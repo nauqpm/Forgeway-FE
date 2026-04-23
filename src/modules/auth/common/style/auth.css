@@ -1,0 +1,124 @@
+/* Auth Form Styles */
+.form-control {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+}
+
+.form-control:focus {
+  box-shadow: none;
+  border-color: rgb(52, 152, 219);
+}
+
+.btn-success {
+  background-color: rgb(52, 152, 219);
+  border-color: rgb(52, 152, 219);
+}
+
+.btn-success:hover {
+  background-color: rgb(52, 152, 219);
+  border-color: rgb(52, 152, 219);
+}
+
+.btn-outline-dark {
+  border-radius: 0.5rem;
+}
+
+.form-check-input:checked {
+  background-color: rgb(52, 152, 219);
+  border-color: rgb(52, 152, 219);
+}
+
+/* Link styles */
+a {
+  color: #000;
+  text-decoration: none;
+}
+
+a:hover {
+  color: rgb(52, 152, 219);
+}
+
+/* Card styles */
+.card {
+  border-radius: 1rem;
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+/* Custom styles for auth forms */
+.auth-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.letter-spacing-2 {
+  letter-spacing: 2px;
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  color: #6c757d;
+  margin-bottom: 24px;
+}
+
+.auth-subtitle {
+  color: #6c757d;
+  margin-bottom: 2rem;
+}
+
+/* Google button styles */
+.google-btn {
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+  color: #000;
+  background-color: #fff;
+}
+
+.google-btn:hover {
+  background-color: #000 !important;
+  border-color: #fff !important;
+  color: #fff !important;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 45%;
+  height: 1px;
+  background-color: #dee2e6;
+}
+
+.divider::before {
+  left: 0;
+}
+
+.divider::after {
+  right: 0;
+}
+
+.divider span {
+  background-color: #fff;
+  padding: 0 1rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.fs-small {
+  font-size: 14px;
+}

@@ -1,0 +1,195 @@
+/* /styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+@layer utilities {
+    .animate-fadeIn {
+        animation: fadeIn 0.3s forwards;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-slideDown {
+        animation: slideDown 0.3s forwards;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+/* SunEditor Content Styles */
+.se-wrapper {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: #000;
+    line-height: 1.6;
+  }
+
+  .se-wrapper * {
+    box-sizing: border-box;
+  }
+
+  .se-wrapper p,
+  .se-wrapper h1,
+  .se-wrapper h2,
+  .se-wrapper h3,
+  .se-wrapper h4,
+  .se-wrapper h5,
+  .se-wrapper h6 {
+    margin: 0 0 1em 0;
+  }
+
+  .se-wrapper p {
+    white-space: normal;
+  }
+
+  .se-wrapper h1 {
+    font-size: 2em;
+    font-weight: bold;
+  }
+
+  .se-wrapper h2 {
+    font-size: 1.75em;
+    font-weight: bold;
+  }
+
+  .se-wrapper h3 {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+
+  .se-wrapper h4 {
+    font-size: 1.25em;
+    font-weight: bold;
+  }
+
+  .se-wrapper h5 {
+    font-size: 1em;
+    font-weight: bold;
+  }
+
+  .se-wrapper h6 {
+    font-size: 0.875em;
+    font-weight: bold;
+  }
+
+  .se-wrapper ul,
+  .se-wrapper ol {
+    margin: 1em 0;
+    padding-left: 2em;
+  }
+
+  .se-wrapper li {
+    margin-bottom: 0.5em;
+  }
+
+  .se-wrapper blockquote {
+    border-left: 4px solid #ccc;
+    margin: 1em 0;
+    padding: 0.5em 1em;
+    color: #666;
+    font-style: italic;
+  }
+
+  .se-wrapper pre {
+    background: #f5f5f5;
+    padding: 1em;
+    overflow-x: auto;
+  }
+
+  .se-wrapper code {
+    background: #eee;
+    padding: 2px 4px;
+    font-family: monospace;
+  }
+
+  .se-wrapper a {
+    color: #007bff;
+    text-decoration: underline;
+  }
+
+  .se-wrapper img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .se-wrapper table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+  }
+
+  .se-wrapper th,
+  .se-wrapper td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+
+  .se-wrapper th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+
+  .se-wrapper hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 2em 0;
+  }
+
+  .se-wrapper b,
+  .se-wrapper strong {
+    font-weight: bold;
+  }
+
+  .se-wrapper i,
+  .se-wrapper em {
+    font-style: italic;
+  }
+
+  .se-wrapper u {
+    text-decoration: underline;
+  }
+  .se-wrapper table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    border: 1px solid #ccc; /* Thêm viền ngoài */
+  }
+
+  .se-wrapper th,
+  .se-wrapper td {
+    border: 1px solid #ccc; /* Thêm viền ô */
+    padding: 8px;
+    text-align: left;
+  }
+
+  .se-wrapper th {
+    background-color: #f9f9f9;
+    font-weight: bold;
+  }
