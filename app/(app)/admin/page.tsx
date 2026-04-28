@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
-import { Users, FolderKanban, BookOpen, Settings, BarChart3, Shield } from "lucide-react";
+import {
+  Users,
+  FolderKanban,
+  BookOpen,
+  LayoutDashboard,
+  Database,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function AdminDashboardPage() {
@@ -15,16 +21,27 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    api.get(apiRoutes.WORKSPACES.BASE)
+    api
+      .get(apiRoutes.WORKSPACES.BASE)
       .then((res) => {
         if (cancelled) return;
         setWorkspaces(res.data);
-        const ws = currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
-        if (!ws) { setLoading(false); return; }
+        const ws =
+          currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
+        if (!ws) {
+          setLoading(false);
+          return;
+        }
         return Promise.all([
-          api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`).catch(() => ({ data: [] })),
-          api.get(apiRoutes.WORKSPACES.BY_ID(ws._id)).catch(() => ({ data: {} })),
-          api.get(`${apiRoutes.SPACES.BASE}?workspaceId=${ws._id}`).catch(() => ({ data: [] })),
+          api
+            .get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`)
+            .catch(() => ({ data: [] })),
+          api
+            .get(apiRoutes.WORKSPACES.BY_ID(ws._id))
+            .catch(() => ({ data: {} })),
+          api
+            .get(`${apiRoutes.SPACES.BASE}?workspaceId=${ws._id}`)
+            .catch(() => ({ data: [] })),
         ]);
       })
       .then((results) => {
@@ -37,15 +54,29 @@ export default function AdminDashboardPage() {
         });
       })
       .catch(() => {})
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [setWorkspaces]);
 
-  const adminCards = [
-    { title: "Cài đặt Workspace", desc: "Quản lý tên, thành viên và cài đặt workspace", href: "/admin/workspace", icon: Settings, color: "bg-indigo-500" },
-    { title: "Quản lý Người dùng", desc: "Quản lý thành viên workspace và phân quyền", href: "/admin/users", icon: Users, color: "bg-blue-500" },
-    { title: "Cấu hình Quy trình", desc: "Tùy chỉnh trạng thái và luồng công việc", href: "/admin/workflows", icon: BarChart3, color: "bg-purple-500" },
-    { title: "Phân quyền", desc: "Quản lý vai trò và quyền hạn", href: "/admin/permissions", icon: Shield, color: "bg-amber-500" },
+  const spaces = [
+    {
+      id: 1,
+      name: "Frontend Team",
+      description: "Quản lý task FE",
+      icon: LayoutDashboard,
+      color: "bg-blue-500",
+    },
+    {
+      id: 2,
+      name: "Backend Team",
+      description: "API & Database",
+      icon: Database,
+      color: "bg-green-500",
+    },
   ];
 
   return (
@@ -53,34 +84,76 @@ export default function AdminDashboardPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Bảng Quản trị</h1>
         <p className="text-gray-500 text-sm">
-          {currentWorkspace ? `Workspace: ${currentWorkspace.name}` : "Không có workspace được chọn"}
+          {currentWorkspace
+            ? `Workspace: ${currentWorkspace.name}`
+            : "Không có workspace được chọn"}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {[
-          { label: "Dự án", value: stats.projects, icon: FolderKanban, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Thành viên", value: stats.members, icon: Users, color: "text-green-600", bg: "bg-green-50" },
-          { label: "Không gian", value: stats.spaces, icon: BookOpen, color: "text-purple-600", bg: "bg-purple-50" },
+          {
+            label: "Dự án",
+            value: stats.projects,
+            icon: FolderKanban,
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+          },
+          {
+            label: "Thành viên",
+            value: stats.members,
+            icon: Users,
+            color: "text-green-600",
+            bg: "bg-green-50",
+          },
+          {
+            label: "Không gian",
+            value: stats.spaces,
+            icon: BookOpen,
+            color: "text-purple-600",
+            bg: "bg-purple-50",
+          },
         ].map((card) => (
-          <div key={card.label} className="bg-white rounded-xl border border-gray-200 p-5">
+          <div
+            key={card.label}
+            className="bg-white rounded-xl border border-gray-200 p-5"
+          >
             <div className="flex items-center justify-between mb-3">
-              <div className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center`}><card.icon className={`w-5 h-5 ${card.color}`} /></div>
+              <div
+                className={`w-10 h-10 ${card.bg} rounded-lg flex items-center justify-center`}
+              >
+                <card.icon className={`w-5 h-5 ${card.color}`} />
+              </div>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{loading ? "..." : card.value}</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {loading ? "..." : card.value}
+            </p>
             <p className="text-sm text-gray-500">{card.label}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {adminCards.map((card) => (
-          <Link key={card.href} href={card.href} className="group bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-indigo-200 transition-all">
+        {spaces.map((space) => (
+          <Link
+            key={space.id}
+            href={`/spaces/${space.id}`}
+            className="group bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-indigo-200 transition-all"
+          >
             <div className="flex items-start gap-4">
-              <div className={`w-12 h-12 ${card.color} rounded-xl flex items-center justify-center flex-shrink-0`}><card.icon className="w-6 h-6 text-white" /></div>
+              <div
+                className={`w-12 h-12 ${space.color} rounded-xl flex items-center justify-center flex-shrink-0`}
+              >
+                <space.icon className="w-6 h-6 text-white" />
+              </div>
+
               <div>
-                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">{card.title}</h3>
-                <p className="text-sm text-gray-500 mt-1">{card.desc}</p>
+                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                  {space.name}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {space.description}
+                </p>
               </div>
             </div>
           </Link>

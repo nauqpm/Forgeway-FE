@@ -90,7 +90,7 @@ export default function HomeClientPage() {
             {/* CTA */}
             <div className="hidden md:flex items-center gap-3">
               {isAuthenticated ? (
-                <Link href="/" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors">
+                <Link href="/admin" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors">
                   Go to Dashboard <ArrowRight className="w-4 h-4" />
                 </Link>
               ) : (
