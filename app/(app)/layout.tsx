@@ -99,7 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Avatar */}
             <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition">
               <img
-                src="/avatar.png" // 👉 thay bằng user.avatar từ API
+                src="/logo-yaviet/download.png" 
                 alt="avatar"
                 className="w-full h-full object-cover"
               />
