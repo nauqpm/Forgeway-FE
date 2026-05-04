@@ -1,202 +1,380 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import api from "@/common/services/api.service";
-import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/app/common/components/LoadingSpinner";
 import Link from "next/link";
 import {
-  BookOpen, Plus, ArrowRight, Search, Lock, Globe, MoreHorizontal,
-  FileText, Edit2, Trash2, ChevronRight
+  BookOpen, Plus, ArrowRight, Search, Lock, Globe, Settings,
+  FileText, Columns, Repeat, ChevronRight, X
 } from "lucide-react";
-
-interface Page {
-  _id: string;
-  title: string;
-  slug: string;
-  authorId?: { fullName?: string; email?: string };
-  status: string;
-  labels: string[];
-  viewCount: number;
-  version: number;
-  updatedAt: string;
-  parentId?: string;
-  children?: Page[];
-}
+import IssueDetailModal from "@/modules/app/common/components/IssueDetailModal";
 
 interface Space {
   _id: string;
   name: string;
   key: string;
   description?: string;
-  type: "private" | "public";
-  pages?: Page[];
-  pageCount?: number;
+  visibility: "private" | "public";
+  template: "kanban" | "scrum";
 }
 
 export default function SpaceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: spaceId } = use(params);
   const { currentWorkspace } = useWorkspaceStore();
   const [space, setSpace] = useState<Space | null>(null);
-  const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
-  const [spaceId, setSpaceId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState<"pages" | "labels">("pages");
+  const [activeTab, setActiveTab] = useState<"board" | "backlog" | "pages">("pages");
+  const [issues, setIssues] = useState([
+    { id: "1", title: "Thiết kế lại luồng đăng nhập theo chuẩn mới", status: "To Do", priority: "High", type: "Design", assignee: "A", color: "bg-indigo-600" },
+    { id: "2", title: "Fix lỗi hiển thị sai font chữ trên Safari", status: "To Do", priority: "High", type: "Bug", assignee: "B", color: "bg-teal-500" },
+    { id: "3", title: "Viết test case cho module Thanh toán", status: "In Progress", priority: "Medium", type: "Task", assignee: "C", color: "bg-emerald-500" },
+    { id: "4", title: "Tối ưu hóa hình ảnh Landing Page", status: "Done", priority: "Low", type: "Task", assignee: "D", color: "bg-orange-500" },
+  ]);
+  const [showCreateIssue, setShowCreateIssue] = useState(false);
+  const [newIssueForm, setNewIssueForm] = useState({ title: "", type: "Task", priority: "Medium", status: "To Do" });
+  const [selectedIssue, setSelectedIssue] = useState<any>(null);
 
-  useEffect(() => {
-    params.then(p => setSpaceId(p.id));
-  }, [params]);
+  const handleCreateIssue = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newIssueForm.title.trim()) return;
+
+    const newId = Date.now().toString();
+    const issue = {
+      id: newId,
+      title: newIssueForm.title,
+      status: newIssueForm.status,
+      priority: newIssueForm.priority,
+      type: newIssueForm.type,
+      assignee: "U",
+      color: "bg-indigo-600"
+    };
+
+    setIssues([...issues, issue]);
+    setShowCreateIssue(false);
+    setNewIssueForm({ title: "", type: "Task", priority: "Medium", status: "To Do" });
+  };
+
+  const handleDragStart = (e: React.DragEvent, issueId: string) => {
+    e.dataTransfer.setData("issueId", issueId);
+  };
+
+  const handleDrop = (e: React.DragEvent, status: string) => {
+    e.preventDefault();
+    const issueId = e.dataTransfer.getData("issueId");
+    if (issueId) {
+      setIssues(issues.map(i => i.id === issueId ? { ...i, status } : i));
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
 
   useEffect(() => {
     if (!spaceId) return;
     const fetchData = async () => {
       try {
-        const [spaceRes, pagesRes] = await Promise.all([
-          api.get(apiRoutes.SPACES.BY_ID(spaceId)),
-          api.get(apiRoutes.PAGES.BY_SPACE(spaceId)),
-        ]);
-        setSpace(spaceRes.data);
-        setPages(Array.isArray(pagesRes.data) ? pagesRes.data : []);
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
+        const found = allSpaces.find((s: any) => s._id === spaceId);
+        if (found) {
+          setSpace(found);
+          // Auto-select tab based on template
+          if (found.template === "kanban") setActiveTab("board");
+          else if (found.template === "scrum") setActiveTab("backlog");
+        }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     };
     fetchData();
   }, [spaceId]);
 
-  const filteredPages = pages.filter(p =>
-    !search || p.title.toLowerCase().includes(search.toLowerCase()) || p.slug.toLowerCase().includes(search.toLowerCase())
-  );
-
   if (loading) return <LoadingSpinner />;
   if (!space) return (
     <div className="flex flex-col items-center justify-center py-20">
-      <p className="text-gray-500 mb-4">Space not found</p>
-      <Link href="/spaces" className="text-indigo-600 hover:text-indigo-800">Back to Spaces</Link>
+      <p className="text-gray-500 mb-4">Không tìm thấy không gian (Space) này</p>
+      <Link href="/spaces" className="text-indigo-600 hover:text-indigo-800">Quay lại danh sách Space</Link>
     </div>
   );
 
-  const allLabels = [...new Set(pages.flatMap(p => p.labels))];
-
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-6xl mx-auto pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <Link href="/spaces" className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <Link href="/spaces" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <ArrowRight className="w-5 h-5 text-gray-500 rotate-180" />
           </Link>
-          <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-            <BookOpen className="w-6 h-6 text-indigo-600" />
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${space.template === 'scrum' ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
+            {space.template === 'scrum' ? <Repeat className="w-7 h-7 text-white" /> : <Columns className="w-7 h-7 text-white" />}
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-gray-900">{space.name}</h1>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                space.type === "private" ? "bg-slate-100 text-slate-600" : "bg-green-50 text-green-700"
-              }`}>
-                {space.type === "private" ? <><Lock className="w-3 h-3" /> Private</> : <><Globe className="w-3 h-3" /> Public</>}
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-mono font-bold">{space.key}</span>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium ${space.visibility === "private" ? "bg-amber-50 text-amber-700" : "bg-green-50 text-green-700"
+                }`}>
+                {space.visibility === "private" ? <><Lock className="w-3 h-3" /> Private</> : <><Globe className="w-3 h-3" /> Public</>}
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-0.5">{space.key} &middot; {pages.length} pages</p>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              {space.name}
+              <Link href={`/spaces/${spaceId}/settings`} className="p-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-gray-700">
+                <Settings className="w-5 h-5" />
+              </Link>
+            </h1>
           </div>
         </div>
-        <Link href={`/spaces/${spaceId}/pages/create`}
-          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors">
-          <Plus className="w-4 h-4" /> New Page
-        </Link>
+        <div className="flex gap-2">
+          <button className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors shadow-sm">
+            Mời thành viên
+          </button>
+          <button onClick={() => setShowCreateIssue(true)} className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm">
+            <Plus className="w-4 h-4" /> Tạo Issue
+          </button>
+        </div>
       </div>
 
       {/* Description */}
       {space.description && (
-        <p className="text-gray-600 text-sm mb-6 bg-gray-50 rounded-lg px-4 py-3 border border-gray-100">{space.description}</p>
+        <p className="text-gray-600 text-sm mb-6 bg-white rounded-lg px-4 py-3 border border-gray-200">{space.description}</p>
       )}
 
-      {/* Tabs + Search */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg w-fit">
-          <button onClick={() => setActiveTab("pages")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "pages" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            Pages ({pages.length})
+      {/* Tabs */}
+      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl w-fit mb-6">
+        {space.template === "kanban" && (
+          <button onClick={() => setActiveTab("board")}
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+            Kanban Board
           </button>
-          <button onClick={() => setActiveTab("labels")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === "labels" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            Labels ({allLabels.length})
-          </button>
-        </div>
+        )}
+        {space.template === "scrum" && (
+          <>
+            <button onClick={() => setActiveTab("backlog")}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "backlog" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              Backlog
+            </button>
+            <button onClick={() => setActiveTab("board")}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              Active Sprint
+            </button>
+          </>
+        )}
+        <button onClick={() => setActiveTab("pages")}
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "pages" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          Tài liệu (Pages)
+        </button>
+      </div>
+
+      {/* Content Area */}
+      <div className={`rounded-2xl ${activeTab === 'pages' ? 'bg-white border border-gray-200 min-h-[400px] flex items-center justify-center' : ''}`}>
         {activeTab === "pages" && (
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search pages..." className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" />
+          <div className="text-center">
+            <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <h3 className="text-lg font-medium text-gray-900">Module Tài Liệu</h3>
+            <p className="text-gray-500 text-sm mt-1 mb-4">Chưa có trang tài liệu nào trong Space này.</p>
+            <button className="text-indigo-600 font-medium hover:text-indigo-800 text-sm">Tạo trang mới</button>
+          </div>
+        )}
+
+        {activeTab === "board" && (
+          <div className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] p-4">
+            {/* Columns */}
+            {["To Do", "In Progress", "Done"].map((status) => (
+              <div
+                key={status}
+                className="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-full border border-gray-200 shadow-sm"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, status)}
+              >
+                <div className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-100/50 rounded-t-xl">
+                  <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide flex items-center gap-2">
+                    {status}
+                    <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px] font-bold">{issues.filter(i => i.status === status).length}</span>
+                  </h3>
+                  <button onClick={() => { setNewIssueForm({ ...newIssueForm, status }); setShowCreateIssue(true); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"><Plus className="w-4 h-4" /></button>
+                </div>
+                <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px]">
+                  {issues.filter(i => i.status === status).map(issue => (
+                    <div
+                      key={issue.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, issue.id)}
+                      onClick={() => setSelectedIssue(issue)}
+                      className="bg-white p-3.5 rounded-lg shadow-sm border border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group"
+                    >
+                      <p className="text-sm font-medium text-gray-900 mb-2 leading-snug group-hover:text-indigo-600">{issue.title}</p>
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === 'High' ? 'bg-red-50 text-red-600' : issue.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'}`}>
+                          {issue.priority}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}>
+                          {issue.type}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+                        <span className="text-xs font-mono font-bold text-gray-400">{space.key}-{100 + parseInt(issue.id)}</span>
+                        <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white`}>{issue.assignee}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {issues.filter(i => i.status === status).length === 0 && (
+                    <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
+                      Kéo thả issue vào đây
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {activeTab === "backlog" && (
+          <div className="space-y-6">
+            {/* Active Sprint Mock */}
+            <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+              <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">Sprint 1 <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded-full">Active</span></h3>
+                  <p className="text-xs text-gray-500 mt-1">10 Aug - 24 Aug &middot; 4 issues</p>
+                </div>
+                <button className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Complete Sprint</button>
+              </div>
+              <div className="p-2 space-y-1">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 hover:border-indigo-200 transition-colors group cursor-pointer shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-4 h-4 text-indigo-500" />
+                      <span className="text-xs font-mono font-medium text-gray-500 w-16">{space.key}-{100 + i}</span>
+                      <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-600">Implement authentication flow {i}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">In Progress</span>
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">U</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Backlog Mock */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
+                <h3 className="font-bold text-gray-900">Backlog <span className="text-gray-400 font-normal ml-1 text-sm">(12 issues)</span></h3>
+                <button className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors">Create Sprint</button>
+              </div>
+              <div className="p-2 space-y-1">
+                {[4, 5, 6, 7].map(i => (
+                  <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <FileText className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs font-mono font-medium text-gray-400 w-16">{space.key}-{100 + i}</span>
+                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Setup CI/CD pipeline {i}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium">To Do</span>
+                      <div className="w-6 h-6 rounded-full border border-gray-300 border-dashed flex items-center justify-center text-gray-400 hover:border-indigo-500 hover:text-indigo-500 transition-colors"><Plus className="w-3 h-3" /></div>
+                    </div>
+                  </div>
+                ))}
+                <button className="w-full text-left p-3 text-sm text-gray-500 hover:bg-gray-50 rounded-lg flex items-center gap-2 mt-1">
+                  <Plus className="w-4 h-4" /> Tạo issue mới...
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Pages Tab */}
-      {activeTab === "pages" && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          {filteredPages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16">
-              <FileText className="w-12 h-12 text-gray-200 mb-3" />
-              <p className="text-gray-500 font-medium mb-1">No pages yet</p>
-              <p className="text-gray-400 text-sm mb-4">Create your first page in this space</p>
-              <Link href={`/spaces/${spaceId}/pages/create`}
-                className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium">
-                <Plus className="w-4 h-4" /> Create First Page
-              </Link>
+      {/* Modal Tạo Issue */}
+      {showCreateIssue && (
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-600" />
+                Tạo Issue mới
+              </h3>
+              <button onClick={() => setShowCreateIssue(false)} className="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
             </div>
-          ) : (
-            <div className="divide-y divide-gray-50">
-              {filteredPages.map((page) => (
-                <Link key={page._id} href={`/spaces/${spaceId}/pages/${page.slug}`}
-                  className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors group">
-                  <FileText className="w-5 h-5 text-gray-300 group-hover:text-indigo-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 truncate">{page.title}</p>
-                      {page.status === "draft" && (
-                        <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded font-medium">Draft</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <span className="text-xs text-gray-400">{page.authorId?.fullName || "Unknown"}</span>
-                      <span className="text-xs text-gray-300">&middot;</span>
-                      <span className="text-xs text-gray-400">{page.viewCount} views</span>
-                      {page.labels.slice(0, 2).map(label => (
-                        <span key={label} className="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">{label}</span>
-                      ))}
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-400 flex-shrink-0">
-                    {new Date(page.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500 flex-shrink-0" />
-                </Link>
-              ))}
-            </div>
-          )}
+            <form onSubmit={handleCreateIssue} className="p-6 space-y-5 bg-gray-50/30">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Tiêu đề công việc <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  autoFocus
+                  required
+                  value={newIssueForm.title}
+                  onChange={(e) => setNewIssueForm({ ...newIssueForm, title: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm transition-all"
+                  placeholder="Vd: Sửa lỗi hiển thị trên màn hình Mobile..."
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Loại Issue</label>
+                  <select
+                    value={newIssueForm.type}
+                    onChange={(e) => setNewIssueForm({ ...newIssueForm, type: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"
+                  >
+                    <option value="Task">📌 Task (Nhiệm vụ)</option>
+                    <option value="Bug">🐛 Bug (Lỗi)</option>
+                    <option value="Story">📖 Story (Tính năng)</option>
+                    <option value="Design">🎨 Design (Thiết kế)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Mức độ ưu tiên</label>
+                  <select
+                    value={newIssueForm.priority}
+                    onChange={(e) => setNewIssueForm({ ...newIssueForm, priority: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"
+                  >
+                    <option value="High">🔴 High (Cao)</option>
+                    <option value="Medium">🟠 Medium (Trung bình)</option>
+                    <option value="Low">🟢 Low (Thấp)</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Trạng thái ban đầu</label>
+                <select
+                  value={newIssueForm.status}
+                  onChange={(e) => setNewIssueForm({ ...newIssueForm, status: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm bg-white"
+                >
+                  <option value="To Do">⭕ To Do (Chưa làm)</option>
+                  <option value="In Progress">⏳ In Progress (Đang làm)</option>
+                  <option value="Done">✅ Done (Hoàn thành)</option>
+                </select>
+              </div>
+              <div className="pt-4 flex justify-end gap-3">
+                <button type="button" onClick={() => setShowCreateIssue(false)} className="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-100 transition-colors">
+                  Hủy bỏ
+                </button>
+                <button type="submit" className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
+                  Tạo mới ngay
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* Labels Tab */}
-      {activeTab === "labels" && (
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          {allLabels.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">No labels used yet</div>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {allLabels.map(label => (
-                <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
-                  {label}
-                  <span className="bg-indigo-100 text-indigo-600 text-xs px-1.5 py-0.5 rounded-full">
-                    {pages.filter(p => p.labels.includes(label)).length}
-                  </span>
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Jira-style Issue Detail Modal */}
+      {selectedIssue && (
+        <IssueDetailModal
+          issue={selectedIssue}
+          spaceKey={space.key}
+          onClose={() => setSelectedIssue(null)}
+          onUpdateIssue={(updatedIssue) => {
+            setIssues(issues.map(i => i.id === updatedIssue.id ? updatedIssue : i));
+            setSelectedIssue(updatedIssue);
+          }}
+        />
       )}
     </div>
   );

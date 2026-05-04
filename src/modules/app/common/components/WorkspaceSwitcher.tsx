@@ -19,9 +19,31 @@ export default function WorkspaceSwitcher() {
   useEffect(() => {
     if (loaded.current || !user) return;
     loaded.current = true;
-    api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
-      setWorkspaces(res.data);
-    }).catch(() => {});
+    
+    // Mock API
+    const fetchWorkspaces = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        let mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
+        
+        // Tạo sẵn 1 workspace default nếu chưa có
+        if (mockWorkspaces.length === 0) {
+          const defaultWs = { 
+            _id: "ws_default_" + Date.now(), 
+            name: "Không gian cá nhân", 
+            slug: "personal-workspace", 
+            ownerId: "user_1", 
+            members: [] 
+          };
+          mockWorkspaces = [defaultWs];
+          localStorage.setItem("MOCK_WORKSPACES", JSON.stringify(mockWorkspaces));
+        }
+        setWorkspaces(mockWorkspaces);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchWorkspaces();
   }, [user, setWorkspaces]);
 
   useEffect(() => {
@@ -38,8 +60,19 @@ export default function WorkspaceSwitcher() {
     if (!newName.trim()) return;
     setLoading(true);
     try {
-      const res = await api.post(apiRoutes.WORKSPACES.BASE, { name: newName });
-      const newWs = res.data;
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const newWs = { 
+        _id: "ws_" + Date.now(), 
+        name: newName, 
+        slug: newName.toLowerCase().replace(/\s+/g, '-'), 
+        ownerId: "user_1", 
+        members: [] 
+      };
+      
+      const mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
+      localStorage.setItem("MOCK_WORKSPACES", JSON.stringify([...mockWorkspaces, newWs]));
+      
       setWorkspaces([...workspaces, newWs]);
       setCurrentWorkspace(newWs);
       setShowCreate(false);

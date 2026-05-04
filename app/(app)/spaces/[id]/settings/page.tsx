@@ -1,0 +1,249 @@
+"use client";
+
+import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
+import LoadingSpinner from "@/modules/app/common/components/LoadingSpinner";
+import Link from "next/link";
+import { ArrowLeft, Save, Trash2, Globe, Lock, Columns, Repeat, Users, ShieldAlert, Settings } from "lucide-react";
+
+export default function SpaceSettingsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: spaceId } = use(params);
+  const router = useRouter();
+  const [space, setSpace] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"general" | "members">("general");
+
+  const [form, setForm] = useState({
+    name: "",
+    description: "",
+    visibility: "public",
+  });
+
+  useEffect(() => {
+    if (!spaceId) return;
+    const fetchData = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
+        const found = allSpaces.find((s: any) => s._id === spaceId);
+        if (found) {
+          setSpace(found);
+          setForm({
+            name: found.name || "",
+            description: found.description || "",
+            visibility: found.visibility || "public",
+          });
+        }
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    fetchData();
+  }, [spaceId]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
+      const updatedSpaces = allSpaces.map((s: any) => {
+        if (s._id === spaceId) {
+          return { ...s, ...form };
+        }
+        return s;
+      });
+      localStorage.setItem("MOCK_SPACES", JSON.stringify(updatedSpaces));
+      window.dispatchEvent(new Event("spaces_updated"));
+      router.push(`/spaces/${spaceId}`);
+    } catch (e) {
+      console.error("Save failed", e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (confirm("Bạn có chắc chắn muốn xóa không gian này không? Hành động này không thể hoàn tác.")) {
+      const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
+      const updatedSpaces = allSpaces.filter((s: any) => s._id !== spaceId);
+      localStorage.setItem("MOCK_SPACES", JSON.stringify(updatedSpaces));
+      window.dispatchEvent(new Event("spaces_updated"));
+      router.push("/spaces");
+    }
+  };
+
+  if (loading) return <LoadingSpinner />;
+  if (!space) return <div className="p-10 text-center">Không tìm thấy không gian này.</div>;
+
+  return (
+    <div className="max-w-4xl mx-auto pb-12">
+      <div className="flex items-center gap-3 mb-6">
+        <Link href={`/spaces/${spaceId}`} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+          <ArrowLeft className="w-5 h-5 text-gray-500" />
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Cài đặt Không gian</h1>
+          <p className="text-gray-500 text-sm mt-0.5">
+            {space.name} <span className="text-gray-400 mx-1">&middot;</span> {space.key}
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col md:flex-row min-h-[500px]">
+        {/* Sidebar Settings */}
+        <div className="w-full md:w-64 bg-gray-50 border-b md:border-b-0 md:border-r border-gray-200 p-4">
+          <nav className="space-y-1">
+            <button 
+              onClick={() => setActiveTab("general")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === "general" ? "bg-indigo-100 text-indigo-700" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              <Settings className="w-4 h-4" /> Cài đặt chung
+            </button>
+            <button 
+              onClick={() => setActiveTab("members")}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${activeTab === "members" ? "bg-indigo-100 text-indigo-700" : "text-gray-600 hover:bg-gray-100"}`}
+            >
+              <Users className="w-4 h-4" /> Thành viên
+            </button>
+          </nav>
+        </div>
+
+        {/* Settings Content */}
+        <div className="flex-1 p-6 md:p-8">
+          {activeTab === "general" && (
+            <form onSubmit={handleSave} className="space-y-8 max-w-xl">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Thông tin cơ bản</h2>
+                
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên Space</label>
+                    <input 
+                      type="text" 
+                      value={form.name} 
+                      onChange={(e) => setForm({ ...form, name: e.target.value })} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" 
+                      required 
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Mô tả</label>
+                    <textarea 
+                      value={form.description} 
+                      onChange={(e) => setForm({ ...form, description: e.target.value })} 
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none" 
+                      rows={3} 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Mã Space (Key)</label>
+                    <input 
+                      type="text" 
+                      value={space.key} 
+                      disabled 
+                      className="w-full px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg text-gray-500 font-mono cursor-not-allowed" 
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Key không thể thay đổi sau khi tạo.</p>
+                  </div>
+                </div>
+              </div>
+
+              <hr className="border-gray-100" />
+
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 mb-4">Quyền truy cập</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { value: "public", label: "Public", icon: Globe },
+                    { value: "private", label: "Private", icon: Lock },
+                  ].map((opt) => (
+                    <label key={opt.value} className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${form.visibility === opt.value ? "border-indigo-600 bg-indigo-50" : "border-gray-200 hover:border-gray-300"}`}>
+                      <input 
+                        type="radio" 
+                        name="visibility" 
+                        value={opt.value} 
+                        checked={form.visibility === opt.value}
+                        onChange={() => setForm({ ...form, visibility: opt.value as "public" | "private" })}
+                        className="text-indigo-600 focus:ring-indigo-500" 
+                      />
+                      <div className="flex items-center gap-2">
+                        <opt.icon className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900">{opt.label}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 pt-4">
+                <button 
+                  type="submit" 
+                  disabled={saving}
+                  className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                >
+                  {saving ? "Đang lưu..." : <><Save className="w-4 h-4" /> Lưu thay đổi</>}
+                </button>
+              </div>
+
+              <div className="mt-12 p-5 border border-red-200 bg-red-50 rounded-xl">
+                <h3 className="text-red-800 font-bold flex items-center gap-2 mb-2">
+                  <ShieldAlert className="w-5 h-5" /> Danger Zone
+                </h3>
+                <p className="text-sm text-red-600 mb-4">Xóa space này sẽ xóa toàn bộ Board, Backlog và Tài liệu bên trong. Không thể khôi phục.</p>
+                <button 
+                  type="button" 
+                  onClick={handleDelete}
+                  className="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" /> Xóa Space
+                </button>
+              </div>
+            </form>
+          )}
+
+          {activeTab === "members" && (
+            <div>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-gray-900">Danh sách thành viên</h2>
+                <button className="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors">
+                  + Mời thành viên
+                </button>
+              </div>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-200">
+                    <tr>
+                      <th className="px-4 py-3">Tên / Email</th>
+                      <th className="px-4 py-3 w-32">Vai trò</th>
+                      <th className="px-4 py-3 w-20"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {/* Mock Member */}
+                    <tr className="hover:bg-gray-50">
+                      <td className="px-4 py-3 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">U</div>
+                        <div>
+                          <p className="font-medium text-gray-900">Bạn (Owner)</p>
+                          <p className="text-xs text-gray-500">user@example.com</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-semibold">Admin</span>
+                      </td>
+                      <td className="px-4 py-3">
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
