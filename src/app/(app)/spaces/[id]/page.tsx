@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useMemo } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import LoadingSpinner from "@/modules/app/common/components/LoadingSpinner";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import {
   FileText, Columns, Repeat, ChevronRight, X
 } from "lucide-react";
 import IssueDetailModal from "@/modules/app/common/components/IssueDetailModal";
+import PageTreeSidebar from "@/modules/app/common/components/PageTreeSidebar";
 
 interface Space {
   _id: string;
@@ -34,6 +35,29 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [newIssueForm, setNewIssueForm] = useState({ title: "", type: "Task", priority: "Medium", status: "To Do" });
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
+  const [filters, setFilters] = useState({ search: "", assigneeId: null as string | null, priority: null as string | null });
+
+  const filteredIssues = useMemo(() => {
+    if (!space) return [];
+    return issues.filter(issue => {
+      const matchSearch = issue.title.toLowerCase().includes(filters.search.toLowerCase()) 
+                       || `${space.key}-${100 + parseInt(issue.id)}`.toLowerCase().includes(filters.search.toLowerCase());
+      const matchAssignee = filters.assigneeId ? issue.assignee === filters.assigneeId : true;
+      const matchPriority = filters.priority ? issue.priority === filters.priority : true;
+      
+      return matchSearch && matchAssignee && matchPriority;
+    });
+  }, [issues, filters, space]);
+
+  const uniqueAssignees = useMemo(() => {
+    const map = new Map<string, { id: string, color: string }>();
+    issues.forEach(i => {
+      if (!map.has(i.assignee)) {
+        map.set(i.assignee, { id: i.assignee, color: i.color });
+      }
+    });
+    return Array.from(map.values());
+  }, [issues]);
 
   const handleCreateIssue = (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,65 +191,142 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {/* Content Area */}
-      <div className={`rounded-2xl ${activeTab === 'pages' ? 'bg-white border border-gray-200 min-h-[400px] flex items-center justify-center' : ''}`}>
+      <div className={`rounded-2xl ${activeTab === 'pages' ? 'bg-white border border-gray-200 min-h-[500px] flex' : ''}`}>
         {activeTab === "pages" && (
-          <div className="text-center">
-            <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="text-lg font-medium text-gray-900">Module Tài Liệu</h3>
-            <p className="text-gray-500 text-sm mt-1 mb-4">Chưa có trang tài liệu nào trong Space này.</p>
-            <button className="text-indigo-600 font-medium hover:text-indigo-800 text-sm">Tạo trang mới</button>
-          </div>
+          <>
+            <PageTreeSidebar 
+              spaceId={spaceId}
+              initialData={[
+                {
+                  id: "getting-started",
+                  title: "Getting Started",
+                  children: [
+                    { id: "installation", title: "Installation" },
+                    { id: "configuration", title: "Configuration" }
+                  ]
+                },
+                {
+                  id: "api-reference",
+                  title: "API Reference",
+                  children: [
+                    { id: "auth", title: "Authentication" },
+                    { id: "endpoints", title: "Endpoints" }
+                  ]
+                }
+              ]} 
+            />
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white rounded-r-2xl">
+              <BookOpen className="w-16 h-16 text-indigo-100 mx-auto mb-4" />
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Tài liệu dự án</h3>
+              <p className="text-gray-500 text-sm max-w-md mx-auto mb-6">Quản lý tài liệu theo cấu trúc hình cây. Kéo thả để sắp xếp lại các trang. Chọn một trang bên trái để xem nội dung.</p>
+              <Link href={`/spaces/${spaceId}/pages/create`} className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-semibold hover:bg-indigo-100 transition-colors">
+                <Plus className="w-4 h-4" /> Tạo trang mới
+              </Link>
+            </div>
+          </>
         )}
 
         {activeTab === "board" && (
-          <div className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] p-4">
-            {/* Columns */}
-            {["To Do", "In Progress", "Done"].map((status) => (
-              <div
-                key={status}
-                className="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-full border border-gray-200 shadow-sm"
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, status)}
-              >
-                <div className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-100/50 rounded-t-xl">
-                  <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide flex items-center gap-2">
-                    {status}
-                    <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px] font-bold">{issues.filter(i => i.status === status).length}</span>
-                  </h3>
-                  <button onClick={() => { setNewIssueForm({ ...newIssueForm, status }); setShowCreateIssue(true); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"><Plus className="w-4 h-4" /></button>
-                </div>
-                <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px]">
-                  {issues.filter(i => i.status === status).map(issue => (
-                    <div
-                      key={issue.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, issue.id)}
-                      onClick={() => setSelectedIssue(issue)}
-                      className="bg-white p-3.5 rounded-lg shadow-sm border border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group"
+          <div className="flex flex-col gap-4">
+            {/* Quick Filters */}
+            <div className="flex flex-wrap items-center gap-4 px-4 pt-4">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm issue..."
+                  value={filters.search}
+                  onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                  className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow w-64"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 font-medium">Assignee:</span>
+                <div className="flex -space-x-2">
+                  {uniqueAssignees.map(user => (
+                    <button
+                      key={user.id}
+                      onClick={() => setFilters(prev => ({ ...prev, assigneeId: prev.assigneeId === user.id ? null : user.id }))}
+                      className={`w-8 h-8 rounded-full ${user.color} text-white flex items-center justify-center text-xs font-bold ring-2 ring-white hover:z-10 transition-transform hover:scale-110 ${filters.assigneeId === user.id ? 'ring-indigo-500 ring-offset-2 ring-offset-white' : ''} ${filters.assigneeId && filters.assigneeId !== user.id ? 'opacity-40' : ''}`}
+                      title={user.id}
                     >
-                      <p className="text-sm font-medium text-gray-900 mb-2 leading-snug group-hover:text-indigo-600">{issue.title}</p>
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === 'High' ? 'bg-red-50 text-red-600' : issue.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'}`}>
-                          {issue.priority}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}>
-                          {issue.type}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
-                        <span className="text-xs font-mono font-bold text-gray-400">{space.key}-{100 + parseInt(issue.id)}</span>
-                        <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white`}>{issue.assignee}</div>
-                      </div>
-                    </div>
+                      {user.id}
+                    </button>
                   ))}
-                  {issues.filter(i => i.status === status).length === 0 && (
-                    <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
-                      Kéo thả issue vào đây
-                    </div>
-                  )}
                 </div>
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500 font-medium">Priority:</span>
+                <select
+                  value={filters.priority || ""}
+                  onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value || null }))}
+                  className="py-2 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                >
+                  <option value="">Tất cả</option>
+                  <option value="High">🔴 High</option>
+                  <option value="Medium">🟠 Medium</option>
+                  <option value="Low">🟢 Low</option>
+                </select>
+              </div>
+              {(filters.search || filters.assigneeId || filters.priority) && (
+                <button 
+                  onClick={() => setFilters({ search: "", assigneeId: null, priority: null })}
+                  className="text-sm text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1"
+                >
+                  Xóa bộ lọc
+                </button>
+              )}
+            </div>
+
+            <div className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] p-4">
+              {/* Columns */}
+              {["To Do", "In Progress", "Done"].map((status) => (
+                <div
+                  key={status}
+                  className="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-full border border-gray-200 shadow-sm"
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, status)}
+                >
+                  <div className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-100/50 rounded-t-xl">
+                    <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide flex items-center gap-2">
+                      {status}
+                      <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px] font-bold">{filteredIssues.filter(i => i.status === status).length}</span>
+                    </h3>
+                    <button onClick={() => { setNewIssueForm({ ...newIssueForm, status }); setShowCreateIssue(true); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"><Plus className="w-4 h-4" /></button>
+                  </div>
+                  <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px]">
+                    {filteredIssues.filter(i => i.status === status).map(issue => (
+                      <div
+                        key={issue.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, issue.id)}
+                        onClick={() => setSelectedIssue(issue)}
+                        className="bg-white p-3.5 rounded-lg shadow-sm border border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group"
+                      >
+                        <p className="text-sm font-medium text-gray-900 mb-2 leading-snug group-hover:text-indigo-600">{issue.title}</p>
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === 'High' ? 'bg-red-50 text-red-600' : issue.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'}`}>
+                            {issue.priority}
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}>
+                            {issue.type}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+                          <span className="text-xs font-mono font-bold text-gray-400">{space.key}-{100 + parseInt(issue.id)}</span>
+                          <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white`}>{issue.assignee}</div>
+                        </div>
+                      </div>
+                    ))}
+                    {filteredIssues.filter(i => i.status === status).length === 0 && (
+                      <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
+                        {issues.filter(i => i.status === status).length === 0 ? "Kéo thả issue vào đây" : "Không có issue phù hợp"}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
