@@ -8,6 +8,7 @@ import {
   Zap, User
 } from 'lucide-react';
 import Link from 'next/link';
+import IssueSubtasks from './IssueSubtasks';
 
 interface IssueDetailModalProps {
   issue: any;
@@ -28,6 +29,8 @@ export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIss
   
   const [commentInput, setCommentInput] = useState('');
   const [comments, setComments] = useState<any[]>(issue.comments || []);
+  
+  const [subtasks, setSubtasks] = useState<any[]>(issue.subtasks || []);
   
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
 
@@ -60,6 +63,28 @@ export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIss
     setShowStatusDropdown(false);
     if (newStatus !== issue.status && onUpdateIssue) {
       onUpdateIssue({ ...issue, status: newStatus });
+    }
+  };
+
+  const handleAddSubtask = (title: string) => {
+    const newSubtask = {
+      id: `sub-${Date.now()}`,
+      title,
+      status: "To Do",
+      priority: "Medium"
+    };
+    const updatedSubtasks = [...subtasks, newSubtask];
+    setSubtasks(updatedSubtasks);
+    if (onUpdateIssue) {
+      onUpdateIssue({ ...issue, subtasks: updatedSubtasks });
+    }
+  };
+
+  const handleUpdateSubtaskStatus = (id: string, newStatus: string) => {
+    const updatedSubtasks = subtasks.map(t => t.id === id ? { ...t, status: newStatus } : t);
+    setSubtasks(updatedSubtasks);
+    if (onUpdateIssue) {
+      onUpdateIssue({ ...issue, subtasks: updatedSubtasks });
     }
   };
 
@@ -166,13 +191,11 @@ export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIss
             </div>
 
             {/* Subtasks */}
-            <div className="space-y-2">
-              <h3 className="text-base font-semibold text-[#DCDFE4]">Subtasks</h3>
-              <div className="flex items-center gap-2 p-2 hover:bg-[#2C333A] rounded cursor-pointer transition-colors group">
-                <div className="w-6 h-6 bg-[#22272B] group-hover:bg-[#38414A] rounded flex items-center justify-center text-[#8C9BAB] transition-colors"><Plus className="w-4 h-4" /></div>
-                <span className="text-sm text-[#8C9BAB] group-hover:text-[#DCDFE4]">Add subtask</span>
-              </div>
-            </div>
+            <IssueSubtasks 
+              subtasks={subtasks} 
+              onAdd={handleAddSubtask} 
+              onUpdateStatus={handleUpdateSubtaskStatus} 
+            />
 
             {/* Linked Work Items - Tích hợp Document */}
             <div className="space-y-3">

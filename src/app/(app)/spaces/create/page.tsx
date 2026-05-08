@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { ArrowLeft, Columns, Repeat, Globe, Lock } from "lucide-react";
+import { ArrowLeft, Columns, Repeat, Lock, Globe } from "lucide-react";
 import Link from "next/link";
 
 export default function CreateSpacePage() {
   const router = useRouter();
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
   const [form, setForm] = useState({ 
     name: "", 
     key: "", 
@@ -18,15 +18,45 @@ export default function CreateSpacePage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pageReady, setPageReady] = useState(false);
+
+  useEffect(() => {
+    // Mock API
+    const fetchWorkspaces = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 300));
+        let mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
+        
+        if (mockWorkspaces.length === 0) {
+          const defaultWs = { 
+            _id: "ws_default_" + Date.now(), 
+            name: "Không gian cá nhân", 
+            slug: "personal-workspace", 
+            ownerId: "user_1", 
+            members: [] 
+          };
+          mockWorkspaces = [defaultWs];
+          localStorage.setItem("MOCK_WORKSPACES", JSON.stringify(mockWorkspaces));
+        }
+        setWorkspaces(mockWorkspaces);
+        setPageReady(true);
+      } catch (e) {
+        console.error(e);
+        setPageReady(true);
+      }
+    };
+    fetchWorkspaces();
+  }, [setWorkspaces]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentWorkspace) return;
-    setLoading(true);
     setError("");
-    
+    if (!currentWorkspace?._id) {
+      setError("Vui lòng chọn workspace.");
+      return;
+    }
+    setLoading(true);
     try {
-      // Mock API delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
       const newSpace = {
@@ -37,32 +67,49 @@ export default function CreateSpacePage() {
         _count: { pages: 0, issues: 0 }
       };
 
-      // Get existing mock spaces
       const existing = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
       localStorage.setItem("MOCK_SPACES", JSON.stringify([...existing, newSpace]));
+      window.dispatchEvent(new Event("spaces_updated"));
 
-      router.push(`/spaces`); // Temporarily route to list since detail page is not ready
+      router.push(`/spaces`);
     } catch (e: any) {
-      setError("Failed to create space");
+      setError("Tạo không gian thất bại. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!currentWorkspace) return <div className="p-6 text-center text-gray-500">Select a workspace first</div>;
+  if (!pageReady) return <div className="p-6 text-center text-gray-500">Loading...</div>;
+
+  if (!currentWorkspace) return (
+    <div className="p-6 text-center">
+      <p className="text-gray-500 mb-4">Chưa có workspace. Vui lòng tạo workspace trước.</p>
+    </div>
+  );
 
   return (
     <div className="max-w-3xl mx-auto pb-12">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/spaces" className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"><ArrowLeft className="w-5 h-5 text-gray-500" /></Link>
-        <h1 className="text-2xl font-bold text-gray-900">Tạo không gian làm việc mới (Space)</h1>
+        <Link href="/spaces" className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+          <ArrowLeft className="w-5 h-5 text-gray-500" />
+        </Link>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tạo không gian làm việc mới (Space)</h1>
+          <p className="text-gray-500 text-sm mt-0.5">
+            trong <span className="font-medium text-indigo-600">{currentWorkspace.name}</span>
+          </p>
+        </div>
       </div>
-
-      {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
 
       <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 md:p-8 space-y-8">
         {/* Basic Info */}
         <div className="space-y-6">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+              {error}
+            </div>
+          )}
+          
           <div>
             <label className="block text-sm font-semibold text-gray-900 mb-2">Tên Space *</label>
             <input 

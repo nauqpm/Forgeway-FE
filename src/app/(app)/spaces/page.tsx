@@ -19,21 +19,37 @@ interface Space {
 }
 
 export default function SpacesPage() {
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!currentWorkspace?._id) return;
-    
-    // Simulate API delay and read from mock storage
     const fetchSpaces = async () => {
       try {
         await new Promise(resolve => setTimeout(resolve, 500));
-        const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
-        // Filter by current workspace ID
-        const workspaceSpaces = allSpaces.filter((s: any) => s.workspaceId === currentWorkspace._id);
-        setSpaces(workspaceSpaces);
+        let mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
+        
+        if (mockWorkspaces.length === 0) {
+          const defaultWs = { 
+            _id: "ws_default_" + Date.now(), 
+            name: "Không gian cá nhân", 
+            slug: "personal-workspace", 
+            ownerId: "user_1", 
+            members: [] 
+          };
+          mockWorkspaces = [defaultWs];
+          localStorage.setItem("MOCK_WORKSPACES", JSON.stringify(mockWorkspaces));
+        }
+        setWorkspaces(mockWorkspaces);
+        
+        // Use the current workspace, or the first one if not set yet
+        const ws = useWorkspaceStore.getState().currentWorkspace || mockWorkspaces[0];
+        
+        if (ws) {
+          const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
+          const workspaceSpaces = allSpaces.filter((s: any) => s.workspaceId === ws._id);
+          setSpaces(workspaceSpaces);
+        }
       } catch (e) { 
         console.error(e); 
       } finally { 
@@ -42,10 +58,11 @@ export default function SpacesPage() {
     };
     
     fetchSpaces();
-  }, [currentWorkspace?._id]);
+  }, [setWorkspaces]);
+
+  if (loading) return <LoadingSpinner />;
 
   if (!currentWorkspace) return <div className="p-6 text-center text-gray-500">Select a workspace first</div>;
-  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -73,7 +90,7 @@ export default function SpacesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {spaces.map((space) => (
-            <Link key={space._id} href={`/spaces/${space._id}`} className="group bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-indigo-300 transition-all flex flex-col h-full cursor-not-allowed" onClick={(e) => { e.preventDefault(); alert("Chức năng chi tiết Space đang được phát triển!"); }}>
+            <Link key={space._id} href={`/spaces/${space._id}`} className="group bg-white rounded-xl border border-gray-200 p-5 hover:shadow-lg hover:border-indigo-300 transition-all flex flex-col h-full cursor-pointer">
               
               {/* Header Card */}
               <div className="flex items-start justify-between mb-4">
@@ -103,7 +120,7 @@ export default function SpacesPage() {
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500">Template</span>
-                    <span className="text-xs font-semibold text-gray-700 capitalize">{space.template}</span>
+                    <span className="text-xs font-semibold text-gray-700 capitalize">{space.template || "Kanban"}</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-xs text-gray-500">Issues</span>

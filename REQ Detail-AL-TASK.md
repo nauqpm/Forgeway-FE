@@ -1,7 +1,7 @@
 **QUY ƯỚC QUAN TRỌNG VỀ CẤU TRÚC THƯ MỤC (VUI LÒNG ĐỌC KỸ TRƯỚC KHI CODE)**
-> **CHÚ Ý:** Dự án sử dụng thư mục `app/` ở **ngoài cùng** (root directory) cho Next.js App Router.
-> **TUYỆT ĐỐI KHÔNG** viết code giao diện, định tuyến (Pages, Layouts) vào thư mục `src/app/` vì Next.js sẽ bỏ qua thư mục đó. 
-> - Pages/Layouts: Viết ở `app/`
+> **CHÚ Ý:** Dự án đã xóa bỏ thư mục `app/` ở **ngoài cùng** (root directory).
+> **BẮT BUỘC** đưa tất cả code giao diện, định tuyến (Pages, Layouts) và tất cả các trạng thái đã build vào trong thư mục `src/app/`.
+> - Pages/Layouts: Viết ở `src/app/`
 > - Components, Stores, Logic: Viết ở `src/` (ví dụ: `src/modules/`, `src/stores/`)
 
 

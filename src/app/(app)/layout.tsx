@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { useShallow } from "zustand/react/shallow";
 import Sidebar from "@/modules/app/common/components/Sidebar";
 import TopBar from "@/modules/app/common/components/TopBar";
 import WorkspaceSwitcher from "@/modules/app/common/components/WorkspaceSwitcher";
@@ -11,21 +10,29 @@ import NotificationPanel from "@/modules/app/common/components/NotificationPanel
 import { Menu } from "lucide-react";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user } = useAuth();
-  const { currentWorkspace } = useWorkspaceStore(
-    useShallow((state) => ({
-      currentWorkspace: state.currentWorkspace,
-    })),
-  );
+  const { isAuthenticated } = useAuth();
+  const { setCurrentWorkspace, currentWorkspace } = useWorkspaceStore();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && !currentWorkspace) {
+      const stored = localStorage.getItem("currentWorkspace");
+      if (stored) {
+        try {
+          setCurrentWorkspace(JSON.parse(stored));
+        } catch {
+          /* ignore */
+        }
+      }
+    }
+  }, [isAuthenticated, currentWorkspace, setCurrentWorkspace]);
 
   if (!isAuthenticated) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}
         onCollapse={setSidebarCollapsed}
@@ -33,22 +40,42 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         onMobileClose={() => setMobileOpen(false)}
       />
 
-      {/* Main Content */}
       <div
         className={`transition-all duration-300 ${sidebarCollapsed ? "lg:ml-16" : "lg:ml-60"}`}
       >
-        {/* Top Bar */}
         <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-20">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1">
             <button
               onClick={() => setMobileOpen(true)}
               className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
             >
               <Menu className="w-5 h-5 text-gray-500" />
             </button>
-            <WorkspaceSwitcher />
+            <div className="w-full max-w-5xl relative">
+              <input
+                type="text"
+                placeholder="Tìm kiếm task, project..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
+              />
+
+              {/* icon search */}
+              <svg
+                className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-4.35-4.35M16 10a6 6 0 11-12 0 6 6 0 0112 0z"
+                />
+              </svg>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* Notification */}
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 hover:bg-gray-100 rounded-lg"
@@ -68,19 +95,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </svg>
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
             </button>
-            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
-              {user?.fullName?.charAt(0).toUpperCase() ||
-                user?.email?.charAt(0).toUpperCase()}
+
+            {/* Avatar */}
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition">
+              <img
+                src="/logo-yaviet/download.png" 
+                alt="avatar"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
         </header>
 
-        {/* Notification Panel */}
         {showNotifications && (
           <NotificationPanel onClose={() => setShowNotifications(false)} />
         )}
 
-        {/* Page Content */}
         <main className="p-4 lg:p-6">{children}</main>
       </div>
     </div>

@@ -1,5 +1,5 @@
-import "../src/styles/globals.css";
-import "../src/styles/suneditor.min.css";
+import "@/styles/globals.css";
+import "@/styles/suneditor.min.css";
 import QueryProvider from "@/modules/admin/common/providers/QueryProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import TokenHandler from "@/common/components/TokenHandler";
