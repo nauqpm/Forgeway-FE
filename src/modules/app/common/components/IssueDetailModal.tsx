@@ -8,6 +8,7 @@ import {
   Zap, User
 } from 'lucide-react';
 import Link from 'next/link';
+import { MentionsInput, Mention } from 'react-mentions';
 import IssueSubtasks from './IssueSubtasks';
 import TimeTrackingSidebar from './TimeTrackingSidebar';
 
@@ -17,6 +18,24 @@ interface IssueDetailModalProps {
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
 }
+
+const spaceMembers = [
+  { id: "nam", username: "nam" },
+  { id: "admin", username: "admin" },
+  { id: "quanp", username: "quanp" }
+];
+
+const renderCommentText = (text: string) => {
+  if (!text) return null;
+  const parts = text.split(/(\[@[^\]]+\]\([^)]+\))/g);
+  return parts.map((part, i) => {
+    const match = part.match(/\[@([^\]]+)\]\(([^)]+)\)/);
+    if (match) {
+      return <a key={i} href={`/profile/${match[2]}`} className="text-[#0052CC] font-medium hover:underline bg-[#E9F2FF] px-1 rounded">@{match[1]}</a>;
+    }
+    return <span key={i}>{part}</span>;
+  });
+};
 
 export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIssue }: IssueDetailModalProps) {
   const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'worklog'>('comments');
@@ -247,15 +266,39 @@ export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIss
                 <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
                   QP
                 </div>
-                <div className="flex-1 border border-[#DFE1E6] rounded-lg bg-[#F4F5F7] hover:bg-[#EBECF0] focus-within:bg-[#FFFFFF] focus-within:border-[#0052CC] transition-colors p-4 cursor-text">
-                  <input
-                    type="text"
-                    value={commentInput}
-                    onChange={(e) => setCommentInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleAddComment(); }}
-                    placeholder="Add a comment..."
-                    className="w-full bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#5E6C84] text-sm mb-4"
-                  />
+                <div className="flex-1 border border-[#DFE1E6] rounded-lg bg-[#F4F5F7] hover:bg-[#EBECF0] focus-within:bg-[#FFFFFF] focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
+                  <div className="mb-4 text-sm relative z-50">
+                    <style dangerouslySetInnerHTML={{__html: `
+                      .mentions__control { min-height: 36px; }
+                      .mentions__input { width: 100%; outline: none; border: none; background: transparent; color: #172B4D; font-family: inherit; font-size: inherit; }
+                      .mentions__suggestions__list { background-color: #F4F5F7; border: 1px solid #DFE1E6; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; z-index: 100; position: absolute; min-width: 200px; margin-top: 4px; }
+                      .mentions__suggestions__item { padding: 8px 12px; cursor: pointer; transition: background-color 0.2s; }
+                      .mentions__suggestions__item--focused { background-color: #EBECF0; }
+                    `}} />
+                    <MentionsInput
+                      value={commentInput}
+                      onChange={(e) => setCommentInput(e.target.value)}
+                      onKeyDown={(e: any) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddComment(); } }}
+                      placeholder="Add a comment... (@ to mention)"
+                      className="mentions w-full bg-transparent text-[#172B4D] text-sm"
+                      a11ySuggestionsListLabel={"Suggested mentions"}
+                    >
+                      <Mention
+                        trigger="@"
+                        data={spaceMembers.map(u => ({ id: u.id, display: u.username }))}
+                        markup="[@__display__](__id__)"
+                        renderSuggestion={(suggestion, search, highlightedDisplay) => (
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                              {suggestion.display?.toString().charAt(0).toUpperCase()}
+                            </div>
+                            <span className="text-sm text-[#172B4D]">{highlightedDisplay}</span>
+                          </div>
+                        )}
+                        className="text-[#0052CC] bg-[#E9F2FF] rounded px-1 font-medium"
+                      />
+                    </MentionsInput>
+                  </div>
                   {!commentInput && (
                     <div className="flex items-center gap-2">
                       <span onClick={() => setCommentInput('Who is working on this...?')} className="text-xs text-[#5E6C84] hover:text-[#172B4D] cursor-pointer font-medium bg-[#FFFFFF] px-3 py-1.5 rounded transition-colors">Who is working on this...?</span>
@@ -287,7 +330,7 @@ export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIss
                           <span className="text-[#172B4D] text-sm font-semibold">{comment.author}</span>
                           <span className="text-[#5E6C84] text-xs">{comment.timestamp}</span>
                         </div>
-                        <p className="text-[#172B4D] text-sm">{comment.text}</p>
+                        <p className="text-[#172B4D] text-sm whitespace-pre-wrap">{renderCommentText(comment.text)}</p>
                         <div className="flex gap-3 mt-2 text-xs font-medium text-[#5E6C84]">
                           <button className="hover:underline">Edit</button>
                           <button className="hover:underline">Delete</button>
