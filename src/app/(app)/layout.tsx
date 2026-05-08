@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/app/common/components/Sidebar";
-import TopBar from "@/modules/app/common/components/TopBar";
-import WorkspaceSwitcher from "@/modules/app/common/components/WorkspaceSwitcher";
 import NotificationPanel from "@/modules/app/common/components/NotificationPanel";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
+import { parseJQL } from "@/utils/jqlParser";
+import { useRouter } from "next/navigation";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -15,6 +15,148 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const [jqlQuery, setJqlQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionMode, setSuggestionMode] = useState<"keyword" | "value">("keyword");
+  const [suggestionKey, setSuggestionKey] = useState<string | null>(null);
+  const [highlightedIdx, setHighlightedIdx] = useState(0);
+  const [ghostText, setGhostText] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  const jqlSuggestions: Record<string, string[]> = {
+    status: ["To Do", "In Progress", "Done"],
+    priority: ["High", "Medium", "Low"],
+    assignee: ["me", "unassigned", "admin", "quanp"]
+  };
+
+  const allKeywords = ["status:", "priority:", "assignee:"];
+
+  // Tính danh sách gợi ý hiện tại
+  const currentSuggestions: string[] = (() => {
+    if (suggestionMode === "value" && suggestionKey) return jqlSuggestions[suggestionKey] ?? [];
+    return allKeywords;
+  })();
+
+  const handleJqlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setJqlQuery(val);
+    setHighlightedIdx(0);
+
+    const lastWord = val.split(" ").pop() || "";
+
+    // Trường hợp 1: gõ xong keyword + ':' → hiện value suggestions
+    if (lastWord.endsWith(":")) {
+      const key = lastWord.slice(0, -1).toLowerCase();
+      if (jqlSuggestions[key]) {
+        setSuggestionKey(key);
+        setSuggestionMode("value");
+        setShowSuggestions(true);
+        setGhostText("");
+        return;
+      }
+    }
+
+    // Trường hợp 2: đang gõ giữa keyword → hiện keyword suggestions lọc theo prefix
+    if (lastWord && !lastWord.includes(":")) {
+      const matchedKws = allKeywords.filter(k => k.startsWith(lastWord.toLowerCase()));
+      if (matchedKws.length > 0) {
+        // Ghost text cho keyword khớp duy nhất
+        setGhostText(matchedKws.length === 1 ? matchedKws[0].slice(lastWord.length) : "");
+        setSuggestionMode("keyword");
+        setSuggestionKey(null);
+        setShowSuggestions(true);
+        return;
+      }
+    }
+
+    // Không khớp gì → ẩn dropdown
+    setShowSuggestions(false);
+    setGhostText("");
+    setSuggestionMode("keyword");
+  };
+
+  const handleSuggestionPick = (suggestion: string) => {
+    const words = jqlQuery.split(" ");
+    words.pop(); // bỏ từ đang gõ
+
+    let newQuery: string;
+    if (suggestionMode === "keyword") {
+      // Pick keyword (ví dụ: "status:") → chèn vào, chuyển sang gợi ý value
+      newQuery = [...words, suggestion].join(" ");
+      setJqlQuery(newQuery);
+      setGhostText("");
+      // Sau khi chèn keyword, tự động chuyển sang value suggestions
+      const key = suggestion.replace(":", "").toLowerCase();
+      if (jqlSuggestions[key]) {
+        setSuggestionKey(key);
+        setSuggestionMode("value");
+        setShowSuggestions(true);
+      } else {
+        setShowSuggestions(false);
+      }
+      setHighlightedIdx(0);
+      setTimeout(() => searchRef.current?.focus(), 0);
+      return;
+    }
+
+    // Pick value → hoàn chỉnh cặp key:value
+    const fmtVal = suggestion.includes(" ") ? `"${suggestion}"` : suggestion;
+    newQuery = [...words, `${suggestionKey}:${fmtVal} `].join(" ");
+    setJqlQuery(newQuery);
+    setShowSuggestions(false);
+    setSuggestionKey(null);
+    setSuggestionMode("keyword");
+    setHighlightedIdx(0);
+    setGhostText("");
+    console.log("[JQL Parsed]", parseJQL(newQuery));
+    setTimeout(() => searchRef.current?.focus(), 0);
+  };
+
+  // currentSuggestions đã được tính ở trên nhưng cần lọc theo prefix khi mode=keyword
+  const filteredSuggestions: string[] = (() => {
+    if (suggestionMode === "value") return currentSuggestions;
+    const lastWord = jqlQuery.split(" ").pop() || "";
+    return currentSuggestions.filter(k => k.startsWith(lastWord.toLowerCase()));
+  })();
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const suggestions = filteredSuggestions;
+
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (showSuggestions && suggestions.length > 0) {
+        // Tab cycle qua các mục, chưa pick
+        setHighlightedIdx(i => (i + 1) % suggestions.length);
+      } else if (ghostText) {
+        setJqlQuery(prev => prev + ghostText);
+        setGhostText("");
+      }
+      return;
+    }
+
+    if (e.key === "Enter") {
+      if (showSuggestions && suggestions.length > 0) {
+        e.preventDefault();
+        handleSuggestionPick(suggestions[highlightedIdx]);
+      }
+      return;
+    }
+
+    if (e.key === "ArrowDown" && showSuggestions) {
+      e.preventDefault();
+      setHighlightedIdx(i => (i + 1) % suggestions.length);
+    }
+    if (e.key === "ArrowUp" && showSuggestions) {
+      e.preventDefault();
+      setHighlightedIdx(i => (i - 1 + suggestions.length) % suggestions.length);
+    }
+    if (e.key === "Escape") {
+      setShowSuggestions(false);
+      setGhostText("");
+    }
+  };
 
   useEffect(() => {
     if (isAuthenticated && !currentWorkspace) {
@@ -52,26 +194,44 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Menu className="w-5 h-5 text-gray-500" />
             </button>
             <div className="w-full max-w-5xl relative">
-              <input
-                type="text"
-                placeholder="Tìm kiếm task, project..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition"
-              />
-
-              {/* icon search */}
-              <svg
-                className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
+              {/* Ghost text layer */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-9 top-1/2 -translate-y-1/2 text-sm text-gray-400 whitespace-pre select-none"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-4.35-4.35M16 10a6 6 0 11-12 0 6 6 0 0112 0z"
-                />
-              </svg>
+                <span className="invisible">{jqlQuery}</span>
+                <span>{ghostText}</span>
+              </div>
+              <input
+                ref={searchRef}
+                type="text"
+                id="jql-search"
+                value={jqlQuery}
+                onChange={handleJqlChange}
+                onKeyDown={handleKeyDown}
+                onBlur={() => setTimeout(() => { setShowSuggestions(false); setGhostText(""); }, 150)}
+                placeholder='Tìm kiếm... (VD: status:"Done" priority:High)'
+                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition relative z-[1]"
+                autoComplete="off"
+              />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <ul className="absolute top-full left-0 mt-1 w-52 bg-white border border-gray-200 shadow-xl rounded-lg overflow-hidden z-50 py-1">
+                  {filteredSuggestions.map((opt, idx) => (
+                    <li
+                      key={opt}
+                      onMouseDown={() => handleSuggestionPick(opt)}
+                      className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
+                        idx === highlightedIdx
+                          ? "bg-indigo-50 text-indigo-700 font-medium"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      {opt}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
