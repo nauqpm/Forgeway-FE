@@ -1,5 +1,5 @@
 
-import LoginPage from "@/modules/auth/pages/login";
+import LoginPage from "@/modules/auth/components/forms/LoginForm";
 
 export default function LoginClient() {
   return (
