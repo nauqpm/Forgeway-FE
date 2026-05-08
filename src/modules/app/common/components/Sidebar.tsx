@@ -124,8 +124,8 @@ const PopoverNavItem = ({
 }: {
   item: (typeof mainNav)[0];
   type: "recent" | "starred";
-  activePopover: "recent" | "starred" | null;
-  setActivePopover: (val: "recent" | "starred" | null) => void;
+  activePopover: "recent" | "starred" | "more_spaces" | null;
+  setActivePopover: (val: "recent" | "starred" | "more_spaces" | null) => void;
   collapsed: boolean;
   mounted: boolean;
 }) => {
@@ -289,8 +289,23 @@ export default function Sidebar({
   const [spaceOpen, setSpaceOpen] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sidebarSpaces, setSidebarSpaces] = useState<any[]>([]);
-  const [activePopover, setActivePopover] = useState<"recent" | "starred" | null>(null);
+  const [activePopover, setActivePopover] = useState<"recent" | "starred" | "more_spaces" | null>(null);
+  const [moreSpacesPos, setMoreSpacesPos] = useState({ top: 0, left: 0 });
+  const moreSpacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
+
+  const handleToggleMoreSpaces = () => {
+    if (activePopover === "more_spaces") {
+      setActivePopover(null);
+    } else {
+      if (moreSpacesBtnRef.current) {
+        const rect = moreSpacesBtnRef.current.getBoundingClientRect();
+        const sidebarWidth = collapsed ? 68 : 240;
+        setMoreSpacesPos({ top: rect.top, left: sidebarWidth + 12 });
+      }
+      setActivePopover("more_spaces");
+    }
+  };
 
   useEffect(() => {
     const fetchSpaces = () => {
@@ -433,12 +448,14 @@ export default function Sidebar({
                     ))}
 
                     {/* More */}
-                    <Link
-                      href="/spaces"
-                      className="flex items-center gap-2 px-2 py-1.5 text-sm text-slate-500 hover:bg-slate-50 rounded-lg"
+                    <button
+                      ref={moreSpacesBtnRef}
+                      onClick={handleToggleMoreSpaces}
+                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-sm text-slate-500 hover:bg-slate-50 rounded-lg group transition-colors"
                     >
-                      More spaces
-                    </Link>
+                      <span>More spaces</span>
+                      <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </button>
                   </div>
                 )}
               </div>
@@ -567,6 +584,47 @@ export default function Sidebar({
           )}
         </button>
       </aside>
+
+      {/* More Spaces Popover */}
+      {activePopover === "more_spaces" && mounted && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
+          <div
+            className="fixed bg-white border border-slate-200 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
+            style={{ top: `${moreSpacesPos.top}px`, left: `${moreSpacesPos.left}px` }}
+          >
+            <div className="flex items-center justify-between p-3 border-b border-slate-100">
+              <span className="font-semibold text-slate-900">Spaces</span>
+              <button onClick={() => setActivePopover(null)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-500 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="p-3 border-b border-slate-100">
+              <div className="relative">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                <input 
+                  type="text" 
+                  placeholder="Search all spaces" 
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <div className="p-2">
+              <Link href="/spaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
+                <ListFilter className="w-4 h-4 text-slate-400" />
+                View all spaces
+              </Link>
+              <Link href="/spaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
+                <Plus className="w-4 h-4 text-slate-400" />
+                Create space
+              </Link>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
     </>
   );
 }
