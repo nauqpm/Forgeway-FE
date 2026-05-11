@@ -730,6 +730,40 @@ const handleDragEnd = (event) => {
 
 ---
 
+
+---
+
+### Task 7.4: Detail Drawer (Ngăn kéo chi tiết)
+
+✅ **Understanding:** Xây dựng một Sidebar trượt ra từ bên phải màn hình khi người dùng click vào một hàng Work Item (Epic/Task) trên lưới Timeline.
+- Giao diện: Chiếm khoảng 30-40% chiều rộng màn hình, đè lên phần bên phải của Timeline.
+- Nội dung: Hiển thị chi tiết Task, bao gồm: Header (Breadcrumb, Close, Share, Lock, Eye), Meta (Status, Type, Actions), Description (TipTap Editor), Child items (Subtasks table), Linked items.
+
+📌 **Assumptions:**
+- Sử dụng CSS `position: fixed; right: 0; transform: translateX(...)` để tạo hiệu ứng trượt.
+- Lưu trữ ID của Task đang được mở (`selectedTaskId`) bằng state cục bộ hoặc global.
+- Drawer chia sẻ chung các component con (Description, Subtasks) đã được xây dựng từ trước cho Modal.
+
+🧩 **Steps:**
+1. **Thiết lập Component Layout & State:** Định nghĩa state `selectedTaskId`, tích hợp component Drawer với animation slide-in/slide-out. Gắn sự kiện `onDoubleClick` hoặc `onClick` vào thanh Task trên Timeline.
+2. **Gọi API Detail & Loading State:** Mô phỏng gọi API lấy chi tiết task và hiển thị Skeleton Loader khi đang đợi.
+3. **Build Header & Meta Data:** Breadcrumb, Title inline-edit, Status dropdown.
+4. **Tích hợp Description:** Sử dụng lại `IssueDescription` component.
+5. **Build Child Work Items Section:** Bảng sub-tasks và thanh tiến độ.
+
+🛠️ **Plan:**
+- Tạo component `TaskDetailDrawer.tsx` với cấu trúc tương tự `IssueDetailModal` nhưng layout dạng panel trượt (Drawer).
+- Tích hợp vào `TimelineView.tsx` hoặc `page.tsx`. Khi click đúp vào bar trên Timeline, sẽ set `selectedTaskId` và mở Drawer.
+
+💻 **Code:**
+(Đã thực hiện trong source code: tạo `TaskDetailDrawer.tsx` và gắn vào hệ thống)
+
+✅ **Validation:**
+- Hiệu ứng trượt: Đóng mở Drawer mượt mà.
+- Đóng form: Bấm nút X hoặc click ra ngoài overlay để đóng.
+- Sync Dữ liệu: Chỉnh sửa trạng thái hoặc description sẽ tự cập nhật lại trên Timeline hoặc Kanban Board.
+
+
 ## Nhóm 8: Architecture & Data Integration (API Layer)
 
 ### Task 8.1: Thiết lập cấu trúc Mock Data & API Layer

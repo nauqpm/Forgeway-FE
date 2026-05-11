@@ -9,11 +9,13 @@ import {
   FileText, Columns, Repeat, ChevronRight, X, Check
 } from "lucide-react";
 import IssueDetailModal from "@/modules/app/common/components/IssueDetailModal";
+import TaskDetailDrawer from "@/modules/app/common/components/TaskDetailDrawer";
 import PageTreeSidebar from "@/modules/app/common/components/PageTreeSidebar";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import SprintModal from "@/modules/app/common/components/SprintModal";
 import FilterMenu from "@/modules/app/common/components/FilterMenu";
 import BulkActionBar from "@/modules/app/common/components/BulkActionBar";
+import TimelineView from "@/modules/app/common/components/TimelineView";
 
 interface Space {
   _id: string;
@@ -29,18 +31,18 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const { currentWorkspace } = useWorkspaceStore();
   const [space, setSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"board" | "backlog" | "pages">("pages");
+  const [activeTab, setActiveTab] = useState<"board" | "backlog" | "timeline" | "pages">("pages");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
   const [sprints, setSprints] = useState([
     { id: "s1", name: "Sprint 1", status: "Active", startDate: "2026-05-10", endDate: "2026-05-24", duration: "2 weeks", goal: "Hoàn thiện UI" },
     { id: "s2", name: "Sprint 2", status: "Planned", startDate: "2026-05-25", endDate: "2026-06-08", duration: "2 weeks", goal: "" }
   ]);
-  const [issues, setIssues] = useState([
-    { id: "1", title: "Thiết kế lại luồng đăng nhập theo chuẩn mới", status: "To Do", priority: "High", type: "Design", assignee: "A", color: "bg-indigo-600", sprintId: "s1", storyPoints: 5 },
-    { id: "2", title: "Fix lỗi hiển thị sai font chữ trên Safari", status: "To Do", priority: "High", type: "Bug", assignee: "B", color: "bg-teal-500", sprintId: "s1", storyPoints: 3 },
-    { id: "3", title: "Viết test case cho module Thanh toán", status: "In Progress", priority: "Medium", type: "Task", assignee: "C", color: "bg-emerald-500", sprintId: null, storyPoints: 8 },
-    { id: "4", title: "Tối ưu hóa hình ảnh Landing Page", status: "Done", priority: "Low", type: "Task", assignee: "D", color: "bg-orange-500", sprintId: null, storyPoints: 2 },
-    { id: "5", title: "Nghiên cứu kiến trúc Micro-frontend", status: "To Do", priority: "Medium", type: "Story", assignee: "U", color: "bg-purple-500", sprintId: null, storyPoints: 13 },
+  const [issues, setIssues] = useState<any[]>([
+    { id: "1", title: "Thiết kế lại luồng đăng nhập theo chuẩn mới", status: "To Do", priority: "High", type: "Design", assignee: "A", color: "bg-indigo-600", sprintId: "s1", storyPoints: 5, startDate: "2026-05-10", endDate: "2026-05-14" },
+    { id: "2", title: "Fix lỗi hiển thị sai font chữ trên Safari", status: "To Do", priority: "High", type: "Bug", assignee: "B", color: "bg-teal-500", sprintId: "s1", storyPoints: 3, startDate: "2026-05-12", endDate: "2026-05-15" },
+    { id: "3", title: "Viết test case cho module Thanh toán", status: "In Progress", priority: "Medium", type: "Task", assignee: "C", color: "bg-emerald-500", sprintId: null, storyPoints: 8, startDate: "2026-05-15", endDate: "2026-05-20" },
+    { id: "4", title: "Tối ưu hóa hình ảnh Landing Page", status: "Done", priority: "Low", type: "Task", assignee: "D", color: "bg-orange-500", sprintId: null, storyPoints: 2, startDate: "2026-05-18", endDate: "2026-05-22" },
+    { id: "5", title: "Nghiên cứu kiến trúc Micro-frontend", status: "To Do", priority: "Medium", type: "Story", assignee: "U", color: "bg-purple-500", sprintId: null, storyPoints: 13, startDate: "2026-05-20", endDate: "2026-05-28" },
   ]);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [newIssueForm, setNewIssueForm] = useState<{title: string, type: string, priority: string, status: string, sprintId: string | null}>({ title: "", type: "Task", priority: "Medium", status: "To Do", sprintId: null });
@@ -108,7 +110,9 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       assignee: "U",
       color: "bg-indigo-600",
       sprintId: newIssueForm.sprintId,
-      storyPoints: 0
+      storyPoints: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     };
 
     setIssues([...issues, issue]);
@@ -195,6 +199,15 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
   const updateIssueDirectly = (id: string, updates: any) => {
     setIssues(issues.map(i => i.id === id ? { ...i, ...updates } : i));
+  };
+
+  const handleUpdateIssue = (updatedIssue: any) => {
+    setIssues(issues.map(i => i.id === updatedIssue.id ? updatedIssue : i));
+    setSelectedIssue(updatedIssue);
+  };
+
+  const handleUpdateIssueDate = (id: string, start: string, end: string) => {
+    updateIssueDirectly(id, { startDate: start, endDate: end });
   };
 
   const toggleTaskSelection = (taskId: string, e?: React.ChangeEvent) => {
@@ -355,6 +368,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             <button onClick={() => setActiveTab("board")}
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
               Active Sprint
+            </button>
+            <button onClick={() => setActiveTab("timeline")}
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "timeline" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              Timeline
             </button>
           </>
         )}
@@ -857,6 +874,17 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             </div>
           </DragDropContext>
         )}
+
+        {activeTab === "timeline" && (
+          <div className="p-4">
+            <TimelineView 
+              issues={filteredIssues} 
+              sprints={sprints} 
+              onUpdateIssueDate={handleUpdateIssueDate}
+              onClickTask={(issue) => setSelectedIssue(issue)}
+            />
+          </div>
+        )}
       </div>
 
       {/* Modal Tạo Issue */}
@@ -945,18 +973,24 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         initialData={editingSprint}
       />
 
-      {/* Jira-style Issue Detail Modal */}
-      {selectedIssue && (
+      {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
+      {selectedIssue && activeTab === 'timeline' ? (
+        <TaskDetailDrawer
+          isOpen={!!selectedIssue}
+          issue={selectedIssue}
+          spaceKey={space.key}
+          onClose={() => setSelectedIssue(null)}
+          onUpdateIssue={handleUpdateIssue}
+        />
+      ) : selectedIssue ? (
         <IssueDetailModal
           issue={selectedIssue}
           spaceKey={space.key}
           onClose={() => setSelectedIssue(null)}
-          onUpdateIssue={(updatedIssue) => {
-            setIssues(issues.map(i => i.id === updatedIssue.id ? updatedIssue : i));
-            setSelectedIssue(updatedIssue);
-          }}
+          onUpdateIssue={handleUpdateIssue}
         />
-      )}
+      ) : null}
+
       {/* Bulk Action Bar */}
       <BulkActionBar 
         selectedCount={selectedTaskIds.length}
