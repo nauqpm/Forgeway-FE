@@ -91,12 +91,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
     { id: "5", title: "Nghiên cứu kiến trúc Micro-frontend", status: "To Do", priority: "Medium", type: "Story", assignee: "U", color: "bg-purple-500", sprintId: null, storyPoints: 13, startDate: "2026-05-20", endDate: "2026-05-28", epic: null, createdAt: "2026-05-10T02:00:00.000Z", updatedAt: "2026-05-10T02:00:00.000Z" },
   ]);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
-  const [newIssueForm, setNewIssueForm] = useState<{title: string, type: string, priority: string, status: string, sprintId: string | null}>({ title: "", type: "Task", priority: "Medium", status: "To Do", sprintId: null });
+  const [newIssueForm, setNewIssueForm] = useState<{ title: string, type: string, priority: string, status: string, sprintId: string | null }>({ title: "", type: "Task", priority: "Medium", status: "To Do", sprintId: null });
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
-  
-  const [filters, setFilters] = useState({ 
-    search: "", 
-    assigneeId: null as string | null, 
+
+  const [filters, setFilters] = useState({
+    search: "",
+    assigneeId: null as string | null,
     priority: null as string | null,
     assignees: [] as string[],
     types: [] as string[],
@@ -104,13 +104,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   });
   const [density, setDensity] = useState<'default' | 'compact'>('default');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+
   const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
   const [editingSprint, setEditingSprint] = useState<any>(null);
   const [showCreateColumn, setShowCreateColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   const columnsEndRef = useRef<HTMLDivElement>(null);
-  
+
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
   /** List tab: full data grid vs split master-detail */
   const [listViewMode, setListViewMode] = useState<"grid" | "split">("grid");
@@ -199,13 +199,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const filteredIssues = useMemo(() => {
     if (!space) return [];
     return issues.filter(issue => {
-      const matchSearch = issue.title.toLowerCase().includes(filters.search.toLowerCase()) 
-                       || `${space.key}-${100 + parseInt(issue.id)}`.toLowerCase().includes(filters.search.toLowerCase());
-      
+      const matchSearch = issue.title.toLowerCase().includes(filters.search.toLowerCase())
+        || `${space.key}-${100 + parseInt(issue.id)}`.toLowerCase().includes(filters.search.toLowerCase());
+
       // Board quick filters
       const matchAssigneeQuick = filters.assigneeId ? issue.assignee === filters.assigneeId : true;
       const matchPriorityQuick = filters.priority ? issue.priority === filters.priority : true;
-      
+
       // Backlog multi-filters
       const matchAssignees = filters.assignees.length > 0 ? filters.assignees.includes(issue.assignee) : true;
       const matchTypes = filters.types.length > 0 ? filters.types.includes(issue.type) : true;
@@ -430,32 +430,32 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
     if (type === "task") {
       const sourceStatus = source.droppableId;
       const destStatus = destination.droppableId;
-      
+
       const draggedIssueIndex = issues.findIndex(i => i.id === draggableId);
       if (draggedIssueIndex === -1) return;
-      
+
       const draggedIssue = issues[draggedIssueIndex];
       const newIssues = Array.from(issues);
-      
+
       if (sourceStatus === destStatus) {
         if (source.index === destination.index) return;
-        
+
         const columnIssues = newIssues.filter(i => i.status === sourceStatus);
         const targetIssue = columnIssues[destination.index];
-        
+
         newIssues.splice(draggedIssueIndex, 1);
         const targetIndex = newIssues.findIndex(i => i.id === targetIssue?.id);
         newIssues.splice(targetIndex !== -1 ? targetIndex : newIssues.length, 0, draggedIssue);
       } else {
         const columnIssues = newIssues.filter(i => i.status === destStatus);
         const targetIssue = columnIssues[destination.index];
-        
+
         newIssues.splice(draggedIssueIndex, 1);
         const newIssue = { ...draggedIssue, status: destStatus };
         const targetIndex = newIssues.findIndex(i => i.id === targetIssue?.id);
         newIssues.splice(targetIndex !== -1 ? targetIndex : newIssues.length, 0, newIssue);
       }
-      
+
       setIssues(newIssues);
     }
   };
@@ -505,7 +505,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
   const toggleTaskSelection = (taskId: string, e?: React.ChangeEvent) => {
     if (e) e.stopPropagation();
-    setSelectedTaskIds(prev => 
+    setSelectedTaskIds(prev =>
       prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
     );
   };
@@ -542,7 +542,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
     if (draggedIssueIndex === -1) return;
 
     const draggedIssue = newIssues[draggedIssueIndex];
-    
+
     // Xử lý xác định sprintId đích
     let targetSprintId: string | null = null;
     if (destination.droppableId.startsWith("sprint-")) {
@@ -550,10 +550,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
     }
 
     // Logic di chuyển
-    const sourceIssues = newIssues.filter(i => 
+    const sourceIssues = newIssues.filter(i =>
       source.droppableId === "backlog" ? i.sprintId === null : i.sprintId === source.droppableId.replace("sprint-", "")
     );
-    const destIssues = newIssues.filter(i => 
+    const destIssues = newIssues.filter(i =>
       destination.droppableId === "backlog" ? i.sprintId === null : i.sprintId === destination.droppableId.replace("sprint-", "")
     );
 
@@ -665,7 +665,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   }, [activeTab, listViewMode, splitSortedIssues, selectedIssue]);
 
   const setListViewModePersisted = (mode: "grid" | "split") => {
-    if (mode === "grid") setListGridDrawerOpen(false);
+    if (mode === "grid") {
+      setListGridDrawerOpen(false);
+      setSelectedIssue(null);
+    }
     setListViewMode(mode);
     if (spaceId) {
       try {
@@ -735,7 +738,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         {space.template === "kanban" && (
           <button onClick={() => setActiveTab("board")}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-            Kanban Board
+            Board
           </button>
         )}
         {space.template === "scrum" && (
@@ -746,7 +749,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             </button>
             <button onClick={() => setActiveTab("board")}
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-              Active Sprint
+              Board
             </button>
           </>
         )}
@@ -760,7 +763,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         </button>
         <button onClick={() => setActiveTab("pages")}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "pages" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-          Tài liệu (Pages)
+          Doc
         </button>
       </div>
 
@@ -768,7 +771,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       <div className={`rounded-2xl ${activeTab === 'pages' ? 'bg-white border border-gray-200 min-h-[500px] flex' : ''}`}>
         {activeTab === "pages" && (
           <>
-            <PageTreeSidebar 
+            <PageTreeSidebar
               spaceId={spaceId}
               initialData={[
                 {
@@ -787,7 +790,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     { id: "endpoints", title: "Endpoints" }
                   ]
                 }
-              ]} 
+              ]}
             />
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white rounded-r-2xl">
               <BookOpen className="w-16 h-16 text-indigo-100 mx-auto mb-4" />
@@ -843,7 +846,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 </select>
               </div>
               {(filters.search || filters.assigneeId || filters.priority) && (
-                <button 
+                <button
                   onClick={() => setFilters(prev => ({ ...prev, search: "", assigneeId: null, priority: null }))}
                   className="text-sm text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1"
                 >
@@ -855,7 +858,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             <DragDropContext onDragEnd={handleDragEnd}>
               <Droppable droppableId="board-columns" direction="horizontal" type="column">
                 {(provided) => (
-                  <div 
+                  <div
                     className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] p-4"
                     ref={provided.innerRef}
                     {...provided.droppableProps}
@@ -868,7 +871,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                             {...provided.draggableProps}
                             className="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-full border border-gray-200 shadow-sm"
                           >
-                            <div 
+                            <div
                               {...provided.dragHandleProps}
                               className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-100/50 rounded-t-xl cursor-grab active:cursor-grabbing"
                             >
@@ -878,10 +881,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                               </h3>
                               <button onClick={() => { setNewIssueForm({ ...newIssueForm, status }); setShowCreateIssue(true); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors cursor-pointer"><Plus className="w-4 h-4" /></button>
                             </div>
-                            
+
                             <Droppable droppableId={status} type="task">
                               {(provided, snapshot) => (
-                                <div 
+                                <div
                                   ref={provided.innerRef}
                                   {...provided.droppableProps}
                                   className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/50' : ''}`}
@@ -927,7 +930,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       </Draggable>
                     ))}
                     {provided.placeholder}
-                    
+
                     {/* Thêm cột mới */}
                     <div className="flex-shrink-0 w-80 bg-transparent flex flex-col" ref={columnsEndRef}>
                       {showCreateColumn ? (
@@ -957,7 +960,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                           </div>
                         </div>
                       ) : (
-                        <button 
+                        <button
                           onClick={() => setShowCreateColumn(true)}
                           className="flex items-center gap-2 w-full bg-gray-50/50 hover:bg-gray-100 border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-xl p-4 text-gray-500 hover:text-gray-700 transition-all font-medium text-sm justify-center"
                         >
@@ -975,14 +978,14 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         {activeTab === "backlog" && (
           <DragDropContext onDragEnd={handleBacklogDragEnd}>
             <div className="space-y-6 w-full max-w-4xl mx-auto py-6">
-              
+
               {/* Backlog Top Bar with Filter */}
               <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                 <div className="text-sm font-medium text-gray-700">
                   Hiển thị {filteredIssues.length} kết quả
                 </div>
                 <div className="relative">
-                  <button 
+                  <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
                     className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
                   >
@@ -1013,19 +1016,19 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   <div key={sprint.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group/sprint">
                     <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={isAllSelected}
                           onChange={(e) => toggleSprintSelection(sprintTaskIds, e)}
                           onClick={e => e.stopPropagation()}
-                          ref={(input) => { if(input) input.indeterminate = isSomeSelected; }}
+                          ref={(input) => { if (input) input.indeterminate = isSomeSelected; }}
                           className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
                         />
-                        <h3 
+                        <h3
                           className="font-bold text-gray-900 flex items-center gap-2 cursor-pointer hover:underline"
                           onClick={() => { setEditingSprint(sprint); setIsSprintModalOpen(true); }}
                         >
-                          {sprint.name} 
+                          {sprint.name}
                           {sprint.status === "Active" && <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full uppercase tracking-wide">Active</span>}
                         </h3>
                         <p className="text-xs text-gray-500 flex gap-2">
@@ -1039,7 +1042,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                           <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "To Do").length}</span>
                           <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "In Progress").length}</span>
                           <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "Done").length}</span>
-                          
+
                           {/* Tooltip for Story Points */}
                           <div className="absolute top-full mt-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                             Tiến độ: {donePoints} / {totalPoints} story points
@@ -1050,10 +1053,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         </button>
                       </div>
                     </div>
-                    
+
                     <Droppable droppableId={`sprint-${sprint.id}`} type="backlog-issue">
                       {(provided, snapshot) => (
-                        <div 
+                        <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
                           className={`p-2 space-y-1 min-h-[50px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/30' : ''}`}
@@ -1061,15 +1064,15 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                           {sprintIssues.map((issue, index) => (
                             <Draggable key={issue.id} draggableId={issue.id} index={index}>
                               {(provided, snapshot) => (
-                                <div 
+                                <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                   className={`flex items-center justify-between bg-white ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:border-indigo-200'} transition-all group shadow-sm`}
                                 >
                                   <div className="flex items-center gap-3 flex-1">
-                                    <input 
-                                      type="checkbox" 
+                                    <input
+                                      type="checkbox"
                                       checked={selectedTaskIds.includes(issue.id)}
                                       onChange={(e) => toggleTaskSelection(issue.id, e)}
                                       onClick={e => e.stopPropagation()}
@@ -1084,7 +1087,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                   <div className="flex items-center gap-3">
                                     {/* Editable Story Points */}
                                     <div className="relative group/pts">
-                                      <input 
+                                      <input
                                         type="number"
                                         value={issue.storyPoints === 0 ? '' : issue.storyPoints}
                                         onChange={(e) => updateIssueDirectly(issue.id, { storyPoints: parseInt(e.target.value) || 0 })}
@@ -1093,9 +1096,9 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                         title="Story Points"
                                       />
                                     </div>
-                                    
+
                                     {/* Editable Status */}
-                                    <select 
+                                    <select
                                       value={issue.status}
                                       onChange={(e) => updateIssueDirectly(issue.id, { status: e.target.value })}
                                       className={`px-2 py-1 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none ${issue.status === 'Done' ? 'bg-green-50 text-green-700' : issue.status === 'In Progress' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700'}`}
@@ -1140,13 +1143,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
                   <div className="flex items-center gap-3">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={filteredIssues.filter(i => i.sprintId === null).length > 0 && filteredIssues.filter(i => i.sprintId === null).map(i => i.id).every(id => selectedTaskIds.includes(id))}
                       onChange={(e) => toggleSprintSelection(filteredIssues.filter(i => i.sprintId === null).map(i => i.id), e)}
                       onClick={e => e.stopPropagation()}
-                      ref={(input) => { 
-                        if(input) {
+                      ref={(input) => {
+                        if (input) {
                           const backlogIds = filteredIssues.filter(i => i.sprintId === null).map(i => i.id);
                           const isAll = backlogIds.length > 0 && backlogIds.every(id => selectedTaskIds.includes(id));
                           const isSome = backlogIds.length > 0 && backlogIds.some(id => selectedTaskIds.includes(id)) && !isAll;
@@ -1156,16 +1159,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
                     />
                     <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                      Backlog 
+                      Backlog
                       <span className="text-gray-400 font-normal text-sm">({filteredIssues.filter(i => i.sprintId === null).length} issues)</span>
                     </h3>
                   </div>
                   <button onClick={handleCreateSprint} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors">Create Sprint</button>
                 </div>
-                
+
                 <Droppable droppableId="backlog" type="backlog-issue">
                   {(provided, snapshot) => (
-                    <div 
+                    <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? 'bg-gray-50/80' : ''}`}
@@ -1173,15 +1176,15 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       {filteredIssues.filter(i => i.sprintId === null).map((issue, index) => (
                         <Draggable key={issue.id} draggableId={issue.id} index={index}>
                           {(provided, snapshot) => (
-                            <div 
+                            <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
                               className={`flex items-center justify-between bg-white ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:bg-gray-50'} transition-all group`}
                             >
                               <div className="flex items-center gap-3 flex-1">
-                                <input 
-                                  type="checkbox" 
+                                <input
+                                  type="checkbox"
                                   checked={selectedTaskIds.includes(issue.id)}
                                   onChange={(e) => toggleTaskSelection(issue.id, e)}
                                   onClick={e => e.stopPropagation()}
@@ -1196,7 +1199,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                               <div className="flex items-center gap-3">
                                 {/* Editable Story Points */}
                                 <div className="relative group/pts">
-                                  <input 
+                                  <input
                                     type="number"
                                     value={issue.storyPoints === 0 ? '' : issue.storyPoints}
                                     onChange={(e) => updateIssueDirectly(issue.id, { storyPoints: parseInt(e.target.value) || 0 })}
@@ -1207,7 +1210,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                 </div>
 
                                 {/* Editable Status */}
-                                <select 
+                                <select
                                   value={issue.status}
                                   onChange={(e) => updateIssueDirectly(issue.id, { status: e.target.value })}
                                   className={`px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none`}
@@ -1216,7 +1219,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                   <option value="In Progress">In Progress</option>
                                   <option value="Done">Done</option>
                                 </select>
-                                
+
                                 {/* Assignee */}
                                 {issue.assignee && issue.assignee !== 'U' ? (
                                   <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 transition-all`}>{issue.assignee}</div>
@@ -1265,11 +1268,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 <button
                   type="button"
                   onClick={() => setListViewModePersisted("grid")}
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    listViewMode === "grid"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${listViewMode === "grid"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                    }`}
                   title="Table view"
                 >
                   <LayoutGrid className="w-4 h-4" /> Table
@@ -1281,11 +1283,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     setListGridDrawerOpen(false);
                     setListViewModePersisted("split");
                   }}
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                    listViewMode === "split"
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${listViewMode === "split"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                    }`}
                   title="Split view"
                 >
                   <PanelRight className="w-4 h-4" /> Split
@@ -1314,11 +1315,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         type="button"
                         onClick={() => setListSplitOrderOpen((o) => !o)}
                         title={`Order work items by: ${LIST_SPLIT_SORT_OPTIONS.find((o) => o.id === listSplitSortBy)?.label ?? listSplitSortBy} (${listSplitSortDir})`}
-                        className={`flex w-full items-center justify-between gap-2 rounded-md border bg-white px-2.5 py-1.5 text-left text-sm font-medium transition-colors hover:bg-gray-50 ${
-                          listSplitOrderOpen
-                            ? "border-blue-500 text-blue-700 ring-1 ring-blue-200"
-                            : "border-gray-300 text-gray-800"
-                        }`}
+                        className={`flex w-full items-center justify-between gap-2 rounded-md border bg-white px-2.5 py-1.5 text-left text-sm font-medium transition-colors hover:bg-gray-50 ${listSplitOrderOpen
+                          ? "border-blue-500 text-blue-700 ring-1 ring-blue-200"
+                          : "border-gray-300 text-gray-800"
+                          }`}
                       >
                         <span className="truncate">Custom field</span>
                         <ChevronDown className={`h-4 w-4 shrink-0 ${listSplitOrderOpen ? "text-blue-600" : "text-gray-500"}`} />
@@ -1386,11 +1386,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                 <button
                                   type="button"
                                   onClick={() => setSelectedIssue(issue)}
-                                  className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                                    active
-                                      ? "border-indigo-400 bg-white shadow-sm ring-1 ring-indigo-200"
-                                      : "border-transparent bg-white hover:border-gray-200 hover:bg-gray-50"
-                                  }`}
+                                  className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${active
+                                    ? "border-indigo-400 bg-white shadow-sm ring-1 ring-indigo-200"
+                                    : "border-transparent bg-white hover:border-gray-200 hover:bg-gray-50"
+                                    }`}
                                 >
                                   <div className="flex items-center gap-2">
                                     <FileText
@@ -1401,13 +1400,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                   <p className="mt-1 line-clamp-2 text-sm font-medium text-gray-900">{issue.title}</p>
                                   <div className="mt-2 flex flex-wrap gap-1.5">
                                     <span
-                                      className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                                        issue.status === "Done"
-                                          ? "bg-green-50 text-green-700"
-                                          : issue.status === "In Progress"
-                                            ? "bg-blue-50 text-blue-700"
-                                            : "bg-gray-100 text-gray-700"
-                                      }`}
+                                      className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${issue.status === "Done"
+                                        ? "bg-green-50 text-green-700"
+                                        : issue.status === "In Progress"
+                                          ? "bg-blue-50 text-blue-700"
+                                          : "bg-gray-100 text-gray-700"
+                                        }`}
                                     >
                                       {issue.status}
                                     </span>
@@ -1463,9 +1461,9 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
         {activeTab === "timeline" && (
           <div className="p-4">
-            <TimelineView 
-              issues={filteredIssues} 
-              sprints={sprints} 
+            <TimelineView
+              issues={filteredIssues}
+              sprints={sprints}
               onUpdateIssueDate={handleUpdateIssueDate}
               onClickTask={(issue) => setSelectedIssue(issue)}
             />
@@ -1477,11 +1475,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             <div className="flex items-center justify-between relative" ref={summaryFilterRef}>
               <button
                 onClick={() => setIsSummaryFilterOpen((prev) => !prev)}
-                className={`inline-flex items-center gap-2 border px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isSummaryFilterOpen
-                    ? "border-blue-600 text-blue-700 bg-blue-50"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                }`}
+                className={`inline-flex items-center gap-2 border px-3 py-2 rounded-md text-sm font-medium transition-colors ${isSummaryFilterOpen
+                  ? "border-blue-600 text-blue-700 bg-blue-50"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
                 Filter
@@ -1512,11 +1509,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         return (
                           <label
                             key={field.id}
-                            className={`flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer border-l-2 ${
-                              checked
-                                ? "bg-gray-100 border-blue-600 text-gray-900"
-                                : "border-transparent hover:bg-gray-50 text-gray-800"
-                            }`}
+                            className={`flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer border-l-2 ${checked
+                              ? "bg-gray-100 border-blue-600 text-gray-900"
+                              : "border-transparent hover:bg-gray-50 text-gray-800"
+                              }`}
                           >
                             <input
                               type="checkbox"
@@ -1839,17 +1835,17 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       )}
 
       {/* Sprint Modal */}
-      <SprintModal 
-        isOpen={isSprintModalOpen} 
-        onClose={() => setIsSprintModalOpen(false)} 
+      <SprintModal
+        isOpen={isSprintModalOpen}
+        onClose={() => setIsSprintModalOpen(false)}
         onSave={handleSaveSprint}
         initialData={editingSprint}
       />
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
       {selectedIssue &&
-      (activeTab === "timeline" ||
-        (activeTab === "list" && listViewMode === "grid" && listGridDrawerOpen)) ? (
+        (activeTab === "timeline" ||
+          (activeTab === "list" && listViewMode === "grid" && listGridDrawerOpen)) ? (
         <TaskDetailDrawer
           isOpen={!!selectedIssue}
           issue={selectedIssue}
@@ -1870,7 +1866,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       ) : null}
 
       {/* Bulk Action Bar */}
-      <BulkActionBar 
+      <BulkActionBar
         selectedCount={selectedTaskIds.length}
         onClear={() => setSelectedTaskIds([])}
         onChangeStatus={handleBulkStatusChange}

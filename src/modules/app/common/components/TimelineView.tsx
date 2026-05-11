@@ -283,7 +283,7 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
                       onDragStop={(e, d) => handleDragStop(item.id, item.originalId, d.x)}
                       onResize={(e, dir, ref, delta, pos) => handleResize(e, dir, ref, delta, pos, item)}
                       onResizeStop={(e, dir, ref, delta, pos) => handleResizeStop(item.id, item.originalId, pos.x, ref.offsetWidth)}
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         // Prevent click if we just dragged. We can do a simple check or just allow click.
                         // Actually, Rnd has onDragStop which handles drags, but standard onClick still fires.
                         // Let's pass the issue to onClickTask if it's a task.
