@@ -19,6 +19,8 @@ interface TaskDetailDrawerProps {
   spaceKey: string;
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
+  /** Embedded in split list view: no overlay, no fixed positioning */
+  embedded?: boolean;
 }
 
 const spaceMembers = [
@@ -39,7 +41,14 @@ const renderCommentText = (text: string) => {
   });
 };
 
-export default function TaskDetailDrawer({ isOpen, issue, spaceKey, onClose, onUpdateIssue }: TaskDetailDrawerProps) {
+export default function TaskDetailDrawer({
+  isOpen,
+  issue,
+  spaceKey,
+  onClose,
+  onUpdateIssue,
+  embedded = false,
+}: TaskDetailDrawerProps) {
   const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'worklog'>('comments');
   const [localTitle, setLocalTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -122,18 +131,22 @@ export default function TaskDetailDrawer({ isOpen, issue, spaceKey, onClose, onU
     }
   };
 
+  const panelClasses = embedded
+    ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-[#FFFFFF] text-[#42526E] shadow-none border-0 rounded-none overflow-hidden"
+    : `fixed top-0 right-0 bottom-0 w-full max-w-4xl z-[99999] bg-[#FFFFFF] text-[#42526E] flex flex-col shadow-2xl border-l border-[#DFE1E6] transform transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      }`;
+
   return (
     <>
-      {/* Overlay */}
-      <div 
-        className={`fixed inset-0 z-[99998] bg-[#091E42]/54 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
-        onClick={onClose} 
-      />
-      
-      {/* Drawer Panel */}
-      <div
-        className={`fixed top-0 right-0 bottom-0 w-full max-w-4xl z-[99999] bg-[#FFFFFF] text-[#42526E] flex flex-col shadow-2xl border-l border-[#DFE1E6] transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
-      >
+      {!embedded && (
+        <div
+          className={`fixed inset-0 z-[99998] bg-[#091E42]/54 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          onClick={onClose}
+        />
+      )}
+
+      <div className={panelClasses}>
         {/* Top Header */}
         <div className="h-14 border-b border-[#DFE1E6] flex items-center justify-between px-5 shrink-0 bg-[#F4F5F7]">
           <div className="flex items-center gap-2 text-sm font-medium">
