@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@//context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   Menu, X, Zap, LayoutDashboard, CheckSquare, BookOpen, Users,
   Shield, ChevronDown, ArrowRight, Play, Star, Clock, BarChart3

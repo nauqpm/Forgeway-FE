@@ -13,10 +13,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { getWorkspaceUI } from "@/utils/workSpaceUI";
-
 export default function AdminDashboardPage() {
-  const { workspaces, currentWorkspace, setWorkspaces } = useWorkspaceStore();
+  const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
   const [stats, setStats] = useState({ projects: 0, members: 0, spaces: 0 });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("assigned");
@@ -65,6 +63,43 @@ export default function AdminDashboardPage() {
     };
   }, [setWorkspaces]);
 
+  const spaces = [
+    {
+      id: 1,
+      name: "Frontend Team",
+      description: "Quản lý task FE",
+      icon: LayoutDashboard,
+      color: "bg-blue-500",
+    },
+    {
+      id: 2,
+      name: "Backend Team",
+      description: "API & Database",
+      icon: Database,
+      color: "bg-green-500",
+    },
+    {
+      id: 3,
+      name: "Backend Team",
+      description: "API & Database",
+      icon: Database,
+      color: "bg-green-500",
+    },
+    {
+      id: 5,
+      name: "Backend Team",
+      description: "API & Database",
+      icon: Database,
+      color: "bg-green-500",
+    },
+    {
+      id: 9,
+      name: "Backend Team",
+      description: "API & Database",
+      icon: Database,
+      color: "bg-green-500",
+    },
+  ];
 
   const tabs = [
     { label: "Được giao cho tôi", key: "assigned" },
@@ -104,7 +139,7 @@ export default function AdminDashboardPage() {
     },
   ];
 
-  const displaySpaces = workspaces.slice(0, 4);
+  const displaySpaces = spaces.slice(0, 4);
 
   const filteredTasks = tasks.filter((task) => task.type === activeTab);
 
@@ -124,29 +159,30 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {displaySpaces.map((workspace) => {
-          const { color, icon: Icon } = getWorkspaceUI(workspace.name);
-
-          return (
-            <Link
-              key={workspace._id}
-              href={`/spaces/${workspace._id}`}
-              className="group bg-white rounded-xl border p-6 hover:shadow-md transition-all"
-            >
-              <div className="flex justify-start items-center gap-4">
-                <div
-                  className={`w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center`}
-                >
-                  <Icon className="w-6 h-6 text-white" />
-                </div>
-
-                <div>
-                  <h3>{workspace.name}</h3>
-                </div>
+        {displaySpaces.map((space) => (
+          <Link
+            key={space.id}
+            href={`/spaces/${space.id}`}
+            className="group bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-indigo-200 transition-all"
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className={`w-12 h-12 ${space.color} rounded-xl flex items-center justify-center flex-shrink-0`}
+              >
+                <space.icon className="w-6 h-6 text-white" />
               </div>
-            </Link>
-          );
-        })}
+
+              <div>
+                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                  {space.name}
+                </h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {space.description}
+                </p>
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
       <div className="mt-10">
         {/* Header */}

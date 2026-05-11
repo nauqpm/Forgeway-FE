@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePostBySlug, useAllPosts } from "../hooks/usePost";
-import { transformSunEditorHtml } from "@//utils/transformSunEditorHtml";
+import { transformSunEditorHtml } from "@/utils/transformSunEditorHtml";
 import { Post, PostStatus } from "../models/post.model";
 import {
   FaCalendarAlt,

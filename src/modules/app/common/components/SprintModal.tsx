@@ -1,0 +1,178 @@
+import React, { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+
+interface SprintModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (sprint: any) => void;
+  initialData?: any;
+}
+
+export default function SprintModal({ isOpen, onClose, onSave, initialData }: SprintModalProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    duration: '2 weeks',
+    startDate: '',
+    endDate: '',
+    goal: ''
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          name: initialData.name || '',
+          duration: initialData.duration || '2 weeks',
+          startDate: initialData.startDate || '',
+          endDate: initialData.endDate || '',
+          goal: initialData.goal || ''
+        });
+      } else {
+        const start = new Date();
+        const end = new Date();
+        end.setDate(start.getDate() + 14); // 2 weeks
+        
+        setFormData({
+          name: 'Sprint 3', // Should be dynamic in real app
+          duration: '2 weeks',
+          startDate: start.toISOString().split('T')[0],
+          endDate: end.toISOString().split('T')[0],
+          goal: ''
+        });
+      }
+    }
+  }, [isOpen, initialData]);
+
+  const handleDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const dur = e.target.value;
+    let days = 0;
+    if (dur === '1 week') days = 7;
+    if (dur === '2 weeks') days = 14;
+    if (dur === '3 weeks') days = 21;
+    if (dur === '4 weeks') days = 28;
+
+    const start = formData.startDate ? new Date(formData.startDate) : new Date();
+    const end = new Date(start);
+    if (days > 0) {
+      end.setDate(start.getDate() + days);
+    }
+
+    setFormData({
+      ...formData,
+      duration: dur,
+      startDate: start.toISOString().split('T')[0],
+      endDate: end.toISOString().split('T')[0]
+    });
+  };
+
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const startStr = e.target.value;
+    const start = new Date(startStr);
+    
+    let days = 0;
+    if (formData.duration === '1 week') days = 7;
+    if (formData.duration === '2 weeks') days = 14;
+    if (formData.duration === '3 weeks') days = 21;
+    if (formData.duration === '4 weeks') days = 28;
+
+    const end = new Date(start);
+    if (days > 0) {
+      end.setDate(start.getDate() + days);
+    }
+
+    setFormData({
+      ...formData,
+      startDate: startStr,
+      endDate: days > 0 ? end.toISOString().split('T')[0] : formData.endDate
+    });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h3 className="font-bold text-gray-900 text-lg">
+            {initialData ? 'Chỉnh sửa Sprint' : 'Tạo Sprint mới'}
+          </h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Tên Sprint <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              required
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Thời lượng (Duration)</label>
+            <select
+              value={formData.duration}
+              onChange={handleDurationChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+            >
+              <option value="1 week">1 week</option>
+              <option value="2 weeks">2 weeks</option>
+              <option value="3 weeks">3 weeks</option>
+              <option value="4 weeks">4 weeks</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngày bắt đầu</label>
+              <input
+                type="date"
+                required
+                value={formData.startDate}
+                onChange={handleStartDateChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Ngày kết thúc</label>
+              <input
+                type="date"
+                required
+                value={formData.endDate}
+                onChange={(e) => setFormData({ ...formData, endDate: e.target.value, duration: 'custom' })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Mục tiêu Sprint (Goal)</label>
+            <textarea
+              value={formData.goal}
+              onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
+              placeholder="Vd: Hoàn thiện tính năng thanh toán..."
+            />
+          </div>
+          <div className="pt-4 flex justify-end gap-3">
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-colors">
+              Hủy
+            </button>
+            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
+              {initialData ? 'Cập nhật' : 'Tạo Sprint'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

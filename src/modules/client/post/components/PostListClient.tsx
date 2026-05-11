@@ -12,7 +12,7 @@ import {
   FaFilter,
   FaTags,
 } from "react-icons/fa";
-import { transformSunEditorHtml } from "@//utils/transformSunEditorHtml";
+import { transformSunEditorHtml } from "@/utils/transformSunEditorHtml";
 
 const PostListClient: React.FC = () => {
   const [page, setPage] = useState(1);

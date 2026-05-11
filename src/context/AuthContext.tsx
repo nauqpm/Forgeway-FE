@@ -11,7 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { apiRoutes } from "../config/apiRoutes";
+import { apiRoutes } from "@/config/apiRoutes";
 
 type UserRole = "user" | "admin" | "staff" | "manager" | "technical";
 

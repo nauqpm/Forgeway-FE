@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@//context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function TokenHandler() {
   const searchParams = useSearchParams();

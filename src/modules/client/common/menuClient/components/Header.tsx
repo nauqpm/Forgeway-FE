@@ -4,7 +4,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import MenuPC from "./MenuPC";
-import { useAuth } from "@//context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { Menu, X, Zap } from "lucide-react";
 
@@ -93,7 +93,7 @@ const Header = () => {
                 </Link>
                 <Link href="/register"
                   className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors hidden sm:block">
-                  Get Started 
+                  Get Started
                 </Link>
               </>
             )}

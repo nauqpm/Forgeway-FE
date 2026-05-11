@@ -51,9 +51,11 @@ export const useAuth = () => {
           return response;
         }
 
-        // Login successful — set user
-        if (response.user) {
-          setUser(response.user);
+        // Login successful — always hydrate full user profile from /auth/me.
+        // Backend login payload may include only a partial user shape.
+        const currentUser = await getCurrentUserAPI();
+        if (currentUser) {
+          setUser(currentUser);
           resetFailedAttempts();
 
           // Load permissions
