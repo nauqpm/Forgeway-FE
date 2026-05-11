@@ -369,12 +369,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
               Active Sprint
             </button>
-            <button onClick={() => setActiveTab("timeline")}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "timeline" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
-              Timeline
-            </button>
           </>
         )}
+        <button onClick={() => setActiveTab("timeline")}
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "timeline" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          Timeline
+        </button>
         <button onClick={() => setActiveTab("pages")}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "pages" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
           Tài liệu (Pages)
