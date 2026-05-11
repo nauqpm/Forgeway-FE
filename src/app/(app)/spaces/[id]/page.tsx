@@ -28,14 +28,19 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"board" | "backlog" | "pages">("pages");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
+  const [sprints, setSprints] = useState([
+    { id: "s1", name: "Sprint 1", status: "Active", startDate: "10 Aug", endDate: "24 Aug" },
+    { id: "s2", name: "Sprint 2", status: "Planned", startDate: "25 Aug", endDate: "08 Sep" }
+  ]);
   const [issues, setIssues] = useState([
-    { id: "1", title: "Thiết kế lại luồng đăng nhập theo chuẩn mới", status: "To Do", priority: "High", type: "Design", assignee: "A", color: "bg-indigo-600" },
-    { id: "2", title: "Fix lỗi hiển thị sai font chữ trên Safari", status: "To Do", priority: "High", type: "Bug", assignee: "B", color: "bg-teal-500" },
-    { id: "3", title: "Viết test case cho module Thanh toán", status: "In Progress", priority: "Medium", type: "Task", assignee: "C", color: "bg-emerald-500" },
-    { id: "4", title: "Tối ưu hóa hình ảnh Landing Page", status: "Done", priority: "Low", type: "Task", assignee: "D", color: "bg-orange-500" },
+    { id: "1", title: "Thiết kế lại luồng đăng nhập theo chuẩn mới", status: "To Do", priority: "High", type: "Design", assignee: "A", color: "bg-indigo-600", sprintId: "s1" },
+    { id: "2", title: "Fix lỗi hiển thị sai font chữ trên Safari", status: "To Do", priority: "High", type: "Bug", assignee: "B", color: "bg-teal-500", sprintId: "s1" },
+    { id: "3", title: "Viết test case cho module Thanh toán", status: "In Progress", priority: "Medium", type: "Task", assignee: "C", color: "bg-emerald-500", sprintId: null },
+    { id: "4", title: "Tối ưu hóa hình ảnh Landing Page", status: "Done", priority: "Low", type: "Task", assignee: "D", color: "bg-orange-500", sprintId: null },
+    { id: "5", title: "Nghiên cứu kiến trúc Micro-frontend", status: "To Do", priority: "Medium", type: "Story", assignee: "U", color: "bg-purple-500", sprintId: null },
   ]);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
-  const [newIssueForm, setNewIssueForm] = useState({ title: "", type: "Task", priority: "Medium", status: "To Do" });
+  const [newIssueForm, setNewIssueForm] = useState<{title: string, type: string, priority: string, status: string, sprintId: string | null}>({ title: "", type: "Task", priority: "Medium", status: "To Do", sprintId: null });
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
   const [filters, setFilters] = useState({ search: "", assigneeId: null as string | null, priority: null as string | null });
   const [showCreateColumn, setShowCreateColumn] = useState(false);
@@ -76,12 +81,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       priority: newIssueForm.priority,
       type: newIssueForm.type,
       assignee: "U",
-      color: "bg-indigo-600"
+      color: "bg-indigo-600",
+      sprintId: newIssueForm.sprintId
     };
 
     setIssues([...issues, issue]);
     setShowCreateIssue(false);
-    setNewIssueForm({ title: "", type: "Task", priority: "Medium", status: "To Do" });
+    setNewIssueForm({ title: "", type: "Task", priority: "Medium", status: "To Do", sprintId: null });
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -142,6 +148,57 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
     setTimeout(() => {
       columnsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' });
     }, 100);
+  };
+
+  const handleCreateSprint = () => {
+    const newSprintId = `s${sprints.length + 1}`;
+    setSprints([
+      ...sprints,
+      { id: newSprintId, name: `Sprint ${sprints.length + 1}`, status: "Planned", startDate: "", endDate: "" }
+    ]);
+  };
+
+  const handleBacklogDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result;
+    if (!destination) return;
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+
+    const newIssues = Array.from(issues);
+    const draggedIssueIndex = newIssues.findIndex(i => i.id === draggableId);
+    if (draggedIssueIndex === -1) return;
+
+    const draggedIssue = newIssues[draggedIssueIndex];
+    
+    // Xử lý xác định sprintId đích
+    let targetSprintId: string | null = null;
+    if (destination.droppableId.startsWith("sprint-")) {
+      targetSprintId = destination.droppableId.replace("sprint-", "");
+    }
+
+    // Logic di chuyển
+    const sourceIssues = newIssues.filter(i => 
+      source.droppableId === "backlog" ? i.sprintId === null : i.sprintId === source.droppableId.replace("sprint-", "")
+    );
+    const destIssues = newIssues.filter(i => 
+      destination.droppableId === "backlog" ? i.sprintId === null : i.sprintId === destination.droppableId.replace("sprint-", "")
+    );
+
+    if (source.droppableId === destination.droppableId) {
+      // Reorder cùng một danh sách (Sprint hoặc Backlog)
+      const targetIssue = sourceIssues[destination.index];
+      newIssues.splice(draggedIssueIndex, 1);
+      const targetIndex = newIssues.findIndex(i => i.id === targetIssue?.id);
+      newIssues.splice(targetIndex !== -1 ? targetIndex : newIssues.length, 0, draggedIssue);
+    } else {
+      // Đổi sang danh sách khác
+      const targetIssue = destIssues[destination.index];
+      newIssues.splice(draggedIssueIndex, 1);
+      const newIssue = { ...draggedIssue, sprintId: targetSprintId };
+      const targetIndex = newIssues.findIndex(i => i.id === targetIssue?.id);
+      newIssues.splice(targetIndex !== -1 ? targetIndex : newIssues.length, 0, newIssue);
+    }
+
+    setIssues(newIssues);
   };
 
   useEffect(() => {
@@ -448,59 +505,145 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         )}
 
         {activeTab === "backlog" && (
-          <div className="space-y-6">
-            {/* Active Sprint Mock */}
-            <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
-              <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-gray-900 flex items-center gap-2">Sprint 1 <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs rounded-full">Active</span></h3>
-                  <p className="text-xs text-gray-500 mt-1">10 Aug - 24 Aug &middot; 4 issues</p>
-                </div>
-                <button className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Complete Sprint</button>
-              </div>
-              <div className="p-2 space-y-1">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 hover:border-indigo-200 transition-colors group cursor-pointer shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-indigo-500" />
-                      <span className="text-xs font-mono font-medium text-gray-500 w-16">{space.key}-{100 + i}</span>
-                      <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-600">Implement authentication flow {i}</span>
+          <DragDropContext onDragEnd={handleBacklogDragEnd}>
+            <div className="space-y-6 w-full max-w-4xl mx-auto py-6">
+              {/* Sprints Mapping */}
+              {sprints.map((sprint) => {
+                const sprintIssues = issues.filter(i => i.sprintId === sprint.id);
+                return (
+                  <div key={sprint.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                    <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                          {sprint.name} 
+                          {sprint.status === "Active" && <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full uppercase tracking-wide">Active</span>}
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          {sprint.startDate ? `${sprint.startDate} - ${sprint.endDate}` : 'Chưa có ngày'} &middot; {sprintIssues.length} issues
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-2">
+                          <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center" title="To Do">{sprintIssues.filter(i => i.status === "To Do").length}</span>
+                          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center" title="In Progress">{sprintIssues.filter(i => i.status === "In Progress").length}</span>
+                          <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center" title="Done">{sprintIssues.filter(i => i.status === "Done").length}</span>
+                        </div>
+                        <button className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                          {sprint.status === "Active" ? "Complete Sprint" : "Start Sprint"}
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">In Progress</span>
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">U</div>
+                    
+                    <Droppable droppableId={`sprint-${sprint.id}`} type="backlog-issue">
+                      {(provided, snapshot) => (
+                        <div 
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`p-2 space-y-1 min-h-[50px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/30' : ''}`}
+                        >
+                          {sprintIssues.map((issue, index) => (
+                            <Draggable key={issue.id} draggableId={issue.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div 
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  onClick={() => setSelectedIssue(issue)}
+                                  className={`flex items-center justify-between bg-white p-3 rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:border-indigo-200'} transition-all group cursor-pointer shadow-sm`}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-indigo-500'}`} />
+                                    <span className="text-xs font-mono font-medium text-gray-500 w-16">{space?.key}-{100 + parseInt(issue.id)}</span>
+                                    <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-600">{issue.title}</span>
+                                  </div>
+                                  <div className="flex items-center gap-4">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${issue.status === 'Done' ? 'bg-green-50 text-green-700' : issue.status === 'In Progress' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>{issue.status}</span>
+                                    {issue.assignee ? (
+                                      <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold`}>{issue.assignee}</div>
+                                    ) : (
+                                      <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center"></div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                          {sprintIssues.length === 0 && !snapshot.isDraggingOver && (
+                            <div className="p-4 text-center text-sm text-gray-400 border-2 border-dashed border-gray-200 rounded-lg mx-2 my-1">
+                              Plan your sprint by dragging issues here
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </Droppable>
+                    <div className="px-3 pb-3">
+                      <button onClick={() => { setNewIssueForm({ ...newIssueForm, sprintId: sprint.id }); setShowCreateIssue(true); }} className="text-sm text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors">
+                        <Plus className="w-4 h-4" /> Create issue
+                      </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                );
+              })}
 
-            {/* Backlog Mock */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
-                <h3 className="font-bold text-gray-900">Backlog <span className="text-gray-400 font-normal ml-1 text-sm">(12 issues)</span></h3>
-                <button className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors">Create Sprint</button>
-              </div>
-              <div className="p-2 space-y-1">
-                {[4, 5, 6, 7].map(i => (
-                  <div key={i} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors group cursor-pointer">
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-gray-400" />
-                      <span className="text-xs font-mono font-medium text-gray-400 w-16">{space.key}-{100 + i}</span>
-                      <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">Setup CI/CD pipeline {i}</span>
+              {/* Backlog Section */}
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
+                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    Backlog 
+                    <span className="text-gray-400 font-normal text-sm">({issues.filter(i => i.sprintId === null).length} issues)</span>
+                  </h3>
+                  <button onClick={handleCreateSprint} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors">Create Sprint</button>
+                </div>
+                
+                <Droppable droppableId="backlog" type="backlog-issue">
+                  {(provided, snapshot) => (
+                    <div 
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? 'bg-gray-50/80' : ''}`}
+                    >
+                      {issues.filter(i => i.sprintId === null).map((issue, index) => (
+                        <Draggable key={issue.id} draggableId={issue.id} index={index}>
+                          {(provided, snapshot) => (
+                            <div 
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              onClick={() => setSelectedIssue(issue)}
+                              className={`flex items-center justify-between bg-white p-3 rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:bg-gray-50'} transition-all group cursor-pointer`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                <span className="text-xs font-mono font-medium text-gray-400 w-16">{space?.key}-{100 + parseInt(issue.id)}</span>
+                                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{issue.title}</span>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium">{issue.status}</span>
+                                {issue.assignee ? (
+                                  <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold`}>{issue.assignee}</div>
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:border-indigo-500 transition-colors">
+                                    <Plus className="w-3 h-3" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium">To Do</span>
-                      <div className="w-6 h-6 rounded-full border border-gray-300 border-dashed flex items-center justify-center text-gray-400 hover:border-indigo-500 hover:text-indigo-500 transition-colors"><Plus className="w-3 h-3" /></div>
-                    </div>
-                  </div>
-                ))}
-                <button className="w-full text-left p-3 text-sm text-gray-500 hover:bg-gray-50 rounded-lg flex items-center gap-2 mt-1">
-                  <Plus className="w-4 h-4" /> Tạo issue mới...
-                </button>
+                  )}
+                </Droppable>
+                <div className="p-3 bg-gray-50/30 border-t border-gray-100">
+                  <button onClick={() => { setNewIssueForm({ ...newIssueForm, sprintId: null }); setShowCreateIssue(true); }} className="w-full text-left p-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg flex items-center gap-2 transition-colors">
+                    <Plus className="w-4 h-4" /> Tạo issue mới...
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          </DragDropContext>
         )}
       </div>
 
