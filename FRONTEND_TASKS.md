@@ -763,6 +763,110 @@ const handleDragEnd = (event) => {
 - Đóng form: Bấm nút X hoặc click ra ngoài overlay để đóng.
 - Sync Dữ liệu: Chỉnh sửa trạng thái hoặc description sẽ tự cập nhật lại trên Timeline hoặc Kanban Board.
 
+---
+
+### Task 7.5: Data Grid List View & Split View
+
+✅ **Understanding:** Xây dựng một trang quản lý danh sách task dưới dạng Data Grid phức tạp với khả năng tùy biến cao. Giao diện này (Tab "List") phải được áp dụng hiển thị ở cả 2 loại dự án (Kanban và Scrum).
+- **Thanh công cụ điều khiển:** Tìm kiếm, Lọc nâng cao, Nhóm dữ liệu (Group by), chuyển đổi chế độ xem (List/Split).
+- **Cấu trúc Bảng:** Có cột cố định (Checkbox, Task Name), cuộn ngang cho các cột khác, hiển thị phân cấp (Cha - Con).
+- **Quản lý cột & Resizing:** Thêm/bớt các cột hiển thị thông qua nút "+". Đặc biệt, các cột phải có khả năng kéo thả để thay đổi độ rộng (Scale/Resize theo chiều ngang) theo ý người dùng.
+- **Tương tác trực tiếp:** Inline edit trạng thái, menu hành động từng hàng.
+- **Split View:** Bảng thu hẹp lại bên trái, hiển thị Panel Chi tiết (TaskDetailDrawer) bên phải.
+
+📌 **Assumptions:**
+- Sử dụng thư viện Headless UI chuyên dụng như TanStack Table (React Table) hoặc Ant Design Table để xây dựng Data Grid nhằm đảm bảo hiệu năng.
+- Backend API hỗ trợ query tham số linh hoạt cho việc filter, sort, groupBy và có pagination/lazy load.
+
+🧩 **Steps:**
+1. **Khởi tạo Data Grid (Core) & Routing:** Khai báo Tab "List" trong `page.tsx` cho cả template Kanban và Scrum. Cài đặt thư viện TanStack Table, định nghĩa các cột mặc định, setup CSS Sticky Header, Scroll.
+2. **Column Resizing:** Sử dụng API `columnSizing` của TanStack Table để bổ sung thanh kéo thả (resizer handler) ở viền các cột header.
+3. **Quản lý Cột (Column Management):** Tạo nút Add column, dropdown menu liệt kê các trường, viết logic cập nhật `visibleColumns`.
+4. **Tính năng Tương tác (Inline & Actions):** Đổi cell Status thành component StatusDropdown có chức năng bắn API update, thêm cột menu hành động cuối cùng.
+5. **Filter & Grouping:** Build FilterPopover, logic gọi API với tham số query mới, implement Row Grouping.
+6. **Tích hợp Split View Mode:** Nút toggle Layout, áp dụng grid-cols để chia tỷ lệ màn hình, rút gọn các cột hiển thị khi ở chế độ Split.
+
+🛠️ **Plan:**
+Xây dựng Data Grid bằng TanStack Table để có độ tùy biến cao nhất. Bật flag `enableColumnResizing` và lưu trữ trạng thái `visibleColumns` cũng như độ rộng cột (`columnSizing`) vào Local Storage để giữ nguyên giao diện cá nhân hóa của user. Áp dụng kỹ thuật Virtual Scroll nếu dữ liệu quá lớn.
+
+💻 **Code:**
+```javascript
+// Ví dụ đồng bộ các cột đang hiển thị vào Local Storage
+const [visibleColumns, setVisibleColumns] = useState(() => {
+  const saved = localStorage.getItem('list_visible_columns');
+  return saved ? JSON.parse(saved) : ['work', 'assignee', 'status', 'created'];
+});
+
+const toggleColumn = (columnId) => {
+  const newCols = visibleColumns.includes(columnId)
+    ? visibleColumns.filter(id => id !== columnId)
+    : [...visibleColumns, columnId];
+    
+  setVisibleColumns(newCols);
+  localStorage.setItem('list_visible_columns', JSON.stringify(newCols));
+};
+```
+
+✅ **Validation:**
+- **Virtualization (Ảo hóa):** Render mượt mà với 500+ tasks sử dụng Virtual Scroll (tránh DOM overload).
+- **Split View Responsive:** Giao diện không bị vỡ hoặc cuộn bất thường trên màn hình laptop nhỏ (13 inch).
+- **Outside Click:** Tự động đóng các popover/menu khi click ra ngoài vùng trống.
+
+---
+
+### Task 7.6: Split View (Master-Detail View) cho List
+
+✅ **Understanding:** Xây dựng một biến thể layout cho Tab List, cho phép người dùng xem danh sách ở cột trái (Master) và chi tiết ở cột phải (Detail) trên cùng một màn hình mà không cần mở popup che khuất.
+- **Chuyển đổi Layout (Toggle View):** Nút đổi chế độ giữa Full Grid (bảng rộng) và Split View (chia đôi).
+- **Master Panel (Cột trái):** Danh sách task thu gọn dạng thẻ (Compact Card), hiển thị thông tin tối giản (Tiêu đề, Key, Icon, Avatar). Thẻ đang chọn có hiệu ứng "Active".
+- **Detail Panel (Cột phải):** Hiển thị chi tiết của task (tái sử dụng kiến trúc nội dung của TaskDetailDrawer).
+
+📌 **Assumptions:**
+- Sử dụng CSS Flexbox/Grid để chia tỷ lệ (ví dụ: `w-[350px]` cho cột trái, `flex-1` cho cột phải).
+- Cột trái và cột phải có thanh cuộn dọc (overflow-y) hoạt động hoàn toàn độc lập với nhau.
+- Trạng thái `viewMode` (`'grid'` | `'split'`) được lưu tại Component cấp cao và đồng bộ vào LocalStorage.
+
+🧩 **Steps:**
+1. **Thiết lập State & Layout:** Tạo state `viewMode` và `selectedTaskId`. Bố trí 2 icon (Grid/Split) ở góc Toolbar.
+2. **Compact List (Cột trái):** Xây dựng component `CompactTaskCard`. Thêm css báo hiệu thẻ đang active. Bọc danh sách trong thẻ div có scroll dọc.
+3. **Detail Panel (Cột phải):** Tái sử dụng nội dung (hoặc render thẳng `TaskDetailDrawer` không có background overlay) vào cột phải. Xử lý trạng thái "Empty State" khi chưa có task nào được click.
+4. **Đồng bộ hóa & Bàn phím:** Đảm bảo thay đổi ở cột phải tự cập nhật ngay lập tức sang cột trái. Hỗ trợ điều hướng bằng phím mũi tên Lên/Xuống.
+
+🛠️ **Plan:**
+Trong `page.tsx` hoặc `DataGridListView.tsx`, thêm nút Toggle View. Khi bật Split View, bố cục của Component được bẻ thành dạng 2 cột song song. Tận dụng state `selectedIssue` hiện tại để quyết định data truyền vào cột phải. 
+
+💻 **Code:**
+```javascript
+// Gợi ý cấu trúc React Layout Split View
+<div className="flex h-full border-t border-gray-200">
+  {/* Cột trái: Compact List */}
+  <div className="w-[350px] border-r border-gray-200 overflow-y-auto">
+    {tasks.map(task => (
+       <CompactCard 
+         key={task.id} 
+         task={task} 
+         isActive={task.id === selectedTaskId}
+         onClick={() => setSelectedTaskId(task.id)}
+       />
+    ))}
+  </div>
+
+  {/* Cột phải: Detail Panel */}
+  <div className="flex-1 overflow-y-auto bg-white relative">
+    {selectedTaskId ? (
+      <DetailPanelView taskId={selectedTaskId} />
+    ) : (
+      <EmptyDetailState message="Select an issue to view its details" />
+    )}
+  </div>
+</div>
+```
+
+✅ **Validation:**
+- **Scroll độc lập:** Cuộn cột trái không ảnh hưởng cột phải và ngược lại.
+- **Lưu trữ View Mode:** Quay lại trang List từ trang khác vẫn giữ nguyên chế độ Split View (dùng LocalStorage).
+- **Trải nghiệm phím:** Bấm mũi tên Lên/Xuống để chuyển đổi focus qua lại giữa các thẻ trong danh sách.
+
 
 ## Nhóm 8: Architecture & Data Integration (API Layer)
 

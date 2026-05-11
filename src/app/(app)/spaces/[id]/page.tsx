@@ -16,6 +16,7 @@ import SprintModal from "@/modules/app/common/components/SprintModal";
 import FilterMenu from "@/modules/app/common/components/FilterMenu";
 import BulkActionBar from "@/modules/app/common/components/BulkActionBar";
 import TimelineView from "@/modules/app/common/components/TimelineView";
+import DataGridListView from "@/modules/app/common/components/DataGridListView";
 
 interface Space {
   _id: string;
@@ -31,7 +32,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const { currentWorkspace } = useWorkspaceStore();
   const [space, setSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"board" | "backlog" | "timeline" | "pages">("pages");
+  const [activeTab, setActiveTab] = useState<"board" | "backlog" | "timeline" | "pages" | "list">("pages");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
   const [sprints, setSprints] = useState([
     { id: "s1", name: "Sprint 1", status: "Active", startDate: "2026-05-10", endDate: "2026-05-24", duration: "2 weeks", goal: "Hoàn thiện UI" },
@@ -374,6 +375,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         <button onClick={() => setActiveTab("timeline")}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "timeline" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
           Timeline
+        </button>
+        <button onClick={() => setActiveTab("list")}
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "list" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          List
         </button>
         <button onClick={() => setActiveTab("pages")}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "pages" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
@@ -875,6 +880,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
           </DragDropContext>
         )}
 
+        {activeTab === "list" && (
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+            <DataGridListView
+              issues={filteredIssues}
+              onClickTask={(issue) => setSelectedIssue(issue)}
+              onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
+            />
+          </div>
+        )}
+
         {activeTab === "timeline" && (
           <div className="p-4">
             <TimelineView 
@@ -974,7 +989,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       />
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
-      {selectedIssue && activeTab === 'timeline' ? (
+      {selectedIssue && (activeTab === 'timeline' || activeTab === 'list') ? (
         <TaskDetailDrawer
           isOpen={!!selectedIssue}
           issue={selectedIssue}
