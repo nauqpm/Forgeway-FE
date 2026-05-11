@@ -530,6 +530,54 @@ const sprintStats = {
 
 ---
 
+### Task 6.3: Bulk Action (Thao tác hàng loạt)
+
+✅ **Understanding:** Xây dựng tính năng cho phép chọn nhiều task cùng lúc (thông qua checkbox) để thực hiện các thao tác hàng loạt, giúp tăng tốc độ quản lý Backlog cho Scrum Master/Product Owner.
+- **Checkbox đa cấp:** Mỗi Task có một checkbox riêng. Sprint Header có một checkbox tổng để chọn/bỏ chọn tất cả task trong Sprint.
+- **Floating Action Bar:** Thanh công cụ nổi xuất hiện ở đáy màn hình khi có ít nhất 1 task được chọn. Cung cấp các thao tác: Change status, Delete, và Clear selection.
+
+📌 **Assumptions:**
+- State `selectedTaskIds` được quản lý ở Component cha (page.tsx) để cả danh sách và Floating Bar đều truy xuất được.
+- Backend hỗ trợ API Bulk (VD: `POST /tasks/bulk-delete`) hoặc Frontend tạm thời xử lý state local cho mảng task.
+
+🧩 **Steps:**
+1. **Thiết lập State & Checkbox UI:**
+   - Tạo state `selectedTaskIds` dạng mảng `string[]`.
+   - Thêm UI Checkbox vào mỗi dòng Task. Gắn sự kiện `onChange`.
+   - Thêm UI Checkbox vào Sprint Header và Backlog Header.
+2. **Xử lý Logic Chọn (Sprint Selection):**
+   - Viết hàm `toggleSprintSelection(sprintTasks)` để xử lý việc chọn/bỏ chọn toàn bộ task trong một cụm. Xử lý trạng thái Indeterminate.
+3. **Xây dựng Floating Action Bar:**
+   - Tạo component `BulkActionBar` cố định ở bottom với hiệu ứng trượt.
+   - Thêm các nút: Đổi trạng thái, Xóa, Bỏ chọn tất cả.
+   - Viết logic `Escape` để hủy chọn.
+4. **Tích hợp Bulk Actions (Frontend Logic):**
+   - Sự kiện Delete: Xác nhận trước khi xóa -> Lọc bỏ các ID đã chọn khỏi `issues`.
+   - Sự kiện Change Status: Hiển thị menu phụ -> Cập nhật trạng thái cho tất cả ID đã chọn.
+
+🛠️ **Plan:**
+Thêm Checkbox vào giao diện list hiện tại -> Bổ sung state array -> Xây dựng thanh Floating bottom -> Tích hợp logic update mảng `issues`.
+
+💻 **Code (Logic Toggle Sprint):**
+```javascript
+const toggleSprintSelection = (sprintTasks) => {
+  const sprintTaskIds = sprintTasks.map(t => t.id);
+  const isAllSelected = sprintTaskIds.every(id => selectedTaskIds.includes(id));
+
+  if (isAllSelected) {
+    setSelectedTaskIds(prev => prev.filter(id => !sprintTaskIds.includes(id)));
+  } else {
+    setSelectedTaskIds(prev => [...new Set([...prev, ...sprintTaskIds])]);
+  }
+};
+```
+
+✅ **Validation:**
+- Kiểm tra Checkbox: Tick từng task trong Sprint, khi đủ 100% thì Sprint Checkbox phải tự động check.
+- Kiểm tra Floating Bar: Trượt lên mượt mà khi chọn task đầu tiên, trượt xuống mất đi khi bỏ chọn task cuối. Nhấn `ESC` để đóng nhanh.
+
+---
+
 ## Nhóm 7: Các chế độ xem mở rộng (Áp dụng cho cả dự án Scrum & Kanban)
 
 ### Task 7.1: Timeline (Gantt Chart)

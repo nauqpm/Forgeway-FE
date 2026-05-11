@@ -11,6 +11,8 @@ import {
 import IssueDetailModal from "@/modules/app/common/components/IssueDetailModal";
 import PageTreeSidebar from "@/modules/app/common/components/PageTreeSidebar";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import SprintModal from "@/modules/app/common/components/SprintModal";
+import FilterMenu from "@/modules/app/common/components/FilterMenu";
 
 interface Space {
   _id: string;
@@ -29,20 +31,33 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const [activeTab, setActiveTab] = useState<"board" | "backlog" | "pages">("pages");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
   const [sprints, setSprints] = useState([
-    { id: "s1", name: "Sprint 1", status: "Active", startDate: "10 Aug", endDate: "24 Aug" },
-    { id: "s2", name: "Sprint 2", status: "Planned", startDate: "25 Aug", endDate: "08 Sep" }
+    { id: "s1", name: "Sprint 1", status: "Active", startDate: "2026-05-10", endDate: "2026-05-24", duration: "2 weeks", goal: "Hoàn thiện UI" },
+    { id: "s2", name: "Sprint 2", status: "Planned", startDate: "2026-05-25", endDate: "2026-06-08", duration: "2 weeks", goal: "" }
   ]);
   const [issues, setIssues] = useState([
-    { id: "1", title: "Thiết kế lại luồng đăng nhập theo chuẩn mới", status: "To Do", priority: "High", type: "Design", assignee: "A", color: "bg-indigo-600", sprintId: "s1" },
-    { id: "2", title: "Fix lỗi hiển thị sai font chữ trên Safari", status: "To Do", priority: "High", type: "Bug", assignee: "B", color: "bg-teal-500", sprintId: "s1" },
-    { id: "3", title: "Viết test case cho module Thanh toán", status: "In Progress", priority: "Medium", type: "Task", assignee: "C", color: "bg-emerald-500", sprintId: null },
-    { id: "4", title: "Tối ưu hóa hình ảnh Landing Page", status: "Done", priority: "Low", type: "Task", assignee: "D", color: "bg-orange-500", sprintId: null },
-    { id: "5", title: "Nghiên cứu kiến trúc Micro-frontend", status: "To Do", priority: "Medium", type: "Story", assignee: "U", color: "bg-purple-500", sprintId: null },
+    { id: "1", title: "Thiết kế lại luồng đăng nhập theo chuẩn mới", status: "To Do", priority: "High", type: "Design", assignee: "A", color: "bg-indigo-600", sprintId: "s1", storyPoints: 5 },
+    { id: "2", title: "Fix lỗi hiển thị sai font chữ trên Safari", status: "To Do", priority: "High", type: "Bug", assignee: "B", color: "bg-teal-500", sprintId: "s1", storyPoints: 3 },
+    { id: "3", title: "Viết test case cho module Thanh toán", status: "In Progress", priority: "Medium", type: "Task", assignee: "C", color: "bg-emerald-500", sprintId: null, storyPoints: 8 },
+    { id: "4", title: "Tối ưu hóa hình ảnh Landing Page", status: "Done", priority: "Low", type: "Task", assignee: "D", color: "bg-orange-500", sprintId: null, storyPoints: 2 },
+    { id: "5", title: "Nghiên cứu kiến trúc Micro-frontend", status: "To Do", priority: "Medium", type: "Story", assignee: "U", color: "bg-purple-500", sprintId: null, storyPoints: 13 },
   ]);
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [newIssueForm, setNewIssueForm] = useState<{title: string, type: string, priority: string, status: string, sprintId: string | null}>({ title: "", type: "Task", priority: "Medium", status: "To Do", sprintId: null });
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
-  const [filters, setFilters] = useState({ search: "", assigneeId: null as string | null, priority: null as string | null });
+  
+  const [filters, setFilters] = useState({ 
+    search: "", 
+    assigneeId: null as string | null, 
+    priority: null as string | null,
+    assignees: [] as string[],
+    types: [] as string[],
+    statuses: [] as string[]
+  });
+  const [density, setDensity] = useState<'default' | 'compact'>('default');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
+  const [editingSprint, setEditingSprint] = useState<any>(null);
   const [showCreateColumn, setShowCreateColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   const columnsEndRef = useRef<HTMLDivElement>(null);
@@ -52,10 +67,17 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
     return issues.filter(issue => {
       const matchSearch = issue.title.toLowerCase().includes(filters.search.toLowerCase()) 
                        || `${space.key}-${100 + parseInt(issue.id)}`.toLowerCase().includes(filters.search.toLowerCase());
-      const matchAssignee = filters.assigneeId ? issue.assignee === filters.assigneeId : true;
-      const matchPriority = filters.priority ? issue.priority === filters.priority : true;
       
-      return matchSearch && matchAssignee && matchPriority;
+      // Board quick filters
+      const matchAssigneeQuick = filters.assigneeId ? issue.assignee === filters.assigneeId : true;
+      const matchPriorityQuick = filters.priority ? issue.priority === filters.priority : true;
+      
+      // Backlog multi-filters
+      const matchAssignees = filters.assignees.length > 0 ? filters.assignees.includes(issue.assignee) : true;
+      const matchTypes = filters.types.length > 0 ? filters.types.includes(issue.type) : true;
+      const matchStatuses = filters.statuses.length > 0 ? filters.statuses.includes(issue.status) : true;
+
+      return matchSearch && matchAssigneeQuick && matchPriorityQuick && matchAssignees && matchTypes && matchStatuses;
     });
   }, [issues, filters, space]);
 
@@ -82,7 +104,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       type: newIssueForm.type,
       assignee: "U",
       color: "bg-indigo-600",
-      sprintId: newIssueForm.sprintId
+      sprintId: newIssueForm.sprintId,
+      storyPoints: 0
     };
 
     setIssues([...issues, issue]);
@@ -151,11 +174,24 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   };
 
   const handleCreateSprint = () => {
-    const newSprintId = `s${sprints.length + 1}`;
-    setSprints([
-      ...sprints,
-      { id: newSprintId, name: `Sprint ${sprints.length + 1}`, status: "Planned", startDate: "", endDate: "" }
-    ]);
+    setEditingSprint(null);
+    setIsSprintModalOpen(true);
+  };
+
+  const handleSaveSprint = (sprintData: any) => {
+    if (editingSprint) {
+      setSprints(sprints.map(s => s.id === editingSprint.id ? { ...s, ...sprintData } : s));
+    } else {
+      const newSprintId = `s${sprints.length + 1}`;
+      setSprints([
+        ...sprints,
+        { id: newSprintId, status: "Planned", ...sprintData }
+      ]);
+    }
+  };
+
+  const updateIssueDirectly = (id: string, updates: any) => {
+    setIssues(issues.map(i => i.id === id ? { ...i, ...updates } : i));
   };
 
   const handleBacklogDragEnd = (result: DropResult) => {
@@ -376,7 +412,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               </div>
               {(filters.search || filters.assigneeId || filters.priority) && (
                 <button 
-                  onClick={() => setFilters({ search: "", assigneeId: null, priority: null })}
+                  onClick={() => setFilters(prev => ({ ...prev, search: "", assigneeId: null, priority: null }))}
                   className="text-sm text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1"
                 >
                   Xóa bộ lọc
@@ -507,26 +543,64 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         {activeTab === "backlog" && (
           <DragDropContext onDragEnd={handleBacklogDragEnd}>
             <div className="space-y-6 w-full max-w-4xl mx-auto py-6">
+              
+              {/* Backlog Top Bar with Filter */}
+              <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                <div className="text-sm font-medium text-gray-700">
+                  Hiển thị {filteredIssues.length} kết quả
+                </div>
+                <div className="relative">
+                  <button 
+                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Bộ lọc nâng cao <span className="bg-white px-1.5 py-0.5 rounded text-xs text-gray-500 shadow-sm border border-gray-200">Shift+F</span>
+                  </button>
+                  <FilterMenu
+                    isOpen={isFilterOpen}
+                    onClose={() => setIsFilterOpen(false)}
+                    filters={filters}
+                    setFilters={setFilters}
+                    density={density}
+                    setDensity={setDensity}
+                    assignees={uniqueAssignees}
+                  />
+                </div>
+              </div>
+
               {/* Sprints Mapping */}
               {sprints.map((sprint) => {
-                const sprintIssues = issues.filter(i => i.sprintId === sprint.id);
+                const sprintIssues = filteredIssues.filter(i => i.sprintId === sprint.id);
+                const totalPoints = sprintIssues.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+                const donePoints = sprintIssues.filter(i => i.status === 'Done').reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+
                 return (
-                  <div key={sprint.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                  <div key={sprint.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group/sprint">
                     <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                        <h3 
+                          className="font-bold text-gray-900 flex items-center gap-2 cursor-pointer hover:underline"
+                          onClick={() => { setEditingSprint(sprint); setIsSprintModalOpen(true); }}
+                        >
                           {sprint.name} 
                           {sprint.status === "Active" && <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full uppercase tracking-wide">Active</span>}
                         </h3>
-                        <p className="text-xs text-gray-500">
-                          {sprint.startDate ? `${sprint.startDate} - ${sprint.endDate}` : 'Chưa có ngày'} &middot; {sprintIssues.length} issues
+                        <p className="text-xs text-gray-500 flex gap-2">
+                          <span>{sprint.startDate ? `${sprint.startDate} - ${sprint.endDate}` : 'Chưa có ngày'}</span>
+                          <span>&middot;</span>
+                          <span>{sprintIssues.length} issues</span>
                         </p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex gap-2">
-                          <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center" title="To Do">{sprintIssues.filter(i => i.status === "To Do").length}</span>
-                          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center" title="In Progress">{sprintIssues.filter(i => i.status === "In Progress").length}</span>
-                          <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center" title="Done">{sprintIssues.filter(i => i.status === "Done").length}</span>
+                        <div className="flex gap-2 items-center group relative cursor-help">
+                          <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "To Do").length}</span>
+                          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "In Progress").length}</span>
+                          <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "Done").length}</span>
+                          
+                          {/* Tooltip for Story Points */}
+                          <div className="absolute top-full mt-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                            Tiến độ: {donePoints} / {totalPoints} story points
+                          </div>
                         </div>
                         <button className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
                           {sprint.status === "Active" ? "Complete Sprint" : "Start Sprint"}
@@ -548,20 +622,44 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  onClick={() => setSelectedIssue(issue)}
-                                  className={`flex items-center justify-between bg-white p-3 rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:border-indigo-200'} transition-all group cursor-pointer shadow-sm`}
+                                  className={`flex items-center justify-between bg-white ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:border-indigo-200'} transition-all group shadow-sm`}
                                 >
-                                  <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-3 flex-1" onClick={() => setSelectedIssue(issue)}>
                                     <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-indigo-500'}`} />
-                                    <span className="text-xs font-mono font-medium text-gray-500 w-16">{space?.key}-{100 + parseInt(issue.id)}</span>
-                                    <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-600">{issue.title}</span>
+                                    <span className="text-xs font-mono font-medium text-gray-500 w-16 hover:underline cursor-pointer">{space?.key}-{100 + parseInt(issue.id)}</span>
+                                    <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 cursor-pointer">{issue.title}</span>
                                   </div>
-                                  <div className="flex items-center gap-4">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${issue.status === 'Done' ? 'bg-green-50 text-green-700' : issue.status === 'In Progress' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>{issue.status}</span>
-                                    {issue.assignee ? (
-                                      <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold`}>{issue.assignee}</div>
+                                  <div className="flex items-center gap-3">
+                                    {/* Editable Story Points */}
+                                    <div className="relative group/pts">
+                                      <input 
+                                        type="number"
+                                        value={issue.storyPoints === 0 ? '' : issue.storyPoints}
+                                        onChange={(e) => updateIssueDirectly(issue.id, { storyPoints: parseInt(e.target.value) || 0 })}
+                                        placeholder="-"
+                                        className="w-8 h-6 text-center text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded border border-transparent focus:bg-white focus:border-indigo-500 outline-none transition-colors appearance-none"
+                                        title="Story Points"
+                                      />
+                                    </div>
+                                    
+                                    {/* Editable Status */}
+                                    <select 
+                                      value={issue.status}
+                                      onChange={(e) => updateIssueDirectly(issue.id, { status: e.target.value })}
+                                      className={`px-2 py-1 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none ${issue.status === 'Done' ? 'bg-green-50 text-green-700' : issue.status === 'In Progress' ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-700'}`}
+                                    >
+                                      <option value="To Do" className="bg-white text-gray-700">To Do</option>
+                                      <option value="In Progress" className="bg-white text-gray-700">In Progress</option>
+                                      <option value="Done" className="bg-white text-gray-700">Done</option>
+                                    </select>
+
+                                    {/* Assignee */}
+                                    {issue.assignee && issue.assignee !== 'U' ? (
+                                      <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 transition-all`}>{issue.assignee}</div>
                                     ) : (
-                                      <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center"></div>
+                                      <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-indigo-400 hover:text-indigo-500 text-gray-400 transition-colors">
+                                        <Plus className="w-3 h-3" />
+                                      </div>
                                     )}
                                   </div>
                                 </div>
@@ -591,7 +689,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
                   <h3 className="font-bold text-gray-900 flex items-center gap-2">
                     Backlog 
-                    <span className="text-gray-400 font-normal text-sm">({issues.filter(i => i.sprintId === null).length} issues)</span>
+                    <span className="text-gray-400 font-normal text-sm">({filteredIssues.filter(i => i.sprintId === null).length} issues)</span>
                   </h3>
                   <button onClick={handleCreateSprint} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors">Create Sprint</button>
                 </div>
@@ -603,27 +701,49 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       {...provided.droppableProps}
                       className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? 'bg-gray-50/80' : ''}`}
                     >
-                      {issues.filter(i => i.sprintId === null).map((issue, index) => (
+                      {filteredIssues.filter(i => i.sprintId === null).map((issue, index) => (
                         <Draggable key={issue.id} draggableId={issue.id} index={index}>
                           {(provided, snapshot) => (
                             <div 
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              onClick={() => setSelectedIssue(issue)}
-                              className={`flex items-center justify-between bg-white p-3 rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:bg-gray-50'} transition-all group cursor-pointer`}
+                              className={`flex items-center justify-between bg-white ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:bg-gray-50'} transition-all group`}
                             >
-                              <div className="flex items-center gap-3">
+                              <div className="flex items-center gap-3 flex-1" onClick={() => setSelectedIssue(issue)}>
                                 <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-gray-400'}`} />
-                                <span className="text-xs font-mono font-medium text-gray-400 w-16">{space?.key}-{100 + parseInt(issue.id)}</span>
-                                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900">{issue.title}</span>
+                                <span className="text-xs font-mono font-medium text-gray-400 w-16 hover:underline cursor-pointer">{space?.key}-{100 + parseInt(issue.id)}</span>
+                                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 cursor-pointer">{issue.title}</span>
                               </div>
-                              <div className="flex items-center gap-4">
-                                <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium">{issue.status}</span>
-                                {issue.assignee ? (
-                                  <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold`}>{issue.assignee}</div>
+                              <div className="flex items-center gap-3">
+                                {/* Editable Story Points */}
+                                <div className="relative group/pts">
+                                  <input 
+                                    type="number"
+                                    value={issue.storyPoints === 0 ? '' : issue.storyPoints}
+                                    onChange={(e) => updateIssueDirectly(issue.id, { storyPoints: parseInt(e.target.value) || 0 })}
+                                    placeholder="-"
+                                    className="w-8 h-6 text-center text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded border border-transparent focus:bg-white focus:border-indigo-500 outline-none transition-colors appearance-none"
+                                    title="Story Points"
+                                  />
+                                </div>
+
+                                {/* Editable Status */}
+                                <select 
+                                  value={issue.status}
+                                  onChange={(e) => updateIssueDirectly(issue.id, { status: e.target.value })}
+                                  className={`px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none`}
+                                >
+                                  <option value="To Do">To Do</option>
+                                  <option value="In Progress">In Progress</option>
+                                  <option value="Done">Done</option>
+                                </select>
+                                
+                                {/* Assignee */}
+                                {issue.assignee && issue.assignee !== 'U' ? (
+                                  <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 transition-all`}>{issue.assignee}</div>
                                 ) : (
-                                  <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:border-indigo-500 transition-colors">
+                                  <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:border-indigo-500 transition-colors cursor-pointer">
                                     <Plus className="w-3 h-3" />
                                   </div>
                                 )}
@@ -636,9 +756,23 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                   )}
                 </Droppable>
-                <div className="p-3 bg-gray-50/30 border-t border-gray-100">
-                  <button onClick={() => { setNewIssueForm({ ...newIssueForm, sprintId: null }); setShowCreateIssue(true); }} className="w-full text-left p-2 text-sm text-gray-500 hover:bg-gray-100 rounded-lg flex items-center gap-2 transition-colors">
-                    <Plus className="w-4 h-4" /> Tạo issue mới...
+                <div className="p-3 bg-gray-50/30 border-t border-gray-100 flex items-center gap-2 relative">
+                  <input
+                    type="text"
+                    placeholder="Bạn cần làm gì tiếp theo?"
+                    className="flex-1 py-1.5 px-3 bg-white border border-gray-300 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                        const newId = Date.now().toString();
+                        setIssues([...issues, {
+                          id: newId, title: e.currentTarget.value, status: "To Do", priority: "Medium", type: "Task", assignee: "U", color: "bg-indigo-600", sprintId: null, storyPoints: 0
+                        }]);
+                        e.currentTarget.value = "";
+                      }
+                    }}
+                  />
+                  <button onClick={() => { setNewIssueForm({ ...newIssueForm, sprintId: null }); setShowCreateIssue(true); }} className="text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 px-3 py-1.5 rounded transition-colors whitespace-nowrap">
+                    Mở modal...
                   </button>
                 </div>
               </div>
@@ -724,6 +858,14 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
       )}
+
+      {/* Sprint Modal */}
+      <SprintModal 
+        isOpen={isSprintModalOpen} 
+        onClose={() => setIsSprintModalOpen(false)} 
+        onSave={handleSaveSprint}
+        initialData={editingSprint}
+      />
 
       {/* Jira-style Issue Detail Modal */}
       {selectedIssue && (
