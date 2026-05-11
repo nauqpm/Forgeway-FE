@@ -108,6 +108,93 @@ export const parseTimeToMinutes = (timeStr: string): number => {
 
 ---
 
+### Task 1.3: Rich Text Editor & Markdown cho Mô tả (Description)
+
+✅ **Understanding:** Xây dựng một khu vực "Description" (Mô tả) có 2 trạng thái:
+- **Chế độ Xem (Read-only):** Hiển thị văn bản đã được format (HTML/Markdown), các link có thể click, code block có highlight.
+- **Chế độ Sửa (Edit mode):** Khi click vào, biến thành một Editor với:
+  - Thanh công cụ (Toolbar): Định dạng text (Bold, Italic), danh sách (List), chèn ảnh, link, emoji.
+  - Khối soạn thảo (Editor Area): Hỗ trợ gõ text, có khung hiển thị Code Block chuyên dụng (có line number).
+  - Tùy chọn ngôn ngữ/định dạng (Dropdown "Markdown"): Cho phép chọn format cho khối code.
+  - Hành động: Nút Save (Lưu) và Cancel (Hủy).
+
+📌 **Assumptions:**
+- Do việc tự build một Editor từ đầu cực kỳ tốn thời gian và dễ lỗi (đặc biệt là xử lý con trỏ chuột - cursor focus), giả định bạn sẽ dùng một thư viện mã nguồn mở mạnh mẽ cho React.
+- Database của backend (AL-TASK-Backend) chỉ cần lưu trữ nội dung mô tả dưới dạng một chuỗi (chuỗi Markdown hoặc chuỗi HTML).
+- Ứng dụng của bạn cần tính bảo mật để tránh lỗi XSS (Cross-Site Scripting) khi render HTML từ người dùng nhập.
+
+🧩 **Steps:**
+1. **Lựa chọn Thư viện:**
+   - TipTap: (Khuyên dùng nhất cho Fullstack) Rất mạnh, headless (không có UI sẵn nên bạn tự do thiết kế toolbar giống hệt ảnh), hỗ trợ Markdown và CodeBlock với thư viện highlight.js.
+   - React-Quill / TinyMCE: Dễ cài đặt, có sẵn UI, nhưng việc tùy biến code-block khó hơn TipTap.
+   - UIW React Markdown Editor: Trực quan, thiên hẳn về viết Markdown.
+2. **Logic State Management:**
+   - Cần một state `isEditing` (boolean) để toggle giữa component Viewer và Editor.
+   - Cần state `content` lưu trữ giá trị tạm thời đang gõ. Nếu bấm "Cancel", content quay về giá trị ban đầu. Nếu bấm "Save", gọi API update.
+
+🛠️ **Plan:** 
+- **Task 1: Nghiên cứu & Cài đặt Editor Core**
+  - Khảo sát và cài đặt thư viện (Ví dụ: `npm install @tiptap/react @tiptap/starter-kit`).
+  - Cài đặt thêm plugin cho Code Block (Ví dụ: `@tiptap/extension-code-block-lowlight` để có line number và syntax highlight).
+- **Task 2: Build Component DescriptionViewer**
+  - Viết component nhận prop là chuỗi HTML/Markdown và render ra màn hình.
+  - Sử dụng thư viện DOMPurify để sanitize (làm sạch) chuỗi HTML trước khi render để chống XSS.
+  - Bắt sự kiện onClick vào vùng này để đổi state `isEditing = true`.
+- **Task 3: Build Component DescriptionEditor**
+  - Thiết kế UI cho Toolbar: Thêm các nút bấm (B, I, H1, Code, List...) và gắn sự kiện tương tác với Editor API.
+  - Tích hợp tính năng Code Block có dropdown chọn ngôn ngữ (như dropdown "Markdown" trong hình).
+  - Thiết kế UI cụm nút "Save" (màu xanh) và "Cancel".
+- **Task 4: Tích hợp API (Backend Connection)**
+  - Bắt sự kiện nút "Save".
+  - Gọi API PATCH `/tasks/:id` với body `{ description: htmlContent }`.
+  - Cập nhật state thành công thì đổi `isEditing = false`.
+
+💻 **Code (Gợi ý Technical cho TipTap):**
+```jsx
+const TaskDescription = ({ task, onUpdate }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempDesc, setTempDesc] = useState(task.description);
+
+  const handleSave = async () => {
+    // Gọi Service API đã viết ở phase trước
+    await taskService.updateDescription(task.id, tempDesc);
+    setIsEditing(false);
+    onUpdate(tempDesc);
+  };
+
+  const handleCancel = () => {
+    setTempDesc(task.description); // Revert lại
+    setIsEditing(false);
+  };
+
+  if (!isEditing) {
+    return (
+      <div onClick={() => setIsEditing(true)} className="viewer-container hover:bg-gray-100 p-2 cursor-text rounded">
+        {/* Render HTML đã sanitize tại đây */}
+        <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(task.description) }} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="editor-container border border-gray-300 rounded">
+      <MyTipTapEditor value={tempDesc} onChange={setTempDesc} />
+      <div className="button-group mt-2 flex gap-2">
+        <button onClick={handleSave} className="bg-blue-600 text-white px-3 py-1 rounded">Save</button>
+        <button onClick={handleCancel} className="text-gray-600 px-3 py-1 rounded">Cancel</button>
+      </div>
+    </div>
+  );
+};
+```
+
+✅ **Validation:**
+- Trải nghiệm hủy (Cancel): Gõ một đoạn text dài, bấm Cancel, mở lại xem đoạn text đó có bị lưu nhầm không.
+- Xử lý Code Block: Copy một đoạn code C++ hoặc JS thực tế paste vào khối Code Block xem nó có giữ nguyên định dạng lùi lề (indentation) không. Việc mất lùi lề là lỗi rất phổ biến khi làm Editor.
+- Responsive: Thu nhỏ cửa sổ trình duyệt xem thanh Toolbar có bị tràn ra ngoài màn hình không (cần áp dụng flex-wrap cho toolbar).
+
+---
+
 ## Nhóm 2: Kanban Board & Bộ lọc
 
 ### Task 2.1: Custom Filters (Quick Filters)

@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { MentionsInput, Mention } from 'react-mentions';
 import IssueSubtasks from './IssueSubtasks';
 import TimeTrackingSidebar from './TimeTrackingSidebar';
+import IssueDescription from './IssueDescription';
 
 interface IssueDetailModalProps {
   issue: any;
@@ -44,8 +45,6 @@ export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIss
   const [localTitle, setLocalTitle] = useState(issue.title);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-  const [localDesc, setLocalDesc] = useState(issue.description || '');
-  const [isEditingDesc, setIsEditingDesc] = useState(false);
 
   const [commentInput, setCommentInput] = useState('');
   const [comments, setComments] = useState<any[]>(issue.comments || []);
@@ -64,12 +63,6 @@ export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIss
     }
   };
 
-  const handleDescSave = () => {
-    setIsEditingDesc(false);
-    if (localDesc !== issue.description && onUpdateIssue) {
-      onUpdateIssue({ ...issue, description: localDesc });
-    }
-  };
 
   const handleAddComment = () => {
     if (!commentInput.trim()) return;
@@ -186,32 +179,14 @@ export default function IssueDetailModal({ issue, spaceKey, onClose, onUpdateIss
             {/* Description */}
             <div className="space-y-2">
               <h3 className="text-base font-semibold text-[#172B4D]">Description</h3>
-              {isEditingDesc ? (
-                <div className="space-y-3">
-                  <textarea
-                    autoFocus
-                    value={localDesc}
-                    onChange={(e) => setLocalDesc(e.target.value)}
-                    placeholder="Add a description..."
-                    className="w-full min-h-[120px] p-4 bg-[#F4F5F7] text-[#172B4D] rounded border-2 border-[#0052CC] outline-none resize-y"
-                  />
-                  <div className="flex gap-2">
-                    <button onClick={handleDescSave} className="px-3 py-1.5 bg-[#0052CC] hover:bg-[#0065FF] text-white text-sm font-medium rounded transition-colors">Save</button>
-                    <button onClick={() => { setLocalDesc(issue.description || ''); setIsEditingDesc(false); }} className="px-3 py-1.5 hover:bg-[#EBECF0] text-[#172B4D] text-sm font-medium rounded transition-colors">Cancel</button>
-                  </div>
-                </div>
-              ) : (
-                <div
-                  onClick={() => setIsEditingDesc(true)}
-                  className="p-4 hover:bg-[#EBECF0] rounded border border-transparent hover:border-[#DFE1E6] cursor-pointer transition-colors min-h-[60px]"
-                >
-                  {localDesc ? (
-                    <p className="text-[#172B4D] text-sm whitespace-pre-wrap">{localDesc}</p>
-                  ) : (
-                    <p className="text-[#5E6C84] text-sm">Add a description...</p>
-                  )}
-                </div>
-              )}
+              <IssueDescription
+                initialContent={issue.description || ''}
+                onSave={(newDesc) => {
+                  if (onUpdateIssue) {
+                    onUpdateIssue({ ...issue, description: newDesc });
+                  }
+                }}
+              />
             </div>
 
             {/* Subtasks */}
