@@ -13,6 +13,7 @@ import PageTreeSidebar from "@/modules/app/common/components/PageTreeSidebar";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import SprintModal from "@/modules/app/common/components/SprintModal";
 import FilterMenu from "@/modules/app/common/components/FilterMenu";
+import BulkActionBar from "@/modules/app/common/components/BulkActionBar";
 
 interface Space {
   _id: string;
@@ -61,6 +62,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const [showCreateColumn, setShowCreateColumn] = useState(false);
   const [newColumnName, setNewColumnName] = useState("");
   const columnsEndRef = useRef<HTMLDivElement>(null);
+  
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
   const filteredIssues = useMemo(() => {
     if (!space) return [];
@@ -192,6 +195,35 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
   const updateIssueDirectly = (id: string, updates: any) => {
     setIssues(issues.map(i => i.id === id ? { ...i, ...updates } : i));
+  };
+
+  const toggleTaskSelection = (taskId: string, e?: React.ChangeEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedTaskIds(prev => 
+      prev.includes(taskId) ? prev.filter(id => id !== taskId) : [...prev, taskId]
+    );
+  };
+
+  const toggleSprintSelection = (sprintTaskIds: string[], e?: React.ChangeEvent) => {
+    if (e) e.stopPropagation();
+    const isAllSelected = sprintTaskIds.length > 0 && sprintTaskIds.every(id => selectedTaskIds.includes(id));
+    if (isAllSelected) {
+      setSelectedTaskIds(prev => prev.filter(id => !sprintTaskIds.includes(id)));
+    } else {
+      setSelectedTaskIds(prev => Array.from(new Set([...prev, ...sprintTaskIds])));
+    }
+  };
+
+  const handleBulkStatusChange = (newStatus: string) => {
+    setIssues(issues.map(i => selectedTaskIds.includes(i.id) ? { ...i, status: newStatus } : i));
+    setSelectedTaskIds([]);
+  };
+
+  const handleBulkDelete = () => {
+    if (confirm(`Bạn có chắc chắn muốn xóa ${selectedTaskIds.length} tasks đã chọn?`)) {
+      setIssues(issues.filter(i => !selectedTaskIds.includes(i.id)));
+      setSelectedTaskIds([]);
+    }
   };
 
   const handleBacklogDragEnd = (result: DropResult) => {
@@ -573,11 +605,22 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 const sprintIssues = filteredIssues.filter(i => i.sprintId === sprint.id);
                 const totalPoints = sprintIssues.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
                 const donePoints = sprintIssues.filter(i => i.status === 'Done').reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+                const sprintTaskIds = sprintIssues.map(i => i.id);
+                const isAllSelected = sprintTaskIds.length > 0 && sprintTaskIds.every(id => selectedTaskIds.includes(id));
+                const isSomeSelected = sprintTaskIds.length > 0 && sprintTaskIds.some(id => selectedTaskIds.includes(id)) && !isAllSelected;
 
                 return (
                   <div key={sprint.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group/sprint">
                     <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
                       <div className="flex items-center gap-3">
+                        <input 
+                          type="checkbox" 
+                          checked={isAllSelected}
+                          onChange={(e) => toggleSprintSelection(sprintTaskIds, e)}
+                          onClick={e => e.stopPropagation()}
+                          ref={(input) => { if(input) input.indeterminate = isSomeSelected; }}
+                          className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                        />
                         <h3 
                           className="font-bold text-gray-900 flex items-center gap-2 cursor-pointer hover:underline"
                           onClick={() => { setEditingSprint(sprint); setIsSprintModalOpen(true); }}
@@ -624,10 +667,19 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                   {...provided.dragHandleProps}
                                   className={`flex items-center justify-between bg-white ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:border-indigo-200'} transition-all group shadow-sm`}
                                 >
-                                  <div className="flex items-center gap-3 flex-1" onClick={() => setSelectedIssue(issue)}>
-                                    <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-indigo-500'}`} />
-                                    <span className="text-xs font-mono font-medium text-gray-500 w-16 hover:underline cursor-pointer">{space?.key}-{100 + parseInt(issue.id)}</span>
-                                    <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 cursor-pointer">{issue.title}</span>
+                                  <div className="flex items-center gap-3 flex-1">
+                                    <input 
+                                      type="checkbox" 
+                                      checked={selectedTaskIds.includes(issue.id)}
+                                      onChange={(e) => toggleTaskSelection(issue.id, e)}
+                                      onClick={e => e.stopPropagation()}
+                                      className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                                    />
+                                    <div className="flex items-center gap-3 flex-1" onClick={() => setSelectedIssue(issue)}>
+                                      <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-indigo-500'}`} />
+                                      <span className="text-xs font-mono font-medium text-gray-500 w-16 hover:underline cursor-pointer">{space?.key}-{100 + parseInt(issue.id)}</span>
+                                      <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 cursor-pointer">{issue.title}</span>
+                                    </div>
                                   </div>
                                   <div className="flex items-center gap-3">
                                     {/* Editable Story Points */}
@@ -687,10 +739,27 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               {/* Backlog Section */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
-                  <h3 className="font-bold text-gray-900 flex items-center gap-2">
-                    Backlog 
-                    <span className="text-gray-400 font-normal text-sm">({filteredIssues.filter(i => i.sprintId === null).length} issues)</span>
-                  </h3>
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="checkbox" 
+                      checked={filteredIssues.filter(i => i.sprintId === null).length > 0 && filteredIssues.filter(i => i.sprintId === null).map(i => i.id).every(id => selectedTaskIds.includes(id))}
+                      onChange={(e) => toggleSprintSelection(filteredIssues.filter(i => i.sprintId === null).map(i => i.id), e)}
+                      onClick={e => e.stopPropagation()}
+                      ref={(input) => { 
+                        if(input) {
+                          const backlogIds = filteredIssues.filter(i => i.sprintId === null).map(i => i.id);
+                          const isAll = backlogIds.length > 0 && backlogIds.every(id => selectedTaskIds.includes(id));
+                          const isSome = backlogIds.length > 0 && backlogIds.some(id => selectedTaskIds.includes(id)) && !isAll;
+                          input.indeterminate = isSome;
+                        }
+                      }}
+                      className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                    />
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                      Backlog 
+                      <span className="text-gray-400 font-normal text-sm">({filteredIssues.filter(i => i.sprintId === null).length} issues)</span>
+                    </h3>
+                  </div>
                   <button onClick={handleCreateSprint} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors">Create Sprint</button>
                 </div>
                 
@@ -710,10 +779,19 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                               {...provided.dragHandleProps}
                               className={`flex items-center justify-between bg-white ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:bg-gray-50'} transition-all group`}
                             >
-                              <div className="flex items-center gap-3 flex-1" onClick={() => setSelectedIssue(issue)}>
-                                <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-gray-400'}`} />
-                                <span className="text-xs font-mono font-medium text-gray-400 w-16 hover:underline cursor-pointer">{space?.key}-{100 + parseInt(issue.id)}</span>
-                                <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 cursor-pointer">{issue.title}</span>
+                              <div className="flex items-center gap-3 flex-1">
+                                <input 
+                                  type="checkbox" 
+                                  checked={selectedTaskIds.includes(issue.id)}
+                                  onChange={(e) => toggleTaskSelection(issue.id, e)}
+                                  onClick={e => e.stopPropagation()}
+                                  className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                                />
+                                <div className="flex items-center gap-3 flex-1" onClick={() => setSelectedIssue(issue)}>
+                                  <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-gray-400'}`} />
+                                  <span className="text-xs font-mono font-medium text-gray-400 w-16 hover:underline cursor-pointer">{space?.key}-{100 + parseInt(issue.id)}</span>
+                                  <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 cursor-pointer">{issue.title}</span>
+                                </div>
                               </div>
                               <div className="flex items-center gap-3">
                                 {/* Editable Story Points */}
@@ -879,6 +957,14 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
           }}
         />
       )}
+      {/* Bulk Action Bar */}
+      <BulkActionBar 
+        selectedCount={selectedTaskIds.length}
+        onClear={() => setSelectedTaskIds([])}
+        onChangeStatus={handleBulkStatusChange}
+        onDelete={handleBulkDelete}
+      />
+
     </div>
   );
 }
