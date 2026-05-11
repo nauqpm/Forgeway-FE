@@ -1,15 +1,16 @@
 "use client";
 
-import { useEffect, useState, use, useMemo } from "react";
+import { useEffect, useState, use, useMemo, useRef } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import LoadingSpinner from "@/modules/app/common/components/LoadingSpinner";
 import Link from "next/link";
 import {
   BookOpen, Plus, ArrowRight, Search, Lock, Globe, Settings,
-  FileText, Columns, Repeat, ChevronRight, X
+  FileText, Columns, Repeat, ChevronRight, X, Check
 } from "lucide-react";
 import IssueDetailModal from "@/modules/app/common/components/IssueDetailModal";
 import PageTreeSidebar from "@/modules/app/common/components/PageTreeSidebar";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 interface Space {
   _id: string;
@@ -26,6 +27,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const [space, setSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"board" | "backlog" | "pages">("pages");
+  const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
   const [issues, setIssues] = useState([
     { id: "1", title: "Thiết kế lại luồng đăng nhập theo chuẩn mới", status: "To Do", priority: "High", type: "Design", assignee: "A", color: "bg-indigo-600" },
     { id: "2", title: "Fix lỗi hiển thị sai font chữ trên Safari", status: "To Do", priority: "High", type: "Bug", assignee: "B", color: "bg-teal-500" },
@@ -36,6 +38,9 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   const [newIssueForm, setNewIssueForm] = useState({ title: "", type: "Task", priority: "Medium", status: "To Do" });
   const [selectedIssue, setSelectedIssue] = useState<any>(null);
   const [filters, setFilters] = useState({ search: "", assigneeId: null as string | null, priority: null as string | null });
+  const [showCreateColumn, setShowCreateColumn] = useState(false);
+  const [newColumnName, setNewColumnName] = useState("");
+  const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const filteredIssues = useMemo(() => {
     if (!space) return [];
@@ -79,20 +84,64 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
     setNewIssueForm({ title: "", type: "Task", priority: "Medium", status: "To Do" });
   };
 
-  const handleDragStart = (e: React.DragEvent, issueId: string) => {
-    e.dataTransfer.setData("issueId", issueId);
-  };
+  const handleDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId, type } = result;
 
-  const handleDrop = (e: React.DragEvent, status: string) => {
-    e.preventDefault();
-    const issueId = e.dataTransfer.getData("issueId");
-    if (issueId) {
-      setIssues(issues.map(i => i.id === issueId ? { ...i, status } : i));
+    if (!destination) return;
+
+    if (type === "column") {
+      if (source.index === destination.index) return;
+      const newColumns = Array.from(columns);
+      const [removed] = newColumns.splice(source.index, 1);
+      newColumns.splice(destination.index, 0, removed);
+      setColumns(newColumns);
+      return;
+    }
+
+    if (type === "task") {
+      const sourceStatus = source.droppableId;
+      const destStatus = destination.droppableId;
+      
+      const draggedIssueIndex = issues.findIndex(i => i.id === draggableId);
+      if (draggedIssueIndex === -1) return;
+      
+      const draggedIssue = issues[draggedIssueIndex];
+      const newIssues = Array.from(issues);
+      
+      if (sourceStatus === destStatus) {
+        if (source.index === destination.index) return;
+        
+        const columnIssues = newIssues.filter(i => i.status === sourceStatus);
+        const targetIssue = columnIssues[destination.index];
+        
+        newIssues.splice(draggedIssueIndex, 1);
+        const targetIndex = newIssues.findIndex(i => i.id === targetIssue?.id);
+        newIssues.splice(targetIndex !== -1 ? targetIndex : newIssues.length, 0, draggedIssue);
+      } else {
+        const columnIssues = newIssues.filter(i => i.status === destStatus);
+        const targetIssue = columnIssues[destination.index];
+        
+        newIssues.splice(draggedIssueIndex, 1);
+        const newIssue = { ...draggedIssue, status: destStatus };
+        const targetIndex = newIssues.findIndex(i => i.id === targetIssue?.id);
+        newIssues.splice(targetIndex !== -1 ? targetIndex : newIssues.length, 0, newIssue);
+      }
+      
+      setIssues(newIssues);
     }
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
+  const handleAddColumn = () => {
+    if (!newColumnName.trim()) {
+      setShowCreateColumn(false);
+      return;
+    }
+    setColumns([...columns, newColumnName.trim()]);
+    setNewColumnName("");
+    setShowCreateColumn(false);
+    setTimeout(() => {
+      columnsEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'end' });
+    }, 100);
   };
 
   useEffect(() => {
@@ -278,55 +327,123 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               )}
             </div>
 
-            <div className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] p-4">
-              {/* Columns */}
-              {["To Do", "In Progress", "Done"].map((status) => (
-                <div
-                  key={status}
-                  className="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-full border border-gray-200 shadow-sm"
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, status)}
-                >
-                  <div className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-100/50 rounded-t-xl">
-                    <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide flex items-center gap-2">
-                      {status}
-                      <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px] font-bold">{filteredIssues.filter(i => i.status === status).length}</span>
-                    </h3>
-                    <button onClick={() => { setNewIssueForm({ ...newIssueForm, status }); setShowCreateIssue(true); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors"><Plus className="w-4 h-4" /></button>
-                  </div>
-                  <div className="p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px]">
-                    {filteredIssues.filter(i => i.status === status).map(issue => (
-                      <div
-                        key={issue.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, issue.id)}
-                        onClick={() => setSelectedIssue(issue)}
-                        className="bg-white p-3.5 rounded-lg shadow-sm border border-gray-200 hover:border-indigo-400 hover:shadow-md transition-all cursor-grab active:cursor-grabbing group"
-                      >
-                        <p className="text-sm font-medium text-gray-900 mb-2 leading-snug group-hover:text-indigo-600">{issue.title}</p>
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === 'High' ? 'bg-red-50 text-red-600' : issue.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'}`}>
-                            {issue.priority}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}>
-                            {issue.type}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
-                          <span className="text-xs font-mono font-bold text-gray-400">{space.key}-{100 + parseInt(issue.id)}</span>
-                          <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white`}>{issue.assignee}</div>
-                        </div>
-                      </div>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <Droppable droppableId="board-columns" direction="horizontal" type="column">
+                {(provided) => (
+                  <div 
+                    className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] p-4"
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                  >
+                    {columns.map((status, index) => (
+                      <Draggable key={status} draggableId={`col-${status}`} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-full border border-gray-200 shadow-sm"
+                          >
+                            <div 
+                              {...provided.dragHandleProps}
+                              className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-100/50 rounded-t-xl cursor-grab active:cursor-grabbing"
+                            >
+                              <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide flex items-center gap-2">
+                                {status}
+                                <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px] font-bold">{filteredIssues.filter(i => i.status === status).length}</span>
+                              </h3>
+                              <button onClick={() => { setNewIssueForm({ ...newIssueForm, status }); setShowCreateIssue(true); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors cursor-pointer"><Plus className="w-4 h-4" /></button>
+                            </div>
+                            
+                            <Droppable droppableId={status} type="task">
+                              {(provided, snapshot) => (
+                                <div 
+                                  ref={provided.innerRef}
+                                  {...provided.droppableProps}
+                                  className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/50' : ''}`}
+                                >
+                                  {filteredIssues.filter(i => i.status === status).map((issue, issueIndex) => (
+                                    <Draggable key={issue.id} draggableId={issue.id} index={issueIndex}>
+                                      {(provided, snapshot) => (
+                                        <div
+                                          ref={provided.innerRef}
+                                          {...provided.draggableProps}
+                                          {...provided.dragHandleProps}
+                                          onClick={() => setSelectedIssue(issue)}
+                                          className={`bg-white p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? 'border-indigo-500 shadow-lg rotate-2 z-50 relative' : 'border-gray-200 hover:border-indigo-400 hover:shadow-md'} transition-all cursor-grab active:cursor-grabbing group`}
+                                        >
+                                          <p className="text-sm font-medium text-gray-900 mb-2 leading-snug group-hover:text-indigo-600">{issue.title}</p>
+                                          <div className="flex flex-wrap gap-1.5 mb-3">
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === 'High' ? 'bg-red-50 text-red-600' : issue.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'}`}>
+                                              {issue.priority}
+                                            </span>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}>
+                                              {issue.type}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+                                            <span className="text-xs font-mono font-bold text-gray-400">{space.key}-{100 + parseInt(issue.id)}</span>
+                                            <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white`}>{issue.assignee}</div>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  ))}
+                                  {provided.placeholder}
+                                  {filteredIssues.filter(i => i.status === status).length === 0 && !snapshot.isDraggingOver && (
+                                    <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
+                                      {issues.filter(i => i.status === status).length === 0 ? "Kéo thả issue vào đây" : "Không có issue phù hợp"}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </Droppable>
+                          </div>
+                        )}
+                      </Draggable>
                     ))}
-                    {filteredIssues.filter(i => i.status === status).length === 0 && (
-                      <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
-                        {issues.filter(i => i.status === status).length === 0 ? "Kéo thả issue vào đây" : "Không có issue phù hợp"}
-                      </div>
-                    )}
+                    {provided.placeholder}
+                    
+                    {/* Thêm cột mới */}
+                    <div className="flex-shrink-0 w-80 bg-transparent flex flex-col" ref={columnsEndRef}>
+                      {showCreateColumn ? (
+                        <div className="bg-white rounded-xl border border-indigo-200 p-3 shadow-sm">
+                          <input
+                            type="text"
+                            autoFocus
+                            value={newColumnName}
+                            onChange={(e) => setNewColumnName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleAddColumn();
+                              if (e.key === 'Escape') {
+                                setShowCreateColumn(false);
+                                setNewColumnName("");
+                              }
+                            }}
+                            placeholder="Tên cột mới..."
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                          />
+                          <div className="flex items-center gap-2 mt-3">
+                            <button onClick={handleAddColumn} className="flex-1 bg-indigo-600 text-white text-xs font-medium py-1.5 rounded hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1">
+                              <Check className="w-3.5 h-3.5" /> Thêm cột
+                            </button>
+                            <button onClick={() => { setShowCreateColumn(false); setNewColumnName(""); }} className="flex-1 bg-gray-100 text-gray-600 text-xs font-medium py-1.5 rounded hover:bg-gray-200 transition-colors flex items-center justify-center gap-1">
+                              <X className="w-3.5 h-3.5" /> Hủy
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => setShowCreateColumn(true)}
+                          className="flex items-center gap-2 w-full bg-gray-50/50 hover:bg-gray-100 border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-xl p-4 text-gray-500 hover:text-gray-700 transition-all font-medium text-sm justify-center"
+                        >
+                          <Plus className="w-5 h-5" /> Thêm cột mới
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           </div>
         )}
 
