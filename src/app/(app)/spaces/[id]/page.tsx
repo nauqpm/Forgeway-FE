@@ -643,7 +643,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
   }, [listSplitOrderOpen]);
 
   useEffect(() => {
-    if (activeTab !== "list") setListGridDrawerOpen(false);
+    if (activeTab !== "list") {
+      setListGridDrawerOpen(false);
+      if (listViewMode === "split") setSelectedIssue(null);
+    }
   }, [activeTab]);
 
   /** Split: chọn item đầu khi vừa bật Split; giữ selection hợp lệ khi sort/filter đổi */
