@@ -12,8 +12,6 @@ import {
   FaArrowLeft,
   FaShare,
 } from "react-icons/fa";
-import "@/styles/globals.css";
-import "@/styles/suneditor.min.css";
 
 interface PostDetailClientProps {
   slug: string;

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../stores/authStore';
 import { AUTH_ROUTES } from '../constants/auth-routes';
@@ -19,6 +19,12 @@ const GuestGuard: React.FC<GuestGuardProps> = ({ children }) => {
   const router = useRouter();
   const { isAuthenticated, isInitialized } = useAuthStore();
 
+  useEffect(() => {
+    if (isInitialized && isAuthenticated) {
+      router.replace(AUTH_ROUTES.DASHBOARD);
+    }
+  }, [isInitialized, isAuthenticated, router]);
+
   if (!isInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -28,7 +34,6 @@ const GuestGuard: React.FC<GuestGuardProps> = ({ children }) => {
   }
 
   if (isAuthenticated) {
-    router.replace(AUTH_ROUTES.DASHBOARD);
     return null;
   }
 

@@ -3,6 +3,7 @@ import "@/styles/suneditor.min.css";
 import QueryProvider from "@/modules/admin/common/providers/QueryProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import TokenHandler from "@/common/components/TokenHandler";
+import ToastProvider from "@/common/providers/ToastProvider";
 import { Suspense } from "react";
 
 export const   metadata = {
@@ -50,6 +51,7 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <TokenHandler />
+              <ToastProvider />
               {children}
             </AuthProvider>
           </QueryProvider>

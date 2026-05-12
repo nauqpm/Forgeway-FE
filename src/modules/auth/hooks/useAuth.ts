@@ -17,7 +17,21 @@ import { clearTokens } from '../services/tokenService';
 import { getMyPermissionsAPI } from '../services/permissionService';
 import { AUTH_ROUTES } from '../constants/auth-routes';
 import { AuthErrorCode } from '../types/auth.types';
-import type { LoginRequest, RegisterRequest, AuthApiError } from '../types/auth.types';
+import type {
+  LoginRequest,
+  RegisterRequest,
+  AuthApiError,
+  UserRole,
+  User,
+} from '../types/auth.types';
+
+const MFA_REQUIRED_ROLES: UserRole[] = ['super_admin', 'space_admin'];
+
+const requiresMfaByRole = (role?: UserRole) =>
+  role ? MFA_REQUIRED_ROLES.includes(role) : false;
+
+const needsMfaSetup = (currentUser: User | null) =>
+  !!currentUser && requiresMfaByRole(currentUser.role) && !currentUser.mfaEnabled;
 
 export const useAuth = () => {
   const router = useRouter();
@@ -51,9 +65,13 @@ export const useAuth = () => {
           return response;
         }
 
-        // Login successful — set user
-        if (response.user) {
-          setUser(response.user);
+        // Prefer user from login response (if provided) to avoid blocking redirect
+        // when /auth/me is temporarily unavailable right after cookie set.
+        const currentUser =
+          response.user ?? (await getCurrentUserAPI().catch(() => null));
+
+        if (currentUser) {
+          setUser(currentUser);
           resetFailedAttempts();
 
           // Load permissions
@@ -64,7 +82,16 @@ export const useAuth = () => {
             // Non-blocking: permissions will load on next navigation
           }
 
+          if (needsMfaSetup(currentUser)) {
+            router.push(AUTH_ROUTES.MFA);
+            return response;
+          }
+
           router.push(AUTH_ROUTES.DASHBOARD);
+        } else {
+          // Keep behavior explicit: login response succeeded but user profile
+          // could not be resolved, so caller receives an actionable error.
+          throw new Error('Không thể lấy thông tin người dùng sau khi đăng nhập.');
         }
 
         return response;
