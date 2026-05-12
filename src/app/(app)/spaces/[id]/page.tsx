@@ -18,6 +18,7 @@ import FilterMenu from "@/modules/app/common/components/FilterMenu";
 import BulkActionBar from "@/modules/app/common/components/BulkActionBar";
 import TimelineView from "@/modules/app/common/components/TimelineView";
 import DataGridListView from "@/modules/app/common/components/DataGridListView";
+import SharePopover from "@/modules/app/common/components/SharePopover";
 
 type DashboardMetric = {
   completed: number;
@@ -718,9 +719,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
         <div className="flex gap-2">
-          <button className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors shadow-sm">
-            Mời thành viên
-          </button>
+          <SharePopover />
           <button onClick={() => setShowCreateIssue(true)} className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm">
             <Plus className="w-4 h-4" /> Tạo Issue
           </button>
