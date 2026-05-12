@@ -18,13 +18,15 @@ import {
   regenerateBackupCodesAPI,
 } from '../services/mfaService';
 import { AUTH_ROUTES } from '../constants/auth-routes';
-import type { MfaMethod } from '../types/auth.types';
+import type { MfaMethod, UserRole } from '../types/auth.types';
+
+const MFA_REQUIRED_ROLES: UserRole[] = ['super_admin', 'space_admin'];
 
 export const useMfa = () => {
   const router = useRouter();
   const { mfaRequired, mfaToken, method, setupData, setMfaSetup, clearMfa } =
     useMfaStore();
-  const { setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,6 +120,11 @@ export const useMfa = () => {
   // ─── Disable MFA ───────────────────────────────────────────────────────────
 
   const disableMfa = useCallback(async () => {
+    if (user?.role && MFA_REQUIRED_ROLES.includes(user.role)) {
+      setError('Role hiện tại bắt buộc bật MFA và không thể tắt.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -131,7 +138,7 @@ export const useMfa = () => {
     } finally {
       setLoading(false);
     }
-  }, [clearMfa]);
+  }, [clearMfa, user]);
 
   // ─── Backup Codes ──────────────────────────────────────────────────────────
 

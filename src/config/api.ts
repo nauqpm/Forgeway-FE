@@ -6,6 +6,7 @@ import { config } from './config';
  * Cấu hình cho API - Định nghĩa URL gốc và các endpoints
  */
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const RESOLVED_API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SERVER_URL;
 
 /**
  * Headers chuẩn cho API requests
@@ -30,7 +31,7 @@ export const getAuthHeaders = (token?: string | null) => {
  * Tạo URL đầy đủ cho endpoint
  */
 export const buildApiUrl = (endpoint: string): string => {
-    return `${API_URL}${endpoint}`;
+    return `${RESOLVED_API_URL}${endpoint}`;
 };
 
 /**
@@ -39,7 +40,7 @@ export const buildApiUrl = (endpoint: string): string => {
 export const API_TIMEOUT = 10000;
 
 const api = axios.create({
-    baseURL: API_URL,
+    baseURL: RESOLVED_API_URL,
     headers: API_HEADERS,
 });
 

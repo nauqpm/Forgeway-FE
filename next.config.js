@@ -21,9 +21,9 @@ const nextConfig = {
   },
 };
 
-const serverUrl = process.env.NEXT_PUBLIC_API_URL;
+const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-if (!serverUrl?.startsWith("http")) {
+if (!serverUrl?.startsWith("http://")) {
   throw new Error("NEXT_PUBLIC_SERVER_URL must start with http:// or https://");
 }
 
