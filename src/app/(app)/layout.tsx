@@ -5,13 +5,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/app/common/components/Sidebar";
 import NotificationPanel from "@/modules/app/common/components/NotificationPanel";
-import { Menu, Search } from "lucide-react";
+import { Menu, Search, Sun, Moon, Monitor } from "lucide-react";
 import { parseJQL } from "@/utils/jqlParser";
 import { useRouter } from "next/navigation";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const { setCurrentWorkspace, currentWorkspace } = useWorkspaceStore();
+  const { theme, setTheme } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -174,7 +176,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
       <Sidebar
         collapsed={sidebarCollapsed}
         onCollapse={setSidebarCollapsed}
@@ -185,13 +187,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div
         className={`transition-all duration-300 ${sidebarCollapsed ? "lg:ml-16" : "lg:ml-60"}`}
       >
-        <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 sticky top-0 z-20">
+        <header className="h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 sticky top-0 z-20 transition-colors duration-200">
           <div className="flex items-center gap-3 flex-1">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
-              <Menu className="w-5 h-5 text-gray-500" />
+              <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </button>
             <div className="w-full max-w-5xl relative">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
@@ -212,19 +214,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 onKeyDown={handleKeyDown}
                 onBlur={() => setTimeout(() => { setShowSuggestions(false); setGhostText(""); }, 150)}
                 placeholder='Tìm kiếm... (VD: status:"Done" priority:High)'
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition relative z-[1]"
+                className="w-full pl-9 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 text-gray-900 dark:text-white transition relative z-[1]"
                 autoComplete="off"
               />
               {showSuggestions && filteredSuggestions.length > 0 && (
-                <ul className="absolute top-full left-0 mt-1 w-52 bg-white border border-gray-200 shadow-xl rounded-lg overflow-hidden z-50 py-1">
+                <ul className="absolute top-full left-0 mt-1 w-52 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-lg overflow-hidden z-50 py-1">
                   {filteredSuggestions.map((opt, idx) => (
                     <li
                       key={opt}
                       onMouseDown={() => handleSuggestionPick(opt)}
                       className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
                         idx === highlightedIdx
-                          ? "bg-indigo-50 text-indigo-700 font-medium"
-                          : "text-gray-700 hover:bg-gray-50"
+                          ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium"
+                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                       }`}
                     >
                       {opt}
@@ -235,13 +237,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Theme toggle */}
+            <button
+              onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title={`Theme: ${theme}`}
+            >
+              {theme === 'dark' ? (
+                <Moon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              ) : theme === 'system' ? (
+                <Monitor className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              ) : (
+                <Sun className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              )}
+            </button>
+
             {/* Notification */}
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 hover:bg-gray-100 rounded-lg"
+              className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <svg
-                className="w-5 h-5 text-gray-500"
+                className="w-5 h-5 text-gray-500 dark:text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -257,7 +274,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
 
             {/* Avatar */}
-            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition">
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition">
               <img
                 src="/logo-yaviet/download.png" 
                 alt="avatar"

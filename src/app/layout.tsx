@@ -25,6 +25,25 @@ export default function RootLayout({
     <html lang="vi">
       <head>
         <link rel="icon" href="/logo-yaviet/logo 1.png" sizes="any" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('app-theme') || 'system';
+                  var classList = document.documentElement.classList;
+                  classList.remove('light', 'dark');
+                  if (theme === 'system') {
+                    var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                    classList.add(systemTheme);
+                  } else {
+                    classList.add(theme);
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="">
         <Suspense>

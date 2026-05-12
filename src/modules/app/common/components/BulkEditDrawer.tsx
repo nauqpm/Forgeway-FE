@@ -59,25 +59,25 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[400px] bg-white shadow-[-10px_0_30px_rgba(0,0,0,0.1)] border-l border-gray-200 z-50 flex flex-col transform transition-transform duration-300">
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">Sửa nhiều Task ({selectedCount})</h2>
-        <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors">
+    <div className="fixed inset-y-0 right-0 w-[400px] bg-white dark:bg-gray-900 shadow-[-10px_0_30px_rgba(0,0,0,0.1)] border-l border-gray-200 dark:border-gray-700 z-50 flex flex-col transform transition-transform duration-300">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Sửa nhiều Task ({selectedCount})</h2>
+        <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400 transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <p className="text-sm text-gray-500">Các trường có giá trị "Giữ nguyên" sẽ không bị thay đổi khi cập nhật.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Các trường có giá trị "Giữ nguyên" sẽ không bị thay đổi khi cập nhật.</p>
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
           <div className="flex gap-2">
-            <select 
-              value={formData.status} 
+            <select
+              value={formData.status}
               onChange={e => handleChange('status', e.target.value)}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
             >
               <option value={KEEP_AS_IS}>-- Giữ nguyên --</option>
               <option value="To Do">To Do</option>
@@ -89,12 +89,12 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
 
         {/* Priority */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
           <div className="flex gap-2">
-            <select 
-              value={formData.priority} 
+            <select
+              value={formData.priority}
               onChange={e => handleChange('priority', e.target.value)}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
             >
               <option value={KEEP_AS_IS}>-- Giữ nguyên --</option>
               <option value="Highest">Highest</option>
@@ -108,12 +108,12 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
 
         {/* Assignee */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Assignee</label>
           <div className="flex gap-2">
-            <select 
-              value={formData.assignee} 
+            <select
+              value={formData.assignee}
               onChange={e => handleChange('assignee', e.target.value)}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
             >
               <option value={KEEP_AS_IS}>-- Giữ nguyên --</option>
               <option value="Unassigned">Unassigned</option>
@@ -126,9 +126,9 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
 
         {/* Due Date */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
           <div className="flex gap-2">
-            <input 
+            <input
               type={formData.dueDate === KEEP_AS_IS ? "text" : "date"}
               value={formData.dueDate === KEEP_AS_IS ? "-- Giữ nguyên --" : formData.dueDate}
               onChange={e => handleChange('dueDate', e.target.value)}
@@ -138,7 +138,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
                   e.target.showPicker && e.target.showPicker();
                 }
               }}
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500"
+              className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
             />
             {formData.dueDate !== KEEP_AS_IS && (
               <button onClick={() => handleClear('dueDate')} className="px-2 text-sm text-red-500 hover:underline">Clear</button>
@@ -148,8 +148,8 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
 
       </div>
 
-      <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">Hủy</button>
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-end gap-2">
+        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">Hủy</button>
         <button onClick={handleSubmit} className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm">
           Cập nhật ({selectedCount})
         </button>

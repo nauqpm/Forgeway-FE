@@ -58,8 +58,8 @@ export default function DashboardPage() {
           <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <FolderKanban className="w-8 h-8 text-indigo-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Chào mừng đến với AL-TASK</h2>
-          <p className="text-gray-500 mb-6">Tạo workspace đầu tiên để bắt đầu quản lý dự án</p>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Chào mừng đến với AL-TASK</h2>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">Tạo workspace đầu tiên để bắt đầu quản lý dự án</p>
           <Link href="/projects/create" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-medium">
             <Plus className="w-5 h-5" /> Bắt đầu ngay
           </Link>
@@ -87,8 +87,8 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{greeting}, {user?.fullName || "Bạn"}</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Workspace {currentWorkspace.name}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{greeting}, {user?.fullName || "Bạn"}</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Workspace {currentWorkspace.name}</p>
         </div>
         <div className="flex items-center gap-3">
           <Link href="/projects/create" className="inline-flex items-center gap-2 border border-indigo-600 text-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-50 font-medium text-sm transition-colors">
@@ -103,7 +103,7 @@ export default function DashboardPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map((card) => (
-          <div key={card.label} className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-sm transition-shadow">
+          <div key={card.label} className="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800 hover:shadow-sm transition-shadow">
             <div className="flex items-start justify-between mb-3">
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                 card.color === "indigo" ? "bg-indigo-50" :
@@ -122,8 +122,8 @@ export default function DashboardPage() {
                 <span className="text-xs text-gray-400">{card.trend}</span>
               ) : null}
             </div>
-            <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-            <p className="text-sm text-gray-500 mt-0.5">{card.label}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{card.label}</p>
           </div>
         ))}
       </div>
@@ -133,20 +133,20 @@ export default function DashboardPage() {
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Công việc của tôi */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-2">
                 <ListTodo className="w-5 h-5 text-indigo-600" />
-                <h2 className="font-semibold text-gray-900">Công việc của tôi</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-white">Công việc của tôi</h2>
                 <span className="bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded-full">{tasks.length}</span>
               </div>
               <Link href="/my-tasks" className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-medium">
                 Xem tất cả <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-gray-50 dark:divide-gray-800">
               {sortedTasks.slice(0, 6).map((task) => (
-                <Link key={task._id} href={`/tasks/${task._id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 transition-colors group">
+                <Link key={task._id} href={`/tasks/${task._id}`} className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                     task.priority === "highest" || task.priority === "high" ? "bg-red-500" :
                     task.priority === "medium" ? "bg-yellow-500" :
@@ -155,9 +155,9 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono text-gray-400">{task.key}</span>
-                      {task.projectId && <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{task.projectId.key}</span>}
+                      {task.projectId && <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded">{task.projectId.key}</span>}
                     </div>
-                    <p className="text-sm font-medium text-gray-800 truncate mt-0.5">{task.title}</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate mt-0.5">{task.title}</p>
                   </div>
                   {task.dueDate && (
                     <span className={`text-xs flex items-center gap-1 ${new Date(task.dueDate) < new Date() && task.status !== "done" ? "text-red-600 font-medium" : "text-gray-400"}`}>
@@ -169,17 +169,17 @@ export default function DashboardPage() {
                 </Link>
               ))}
               {tasks.length === 0 && (
-                <div className="p-8 text-center text-gray-400 text-sm">Không có công việc nào được giao cho bạn</div>
+                <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-sm">Không có công việc nào được giao cho bạn</div>
               )}
             </div>
           </div>
 
           {/* Tiến độ dự án */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-indigo-600" />
-                <h2 className="font-semibold text-gray-900">Tiến độ Dự án</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-white">Tiến độ Dự án</h2>
               </div>
               <Link href="/projects" className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-medium">
                 Tất cả dự án <ArrowRight className="w-4 h-4" />
@@ -193,13 +193,13 @@ export default function DashboardPage() {
                 return (
                   <div key={project._id} className="group">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-medium text-gray-800 group-hover:text-indigo-600 cursor-pointer">{project.name}</span>
+                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200 group-hover:text-indigo-600 cursor-pointer">{project.name}</span>
                       <span className="text-xs text-gray-400">{pct}%</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2">
                       <div className={`h-2 rounded-full transition-all ${pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-indigo-500" : "bg-blue-400"}`} style={{ width: `${pct}%` }} />
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">{done} trong {total} công việc đã hoàn thành</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{done} trong {total} công việc đã hoàn thành</p>
                   </div>
                 );
               })}
@@ -213,17 +213,17 @@ export default function DashboardPage() {
         {/* Right Column */}
         <div className="space-y-6">
           {/* Sprint hiện tại */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-amber-500" />
-                <h2 className="font-semibold text-gray-900">Sprint Hiện tại</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-white">Sprint Hiện tại</h2>
               </div>
               <Link href="/sprints" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">Quản lý</Link>
             </div>
             <div className="p-5 text-center">
-              <p className="text-sm font-medium text-gray-700">Không có sprint đang hoạt động</p>
-              <p className="text-xs text-gray-400 mt-1">Tạo sprint để theo dõi tiến độ đội nhóm</p>
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Không có sprint đang hoạt động</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Tạo sprint để theo dõi tiến độ đội nhóm</p>
               <Link href="/sprints" className="inline-flex items-center gap-1 text-xs text-indigo-600 mt-2 font-medium hover:text-indigo-800">
                 Đến Sprint <ArrowRight className="w-3 h-3" />
               </Link>
@@ -231,9 +231,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Thao tác nhanh */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2"><Activity className="w-5 h-5 text-indigo-600" />Thao tác Nhanh</h2>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2"><Activity className="w-5 h-5 text-indigo-600" />Thao tác Nhanh</h2>
             </div>
             <div className="p-2">
               {[
@@ -244,7 +244,7 @@ export default function DashboardPage() {
               ].map((item) => (
                 <Link key={item.href + item.label} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${item.bg} transition-colors`}>
                   <item.icon className={`w-4 h-4 ${item.color}`} />
-                  <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{item.label}</span>
                   <ArrowRight className="w-4 h-4 text-gray-300 ml-auto" />
                 </Link>
               ))}
@@ -252,10 +252,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Thành viên đội nhóm */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-600" />Thành viên Đội nhóm</h2>
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{members.length}</span>
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2"><Users className="w-5 h-5 text-indigo-600" />Thành viên Đội nhóm</h2>
+              <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">{members.length}</span>
             </div>
             <div className="p-5">
               <div className="flex flex-wrap gap-3">
@@ -268,7 +268,7 @@ export default function DashboardPage() {
                   </div>
                 ))}
                 {members.length > 8 && (
-                  <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-xs font-bold">+{members.length - 8}</div>
+                  <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 flex items-center justify-center text-xs font-bold">+{members.length - 8}</div>
                 )}
               </div>
             </div>

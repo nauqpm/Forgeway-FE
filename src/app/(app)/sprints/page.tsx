@@ -45,20 +45,20 @@ export default function SprintsPage() {
 
   const render = (list: Sprint[], title: string) => list.length > 0 && (
     <div className="mb-6">
-      <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">{title} ({list.length})</h2>
+      <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{title} ({list.length})</h2>
       <div className="space-y-3">
         {list.map((sprint) => {
           const c = config[sprint.status] || config.planning;
           const Icon = c.icon;
           return (
-            <div key={sprint._id} className="bg-white rounded-xl border border-gray-200 p-5">
+            <div key={sprint._id} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 ${c.bg} rounded-lg flex items-center justify-center flex-shrink-0`}><Icon className={`w-5 h-5 ${c.color}`} /></div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{sprint.name}</h3>
-                    {sprint.goal && <p className="text-sm text-gray-500 mt-0.5">{sprint.goal}</p>}
-                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{sprint.name}</h3>
+                    {sprint.goal && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{sprint.goal}</p>}
+                    <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500">
                       <span>{sprint.projectId?.name}</span><span>·</span>
                       <Calendar className="w-3 h-3" />
                       <span>{new Date(sprint.startDate).toLocaleDateString("vi-VN")} - {new Date(sprint.endDate).toLocaleDateString("vi-VN")}</span>
@@ -80,16 +80,16 @@ export default function SprintsPage() {
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sprints</h1>
-          <p className="text-gray-500 text-sm">Scrum sprint management</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sprints</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Scrum sprint management</p>
         </div>
       </div>
 
       {sprints.length === 0 ? (
-        <div className="flex flex-col items-center py-16 bg-white rounded-xl border border-gray-200">
-          <Zap className="w-12 h-12 text-gray-300 mb-3" />
-          <p className="text-gray-500 font-medium mb-2">No sprints found</p>
-          <p className="text-gray-400 text-sm text-center">Sprints are available in Scrum projects.</p>
+        <div className="flex flex-col items-center py-16 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+          <Zap className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
+          <p className="text-gray-500 dark:text-gray-400 font-medium mb-2">No sprints found</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm text-center">Sprints are available in Scrum projects.</p>
         </div>
       ) : (
         <>

@@ -56,38 +56,38 @@ export default function CreatePagePage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <Link href={`/spaces/${spaceId}`} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-          <ArrowLeft className="w-5 h-5 text-gray-500" />
+        <Link href={`/spaces/${spaceId}`} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+          <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Create Page</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Create a new document in this space</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Page</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Create a new document in this space</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="p-6 space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Page Title *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Page Title *</label>
             <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required
               placeholder="Enter page title"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Content</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Content</label>
             <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={12}
               placeholder="Write your content here... (Markdown supported)"
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none font-mono" />
+              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none font-mono" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Labels</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Labels</label>
             <div className="flex gap-2">
               <input type="text" value={labelInput} onChange={(e) => setLabelInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLabel(); } }}
                 placeholder="Type a label and press Enter"
-                className="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+                className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
               <button type="button" onClick={addLabel}
-                className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors">
+                className="px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <Plus className="w-4 h-4" />
               </button>
             </div>
@@ -100,23 +100,23 @@ export default function CreatePagePage() {
                 ))}
               </div>
             )}
-            <p className="text-xs text-gray-400 mt-1">Separate multiple labels with commas</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Separate multiple labels with commas</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
             <div className="flex gap-3">
               {(["draft", "published"] as const).map(s => (
-                <label key={s} className={`flex-1 flex items-center gap-2 p-3 border rounded-xl cursor-pointer transition-colors ${form.status === s ? "border-indigo-500 bg-indigo-50" : "border-gray-200 hover:border-gray-300"}`}>
+                <label key={s} className={`flex-1 flex items-center gap-2 p-3 border rounded-xl cursor-pointer transition-colors ${form.status === s ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"}`}>
                   <input type="radio" name="status" value={s} checked={form.status === s}
                     onChange={() => setForm({ ...form, status: s })} />
-                  <span className="text-sm font-medium text-gray-800 capitalize">{s}</span>
+                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200 capitalize">{s}</span>
                 </label>
               ))}
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-3">
-          <Link href={`/spaces/${spaceId}`} className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">
+        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
+          <Link href={`/spaces/${spaceId}`} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             Cancel
           </Link>
           <button type="submit" disabled={loading || !form.title.trim()}

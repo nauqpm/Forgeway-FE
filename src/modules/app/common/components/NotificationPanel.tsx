@@ -123,37 +123,37 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
   const groupOrder = ['Latest', 'Yesterday', 'Older'];
 
   return (
-    <div className="absolute right-0 top-12 w-[400px] bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 z-50 flex flex-col max-h-[85vh] animate-in fade-in slide-in-from-top-2 duration-200" ref={panelRef}>
+    <div className="absolute right-0 top-12 w-[400px] bg-white dark:bg-gray-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 dark:border-gray-700 z-50 flex flex-col max-h-[85vh] animate-in fade-in slide-in-from-top-2 duration-200" ref={panelRef}>
       {/* Header */}
-      <div className="px-4 pt-4 pb-0 border-b border-gray-100 flex flex-col gap-3">
+      <div className="px-4 pt-4 pb-0 border-b border-gray-100 dark:border-gray-700 flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Notifications</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Notifications</h2>
           <div className="flex items-center gap-1">
             <div className="flex items-center gap-2 mr-2">
-              <span className="text-xs font-medium text-gray-600">Only show unread</span>
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Only show unread</span>
               <button 
                 onClick={() => setShowUnreadOnly(!showUnreadOnly)}
-                className={`w-8 h-4 rounded-full relative transition-colors ${showUnreadOnly ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                className={`w-8 h-4 rounded-full relative transition-colors ${showUnreadOnly ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'}`}
               >
                 <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform ${showUnreadOnly ? 'translate-x-4.5 left-0.5' : 'left-0.5'}`} />
               </button>
             </div>
             
-            <button className="p-1.5 hover:bg-gray-100 rounded text-gray-500" title="Fullscreen">
+            <button className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-gray-500 dark:text-gray-400" title="Fullscreen">
               <Maximize2 className="w-4 h-4" />
             </button>
-            
+
             <div className="relative" ref={menuRef}>
-              <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 hover:bg-gray-100 rounded text-gray-500">
+              <button onClick={() => setShowMenu(!showMenu)} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-gray-500 dark:text-gray-400">
                 <MoreHorizontal className="w-4 h-4" />
               </button>
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                  <button onClick={markAllAsRead} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50">
+                  <button onClick={markAllAsRead} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
                     <Check className="w-4 h-4 text-gray-400" />
                     Mark all as read
                   </button>
-                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                  <button className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2">
                     <Settings className="w-4 h-4 text-gray-400" />
                     Notification settings
                   </button>
@@ -167,13 +167,13 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
         <div className="flex gap-6">
           <button 
             onClick={() => setActiveTab('DIRECT')}
-            className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'DIRECT' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'DIRECT' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
           >
             Direct
           </button>
           <button 
             onClick={() => setActiveTab('WATCHING')}
-            className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'WATCHING' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
+            className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === 'WATCHING' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
           >
             Watching
           </button>
@@ -181,7 +181,7 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50/30">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50/30 dark:bg-gray-800/30">
         {!dismissBanner && (
           <div className="mx-4 mt-4 p-3 bg-indigo-50 border border-indigo-100 rounded-lg flex items-start gap-3 relative">
             <div className="flex-1">
@@ -196,11 +196,11 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
 
         {filteredNotifications.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Bell className="w-8 h-8 text-gray-300" />
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+              <Bell className="w-8 h-8 text-gray-300 dark:text-gray-600" />
             </div>
-            <p className="text-base font-semibold text-gray-900">You're all caught up!</p>
-            <p className="text-sm text-gray-500 mt-1">No new notifications here.</p>
+            <p className="text-base font-semibold text-gray-900 dark:text-white">You're all caught up!</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No new notifications here.</p>
           </div>
         ) : (
           <div className="p-4 space-y-6">
@@ -210,13 +210,13 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
 
               return (
                 <div key={group}>
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">{group}</h3>
+                  <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{group}</h3>
                   <div className="space-y-1">
                     {items.map(notif => (
                       <div 
                         key={notif.id} 
                         onClick={() => markAsRead(notif.id)}
-                        className={`relative p-3 rounded-xl transition-all cursor-pointer group hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 ${!notif.isRead ? 'bg-indigo-50/40' : ''}`}
+                        className={`relative p-3 rounded-xl transition-all cursor-pointer group hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-700 ${!notif.isRead ? 'bg-indigo-50/40 dark:bg-indigo-900/10' : ''}`}
                       >
                         {!notif.isRead && (
                           <div className="absolute top-4 right-3 w-2.5 h-2.5 bg-[#0c66e4] rounded-full" />
@@ -227,28 +227,28 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
                             {notif.actor.avatar}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-800 leading-snug">
-                              <span className="font-semibold text-gray-900">{notif.actor.name}</span> {notif.actionText}
+                            <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">
+                              <span className="font-semibold text-gray-900 dark:text-white">{notif.actor.name}</span> {notif.actionText}
                             </p>
                             
                             {notif.type === 'STANDARD' && notif.target && (
-                              <div className="mt-1.5 flex items-center gap-1.5 bg-white border border-gray-200 rounded p-1.5 w-fit hover:border-indigo-300 transition-colors">
+                              <div className="mt-1.5 flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-1.5 w-fit hover:border-indigo-300 transition-colors">
                                 <FileText className={`w-3.5 h-3.5 ${notif.target.type === 'Bug' ? 'text-red-500' : notif.target.type === 'Story' ? 'text-emerald-500' : 'text-indigo-500'}`} />
-                                <span className="text-xs font-medium text-gray-700">{notif.target.key}: {notif.target.title}</span>
+                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{notif.target.key}: {notif.target.title}</span>
                               </div>
                             )}
 
                             {notif.type === 'INVITE' && notif.inviteData && (
-                              <div className="mt-2 bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
-                                <p className="text-sm font-semibold text-gray-900">{notif.inviteData.spaceName}</p>
-                                <p className="text-xs text-gray-600 mt-1 italic">"{notif.inviteData.message}"</p>
+                              <div className="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm">
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{notif.inviteData.spaceName}</p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 italic">"{notif.inviteData.message}"</p>
                                 <button className="mt-3 bg-[#0c66e4] hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors w-full">
                                   Join the space
                                 </button>
                               </div>
                             )}
 
-                            <p className="text-xs text-gray-400 mt-2">
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                               {new Date(notif.createdAt).toLocaleDateString('en-US', { weekday: 'long', hour: 'numeric', minute: 'numeric' })}
                             </p>
                           </div>
@@ -260,9 +260,9 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
               );
             })}
             
-            <div className="flex flex-col items-center justify-center py-6 border-t border-gray-100">
-              <Flag className="w-5 h-5 text-gray-300 mb-2" />
-              <p className="text-xs text-gray-500 text-center max-w-[200px]">
+            <div className="flex flex-col items-center justify-center py-6 border-t border-gray-100 dark:border-gray-700">
+              <Flag className="w-5 h-5 text-gray-300 dark:text-gray-600 mb-2" />
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-center max-w-[200px]">
                 That's all your notifications from the last 30 days.
               </p>
             </div>

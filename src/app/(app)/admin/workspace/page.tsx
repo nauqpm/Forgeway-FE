@@ -58,45 +58,66 @@ export default function WorkspaceSettingsPage() {
   };
 
   const roleIcons: Record<string, any> = { owner: Crown, admin: Shield, member: User, viewer: User };
-  const roleColors: Record<string, string> = { owner: "text-amber-500", admin: "text-purple-500", member: "text-blue-500", viewer: "text-gray-400" };
+  const roleColors: Record<string, string> = { owner: "text-amber-500", admin: "text-purple-500", member: "text-blue-500", viewer: "text-gray-400 dark:text-gray-500" };
   const roleLabels: Record<string, string> = { owner: "Chủ sở hữu", admin: "Quản trị viên", member: "Thành viên", viewer: "Người xem" };
 
   if (loading) return <LoadingSpinner />;
 
   if (!currentWorkspace) return (
-    <div className="p-6 text-center text-gray-500">Không tìm thấy workspace. Vui lòng tạo workspace trước.</div>
+    <div className="p-6 text-center text-gray-500 dark:text-gray-400">Không tìm thấy workspace. Vui lòng tạo workspace trước.</div>
   );
 
-  if (!workspace) return <div className="p-6 text-center text-gray-500">Không tìm thấy workspace</div>;
+  if (!workspace) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Không tìm thấy workspace</div>;
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Cài đặt Workspace</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Cài đặt Workspace</h1>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
-        <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-indigo-500" /> Thông tin Workspace</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-indigo-500" /> Thông tin Workspace</h2>
         <div className="space-y-4">
-          <div><label className="block text-sm font-medium text-gray-700 mb-2">Tên</label><input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500" /></div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-2">Mô tả</label><textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 resize-none" rows={3} /></div>
-          <div className="flex justify-end"><button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50">{saving ? "Đang lưu..." : "Lưu thay đổi"}</button></div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tên</label>
+            <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mô tả</label>
+            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none" rows={3} />
+          </div>
+          <div className="flex justify-end">
+            <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50">
+              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> Thành viên ({members.length})</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> Thành viên ({members.length})</h2>
         <div className="space-y-2">
           {members.map((member) => {
             const RoleIcon = roleIcons[member.role] || User;
             return (
-              <div key={member.userId._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={member.userId._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold">{member.userId.fullName?.charAt(0) || member.userId.email.charAt(0).toUpperCase()}</div>
-                  <div><p className="text-sm font-medium text-gray-900">{member.userId.fullName || "Người dùng"}</p><p className="text-xs text-gray-400">{member.userId.email}</p></div>
+                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-bold">
+                    {member.userId.fullName?.charAt(0) || member.userId.email.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{member.userId.fullName || "Người dùng"}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">{member.userId.email}</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-xs font-medium capitalize flex items-center gap-1 ${roleColors[member.role]}`}><RoleIcon className="w-3.5 h-3.5" /> {roleLabels[member.role] || member.role}</span>
+                  <span className={`text-xs font-medium capitalize flex items-center gap-1 ${roleColors[member.role]}`}>
+                    <RoleIcon className="w-3.5 h-3.5" /> {roleLabels[member.role] || member.role}
+                  </span>
                   {member.role !== "owner" && (
-                    <button onClick={() => handleRemoveMember(member.userId._id)} className="p-1 hover:bg-red-100 rounded text-red-500" title="Xóa khỏi workspace"><X className="w-4 h-4" /></button>
+                    <button onClick={() => handleRemoveMember(member.userId._id)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-500" title="Xóa khỏi workspace">
+                      <X className="w-4 h-4" />
+                    </button>
                   )}
                 </div>
               </div>

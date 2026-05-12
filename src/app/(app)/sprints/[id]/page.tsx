@@ -107,18 +107,18 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
   return (
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <Link href="/sprints" className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-          <ArrowLeft className="w-5 h-5 text-gray-500" />
+        <Link href="/sprints" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+          <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
         </Link>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{sprint.name}</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{sprint.name}</h1>
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${status.bg} ${status.color}`}>
               <status.icon className="w-3.5 h-3.5" />
               {sprint.status.charAt(0).toUpperCase() + sprint.status.slice(1)}
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             {sprint.projectId.key} &middot; {sprint.projectId.name}
           </p>
         </div>
@@ -153,35 +153,35 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
           { label: "Progress", value: `${pct}%`, icon: TrendingUp, color: "text-indigo-600", bg: "bg-indigo-50" },
           { label: "Days Left", value: daysLeft !== null ? `${daysLeft} days` : "—", icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
         ].map((card) => (
-          <div key={card.label} className="bg-white rounded-xl border border-gray-200 p-4">
+          <div key={card.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
             <div className={`w-9 h-9 ${card.bg} rounded-lg flex items-center justify-center mb-3`}>
               <card.icon className={`w-4 h-4 ${card.color}`} />
             </div>
-            <p className="text-xl font-bold text-gray-900">{card.value}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{card.label}</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{card.label}</p>
           </div>
         ))}
       </div>
 
       {/* Progress Bars */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-        <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-indigo-600" /> Sprint Progress</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 mb-6">
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-indigo-600" /> Sprint Progress</h2>
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-sm text-gray-600">Task Completion</span>
-              <span className="text-sm font-medium text-gray-800">{pct}%</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Task Completion</span>
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{pct}%</span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2.5">
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5">
               <div className={`h-2.5 rounded-full transition-all ${pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-indigo-500" : "bg-blue-400"}`} style={{ width: `${pct}%` }} />
             </div>
           </div>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-sm text-gray-600">Story Points Velocity</span>
-              <span className="text-sm font-medium text-gray-800">{pointsPct}%</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">Story Points Velocity</span>
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{pointsPct}%</span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2.5">
+            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5">
               <div className={`h-2.5 rounded-full transition-all ${pointsPct >= 80 ? "bg-green-500" : pointsPct >= 50 ? "bg-amber-500" : "bg-amber-400"}`} style={{ width: `${pointsPct}%` }} />
             </div>
           </div>
@@ -189,18 +189,18 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Dates */}
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-indigo-600" /> Sprint Timeline</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-indigo-600" /> Sprint Timeline</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Start Date</p>
-            <p className="text-sm font-medium text-gray-800 mt-1">
+            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Start Date</p>
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1">
               {sprint.startDate ? new Date(sprint.startDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "Not set"}
             </p>
           </div>
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">End Date</p>
-            <p className="text-sm font-medium text-gray-800 mt-1">
+            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">End Date</p>
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1">
               {sprint.endDate ? new Date(sprint.endDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "Not set"}
             </p>
           </div>

@@ -146,7 +146,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="px-2 text-2xl font-bold text-gray-900">
+        <h1 className="px-2 text-2xl font-bold text-gray-900 dark:text-white">
           Không gian đề xuất
         </h1>
 
@@ -163,7 +163,7 @@ export default function AdminDashboardPage() {
           <Link
             key={space.id}
             href={`/spaces/${space.id}`}
-            className="group bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md hover:border-indigo-200 transition-all"
+            className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500 transition-all"
           >
             <div className="flex items-start gap-4">
               <div
@@ -173,10 +173,10 @@ export default function AdminDashboardPage() {
               </div>
 
               <div>
-                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-600">
+                <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                   {space.name}
                 </h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   {space.description}
                 </p>
               </div>
@@ -187,7 +187,7 @@ export default function AdminDashboardPage() {
       <div className="mt-10">
         {/* Header */}
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Dành cho bạn</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dành cho bạn</h2>
         </div>
 
         {/* Tabs */}
@@ -198,8 +198,8 @@ export default function AdminDashboardPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`px-3 py-1.5 text-sm rounded-md transition ${
                 activeTab === tab.key
-                  ? "bg-indigo-100 text-indigo-700 font-medium"
-                  : "text-gray-500 hover:bg-gray-100"
+                  ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-medium"
+                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
               {tab.label}
@@ -208,31 +208,31 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Tóm lại */}
-        <div className="mb-2 text-sm text-gray-500">Tóm lại</div>
+        <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">Tóm lại</div>
 
         {/* Task list */}
         <div className="space-y-2">
           {filteredTasks.map((task) => (
             <div
               key={task.id}
-              className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 hover:bg-gray-100 transition"
+              className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
             >
               {/* Left */}
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-green-100 flex items-center justify-center">
+                <div className="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                   <BookOpen className="w-4 h-4 text-green-600" />
                 </div>
 
                 <div>
-                  <p className="font-medium text-gray-900">{task.title}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="font-medium text-gray-900 dark:text-white">{task.title}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {task.type} • {task.project} • {task.team}
                   </p>
                 </div>
               </div>
 
               {/* Right */}
-              <button className="text-xs font-medium bg-indigo-100 text-indigo-700 px-3 py-1 rounded">
+              <button className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded">
                 TÓM LẠI
               </button>
             </div>

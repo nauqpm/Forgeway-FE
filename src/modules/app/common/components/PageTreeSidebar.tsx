@@ -38,18 +38,18 @@ const SortableTreeItem = ({ item, isExpanded, onToggle, spaceId }: SortableTreeI
   const hasChildren = item.children && item.children.length > 0;
 
   return (
-    <div ref={setNodeRef} style={style} className={`flex items-center gap-1.5 py-1.5 pr-2 rounded-lg group ${isDragging ? 'bg-indigo-50 z-50 relative' : 'hover:bg-gray-100 bg-white'}`}>
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600">
+    <div ref={setNodeRef} style={style} className={`flex items-center gap-1.5 py-1.5 pr-2 rounded-lg group ${isDragging ? 'bg-indigo-50 z-50 relative' : 'hover:bg-gray-100 dark:hover:bg-gray-800 bg-white dark:bg-transparent'}`}>
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
         <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor">
           <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"></path>
         </svg>
       </div>
       
-      <button onClick={() => onToggle(item.id)} className={`p-0.5 rounded text-gray-400 hover:bg-gray-200 transition-colors ${!hasChildren ? 'invisible' : ''}`}>
+      <button onClick={() => onToggle(item.id)} className={`p-0.5 rounded text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors ${!hasChildren ? 'invisible' : ''}`}>
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
       </button>
 
-      <Link href={`/spaces/${spaceId}/pages/${item.id}`} className="flex-1 flex items-center gap-2 text-sm text-gray-700 hover:text-indigo-600 font-medium truncate">
+      <Link href={`/spaces/${spaceId}/pages/${item.id}`} className="flex-1 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium truncate">
         <FileText className="w-4 h-4 text-gray-400 shrink-0" />
         <span className="truncate">{item.title}</span>
       </Link>
@@ -125,10 +125,10 @@ export default function PageTreeSidebar({ initialData, spaceId }: { initialData:
   };
 
   return (
-    <div className="w-64 border-r border-gray-200 bg-gray-50 flex flex-col rounded-l-2xl overflow-hidden shrink-0">
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-700">Tài liệu</h3>
-        <Link href={`/spaces/${spaceId}/pages/create`} className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors bg-white border border-gray-200 shadow-sm">
+    <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col rounded-l-2xl overflow-hidden shrink-0">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h3 className="font-semibold text-gray-700 dark:text-gray-300">Tài liệu</h3>
+        <Link href={`/spaces/${spaceId}/pages/create`} className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400 transition-colors bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm">
           <Plus className="w-4 h-4" />
         </Link>
       </div>

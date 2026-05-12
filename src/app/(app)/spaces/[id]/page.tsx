@@ -796,30 +796,30 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Link href="/spaces" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ArrowRight className="w-5 h-5 text-gray-500 rotate-180" />
+          <Link href="/spaces" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+            <ArrowRight className="w-5 h-5 text-gray-500 dark:text-gray-400 rotate-180" />
           </Link>
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${space.template === 'scrum' ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
             {space.template === 'scrum' ? <Repeat className="w-7 h-7 text-white" /> : <Columns className="w-7 h-7 text-white" />}
           </div>
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs font-mono font-bold">{space.key}</span>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium ${space.visibility === "private" ? "bg-amber-50 text-amber-700" : "bg-green-50 text-green-700"
+              <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded text-xs font-mono font-bold">{space.key}</span>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium ${space.visibility === "private" ? "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-500" : "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-500"
                 }`}>
                 {space.visibility === "private" ? <><Lock className="w-3 h-3" /> Private</> : <><Globe className="w-3 h-3" /> Public</>}
               </span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               {space.name}
-              <Link href={`/spaces/${spaceId}/settings`} className="p-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-gray-700">
+              <Link href={`/spaces/${spaceId}/settings`} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
                 <Settings className="w-5 h-5" />
               </Link>
             </h1>
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setIsInviteModalOpen(true)} className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium text-sm transition-colors shadow-sm">
+          <button onClick={() => setIsInviteModalOpen(true)} className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors shadow-sm">
             Mời thành viên
           </button>
           <button onClick={() => setShowCreateIssue(true)} className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm">
@@ -830,43 +830,43 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
       {/* Description */}
       {space.description && (
-        <p className="text-gray-600 text-sm mb-6 bg-white rounded-lg px-4 py-3 border border-gray-200">{space.description}</p>
+        <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 bg-white dark:bg-gray-900 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-800">{space.description}</p>
       )}
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl w-fit mb-6">
+      <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900/50 p-1 rounded-xl w-fit mb-6">
         <button onClick={() => setActiveTab("summary")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "summary" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "summary" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
           Summary
         </button>
         {space.template === "kanban" && (
           <button onClick={() => setActiveTab("board")}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
             Board
           </button>
         )}
         {space.template === "scrum" && (
           <>
             <button onClick={() => setActiveTab("backlog")}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "backlog" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "backlog" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
               Backlog
             </button>
             <button onClick={() => setActiveTab("board")}
-              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+              className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
               Board
             </button>
           </>
         )}
         <button onClick={() => setActiveTab("timeline")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "timeline" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "timeline" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
           Timeline
         </button>
         <button onClick={() => setActiveTab("list")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "list" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "list" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
           List
         </button>
         <button onClick={() => setActiveTab("pages")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "pages" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "pages" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}>
           Doc
         </button>
       </div>
@@ -921,7 +921,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     placeholder="Search issues..."
                     value={filters.search}
                     onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                    className="pl-9 pr-4 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow w-52"
+                    className="pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow w-52"
                   />
                 </div>
                 <div className="flex -space-x-2">
@@ -939,20 +939,20 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="relative" ref={boardFilterRef}>
                   <button
                     onClick={() => setIsBoardFilterOpen(o => !o)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border rounded-lg transition-colors ${filters.priority ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border rounded-lg transition-colors ${filters.priority ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                     <span>Filter</span>
                     {filters.priority && <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center">1</span>}
                   </button>
                   {isBoardFilterOpen && (
-                    <div className="absolute top-full mt-1 left-0 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-[180px] p-3">
+                    <div className="absolute top-full mt-1 left-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg z-20 min-w-[180px] p-3">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Priority</p>
                       {(['', 'High', 'Medium', 'Low'] as const).map(p => (
                         <button
                           key={p}
                           onClick={() => { setFilters(prev => ({ ...prev, priority: p || null })); setIsBoardFilterOpen(false); }}
-                          className={`w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg hover:bg-gray-50 transition-colors ${filters.priority === (p || null) ? 'text-indigo-600 font-semibold' : 'text-gray-700'}`}
+                          className={`w-full flex items-center justify-between px-2 py-2 text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${filters.priority === (p || null) ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
                         >
                           <span>{p === '' ? 'All' : p === 'High' ? '🔴 High' : p === 'Medium' ? '🟠 Medium' : '🟢 Low'}</span>
                           {filters.priority === (p || null) && <Check className="w-3.5 h-3.5 text-indigo-600" />}
@@ -961,7 +961,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       {(filters.search || filters.assigneeId || filters.priority) && (
                         <button
                           onClick={() => { setFilters(prev => ({ ...prev, search: "", assigneeId: null, priority: null })); setIsBoardFilterOpen(false); }}
-                          className="w-full mt-2 pt-2 border-t border-gray-100 text-xs text-indigo-600 hover:text-indigo-800 font-medium text-left px-2"
+                          className="w-full mt-2 pt-2 border-t border-gray-100 dark:border-gray-800 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-medium text-left px-2"
                         >
                           Clear all filters
                         </button>
@@ -1000,7 +1000,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="relative" ref={boardSprintRef}>
                       <button
                         onClick={() => setIsSprintSwitcherOpen(o => !o)}
-                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                         title={currentBoardSprint?.name ?? "All Issues"}
                       >
                         <Repeat className="w-3.5 h-3.5" />
@@ -1015,14 +1015,14 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         <ChevronDown className="w-3 h-3 text-gray-400" />
                       </button>
                       {isSprintSwitcherOpen && (
-                        <div className="absolute top-full mt-1 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-[220px] py-1">
+                        <div className="absolute top-full mt-1 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg z-20 min-w-[220px] py-1">
                           {sprints.map(sprint => {
                             const dl = calculateDaysLeft(sprint.endDate);
                             return (
                               <button
                                 key={sprint.id}
                                 onClick={() => { setSelectedSprintId(sprint.id); setIsSprintSwitcherOpen(false); }}
-                                className={`w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-gray-50 transition-colors ${sprint.id === selectedSprintId ? 'text-indigo-600 font-semibold' : 'text-gray-700'}`}
+                                className={`w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${sprint.id === selectedSprintId ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
                               >
                                 <div className="flex flex-col items-start gap-0.5">
                                   <span>{sprint.name}</span>
@@ -1044,19 +1044,19 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 <div className="relative" ref={boardGroupRef}>
                   <button
                     onClick={() => setIsGroupDropdownOpen(o => !o)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border rounded-lg transition-colors ${boardGroupBy !== 'NONE' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium border rounded-lg transition-colors ${boardGroupBy !== 'NONE' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800' : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
                     <span>Group{boardGroupBy !== 'NONE' ? ` · ${boardGroupBy.charAt(0) + boardGroupBy.slice(1).toLowerCase()}` : ''}</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                   {isGroupDropdownOpen && (
-                    <div className="absolute top-full mt-1 right-0 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-[160px] py-1">
+                    <div className="absolute top-full mt-1 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg z-20 min-w-[160px] py-1">
                       {(['NONE', 'ASSIGNEE', 'EPIC'] as const).map(opt => (
                         <button
                           key={opt}
                           onClick={() => { setBoardGroupBy(opt); setIsGroupDropdownOpen(false); }}
-                          className={`w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-gray-50 transition-colors ${boardGroupBy === opt ? 'text-indigo-600 font-semibold' : 'text-gray-700'}`}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${boardGroupBy === opt ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
                         >
                           <span>{opt === 'NONE' ? 'None' : opt.charAt(0) + opt.slice(1).toLowerCase()}</span>
                           {boardGroupBy === opt && <Check className="w-3.5 h-3.5 text-indigo-600" />}
@@ -1091,24 +1091,24 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-full border border-gray-200 shadow-sm"
+                              className="flex-shrink-0 w-80 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex flex-col max-h-full border border-gray-200 dark:border-gray-800 shadow-sm"
                             >
                               <div
                                 {...provided.dragHandleProps}
-                                className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-100/50 rounded-t-xl cursor-grab active:cursor-grabbing"
+                                className="p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl cursor-grab active:cursor-grabbing"
                               >
-                                <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide flex items-center gap-2">
+                                <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide flex items-center gap-2">
                                   {status}
-                                  <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px] font-bold">{boardIssues.filter(i => i.status === status).length}</span>
+                                  <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[10px] font-bold">{boardIssues.filter(i => i.status === status).length}</span>
                                 </h3>
-                                <button onClick={() => { setNewIssueForm({ ...newIssueForm, status }); setShowCreateIssue(true); }} className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors cursor-pointer"><Plus className="w-4 h-4" /></button>
+                                <button onClick={() => { setNewIssueForm({ ...newIssueForm, status }); setShowCreateIssue(true); }} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors cursor-pointer"><Plus className="w-4 h-4" /></button>
                               </div>
                               <Droppable droppableId={status} type="task">
                                 {(provided, snapshot) => (
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/50' : ''}`}
+                                    className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/50 dark:bg-indigo-900/20' : ''}`}
                                   >
                                     {boardIssues.filter(i => i.status === status).map((issue, issueIndex) => (
                                       <Draggable key={issue.id} draggableId={issue.id} index={issueIndex}>
@@ -1118,16 +1118,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
                                             onClick={() => setSelectedIssue(issue)}
-                                            className={`bg-white p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? 'border-indigo-500 shadow-lg rotate-2 z-50 relative' : 'border-gray-200 hover:border-indigo-400 hover:shadow-md'} transition-all cursor-grab active:cursor-grabbing group`}
+                                            className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? 'border-indigo-500 shadow-lg rotate-2 z-50 relative' : 'border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md'} transition-all cursor-grab active:cursor-grabbing group`}
                                           >
-                                            <p className="text-sm font-medium text-gray-900 mb-2 leading-snug group-hover:text-indigo-600">{issue.title}</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{issue.title}</p>
                                             <div className="flex flex-wrap gap-1.5 mb-3">
                                               <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === 'High' ? 'bg-red-50 text-red-600' : issue.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'}`}>{issue.priority}</span>
                                               <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600">{issue.type}</span>
                                             </div>
-                                            <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+                                            <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50 dark:border-gray-800">
                                               <span className="text-xs font-mono font-bold text-gray-400">{space.key}-{100 + parseInt(issue.id)}</span>
-                                              <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white`}>{issue.assignee}</div>
+                                              <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-900`}>{issue.assignee}</div>
                                             </div>
                                           </div>
                                         )}
@@ -1135,7 +1135,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                     ))}
                                     {provided.placeholder}
                                     {boardIssues.filter(i => i.status === status).length === 0 && !snapshot.isDraggingOver && (
-                                      <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
+                                      <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
                                         {issues.filter(i => i.status === status).length === 0 ? "Kéo thả issue vào đây" : "Không có issue phù hợp"}
                                       </div>
                                     )}
@@ -1150,7 +1150,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       {/* Thêm cột mới */}
                       <div className="flex-shrink-0 w-80 bg-transparent flex flex-col" ref={columnsEndRef}>
                         {showCreateColumn ? (
-                          <div className="bg-white rounded-xl border border-indigo-200 p-3 shadow-sm">
+                          <div className="bg-white dark:bg-gray-900 rounded-xl border border-indigo-200 dark:border-indigo-800 p-3 shadow-sm">
                             <input
                               type="text"
                               autoFocus
@@ -1161,13 +1161,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                 if (e.key === 'Escape') { setShowCreateColumn(false); setNewColumnName(""); }
                               }}
                               placeholder="Tên cột mới..."
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                             />
                             <div className="flex items-center gap-2 mt-3">
                               <button onClick={handleAddColumn} className="flex-1 bg-indigo-600 text-white text-xs font-medium py-1.5 rounded hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1">
                                 <Check className="w-3.5 h-3.5" /> Thêm cột
                               </button>
-                              <button onClick={() => { setShowCreateColumn(false); setNewColumnName(""); }} className="flex-1 bg-gray-100 text-gray-600 text-xs font-medium py-1.5 rounded hover:bg-gray-200 transition-colors flex items-center justify-center gap-1">
+                              <button onClick={() => { setShowCreateColumn(false); setNewColumnName(""); }} className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-medium py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1">
                                 <X className="w-3.5 h-3.5" /> Hủy
                               </button>
                             </div>
@@ -1175,7 +1175,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         ) : (
                           <button
                             onClick={() => setShowCreateColumn(true)}
-                            className="flex items-center gap-2 w-full bg-gray-50/50 hover:bg-gray-100 border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-xl p-4 text-gray-500 hover:text-gray-700 transition-all font-medium text-sm justify-center"
+                            className="flex items-center gap-2 w-full bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl p-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all font-medium text-sm justify-center"
                           >
                             <Plus className="w-5 h-5" /> Thêm cột mới
                           </button>
@@ -1188,12 +1188,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 /* ── Swimlane Board ── */
                 <div className="overflow-x-auto pb-4 min-h-[500px]">
                   {/* Sticky column header row */}
-                  <div className="flex gap-4 px-4 pb-2 sticky top-0 z-10 bg-white border-b border-gray-100">
+                  <div className="flex gap-4 px-4 pb-2 sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
                     <div className="w-44 flex-shrink-0" />
                     {columns.map(col => (
-                      <div key={col} className="flex-shrink-0 w-72 text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-2 py-2">
+                      <div key={col} className="flex-shrink-0 w-72 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2 py-2">
                         {col}
-                        <span className="w-4 h-4 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[9px] font-bold">
+                        <span className="w-4 h-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 flex items-center justify-center text-[9px] font-bold">
                           {boardIssues.filter(i => i.status === col).length}
                         </span>
                       </div>
@@ -1201,15 +1201,15 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                   {/* Swimlane rows */}
                   {Object.entries(groupedBoardIssues).map(([groupId, groupData]) => (
-                    <div key={groupId} className="border-t border-gray-100">
+                    <div key={groupId} className="border-t border-gray-100 dark:border-gray-800">
                       {/* Row label */}
-                      <div className="flex items-center gap-2.5 px-4 py-2 bg-gray-50/80 sticky left-0">
+                      <div className="flex items-center gap-2.5 px-4 py-2 bg-gray-50/80 dark:bg-gray-800/80 sticky left-0">
                         {boardGroupBy === 'ASSIGNEE' && (
                           <div className={`w-6 h-6 rounded-full ${groupData.color || 'bg-gray-400'} text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0`}>
                             {groupId === 'unassigned' ? '?' : groupId}
                           </div>
                         )}
-                        <span className="text-sm font-semibold text-gray-700">{groupData.name}</span>
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{groupData.name}</span>
                         <span className="text-xs text-gray-400">({groupData.tasks.length})</span>
                       </div>
                       {/* Row columns */}
@@ -1220,7 +1220,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                               <div
                                 ref={provided.innerRef}
                                 {...provided.droppableProps}
-                                className={`flex-shrink-0 w-72 min-h-[80px] rounded-lg p-2 space-y-2 transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/60 ring-1 ring-indigo-200' : 'bg-gray-50/50'}`}
+                                className={`flex-shrink-0 w-72 min-h-[80px] rounded-lg p-2 space-y-2 transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/60 dark:bg-indigo-900/30 ring-1 ring-indigo-200 dark:ring-indigo-800' : 'bg-gray-50/50 dark:bg-gray-800/40'}`}
                               >
                                 {groupData.tasks.filter((i: any) => i.status === status).map((issue: any, idx: number) => (
                                   <Draggable key={issue.id} draggableId={issue.id} index={idx}>
@@ -1230,16 +1230,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
                                         onClick={() => setSelectedIssue(issue)}
-                                        className={`bg-white p-3 rounded-lg shadow-sm border ${snapshot.isDragging ? 'border-indigo-500 shadow-lg rotate-1 z-50 relative' : 'border-gray-200 hover:border-indigo-400 hover:shadow-md'} transition-all cursor-grab active:cursor-grabbing group`}
+                                        className={`bg-white dark:bg-gray-900 p-3 rounded-lg shadow-sm border ${snapshot.isDragging ? 'border-indigo-500 shadow-lg rotate-1 z-50 relative' : 'border-gray-200 dark:border-gray-700 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md'} transition-all cursor-grab active:cursor-grabbing group`}
                                       >
-                                        <p className="text-sm font-medium text-gray-900 mb-1.5 leading-snug group-hover:text-indigo-600">{issue.title}</p>
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white mb-1.5 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{issue.title}</p>
                                         <div className="flex flex-wrap gap-1 mb-2">
                                           <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === 'High' ? 'bg-red-50 text-red-600' : issue.priority === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-green-50 text-green-600'}`}>{issue.priority}</span>
                                           <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600">{issue.type}</span>
                                         </div>
-                                        <div className="flex items-center justify-between pt-1.5 border-t border-gray-50">
+                                        <div className="flex items-center justify-between pt-1.5 border-t border-gray-50 dark:border-gray-800">
                                           <span className="text-xs font-mono font-bold text-gray-400">{space.key}-{100 + parseInt(issue.id)}</span>
-                                          <div className={`w-5 h-5 rounded-full ${issue.color} text-white flex items-center justify-center text-[9px] font-bold shadow-sm`}>{issue.assignee}</div>
+                                          <div className={`w-5 h-5 rounded-full ${issue.color} text-white flex items-center justify-center text-[9px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-900`}>{issue.assignee}</div>
                                         </div>
                                       </div>
                                     )}
@@ -1247,7 +1247,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                 ))}
                                 {provided.placeholder}
                                 {groupData.tasks.filter((i: any) => i.status === status).length === 0 && !snapshot.isDraggingOver && (
-                                  <div className="h-14 border border-dashed border-gray-200 rounded flex items-center justify-center text-xs text-gray-400">Drop here</div>
+                                  <div className="h-14 border border-dashed border-gray-200 dark:border-gray-700 rounded flex items-center justify-center text-xs text-gray-400">Drop here</div>
                                 )}
                               </div>
                             )}
@@ -1265,10 +1265,10 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         {/* Complete Sprint Modal */}
         {isCompleteSprintModalOpen && currentBoardSprint && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={(e) => { if (e.target === e.currentTarget) setIsCompleteSprintModalOpen(false); }}>
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-1">Complete sprint</h2>
-              <p className="text-sm text-gray-500 mb-6">
-                <span className="font-semibold text-gray-700">{currentBoardSprint.name}</span> will be marked as completed.
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md p-6">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Complete sprint</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                <span className="font-semibold text-gray-700 dark:text-gray-300">{currentBoardSprint.name}</span> will be marked as completed.
               </p>
 
               {/* Stats */}
@@ -1290,11 +1290,11 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               {/* Move incomplete tasks */}
               {issues.filter(i => i.sprintId === currentBoardSprint.id && i.status !== 'Done').length > 0 && (
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Move incomplete issues to</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Move incomplete issues to</label>
                   <select
                     value={completeSprintMoveTarget}
                     onChange={e => setCompleteSprintMoveTarget(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 dark:text-white"
                   >
                     <option value="backlog">Backlog</option>
                     {sprints
@@ -1308,7 +1308,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               <div className="flex gap-3">
                 <button
                   onClick={() => setIsCompleteSprintModalOpen(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>
@@ -1328,16 +1328,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             <div className="space-y-6 w-full max-w-4xl mx-auto py-6">
 
               {/* Backlog Top Bar with Filter */}
-              <div className="flex justify-between items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                <div className="text-sm font-medium text-gray-700">
+              <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Hiển thị {filteredIssues.length} kết quả
                 </div>
                 <div className="relative">
                   <button
                     onClick={() => setIsFilterOpen(!isFilterOpen)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors"
                   >
-                    Bộ lọc nâng cao <span className="bg-white px-1.5 py-0.5 rounded text-xs text-gray-500 shadow-sm border border-gray-200">Shift+F</span>
+                    Bộ lọc nâng cao <span className="bg-white dark:bg-gray-900 px-1.5 py-0.5 rounded text-xs text-gray-500 dark:text-gray-400 shadow-sm border border-gray-200 dark:border-gray-700">Shift+F</span>
                   </button>
                   <FilterMenu
                     isOpen={isFilterOpen}
@@ -1361,8 +1361,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 const isSomeSelected = sprintTaskIds.length > 0 && sprintTaskIds.some(id => selectedTaskIds.includes(id)) && !isAllSelected;
 
                 return (
-                  <div key={sprint.id} className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden shadow-sm group/sprint">
-                    <div className="bg-white p-4 border-b border-gray-200 flex items-center justify-between">
+                  <div key={sprint.id} className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm group/sprint">
+                    <div className="bg-white dark:bg-gray-900 p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <input
                           type="checkbox"
@@ -1373,13 +1373,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                           className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
                         />
                         <h3
-                          className="font-bold text-gray-900 flex items-center gap-2 cursor-pointer hover:underline"
+                          className="font-bold text-gray-900 dark:text-white flex items-center gap-2 cursor-pointer hover:underline"
                           onClick={() => { setEditingSprint(sprint); setIsSprintModalOpen(true); }}
                         >
                           {sprint.name}
-                          {sprint.status === "Active" && <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full uppercase tracking-wide">Active</span>}
+                          {sprint.status === "Active" && <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs font-semibold rounded-full uppercase tracking-wide">Active</span>}
                         </h3>
-                        <p className="text-xs text-gray-500 flex gap-2">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 flex gap-2">
                           <span>{sprint.startDate ? `${sprint.startDate} - ${sprint.endDate}` : 'Chưa có ngày'}</span>
                           <span>&middot;</span>
                           <span>{sprintIssues.length} issues</span>
@@ -1387,16 +1387,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 items-center group relative cursor-help">
-                          <span className="w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "To Do").length}</span>
-                          <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "In Progress").length}</span>
-                          <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "Done").length}</span>
+                          <span className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "To Do").length}</span>
+                          <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "In Progress").length}</span>
+                          <span className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold flex items-center justify-center">{sprintIssues.filter(i => i.status === "Done").length}</span>
 
                           {/* Tooltip for Story Points */}
                           <div className="absolute top-full mt-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                             Tiến độ: {donePoints} / {totalPoints} story points
                           </div>
                         </div>
-                        <button className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                        <button className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                           {sprint.status === "Active" ? "Complete Sprint" : "Start Sprint"}
                         </button>
                       </div>
@@ -1407,7 +1407,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`p-2 space-y-1 min-h-[50px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/30' : ''}`}
+                          className={`p-2 space-y-1 min-h-[50px] transition-colors ${snapshot.isDraggingOver ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : ''}`}
                         >
                           {sprintIssues.map((issue, index) => (
                             <Draggable key={issue.id} draggableId={issue.id} index={index}>
@@ -1416,7 +1416,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={`flex items-center justify-between bg-white ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:border-indigo-200'} transition-all group shadow-sm`}
+                                  className={`flex items-center justify-between bg-white dark:bg-gray-900 ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-500'} transition-all group shadow-sm`}
                                 >
                                   <div className="flex items-center gap-3 flex-1">
                                     <input
@@ -1429,7 +1429,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                     <div className="flex items-center gap-3 flex-1" onClick={() => setSelectedIssue(issue)}>
                                       <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-indigo-500'}`} />
                                       <span className="text-xs font-mono font-medium text-gray-500 w-16 hover:underline cursor-pointer">{space?.key}-{100 + parseInt(issue.id)}</span>
-                                      <span className="text-sm font-medium text-gray-900 group-hover:text-indigo-600 cursor-pointer">{issue.title}</span>
+                                      <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 cursor-pointer">{issue.title}</span>
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-3">
@@ -1440,7 +1440,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                         value={issue.storyPoints === 0 ? '' : issue.storyPoints}
                                         onChange={(e) => updateIssueDirectly(issue.id, { storyPoints: parseInt(e.target.value) || 0 })}
                                         placeholder="-"
-                                        className="w-8 h-6 text-center text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded border border-transparent focus:bg-white focus:border-indigo-500 outline-none transition-colors appearance-none"
+                                        className="w-8 h-6 text-center text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-indigo-500 outline-none transition-colors appearance-none"
                                         title="Story Points"
                                       />
                                     </div>
@@ -1458,9 +1458,9 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
                                     {/* Assignee */}
                                     {issue.assignee && issue.assignee !== 'U' ? (
-                                      <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 transition-all`}>{issue.assignee}</div>
+                                      <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 dark:hover:ring-indigo-800 transition-all`}>{issue.assignee}</div>
                                     ) : (
-                                      <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-indigo-400 hover:text-indigo-500 text-gray-400 transition-colors">
+                                      <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-500 text-gray-400 dark:text-gray-500 transition-colors">
                                         <Plus className="w-3 h-3" />
                                       </div>
                                     )}
@@ -1479,7 +1479,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       )}
                     </Droppable>
                     <div className="px-3 pb-3">
-                      <button onClick={() => { setNewIssueForm({ ...newIssueForm, sprintId: sprint.id }); setShowCreateIssue(true); }} className="text-sm text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors">
+                      <button onClick={() => { setNewIssueForm({ ...newIssueForm, sprintId: sprint.id }); setShowCreateIssue(true); }} className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors">
                         <Plus className="w-4 h-4" /> Create issue
                       </button>
                     </div>
@@ -1488,8 +1488,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               })}
 
               {/* Backlog Section */}
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50/50">
+              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/50">
                   <div className="flex items-center gap-3">
                     <input
                       type="checkbox"
@@ -1506,12 +1506,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       }}
                       className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
                     />
-                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                    <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                       Backlog
-                      <span className="text-gray-400 font-normal text-sm">({filteredIssues.filter(i => i.sprintId === null).length} issues)</span>
+                      <span className="text-gray-400 dark:text-gray-500 font-normal text-sm">({filteredIssues.filter(i => i.sprintId === null).length} issues)</span>
                     </h3>
                   </div>
-                  <button onClick={handleCreateSprint} className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors">Create Sprint</button>
+                  <button onClick={handleCreateSprint} className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">Create Sprint</button>
                 </div>
 
                 <Droppable droppableId="backlog" type="backlog-issue">
@@ -1519,7 +1519,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? 'bg-gray-50/80' : ''}`}
+                      className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? 'bg-gray-50/80 dark:bg-gray-800/80' : ''}`}
                     >
                       {filteredIssues.filter(i => i.sprintId === null).map((issue, index) => (
                         <Draggable key={issue.id} draggableId={issue.id} index={index}>
@@ -1528,7 +1528,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`flex items-center justify-between bg-white ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 hover:bg-gray-50'} transition-all group`}
+                              className={`flex items-center justify-between bg-white dark:bg-gray-900 ${density === 'compact' ? 'p-2' : 'p-3'} rounded-lg border ${snapshot.isDragging ? 'border-indigo-400 shadow-md rotate-1 z-50 relative' : 'border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800'} transition-all group`}
                             >
                               <div className="flex items-center gap-3 flex-1">
                                 <input
@@ -1541,7 +1541,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                 <div className="flex items-center gap-3 flex-1" onClick={() => setSelectedIssue(issue)}>
                                   <FileText className={`w-4 h-4 ${issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-gray-400'}`} />
                                   <span className="text-xs font-mono font-medium text-gray-400 w-16 hover:underline cursor-pointer">{space?.key}-{100 + parseInt(issue.id)}</span>
-                                  <span className="text-sm font-medium text-gray-700 group-hover:text-gray-900 cursor-pointer">{issue.title}</span>
+                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white cursor-pointer">{issue.title}</span>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
@@ -1552,27 +1552,26 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                     value={issue.storyPoints === 0 ? '' : issue.storyPoints}
                                     onChange={(e) => updateIssueDirectly(issue.id, { storyPoints: parseInt(e.target.value) || 0 })}
                                     placeholder="-"
-                                    className="w-8 h-6 text-center text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded border border-transparent focus:bg-white focus:border-indigo-500 outline-none transition-colors appearance-none"
+                                    className="w-8 h-6 text-center text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-indigo-500 outline-none transition-colors appearance-none"
                                     title="Story Points"
                                   />
                                 </div>
 
-                                {/* Editable Status */}
                                 <select
                                   value={issue.status}
                                   onChange={(e) => updateIssueDirectly(issue.id, { status: e.target.value })}
-                                  className={`px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none`}
+                                  className={`px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none`}
                                 >
-                                  <option value="To Do">To Do</option>
-                                  <option value="In Progress">In Progress</option>
-                                  <option value="Done">Done</option>
+                                  <option value="To Do" className="bg-white dark:bg-gray-900">To Do</option>
+                                  <option value="In Progress" className="bg-white dark:bg-gray-900">In Progress</option>
+                                  <option value="Done" className="bg-white dark:bg-gray-900">Done</option>
                                 </select>
 
                                 {/* Assignee */}
                                 {issue.assignee && issue.assignee !== 'U' ? (
-                                  <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 transition-all`}>{issue.assignee}</div>
+                                  <div className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 dark:hover:ring-indigo-800 transition-all`}>{issue.assignee}</div>
                                 ) : (
-                                  <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:text-indigo-500 hover:border-indigo-500 transition-colors cursor-pointer">
+                                  <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:border-indigo-500 transition-colors cursor-pointer">
                                     <Plus className="w-3 h-3" />
                                   </div>
                                 )}
@@ -1585,11 +1584,11 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                   )}
                 </Droppable>
-                <div className="p-3 bg-gray-50/30 border-t border-gray-100 flex items-center gap-2 relative">
+                <div className="p-3 bg-gray-50/30 dark:bg-gray-800/30 border-t border-gray-100 dark:border-gray-800 flex items-center gap-2 relative">
                   <input
                     type="text"
                     placeholder="Bạn cần làm gì tiếp theo?"
-                    className="flex-1 py-1.5 px-3 bg-white border border-gray-300 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                    className="flex-1 py-1.5 px-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                         const newId = Date.now().toString();
@@ -1600,7 +1599,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       }
                     }}
                   />
-                  <button onClick={() => { setNewIssueForm({ ...newIssueForm, sprintId: null }); setShowCreateIssue(true); }} className="text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800 px-3 py-1.5 rounded transition-colors whitespace-nowrap">
+                  <button onClick={() => { setNewIssueForm({ ...newIssueForm, sprintId: null }); setShowCreateIssue(true); }} className="text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap">
                     Mở modal...
                   </button>
                 </div>
@@ -1610,15 +1609,15 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
         )}
 
         {activeTab === "list" && (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-4">
             <div className="flex flex-wrap items-center justify-end gap-3 mb-4">
-              <div className="inline-flex rounded-lg border border-gray-200 p-0.5 bg-gray-100">
+              <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5 bg-gray-100 dark:bg-gray-800">
                 <button
                   type="button"
                   onClick={() => setListViewModePersisted("grid")}
                   className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${listViewMode === "grid"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     }`}
                   title="Table view"
                 >
@@ -1652,34 +1651,34 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
               />
             ) : (
-              <div className="flex flex-col lg:grid lg:grid-cols-[minmax(260px,340px)_1fr] h-[min(720px,calc(100vh-240px))] border border-gray-200 rounded-xl overflow-hidden">
-                <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 bg-gray-50 shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
+              <div className="flex flex-col lg:grid lg:grid-cols-[minmax(260px,340px)_1fr] h-[min(720px,calc(100vh-240px))] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
+                <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30 shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
                   <div
                     ref={listSplitToolbarRef}
-                    className="flex items-center gap-1.5 px-2 py-2 border-b border-gray-200 bg-white shrink-0"
+                    className="flex items-center gap-1.5 px-2 py-2 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0"
                   >
                     <div className="relative flex-1 min-w-0">
                       <button
                         type="button"
                         onClick={() => setListSplitOrderOpen((o) => !o)}
                         title={`Order work items by: ${LIST_SPLIT_SORT_OPTIONS.find((o) => o.id === listSplitSortBy)?.label ?? listSplitSortBy} (${listSplitSortDir})`}
-                        className={`flex w-full items-center justify-between gap-2 rounded-md border bg-white px-2.5 py-1.5 text-left text-sm font-medium transition-colors hover:bg-gray-50 ${listSplitOrderOpen
-                          ? "border-blue-500 text-blue-700 ring-1 ring-blue-200"
-                          : "border-gray-300 text-gray-800"
+                        className={`flex w-full items-center justify-between gap-2 rounded-md border bg-white dark:bg-gray-900 px-2.5 py-1.5 text-left text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${listSplitOrderOpen
+                          ? "border-blue-500 dark:border-blue-500 text-blue-700 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-900"
+                          : "border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200"
                           }`}
                       >
                         <span className="truncate">Custom field</span>
-                        <ChevronDown className={`h-4 w-4 shrink-0 ${listSplitOrderOpen ? "text-blue-600" : "text-gray-500"}`} />
+                        <ChevronDown className={`h-4 w-4 shrink-0 ${listSplitOrderOpen ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`} />
                       </button>
                       {listSplitOrderOpen && (
-                        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-                          <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-lg">
+                          <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
                             Order work items by
                           </div>
                           {LIST_SPLIT_SORT_OPTIONS.map((opt) => (
                             <label
                               key={opt.id}
-                              className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50"
+                              className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
                             >
                               <input
                                 type="radio"
@@ -1701,7 +1700,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       type="button"
                       title={listSplitSortDir === "asc" ? "Sort ascending" : "Sort descending"}
                       onClick={() => setListSplitSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-                      className="shrink-0 rounded-md border border-gray-300 bg-gray-50 p-2 text-gray-700 hover:bg-gray-100"
+                      className="shrink-0 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <ArrowDownWideNarrow
                         className={`h-4 w-4 ${listSplitSortDir === "asc" ? "rotate-180" : ""}`}
@@ -1714,7 +1713,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         setListSplitSortBy("key");
                         setListSplitSortDir("asc");
                       }}
-                      className="shrink-0 rounded-md border border-gray-300 bg-white p-2 text-gray-600 hover:bg-gray-50"
+                      className="shrink-0 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <RotateCw className="h-4 w-4" />
                     </button>
@@ -1722,7 +1721,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
 
                   <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
                     {splitSortedIssues.length === 0 ? (
-                      <p className="p-4 text-sm text-gray-500">Không có issue trong bộ lọc hiện tại.</p>
+                      <p className="p-4 text-sm text-gray-500 dark:text-gray-400">Không có issue trong bộ lọc hiện tại.</p>
                     ) : (
                       <>
                         <ul className="flex-1 space-y-1 overflow-y-auto p-2">
@@ -1735,30 +1734,30 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                                   type="button"
                                   onClick={() => setSelectedIssue(issue)}
                                   className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${active
-                                    ? "border-indigo-400 bg-white shadow-sm ring-1 ring-indigo-200"
-                                    : "border-transparent bg-white hover:border-gray-200 hover:bg-gray-50"
+                                    ? "border-indigo-400 dark:border-indigo-600 bg-white dark:bg-gray-900 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800"
+                                    : "border-transparent bg-white dark:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                                     }`}
                                 >
                                   <div className="flex items-center gap-2">
                                     <FileText
                                       className={`h-4 w-4 shrink-0 ${issue.type === "Bug" ? "text-red-500" : issue.type === "Story" ? "text-emerald-500" : "text-blue-500"}`}
                                     />
-                                    <span className="shrink-0 font-mono text-xs text-gray-500">{issueKey}</span>
+                                    <span className="shrink-0 font-mono text-xs text-gray-500 dark:text-gray-400">{issueKey}</span>
                                   </div>
-                                  <p className="mt-1 line-clamp-2 text-sm font-medium text-gray-900">{issue.title}</p>
+                                  <p className="mt-1 line-clamp-2 text-sm font-medium text-gray-900 dark:text-white">{issue.title}</p>
                                   <div className="mt-2 flex flex-wrap gap-1.5">
                                     <span
                                       className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${issue.status === "Done"
-                                        ? "bg-green-50 text-green-700"
+                                        ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                                         : issue.status === "In Progress"
-                                          ? "bg-blue-50 text-blue-700"
-                                          : "bg-gray-100 text-gray-700"
+                                          ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
+                                          : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                                         }`}
                                     >
                                       {issue.status}
                                     </span>
                                     {issue.priority && (
-                                      <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800">
+                                      <span className="rounded bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-400">
                                         {issue.priority}
                                       </span>
                                     )}
@@ -1768,16 +1767,16 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                             );
                           })}
                         </ul>
-                        <div className="shrink-0 border-t border-gray-200 bg-gray-100 px-3 py-2 text-center text-xs text-gray-600">
+                        <div className="shrink-0 border-t border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-center text-xs text-gray-600 dark:text-gray-400">
                           {splitSortedIssues.length} of {splitSortedIssues.length}
                         </div>
                       </>
                     )}
                   </div>
                 </aside>
-                <section className="flex min-h-[320px] flex-col overflow-hidden bg-white lg:min-h-0">
+                <section className="flex min-h-[320px] flex-col overflow-hidden bg-white dark:bg-gray-900 lg:min-h-0">
                   {!selectedIssue ? (
-                    <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500">
+                    <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500 dark:text-gray-400">
                       Chọn một issue ở cột trái để xem chi tiết.
                     </div>
                   ) : splitSortedIssues.some((i) => i.id === selectedIssue.id) ? (
@@ -1790,12 +1789,12 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       onUpdateIssue={handleUpdateIssue}
                     />
                   ) : (
-                    <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500">
+                    <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500 dark:text-gray-400">
                       Issue đang chọn không còn trong danh sách sau khi lọc.{" "}
                       <button
                         type="button"
                         onClick={() => setSelectedIssue(null)}
-                        className="ml-1 font-medium text-indigo-600 hover:underline"
+                        className="ml-1 font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
                       >
                         Bỏ chọn
                       </button>
@@ -1825,7 +1824,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 onClick={() => setIsSummaryFilterOpen((prev) => !prev)}
                 className={`inline-flex items-center gap-2 border px-3 py-2 rounded-md text-sm font-medium transition-colors ${isSummaryFilterOpen
                   ? "border-blue-600 text-blue-700 bg-blue-50"
-                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  : "border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
               >
                 <SlidersHorizontal className="w-4 h-4" />
@@ -1838,19 +1837,19 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
               </button>
 
               {isSummaryFilterOpen && (
-                <div className="absolute top-12 left-0 w-[360px] md:w-[460px] bg-white border border-gray-300 rounded-lg shadow-xl z-30 overflow-hidden">
-                  <div className="p-4 border-b border-gray-200">
+                <div className="absolute top-12 left-0 w-[360px] md:w-[460px] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg shadow-xl z-30 overflow-hidden">
+                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                     <input
                       autoFocus
                       value={summaryFilterSearch}
                       onChange={(e) => setSummaryFilterSearch(e.target.value)}
                       placeholder="Search more filters"
-                      className="w-full px-3 py-2 rounded-md border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
+                      className="w-full px-3 py-2 rounded-md border border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm bg-white dark:bg-gray-800 dark:text-white placeholder-gray-400"
                     />
                   </div>
                   <div className="max-h-80 overflow-y-auto py-1">
                     {visibleSummaryFilterFields.length === 0 ? (
-                      <p className="px-4 py-3 text-sm text-gray-500">No filters found</p>
+                      <p className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">No filters found</p>
                     ) : (
                       visibleSummaryFilterFields.map((field) => {
                         const checked = selectedSummaryFields.includes(field.id);
@@ -1858,8 +1857,8 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                           <label
                             key={field.id}
                             className={`flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer border-l-2 ${checked
-                              ? "bg-gray-100 border-blue-600 text-gray-900"
-                              : "border-transparent hover:bg-gray-50 text-gray-800"
+                              ? "bg-gray-100 dark:bg-gray-800 border-blue-600 text-gray-900 dark:text-white"
+                              : "border-transparent hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-800 dark:text-gray-200"
                               }`}
                           >
                             <input
@@ -1880,7 +1879,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                       })
                     )}
                   </div>
-                  <div className="px-4 py-3 border-t border-gray-200 text-right text-sm text-gray-500 font-medium">
+                  <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 text-right text-sm text-gray-500 dark:text-gray-400 font-medium">
                     {visibleSummaryFilterFields.length} of {summaryFilterFields.length}
                   </div>
                 </div>
@@ -1888,7 +1887,7 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             </div>
 
             {selectedSummaryFields.length > 0 && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Showing <span className="font-semibold">{dashboardData.totalVisibleItems}</span> work items after applying{" "}
                 <span className="font-semibold">{selectedSummaryFields.length}</span> filter field(s).
               </p>
@@ -1901,24 +1900,24 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 { label: "created", value: dashboardData.keyMetrics.created, subtitle: "in the last 7 days", icon: FileText, iconTone: "text-gray-600" },
                 { label: "due soon", value: dashboardData.keyMetrics.dueSoon, subtitle: "in the next 7 days", icon: CalendarClock, iconTone: "text-amber-600" },
               ].map((item) => (
-                <div key={item.label} className="bg-white border border-gray-200 rounded-xl px-5 py-4 flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-lg bg-gray-100 flex items-center justify-center">
+                <div key={item.label} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl px-5 py-4 flex items-center gap-4">
+                  <div className="w-11 h-11 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                     <item.icon className={`w-5 h-5 ${item.iconTone}`} />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold text-gray-900 leading-none">{item.value}</p>
-                    <p className="text-base text-gray-900 font-semibold leading-tight capitalize">{item.label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{item.subtitle}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white leading-none">{item.value}</p>
+                    <p className="text-base text-gray-900 dark:text-white font-semibold leading-tight capitalize">{item.label}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{item.subtitle}</p>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
               <div className="flex items-start justify-between gap-3 mb-5">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Status overview</h3>
-                  <p className="text-sm text-gray-600">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Status overview</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Get a snapshot of the status of your work items.{" "}
                     <button className="text-blue-700 hover:underline font-medium">View all work items</button>
                   </p>
@@ -1942,9 +1941,9 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                           .join(", ")})`,
                       }}
                     >
-                      <div className="absolute inset-6 bg-white rounded-full flex flex-col items-center justify-center text-center">
-                        <p className="text-4xl font-bold text-gray-900 leading-none">{dashboardData.totalVisibleItems}</p>
-                        <p className="text-sm font-semibold text-gray-700 mt-2">Total work items</p>
+                      <div className="absolute inset-6 bg-white dark:bg-gray-900 rounded-full flex flex-col items-center justify-center text-center">
+                        <p className="text-4xl font-bold text-gray-900 dark:text-white leading-none">{dashboardData.totalVisibleItems}</p>
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mt-2">Total work items</p>
                       </div>
                     </div>
                   </div>
@@ -1952,29 +1951,29 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                     {dashboardData.statusDistribution.map((status) => (
                       <div key={status.name} className="flex items-center gap-3 text-sm">
                         <span className="w-4 h-4 rounded-sm" style={{ backgroundColor: status.color }} />
-                        <span className="text-gray-700">{status.name}: {status.value}</span>
+                        <span className="text-gray-700 dark:text-gray-300">{status.name}: {status.value}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">No status data available.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No status data available.</p>
               )}
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl p-5">
+            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Recent activity</h3>
-                  <p className="text-sm text-gray-600">Stay up to date with what's happening across the space.</p>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Recent activity</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Stay up to date with what's happening across the space.</p>
                 </div>
-                <button className="w-9 h-9 rounded-md border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50">
+                <button className="w-9 h-9 rounded-md border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                   <ExternalLink className="w-4 h-4" />
                 </button>
               </div>
               <div className="max-h-64 overflow-y-auto pr-2 space-y-4">
                 {dashboardData.activities.length === 0 ? (
-                  <p className="text-sm text-gray-500">No activity yet.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No activity yet.</p>
                 ) : (
                   dashboardData.activities.map((activity) => (
                     <div key={activity.id} className="flex gap-3">
@@ -1982,17 +1981,17 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                         {activity.userInitials}
                       </div>
                       <div className="text-sm">
-                        <p className="text-gray-700 leading-6">
+                        <p className="text-gray-700 dark:text-gray-300 leading-6">
                           <span className="font-semibold text-blue-700">{activity.userName}</span>{" "}
                           {activity.actionLabel} on{" "}
                           <span className="text-blue-700 hover:underline cursor-pointer">
                             {activity.issueKey}: {activity.issueTitle}
                           </span>{" "}
-                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded bg-gray-100 text-gray-700">
+                          <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                             {activity.status.toUpperCase()}
                           </span>
                         </p>
-                        <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{activity.time}</p>
                       </div>
                     </div>
                   ))
@@ -2001,13 +2000,13 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h3 className="text-xl font-semibold text-gray-900">Priority breakdown</h3>
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Priority breakdown</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Get a holistic view of how work is being prioritized.{" "}
                   <button className="text-blue-700 hover:underline font-medium">How to manage priorities for spaces</button>
                 </p>
-                <div className="h-60 border-l border-b border-gray-300 px-3 pb-2">
+                <div className="h-60 border-l border-b border-gray-300 dark:border-gray-600 px-3 pb-2">
                   <div className="h-full flex items-end justify-between gap-1.5">
                     {dashboardData.priorities.map((priority) => (
                       <div key={priority.level} className="flex-1 flex flex-col items-center justify-end gap-2">
@@ -2015,24 +2014,24 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                           className="w-full max-w-12 bg-gray-400 rounded-sm"
                           style={{ height: `${Math.max(Math.round((priority.count / dashboardData.maxPriorityCount) * 100), priority.count > 0 ? 12 : 0)}%` }}
                         />
-                        <span className="text-[11px] text-gray-500 truncate max-w-full">{priority.level}</span>
+                        <span className="text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-full">{priority.level}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h3 className="text-xl font-semibold text-gray-900">Types of work</h3>
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Types of work</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Get a breakdown of work items by their types.{" "}
                   <button className="text-blue-700 hover:underline font-medium">View all items</button>
                 </p>
                 <div className="max-h-64 overflow-y-auto pr-2 space-y-3">
                   {dashboardData.typeBreakdown.map((item) => (
                     <div key={item.type} className="grid grid-cols-[1fr_2fr] items-center gap-4">
-                      <span className="text-sm text-gray-700">{item.type}</span>
-                      <div className="h-7 rounded bg-gray-200 overflow-hidden">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{item.type}</span>
+                      <div className="h-7 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <div className="h-full bg-gray-500 text-white text-sm font-semibold px-3 flex items-center" style={{ width: `${item.percent}%` }}>
                           {item.percent > 10 ? `${item.percent}%` : ""}
                         </div>
@@ -2044,22 +2043,22 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h3 className="text-xl font-semibold text-gray-900">Team workload</h3>
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Team workload</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Monitor the capacity of your team.{" "}
                   <button className="text-blue-700 hover:underline font-medium">Reassign work items to get the right balance</button>
                 </p>
                 <div className="space-y-3">
                   {dashboardData.teamWorkload.map((item) => (
                     <div key={item.assignee} className="grid grid-cols-[1fr_2fr] items-center gap-4">
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                         <span className={`w-7 h-7 rounded-full ${item.color} text-white text-[10px] font-bold flex items-center justify-center`}>
                           {item.assignee === "Unassigned" ? "U" : item.assignee}
                         </span>
                         {item.assignee}
                       </div>
-                      <div className="h-7 rounded bg-gray-200 overflow-hidden">
+                      <div className="h-7 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
                         <div className="h-full bg-gray-500 text-white text-sm font-semibold px-3 flex items-center" style={{ width: `${item.percent}%` }}>
                           {item.percent > 10 ? `${item.percent}%` : ""}
                         </div>
@@ -2069,27 +2068,27 @@ export default function SpaceDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h3 className="text-xl font-semibold text-gray-900">Epic progress</h3>
-                <p className="text-sm text-gray-600 mb-4">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Epic progress</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   See how your epics are progressing at a glance.{" "}
                   <button className="text-blue-700 hover:underline font-medium">View all epics</button>
                 </p>
-                <div className="flex items-center gap-5 text-sm text-gray-600 mb-4">
+                <div className="flex items-center gap-5 text-sm text-gray-600 dark:text-gray-400 mb-4">
                   <span className="inline-flex items-center gap-2"><span className="w-3 h-3 bg-green-600 rounded-sm" />Done</span>
                   <span className="inline-flex items-center gap-2"><span className="w-3 h-3 bg-blue-500 rounded-sm" />In progress</span>
                   <span className="inline-flex items-center gap-2"><span className="w-3 h-3 bg-gray-500 rounded-sm" />To do</span>
                 </div>
                 {dashboardData.epicProgress.length === 0 ? (
-                  <div className="rounded-md border border-dashed border-gray-300 p-5 text-sm text-gray-500">
+                  <div className="rounded-md border border-dashed border-gray-300 dark:border-gray-600 p-5 text-sm text-gray-500 dark:text-gray-400">
                     No epics yet.
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {dashboardData.epicProgress.map((epic) => (
                       <div key={epic.epic}>
-                        <p className="text-sm font-medium text-gray-700 mb-2">{epic.epic}</p>
-                        <div className="h-7 rounded bg-gray-200 overflow-hidden">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{epic.epic}</p>
+                        <div className="h-7 rounded bg-gray-200 dark:bg-gray-700 overflow-hidden">
                           <div className="h-full bg-gray-500 text-white text-sm font-semibold px-3 flex items-center" style={{ width: `${epic.percent}%` }}>
                             {epic.percent}%
                           </div>

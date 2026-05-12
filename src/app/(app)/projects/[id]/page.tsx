@@ -88,10 +88,10 @@ export default function ProjectBoardPage() {
     <div className="flex flex-col h-[calc(100vh-8rem)]">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Link href="/projects" className="p-1.5 hover:bg-gray-100 rounded-lg"><ArrowLeft className="w-5 h-5 text-gray-500" /></Link>
+          <Link href="/projects" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{project.name}</h1>
-            <p className="text-sm text-gray-500">{project.key} · {project.type}</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">{project.name}</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{project.key} · {project.type}</p>
           </div>
         </div>
         <button onClick={() => handleCreateTask("todo")} className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm">
@@ -105,20 +105,20 @@ export default function ProjectBoardPage() {
             const columnTasks = getTasksByColumn(column.id);
             return (
               <div key={column.id} onDragOver={(e) => handleDragOver(e, column.id)} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, column.id)}
-                className={`w-72 flex-shrink-0 bg-gray-100 rounded-xl flex flex-col ${dragOverColumn === column.id ? "ring-2 ring-indigo-400" : ""}`}>
+                className={`w-72 flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl flex flex-col ${dragOverColumn === column.id ? "ring-2 ring-indigo-400" : ""}`}>
                 <div className="flex items-center justify-between p-3">
-                  <h3 className="font-semibold text-gray-800 text-sm">{column.name} <span className="ml-1 px-2 py-0.5 bg-gray-200 text-gray-600 rounded-full text-xs">{columnTasks.length}</span></h3>
-                  <button onClick={() => handleCreateTask(column.id)} className="p-1 hover:bg-gray-200 rounded"><Plus className="w-4 h-4 text-gray-500" /></button>
+                  <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{column.name} <span className="ml-1 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-xs">{columnTasks.length}</span></h3>
+                  <button onClick={() => handleCreateTask(column.id)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"><Plus className="w-4 h-4 text-gray-500 dark:text-gray-400" /></button>
                 </div>
                 <div className="flex-1 overflow-y-auto px-2 space-y-2">
                   {columnTasks.map((task) => (
                     <div key={task._id} draggable onDragStart={(e) => handleDragStart(e, task)}
-                      className={`group bg-white rounded-lg p-3 border-l-4 cursor-grab active:cursor-grabbing hover:shadow-md ${priorityColors[task.priority] || "border-l-gray-300"}`}>
+                      className={`group bg-white dark:bg-gray-900 rounded-lg p-3 border-l-4 cursor-grab active:cursor-grabbing hover:shadow-md ${priorityColors[task.priority] || "border-l-gray-300"}`}>
                       <div className="flex items-start gap-2">
-                        <GripVertical className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                        <GripVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-800 line-clamp-2">{task.title}</p>
-                          <p className="text-xs text-gray-400 mt-1">{task.key}</p>
+                          <p className="text-sm font-medium text-gray-800 dark:text-gray-200 line-clamp-2">{task.title}</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{task.key}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 mt-2">
