@@ -5,10 +5,11 @@ interface BulkActionBarProps {
   selectedCount: number;
   onClear: () => void;
   onChangeStatus: (status: string) => void;
+  onEditFields?: () => void;
   onDelete: () => void;
 }
 
-export default function BulkActionBar({ selectedCount, onClear, onChangeStatus, onDelete }: BulkActionBarProps) {
+export default function BulkActionBar({ selectedCount, onClear, onChangeStatus, onEditFields, onDelete }: BulkActionBarProps) {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
 
   useEffect(() => {
@@ -58,6 +59,16 @@ export default function BulkActionBar({ selectedCount, onClear, onChangeStatus, 
                 </button>
               ))}
             </div>
+          )}
+
+          {onEditFields && (
+            <button 
+              onClick={onEditFields}
+              className="flex items-center gap-2 hover:bg-gray-800 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-gray-300 hover:text-white"
+            >
+              <Edit2 className="w-4 h-4" />
+              Sửa trường
+            </button>
           )}
 
           <button 
