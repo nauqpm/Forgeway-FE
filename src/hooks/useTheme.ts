@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 type Theme = "light" | "dark" | "system";
 
 export const useTheme = () => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("app-theme") as Theme) || "system";
-    }
-    return "system";
-  });
+  const [theme, setTheme] = useState<Theme>("system");
+
+  useEffect(() => {
+    const saved = (localStorage.getItem("app-theme") as Theme) || "system";
+    setTheme(saved);
+  }, []);
 
   useEffect(() => {
     const root = window.document.documentElement;

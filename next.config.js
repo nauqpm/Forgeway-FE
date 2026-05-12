@@ -23,7 +23,7 @@ const nextConfig = {
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-if (!serverUrl?.startsWith("http://")) {
+if (!serverUrl?.startsWith("http://") && !serverUrl?.startsWith("https://")) {
   throw new Error("NEXT_PUBLIC_SERVER_URL must start with http:// or https://");
 }
 

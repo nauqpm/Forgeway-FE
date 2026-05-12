@@ -8,9 +8,6 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
-  FolderKanban,
-  CheckSquare,
-  ListTodo,
   BookOpen,
   BarChart3,
   Settings,
@@ -90,18 +87,18 @@ const NavItem = ({
       onClick={onMobileClose}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group relative ${
         isActive
-          ? "bg-indigo-50 text-indigo-700"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
       }`}
     >
       <item.icon
-        className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 group-hover:text-slate-600 dark:text-gray-500 dark:group-hover:text-gray-300"}`}
       />
       {!collapsed && (
         <>
           <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
           {showBadge && item.badge && (
-            <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+            <span className="text-[10px] bg-slate-200 text-slate-500 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded font-medium">
               {item.badge}
             </span>
           )}
@@ -153,11 +150,11 @@ const PopoverNavItem = ({
         onClick={handleToggle}
         className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
           isActive
-            ? "bg-indigo-50 text-indigo-700"
-            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
         }`}
       >
-        <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`} />
+        <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 group-hover:text-slate-600 dark:text-gray-500 dark:group-hover:text-gray-300"}`} />
         {!collapsed && (
           <>
             <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
@@ -170,77 +167,77 @@ const PopoverNavItem = ({
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
-            className="fixed bg-white border border-slate-200 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
+            className="fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
             style={{ top: `${pos.top}px`, left: `${pos.left}px` }}
           >
-            <div className="flex items-center justify-between p-3 border-b border-slate-100">
-              <span className="font-semibold text-slate-900">{item.label}</span>
-              <button onClick={() => setActivePopover(null)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-500 transition-colors">
+            <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-gray-800">
+              <span className="font-semibold text-slate-900 dark:text-gray-100">{item.label}</span>
+              <button onClick={() => setActivePopover(null)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-md text-slate-500 dark:text-gray-400 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             {type === "recent" && (
               <div className="flex flex-col max-h-[60vh]">
-                <div className="p-3 border-b border-slate-100">
+                <div className="p-3 border-b border-slate-100 dark:border-gray-800">
                   <div className="relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                    <input 
-                      type="text" 
-                      placeholder="Search recent items" 
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                    <Search className="w-4 h-4 text-slate-400 dark:text-gray-500 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Search recent items"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-750 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                     />
                   </div>
                 </div>
                 <div className="overflow-y-auto flex-1 p-2 space-y-4">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 mb-1 px-2 uppercase tracking-wider">Hôm nay</h4>
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">Hôm nay</h4>
                     <div className="space-y-0.5">
-                      <Link href="/spaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 group-hover:border-slate-300"><Columns className="w-4 h-4" /></div>
+                      <Link href="/spaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                        <div className="w-7 h-7 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 group-hover:border-slate-300 dark:group-hover:border-gray-600"><Columns className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors">QUAN board</p>
-                          <p className="text-[11px] text-slate-500">6 giây trước</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">QUAN board</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">6 giây trước</p>
                         </div>
                       </Link>
-                      <Link href="/spaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                      <Link href="/spaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">Q</div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors">quan</p>
-                          <p className="text-[11px] text-slate-500">7 giây trước</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">quan</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">7 giây trước</p>
                         </div>
                       </Link>
-                      <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded flex items-center justify-center text-slate-400 group-hover:text-slate-600"><ListFilter className="w-4 h-4" /></div>
+                      <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                        <div className="w-7 h-7 rounded flex items-center justify-center text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300"><ListFilter className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors">Reported by me</p>
-                          <p className="text-[11px] text-slate-500">14 giây trước</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Reported by me</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">14 giây trước</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 mb-1 px-2 uppercase tracking-wider">Hơn 1 tháng trước</h4>
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">Hơn 1 tháng trước</h4>
                     <div className="space-y-0.5">
-                      <Link href="/spaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 group-hover:border-slate-300"><Columns className="w-4 h-4" /></div>
+                      <Link href="/spaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                        <div className="w-7 h-7 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 group-hover:border-slate-300 dark:group-hover:border-gray-600"><Columns className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors">SCRUM board</p>
-                          <p className="text-[11px] text-slate-500">5 ngày trước</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">SCRUM board</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">5 ngày trước</p>
                         </div>
                       </Link>
-                      <Link href="/spaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                      <Link href="/spaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 group-hover:text-indigo-600 transition-colors">My Software Team</p>
-                          <p className="text-[11px] text-slate-500">5 ngày trước</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">My Software Team</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">5 ngày trước</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                 </div>
-                <div className="p-2 border-t border-slate-100">
-                  <button className="w-full text-left p-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
+                <div className="p-2 border-t border-slate-100 dark:border-gray-800">
+                  <button className="w-full text-left p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
                     Xem tất cả mục gần đây
                   </button>
                 </div>
@@ -251,17 +248,17 @@ const PopoverNavItem = ({
               <div className="flex flex-col">
                 <div className="p-8 text-center flex flex-col items-center">
                   <div className="w-20 h-20 mb-4 relative flex items-center justify-center">
-                    <div className="absolute inset-0 bg-indigo-50 rounded-full scale-150 opacity-50" />
-                    <Star className="w-10 h-10 text-indigo-300 relative z-10 fill-indigo-100/50" />
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center z-20 text-white shadow-sm border-2 border-white">
+                    <div className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-full scale-150 opacity-50" />
+                    <Star className="w-10 h-10 text-indigo-300 dark:text-indigo-500 relative z-10 fill-indigo-100/50 dark:fill-indigo-900/50" />
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center z-20 text-white shadow-sm border-2 border-white dark:border-gray-900">
                       <Plus className="w-3.5 h-3.5" />
                     </div>
                   </div>
-                  <h4 className="text-[15px] font-bold text-slate-900 mb-2 mt-4">Bạn chưa đánh dấu mục nào.</h4>
-                  <p className="text-[13px] text-slate-500 leading-relaxed">Đánh dấu mục quan trọng bằng biểu tượng sao để truy cập nhanh. Bạn sẽ thấy chúng hiển thị ở đây.</p>
+                  <h4 className="text-[15px] font-bold text-slate-900 dark:text-gray-100 mb-2 mt-4">Bạn chưa đánh dấu mục nào.</h4>
+                  <p className="text-[13px] text-slate-500 dark:text-gray-400 leading-relaxed">Đánh dấu mục quan trọng bằng biểu tượng sao để truy cập nhanh. Bạn sẽ thấy chúng hiển thị ở đây.</p>
                 </div>
-                <div className="p-2 border-t border-slate-100">
-                  <button className="w-full text-left p-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
+                <div className="p-2 border-t border-slate-100 dark:border-gray-800">
+                  <button className="w-full text-left p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
                     Xem tất cả mục đã đánh dấu
                   </button>
                 </div>
@@ -282,7 +279,7 @@ export default function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const pathname = usePathname();
-  const { currentWorkspace, workspaces } = useWorkspaceStore();
+  const { currentWorkspace } = useWorkspaceStore();
   const { hasAdminAccess } = useAuth();
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/admin"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
@@ -322,9 +319,9 @@ export default function Sidebar({
         setSidebarSpaces([]);
       }
     };
-    
+
     fetchSpaces();
-    
+
     window.addEventListener("spaces_updated", fetchSpaces);
     setMounted(true);
     return () => window.removeEventListener("spaces_updated", fetchSpaces);
@@ -344,12 +341,12 @@ export default function Sidebar({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white border-r border-slate-200 z-40 transition-all duration-200 flex flex-col ${
+        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 border-r border-slate-200 dark:border-gray-800 z-40 transition-all duration-200 flex flex-col ${
           collapsed ? "w-[68px]" : "w-[240px]"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Logo / Brand */}
-        <div className="h-14 flex items-center justify-between px-4 border-b border-slate-100 flex-shrink-0">
+        <div className="h-14 flex items-center justify-between px-4 border-b border-slate-100 dark:border-gray-800 flex-shrink-0">
           <Link
             href="/"
             className="flex items-center gap-2.5"
@@ -359,16 +356,16 @@ export default function Sidebar({
               <Zap className="w-4 h-4 text-white" />
             </div>
             {!collapsed && (
-              <span className="font-bold text-slate-900 text-lg tracking-tight">
+              <span className="font-bold text-slate-900 dark:text-gray-100 text-lg tracking-tight">
                 AL-TASK
               </span>
             )}
           </Link>
           <button
             onClick={onMobileClose}
-            className="lg:hidden p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+            className="lg:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
-            <X className="w-4 h-4 text-slate-400" />
+            <X className="w-4 h-4 text-slate-400 dark:text-gray-500" />
           </button>
         </div>
 
@@ -413,9 +410,9 @@ export default function Sidebar({
               <div>
                 <button
                   onClick={() => setSpaceOpen(!spaceOpen)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <BookOpen className="w-[18px] h-[18px] text-slate-400" />
+                  <BookOpen className="w-[18px] h-[18px] text-slate-400 dark:text-gray-500" />
 
                   {!collapsed && (
                     <>
@@ -438,7 +435,7 @@ export default function Sidebar({
                       <Link
                         key={space._id}
                         href={`/spaces/${space._id}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50"
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
                       >
                         <div className="w-4 h-4 rounded bg-indigo-500 text-white flex items-center justify-center text-[10px]">
                           {space.name?.charAt(0)}
@@ -451,7 +448,7 @@ export default function Sidebar({
                     <button
                       ref={moreSpacesBtnRef}
                       onClick={handleToggleMoreSpaces}
-                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-sm text-slate-500 hover:bg-slate-50 rounded-lg group transition-colors"
+                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-sm text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors"
                     >
                       <span>More spaces</span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -463,9 +460,9 @@ export default function Sidebar({
               <div>
                 <button
                   onClick={() => setFilterOpen(!filterOpen)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
                 >
-                  <ListFilter className="w-[18px] h-[18px] text-slate-400" />
+                  <ListFilter className="w-[18px] h-[18px] text-slate-400 dark:text-gray-500" />
 
                   {!collapsed && (
                     <>
@@ -490,8 +487,8 @@ export default function Sidebar({
                         href={`/filter/${filter.slug}`}
                         className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition ${
                           pathname.includes(filter.slug)
-                            ? "bg-indigo-50 text-indigo-700"
-                            : "text-slate-600 hover:bg-slate-50"
+                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+                            : "text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800"
                         }`}
                       >
                         <span className="truncate">{filter.title}</span>
@@ -511,7 +508,7 @@ export default function Sidebar({
             <div className="mt-4 px-2">
               <button
                 onClick={() => setAdminOpen(!adminOpen)}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-600 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-400 dark:text-gray-500 uppercase tracking-wider hover:text-slate-600 dark:hover:text-gray-300 transition-colors"
               >
                 {!collapsed && (
                   <>
@@ -539,7 +536,7 @@ export default function Sidebar({
                       key={item.href}
                       href={item.href}
                       onClick={onMobileClose}
-                      className={`flex justify-center p-2 rounded-lg transition-colors ${pathname.startsWith(item.href) ? "bg-indigo-50 text-indigo-600" : "text-slate-400 hover:bg-slate-50"}`}
+                      className={`flex justify-center p-2 rounded-lg transition-colors ${pathname.startsWith(item.href) ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-gray-800"}`}
                     >
                       <item.icon className="w-[18px] h-[18px]" />
                     </Link>
@@ -551,13 +548,13 @@ export default function Sidebar({
         </div>
 
         {/* Bottom: Workspace + Settings */}
-        <div className="flex-shrink-0 border-t border-slate-100 p-3 space-y-1">
+        <div className="flex-shrink-0 border-t border-slate-100 dark:border-gray-800 p-3 space-y-1">
           {!collapsed && currentWorkspace && (
-            <div className="px-3 py-2 bg-slate-50 rounded-lg mb-2">
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+            <div className="px-3 py-2 bg-slate-50 dark:bg-gray-800 rounded-lg mb-2">
+              <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">
                 Không gian làm việc
               </p>
-              <p className="text-sm font-medium text-slate-800 truncate">
+              <p className="text-sm font-medium text-slate-800 dark:text-gray-200 truncate">
                 {currentWorkspace.name}
               </p>
             </div>
@@ -565,7 +562,7 @@ export default function Sidebar({
           <Link
             href="/settings"
             onClick={onMobileClose}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${pathname === "/settings" ? "bg-indigo-50 text-indigo-700" : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"}`}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${pathname === "/settings" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" : "text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 hover:text-slate-800 dark:hover:text-gray-100"}`}
           >
             <Settings className="w-[18px] h-[18px] flex-shrink-0" />
             {!collapsed && <span className="text-sm font-medium">Cài đặt</span>}
@@ -575,12 +572,12 @@ export default function Sidebar({
         {/* Collapse toggle */}
         <button
           onClick={() => onCollapse(!collapsed)}
-          className="absolute -right-3 top-[52px] w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-50 lg:flex shadow-sm transition-colors"
+          className="absolute -right-3 top-[52px] w-6 h-6 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-full flex items-center justify-center hover:bg-slate-50 dark:hover:bg-gray-800 lg:flex shadow-sm transition-colors"
         >
           {collapsed ? (
-            <ChevronRight className="w-3 h-3 text-slate-400" />
+            <ChevronRight className="w-3 h-3 text-slate-400 dark:text-gray-500" />
           ) : (
-            <ChevronDown className="w-3 h-3 text-slate-400 rotate-90" />
+            <ChevronDown className="w-3 h-3 text-slate-400 dark:text-gray-500 rotate-90" />
           )}
         </button>
       </aside>
@@ -590,34 +587,34 @@ export default function Sidebar({
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
-            className="fixed bg-white border border-slate-200 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
+            className="fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
             style={{ top: `${moreSpacesPos.top}px`, left: `${moreSpacesPos.left}px` }}
           >
-            <div className="flex items-center justify-between p-3 border-b border-slate-100">
-              <span className="font-semibold text-slate-900">Spaces</span>
-              <button onClick={() => setActivePopover(null)} className="p-1.5 hover:bg-slate-100 rounded-md text-slate-500 transition-colors">
+            <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-gray-800">
+              <span className="font-semibold text-slate-900 dark:text-gray-100">Spaces</span>
+              <button onClick={() => setActivePopover(null)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-md text-slate-500 dark:text-gray-400 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
-            <div className="p-3 border-b border-slate-100">
+
+            <div className="p-3 border-b border-slate-100 dark:border-gray-800">
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                <input 
-                  type="text" 
-                  placeholder="Search all spaces" 
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                <Search className="w-4 h-4 text-slate-400 dark:text-gray-500 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  placeholder="Search all spaces"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-750 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                 />
               </div>
             </div>
 
             <div className="p-2">
-              <Link href="/spaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
-                <ListFilter className="w-4 h-4 text-slate-400" />
+              <Link href="/spaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                <ListFilter className="w-4 h-4 text-slate-400 dark:text-gray-500" />
                 View all spaces
               </Link>
-              <Link href="/spaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors">
-                <Plus className="w-4 h-4 text-slate-400" />
+              <Link href="/spaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                <Plus className="w-4 h-4 text-slate-400 dark:text-gray-500" />
                 Create space
               </Link>
             </div>
