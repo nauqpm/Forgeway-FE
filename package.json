@@ -44,6 +44,7 @@
     "react-mentions": "^4.4.10",
     "react-rnd": "^10.5.3",
     "react-router-dom": "^7.2.0",
+    "react-select": "^5.10.2",
     "suneditor": "^2.47.5",
     "suneditor-react": "^3.6.1",
     "swiper": "^12.1.4",
