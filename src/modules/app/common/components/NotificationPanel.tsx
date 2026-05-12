@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Bell, X, MoreHorizontal, FileText, Settings, Maximize2, Flag } from "lucide-react";
+import { Bell, X, MoreHorizontal, FileText, Settings, Maximize2, Flag, Check } from "lucide-react";
 
 interface Notification {
   id: string;

@@ -347,7 +347,7 @@ export default function DataGridListView({
           {/* Quick Filter: Avatar Pile */}
           <div className="flex items-center -space-x-2">
             {uniqueAssignees.slice(0, 4).map((assignee, idx) => {
-              const isActive = columnFilters.find(f => f.id === 'assignee')?.value?.includes(assignee);
+              const isActive = (columnFilters.find(f => f.id === 'assignee')?.value as string[] | undefined)?.includes(assignee);
               return (
                 <div 
                   key={idx}
@@ -475,7 +475,7 @@ export default function DataGridListView({
                     <td colSpan={row.getVisibleCells().length} className="px-3 py-2 cursor-pointer" onClick={row.getToggleExpandedHandler()}>
                       <div className="flex items-center gap-2 font-semibold text-gray-700 text-sm">
                         {row.getIsExpanded() ? <ChevronDown className="w-4 h-4 text-gray-500"/> : <ChevronRight className="w-4 h-4 text-gray-500"/>}
-                        <span className="capitalize">{row.groupingColumnId}</span>: {row.getValue(row.groupingColumnId) || 'Unassigned'} 
+                        <span className="capitalize">{row.groupingColumnId}</span>: {row.groupingColumnId ? (row.getValue(row.groupingColumnId) as string) || 'Unassigned' : 'Unassigned'} 
                         <span className="text-gray-400 font-normal text-xs ml-1">({row.subRows.length})</span>
                       </div>
                     </td>
