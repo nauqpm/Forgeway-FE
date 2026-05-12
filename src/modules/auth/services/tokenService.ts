@@ -11,7 +11,7 @@ import type { RefreshTokenResponse } from '../types/auth.types';
 
 export const refreshTokenAPI = async (): Promise<RefreshTokenResponse> => {
   const response = await api.post<RefreshTokenResponse>(
-    '/auth/refresh-token',
+    '/auth/refresh',
     {},
     { withCredentials: true },
   );

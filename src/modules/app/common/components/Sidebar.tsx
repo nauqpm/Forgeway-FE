@@ -1,11 +1,20 @@
 "use client";
 
+<<<<<<< HEAD
+import { useState, useEffect } from "react";
+=======
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
+<<<<<<< HEAD
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
+=======
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
 import {
   LayoutDashboard,
   FolderKanban,
@@ -25,8 +34,11 @@ import {
   Clock7,
   Star,
   ListFilter,
+<<<<<<< HEAD
+=======
   Search,
   Columns,
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
 } from "lucide-react";
 
 interface SidebarProps {
@@ -68,6 +80,8 @@ const optionFilter = [
   { title: "Đã xong gần đây", slug: "recently-completed" },
 ];
 
+<<<<<<< HEAD
+=======
 const NavItem = ({
   item,
   showBadge,
@@ -275,6 +289,7 @@ const PopoverNavItem = ({
   );
 };
 
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
 export default function Sidebar({
   collapsed,
   onCollapse,
@@ -282,12 +297,79 @@ export default function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const pathname = usePathname();
+<<<<<<< HEAD
+  const { workspaces, setWorkspaces, workspacesLoaded } = useWorkspaceStore();
+=======
   const { currentWorkspace, workspaces } = useWorkspaceStore();
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
   const { hasAdminAccess } = useAuth();
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/admin"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [spaceOpen, setSpaceOpen] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
+<<<<<<< HEAD
+
+  const isAdmin = hasAdminAccess();
+
+  useEffect(() => {
+    if (workspacesLoaded) return;
+
+    let cancelled = false;
+
+    api
+      .get(apiRoutes.WORKSPACES.BASE)
+      .then((res) => {
+        if (!cancelled) {
+          setWorkspaces(res.data);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [workspacesLoaded, setWorkspaces]);
+
+  const NavItem = ({
+    item,
+    showBadge,
+  }: {
+    item: (typeof mainNav)[0];
+    showBadge?: boolean;
+  }) => {
+    const isActive =
+      pathname === item.href ||
+      (item.href !== "/" && pathname.startsWith(item.href));
+    return (
+      <Link
+        href={item.href}
+        onClick={onMobileClose}
+        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group relative ${
+          isActive
+            ? "bg-indigo-50 text-indigo-700"
+            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+        }`}
+      >
+        <item.icon
+          className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`}
+        />
+        {!collapsed && (
+          <>
+            <span className="text-sm font-medium flex-1">{item.label}</span>
+            {showBadge && item.badge && (
+              <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-medium">
+                {item.badge}
+              </span>
+            )}
+          </>
+        )}
+        {isActive && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-indigo-600 rounded-r-full" />
+        )}
+      </Link>
+    );
+  };
+=======
   const [sidebarSpaces, setSidebarSpaces] = useState<any[]>([]);
   const [activePopover, setActivePopover] = useState<"recent" | "starred" | "more_spaces" | null>(null);
   const [moreSpacesPos, setMoreSpacesPos] = useState({ top: 0, left: 0 });
@@ -331,6 +413,7 @@ export default function Sidebar({
   }, [currentWorkspace]);
 
   const isAdmin = hasAdminAccess();
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
 
   return (
     <>
@@ -405,14 +488,56 @@ export default function Sidebar({
           <div className="px-2 space-y-0.5">
             <div className="px-2 space-y-0.5">
               {/* Bảng điều khiển */}
+<<<<<<< HEAD
+              <NavItem item={mainNav[0]} />
+              <NavItem item={mainNav[1]} showBadge />
+              <NavItem item={mainNav[2]} showBadge />
+=======
               <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
               <PopoverNavItem item={mainNav[1]} type="recent" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
               <PopoverNavItem item={mainNav[2]} type="starred" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
 
               {/* Không gian làm việc (có subnav) */}
               <div>
                 <button
                   onClick={() => setSpaceOpen(!spaceOpen)}
+<<<<<<< HEAD
+                  className="flex items-center gap-2 px-3 py-2 w-full hover:bg-gray-100 rounded"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span className="flex-1 text-sm font-medium text-left">Workspace</span>
+                  {spaceOpen ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </button>
+
+                {/* LIST WORKSPACE */}
+                {spaceOpen && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {workspaces.map((space) => {
+                      const isActive = pathname.includes(space._id);
+
+                      return (
+                        <Link
+                          key={space._id}
+                          href={`/spaces/${space._id}`} 
+                          className={`flex items-center gap-2 px-2 py-1.5 rounded text-sm ${
+                            isActive
+                              ? "bg-indigo-100 text-indigo-700"
+                              : "hover:bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          <div className="w-5 h-5 bg-indigo-500 text-white flex items-center justify-center rounded text-xs">
+                            {space.name?.charAt(0)}
+                          </div>
+                          <span className="truncate">{space.name}</span>
+                        </Link>
+                      );
+                    })}
+=======
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50"
                 >
                   <BookOpen className="w-[18px] h-[18px] text-slate-400" />
@@ -456,6 +581,7 @@ export default function Sidebar({
                       <span>More spaces</span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
                   </div>
                 )}
               </div>
@@ -502,7 +628,11 @@ export default function Sidebar({
               </div>
 
               {/* Báo cáo */}
+<<<<<<< HEAD
+              <NavItem item={mainNav[5]} showBadge />
+=======
               <NavItem item={mainNav[5]} showBadge pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
             </div>
           </div>
 
@@ -528,7 +658,11 @@ export default function Sidebar({
               {adminOpen && !collapsed && (
                 <div className="space-y-0.5 mt-1">
                   {adminNav.map((item) => (
+<<<<<<< HEAD
+                    <NavItem key={item.href} item={item} />
+=======
                     <NavItem key={item.href} item={item} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
                   ))}
                 </div>
               )}
@@ -550,6 +684,8 @@ export default function Sidebar({
           )}
         </div>
 
+<<<<<<< HEAD
+=======
         {/* Bottom: Workspace + Settings */}
         <div className="flex-shrink-0 border-t border-slate-100 p-3 space-y-1">
           {!collapsed && currentWorkspace && (
@@ -572,6 +708,7 @@ export default function Sidebar({
           </Link>
         </div>
 
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
         {/* Collapse toggle */}
         <button
           onClick={() => onCollapse(!collapsed)}
@@ -584,6 +721,8 @@ export default function Sidebar({
           )}
         </button>
       </aside>
+<<<<<<< HEAD
+=======
 
       {/* More Spaces Popover */}
       {activePopover === "more_spaces" && mounted && createPortal(
@@ -625,6 +764,7 @@ export default function Sidebar({
         </>,
         document.body
       )}
+>>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
     </>
   );
 }

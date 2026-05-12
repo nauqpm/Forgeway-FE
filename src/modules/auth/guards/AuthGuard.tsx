@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../stores/authStore';
 import { AUTH_ROUTES } from '../constants/auth-routes';
@@ -14,6 +14,12 @@ interface AuthGuardProps {
 const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
   const router = useRouter();
   const { isAuthenticated, isLoading, isInitialized } = useAuthStore();
+
+  useEffect(() => {
+    if (isInitialized && !isLoading && !isAuthenticated) {
+      router.replace(AUTH_ROUTES.LOGIN);
+    }
+  }, [isInitialized, isLoading, isAuthenticated, router]);
 
   // Still initializing — show loading spinner
   if (!isInitialized || isLoading) {
@@ -31,7 +37,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
 
   // Not authenticated — redirect to login
   if (!isAuthenticated) {
-    router.replace(AUTH_ROUTES.LOGIN);
     return null;
   }
 

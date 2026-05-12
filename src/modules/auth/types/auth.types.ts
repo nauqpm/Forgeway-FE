@@ -4,7 +4,7 @@
 
 // ─── User & Roles ────────────────────────────────────────────────────────────
 
-export type UserRole = 'user' | 'admin' | 'staff' | 'manager' | 'technical';
+export type UserRole = 'super_admin' | 'space_admin' | 'member' | 'viewer';
 
 export interface User {
   id: string;
@@ -155,7 +155,7 @@ export interface SsoAuthUrlResponse {
 
 // ─── RBAC / Permissions ──────────────────────────────────────────────────────
 
-export type SpaceRoleName = 'owner' | 'admin' | 'member' | 'viewer';
+export type SpaceRoleName = 'space_admin' | 'member' | 'viewer';
 
 export interface SpaceRole {
   spaceId: string;

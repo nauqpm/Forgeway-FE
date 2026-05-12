@@ -62,7 +62,7 @@ export const setupAuthInterceptors = (): void => {
       }
 
       // Don't retry the refresh endpoint itself
-      if (originalRequest.url?.includes('/auth/refresh-token')) {
+      if (originalRequest.url?.includes('/auth/refresh')) {
         useAuthStore.getState().clearAuth();
         return Promise.reject(error);
       }
