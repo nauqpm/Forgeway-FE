@@ -14,25 +14,6 @@ export const initiateGoogleLogin = (): void => {
   window.location.href = `${API_URL}/auth/google`;
 };
 
-// ─── Handle SSO Callback ─────────────────────────────────────────────────────
-// Called after Google redirects back with a token/code.
-
-export const handleSsoCallbackAPI = async (
-  token: string,
-): Promise<LoginResponse> => {
-  const response = await api.get<LoginResponse>('/auth/verify-token', {
-    headers: { Authorization: `Bearer ${token}` },
-    withCredentials: true,
-  });
-
-  return {
-    message: 'Đăng nhập Google thành công',
-    user: response.data.user,
-    mfaRequired: response.data.mfaRequired,
-    mfaToken: response.data.mfaToken,
-    mfaMethod: response.data.mfaMethod,
-  };
-};
 
 // ─── Link Google Account ─────────────────────────────────────────────────────
 // Links Google account to existing user account.
