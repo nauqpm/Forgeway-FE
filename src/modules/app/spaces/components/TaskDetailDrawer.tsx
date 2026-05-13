@@ -9,9 +9,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { MentionsInput, Mention } from 'react-mentions';
-import IssueSubtasks from './IssueSubtasks';
-import TimeTrackingSidebar from './TimeTrackingSidebar';
-import IssueDescription from './IssueDescription';
+import IssueSubtasks from '../../common/components/IssueSubtasks';
+import TimeTrackingSidebar from '../../common/components/TimeTrackingSidebar';
+import IssueDescription from '../../common/components/IssueDescription';
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;

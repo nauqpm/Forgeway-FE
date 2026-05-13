@@ -13,7 +13,7 @@ interface TimelineViewProps {
 export default function TimelineView({ issues, sprints, onUpdateIssueDate, onClickTask }: TimelineViewProps) {
   const [pixelsPerDay, setPixelsPerDay] = useState(40); // Zoom level
   const [activeTooltip, setActiveTooltip] = useState<{ id: string, start: string, end: string, x: number, y: number } | null>(null);
-
+  
   const ROW_HEIGHT = 48;
   const SIDEBAR_WIDTH = 300;
 
@@ -31,17 +31,17 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
         startDate: sStart,
         endDate: sEnd,
         type: 'sprint',
-        color: 'bg-indigo-100 dark:bg-indigo-900/40',
-        textColor: 'text-indigo-800 dark:text-indigo-300',
-        borderColor: 'border-indigo-300 dark:border-indigo-600'
+        color: 'bg-indigo-100',
+        textColor: 'text-indigo-800',
+        borderColor: 'border-indigo-300'
       });
-
+      
       // Create Tasks Rows for this sprint
       const sprintIssues = issues.filter(i => i.sprintId === sprint.id);
       sprintIssues.forEach(issue => {
         const iStart = issue.startDate || sStart;
         const iEnd = issue.endDate || addDays(new Date(iStart), 3).toISOString().split('T')[0];
-
+        
         let color = 'bg-blue-500/90';
         if (issue.status === 'Done') color = 'bg-emerald-500/90';
         if (issue.type === 'Bug') color = 'bg-red-500/90';
@@ -55,7 +55,7 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
           type: 'task',
           color,
           textColor: 'text-white',
-          borderColor: color.replace('/90', '')
+          borderColor: color.replace('/90', '') 
         });
       });
     });
@@ -102,9 +102,9 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
     // Padding
     min = addDays(min, -7);
     max = addDays(max, 30);
-
-    return {
-      minDate: min,
+    
+    return { 
+      minDate: min, 
       maxDate: max,
       daysArray: eachDayOfInterval({ start: min, end: max })
     };
@@ -132,12 +132,12 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
     setActiveTooltip(null);
     const daysShifted = Math.round(newX / pixelsPerDay);
     const newStartDate = format(addDays(minDate, daysShifted), 'yyyy-MM-dd');
-
+    
     const item = items.find(i => i.id === id);
     if (!item) return;
     const duration = differenceInDays(new Date(item.endDate), new Date(item.startDate));
     const newEndDate = format(addDays(new Date(newStartDate), duration), 'yyyy-MM-dd');
-
+    
     if (item.type === 'task') {
       onUpdateIssueDate(originalId, newStartDate, newEndDate);
     }
@@ -147,10 +147,10 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
     setActiveTooltip(null);
     const newStartDays = Math.round(newX / pixelsPerDay);
     const newStartDate = format(addDays(minDate, newStartDays), 'yyyy-MM-dd');
-
+    
     const durationDays = Math.round(newWidth / pixelsPerDay);
     const newEndDate = format(addDays(new Date(newStartDate), durationDays), 'yyyy-MM-dd');
-
+    
     const item = items.find(i => i.id === id);
     if (item && item.type === 'task') {
       onUpdateIssueDate(originalId, newStartDate, newEndDate);
@@ -172,26 +172,26 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col font-sans text-gray-700 dark:text-gray-300 h-[700px] relative">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col font-sans text-gray-700 h-[700px] relative">
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden relative">
-
+        
         {/* LEFT PANEL: Lists */}
-        <div className="w-[300px] flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col z-10 shadow-[4px_0_12px_rgba(0,0,0,0.03)]">
+        <div className="w-[300px] flex-shrink-0 border-r border-gray-200 bg-white flex flex-col z-10 shadow-[4px_0_12px_rgba(0,0,0,0.03)]">
           {/* Header */}
-          <div className="h-[60px] border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center px-4 shrink-0">
-            <span className="font-semibold text-sm text-gray-500 dark:text-gray-400">Work Items</span>
+          <div className="h-[60px] border-b border-gray-200 bg-gray-50 flex items-center px-4 shrink-0">
+            <span className="font-semibold text-sm text-gray-500">Work Items</span>
           </div>
           {/* List Content */}
-          <div
+          <div 
             ref={leftRef}
             onScroll={handleLeftScroll}
-            className="flex-1 overflow-y-auto overflow-x-hidden timeline-scrollbar pb-20"
+            className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pb-20"
           >
             {items.map((item, i) => (
-              <div
-                key={item.id}
-                className={`h-[48px] flex items-center px-4 border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${item.type === 'sprint' ? 'bg-gray-50/80 dark:bg-gray-800/50' : item.type === 'header' ? 'bg-gray-100 dark:bg-gray-700 font-bold' : ''} ${item.type === 'task' ? 'cursor-pointer' : ''}`}
+              <div 
+                key={item.id} 
+                className={`h-[48px] flex items-center px-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${item.type === 'sprint' ? 'bg-gray-50/80' : item.type === 'header' ? 'bg-gray-100 font-bold' : ''} ${item.type === 'task' ? 'cursor-pointer' : ''}`}
                 onClick={() => {
                   if (item.type === 'task' && onClickTask) {
                     const originalTask = issues.find(i => i.id === item.originalId) || item;
@@ -200,8 +200,8 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
                 }}
               >
                 {item.type === 'sprint' && <ChevronRight className="w-4 h-4 mr-2 text-indigo-500" />}
-                {item.type === 'task' && <div className="w-4 h-4 mr-2 ml-4 rounded-sm flex items-center justify-center bg-gray-100 dark:bg-gray-700"><span className={`w-2 h-2 rounded-full ${item.status === 'Done' ? 'bg-emerald-500' : 'bg-blue-500'}`}></span></div>}
-                <span className={`text-sm truncate ${item.type === 'sprint' ? 'font-semibold text-indigo-700 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                {item.type === 'task' && <div className="w-4 h-4 mr-2 ml-4 rounded-sm flex items-center justify-center bg-gray-100"><span className={`w-2 h-2 rounded-full ${item.status === 'Done' ? 'bg-emerald-500' : 'bg-blue-500'}`}></span></div>}
+                <span className={`text-sm truncate ${item.type === 'sprint' ? 'font-semibold text-indigo-700' : 'text-gray-700'}`}>
                   {item.title}
                 </span>
               </div>
@@ -210,24 +210,26 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
         </div>
 
         {/* RIGHT PANEL: Timeline Grid & Bars */}
-        <div className="flex-1 overflow-x-auto overflow-y-hidden flex flex-col bg-white dark:bg-gray-900 timeline-scrollbar relative">
-
+        <div className="flex-1 overflow-x-auto overflow-y-hidden flex flex-col bg-white custom-scrollbar relative">
+          
           {/* Header Grid (Sticky Top) */}
-          <div className="h-[60px] shrink-0 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex sticky top-0 z-20" style={{ width: totalWidth }}>
+          <div className="h-[60px] shrink-0 border-b border-gray-200 bg-gray-50 flex sticky top-0 z-20" style={{ width: totalWidth }}>
             {daysArray.map((day, i) => {
               const isFirstOfMonth = day.getDate() === 1;
               return (
-                <div
-                  key={i}
-                  className="flex-shrink-0 border-r border-gray-200 dark:border-gray-700 flex flex-col items-center justify-end pb-1 relative"
+                <div 
+                  key={i} 
+                  className="flex-shrink-0 border-r border-gray-200 flex flex-col items-center justify-end pb-1 relative"
                   style={{ width: pixelsPerDay }}
                 >
+                  {/* Month Label (only show occasionally to prevent clutter) */}
                   {(isFirstOfMonth || i === 0) && (
-                    <span className="absolute top-1 left-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                    <span className="absolute top-1 left-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                       {format(day, 'MMM yyyy')}
                     </span>
                   )}
-                  <span className={`text-[10px] font-medium ${isToday(day) ? 'text-indigo-700 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/50 px-1 rounded' : 'text-gray-500 dark:text-gray-400'}`}>
+                  {/* Day Label */}
+                  <span className={`text-[10px] font-medium ${isToday(day) ? 'text-indigo-700 bg-indigo-100 px-1 rounded' : 'text-gray-500'}`}>
                     {format(day, 'dd')}
                   </span>
                 </div>
@@ -236,7 +238,7 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
           </div>
 
           {/* Body Grid & Content */}
-          <div
+          <div 
             ref={rightRef}
             onScroll={handleRightScroll}
             className="flex-1 overflow-y-auto relative pb-20"
@@ -245,9 +247,9 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
             {/* Grid Lines Overlay */}
             <div className="absolute inset-0 flex pointer-events-none z-0">
               {daysArray.map((day, i) => (
-                <div
-                  key={i}
-                  className={`flex-shrink-0 border-r ${isToday(day) ? 'border-indigo-200 dark:border-indigo-700 bg-indigo-50/30 dark:bg-indigo-900/10' : 'border-gray-100 dark:border-gray-700/30'}`}
+                <div 
+                  key={i} 
+                  className={`flex-shrink-0 border-r ${isToday(day) ? 'border-indigo-200 bg-indigo-50/30' : 'border-gray-100'}`}
                   style={{ width: pixelsPerDay }}
                 />
               ))}
@@ -255,8 +257,8 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
 
             {/* Today Marker */}
             {daysArray.findIndex(d => isToday(d)) !== -1 && (
-              <div
-                className="absolute top-0 bottom-0 border-l-2 border-indigo-400 dark:border-indigo-500 z-10 pointer-events-none shadow-[0_0_8px_rgba(99,102,241,0.5)]"
+              <div 
+                className="absolute top-0 bottom-0 border-l-2 border-indigo-400 z-10 pointer-events-none shadow-[0_0_8px_rgba(99,102,241,0.5)]"
                 style={{ left: daysArray.findIndex(d => isToday(d)) * pixelsPerDay + (pixelsPerDay / 2) }}
               />
             )}
@@ -264,13 +266,13 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
             {/* Rows & Bars */}
             <div className="relative z-10">
               {items.map((item, i) => {
-                if (item.type === 'header') return <div key={i} className="h-[48px] border-b border-gray-100 dark:border-gray-700/50" />;
-
+                if (item.type === 'header') return <div key={i} className="h-[48px] border-b border-gray-100" />;
+                
                 const left = differenceInDays(new Date(item.startDate), minDate) * pixelsPerDay;
                 const width = Math.max(1, differenceInDays(new Date(item.endDate), new Date(item.startDate))) * pixelsPerDay;
 
                 return (
-                  <div key={item.id} className="h-[48px] border-b border-gray-100 dark:border-gray-700/50 relative flex items-center hover:bg-gray-50/50 dark:hover:bg-gray-800/30 group">
+                  <div key={item.id} className="h-[48px] border-b border-gray-100 relative flex items-center hover:bg-gray-50/50 group">
                     <Rnd
                       bounds="parent"
                       dragAxis="x"
@@ -281,7 +283,10 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
                       onDragStop={(e, d) => handleDragStop(item.id, item.originalId, d.x)}
                       onResize={(e, dir, ref, delta, pos) => handleResize(e, dir, ref, delta, pos, item)}
                       onResizeStop={(e, dir, ref, delta, pos) => handleResizeStop(item.id, item.originalId, pos.x, ref.offsetWidth)}
-                      onClick={(e: React.MouseEvent) => {
+                      onClick={() => {
+                        // Prevent click if we just dragged. We can do a simple check or just allow click.
+                        // Actually, Rnd has onDragStop which handles drags, but standard onClick still fires.
+                        // Let's pass the issue to onClickTask if it's a task.
                         if (item.type === 'task' && onClickTask) {
                           const originalTask = issues.find(i => i.id === item.originalId) || item;
                           onClickTask(originalTask);
@@ -301,20 +306,20 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
       </div>
 
       {/* Floating Zoom Controls */}
-      <div className="absolute bottom-6 right-6 z-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg flex items-center p-1.5 gap-1">
-        <button
+      <div className="absolute bottom-6 right-6 z-40 bg-white border border-gray-200 shadow-lg rounded-lg flex items-center p-1.5 gap-1">
+        <button 
           onClick={() => setPixelsPerDay(Math.max(10, pixelsPerDay - 10))}
-          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+          className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded transition"
           title="Zoom Out"
         >
           <ZoomOut className="w-4 h-4" />
         </button>
-        <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-1"></div>
-        <span className="text-xs font-mono font-medium px-2 text-gray-600 dark:text-gray-300">{pixelsPerDay}px</span>
-        <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-1"></div>
-        <button
+        <div className="w-px h-4 bg-gray-200 mx-1"></div>
+        <span className="text-xs font-mono font-medium px-2 text-gray-600">{pixelsPerDay}px</span>
+        <div className="w-px h-4 bg-gray-200 mx-1"></div>
+        <button 
           onClick={() => setPixelsPerDay(Math.min(100, pixelsPerDay + 10))}
-          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition"
+          className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded transition"
           title="Zoom In"
         >
           <ZoomIn className="w-4 h-4" />
@@ -323,38 +328,29 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
 
       {/* Floating Tooltip */}
       {activeTooltip && (
-        <div
-          className="fixed z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white text-xs px-3 py-2 rounded shadow-xl pointer-events-none font-mono"
+        <div 
+          className="fixed z-50 bg-white border border-gray-200 text-gray-900 text-xs px-3 py-2 rounded shadow-xl pointer-events-none font-mono"
           style={{ left: activeTooltip.x, top: activeTooltip.y }}
         >
           {activeTooltip.start} - {activeTooltip.end}
         </div>
       )}
 
-      {/* Scrollbar Styles */}
+      {/* Custom Styles */}
       <style dangerouslySetInnerHTML={{__html: `
-        .timeline-scrollbar::-webkit-scrollbar {
+        .custom-scrollbar::-webkit-scrollbar {
           width: 8px;
           height: 8px;
         }
-        .timeline-scrollbar::-webkit-scrollbar-track {
+        .custom-scrollbar::-webkit-scrollbar-track {
           background: #f9fafb;
         }
-        .timeline-scrollbar::-webkit-scrollbar-thumb {
+        .custom-scrollbar::-webkit-scrollbar-thumb {
           background: #d1d5db;
           border-radius: 4px;
         }
-        .timeline-scrollbar::-webkit-scrollbar-thumb:hover {
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #9ca3af;
-        }
-        .dark .timeline-scrollbar::-webkit-scrollbar-track {
-          background: #111827;
-        }
-        .dark .timeline-scrollbar::-webkit-scrollbar-thumb {
-          background: #374151;
-        }
-        .dark .timeline-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #4b5563;
         }
       `}} />
     </div>
