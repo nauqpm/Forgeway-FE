@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../hooks/useAuth';
 import { useSecurityStore } from '../../stores/securityStore';
 import { initiateGoogleLogin } from '../../services/ssoService';
@@ -9,12 +10,20 @@ import LockoutAlert from '../security/LockoutAlert';
 import toast from 'react-hot-toast';
 import { Zap, Eye, EyeOff, Loader2 } from 'lucide-react';
 
-export default function LoginForm() {
+function LoginFormInner() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { login, isLoading } = useAuth();
   const { lockoutInfo } = useSecurityStore();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error === 'google_auth_failed') {
+      toast.error('Đăng nhập Google thất bại. Vui lòng thử lại.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,5 +108,13 @@ export default function LoginForm() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginForm() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>}>
+      <LoginFormInner />
+    </Suspense>
   );
 }
