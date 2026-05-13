@@ -53,7 +53,17 @@ export const useAuth = () => {
 
         // Login successful — set user
         if (response.user) {
-          setUser(response.user);
+          let currentUser = response.user;
+          try {
+            currentUser = await getCurrentUserAPI();
+          } catch {
+            currentUser = {
+              ...response.user,
+              permissions: response.user.permissions || [],
+              spaceRoles: response.user.spaceRoles || [],
+            };
+          }
+          setUser(currentUser);
           resetFailedAttempts();
 
           // Load permissions

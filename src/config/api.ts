@@ -1,6 +1,5 @@
 // /src/config/api.ts
 import axios from 'axios';
-import { config } from './config';
 
 /**
  * Cấu hình cho API - Định nghĩa URL gốc và các endpoints
@@ -41,6 +40,7 @@ export const API_TIMEOUT = 10000;
 const api = axios.create({
     baseURL: API_URL,
     headers: API_HEADERS,
+    withCredentials: true,
 });
 
 export default api;

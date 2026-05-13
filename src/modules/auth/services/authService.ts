@@ -54,7 +54,11 @@ export const getCurrentUserAPI = async (): Promise<AuthUser> => {
   const response = await api.get<AuthUser>('/auth/me', {
     withCredentials: true,
   });
-  return response.data;
+  return {
+    ...response.data,
+    permissions: response.data.permissions || [],
+    spaceRoles: response.data.spaceRoles || [],
+  };
 };
 
 // ─── Update Current User ──────────────────────────────────────────────────────

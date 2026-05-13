@@ -2,24 +2,25 @@
 
 import {
   createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
+  ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { jwtDecode } from "jwt-decode";
-import axios from "axios";
-import { apiRoutes } from "@/config/apiRoutes";
-
-type UserRole = "user" | "admin" | "staff" | "manager" | "technical";
-
-interface Permission {
-  id: string;
-  resource: string;
-  action: string;
-}
+import type { AuthUser, Permission, UserRole } from "@/modules/auth/types/auth.types";
+import { useAuthStore } from "@/modules/auth/stores/authStore";
+import { usePermissionStore } from "@/modules/auth/stores/permissionStore";
+import {
+  getCurrentUserAPI,
+  logoutAPI,
+} from "@/modules/auth/services/authService";
+import { getMyPermissionsAPI } from "@/modules/auth/services/permissionService";
+import { handleSsoCallbackAPI } from "@/modules/auth/services/ssoService";
+import { clearTokens } from "@/modules/auth/services/tokenService";
+import { setupAuthInterceptors } from "@/modules/auth/services/axiosAuthInterceptor";
+import { useSessionStore } from "@/modules/auth/stores/sessionStore";
+import { useSecurityStore } from "@/modules/auth/stores/securityStore";
 
 interface User {
   id: string;
@@ -34,126 +35,194 @@ interface AuthContextType {
   token: string | null;
   user: User | null;
   isAuthenticated: boolean;
-  login: (token: string) => void;
-  logout: () => void;
+  isLoading: boolean;
+  login: (token?: string) => Promise<void>;
+  logout: () => Promise<void>;
   hasAdminAccess: () => boolean;
   hasPermission: (resource: string, action: string) => boolean;
   fetchUserPermissions: () => Promise<Permission[]>;
   isLoadingPermissions: boolean;
-  verifyToken: (token?: string) => Promise<void>;
+  verifyToken: () => Promise<void>;
 }
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const normalizeUser = (
+  user: AuthUser | (Partial<AuthUser> & { id?: string; _id?: string }),
+  permissions: Permission[] = [],
+): User => ({
+  id: user.id || ("_id" in user ? user._id || "" : ""),
+  email: user.email || "",
+  role: (user.role || "user") as UserRole,
+  fullName: user.fullName,
+  avatar: user.avatar,
+  permissions: permissions.length ? permissions : user.permissions || [],
+});
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
   const router = useRouter();
+  const {
+    user: storeUser,
+    isAuthenticated,
+    isLoading,
+    isInitialized,
+    setUser,
+    setLoading,
+    setInitialized,
+    clearAuth,
+  } = useAuthStore();
+  const {
+    globalPermissions,
+    setGlobalPermissions,
+    clearPermissions,
+  } = usePermissionStore();
+  const { clearSessionState } = useSessionStore();
+  const { clearSecurityState } = useSecurityStore();
+
+  useEffect(() => {
+    setupAuthInterceptors();
+  }, []);
 
   const fetchUserPermissions = useCallback(async (): Promise<Permission[]> => {
-    const currentToken = token || localStorage.getItem("token");
-    if (!currentToken) return [];
-
-    setIsLoadingPermissions(true);
     try {
-      const response = await axios.get(
-        `${BASE_URL}${apiRoutes.AUTH.MY_PERMISSIONS}`,
-        { headers: { Authorization: `Bearer ${currentToken}` } }
-      );
-      const { permissions } = response.data;
-      if (permissions && Array.isArray(permissions)) {
-        setUser((prev) => {
-          if (!prev) {
-            const decoded = jwtDecode<{ userId: string; email: string; role: UserRole }>(currentToken);
-            setIsAuthenticated(true);
-            return { id: decoded.userId, email: decoded.email, role: decoded.role, permissions: permissions || [] };
-          }
-          return { ...prev, permissions: permissions || [] };
+      const { permissions } = await getMyPermissionsAPI();
+      setGlobalPermissions(permissions);
+      if (useAuthStore.getState().user) {
+        setUser({
+          ...useAuthStore.getState().user!,
+          permissions,
         });
-        return permissions;
       }
-      return [];
+      return permissions;
     } catch {
+      setGlobalPermissions([]);
       return [];
-    } finally {
-      setIsLoadingPermissions(false);
     }
-  }, [token]);
+  }, [setGlobalPermissions, setUser]);
+
+  const refreshCurrentUser = useCallback(async () => {
+    const currentUser = await getCurrentUserAPI();
+    setUser({
+      ...currentUser,
+      permissions: currentUser.permissions || [],
+      spaceRoles: currentUser.spaceRoles || [],
+    });
+    await fetchUserPermissions();
+  }, [fetchUserPermissions, setUser]);
 
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem("token");
-      if (storedToken) {
-        setToken(storedToken);
-        try {
-          const decodedToken = jwtDecode<{ userId: string; email: string; role: UserRole; fullName?: string; avatar?: string; exp: number }>(storedToken);
-          const currentTime = Math.floor(Date.now() / 1000);
-          if (decodedToken.exp && decodedToken.exp < currentTime) {
-            logout();
-            return;
-          }
-          setUser({ id: decodedToken.userId, email: decodedToken.email, role: decodedToken.role, fullName: decodedToken.fullName, avatar: decodedToken.avatar, permissions: [] });
-          setIsAuthenticated(true);
-          await fetchUserPermissions();
-        } catch {
-          logout();
-        }
+      if (isInitialized) return;
+
+      setLoading(true);
+      try {
+        await refreshCurrentUser();
+      } catch {
+        clearAuth();
+        clearPermissions();
+      } finally {
+        setInitialized(true);
       }
     };
+
     initAuth();
-  }, []);
+  }, [
+    clearAuth,
+    clearPermissions,
+    isInitialized,
+    refreshCurrentUser,
+    setInitialized,
+    setLoading,
+  ]);
 
-  const verifyToken = async (storedToken?: string): Promise<void> => {
-    const tokenToVerify = storedToken || token || localStorage.getItem("token");
-    if (!tokenToVerify) { logout(); return; }
+  const login = useCallback(
+    async (token?: string) => {
+      if (token) {
+        const response = await handleSsoCallbackAPI(token);
+        if (response.user) {
+          setUser(response.user);
+          await fetchUserPermissions();
+        }
+        router.replace("/");
+        return;
+      }
+
+      await refreshCurrentUser();
+      router.replace("/");
+    },
+    [fetchUserPermissions, refreshCurrentUser, router, setUser],
+  );
+
+  const logout = useCallback(async () => {
     try {
-      const decodedToken = jwtDecode<{ userId: string; email: string; role: UserRole; exp: number }>(tokenToVerify);
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (decodedToken.exp && decodedToken.exp < currentTime) { logout(); return; }
-      setToken(tokenToVerify);
-      localStorage.setItem("token", tokenToVerify);
-      setUser({ id: decodedToken.userId, email: decodedToken.email, role: decodedToken.role, permissions: [] });
-      setIsAuthenticated(true);
-      await fetchUserPermissions();
-    } catch { logout(); }
-  };
+      await logoutAPI();
+    } catch {
+      // Client state must still be cleared if the session has already expired.
+    } finally {
+      clearTokens();
+      clearAuth();
+      clearPermissions();
+      clearSessionState();
+      clearSecurityState();
+      router.replace("/login");
+    }
+  }, [
+    clearAuth,
+    clearPermissions,
+    clearSecurityState,
+    clearSessionState,
+    router,
+  ]);
 
-  const login = async (newToken: string) => {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    const decodedToken = jwtDecode<{ userId: string; email: string; role: UserRole; fullName?: string; avatar?: string }>(newToken);
-    setUser({ id: decodedToken.userId, email: decodedToken.email, role: decodedToken.role, fullName: decodedToken.fullName, avatar: decodedToken.avatar, permissions: [] });
-    setIsAuthenticated(true);
-    await fetchUserPermissions();
-    router.replace("/");
-  };
+  const verifyToken = useCallback(async (): Promise<void> => {
+    try {
+      await refreshCurrentUser();
+    } catch {
+      await logout();
+    }
+  }, [logout, refreshCurrentUser]);
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("token");
-    localStorage.removeItem("workspace-storage");
-    router.replace("/login");
-  };
+  const effectivePermissions =
+    globalPermissions.length > 0 ? globalPermissions : storeUser?.permissions || [];
+  const user = storeUser
+    ? normalizeUser(storeUser, effectivePermissions)
+    : null;
 
   const hasAdminAccess = (): boolean => {
     if (!user) return false;
-    return user.role === "admin" || ["staff", "manager", "technical"].includes(user.role) || user.permissions.length > 0;
+    return (
+      user.role === "admin" ||
+      ["staff", "manager", "technical"].includes(user.role) ||
+      effectivePermissions.length > 0
+    );
   };
 
   const hasPermission = (resource: string, action: string): boolean => {
     if (!user) return false;
     if (user.role === "admin") return true;
-    return user.permissions.some((p) => p.resource === resource && p.action === action);
+    return effectivePermissions.some(
+      (p) =>
+        (p.resource === resource || p.resource === "*") &&
+        (p.action === action || p.action === "*"),
+    );
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, isAuthenticated, login, logout, hasAdminAccess, hasPermission, fetchUserPermissions, isLoadingPermissions, verifyToken }}>
+    <AuthContext.Provider
+      value={{
+        token: null,
+        user,
+        isAuthenticated,
+        isLoading: isLoading || !isInitialized,
+        login,
+        logout,
+        hasAdminAccess,
+        hasPermission,
+        fetchUserPermissions,
+        isLoadingPermissions: isLoading || !isInitialized,
+        verifyToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
