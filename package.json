@@ -75,5 +75,13 @@
   "main": "next.config.js",
   "author": "",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DT-MinhMan/AL-TASK-Frontend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/DT-MinhMan/AL-TASK-Frontend/issues"
+  },
+  "homepage": "https://github.com/DT-MinhMan/AL-TASK-Frontend#readme",
   "description": ""
 }
