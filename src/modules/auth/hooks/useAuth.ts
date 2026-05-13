@@ -135,7 +135,7 @@ export const useAuth = () => {
       usePermissionStore.getState().clearPermissions();
       useSessionStore.getState().clearSessionState();
       useSecurityStore.getState().clearSecurityState();
-      router.push(AUTH_ROUTES.LOGIN);
+      router.push(AUTH_ROUTES.DASHBOARD);
     }
   }, [clearAuth, router]);
 

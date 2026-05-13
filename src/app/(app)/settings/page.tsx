@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
-import { User, Shield, Key } from "lucide-react";
+import { User, Shield, Key, LogOut } from "lucide-react";
 import ThemeSwitcher from "@/common/components/ThemeSwitcher";
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [profile, setProfile] = useState({ fullName: user?.fullName || "", email: user?.email || "" });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -45,6 +45,14 @@ export default function SettingsPage() {
         <button className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
           <div className="flex items-center gap-3"><Key className="w-5 h-5 text-gray-400" /><div className="text-left"><p className="text-sm font-medium text-gray-900 dark:text-white">Change Password</p><p className="text-xs text-gray-500 dark:text-gray-400">Update your account password</p></div></div>
           <span className="text-gray-400">→</span>
+        </button>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><LogOut className="w-5 h-5 text-red-500" /> Account</h2>
+        <button onClick={logout} className="w-full flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-600 dark:text-red-400">
+          <LogOut className="w-5 h-5" />
+          <div className="text-left"><p className="text-sm font-medium">Đăng xuất</p><p className="text-xs opacity-75">Đăng xuất khỏi tài khoản hiện tại</p></div>
         </button>
       </div>
 
