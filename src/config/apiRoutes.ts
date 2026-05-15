@@ -44,6 +44,7 @@ export const apiRoutes = {
         MOVE: (id: string) => `/tasks/${id}/move`,
         ASSIGN: (id: string) => `/tasks/${id}/assign`,
         STATUS: (id: string) => `/tasks/${id}/status`,
+        UPDATE: (id: string) => `/tasks/${id}`,
         LABELS: (id: string) => `/tasks/${id}/labels`,
     },
     SPRINTS: {

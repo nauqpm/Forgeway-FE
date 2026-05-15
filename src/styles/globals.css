@@ -223,3 +223,69 @@ body {
     background-color: #f9f9f9;
     font-weight: bold;
   }
+
+/* ── FullCalendar overrides ── */
+.fc .fc-toolbar.fc-header-toolbar {
+  display: none; /* Use custom CalendarToolbar instead */
+}
+
+/* Light mode */
+.fc {
+  --fc-border-color: #e5e7eb;
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: #f9fafb;
+  --fc-today-bg-color: rgba(99, 102, 241, 0.05);
+}
+.fc .fc-daygrid-day-number {
+  color: #374151;
+  font-size: 0.75rem;
+  padding: 4px 6px;
+}
+.fc .fc-col-header-cell-cushion {
+  color: #6b7280;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 4px;
+  text-decoration: none;
+}
+.fc .fc-daygrid-day-number {
+  text-decoration: none;
+}
+
+/* Dark mode */
+.dark .fc {
+  --fc-border-color: #374151;
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: #1f2937;
+  --fc-today-bg-color: rgba(59, 130, 246, 0.1);
+  color: #f3f4f6;
+}
+.dark .fc .fc-daygrid-day-number {
+  color: #d1d5db;
+}
+.dark .fc .fc-col-header-cell-cushion {
+  color: #9ca3af;
+}
+.dark .fc .fc-scrollgrid {
+  border-color: #374151;
+}
+
+/* Sprint event bar style */
+.fc .sprint-event {
+  opacity: 0.9;
+  border-radius: 4px;
+}
+
+/* Make single-day events transparent background so custom content shows */
+.fc .fc-daygrid-event {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+/* Re-apply background only for multi-day block events */
+.fc .fc-daygrid-block-event {
+  background: var(--fc-event-bg-color, #3b82f6);
+  border-radius: 4px;
+}

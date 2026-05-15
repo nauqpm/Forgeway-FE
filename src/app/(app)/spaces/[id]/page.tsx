@@ -45,7 +45,7 @@ export default function SpaceDetailPage({
   const [space, setSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "board" | "backlog" | "timeline" | "summary" | "pages" | "list"
+    "board" | "backlog" | "timeline" | "summary" | "pages" | "list" | "calendar"
   >("pages");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
 
@@ -292,6 +292,12 @@ export default function SpaceDetailPage({
           issues,
           spaceKey: space.key,
         }}
+        calendarProps={{
+          issues,
+          sprints,
+          handleUpdateIssueDate,
+          setSelectedIssue,
+        }}
       />
 
       {/* Modal Tạo Issue */}
@@ -316,6 +322,7 @@ export default function SpaceDetailPage({
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
       {selectedIssue &&
       (activeTab === "timeline" ||
+        activeTab === "calendar" ||
         (activeTab === "list" && listViewMode === "grid" && listGridDrawerOpen)) ? (
         <TaskDetailDrawer
           isOpen={!!selectedIssue}

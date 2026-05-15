@@ -10,6 +10,7 @@ import BacklogTab from "./tabs/BacklogTab";
 import TimelineTab from "./tabs/TimelineTab";
 import ListTab from "./tabs/ListTab";
 import SummaryTab from "./tabs/SummaryTab";
+import CalendarTab from "./tabs/CalendarTab";
 
 type SpaceContentProps = {
   activeTab: string;
@@ -22,6 +23,7 @@ type SpaceContentProps = {
   timelineProps: any;
   listProps: any;
   summaryProps: any;
+  calendarProps: any;
 };
 
 export default function SpaceContent({
@@ -33,6 +35,7 @@ export default function SpaceContent({
   timelineProps,
   listProps,
   summaryProps,
+  calendarProps,
 }: SpaceContentProps) {
   return (
     <div
@@ -96,6 +99,8 @@ export default function SpaceContent({
       {activeTab === "timeline" && (
         <TimelineTab {...timelineProps} />
       )}
+
+      {activeTab === "calendar" && <CalendarTab {...calendarProps} />}
 
       {activeTab === "list" && <ListTab {...listProps} />}
 
