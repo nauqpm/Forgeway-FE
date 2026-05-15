@@ -1,0 +1,61 @@
+import { Document } from "../types/docs.type";
+import { v4 as uuidv4 } from "uuid";
+
+const now = new Date().toISOString();
+
+export const MOCK_DOCS: Document[] = [
+  {
+    id: "doc-1",
+    title: "Getting Started",
+    content: "<h1>Getting Started</h1><p>Welcome to your new workspace. Here you can write documentation.</p>",
+    parentId: null,
+    spaceId: "space-1",
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "doc-2",
+    title: "Installation",
+    content: "<h2>Installation Guide</h2><p>Run <code>npm install</code> to get started.</p>",
+    parentId: "doc-1",
+    spaceId: "space-1",
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "doc-3",
+    title: "Authentication",
+    content: "<h2>Authentication</h2><p>Learn how to authenticate your API requests.</p>",
+    parentId: "doc-1",
+    spaceId: "space-1",
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "doc-4",
+    title: "API Reference",
+    content: "<h1>API Reference</h1><p>List of all available endpoints.</p>",
+    parentId: null,
+    spaceId: "space-1",
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "doc-5",
+    title: "Endpoints",
+    content: "<h2>Endpoints</h2><p>GET /api/v1/users</p>",
+    parentId: "doc-4",
+    spaceId: "space-1",
+    createdAt: now,
+    updatedAt: now,
+  },
+  {
+    id: "doc-6",
+    title: "Project Architecture",
+    content: "<h1>Project Architecture</h1><p>We use a feature-based architecture.</p>",
+    parentId: null,
+    spaceId: "space-1",
+    createdAt: now,
+    updatedAt: now,
+  }
+];
