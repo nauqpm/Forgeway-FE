@@ -45,8 +45,8 @@ export default function SpaceDetailPage({
   const [space, setSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "board" | "backlog" | "timeline" | "pages" | "list"
-  >("pages");
+    "board" | "backlog" | "timeline" | "docs" | "list"
+  >("docs");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
 
   const [sprints, setSprints] = useState<Sprint[]>(MOCK_SPRINTS);

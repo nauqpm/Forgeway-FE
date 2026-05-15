@@ -2,12 +2,23 @@
 
 import { useDocsStore } from "../store/docs.store";
 import { Document } from "../types/docs.type";
-import { ChevronRight, CheckCircle2, Loader2, FileText } from "lucide-react";
+import { ChevronRight, CheckCircle2, Loader2, FileText, Globe } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function EditorHeader({ doc }: { doc: Document }) {
-  const { documents, isSaving } = useDocsStore();
+  const { documents, isSaving, renameDocument } = useDocsStore();
+  const [title, setTitle] = useState(doc.title);
 
-  // Tạo breadcrumbs đệ quy
+  useEffect(() => {
+    setTitle(doc.title);
+  }, [doc.id, doc.title]);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    renameDocument(doc.id, newTitle);
+  };
+
   const getBreadcrumbs = (currentDoc: Document): Document[] => {
     const breadcrumbs: Document[] = [currentDoc];
     let parentId = currentDoc.parentId;
@@ -26,31 +37,35 @@ export default function EditorHeader({ doc }: { doc: Document }) {
   const breadcrumbs = getBreadcrumbs(doc);
 
   return (
-    <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 bg-white shadow-sm shrink-0">
-      <div className="flex items-center text-sm text-gray-500 overflow-hidden flex-1 mr-4">
-        <FileText className="w-4 h-4 mr-2 flex-shrink-0" />
-        {breadcrumbs.map((b, index) => (
-          <span key={b.id} className="flex items-center flex-shrink-0">
-            {index > 0 && <ChevronRight className="w-4 h-4 mx-1 text-gray-400" />}
-            <span className={`truncate max-w-[150px] ${index === breadcrumbs.length - 1 ? "font-semibold text-gray-900" : ""}`}>
-              {b.title}
+    <div className="flex flex-col bg-white shrink-0">
+      {/* Breadcrumbs Row */}
+      <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100">
+        <div className="flex items-center text-[12px] text-gray-500 overflow-hidden flex-1">
+          <Globe className="w-3.5 h-3.5 mr-2 text-gray-400" />
+          <span className="hover:underline cursor-pointer">Space</span>
+          {breadcrumbs.map((b, index) => (
+            <span key={b.id} className="flex items-center shrink-0">
+              <ChevronRight className="w-3.5 h-3.5 mx-0.5 text-gray-400" />
+              <span className={`truncate max-w-[150px] ${index === breadcrumbs.length - 1 ? "text-gray-900 font-medium" : "hover:underline cursor-pointer"}`}>
+                {b.title}
+              </span>
             </span>
-          </span>
-        ))}
-      </div>
-      
-      <div className="flex items-center text-xs text-gray-500 font-medium">
-        {isSaving ? (
-          <span className="flex items-center text-gray-400">
-            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-            Đang lưu...
-          </span>
-        ) : (
-          <span className="flex items-center text-emerald-600">
-            <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-            Đã lưu
-          </span>
-        )}
+          ))}
+        </div>
+        
+        <div className="flex items-center text-[11px] font-medium ml-4">
+          {isSaving ? (
+            <span className="flex items-center text-gray-400">
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            <span className="flex items-center text-gray-400">
+              <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500" />
+              Saved
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

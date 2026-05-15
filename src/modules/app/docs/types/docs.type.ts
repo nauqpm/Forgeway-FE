@@ -6,6 +6,7 @@ export interface Document {
   spaceId: string;
   createdAt: string;
   updatedAt: string;
+  category?: string; // Nhóm tài liệu (Frontend, Backend, etc.)
 }
 
 export interface DocsState {
@@ -14,6 +15,7 @@ export interface DocsState {
   expandedNodes: string[];
   searchQuery: string;
   isSaving: boolean;
+  recentDocumentIds: string[];
   
   // Actions
   setDocuments: (documents: Document[]) => void;
@@ -25,4 +27,5 @@ export interface DocsState {
   renameDocument: (id: string, newTitle: string) => void;
   setSearchQuery: (query: string) => void;
   setIsSaving: (saving: boolean) => void;
+  duplicateDocument: (id: string) => Document | null;
 }

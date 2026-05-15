@@ -12,6 +12,7 @@ export const MOCK_DOCS: Document[] = [
     spaceId: "space-1",
     createdAt: now,
     updatedAt: now,
+    category: "Frontend"
   },
   {
     id: "doc-2",
@@ -21,6 +22,7 @@ export const MOCK_DOCS: Document[] = [
     spaceId: "space-1",
     createdAt: now,
     updatedAt: now,
+    category: "Frontend"
   },
   {
     id: "doc-3",
@@ -30,6 +32,7 @@ export const MOCK_DOCS: Document[] = [
     spaceId: "space-1",
     createdAt: now,
     updatedAt: now,
+    category: "Backend"
   },
   {
     id: "doc-4",
@@ -39,6 +42,7 @@ export const MOCK_DOCS: Document[] = [
     spaceId: "space-1",
     createdAt: now,
     updatedAt: now,
+    category: "Backend"
   },
   {
     id: "doc-5",
@@ -48,14 +52,16 @@ export const MOCK_DOCS: Document[] = [
     spaceId: "space-1",
     createdAt: now,
     updatedAt: now,
+    category: "Backend"
   },
   {
     id: "doc-6",
-    title: "Project Architecture",
-    content: "<h1>Project Architecture</h1><p>We use a feature-based architecture.</p>",
+    title: "Design System",
+    content: "<h1>Design System</h1><p>Our UI components and styles.</p>",
     parentId: null,
     spaceId: "space-1",
     createdAt: now,
     updatedAt: now,
+    category: "Frontend"
   }
 ];

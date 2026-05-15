@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronRight, ChevronDown, FileText, Plus, MoreHorizontal, Trash, Edit2 } from "lucide-react";
+import { ChevronRight, ChevronDown, FileText, Plus, MoreHorizontal, Trash, Edit2, Copy } from "lucide-react";
 import { useDocsStore } from "../store/docs.store";
 import { Document } from "../types/docs.type";
 import DocsTree from "./DocsTree";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface DocsTreeItemProps {
   doc: Document;
@@ -21,7 +22,8 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
     selectDocument,
     createDocument,
     deleteDocument,
-    renameDocument
+    renameDocument,
+    duplicateDocument
   } = useDocsStore();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -71,8 +73,17 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Bạn có chắc muốn xoá tài liệu này và tất cả tài liệu con?")) {
+    if (confirm("Delete this document and all sub-pages?")) {
       deleteDocument(doc.id);
+    }
+    setShowMenu(false);
+  };
+
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newDoc = duplicateDocument(doc.id);
+    if (newDoc) {
+      selectDocument(newDoc.id);
     }
     setShowMenu(false);
   };
@@ -95,24 +106,38 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
   };
 
   return (
-    <li>
+    <li className="list-none">
       <div 
-        className={`group flex items-center justify-between px-2 py-1.5 rounded-lg cursor-pointer transition-colors ${
-          isSelected ? "bg-indigo-50 text-indigo-700" : "text-gray-700 hover:bg-gray-100"
-        }`}
+        className={`
+          group relative flex items-center justify-between px-3 py-1.5 cursor-pointer transition-all duration-200
+          ${isSelected ? "bg-[#E6EFFC] text-[#0052CC]" : "text-[#42526E] hover:bg-gray-50"}
+          rounded-lg mx-1 mb-0.5
+        `}
         style={{ paddingLeft: `${(level * 12) + 8}px` }}
         onClick={handleSelect}
       >
-        <div className="flex items-center gap-1.5 flex-1 overflow-hidden">
+        {/* Active Indicator */}
+        {isSelected && (
+          <motion.div 
+            layoutId="activeDocIndicator"
+            className="absolute left-0 w-1 h-5 bg-[#0052CC] rounded-r-full"
+          />
+        )}
+
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           <button 
-            className={`w-5 h-5 flex items-center justify-center rounded hover:bg-gray-200 text-gray-400 ${isSelected ? "hover:bg-indigo-100 text-indigo-500" : ""} transition-colors`}
+            className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isSelected ? "text-[#0052CC]" : "text-gray-400"} ${hasChildren ? "hover:bg-gray-200/50" : "opacity-0 cursor-default"}`}
             onClick={handleToggle}
-            style={{ visibility: hasChildren ? "visible" : "hidden" }}
           >
-            {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            <motion.div
+              animate={{ rotate: isExpanded ? 90 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </motion.div>
           </button>
           
-          <FileText className={`w-4 h-4 flex-shrink-0 ${isSelected ? "text-indigo-600" : "text-gray-400"}`} />
+          <FileText className={`w-4 h-4 shrink-0 ${isSelected ? "text-[#0052CC]" : "text-gray-400 group-hover:text-gray-500"}`} />
           
           {isEditing ? (
             <input
@@ -122,54 +147,77 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
               onBlur={handleRenameSubmit}
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="flex-1 min-w-0 bg-white border border-indigo-300 rounded px-1.5 py-0.5 text-sm outline-none"
+              className="flex-1 min-w-0 bg-white border border-[#4C9AFF] rounded-md px-2 py-0.5 text-[13px] outline-none shadow-sm"
             />
           ) : (
-            <span className="truncate text-sm font-medium">{doc.title}</span>
+            <span className={`truncate text-[13px] leading-tight py-0.5 ${isSelected ? "font-bold" : "font-medium"}`}>
+              {doc.title}
+            </span>
           )}
         </div>
 
-        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 flex-shrink-0 transition-opacity relative" ref={menuRef}>
+        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 flex-shrink-0 transition-opacity relative" ref={menuRef}>
           <button 
             onClick={handleAddChild}
-            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
-            title="Thêm trang con"
+            className="p-1 text-gray-400 hover:text-[#0052CC] hover:bg-white rounded-md transition-all shadow-none hover:shadow-sm"
+            title="Add sub-page"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
           
           <button 
             onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
+            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white rounded-md transition-all shadow-none hover:shadow-sm"
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
 
-          {showMenu && (
-            <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-10">
-              <button 
-                onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
-                className="w-full text-left px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+          <AnimatePresence>
+            {showMenu && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-[0_10px_38px_rgba(0,0,0,0.1),0_10px_20px_rgba(0,0,0,0.06)] border border-gray-100 py-1.5 z-30"
               >
-                <Edit2 className="w-3.5 h-3.5" /> Đổi tên
-              </button>
-              <button 
-                onClick={handleDelete}
-                className="w-full text-left px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-              >
-                <Trash className="w-3.5 h-3.5" /> Xoá
-              </button>
-            </div>
-          )}
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
+                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] hover:bg-[#F4F5F7] flex items-center gap-2.5 transition-colors"
+                >
+                  <Edit2 className="w-3.5 h-3.5 text-gray-400" /> Rename
+                </button>
+                <button 
+                  onClick={handleDuplicate}
+                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] hover:bg-[#F4F5F7] flex items-center gap-2.5 transition-colors"
+                >
+                  <Copy className="w-3.5 h-3.5 text-gray-400" /> Duplicate
+                </button>
+                <div className="my-1 border-t border-gray-50" />
+                <button 
+                  onClick={handleDelete}
+                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors"
+                >
+                  <Trash className="w-3.5 h-3.5" /> Delete
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
-      {/* Render children animated using tailwind arbitrary variants (max-height for basic accordion effect if possible, but conditionally rendering is simpler) */}
-      <div 
-        className={`overflow-hidden transition-all duration-200 ease-in-out ${isExpanded ? "max-h-[1000px] opacity-100 mt-0.5" : "max-h-0 opacity-0"}`}
-      >
-        {hasChildren && <DocsTree docs={children} spaceId={spaceId} level={level + 1} />}
-      </div>
+      <AnimatePresence initial={false}>
+        {isExpanded && hasChildren && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
+            <DocsTree docs={children} spaceId={spaceId} level={level + 1} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </li>
   );
 }

@@ -22,6 +22,7 @@ export default function TiptapEditor() {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         codeBlock: false, // We use CodeBlockLowlight instead
@@ -74,19 +75,31 @@ export default function TiptapEditor() {
   if (!document) return null;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full bg-white overflow-hidden">
       <EditorHeader doc={document} />
-      {editor && <EditorToolbar editor={editor} />}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto py-8">
-          <input
-            type="text"
-            value={document.title}
-            onChange={(e) => updateDocument(document.id, { title: e.target.value })}
-            className="w-full text-4xl font-bold border-none outline-none focus:ring-0 px-8 mb-6 bg-transparent text-gray-900 placeholder-gray-300"
-            placeholder="Tiêu đề trang"
-          />
-          <EditorContent editor={editor} />
+      
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
+        {/* Sticky Toolbar with Blur */}
+        <div className="sticky top-0 z-20">
+          <EditorToolbar editor={editor} />
+        </div>
+
+        <div className="max-w-[760px] mx-auto px-10 py-16">
+          {/* Page Title Section */}
+          <div className="mb-12 group">
+            <input
+              type="text"
+              value={document.title}
+              onChange={(e) => updateDocument(document.id, { title: e.target.value })}
+              className="w-full text-5xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] placeholder:text-gray-100 transition-all tracking-tight leading-tight"
+              placeholder="Untitled Page"
+            />
+          </div>
+          
+          {/* Editor Content Area */}
+          <div className="min-h-[600px] pb-40">
+            <EditorContent editor={editor} />
+          </div>
         </div>
       </div>
     </div>
