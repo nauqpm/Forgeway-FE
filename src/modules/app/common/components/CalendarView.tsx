@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -32,7 +32,7 @@ export default function CalendarView({
   const calendarRef = useRef<FullCalendar>(null);
   const [currentDateTitle, setCurrentDateTitle] = useState('');
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [filters, setFilters] = useState<CalendarFilters>({
     search: '',
     assignees: [],
@@ -62,6 +62,11 @@ export default function CalendarView({
 
   const { events, unscheduledTasks } = useCalendarData(filteredIssues, sprints);
   const handlers = useCalendarHandlers({ onUpdateIssueDate, onSelectIssue });
+
+  // Auto-close when all tasks are scheduled
+  useEffect(() => {
+    if (unscheduledTasks.length === 0) setIsSidebarOpen(false);
+  }, [unscheduledTasks.length]);
   const assignees = useAssignees(issues);
 
   const handleViewChange = (view: CalendarViewType) => {
@@ -70,7 +75,7 @@ export default function CalendarView({
   };
 
   return (
-    <div className="flex h-full overflow-hidden gap-0">
+    <div className="flex h-full overflow-hidden gap-4">
       {/* Main calendar area */}
       <div className="flex-1 min-w-0 flex flex-col">
         <CalendarToolbar
