@@ -65,12 +65,18 @@ export const useAuth = () => {
           return response;
         }
 
-        // Prefer user from login response (if provided) to avoid blocking redirect
-        // when /auth/me is temporarily unavailable right after cookie set.
-        const currentUser =
-          response.user ?? (await getCurrentUserAPI().catch(() => null));
-
-        if (currentUser) {
+        // Login successful — set user
+        if (response.user) {
+          let currentUser = response.user;
+          try {
+            currentUser = await getCurrentUserAPI();
+          } catch {
+            currentUser = {
+              ...response.user,
+              permissions: response.user.permissions || [],
+              spaceRoles: response.user.spaceRoles || [],
+            };
+          }
           setUser(currentUser);
           resetFailedAttempts();
 
@@ -152,7 +158,7 @@ export const useAuth = () => {
       usePermissionStore.getState().clearPermissions();
       useSessionStore.getState().clearSessionState();
       useSecurityStore.getState().clearSecurityState();
-      router.push(AUTH_ROUTES.LOGIN);
+      router.push(AUTH_ROUTES.DASHBOARD);
     }
   }, [clearAuth, router]);
 

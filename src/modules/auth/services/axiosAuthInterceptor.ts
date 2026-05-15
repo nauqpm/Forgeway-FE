@@ -15,6 +15,7 @@ import { useSessionStore } from '../stores/sessionStore';
 // ─── Refresh Queue ───────────────────────────────────────────────────────────
 
 let isRefreshing = false;
+let interceptorsReady = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
   reject: (error?: unknown) => void;
@@ -34,6 +35,9 @@ const processQueue = (error: unknown | null) => {
 // ─── Setup Interceptors ──────────────────────────────────────────────────────
 
 export const setupAuthInterceptors = (): void => {
+  if (interceptorsReady) return;
+  interceptorsReady = true;
+
   // ── Request Interceptor ──
   api.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -81,6 +85,7 @@ export const setupAuthInterceptors = (): void => {
 
       originalRequest._retry = true;
       isRefreshing = true;
+      const wasAuthenticated = useAuthStore.getState().isAuthenticated;
 
       try {
         await refreshTokenAPI();
@@ -89,7 +94,9 @@ export const setupAuthInterceptors = (): void => {
       } catch (refreshError) {
         processQueue(refreshError);
         useAuthStore.getState().clearAuth();
-        useSessionStore.getState().openSessionExpiredModal();
+        if (wasAuthenticated) {
+          useSessionStore.getState().openSessionExpiredModal();
+        }
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

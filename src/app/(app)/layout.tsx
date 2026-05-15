@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/app/common/components/Sidebar";
 import NotificationPanel from "@/modules/app/common/components/NotificationPanel";
-import { Menu, Search, Sun, Moon, Monitor } from "lucide-react";
+import { Loader2, Menu, Search, Sun, Moon, Monitor } from "lucide-react";
 import { parseJQL } from "@/utils/jqlParser";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const { setCurrentWorkspace, currentWorkspace } = useWorkspaceStore();
   const { theme, setTheme } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -172,6 +172,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       }
     }
   }, [isAuthenticated, currentWorkspace, setCurrentWorkspace]);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">Dang xac thuc...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
 

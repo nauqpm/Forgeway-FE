@@ -42,6 +42,12 @@ const Tabs = ({ space, activeTab, setActiveTab }: TabProps) => {
         Timeline
       </button>
       <button
+        onClick={() => setActiveTab("list")}
+        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "list" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+      >
+        List
+      </button>
+      <button
         onClick={() => setActiveTab("pages")}
         className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "pages" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
       >
