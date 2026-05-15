@@ -3,6 +3,8 @@
 import BoardTab from "./tabs/BoardTab";
 import BacklogTab from "./tabs/BacklogTab";
 import TimelineTab from "./tabs/TimelineTab";
+import ListTab from "./tabs/ListTab";
+import SummaryTab from "./tabs/SummaryTab";
 import { DocsLayout } from "../../docs";
 
 type SpaceContentProps = {
@@ -14,6 +16,8 @@ type SpaceContentProps = {
   boardProps: any;
   backlogProps: any;
   timelineProps: any;
+  listProps: any;
+  summaryProps: any;
 };
 
 export default function SpaceContent({
@@ -23,6 +27,8 @@ export default function SpaceContent({
   boardProps,
   backlogProps,
   timelineProps,
+  listProps,
+  summaryProps,
 }: SpaceContentProps) {
   return (
     <div
@@ -43,6 +49,10 @@ export default function SpaceContent({
       {activeTab === "timeline" && (
         <TimelineTab {...timelineProps} />
       )}
+      
+      {activeTab === "list" && <ListTab {...listProps} />}
+
+      {activeTab === "summary" && <SummaryTab {...summaryProps} />}
     </div>
   );
 }

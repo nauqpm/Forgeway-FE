@@ -7,7 +7,7 @@ import {
   List, ListOrdered, Quote, Undo, Redo 
 } from "lucide-react";
 
-export default function EditorToolbar({ editor }: { editor: Editor }) {
+export default function EditorToolbar({ editor }: { editor: Editor | null }) {
   if (!editor) return null;
 
   const ToolbarButton = ({ onClick, isActive, disabled, children, title }: any) => (

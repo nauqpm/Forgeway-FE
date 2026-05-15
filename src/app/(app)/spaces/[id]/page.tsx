@@ -8,7 +8,7 @@ import IssueDetailModal from "@/modules/app/spaces/components/IssueDetailModal";
 import TaskDetailDrawer from "@/modules/app/spaces/components/TaskDetailDrawer";
 import SpaceContent from "@/modules/app/spaces/components/SpaceContent";
 import SprintModal from "@/modules/app/spaces/components/SprintModal";
-import BulkActionBar from "@/modules/app/spaces/components/BulkActionBar";
+import BulkActionBar from "@/modules/app/common/components/BulkActionBar";
 
 import { Space } from "@/modules/app/spaces/types/space.type";
 import { Issue } from "@/modules/app/spaces/types/issue.type";
