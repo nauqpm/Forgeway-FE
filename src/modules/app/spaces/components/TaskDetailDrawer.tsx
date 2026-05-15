@@ -132,8 +132,8 @@ export default function TaskDetailDrawer({
   };
 
   const panelClasses = embedded
-    ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-[#FFFFFF] text-[#42526E] shadow-none border-0 rounded-none overflow-hidden"
-    : `fixed top-0 right-0 bottom-0 w-full max-w-4xl z-[99999] bg-[#FFFFFF] text-[#42526E] flex flex-col shadow-2xl border-l border-[#DFE1E6] transform transition-transform duration-300 ease-in-out ${
+    ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 shadow-none border-0 rounded-none overflow-hidden"
+    : `fixed top-0 right-0 bottom-0 w-full max-w-4xl z-[99999] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col shadow-2xl border-l border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`;
 
@@ -141,47 +141,47 @@ export default function TaskDetailDrawer({
     <>
       {!embedded && (
         <div
-          className={`fixed inset-0 z-[99998] bg-[#091E42]/54 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          className={`fixed inset-0 z-[99998] bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
           onClick={onClose}
         />
       )}
 
       <div className={panelClasses}>
         {/* Top Header */}
-        <div className="h-14 border-b border-[#DFE1E6] flex items-center justify-between px-5 shrink-0 bg-[#F4F5F7]">
+        <div className="h-14 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-5 shrink-0 bg-gray-100 dark:bg-gray-800">
           <div className="flex items-center gap-2 text-sm font-medium">
-            <div className="flex items-center gap-2 hover:bg-[#EBECF0] px-2 py-1 rounded cursor-pointer transition-colors">
+            <div className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded cursor-pointer transition-colors">
               <div className="w-5 h-5 bg-[#0052CC] rounded text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
               </div>
-              <span className="text-[#5E6C84]">Add epic</span>
+              <span className="text-gray-500 dark:text-gray-400">Add epic</span>
             </div>
-            <span className="text-[#5E6C84]">/</span>
-            <div className="flex items-center gap-2 hover:bg-[#EBECF0] px-2 py-1 rounded cursor-pointer transition-colors">
+            <span className="text-gray-500 dark:text-gray-400">/</span>
+            <div className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded cursor-pointer transition-colors">
               <div className="w-4 h-4 bg-[#0052CC] text-white flex items-center justify-center rounded-sm">
                 <span className="text-[10px]">✓</span>
               </div>
-              <span className="text-[#172B4D]">{issueKey}</span>
+              <span className="text-gray-900 dark:text-white">{issueKey}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors"><Lock className="w-4 h-4" /></button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors">
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Lock className="w-4 h-4" /></button>
+            <button className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
               <Eye className="w-4 h-4" /> <span>1</span>
             </button>
-            <button className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors"><Share2 className="w-4 h-4" /></button>
-            <button className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors"><MoreHorizontal className="w-4 h-4" /></button>
-            <div className="w-px h-5 bg-[#DFE1E6] mx-1" />
-            <button className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors"><Maximize2 className="w-4 h-4" /></button>
-            <button onClick={onClose} className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors"><X className="w-4 h-4" /></button>
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Share2 className="w-4 h-4" /></button>
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><MoreHorizontal className="w-4 h-4" /></button>
+            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Maximize2 className="w-4 h-4" /></button>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><X className="w-4 h-4" /></button>
           </div>
         </div>
 
         {/* Content Body */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Column (Main) */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 border-r border-[#DFE1E6] space-y-8 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 border-r border-gray-200 dark:border-gray-700 space-y-8 custom-scrollbar">
 
             {/* Title */}
             <div>
@@ -193,12 +193,12 @@ export default function TaskDetailDrawer({
                   onChange={(e) => setLocalTitle(e.target.value)}
                   onBlur={handleTitleBlur}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleTitleBlur(); }}
-                  className="w-full text-3xl font-semibold text-[#172B4D] bg-[#F4F5F7] border-2 border-[#0052CC] rounded px-2 py-1 outline-none mb-4"
+                  className="w-full text-3xl font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 border-2 border-[#0052CC] rounded px-2 py-1 outline-none mb-4"
                 />
               ) : (
                 <h1
                   onClick={() => setIsEditingTitle(true)}
-                  className="text-3xl font-semibold text-[#172B4D] leading-tight mb-4 hover:bg-[#EBECF0] p-2 -ml-2 rounded cursor-pointer transition-colors"
+                  className="text-3xl font-semibold text-gray-900 dark:text-white leading-tight mb-4 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 -ml-2 rounded cursor-pointer transition-colors"
                 >
                   {localTitle}
                 </h1>
@@ -207,7 +207,7 @@ export default function TaskDetailDrawer({
 
             {/* Description */}
             <div className="space-y-2">
-              <h3 className="text-base font-semibold text-[#172B4D]">Description</h3>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Description</h3>
               <IssueDescription
                 initialContent={issue.description || ''}
                 onSave={(newDesc) => {
@@ -227,10 +227,10 @@ export default function TaskDetailDrawer({
 
             {/* Linked Work Items */}
             <div className="space-y-3">
-              <h3 className="text-base font-semibold text-[#172B4D]">Linked work items</h3>
-              <div className="p-5 bg-[#F4F5F7] border border-[#DFE1E6] rounded-lg">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Linked work items</h3>
+              <div className="p-5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-[#5E6C84]">No linked items yet</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">No linked items yet</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Link
@@ -239,7 +239,7 @@ export default function TaskDetailDrawer({
                   >
                     <Plus className="w-4 h-4" /> Create new Document
                   </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-[#EBECF0] text-[#172B4D] text-sm font-medium rounded transition-colors">
+                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
                     <LinkIcon className="w-4 h-4" /> Link existing item
                   </button>
                 </div>
@@ -249,20 +249,20 @@ export default function TaskDetailDrawer({
             {/* Activity */}
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-[#172B4D]">Activity</h3>
-                <div className="flex items-center gap-2 text-sm text-[#5E6C84]">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h3>
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                   <span>Show:</span>
                   <button
                     onClick={() => setActiveTab('comments')}
-                    className={`px-3 py-1 rounded font-medium transition-colors ${activeTab === 'comments' ? 'bg-[#EBECF0] text-[#172B4D]' : 'hover:bg-[#EBECF0]'}`}
+                    className={`px-3 py-1 rounded font-medium transition-colors ${activeTab === 'comments' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                   >Comments</button>
                   <button
                     onClick={() => setActiveTab('history')}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === 'history' ? 'bg-[#EBECF0] text-[#172B4D]' : 'hover:bg-[#EBECF0]'}`}
+                    className={`px-3 py-1 rounded transition-colors ${activeTab === 'history' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                   >History</button>
                   <button
                     onClick={() => setActiveTab('worklog')}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === 'worklog' ? 'bg-[#EBECF0] text-[#172B4D]' : 'hover:bg-[#EBECF0]'}`}
+                    className={`px-3 py-1 rounded transition-colors ${activeTab === 'worklog' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                   >Work log</button>
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function TaskDetailDrawer({
                 <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
                   QP
                 </div>
-                <div className="flex-1 border border-[#DFE1E6] rounded-lg bg-[#F4F5F7] hover:bg-[#EBECF0] focus-within:bg-[#FFFFFF] focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
+                <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
                   <div className="mb-4 text-sm relative z-50">
                     <style dangerouslySetInnerHTML={{__html: `
                       .mentions__control { min-height: 36px; }
@@ -284,7 +284,7 @@ export default function TaskDetailDrawer({
                       onChange={(e) => setCommentInput(e.target.value)}
                       onKeyDown={(e: any) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddComment(); } }}
                       placeholder="Add a comment... (@ to mention)"
-                      className="mentions w-full bg-transparent text-[#172B4D] text-sm"
+                      className="mentions w-full bg-transparent text-gray-900 dark:text-white text-sm"
                       a11ySuggestionsListLabel={"Suggested mentions"}
                     >
                       <Mention
@@ -296,7 +296,7 @@ export default function TaskDetailDrawer({
                             <div className="w-6 h-6 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
                               {suggestion.display?.toString().charAt(0).toUpperCase()}
                             </div>
-                            <span className="text-sm text-[#172B4D]">{highlightedDisplay}</span>
+                            <span className="text-sm text-gray-900 dark:text-white">{highlightedDisplay}</span>
                           </div>
                         )}
                         className="text-[#0052CC] bg-[#E9F2FF] rounded px-1 font-medium"
@@ -305,18 +305,18 @@ export default function TaskDetailDrawer({
                   </div>
                   {!commentInput && (
                     <div className="flex items-center gap-2">
-                      <span onClick={() => setCommentInput('Who is working on this...?')} className="text-xs text-[#5E6C84] hover:text-[#172B4D] cursor-pointer font-medium bg-[#FFFFFF] px-3 py-1.5 rounded transition-colors">Who is working on this...?</span>
-                      <span onClick={() => setCommentInput('Status update...')} className="text-xs text-[#5E6C84] hover:text-[#172B4D] cursor-pointer font-medium bg-[#FFFFFF] px-3 py-1.5 rounded transition-colors">Status update...</span>
+                      <span onClick={() => setCommentInput('Who is working on this...?')} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors">Who is working on this...?</span>
+                      <span onClick={() => setCommentInput('Status update...')} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors">Status update...</span>
                     </div>
                   )}
                   {commentInput && (
                     <div className="flex gap-2">
                       <button onClick={handleAddComment} className="px-3 py-1.5 bg-[#0052CC] hover:bg-[#0065FF] text-white text-xs font-medium rounded transition-colors">Save</button>
-                      <button onClick={() => setCommentInput('')} className="px-3 py-1.5 hover:bg-[#EBECF0] text-[#172B4D] text-xs font-medium rounded transition-colors">Cancel</button>
+                      <button onClick={() => setCommentInput('')} className="px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-medium rounded transition-colors">Cancel</button>
                     </div>
                   )}
-                  <div className="mt-5 flex items-center justify-between border-t border-[#DFE1E6] pt-3">
-                    <p className="text-[11px] text-[#5E6C84]">Pro tip: press <span className="font-bold bg-[#FFFFFF] px-1.5 py-0.5 rounded border border-[#DFE1E6]">Enter</span> to comment</p>
+                  <div className="mt-5 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">Pro tip: press <span className="font-bold bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700">Enter</span> to comment</p>
                   </div>
                 </div>
               </div>
@@ -331,11 +331,11 @@ export default function TaskDetailDrawer({
                        </div>
                        <div className="flex-1">
                          <div className="flex items-center gap-2 mb-1">
-                           <span className="text-[#172B4D] text-sm font-semibold">{comment.author}</span>
-                           <span className="text-[#5E6C84] text-xs">{comment.timestamp}</span>
+                           <span className="text-gray-900 dark:text-white text-sm font-semibold">{comment.author}</span>
+                           <span className="text-gray-500 dark:text-gray-400 text-xs">{comment.timestamp}</span>
                          </div>
-                         <p className="text-[#172B4D] text-sm whitespace-pre-wrap">{renderCommentText(comment.text)}</p>
-                         <div className="flex gap-3 mt-2 text-xs font-medium text-[#5E6C84]">
+                         <p className="text-gray-900 dark:text-white text-sm whitespace-pre-wrap">{renderCommentText(comment.text)}</p>
+                         <div className="flex gap-3 mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
                            <button className="hover:underline">Edit</button>
                            <button className="hover:underline">Delete</button>
                          </div>
@@ -349,23 +349,23 @@ export default function TaskDetailDrawer({
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="w-[340px] bg-[#F4F5F7] p-6 overflow-y-auto custom-scrollbar">
+          <div className="w-[340px] bg-gray-100 dark:bg-gray-800/50 p-6 overflow-y-auto custom-scrollbar">
 
             <div className="flex items-center gap-2 mb-6">
               <div className="relative">
                 <button
                   onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-[#EBECF0] hover:bg-[#DFE1E6] text-[#172B4D] text-sm font-semibold rounded transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors"
                 >
                   {issue.status} <ChevronDown className="w-4 h-4" />
                 </button>
                 {showStatusDropdown && (
-                  <div className="absolute top-full mt-1 left-0 w-40 bg-[#F4F5F7] border border-[#DFE1E6] rounded-lg shadow-xl overflow-hidden z-10 py-1">
+                  <div className="absolute top-full mt-1 left-0 w-40 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
                     {["To Do", "In Progress", "Done"].map((s) => (
                       <button
                         key={s}
                         onClick={() => handleStatusChange(s)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? 'bg-[#EBECF0] text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-[#42526E] hover:bg-[#EBECF0]'}`}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? 'bg-gray-200 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                       >
                         {s}
                       </button>
@@ -373,25 +373,25 @@ export default function TaskDetailDrawer({
                   </div>
                 )}
               </div>
-              <button className="p-1.5 hover:bg-[#DFE1E6] text-[#5E6C84] rounded transition-colors"><Zap className="w-4 h-4" /></button>
-              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#DFE1E6] text-[#172B4D] text-sm font-medium rounded transition-colors">
+              <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 rounded transition-colors"><Zap className="w-4 h-4" /></button>
+              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
                 <Settings className="w-4 h-4" /> Improve Task
               </button>
             </div>
 
             <div className="space-y-6">
-              <div className="border border-[#DFE1E6] rounded-lg bg-white">
-                <button className="w-full flex items-center justify-between p-3 text-sm font-semibold text-[#172B4D] hover:bg-[#EBECF0] rounded-t-lg transition-colors">
-                  Details <ChevronDown className="w-4 h-4 text-[#5E6C84]" />
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
+                <button className="w-full flex items-center justify-between p-3 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg transition-colors">
+                  Details <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </button>
-                <div className="p-4 border-t border-[#DFE1E6] space-y-4">
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
                   {/* Assignee */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1">Assignee</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1">Assignee</div>
                     <div className="col-span-2 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        <div className="w-6 h-6 rounded-full bg-[#FFFFFF] flex items-center justify-center border border-[#DFE1E6]">
-                          <User className="w-3 h-3 text-[#5E6C84]" />
+                      <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                        <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                          <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                         </div>
                         {issue.assignee === 'U' || issue.assignee === 'A' ? 'Unassigned' : issue.assignee}
                       </div>
@@ -401,33 +401,33 @@ export default function TaskDetailDrawer({
 
                   {/* Labels */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1.5">Labels</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Labels</div>
                     <div className="col-span-2">
-                      <div className="text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">None</div>
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">None</div>
                     </div>
                   </div>
 
                   {/* Parent */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1.5">Parent</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Parent</div>
                     <div className="col-span-2">
-                      <div className="text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">None</div>
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">None</div>
                     </div>
                   </div>
 
                   {/* Due date */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1.5">Due date</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Due date</div>
                     <div className="col-span-2">
-                      <div className="text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer transition-colors text-indigo-700 font-semibold">{issue.startDate} to {issue.endDate}</div>
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors text-indigo-700 font-semibold">{issue.startDate} to {issue.endDate}</div>
                     </div>
                   </div>
 
                   {/* Priority */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1.5">Priority</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Priority</div>
                     <div className="col-span-2">
-                      <div className="text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer flex items-center gap-2 transition-colors">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer flex items-center gap-2 transition-colors">
                         {issue.priority}
                       </div>
                     </div>
@@ -443,7 +443,7 @@ export default function TaskDetailDrawer({
               />
 
               {/* Meta information */}
-              <div className="text-xs text-[#5E6C84] space-y-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                 <p>Created just now</p>
                 <p>Updated just now</p>
               </div>

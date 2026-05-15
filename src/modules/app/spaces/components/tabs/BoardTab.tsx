@@ -80,11 +80,11 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                 search: e.target.value,
               }))
             }
-            className="pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow w-64"
+            className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow w-64"
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 font-medium">Assignee:</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Assignee:</span>
           <div className="flex -space-x-2">
             {uniqueAssignees.map((user) => (
               <button
@@ -95,7 +95,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                     assigneeId: prev.assigneeId === user.id ? null : user.id,
                   }))
                 }
-                className={`w-8 h-8 rounded-full ${user.color} text-white flex items-center justify-center text-xs font-bold ring-2 ring-white hover:z-10 transition-transform hover:scale-110 ${filters.assigneeId === user.id ? "ring-indigo-500 ring-offset-2 ring-offset-white" : ""} ${filters.assigneeId && filters.assigneeId !== user.id ? "opacity-40" : ""}`}
+                className={`w-8 h-8 rounded-full ${user.color} text-white flex items-center justify-center text-xs font-bold ring-2 ring-white dark:ring-gray-900 hover:z-10 transition-transform hover:scale-110 ${filters.assigneeId === user.id ? "ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900" : ""} ${filters.assigneeId && filters.assigneeId !== user.id ? "opacity-40" : ""}`}
                 title={user.id}
               >
                 {user.id}
@@ -104,7 +104,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 font-medium">Priority:</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Priority:</span>
           <select
             value={filters.priority || ""}
             onChange={(e) =>
@@ -113,7 +113,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                 priority: e.target.value || null,
               }))
             }
-            className="py-2 px-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+            className="py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="">Tất cả</option>
             <option value="High">🔴 High</option>
@@ -170,15 +170,15 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="flex-shrink-0 w-80 bg-gray-50 rounded-xl flex flex-col max-h-full border border-gray-200 shadow-sm"
+                      className="flex-shrink-0 w-80 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex flex-col max-h-full border border-gray-200 dark:border-gray-800 shadow-sm"
                     >
                       <div
                         {...provided.dragHandleProps}
-                        className="p-3 border-b border-gray-200 flex items-center justify-between bg-gray-100/50 rounded-t-xl cursor-grab active:cursor-grabbing"
+                        className="p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl cursor-grab active:cursor-grabbing"
                       >
-                        <h3 className="font-semibold text-gray-700 text-sm uppercase tracking-wide flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide flex items-center gap-2">
                           {status}
-                          <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center text-[10px] font-bold">
+                          <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[10px] font-bold">
                             {
                               filteredIssues.filter((i) => i.status === status)
                                 .length
@@ -190,7 +190,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                             setNewIssueForm({ ...newIssueForm, status });
                             setShowCreateIssue(true);
                           }}
-                          className="p-1 hover:bg-gray-200 rounded text-gray-500 transition-colors cursor-pointer"
+                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors cursor-pointer"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -201,7 +201,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50" : ""}`}
+                            className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : ""}`}
                           >
                             {filteredIssues
                               .filter((i) => i.status === status)
@@ -217,9 +217,9 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                                       {...provided.draggableProps}
                                       {...provided.dragHandleProps}
                                       onClick={() => setSelectedIssue(issue)}
-                                      className={`bg-white p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 hover:border-indigo-400 hover:shadow-md"} transition-all cursor-grab active:cursor-grabbing group`}
+                                      className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all cursor-grab active:cursor-grabbing group`}
                                     >
-                                      <p className="text-sm font-medium text-gray-900 mb-2 leading-snug group-hover:text-indigo-600">
+                                      <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                                         {issue.title}
                                       </p>
                                       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -234,12 +234,12 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                                           {issue.type}
                                         </span>
                                       </div>
-                                      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+                                      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50 dark:border-gray-800">
                                         <span className="text-xs font-mono font-bold text-gray-400">
                                           {space.key}-{100 + parseInt(issue.id)}
                                         </span>
                                         <div
-                                          className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white`}
+                                          className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-900`}
                                         >
                                           {issue.assignee}
                                         </div>
@@ -252,7 +252,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                             {filteredIssues.filter((i) => i.status === status)
                               .length === 0 &&
                               !snapshot.isDraggingOver && (
-                                <div className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
+                                <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
                                   {issues.filter((i) => i.status === status)
                                     .length === 0
                                     ? "Kéo thả issue vào đây"
@@ -274,7 +274,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                 ref={columnsEndRef}
               >
                 {showCreateColumn ? (
-                  <div className="bg-white rounded-xl border border-indigo-200 p-3 shadow-sm">
+                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-indigo-200 dark:border-indigo-800 p-3 shadow-sm">
                     <input
                       type="text"
                       autoFocus
@@ -288,7 +288,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                         }
                       }}
                       placeholder="Tên cột mới..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                     />
                     <div className="flex items-center gap-2 mt-3">
                       <button
@@ -302,7 +302,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                           setShowCreateColumn(false);
                           setNewColumnName("");
                         }}
-                        className="flex-1 bg-gray-100 text-gray-600 text-xs font-medium py-1.5 rounded hover:bg-gray-200 transition-colors flex items-center justify-center gap-1"
+                        className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-medium py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1"
                       >
                         <X className="w-3.5 h-3.5" /> Hủy
                       </button>
@@ -311,7 +311,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                 ) : (
                   <button
                     onClick={() => setShowCreateColumn(true)}
-                    className="flex items-center gap-2 w-full bg-gray-50/50 hover:bg-gray-100 border-2 border-dashed border-gray-200 hover:border-gray-300 rounded-xl p-4 text-gray-500 hover:text-gray-700 transition-all font-medium text-sm justify-center"
+                    className="flex items-center gap-2 w-full bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl p-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all font-medium text-sm justify-center"
                   >
                     <Plus className="w-5 h-5" /> Thêm cột mới
                   </button>

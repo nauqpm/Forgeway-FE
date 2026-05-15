@@ -45,10 +45,9 @@ export default function SpaceDetailPage({
   const [space, setSpace] = useState<Space | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "board" | "backlog" | "timeline" | "docs" | "list"
-  >("docs");
+    "board" | "backlog" | "timeline" | "summary" | "pages" | "list"
+  >("pages");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
-
   const [sprints, setSprints] = useState<Sprint[]>(MOCK_SPRINTS);
   const [issues, setIssues] = useState<Issue[]>(MOCK_ISSUES);
 
@@ -86,6 +85,9 @@ export default function SpaceDetailPage({
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+
+  const [listViewMode, setListViewMode] = useState<"grid" | "split">("grid");
+  const [listGridDrawerOpen, setListGridDrawerOpen] = useState(false);
 
   const filteredIssues = useMemo(() => {
     return filterIssues(issues, filters, space);
@@ -136,6 +138,13 @@ export default function SpaceDetailPage({
   });
 
   useEffect(() => {
+    if (activeTab !== "list") {
+      setListGridDrawerOpen(false);
+      if (listViewMode === "split") setSelectedIssue(null);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
     if (!spaceId) return;
     const fetchData = async () => {
       try {
@@ -183,7 +192,7 @@ export default function SpaceDetailPage({
 
       {/* Description */}
       {space.description && (
-        <p className="text-gray-600 text-sm mb-6 bg-white rounded-lg px-4 py-3 border border-gray-200">
+        <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 bg-white dark:bg-gray-900 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-800">
           {space.description}
         </p>
       )}
@@ -266,8 +275,21 @@ export default function SpaceDetailPage({
         }}
         listProps={{
           filteredIssues,
+          selectedIssue,
+          spaceKey: space.key,
+          spaceId,
+          listViewMode,
+          listGridDrawerOpen,
           setSelectedIssue,
+          setListViewMode,
+          setListGridDrawerOpen,
           updateIssueDirectly,
+          handleUpdateIssue,
+          onBulkDeleteIds: (ids: string[]) => setIssues(prev => prev.filter(i => !ids.includes(i.id))),
+        }}
+        summaryProps={{
+          issues,
+          spaceKey: space.key,
         }}
       />
 
@@ -291,15 +313,20 @@ export default function SpaceDetailPage({
       />
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
-      {selectedIssue && (activeTab === "timeline" || activeTab === "list") ? (
+      {selectedIssue &&
+      (activeTab === "timeline" ||
+        (activeTab === "list" && listViewMode === "grid" && listGridDrawerOpen)) ? (
         <TaskDetailDrawer
           isOpen={!!selectedIssue}
           issue={selectedIssue}
           spaceKey={space.key}
-          onClose={() => setSelectedIssue(null)}
+          onClose={() => {
+            setSelectedIssue(null);
+            setListGridDrawerOpen(false);
+          }}
           onUpdateIssue={handleUpdateIssue}
         />
-      ) : selectedIssue ? (
+      ) : selectedIssue && !(activeTab === "list" && listViewMode === "split") ? (
         <IssueDetailModal
           issue={selectedIssue}
           spaceKey={space.key}

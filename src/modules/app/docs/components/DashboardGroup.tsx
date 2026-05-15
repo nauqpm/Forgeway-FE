@@ -31,19 +31,19 @@ export default function DashboardGroup({
     >
       <div className="flex items-center gap-2 mb-5 px-1">
         <div className="w-1.5 h-4 bg-indigo-500 rounded-full" />
-        <h3 className="text-[12px] font-bold text-[#42526E] uppercase tracking-[0.1em]">{name}</h3>
-        <span className="ml-2 px-2 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-500">{docs.length}</span>
+        <h3 className="text-[12px] font-bold text-[#42526E] dark:text-gray-300 uppercase tracking-[0.1em]">{name}</h3>
+        <span className="ml-2 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px] font-bold text-gray-500 dark:text-gray-400">{docs.length}</span>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.04)]">
+      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.04)]">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/40 border-b border-gray-100">
-                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] uppercase tracking-wider w-[45%]">Document Title</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] uppercase tracking-wider">Contributor</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] uppercase tracking-wider">Activity</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] uppercase tracking-wider text-right">Options</th>
+              <tr className="bg-gray-50/40 dark:bg-gray-800/40 border-b border-gray-100 dark:border-gray-800">
+                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider w-[45%]">Document Title</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider">Contributor</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider">Activity</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider text-right">Options</th>
               </tr>
             </thead>
             <tbody>

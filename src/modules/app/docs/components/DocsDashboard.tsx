@@ -58,7 +58,7 @@ export default function DocsDashboard({ spaceId }: { spaceId: string }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#F9FAFB] overflow-hidden h-full">
+    <div className="flex-1 flex flex-col bg-[#F9FAFB] dark:bg-gray-950 overflow-hidden h-full">
       <DashboardHeader 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}

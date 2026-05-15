@@ -57,5 +57,5 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 .claude
-.claude
 .agents
+.claude/settings.local.json

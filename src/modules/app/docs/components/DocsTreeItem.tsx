@@ -110,7 +110,9 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
       <div 
         className={`
           group relative flex items-center justify-between px-3 py-1.5 cursor-pointer transition-all duration-200
-          ${isSelected ? "bg-[#E6EFFC] text-[#0052CC]" : "text-[#42526E] hover:bg-gray-50"}
+          ${isSelected 
+            ? "bg-[#E6EFFC] dark:bg-blue-900/30 text-[#0052CC] dark:text-blue-400" 
+            : "text-[#42526E] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"}
           rounded-lg mx-1 mb-0.5
         `}
         style={{ paddingLeft: `${(level * 12) + 8}px` }}
@@ -120,13 +122,13 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
         {isSelected && (
           <motion.div 
             layoutId="activeDocIndicator"
-            className="absolute left-0 w-1 h-5 bg-[#0052CC] rounded-r-full"
+            className="absolute left-0 w-1 h-5 bg-[#0052CC] dark:bg-blue-400 rounded-r-full"
           />
         )}
 
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <button 
-            className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isSelected ? "text-[#0052CC]" : "text-gray-400"} ${hasChildren ? "hover:bg-gray-200/50" : "opacity-0 cursor-default"}`}
+            className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isSelected ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-600"} ${hasChildren ? "hover:bg-gray-200/50 dark:hover:bg-gray-800" : "opacity-0 cursor-default"}`}
             onClick={handleToggle}
           >
             <motion.div
@@ -137,7 +139,7 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
             </motion.div>
           </button>
           
-          <FileText className={`w-4 h-4 shrink-0 ${isSelected ? "text-[#0052CC]" : "text-gray-400 group-hover:text-gray-500"}`} />
+          <FileText className={`w-4 h-4 shrink-0 ${isSelected ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400"}`} />
           
           {isEditing ? (
             <input
@@ -147,7 +149,7 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
               onBlur={handleRenameSubmit}
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="flex-1 min-w-0 bg-white border border-[#4C9AFF] rounded-md px-2 py-0.5 text-[13px] outline-none shadow-sm"
+              className="flex-1 min-w-0 bg-white dark:bg-gray-800 border border-[#4C9AFF] dark:border-blue-500 rounded-md px-2 py-0.5 text-[13px] outline-none shadow-sm dark:text-gray-200"
             />
           ) : (
             <span className={`truncate text-[13px] leading-tight py-0.5 ${isSelected ? "font-bold" : "font-medium"}`}>
@@ -159,7 +161,7 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
         <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 flex-shrink-0 transition-opacity relative" ref={menuRef}>
           <button 
             onClick={handleAddChild}
-            className="p-1 text-gray-400 hover:text-[#0052CC] hover:bg-white rounded-md transition-all shadow-none hover:shadow-sm"
+            className="p-1 text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 hover:bg-white dark:hover:bg-gray-800 rounded-md transition-all shadow-none hover:shadow-sm"
             title="Add sub-page"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -167,7 +169,7 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
           
           <button 
             onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-white rounded-md transition-all shadow-none hover:shadow-sm"
+            className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white dark:hover:bg-gray-800 rounded-md transition-all shadow-none hover:shadow-sm"
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
@@ -178,24 +180,24 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-[0_10px_38px_rgba(0,0,0,0.1),0_10px_20px_rgba(0,0,0,0.06)] border border-gray-100 py-1.5 z-30"
+                className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-gray-900 rounded-xl shadow-[0_10px_38px_rgba(0,0,0,0.1),0_10px_20px_rgba(0,0,0,0.06)] border border-gray-100 dark:border-gray-800 py-1.5 z-30"
               >
                 <button 
                   onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
-                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] hover:bg-[#F4F5F7] flex items-center gap-2.5 transition-colors"
+                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] dark:text-gray-300 hover:bg-[#F4F5F7] dark:hover:bg-gray-800 flex items-center gap-2.5 transition-colors"
                 >
-                  <Edit2 className="w-3.5 h-3.5 text-gray-400" /> Rename
+                  <Edit2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> Rename
                 </button>
                 <button 
                   onClick={handleDuplicate}
-                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] hover:bg-[#F4F5F7] flex items-center gap-2.5 transition-colors"
+                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] dark:text-gray-300 hover:bg-[#F4F5F7] dark:hover:bg-gray-800 flex items-center gap-2.5 transition-colors"
                 >
-                  <Copy className="w-3.5 h-3.5 text-gray-400" /> Duplicate
+                  <Copy className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> Duplicate
                 </button>
-                <div className="my-1 border-t border-gray-50" />
+                <div className="my-1 border-t border-gray-50 dark:border-gray-800" />
                 <button 
                   onClick={handleDelete}
-                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors"
+                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2.5 transition-colors"
                 >
                   <Trash className="w-3.5 h-3.5" /> Delete
                 </button>

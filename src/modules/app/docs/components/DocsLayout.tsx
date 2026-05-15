@@ -22,7 +22,7 @@ export default function DocsLayout({ spaceId }: { spaceId: string }) {
   if (!mounted) return null;
 
   return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[600px] w-full bg-white rounded-xl overflow-hidden border border-gray-200 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
+    <div className="flex h-[calc(100vh-200px)] min-h-[600px] w-full bg-white dark:bg-gray-950 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
       {/* Persistent Sidebar */}
       <DocsSidebar spaceId={spaceId} />
       

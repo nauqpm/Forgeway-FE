@@ -24,64 +24,64 @@ const MenuBar = ({ editor }: { editor: any }) => {
   if (!editor) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 bg-[#F4F5F7] border-b border-[#DFE1E6] rounded-t-md">
+    <div className="flex flex-wrap items-center gap-1 p-2 bg-[#F4F5F7] dark:bg-gray-800 border-b border-[#DFE1E6] dark:border-gray-700 rounded-t-md">
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
-        className={`p-1.5 rounded hover:bg-[#EBECF0] transition-colors ${editor.isActive('bold') ? 'bg-[#EBECF0] text-[#0052CC]' : 'text-[#42526E]'}`}
+        className={`p-1.5 rounded hover:bg-[#EBECF0] dark:hover:bg-gray-700 transition-colors ${editor.isActive('bold') ? 'bg-[#EBECF0] dark:bg-gray-700 text-[#0052CC]' : 'text-[#42526E] dark:text-gray-300'}`}
         title="Bold"
       >
         <Bold className="w-4 h-4" />
       </button>
       <button
         onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={`p-1.5 rounded hover:bg-[#EBECF0] transition-colors ${editor.isActive('italic') ? 'bg-[#EBECF0] text-[#0052CC]' : 'text-[#42526E]'}`}
+        className={`p-1.5 rounded hover:bg-[#EBECF0] dark:hover:bg-gray-700 transition-colors ${editor.isActive('italic') ? 'bg-[#EBECF0] dark:bg-gray-700 text-[#0052CC]' : 'text-[#42526E] dark:text-gray-300'}`}
         title="Italic"
       >
         <Italic className="w-4 h-4" />
       </button>
       <button
         onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={`p-1.5 rounded hover:bg-[#EBECF0] transition-colors ${editor.isActive('strike') ? 'bg-[#EBECF0] text-[#0052CC]' : 'text-[#42526E]'}`}
+        className={`p-1.5 rounded hover:bg-[#EBECF0] dark:hover:bg-gray-700 transition-colors ${editor.isActive('strike') ? 'bg-[#EBECF0] dark:bg-gray-700 text-[#0052CC]' : 'text-[#42526E] dark:text-gray-300'}`}
         title="Strikethrough"
       >
         <Strikethrough className="w-4 h-4" />
       </button>
 
-      <div className="w-px h-4 bg-[#DFE1E6] mx-1" />
+      <div className="w-px h-4 bg-[#DFE1E6] dark:bg-gray-700 mx-1" />
 
       <button
         onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-        className={`p-1.5 rounded hover:bg-[#EBECF0] transition-colors ${editor.isActive('codeBlock') ? 'bg-[#EBECF0] text-[#0052CC]' : 'text-[#42526E]'}`}
+        className={`p-1.5 rounded hover:bg-[#EBECF0] dark:hover:bg-gray-700 transition-colors ${editor.isActive('codeBlock') ? 'bg-[#EBECF0] dark:bg-gray-700 text-[#0052CC]' : 'text-[#42526E] dark:text-gray-300'}`}
         title="Code Block"
       >
         <Code className="w-4 h-4" />
       </button>
       <button
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={`p-1.5 rounded hover:bg-[#EBECF0] transition-colors ${editor.isActive('blockquote') ? 'bg-[#EBECF0] text-[#0052CC]' : 'text-[#42526E]'}`}
+        className={`p-1.5 rounded hover:bg-[#EBECF0] dark:hover:bg-gray-700 transition-colors ${editor.isActive('blockquote') ? 'bg-[#EBECF0] dark:bg-gray-700 text-[#0052CC]' : 'text-[#42526E] dark:text-gray-300'}`}
         title="Quote"
       >
         <Quote className="w-4 h-4" />
       </button>
       
-      <div className="w-px h-4 bg-[#DFE1E6] mx-1" />
+      <div className="w-px h-4 bg-[#DFE1E6] dark:bg-gray-700 mx-1" />
 
       <button
         onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={`p-1.5 rounded hover:bg-[#EBECF0] transition-colors ${editor.isActive('bulletList') ? 'bg-[#EBECF0] text-[#0052CC]' : 'text-[#42526E]'}`}
+        className={`p-1.5 rounded hover:bg-[#EBECF0] dark:hover:bg-gray-700 transition-colors ${editor.isActive('bulletList') ? 'bg-[#EBECF0] dark:bg-gray-700 text-[#0052CC]' : 'text-[#42526E] dark:text-gray-300'}`}
         title="Bullet List"
       >
         <List className="w-4 h-4" />
       </button>
       <button
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={`p-1.5 rounded hover:bg-[#EBECF0] transition-colors ${editor.isActive('orderedList') ? 'bg-[#EBECF0] text-[#0052CC]' : 'text-[#42526E]'}`}
+        className={`p-1.5 rounded hover:bg-[#EBECF0] dark:hover:bg-gray-700 transition-colors ${editor.isActive('orderedList') ? 'bg-[#EBECF0] dark:bg-gray-700 text-[#0052CC]' : 'text-[#42526E] dark:text-gray-300'}`}
         title="Ordered List"
       >
         <ListOrdered className="w-4 h-4" />
       </button>
 
-      <div className="w-px h-4 bg-[#DFE1E6] mx-1" />
+      <div className="w-px h-4 bg-[#DFE1E6] dark:bg-gray-700 mx-1" />
 
       <button
         onClick={() => {
@@ -90,7 +90,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
             editor.chain().focus().setLink({ href: url }).run();
           }
         }}
-        className={`p-1.5 rounded hover:bg-[#EBECF0] transition-colors ${editor.isActive('link') ? 'bg-[#EBECF0] text-[#0052CC]' : 'text-[#42526E]'}`}
+        className={`p-1.5 rounded hover:bg-[#EBECF0] dark:hover:bg-gray-700 transition-colors ${editor.isActive('link') ? 'bg-[#EBECF0] dark:bg-gray-700 text-[#0052CC]' : 'text-[#42526E] dark:text-gray-300'}`}
         title="Link"
       >
         <LinkIcon className="w-4 h-4" />
@@ -125,7 +125,7 @@ export default function IssueDescription({ initialContent, onSave }: IssueDescri
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] p-4 text-[#172B4D]',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] p-4 text-[#172B4D] dark:text-white',
       },
     },
     immediatelyRender: false,
@@ -157,12 +157,12 @@ export default function IssueDescription({ initialContent, onSave }: IssueDescri
     return (
       <div
         onClick={() => setIsEditing(true)}
-        className="p-4 hover:bg-[#EBECF0] rounded border border-transparent hover:border-[#DFE1E6] cursor-pointer transition-colors min-h-[60px] prose prose-sm max-w-none"
+        className="p-4 hover:bg-[#EBECF0] dark:hover:bg-gray-700 rounded border border-transparent hover:border-[#DFE1E6] dark:hover:border-gray-700 cursor-pointer transition-colors min-h-[60px] prose prose-sm max-w-none"
       >
         {content && content !== '<p></p>' ? (
           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
         ) : (
-          <p className="text-[#5E6C84] text-sm m-0">Add a description...</p>
+          <p className="text-[#5E6C84] dark:text-gray-400 text-sm m-0">Add a description...</p>
         )}
       </div>
     );
@@ -170,7 +170,7 @@ export default function IssueDescription({ initialContent, onSave }: IssueDescri
 
   return (
     <div className="space-y-3">
-      <div className="border-2 border-[#0052CC] rounded-md overflow-hidden bg-[#FFFFFF]">
+      <div className="border-2 border-[#0052CC] rounded-md overflow-hidden bg-[#FFFFFF] dark:bg-gray-900">
         <MenuBar editor={editor} />
         <EditorContent editor={editor} />
       </div>
@@ -183,7 +183,7 @@ export default function IssueDescription({ initialContent, onSave }: IssueDescri
         </button>
         <button
           onClick={handleCancel}
-          className="px-3 py-1.5 hover:bg-[#EBECF0] text-[#172B4D] text-sm font-medium rounded transition-colors"
+          className="px-3 py-1.5 hover:bg-[#EBECF0] dark:hover:bg-gray-700 text-[#172B4D] dark:text-white text-sm font-medium rounded transition-colors"
         >
           Cancel
         </button>

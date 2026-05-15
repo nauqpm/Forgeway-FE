@@ -10,27 +10,25 @@ import {
 export default function EditorToolbar({ editor }: { editor: Editor }) {
   if (!editor) return null;
 
-  const ToolbarButton = ({ 
-    onClick, 
-    isActive = false, 
-    disabled = false, 
-    children, 
-    title 
-  }: any) => (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={`p-1.5 rounded transition-all duration-200 ${
-        isActive ? "bg-[#E6EFFC] text-[#0052CC]" : "text-[#42526E] hover:bg-gray-100"
-      } ${disabled ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
-    >
-      {children}
-    </button>
-  );
+  const ToolbarButton = ({ onClick, isActive, disabled, children, title }: any) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    title={title}
+    className={`
+      p-2 rounded-lg transition-all flex items-center justify-center
+      ${isActive 
+        ? "bg-gray-100 dark:bg-gray-900 text-[#0052CC] dark:text-blue-400 font-bold" 
+        : "text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-600 dark:hover:text-gray-300"}
+      ${disabled ? "opacity-20 cursor-not-allowed" : "cursor-pointer"}
+    `}
+  >
+    {children}
+  </button>
+);
 
   return (
-    <div className="flex items-center gap-0.5 px-10 py-1.5 bg-white/90 backdrop-blur-md border-b border-gray-50 overflow-x-auto no-scrollbar flex-shrink-0">
+    <div className="flex items-center gap-0.5 px-10 py-1.5 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-50 dark:border-gray-800 overflow-x-auto no-scrollbar flex-shrink-0">
       <div className="flex items-center gap-0.5">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -57,7 +55,7 @@ export default function EditorToolbar({ editor }: { editor: Editor }) {
         </ToolbarButton>
       </div>
 
-      <div className="w-px h-3.5 bg-gray-200 mx-3" />
+      <div className="w-px h-3.5 bg-gray-200 dark:bg-gray-800 mx-3" />
 
       <div className="flex items-center gap-0.5">
         <ToolbarButton
@@ -85,7 +83,7 @@ export default function EditorToolbar({ editor }: { editor: Editor }) {
         </ToolbarButton>
       </div>
 
-      <div className="w-px h-3.5 bg-gray-200 mx-3" />
+      <div className="w-px h-3.5 bg-gray-200 dark:bg-gray-800 mx-3" />
 
       <div className="flex items-center gap-0.5">
         <ToolbarButton
@@ -105,7 +103,7 @@ export default function EditorToolbar({ editor }: { editor: Editor }) {
         </ToolbarButton>
       </div>
 
-      <div className="w-px h-3.5 bg-gray-200 mx-3" />
+      <div className="w-px h-3.5 bg-gray-200 dark:bg-gray-800 mx-3" />
 
       <div className="flex items-center gap-0.5">
         <ToolbarButton

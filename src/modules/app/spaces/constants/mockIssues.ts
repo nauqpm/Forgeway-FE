@@ -1,6 +1,6 @@
 import { Issue } from "../types/issue.type";
 
-export const MOCK_ISSUES: Issue[]= [
+export const MOCK_ISSUES: Issue[] = [
   {
     id: "1",
     title: "Thiết kế lại luồng đăng nhập theo chuẩn mới",
@@ -13,6 +13,9 @@ export const MOCK_ISSUES: Issue[]= [
     storyPoints: 5,
     startDate: "2026-05-10",
     endDate: "2026-05-14",
+    epic: "Auth Revamp",
+    createdAt: "2026-05-05T08:00:00.000Z",
+    updatedAt: "2026-05-10T03:00:00.000Z",
   },
   {
     id: "2",
@@ -26,6 +29,9 @@ export const MOCK_ISSUES: Issue[]= [
     storyPoints: 3,
     startDate: "2026-05-12",
     endDate: "2026-05-15",
+    epic: "Cross-browser Stability",
+    createdAt: "2026-05-06T07:20:00.000Z",
+    updatedAt: "2026-05-11T04:00:00.000Z",
   },
   {
     id: "3",
@@ -39,6 +45,9 @@ export const MOCK_ISSUES: Issue[]= [
     storyPoints: 8,
     startDate: "2026-05-15",
     endDate: "2026-05-20",
+    epic: "Payment Reliability",
+    createdAt: "2026-05-07T09:00:00.000Z",
+    updatedAt: "2026-05-11T05:15:00.000Z",
   },
   {
     id: "4",
@@ -52,6 +61,9 @@ export const MOCK_ISSUES: Issue[]= [
     storyPoints: 2,
     startDate: "2026-05-18",
     endDate: "2026-05-22",
+    epic: "Performance",
+    createdAt: "2026-05-02T06:30:00.000Z",
+    updatedAt: "2026-05-09T11:00:00.000Z",
   },
   {
     id: "5",
@@ -65,5 +77,8 @@ export const MOCK_ISSUES: Issue[]= [
     storyPoints: 13,
     startDate: "2026-05-20",
     endDate: "2026-05-28",
+    epic: null,
+    createdAt: "2026-05-10T02:00:00.000Z",
+    updatedAt: "2026-05-10T02:00:00.000Z",
   },
 ];

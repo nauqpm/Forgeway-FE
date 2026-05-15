@@ -27,12 +27,12 @@ export default function SpaceContent({
   return (
     <div
       className={`rounded-2xl ${
-        activeTab === "docs"
+        activeTab === "pages"
           ? ""
           : ""
       }`}
     >
-      {activeTab === "docs" && (
+      {activeTab === "pages" && (
         <DocsLayout spaceId={spaceId} />
       )}
 

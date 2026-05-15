@@ -75,10 +75,10 @@ export default function TiptapEditor() {
   if (!document) return null;
 
   return (
-    <div className="flex flex-col h-full bg-white overflow-hidden">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden">
       <EditorHeader doc={document} />
       
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
         {/* Sticky Toolbar with Blur */}
         <div className="sticky top-0 z-20">
           <EditorToolbar editor={editor} />
@@ -91,13 +91,13 @@ export default function TiptapEditor() {
               type="text"
               value={document.title}
               onChange={(e) => updateDocument(document.id, { title: e.target.value })}
-              className="w-full text-5xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] placeholder:text-gray-100 transition-all tracking-tight leading-tight"
+              className="w-full text-5xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-gray-100 dark:placeholder:text-gray-800 transition-all tracking-tight leading-tight"
               placeholder="Untitled Page"
             />
           </div>
           
           {/* Editor Content Area */}
-          <div className="min-h-[600px] pb-40">
+          <div className="min-h-[600px] pb-40 dark:prose-invert">
             <EditorContent editor={editor} />
           </div>
         </div>

@@ -143,49 +143,49 @@ export default function IssueDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-[#091E42]/54 backdrop-blur-sm p-4 md:p-8 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 md:p-8 animate-in fade-in duration-200">
       <div
-        className="w-full max-w-6xl h-full max-h-[90vh] bg-[#FFFFFF] text-[#42526E] flex flex-col rounded-xl overflow-hidden shadow-2xl border border-[#DFE1E6] ring-1 ring-black/5"
+        className="w-full max-w-6xl h-full max-h-[90vh] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col rounded-xl overflow-hidden shadow-2xl border border-gray-200 dark:border-gray-700 ring-1 ring-black/5"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="h-14 border-b border-[#DFE1E6] flex items-center justify-between px-5 shrink-0 bg-[#F4F5F7]">
+        <div className="h-14 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-5 shrink-0 bg-gray-100 dark:bg-gray-800">
           <div className="flex items-center gap-2 text-sm font-medium">
-            <div className="flex items-center gap-2 hover:bg-[#EBECF0] px-2 py-1 rounded cursor-pointer transition-colors">
+            <div className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded cursor-pointer transition-colors">
               <div className="w-5 h-5 bg-[#0052CC] rounded text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
               </div>
-              <span className="text-[#5E6C84]">Add epic</span>
+              <span className="text-gray-500 dark:text-gray-400">Add epic</span>
             </div>
-            <span className="text-[#5E6C84]">/</span>
-            <div className="flex items-center gap-2 hover:bg-[#EBECF0] px-2 py-1 rounded cursor-pointer transition-colors">
+            <span className="text-gray-500 dark:text-gray-400">/</span>
+            <div className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded cursor-pointer transition-colors">
               <div className="w-4 h-4 bg-[#0052CC] text-white flex items-center justify-center rounded-sm">
                 <span className="text-[10px]">✓</span>
               </div>
-              <span className="text-[#172B4D]">{issueKey}</span>
+              <span className="text-gray-900 dark:text-white">{issueKey}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors">
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
               <Lock className="w-4 h-4" />
             </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors">
+            <button className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
               <Eye className="w-4 h-4" /> <span>1</span>
             </button>
-            <button className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors">
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
               <Share2 className="w-4 h-4" />
             </button>
-            <button className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors">
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
               <MoreHorizontal className="w-4 h-4" />
             </button>
-            <div className="w-px h-5 bg-[#DFE1E6] mx-1" />
-            <button className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors">
+            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
               <Maximize2 className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -195,7 +195,7 @@ export default function IssueDetailModal({
         {/* Content Body */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Column (Main) */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 border-r border-[#DFE1E6] space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 border-r border-gray-200 dark:border-gray-700 space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             {/* Title */}
             <div>
               {isEditingTitle ? (
@@ -208,12 +208,12 @@ export default function IssueDetailModal({
                   onKeyDown={(e) => {
                     if (e.key === "Enter") handleTitleBlur();
                   }}
-                  className="w-full text-3xl font-semibold text-[#172B4D] bg-[#F4F5F7] border-2 border-[#0052CC] rounded px-2 py-1 outline-none mb-4"
+                  className="w-full text-3xl font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 border-2 border-[#0052CC] rounded px-2 py-1 outline-none mb-4"
                 />
               ) : (
                 <h1
                   onClick={() => setIsEditingTitle(true)}
-                  className="text-3xl font-semibold text-[#172B4D] leading-tight mb-4 hover:bg-[#EBECF0] p-2 -ml-2 rounded cursor-pointer transition-colors"
+                  className="text-3xl font-semibold text-gray-900 dark:text-white leading-tight mb-4 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 -ml-2 rounded cursor-pointer transition-colors"
                 >
                   {localTitle}
                 </h1>
@@ -222,7 +222,7 @@ export default function IssueDetailModal({
 
             {/* Description */}
             <div className="space-y-2">
-              <h3 className="text-base font-semibold text-[#172B4D]">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 Description
               </h3>
               <IssueDescription
@@ -244,12 +244,12 @@ export default function IssueDetailModal({
 
             {/* Linked Work Items - Tích hợp Document */}
             <div className="space-y-3">
-              <h3 className="text-base font-semibold text-[#172B4D]">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 Linked work items
               </h3>
-              <div className="p-5 bg-[#F4F5F7] border border-[#DFE1E6] rounded-lg">
+              <div className="p-5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-[#5E6C84]">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
                     No linked items yet
                   </span>
                 </div>
@@ -260,7 +260,7 @@ export default function IssueDetailModal({
                   >
                     <Plus className="w-4 h-4" /> Create new Document
                   </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-[#EBECF0] text-[#172B4D] text-sm font-medium rounded transition-colors">
+                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
                     <LinkIcon className="w-4 h-4" /> Link existing item
                   </button>
                 </div>
@@ -270,26 +270,26 @@ export default function IssueDetailModal({
             {/* Activity */}
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-[#172B4D]">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                   Activity
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-[#5E6C84]">
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                   <span>Show:</span>
                   <button
                     onClick={() => setActiveTab("comments")}
-                    className={`px-3 py-1 rounded font-medium transition-colors ${activeTab === "comments" ? "bg-[#EBECF0] text-[#172B4D]" : "hover:bg-[#EBECF0]"}`}
+                    className={`px-3 py-1 rounded font-medium transition-colors ${activeTab === "comments" ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
                   >
                     Comments
                   </button>
                   <button
                     onClick={() => setActiveTab("history")}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === "history" ? "bg-[#EBECF0] text-[#172B4D]" : "hover:bg-[#EBECF0]"}`}
+                    className={`px-3 py-1 rounded transition-colors ${activeTab === "history" ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
                   >
                     History
                   </button>
                   <button
                     onClick={() => setActiveTab("worklog")}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === "worklog" ? "bg-[#EBECF0] text-[#172B4D]" : "hover:bg-[#EBECF0]"}`}
+                    className={`px-3 py-1 rounded transition-colors ${activeTab === "worklog" ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
                   >
                     Work log
                   </button>
@@ -299,7 +299,7 @@ export default function IssueDetailModal({
                 <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
                   QP
                 </div>
-                <div className="flex-1 border border-[#DFE1E6] rounded-lg bg-[#F4F5F7] hover:bg-[#EBECF0] focus-within:bg-[#FFFFFF] focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
+                <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
                   <div className="mb-4 text-sm relative z-50">
                     <style
                       dangerouslySetInnerHTML={{
@@ -359,13 +359,13 @@ export default function IssueDetailModal({
                         onClick={() =>
                           setCommentInput("Who is working on this...?")
                         }
-                        className="text-xs text-[#5E6C84] hover:text-[#172B4D] cursor-pointer font-medium bg-[#FFFFFF] px-3 py-1.5 rounded transition-colors"
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors"
                       >
                         Who is working on this...?
                       </span>
                       <span
                         onClick={() => setCommentInput("Status update...")}
-                        className="text-xs text-[#5E6C84] hover:text-[#172B4D] cursor-pointer font-medium bg-[#FFFFFF] px-3 py-1.5 rounded transition-colors"
+                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors"
                       >
                         Status update...
                       </span>
@@ -381,16 +381,16 @@ export default function IssueDetailModal({
                       </button>
                       <button
                         onClick={() => setCommentInput("")}
-                        className="px-3 py-1.5 hover:bg-[#EBECF0] text-[#172B4D] text-xs font-medium rounded transition-colors"
+                        className="px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-medium rounded transition-colors"
                       >
                         Cancel
                       </button>
                     </div>
                   )}
-                  <div className="mt-5 flex items-center justify-between border-t border-[#DFE1E6] pt-3">
-                    <p className="text-[11px] text-[#5E6C84]">
+                  <div className="mt-5 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
                       Pro tip: press{" "}
-                      <span className="font-bold bg-[#FFFFFF] px-1.5 py-0.5 rounded border border-[#DFE1E6]">
+                      <span className="font-bold bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700">
                         Enter
                       </span>{" "}
                       to comment
@@ -409,17 +409,17 @@ export default function IssueDetailModal({
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[#172B4D] text-sm font-semibold">
+                          <span className="text-gray-900 dark:text-white text-sm font-semibold">
                             {comment.author}
                           </span>
-                          <span className="text-[#5E6C84] text-xs">
+                          <span className="text-gray-500 dark:text-gray-400 text-xs">
                             {comment.timestamp}
                           </span>
                         </div>
-                        <p className="text-[#172B4D] text-sm whitespace-pre-wrap">
+                        <p className="text-gray-900 dark:text-white text-sm whitespace-pre-wrap">
                           {renderCommentText(comment.text)}
                         </p>
-                        <div className="flex gap-3 mt-2 text-xs font-medium text-[#5E6C84]">
+                        <div className="flex gap-3 mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
                           <button className="hover:underline">Edit</button>
                           <button className="hover:underline">Delete</button>
                         </div>
@@ -432,22 +432,22 @@ export default function IssueDetailModal({
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="w-[380px] bg-[#F4F5F7] p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
+          <div className="w-[380px] bg-gray-100 dark:bg-gray-800/50 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <div className="flex items-center gap-2 mb-6">
               <div className="relative">
                 <button
                   onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-[#EBECF0] hover:bg-[#DFE1E6] text-[#172B4D] text-sm font-semibold rounded transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors"
                 >
                   {issue.status} <ChevronDown className="w-4 h-4" />
                 </button>
                 {showStatusDropdown && (
-                  <div className="absolute top-full mt-1 left-0 w-40 bg-[#F4F5F7] border border-[#DFE1E6] rounded-lg shadow-xl overflow-hidden z-10 py-1">
+                  <div className="absolute top-full mt-1 left-0 w-40 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
                     {["To Do", "In Progress", "Done"].map((s) => (
                       <button
                         key={s}
                         onClick={() => handleStatusChange(s)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? "bg-[#EBECF0] text-[#0052CC] font-medium border-l-2 border-[#0052CC]" : "text-[#42526E] hover:bg-[#EBECF0]"}`}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? "bg-gray-200 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`}
                       >
                         {s}
                       </button>
@@ -455,27 +455,27 @@ export default function IssueDetailModal({
                   </div>
                 )}
               </div>
-              <button className="p-1.5 hover:bg-[#DFE1E6] text-[#5E6C84] rounded transition-colors">
+              <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 rounded transition-colors">
                 <Zap className="w-4 h-4" />
               </button>
-              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#DFE1E6] text-[#172B4D] text-sm font-medium rounded transition-colors">
+              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
                 <Settings className="w-4 h-4" /> Improve Task
               </button>
             </div>
 
             <div className="space-y-6">
-              <div className="border border-[#DFE1E6] rounded-lg">
-                <button className="w-full flex items-center justify-between p-3 text-sm font-semibold text-[#172B4D] hover:bg-[#EBECF0] rounded-t-lg transition-colors">
-                  Details <ChevronDown className="w-4 h-4 text-[#5E6C84]" />
+              <div className="border border-gray-200 dark:border-gray-700 dark:bg-gray-900 rounded-lg">
+                <button className="w-full flex items-center justify-between p-3 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg transition-colors">
+                  Details <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </button>
-                <div className="p-4 border-t border-[#DFE1E6] space-y-4">
+                <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
                   {/* Assignee */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1">Assignee</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1">Assignee</div>
                     <div className="col-span-2 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        <div className="w-6 h-6 rounded-full bg-[#FFFFFF] flex items-center justify-center border border-[#DFE1E6]">
-                          <User className="w-3 h-3 text-[#5E6C84]" />
+                      <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                        <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                          <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                         </div>
                         {issue.assignee === "U" || issue.assignee === "A"
                           ? "Unassigned"
@@ -492,9 +492,9 @@ export default function IssueDetailModal({
 
                   {/* Labels */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1.5">Labels</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Labels</div>
                     <div className="col-span-2">
-                      <div className="text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
                         None
                       </div>
                     </div>
@@ -502,9 +502,9 @@ export default function IssueDetailModal({
 
                   {/* Parent */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1.5">Parent</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Parent</div>
                     <div className="col-span-2">
-                      <div className="text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
                         None
                       </div>
                     </div>
@@ -512,11 +512,11 @@ export default function IssueDetailModal({
 
                   {/* Due date */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1.5">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
                       Due date
                     </div>
                     <div className="col-span-2">
-                      <div className="text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
                         None
                       </div>
                     </div>
@@ -524,11 +524,11 @@ export default function IssueDetailModal({
 
                   {/* Priority */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-[#5E6C84] pt-1.5">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
                       Priority
                     </div>
                     <div className="col-span-2">
-                      <div className="text-sm text-[#172B4D] hover:bg-[#EBECF0] p-1.5 -ml-1.5 rounded cursor-pointer flex items-center gap-2 transition-colors">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer flex items-center gap-2 transition-colors">
                         {issue.priority}
                       </div>
                     </div>
@@ -544,7 +544,7 @@ export default function IssueDetailModal({
               />
 
               {/* Meta information */}
-              <div className="text-xs text-[#5E6C84] space-y-1">
+              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
                 <p>Created just now</p>
                 <p>Updated just now</p>
               </div>

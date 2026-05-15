@@ -10,4 +10,7 @@ export interface Issue {
   storyPoints: number;
   startDate?: string;
   endDate?: string;
+  epic?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }

@@ -22,21 +22,21 @@ export default function LogWorkModal({ onClose, onSave }: LogWorkModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-[#091E42]/54 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-gray-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-md bg-white text-[#172B4D] rounded-xl shadow-2xl border border-[#DFE1E6]"
+        className="w-full max-w-md bg-white dark:bg-gray-900 text-[#172B4D] dark:text-white rounded-xl shadow-2xl border border-[#DFE1E6] dark:border-gray-700"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-5 border-b border-[#DFE1E6]">
-          <h2 className="text-xl font-semibold text-[#172B4D]">Log work</h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-[#EBECF0] rounded-md text-[#5E6C84] transition-colors">
+        <div className="flex items-center justify-between p-5 border-b border-[#DFE1E6] dark:border-gray-700">
+          <h2 className="text-xl font-semibold text-[#172B4D] dark:text-white">Log work</h2>
+          <button onClick={onClose} className="p-1.5 hover:bg-[#EBECF0] dark:hover:bg-gray-700 rounded-md text-[#5E6C84] dark:text-gray-400 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <div className="p-5 space-y-5">
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-[#5E6C84]">Time spent <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-semibold text-[#5E6C84] dark:text-gray-400">Time spent <span className="text-red-500">*</span></label>
             <input 
               type="text" 
               value={timeSpent}
@@ -45,27 +45,27 @@ export default function LogWorkModal({ onClose, onSave }: LogWorkModalProps) {
                 if (error) setError('');
               }}
               placeholder="e.g. 1w 2d 4h 30m"
-              className="w-full p-2 bg-[#F4F5F7] border-2 border-transparent focus:border-[#0052CC] focus:bg-white rounded transition-colors outline-none text-sm"
+              className="w-full p-2 bg-[#F4F5F7] dark:bg-gray-800 dark:text-white border-2 border-transparent focus:border-[#0052CC] focus:bg-white dark:focus:bg-gray-900 rounded transition-colors outline-none text-sm"
               autoFocus
             />
             {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-sm font-semibold text-[#5E6C84]">Work description</label>
+            <label className="block text-sm font-semibold text-[#5E6C84] dark:text-gray-400">Work description</label>
             <textarea 
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What did you work on?"
-              className="w-full min-h-[100px] p-2 bg-[#F4F5F7] border-2 border-transparent focus:border-[#0052CC] focus:bg-white rounded transition-colors outline-none resize-y text-sm"
+              className="w-full min-h-[100px] p-2 bg-[#F4F5F7] dark:bg-gray-800 dark:text-white border-2 border-transparent focus:border-[#0052CC] focus:bg-white dark:focus:bg-gray-900 rounded transition-colors outline-none resize-y text-sm"
             />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 p-5 border-t border-[#DFE1E6]">
+        <div className="flex items-center justify-end gap-2 p-5 border-t border-[#DFE1E6] dark:border-gray-700">
           <button 
             onClick={onClose} 
-            className="px-4 py-2 hover:bg-[#EBECF0] text-[#172B4D] text-sm font-medium rounded transition-colors"
+            className="px-4 py-2 hover:bg-[#EBECF0] dark:hover:bg-gray-700 text-[#172B4D] dark:text-white text-sm font-medium rounded transition-colors"
           >
             Cancel
           </button>

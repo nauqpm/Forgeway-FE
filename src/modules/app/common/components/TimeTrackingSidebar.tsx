@@ -23,12 +23,12 @@ export default function TimeTrackingSidebar({ timeEstimated, timeLogged, onLogWo
   }
 
   return (
-    <div className="space-y-3 pt-4 border-t border-[#DFE1E6] mt-4">
+    <div className="space-y-3 pt-4 border-t border-[#DFE1E6] dark:border-gray-700 mt-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#5E6C84]">Time tracking</h3>
-        <button 
+        <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">Time tracking</h3>
+        <button
           onClick={() => setIsModalOpen(true)}
-          className="p-1 hover:bg-[#EBECF0] text-[#5E6C84] hover:text-[#172B4D] rounded transition-colors"
+          className="p-1 hover:bg-[#EBECF0] dark:hover:bg-gray-700 text-[#5E6C84] dark:text-gray-400 hover:text-[#172B4D] dark:hover:text-white rounded transition-colors"
           title="Log work"
         >
           <Clock className="w-4 h-4" />
@@ -36,7 +36,7 @@ export default function TimeTrackingSidebar({ timeEstimated, timeLogged, onLogWo
       </div>
 
       <div 
-        className="w-full bg-[#DFE1E6] rounded-full h-1.5 overflow-hidden cursor-pointer group relative"
+        className="w-full bg-[#DFE1E6] dark:bg-gray-700 rounded-full h-1.5 overflow-hidden cursor-pointer group relative"
         onClick={() => setIsModalOpen(true)}
       >
         <div 
@@ -45,7 +45,7 @@ export default function TimeTrackingSidebar({ timeEstimated, timeLogged, onLogWo
         />
       </div>
 
-      <div className="flex justify-between text-[11px] font-medium text-[#5E6C84]">
+      <div className="flex justify-between text-[11px] font-medium text-[#5E6C84] dark:text-gray-400">
         <span>{formatMinutesToTimeString(timeLogged)} logged</span>
         <span>
           {estimatedMinutes > 0 
