@@ -39,7 +39,7 @@ export default function UnscheduledSidebar({ tasks, isOpen, onClose }: Unschedul
   if (!isOpen) return null;
 
   return (
-    <div className="w-80 flex-shrink-0 border-l border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col h-full">
+    <div className="w-72 flex-shrink-0 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div>
