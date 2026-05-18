@@ -5,18 +5,20 @@ import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/app/common/components/Sidebar";
 import NotificationPanel from "@/modules/app/common/components/NotificationPanel";
-import { Loader2, Menu, Search, Sun, Moon, Monitor } from "lucide-react";
+import { Loader2, Menu, Search, Sun, Moon, Monitor, User, Settings, LogOut } from "lucide-react";
 import { parseJQL } from "@/utils/jqlParser";
 import { useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const { setCurrentWorkspace, currentWorkspace } = useWorkspaceStore();
   const { theme, setTheme } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   const [jqlQuery, setJqlQuery] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -161,6 +163,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
     if (isAuthenticated && !currentWorkspace) {
       const stored = localStorage.getItem("currentWorkspace");
       if (stored) {
@@ -290,13 +302,46 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
             </button>
 
-            {/* Avatar */}
-            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer hover:ring-2 hover:ring-indigo-500 transition">
-              <img
-                src="/logo-yaviet/download.png" 
-                alt="avatar"
-                className="w-full h-full object-cover"
-              />
+            {/* User avatar + dropdown */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu((v) => !v)}
+                className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 hover:ring-2 hover:ring-indigo-500 transition flex items-center justify-center bg-indigo-600 text-white text-sm font-medium"
+              >
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span>{user?.fullName?.charAt(0).toUpperCase() ?? user?.email?.charAt(0).toUpperCase() ?? "U"}</span>
+                )}
+              </button>
+
+              {showUserMenu && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.fullName ?? "User"}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                  </div>
+                  <button
+                    onClick={() => { router.push("/account"); setShowUserMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <User className="w-4 h-4" /> Hồ sơ cá nhân
+                  </button>
+                  <button
+                    onClick={() => { router.push("/settings"); setShowUserMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <Settings className="w-4 h-4" /> Cài đặt
+                  </button>
+                  <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                  <button
+                    onClick={() => { logout(); setShowUserMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" /> Đăng xuất
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

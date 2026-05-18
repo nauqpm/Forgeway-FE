@@ -18,6 +18,7 @@ type SpaceContentProps = {
   timelineProps: any;
   listProps: any;
   summaryProps: any;
+  calendarProps: any;
 };
 
 export default function SpaceContent({
@@ -29,6 +30,7 @@ export default function SpaceContent({
   timelineProps,
   listProps,
   summaryProps,
+  calendarProps,
 }: SpaceContentProps) {
   return (
     <div
