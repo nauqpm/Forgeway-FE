@@ -289,3 +289,40 @@ body {
   background: var(--fc-event-bg-color, #3b82f6);
   border-radius: 4px;
 }
+
+/* Resize handles — show on hover, Jira-like vertical grip */
+.fc .fc-event-resizer {
+  opacity: 0;
+  transition: opacity 0.15s;
+  width: 8px !important;
+  cursor: col-resize !important;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+}
+.fc .fc-daygrid-block-event:hover .fc-event-resizer {
+  opacity: 1;
+}
+.fc .fc-event-resizer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.75);
+  border-radius: 2px;
+}
+.fc .fc-event-resizer-start {
+  left: 0;
+}
+.fc .fc-event-resizer-start::after {
+  left: 2px;
+}
+.fc .fc-event-resizer-end {
+  right: 0;
+}
+.fc .fc-event-resizer-end::after {
+  right: 2px;
+}

@@ -97,6 +97,7 @@ export default function CalendarView({
             initialView="dayGridMonth"
             events={events}
             editable
+            eventResizableFromStart
             droppable
             eventContent={(arg) => <CalendarEventContent eventInfo={arg} />}
             eventDrop={handlers.onEventDrop}
