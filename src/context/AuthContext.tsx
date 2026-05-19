@@ -191,15 +191,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const hasAdminAccess = (): boolean => {
     if (!user) return false;
     return (
-      user.role === "admin" ||
-      ["staff", "manager", "technical"].includes(user.role) ||
+      (user.role as string) === "super_admin" ||
+      (user.role as string) === "admin" ||
       effectivePermissions.length > 0
     );
   };
 
   const hasPermission = (resource: string, action: string): boolean => {
     if (!user) return false;
-    if (user.role === "admin") return true;
+    if ((user.role as string) === "super_admin" || (user.role as string) === "admin") return true;
     return effectivePermissions.some(
       (p) =>
         (p.resource === resource || p.resource === "*") &&

@@ -20,7 +20,7 @@ import {
 import { AUTH_ROUTES } from '../constants/auth-routes';
 import type { MfaMethod, UserRole } from '../types/auth.types';
 
-const MFA_REQUIRED_ROLES: UserRole[] = ['super_admin', 'space_admin'];
+const MFA_REQUIRED_ROLES: UserRole[] = ['space_admin'];
 
 export const useMfa = () => {
   const router = useRouter();

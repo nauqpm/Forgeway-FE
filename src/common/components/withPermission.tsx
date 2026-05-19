@@ -46,7 +46,7 @@ export const withPermission = (
           }
 
           // Admin has all permissions
-          if (user.role === "admin") {
+          if ((user.role as string) === "super_admin" || (user.role as string) === "admin") {
             console.log("✅ User is admin, granting access");
             setHasAccess(true);
             setIsLoading(false);
