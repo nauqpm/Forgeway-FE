@@ -14,6 +14,18 @@ export const initiateGoogleLogin = (): void => {
   window.location.href = `${API_URL}/auth/google`;
 };
 
+// ─── Handle SSO Callback ─────────────────────────────────────────────────────
+// Called after OAuth redirect returns with a token in the URL.
+
+export const handleSsoCallbackAPI = async (token: string): Promise<{ user: unknown }> => {
+  const response = await api.post<{ user: unknown }>(
+    '/auth/sso/callback',
+    { token },
+    { withCredentials: true },
+  );
+  return response.data;
+};
+
 
 // ─── Link Google Account ─────────────────────────────────────────────────────
 // Links Google account to existing user account.
