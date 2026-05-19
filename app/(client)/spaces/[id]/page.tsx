@@ -15,6 +15,8 @@ import { Issue } from "@/modules/client/spaces/types/issue.type";
 import { Sprint } from "@/modules/client/spaces/types/sprint.type";
 import { Filters } from "@/modules/client/spaces/types/filter.type";
 
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import { useAssignees } from "@/modules/client/spaces/hooks/useAssignees";
 
 import { filterIssues } from "@/modules/client/spaces/utils/filterIssues";
@@ -146,26 +148,14 @@ export default function SpaceDetailPage({
 
   useEffect(() => {
     if (!spaceId) return;
-    const fetchData = async () => {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 300));
-        const allSpaces = JSON.parse(
-          localStorage.getItem("MOCK_SPACES") || "[]",
-        );
-        const found = allSpaces.find((s: any) => s._id === spaceId);
-        if (found) {
-          setSpace(found);
-          // Auto-select tab based on template
-          if (found.template === "kanban") setActiveTab("board");
-          else if (found.template === "scrum") setActiveTab("backlog");
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    api.get(apiRoutes.SPACES.BY_ID(spaceId))
+      .then((res) => {
+        setSpace(res.data);
+        if (res.data.template === "kanban") setActiveTab("board");
+        else if (res.data.template === "scrum") setActiveTab("backlog");
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [spaceId]);
 
   if (loading) return <LoadingSpinner />;

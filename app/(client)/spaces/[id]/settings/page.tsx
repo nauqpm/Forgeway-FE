@@ -2,6 +2,8 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { ArrowLeft, Save, Trash2, Globe, Lock, Columns, Repeat, Users, ShieldAlert, Settings } from "lucide-react";
@@ -22,39 +24,24 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     if (!spaceId) return;
-    const fetchData = async () => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
-        const found = allSpaces.find((s: any) => s._id === spaceId);
-        if (found) {
-          setSpace(found);
-          setForm({
-            name: found.name || "",
-            description: found.description || "",
-            visibility: found.visibility || "public",
-          });
-        }
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    };
-    fetchData();
+    api.get(apiRoutes.SPACES.BY_ID(spaceId))
+      .then((res) => {
+        setSpace(res.data);
+        setForm({
+          name: res.data.name || "",
+          description: res.data.description || "",
+          visibility: res.data.visibility || "public",
+        });
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [spaceId]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
-      const updatedSpaces = allSpaces.map((s: any) => {
-        if (s._id === spaceId) {
-          return { ...s, ...form };
-        }
-        return s;
-      });
-      localStorage.setItem("MOCK_SPACES", JSON.stringify(updatedSpaces));
-      window.dispatchEvent(new Event("spaces_updated"));
+      await api.put(apiRoutes.SPACES.BY_ID(spaceId), form);
       router.push(`/spaces/${spaceId}`);
     } catch (e) {
       console.error("Save failed", e);
@@ -65,11 +52,12 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
 
   const handleDelete = async () => {
     if (confirm("Bạn có chắc chắn muốn xóa không gian này không? Hành động này không thể hoàn tác.")) {
-      const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
-      const updatedSpaces = allSpaces.filter((s: any) => s._id !== spaceId);
-      localStorage.setItem("MOCK_SPACES", JSON.stringify(updatedSpaces));
-      window.dispatchEvent(new Event("spaces_updated"));
-      router.push("/spaces");
+      try {
+        await api.delete(apiRoutes.SPACES.BY_ID(spaceId));
+        router.push("/spaces");
+      } catch (e) {
+        console.error("Delete failed", e);
+      }
     }
   };
 

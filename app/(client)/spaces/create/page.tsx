@@ -1,91 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useCreateWorkspace } from "@/modules/client/workspaces/hooks/useCreateWorkspace";
 import { ArrowLeft, Columns, Repeat, Lock, Globe } from "lucide-react";
 import Link from "next/link";
 
 export default function CreateSpacePage() {
   const router = useRouter();
-  const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
-  const [form, setForm] = useState({ 
-    name: "", 
-    key: "", 
-    description: "", 
+  const { createWorkspace, isLoading } = useCreateWorkspace();
+  const [form, setForm] = useState({
+    name: "",
+    key: "",
+    description: "",
     visibility: "public" as "public" | "private",
     template: "kanban" as "kanban" | "scrum"
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [pageReady, setPageReady] = useState(false);
-
-  useEffect(() => {
-    // Mock API
-    const fetchWorkspaces = async () => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        let mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
-        
-        if (mockWorkspaces.length === 0) {
-          const defaultWs = { 
-            _id: "ws_default_" + Date.now(), 
-            name: "Không gian cá nhân", 
-            slug: "personal-workspace", 
-            ownerId: "user_1", 
-            members: [] 
-          };
-          mockWorkspaces = [defaultWs];
-          localStorage.setItem("MOCK_WORKSPACES", JSON.stringify(mockWorkspaces));
-        }
-        setWorkspaces(mockWorkspaces);
-        setPageReady(true);
-      } catch (e) {
-        console.error(e);
-        setPageReady(true);
-      }
-    };
-    fetchWorkspaces();
-  }, [setWorkspaces]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!currentWorkspace?._id) {
-      setError("Vui lòng chọn workspace.");
-      return;
-    }
-    setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      const newSpace = {
-        _id: "space_" + Date.now(),
-        ...form,
-        workspaceId: currentWorkspace._id,
-        createdAt: new Date().toISOString(),
-        _count: { pages: 0, issues: 0 }
-      };
-
-      const existing = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
-      localStorage.setItem("MOCK_SPACES", JSON.stringify([...existing, newSpace]));
-      window.dispatchEvent(new Event("spaces_updated"));
-
-      router.push(`/spaces`);
-    } catch (e: any) {
-      setError("Tạo không gian thất bại. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
+      await createWorkspace({
+        name: form.name,
+        key: form.key,
+        description: form.description,
+        type: form.template,
+        access: form.visibility === "public" ? "open" : "private",
+      });
+      router.push("/spaces");
+    } catch {
+      setError("Tạo Space thất bại. Vui lòng thử lại.");
     }
   };
-
-  if (!pageReady) return <div className="p-6 text-center text-gray-500">Loading...</div>;
-
-  if (!currentWorkspace) return (
-    <div className="p-6 text-center">
-      <p className="text-gray-500 mb-4">Chưa có workspace. Vui lòng tạo workspace trước.</p>
-    </div>
-  );
 
   return (
     <div className="max-w-3xl mx-auto pb-12">
@@ -95,9 +43,7 @@ export default function CreateSpacePage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tạo không gian làm việc mới (Space)</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">
-            trong <span className="font-medium text-indigo-600">{currentWorkspace.name}</span>
-          </p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Không gian làm việc cho team của bạn</p>
         </div>
       </div>
 
@@ -208,8 +154,8 @@ export default function CreateSpacePage() {
 
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
           <Link href="/spaces" className="px-6 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors">Hủy</Link>
-          <button type="submit" disabled={loading} className="px-8 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50 flex items-center gap-2">
-            {loading ? "Đang tạo..." : "Tạo Space"}
+          <button type="submit" disabled={isLoading} className="px-8 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50 flex items-center gap-2">
+            {isLoading ? "Đang tạo..." : "Tạo Space"}
           </button>
         </div>
       </form>

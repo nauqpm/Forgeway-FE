@@ -6,6 +6,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import {
   LayoutDashboard,
   BookOpen,
@@ -305,26 +307,14 @@ export default function Sidebar({
   };
 
   useEffect(() => {
-    const fetchSpaces = () => {
-      if (currentWorkspace) {
-        try {
-          const raw = localStorage.getItem("MOCK_SPACES");
-          const allSpaces = raw && raw !== "undefined" ? JSON.parse(raw) : [];
-          setSidebarSpaces(allSpaces.filter((s: any) => s.workspaceId === currentWorkspace._id));
-        } catch (e) {
-          console.error("Failed to parse MOCK_SPACES", e);
-          setSidebarSpaces([]);
-        }
-      } else {
-        setSidebarSpaces([]);
-      }
-    };
-
-    fetchSpaces();
-
-    window.addEventListener("spaces_updated", fetchSpaces);
     setMounted(true);
-    return () => window.removeEventListener("spaces_updated", fetchSpaces);
+    if (!currentWorkspace) {
+      setSidebarSpaces([]);
+      return;
+    }
+    api.get(apiRoutes.SPACES.BASE, { params: { workspaceId: currentWorkspace._id } })
+      .then((res) => setSidebarSpaces(res.data))
+      .catch(() => setSidebarSpaces([]));
   }, [currentWorkspace]);
 
   const isAdmin = hasAdminAccess();

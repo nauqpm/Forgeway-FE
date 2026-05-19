@@ -2,55 +2,26 @@
 import { useState, useEffect, useRef } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { ChevronDown, Plus, Check, Building2 } from "lucide-react";
 
 export default function WorkspaceSwitcher() {
-  const { workspaces, currentWorkspace, setWorkspaces, setCurrentWorkspace } = useWorkspaceStore();
+  const { workspaces, currentWorkspace, setWorkspaces, setCurrentWorkspace, workspacesLoaded } = useWorkspaceStore();
   const { user } = useAuth();
+  const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [loading, setLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const loaded = useRef(false);
 
   useEffect(() => {
-    if (loaded.current || !user) return;
+    if (loaded.current || !user || workspacesLoaded) return;
     loaded.current = true;
-<<<<<<< HEAD
     api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
       setWorkspaces(res.data);
     }).catch(() => {});
-=======
-    
-    // Mock API
-    const fetchWorkspaces = async () => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        let mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
-        
-        // Tạo sẵn 1 workspace default nếu chưa có
-        if (mockWorkspaces.length === 0) {
-          const defaultWs = { 
-            _id: "ws_default_" + Date.now(), 
-            name: "Không gian cá nhân", 
-            slug: "personal-workspace", 
-            ownerId: "user_1", 
-            members: [] 
-          };
-          mockWorkspaces = [defaultWs];
-          localStorage.setItem("MOCK_WORKSPACES", JSON.stringify(mockWorkspaces));
-        }
-        setWorkspaces(mockWorkspaces);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    fetchWorkspaces();
->>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
-  }, [user, setWorkspaces]);
+  }, [user, setWorkspaces, workspacesLoaded]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -61,39 +32,6 @@ export default function WorkspaceSwitcher() {
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  const handleCreate = async () => {
-    if (!newName.trim()) return;
-    setLoading(true);
-    try {
-<<<<<<< HEAD
-      const res = await api.post(apiRoutes.WORKSPACES.BASE, { name: newName });
-      const newWs = res.data;
-=======
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const newWs = { 
-        _id: "ws_" + Date.now(), 
-        name: newName, 
-        slug: newName.toLowerCase().replace(/\s+/g, '-'), 
-        ownerId: "user_1", 
-        members: [] 
-      };
-      
-      const mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
-      localStorage.setItem("MOCK_WORKSPACES", JSON.stringify([...mockWorkspaces, newWs]));
-      
->>>>>>> e61dad3ac121944941432408236f7d53f9ea43c2
-      setWorkspaces([...workspaces, newWs]);
-      setCurrentWorkspace(newWs);
-      setShowCreate(false);
-      setNewName("");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div ref={dropdownRef} className="relative">
@@ -135,31 +73,12 @@ export default function WorkspaceSwitcher() {
           ))}
 
           <div className="border-t border-gray-100 dark:border-gray-700 mt-2 pt-2">
-            {showCreate ? (
-              <div className="px-3 py-2">
-                <input
-                  type="text"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Workspace name"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  autoFocus
-                  onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                />
-                <div className="flex gap-2">
-                  <button onClick={handleCreate} disabled={loading} className="flex-1 bg-indigo-600 text-white text-sm py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                    {loading ? "..." : "Create"}
-                  </button>
-                  <button onClick={() => { setShowCreate(false); setNewName(""); }} className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button onClick={() => setShowCreate(true)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
-                <Plus className="w-4 h-4" /> Create Workspace
-              </button>
-            )}
+            <button
+              onClick={() => { setShowDropdown(false); router.push("/spaces/create"); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+            >
+              <Plus className="w-4 h-4" /> Tạo Workspace mới
+            </button>
           </div>
         </div>
       )}

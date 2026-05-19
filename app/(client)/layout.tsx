@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/admin/components/common/components/Sidebar";
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
 import { Loader2, Menu, Search, Sun, Moon, Monitor, User, Settings, LogOut, Shield } from "lucide-react";
 import { parseJQL } from "@/utils/jqlParser";
@@ -12,7 +14,7 @@ import { useTheme } from "@/hooks/useTheme";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
-  const { setCurrentWorkspace, currentWorkspace } = useWorkspaceStore();
+  const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspacesLoaded } = useWorkspaceStore();
   const { theme, setTheme } = useTheme();
   const { hasAdminAccess } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -174,17 +176,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated && !currentWorkspace) {
-      const stored = localStorage.getItem("currentWorkspace");
-      if (stored) {
-        try {
-          setCurrentWorkspace(JSON.parse(stored));
-        } catch {
-          /* ignore */
-        }
-      }
+    if (isAuthenticated && !workspacesLoaded) {
+      api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
+        setWorkspaces(res.data);
+      }).catch(() => {});
     }
-  }, [isAuthenticated, currentWorkspace, setCurrentWorkspace]);
+  }, [isAuthenticated, workspacesLoaded, setWorkspaces]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

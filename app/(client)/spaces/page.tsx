@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { BookOpen, Plus, Globe, Lock, ChevronRight, Columns, Repeat } from "lucide-react";
@@ -19,46 +21,22 @@ interface Space {
 }
 
 export default function SpacesPage() {
-  const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
+  const { currentWorkspace, workspacesLoaded } = useWorkspaceStore();
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchSpaces = async () => {
-      try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        let mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
-        
-        if (mockWorkspaces.length === 0) {
-          const defaultWs = { 
-            _id: "ws_default_" + Date.now(), 
-            name: "Không gian cá nhân", 
-            slug: "personal-workspace", 
-            ownerId: "user_1", 
-            members: [] 
-          };
-          mockWorkspaces = [defaultWs];
-          localStorage.setItem("MOCK_WORKSPACES", JSON.stringify(mockWorkspaces));
-        }
-        setWorkspaces(mockWorkspaces);
-        
-        // Use the current workspace, or the first one if not set yet
-        const ws = useWorkspaceStore.getState().currentWorkspace || mockWorkspaces[0];
-        
-        if (ws) {
-          const allSpaces = JSON.parse(localStorage.getItem("MOCK_SPACES") || "[]");
-          const workspaceSpaces = allSpaces.filter((s: any) => s.workspaceId === ws._id);
-          setSpaces(workspaceSpaces);
-        }
-      } catch (e) { 
-        console.error(e); 
-      } finally { 
-        setLoading(false); 
-      }
-    };
-    
-    fetchSpaces();
-  }, [setWorkspaces]);
+    if (!workspacesLoaded) return;
+    if (!currentWorkspace) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    api.get(apiRoutes.SPACES.BASE, { params: { workspaceId: currentWorkspace._id } })
+      .then((res) => setSpaces(res.data))
+      .catch(() => setSpaces([]))
+      .finally(() => setLoading(false));
+  }, [currentWorkspace, workspacesLoaded]);
 
   if (loading) return <LoadingSpinner />;
 
