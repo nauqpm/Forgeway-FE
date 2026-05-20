@@ -102,9 +102,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshCurrentUser = useCallback(async () => {
     const currentUser = await getCurrentUserAPI();
+    const legacyUser = currentUser as typeof currentUser & {
+      spaceRoles?: typeof currentUser.workspaceRoles;
+    };
     setUser({
       ...currentUser,
       permissions: currentUser.permissions || [],
+      workspaceRoles: currentUser.workspaceRoles || legacyUser.spaceRoles || [],
     });
     await fetchUserPermissions();
   }, [fetchUserPermissions, setUser]);

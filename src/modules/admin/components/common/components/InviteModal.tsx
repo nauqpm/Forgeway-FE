@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Link as LinkIcon, Check, Mail, Briefcase, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
 import CreatableSelect from 'react-select/creatable';
 import { toast } from 'react-hot-toast';
+import { inviteService } from '@/modules/client/workspaces/services/inviteService';
 
 // --- MOCK DATA ---
 const EXISTING_USERS = [
@@ -18,7 +19,7 @@ const QUICK_SUGGESTIONS = [
 ];
 
 const ROLES = [
-  { value: 'admin', label: 'Admin' },
+  { value: 'workspace_admin', label: 'Admin' },
   { value: 'member', label: 'Member' },
   { value: 'viewer', label: 'Viewer' }
 ];
@@ -84,23 +85,35 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
     setIsSubmitting(true);
 
     try {
-      // Giả lập lấy token reCAPTCHA
-      const mockCaptchaToken = 'mock_recaptcha_token_12345';
-      
-      const payload = {
-        users: selectedOptions.map(opt => opt.value),
-        roleId: role,
-        captchaToken: mockCaptchaToken
-      };
+      const emails = selectedOptions.map(opt => String(opt.value));
+      const results = await Promise.allSettled(
+        emails.map(email =>
+          inviteService.sendInvite(projectId, {
+            email,
+            role: role as 'workspace_admin' | 'member' | 'viewer',
+          })
+        )
+      );
 
-      // Mock API Call
-      console.log('Sending invitation to API for project:', projectId, 'Payload:', payload);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network latency
+      const failed = results
+        .map((r, i) => ({ r, email: emails[i] }))
+        .filter(({ r }) => r.status === 'rejected');
 
-      toast.success('Invitations sent successfully!');
-      onClose();
+      if (failed.length === 0) {
+        toast.success(`Đã gửi lời mời tới ${emails.length} người.`);
+        onClose();
+      } else if (failed.length < emails.length) {
+        const failedEmails = failed.map(({ email, r }) => {
+          const msg = (r as PromiseRejectedResult).reason?.response?.data?.message;
+          return msg ? `${email} (${msg})` : email;
+        });
+        toast.error(`Một số lời mời thất bại: ${failedEmails.join(', ')}`);
+      } else {
+        const firstMsg = (failed[0].r as PromiseRejectedResult).reason?.response?.data?.message;
+        toast.error(firstMsg || 'Không thể gửi lời mời.');
+      }
     } catch (error) {
-      toast.error('Failed to send invitations.');
+      toast.error('Không thể gửi lời mời.');
     } finally {
       setIsSubmitting(false);
     }

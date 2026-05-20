@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore, useSecurityStore, useSessionStore } from '../stores/authStore';
+import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from '../stores/authStore';
 import { usePermissionStore } from '../../permission/stores/permissionStore';
 import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from '../services/authService';
 import { clearTokens } from '../services/tokenService';
@@ -18,7 +18,17 @@ import type {
   LoginRequest,
   RegisterRequest,
   AuthApiError,
+  UserRole,
+  User,
 } from '../types/auth.types';
+
+const MFA_REQUIRED_ROLES: UserRole[] = ['super_admin'];
+
+const requiresMfaByRole = (role?: UserRole) =>
+  role ? MFA_REQUIRED_ROLES.includes(role) : false;
+
+const needsMfaSetup = (currentUser: User | null) =>
+  !!currentUser && requiresMfaByRole(currentUser.role) && !currentUser.mfaEnabled;
 
 export const useAuth = () => {
   const router = useRouter();
@@ -32,6 +42,7 @@ export const useAuth = () => {
     setInitialized,
     clearAuth,
   } = useAuthStore();
+  const { setMfaChallenge } = useMfaStore();
   const { incrementFailedAttempts, resetFailedAttempts, setLockout, setSuspendedMessage } =
     useSecurityStore();
   const { setGlobalPermissions } = usePermissionStore();
@@ -119,7 +130,7 @@ export const useAuth = () => {
         setLoading(false); // Bước 7: Luôn tắt trạng thái tải
       }
     },
-    [router, setUser, setLoading, resetFailedAttempts, incrementFailedAttempts, setLockout, setSuspendedMessage, setGlobalPermissions],
+    [router, setUser, setLoading, setMfaChallenge, resetFailedAttempts, incrementFailedAttempts, setLockout, setSuspendedMessage, setGlobalPermissions],
   );
 
   // ─── Register ──────────────────────────────────────────────────────────────
