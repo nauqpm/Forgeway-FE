@@ -22,6 +22,8 @@ export interface User {
 
 export interface AuthUser extends User {
   permissions: Permission[];
+  workspaceRoles?: WorkspaceRole[];
+  spaceRoles?: WorkspaceRole[];
 }
 
 // ─── Login / Register ────────────────────────────────────────────────────────
@@ -160,6 +162,23 @@ export interface Permission {
   id?: string;
   resource: string;
   action: string;
+}
+
+export type WorkspaceRoleName = 'space_admin' | 'member' | 'viewer';
+
+export interface WorkspaceRole {
+  workspaceId?: string;
+  spaceId?: string;
+  workspaceName?: string;
+  spaceName?: string;
+  role: WorkspaceRoleName;
+}
+
+export interface WorkspacePermissions {
+  workspaceId?: string;
+  spaceId?: string;
+  role: WorkspaceRoleName;
+  permissions: Permission[];
 }
 
 // ─── Session ─────────────────────────────────────────────────────────────────
