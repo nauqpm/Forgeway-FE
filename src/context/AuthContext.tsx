@@ -8,19 +8,19 @@ import {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import type { AuthUser, Permission, UserRole } from "@/modules/auth/types/auth.types";
-import { useAuthStore } from "@/modules/auth/stores/authStore";
-import { usePermissionStore } from "@/modules/auth/stores/permissionStore";
+import type { AuthUser, Permission, UserRole } from "@/modules/auth/shared/types/auth.types";
+import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
+import { usePermissionStore } from "@/modules/auth/permission/stores/permissionStore";
 import {
   getCurrentUserAPI,
   logoutAPI,
-} from "@/modules/auth/services/authService";
-import { getMyPermissionsAPI } from "@/modules/auth/services/permissionService";
-import { handleSsoCallbackAPI } from "@/modules/auth/services/ssoService";
-import { clearTokens } from "@/modules/auth/services/tokenService";
-import { setupAuthInterceptors } from "@/modules/auth/services/axiosAuthInterceptor";
-import { useSessionStore } from "@/modules/auth/stores/sessionStore";
-import { useSecurityStore } from "@/modules/auth/stores/securityStore";
+} from "@/modules/auth/shared/services/authService";
+import { getMyPermissionsAPI } from "@/modules/auth/permission/services/permissionService";
+import { handleSsoCallbackAPI } from "@/modules/auth/sso/services/ssoService";
+import { clearTokens } from "@/modules/auth/shared/services/tokenService";
+import { setupAuthInterceptors } from "@/modules/auth/shared/services/axiosAuthInterceptor";
+import { useSessionStore } from "@/modules/auth/shared/stores/authStore";
+import { useSecurityStore } from "@/modules/auth/shared/stores/authStore";
 
 interface User {
   id: string;
@@ -102,13 +102,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const refreshCurrentUser = useCallback(async () => {
     const currentUser = await getCurrentUserAPI();
-    const legacyUser = currentUser as typeof currentUser & {
-      spaceRoles?: typeof currentUser.workspaceRoles;
-    };
     setUser({
       ...currentUser,
       permissions: currentUser.permissions || [],
-      workspaceRoles: currentUser.workspaceRoles || legacyUser.spaceRoles || [],
     });
     await fetchUserPermissions();
   }, [fetchUserPermissions, setUser]);
