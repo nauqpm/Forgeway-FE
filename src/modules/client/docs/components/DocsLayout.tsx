@@ -8,7 +8,7 @@ import DocsDashboard from "./DocsDashboard";
 import { MOCK_DOCS } from "../mock/docs.mock";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function DocsLayout({ spaceId }: { spaceId: string }) {
+export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
   const { documents, setDocuments, selectedDocumentId } = useDocsStore();
   const [mounted, setMounted] = useState(false);
 
@@ -24,7 +24,7 @@ export default function DocsLayout({ spaceId }: { spaceId: string }) {
   return (
     <div className="flex h-[calc(100vh-200px)] min-h-[600px] w-full bg-white dark:bg-gray-950 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
       {/* Persistent Sidebar */}
-      <DocsSidebar spaceId={spaceId} />
+      <DocsSidebar workspaceId={workspaceId} />
       
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col bg-white overflow-hidden relative">
@@ -38,7 +38,7 @@ export default function DocsLayout({ spaceId }: { spaceId: string }) {
               transition={{ duration: 0.2 }}
               className="h-full w-full flex flex-col"
             >
-              <DocsDashboard spaceId={spaceId} />
+              <DocsDashboard workspaceId={workspaceId} />
             </motion.div>
           ) : (
             <motion.div

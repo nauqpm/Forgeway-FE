@@ -9,11 +9,11 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface DocsTreeItemProps {
   doc: Document;
-  spaceId: string;
+  workspaceId: string;
   level: number;
 }
 
-export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps) {
+export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemProps) {
   const { 
     documents, 
     selectedDocumentId, 
@@ -65,7 +65,7 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
 
   const handleAddChild = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const newDoc = createDocument(spaceId, doc.id);
+    const newDoc = createDocument(workspaceId, doc.id);
     if (!isExpanded) toggleExpand(doc.id);
     selectDocument(newDoc.id);
     setShowMenu(false);
@@ -216,7 +216,7 @@ export default function DocsTreeItem({ doc, spaceId, level }: DocsTreeItemProps)
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             className="overflow-hidden"
           >
-            <DocsTree docs={children} spaceId={spaceId} level={level + 1} />
+            <DocsTree docs={children} workspaceId={workspaceId} level={level + 1} />
           </motion.div>
         )}
       </AnimatePresence>

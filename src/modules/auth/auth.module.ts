@@ -7,7 +7,7 @@
 export { default as AuthGuard } from './guards/AuthGuard';
 export { default as GuestGuard } from './guards/GuestGuard';
 export { default as PermissionGuard } from './guards/PermissionGuard';
-export { default as SpacePermissionGuard } from './guards/SpacePermissionGuard';
+export { default as WorkspacePermissionGuard } from './guards/WorkspacePermissionGuard';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 export { useAuth } from './hooks/useAuth';
@@ -50,8 +50,8 @@ export type {
   LoginRequest,
   LoginResponse,
   Permission,
-  SpacePermissions,
-  SpaceRoleName,
+  WorkspacePermissions,
+  WorkspaceRoleName,
   MfaMethod,
   Session,
   LockoutInfo,

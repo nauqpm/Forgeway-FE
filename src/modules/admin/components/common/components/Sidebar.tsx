@@ -42,7 +42,7 @@ const mainNav = [
   {
     icon: BookOpen,
     label: "Không gian",
-    href: "/spaces",
+    href: "/workspaces",
     badge: null,
   },
   { icon: ListFilter, label: "Bộ lọc", href: "/filter" },
@@ -123,8 +123,8 @@ const PopoverNavItem = ({
 }: {
   item: (typeof mainNav)[0];
   type: "recent" | "starred";
-  activePopover: "recent" | "starred" | "more_spaces" | null;
-  setActivePopover: (val: "recent" | "starred" | "more_spaces" | null) => void;
+  activePopover: "recent" | "starred" | "more_workspaces" | null;
+  setActivePopover: (val: "recent" | "starred" | "more_workspaces" | null) => void;
   collapsed: boolean;
   mounted: boolean;
 }) => {
@@ -195,14 +195,14 @@ const PopoverNavItem = ({
                   <div>
                     <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">Hôm nay</h4>
                     <div className="space-y-0.5">
-                      <Link href="/spaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                      <Link href="/workspaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 group-hover:border-slate-300 dark:group-hover:border-gray-600"><Columns className="w-4 h-4" /></div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">QUAN board</p>
                           <p className="text-[11px] text-slate-500 dark:text-gray-500">6 giây trước</p>
                         </div>
                       </Link>
-                      <Link href="/spaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                      <Link href="/workspaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">Q</div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">quan</p>
@@ -221,14 +221,14 @@ const PopoverNavItem = ({
                   <div>
                     <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">Hơn 1 tháng trước</h4>
                     <div className="space-y-0.5">
-                      <Link href="/spaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                      <Link href="/workspaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 group-hover:border-slate-300 dark:group-hover:border-gray-600"><Columns className="w-4 h-4" /></div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">SCRUM board</p>
                           <p className="text-[11px] text-slate-500 dark:text-gray-500">5 ngày trước</p>
                         </div>
                       </Link>
-                      <Link href="/spaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
+                      <Link href="/workspaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">My Software Team</p>
@@ -285,36 +285,36 @@ export default function Sidebar({
   const { hasAdminAccess } = useAuth();
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/admin"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
-  const [spaceOpen, setSpaceOpen] = useState(true);
+  const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [sidebarSpaces, setSidebarSpaces] = useState<any[]>([]);
-  const [activePopover, setActivePopover] = useState<"recent" | "starred" | "more_spaces" | null>(null);
-  const [moreSpacesPos, setMoreSpacesPos] = useState({ top: 0, left: 0 });
-  const moreSpacesBtnRef = useRef<HTMLButtonElement>(null);
+  const [sidebarWorkspaces, setsidebarWorkspaces] = useState<any[]>([]);
+  const [activePopover, setActivePopover] = useState<"recent" | "starred" | "more_workspaces" | null>(null);
+  const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: 0 });
+  const moreWorkspacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
 
-  const handleToggleMoreSpaces = () => {
-    if (activePopover === "more_spaces") {
+  const handleToggleMoreWorkspaces = () => {
+    if (activePopover === "more_workspaces") {
       setActivePopover(null);
     } else {
-      if (moreSpacesBtnRef.current) {
-        const rect = moreSpacesBtnRef.current.getBoundingClientRect();
+      if (moreWorkspacesBtnRef.current) {
+        const rect = moreWorkspacesBtnRef.current.getBoundingClientRect();
         const sidebarWidth = collapsed ? 68 : 240;
-        setMoreSpacesPos({ top: rect.top, left: sidebarWidth + 12 });
+        setMoreWorkspacesPos({ top: rect.top, left: sidebarWidth + 12 });
       }
-      setActivePopover("more_spaces");
+      setActivePopover("more_workspaces");
     }
   };
 
   useEffect(() => {
     setMounted(true);
     if (!currentWorkspace) {
-      setSidebarSpaces([]);
+      setsidebarWorkspaces([]);
       return;
     }
-    api.get(apiRoutes.SPACES.BASE, { params: { workspaceId: currentWorkspace._id } })
-      .then((res) => setSidebarSpaces(res.data))
-      .catch(() => setSidebarSpaces([]));
+    api.get(apiRoutes.WORKSPACES.BASE, { params: { workspaceId: currentWorkspace._id } })
+      .then((res) => setsidebarWorkspaces(res.data))
+      .catch(() => setsidebarWorkspaces([]));
   }, [currentWorkspace]);
 
   const isAdmin = hasAdminAccess();
@@ -365,7 +365,7 @@ export default function Sidebar({
           {!collapsed && (
             <div className="px-3 mb-3">
               <Link
-                href="/spaces/create"
+                href="/workspaces/create"
                 onClick={() => {
                   setShowCreateMenu(false);
                   onMobileClose();
@@ -399,7 +399,7 @@ export default function Sidebar({
               {/* Không gian làm việc (có subnav) */}
               <div>
                 <button
-                  onClick={() => setSpaceOpen(!spaceOpen)}
+                  onClick={() => setWorkspaceOpen(!workspaceOpen)}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <BookOpen className="w-[18px] h-[18px] text-slate-400 dark:text-gray-500" />
@@ -409,7 +409,7 @@ export default function Sidebar({
                       <span className="text-sm font-medium flex-1 text-left">
                         Không gian
                       </span>
-                      {spaceOpen ? (
+                      {workspaceOpen ? (
                         <ChevronDown className="w-4 h-4" />
                       ) : (
                         <ChevronRight className="w-4 h-4" />
@@ -419,28 +419,28 @@ export default function Sidebar({
                 </button>
 
                 {/* SUB NAV */}
-                {spaceOpen && !collapsed && (
+                {workspaceOpen && !collapsed && (
                   <div className="ml-6 mt-1 space-y-1">
-                    {sidebarSpaces.slice(0, 5).map((space) => (
+                    {sidebarWorkspaces.slice(0, 5).map((workspace) => (
                       <Link
-                        key={space._id}
-                        href={`/spaces/${space._id}`}
+                        key={workspace._id}
+                        href={`/workspaces/${workspace._id}`}
                         className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
                       >
                         <div className="w-4 h-4 rounded bg-indigo-500 text-white flex items-center justify-center text-[10px]">
-                          {space.name?.charAt(0)}
+                          {workspace.name?.charAt(0)}
                         </div>
-                        <span className="truncate">{space.name}</span>
+                        <span className="truncate">{workspace.name}</span>
                       </Link>
                     ))}
 
                     {/* More */}
                     <button
-                      ref={moreSpacesBtnRef}
-                      onClick={handleToggleMoreSpaces}
+                      ref={moreWorkspacesBtnRef}
+                      onClick={handleToggleMoreWorkspaces}
                       className="w-full text-left flex items-center justify-between px-2 py-1.5 text-sm text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors"
                     >
-                      <span>More spaces</span>
+                      <span>More Workspaces</span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
                   </div>
@@ -572,16 +572,16 @@ export default function Sidebar({
         </button>
       </aside>
 
-      {/* More Spaces Popover */}
-      {activePopover === "more_spaces" && mounted && createPortal(
+      {/* More Workspaces Popover */}
+      {activePopover === "more_workspaces" && mounted && createPortal(
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
             className="fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
-            style={{ top: `${moreSpacesPos.top}px`, left: `${moreSpacesPos.left}px` }}
+            style={{ top: `${moreWorkspacesPos.top}px`, left: `${moreWorkspacesPos.left}px` }}
           >
             <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-gray-800">
-              <span className="font-semibold text-slate-900 dark:text-gray-100">Spaces</span>
+              <span className="font-semibold text-slate-900 dark:text-gray-100">Workspaces</span>
               <button onClick={() => setActivePopover(null)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-md text-slate-500 dark:text-gray-400 transition-colors">
                 <X className="w-4 h-4" />
               </button>
@@ -592,20 +592,20 @@ export default function Sidebar({
                 <Search className="w-4 h-4 text-slate-400 dark:text-gray-500 absolute left-3 top-2.5" />
                 <input
                   type="text"
-                  placeholder="Search all spaces"
+                  placeholder="Search all Workspaces"
                   className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-750 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                 />
               </div>
             </div>
 
             <div className="p-2">
-              <Link href="/spaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+              <Link href="/workspaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
                 <ListFilter className="w-4 h-4 text-slate-400 dark:text-gray-500" />
-                View all spaces
+                View all Workspaces
               </Link>
-              <Link href="/spaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+              <Link href="/workspaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
                 <Plus className="w-4 h-4 text-slate-400 dark:text-gray-500" />
-                Create space
+                Create Workspace
               </Link>
             </div>
           </div>

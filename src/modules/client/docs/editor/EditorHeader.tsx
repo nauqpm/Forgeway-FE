@@ -42,7 +42,7 @@ export default function EditorHeader({ doc }: { doc: Document }) {
       <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center text-[12px] text-gray-500 dark:text-gray-400 overflow-hidden flex-1">
           <Globe className="w-3.5 h-3.5 mr-2 text-gray-400 dark:text-gray-500" />
-          <span className="hover:underline cursor-pointer">Space</span>
+          <span className="hover:underline cursor-pointer">Workspace</span>
           {breadcrumbs.map((b, index) => (
             <span key={b.id} className="flex items-center shrink-0">
               <ChevronRight className="w-3.5 h-3.5 mx-0.5 text-gray-400 dark:text-gray-600" />

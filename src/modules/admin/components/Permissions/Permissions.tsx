@@ -7,7 +7,7 @@ const permissions = [
   { group: "Workspace", items: ["workspace:read", "workspace:write", "workspace:admin"] },
   { group: "Dự án", items: ["project:read", "project:write", "project:delete"] },
   { group: "Công việc", items: ["task:read", "task:write", "task:delete", "task:assign"] },
-  { group: "Cơ sở tri thức", items: ["space:read", "space:write", "space:delete", "page:write", "page:delete"] },
+  { group: "Cơ sở tri thức", items: ["workspace:read", "workspace:write", "workspace:delete", "page:write", "page:delete"] },
   { group: "Người dùng", items: ["user:read", "user:manage"] },
 ];
 

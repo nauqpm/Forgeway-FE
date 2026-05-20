@@ -11,21 +11,21 @@ interface Notification {
   isRead: boolean;
   category: 'DIRECT' | 'WATCHING';
   type: 'STANDARD' | 'INVITE';
-  inviteData?: { spaceName: string; message: string };
+  inviteData?: { workspaceName: string; message: string };
 }
 
 const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: "1",
     actor: { name: "Maria Garcia", avatar: "M" },
-    actionText: "invited you to a space",
+    actionText: "invited you to a Workspace",
     createdAt: new Date().toISOString(), // Today
     isRead: false,
     category: "DIRECT",
     type: "INVITE",
     inviteData: {
-      spaceName: "team dev",
-      message: "Hey! Join our dev space to track tasks."
+      workspaceName: "team dev",
+      message: "Hey! Join our dev Workspace to track tasks."
     }
   },
   {
@@ -240,10 +240,10 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
 
                             {notif.type === 'INVITE' && notif.inviteData && (
                               <div className="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm">
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{notif.inviteData.spaceName}</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{notif.inviteData.workspaceName}</p>
                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 italic">"{notif.inviteData.message}"</p>
                                 <button className="mt-3 bg-[#0c66e4] hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded transition-colors w-full">
-                                  Join the space
+                                  Join the Workspace
                                 </button>
                               </div>
                             )}

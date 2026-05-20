@@ -3,7 +3,7 @@
 // =============================================================================
 
 import api from '@/config/api';
-import type { LoginResponse } from '../types/auth.types';
+import type { AuthUser } from '../types/auth.types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -17,8 +17,8 @@ export const initiateGoogleLogin = (): void => {
 // ─── Handle SSO Callback ─────────────────────────────────────────────────────
 // Called after OAuth redirect returns with a token in the URL.
 
-export const handleSsoCallbackAPI = async (token: string): Promise<{ user: unknown }> => {
-  const response = await api.post<{ user: unknown }>(
+export const handleSsoCallbackAPI = async (token: string): Promise<{ user: AuthUser }> => {
+  const response = await api.post<{ user: AuthUser }>(
     '/auth/sso/callback',
     { token },
     { withCredentials: true },

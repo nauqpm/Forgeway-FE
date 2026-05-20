@@ -58,13 +58,13 @@ export const useDocsStore = create<DocsState>((set, get) => ({
     };
   }),
 
-  createDocument: (spaceId, parentId = null) => {
+  createDocument: (workspaceId, parentId = null) => {
     const newDoc: Document = {
       id: uuidv4(),
       title: "Untitled Document",
       content: "<h1>Untitled Document</h1><p>Start typing...</p>",
       parentId,
-      spaceId,
+      workspaceId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

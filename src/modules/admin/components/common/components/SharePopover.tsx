@@ -16,7 +16,7 @@ export default function SharePopover() {
   const [searchResults, setSearchResults] = useState<typeof MOCK_USERS>([]);
   const [selectedUsers, setSelectedUsers] = useState<typeof MOCK_USERS>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [spaceAccess, setSpaceAccess] = useState<'OPEN' | 'PRIVATE'>('OPEN');
+  const [workspaceAccess, setWorkspaceAccess] = useState<'OPEN' | 'PRIVATE'>('OPEN');
   
   // Clipboard
   const [isCopied, setIsCopied] = useState(false);
@@ -86,10 +86,10 @@ export default function SharePopover() {
     setIsOpen(false);
   };
 
-  const handleSpaceAccessChange = (type: 'OPEN' | 'PRIVATE') => {
-    setSpaceAccess(type);
+  const handleWorkspaceAccessChange = (type: 'OPEN' | 'PRIVATE') => {
+    setWorkspaceAccess(type);
     // Gọi API PATCH /projects/:id/access
-    console.log("Updating Space Access to:", type);
+    console.log("Updating Workspace Access to:", type);
   };
 
   return (
@@ -166,12 +166,12 @@ export default function SharePopover() {
           </div>
 
           <div className="p-4 bg-gray-50 dark:bg-gray-800">
-            <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Space Access</h4>
+            <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Workspace Access</h4>
             
             <div className="flex items-start justify-between gap-4">
               <div className="flex gap-3">
                 <div className="mt-1">
-                  {spaceAccess === 'OPEN' ? (
+                  {workspaceAccess === 'OPEN' ? (
                     <Globe className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                   ) : (
                     <Lock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -179,17 +179,17 @@ export default function SharePopover() {
                 </div>
                 <div>
                   <select 
-                    value={spaceAccess}
-                    onChange={(e) => handleSpaceAccessChange(e.target.value as any)}
+                    value={workspaceAccess}
+                    onChange={(e) => handleWorkspaceAccessChange(e.target.value as any)}
                     className="text-sm font-medium text-gray-900 dark:text-white bg-transparent dark:bg-transparent outline-none cursor-pointer hover:underline mb-0.5"
                   >
                     <option value="OPEN">Open</option>
                     <option value="PRIVATE">Private</option>
                   </select>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {spaceAccess === 'OPEN' 
+                    {workspaceAccess === 'OPEN' 
                       ? 'Anyone in this workspace can view and join.' 
-                      : 'Only people invited to this space can view and join.'}
+                      : 'Only people invited to this Workspace can view and join.'}
                   </p>
                 </div>
               </div>

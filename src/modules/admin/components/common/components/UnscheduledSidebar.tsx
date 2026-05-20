@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { Draggable } from '@fullcalendar/interaction';
 import { X } from 'lucide-react';
-import { Issue } from '@/modules/client/spaces/types/issue.type';
+import { Issue } from '@/modules/client/workspaces/types/issue.type';
 
 interface UnscheduledSidebarProps {
   tasks: Issue[];

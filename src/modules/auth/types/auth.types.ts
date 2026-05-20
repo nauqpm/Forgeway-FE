@@ -22,7 +22,7 @@ export interface User {
 
 export interface AuthUser extends User {
   permissions: Permission[];
-  spaceRoles: SpaceRole[];
+  workspaceRoles: WorkspaceRole[];
 }
 
 // ─── Login / Register ────────────────────────────────────────────────────────
@@ -155,12 +155,12 @@ export interface SsoAuthUrlResponse {
 
 // ─── RBAC / Permissions ──────────────────────────────────────────────────────
 
-export type SpaceRoleName = 'space_admin' | 'member' | 'viewer';
+export type WorkspaceRoleName = 'space_admin' | 'member' | 'viewer';
 
-export interface SpaceRole {
-  spaceId: string;
-  spaceName?: string;
-  role: SpaceRoleName;
+export interface WorkspaceRole {
+  workspaceId: string;
+  workspaceName?: string;
+  role: WorkspaceRoleName;
 }
 
 export interface Permission {
@@ -169,9 +169,9 @@ export interface Permission {
   action: string;
 }
 
-export interface SpacePermissions {
-  spaceId: string;
-  role: SpaceRoleName;
+export interface WorkspacePermissions {
+  workspaceId: string;
+  role: WorkspaceRoleName;
   permissions: Permission[];
 }
 

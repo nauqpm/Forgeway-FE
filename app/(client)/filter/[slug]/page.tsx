@@ -175,14 +175,14 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
   const title = filterTitles[slug] || "Custom filter";
 
   // Filter States (ready for backend)
-  const [filterSpace, setFilterSpace] = useState<string[]>([]);
+  const [filterWorkspace, setFilterWorkspace] = useState<string[]>([]);
   const [filterAssignee, setFilterAssignee] = useState<string[]>(["current_user"]); // Default like Jira screenshot
   const [filterType, setFilterType] = useState<string[]>([]);
   const [filterStatus, setFilterStatus] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
   const clearAllFilters = () => {
-    setFilterSpace([]);
+    setFilterWorkspace([]);
     setFilterAssignee([]);
     setFilterType([]);
     setFilterStatus([]);
@@ -190,9 +190,9 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
   };
 
   // Static Mock Data configurations for Dropdowns
-  const spaceGroups: FilterGroup[] = [
-    { name: "Recent spaces", options: [{ id: "space_quan", label: "quan" }, { id: "space_software", label: "My Software Team" }] },
-    { name: "All spaces", options: [{ id: "space_backend", label: "Backend Team" }, { id: "space_frontend", label: "Frontend Team" }, { id: "space_design", label: "Design Team" }, { id: "space_product", label: "Product Team" }] }
+  const workspaceGroups: FilterGroup[] = [
+    { name: "Recent Workspaces", options: [{ id: "workspace_quan", label: "quan" }, { id: "workspace_software", label: "My Software Team" }] },
+    { name: "All Workspaces", options: [{ id: "workspace_backend", label: "Backend Team" }, { id: "workspace_frontend", label: "Frontend Team" }, { id: "workspace_design", label: "Design Team" }, { id: "workspace_product", label: "Product Team" }] }
   ];
 
   const assigneeGroups: FilterGroup[] = [
@@ -222,12 +222,12 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
 
   // Mock Issues (Normally fetched from API based on filters)
   const allMockIssues = [
-    { id: "1", key: "AL-101", title: "Cập nhật tài liệu API cho tính năng mới", status: "In Progress", priority: "High", type: "Task", space: "Backend Team", assignee: "Quân Phạm", assigneeId: "user_quan", reporter: "Minh", updatedAt: "2 giờ trước" },
-    { id: "2", key: "AL-102", title: "Sửa lỗi UI hiển thị sai trên mobile", status: "To Do", priority: "Medium", type: "Bug", space: "Frontend Team", assignee: "Tuấn", assigneeId: "user_tuan", reporter: "Quân Phạm", updatedAt: "Hôm qua" },
-    { id: "3", key: "AL-105", title: "Thiết kế luồng Onboarding cho user mới", status: "Done", priority: "High", type: "Story", space: "Design Team", assignee: "Hà", assigneeId: "user_ha", reporter: "Minh", updatedAt: "3 ngày trước" },
-    { id: "4", key: "AL-108", title: "Review Pull Request #42", status: "To Do", priority: "High", type: "Task", space: "Backend Team", assignee: "Quân Phạm", assigneeId: "user_quan", reporter: "Tuấn", updatedAt: "5 phút trước" },
-    { id: "5", key: "AL-110", title: "Lên kế hoạch Sprint tiếp theo", status: "In Progress", priority: "Medium", type: "Epic", space: "Product Team", assignee: "Minh", assigneeId: "user_minh", reporter: "Minh", updatedAt: "1 giờ trước" },
-    { id: "6", key: "QUAN-1", title: "Làm việc", status: "To Do", priority: "Medium", type: "Task", space: "quan", assignee: "Unassigned", assigneeId: "unassigned", reporter: "Quân Phạm", updatedAt: "1 ngày trước" },
+    { id: "1", key: "AL-101", title: "Cập nhật tài liệu API cho tính năng mới", status: "In Progress", priority: "High", type: "Task", workspace: "Backend Team", assignee: "Quân Phạm", assigneeId: "user_quan", reporter: "Minh", updatedAt: "2 giờ trước" },
+    { id: "2", key: "AL-102", title: "Sửa lỗi UI hiển thị sai trên mobile", status: "To Do", priority: "Medium", type: "Bug", workspace: "Frontend Team", assignee: "Tuấn", assigneeId: "user_tuan", reporter: "Quân Phạm", updatedAt: "Hôm qua" },
+    { id: "3", key: "AL-105", title: "Thiết kế luồng Onboarding cho user mới", status: "Done", priority: "High", type: "Story", workspace: "Design Team", assignee: "Hà", assigneeId: "user_ha", reporter: "Minh", updatedAt: "3 ngày trước" },
+    { id: "4", key: "AL-108", title: "Review Pull Request #42", status: "To Do", priority: "High", type: "Task", workspace: "Backend Team", assignee: "Quân Phạm", assigneeId: "user_quan", reporter: "Tuấn", updatedAt: "5 phút trước" },
+    { id: "5", key: "AL-110", title: "Lên kế hoạch Sprint tiếp theo", status: "In Progress", priority: "Medium", type: "Epic", workspace: "Product Team", assignee: "Minh", assigneeId: "user_minh", reporter: "Minh", updatedAt: "1 giờ trước" },
+    { id: "6", key: "QUAN-1", title: "Làm việc", status: "To Do", priority: "Medium", type: "Task", workspace: "quan", assignee: "Unassigned", assigneeId: "unassigned", reporter: "Quân Phạm", updatedAt: "1 ngày trước" },
   ];
 
   // Client-side filtering simulation (Backend will do this later)
@@ -240,12 +240,12 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
     const matchType = filterType.length === 0 || filterType.includes(issue.type);
     const matchStatus = filterStatus.length === 0 || filterStatus.includes(issue.status);
     
-    // Simplistic space mapping for demo
-    const spaceMap: Record<string, string> = { "space_backend": "Backend Team", "space_frontend": "Frontend Team", "space_design": "Design Team", "space_product": "Product Team", "space_quan": "quan" };
-    const effectiveSpaceFilters = filterSpace.map(s => spaceMap[s]).filter(Boolean);
-    const matchSpace = effectiveSpaceFilters.length === 0 || effectiveSpaceFilters.includes(issue.space);
+    // Simplistic Workspace mapping for demo
+    const workspaceMap: Record<string, string> = { "workspace_backend": "Backend Team", "workspace_frontend": "Frontend Team", "workspace_design": "Design Team", "workspace_product": "Product Team", "workspace_quan": "quan" };
+    const effectiveWorkspaceFilters = filterWorkspace.map(s => workspaceMap[s]).filter(Boolean);
+    const matchWorkspace = effectiveWorkspaceFilters.length === 0 || effectiveWorkspaceFilters.includes(issue.workspace);
 
-    return matchSearch && matchAssignee && matchType && matchStatus && matchSpace;
+    return matchSearch && matchAssignee && matchType && matchStatus && matchWorkspace;
   });
 
   return (
@@ -310,12 +310,12 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
             </div>
 
             <FilterDropdown 
-              label="Space" 
-              searchPlaceholder="Search Space"
-              groups={spaceGroups} 
-              selectedIds={filterSpace} 
-              onChange={(id, checked) => setFilterSpace(prev => checked ? [...prev, id] : prev.filter(v => v !== id))}
-              onClear={() => setFilterSpace([])}
+              label="Workspace" 
+              searchPlaceholder="Search Workspace"
+              groups={workspaceGroups} 
+              selectedIds={filterWorkspace} 
+              onChange={(id, checked) => setFilterWorkspace(prev => checked ? [...prev, id] : prev.filter(v => v !== id))}
+              onClear={() => setFilterWorkspace([])}
             />
 
             <FilterDropdown 
@@ -373,7 +373,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
                 <th className="px-4 py-3">Work</th>
                 <th className="px-4 py-3">Assignee</th>
                 <th className="px-4 py-3">Reporter</th>
-                <th className="px-4 py-3">Space</th>
+                <th className="px-4 py-3">Workspace</th>
                 <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3 w-10"></th>
               </tr>
@@ -415,7 +415,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
                       <span className="text-gray-700 dark:text-gray-300">{issue.reporter}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{issue.space}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{issue.workspace}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium uppercase tracking-wider ${
                       issue.status === 'Done' ? 'bg-emerald-100 text-emerald-700' :

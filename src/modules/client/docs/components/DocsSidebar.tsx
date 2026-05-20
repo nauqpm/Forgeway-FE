@@ -8,12 +8,12 @@ import { Plus, ChevronLeft, ChevronRight, FileText, Layout } from "lucide-react"
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function DocsSidebar({ spaceId }: { spaceId: string }) {
+export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
   const { documents, createDocument, selectDocument, selectedDocumentId } = useDocsStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   
   const handleCreateRoot = () => {
-    const newDoc = createDocument(spaceId, null);
+    const newDoc = createDocument(workspaceId, null);
     selectDocument(newDoc.id);
   };
 
@@ -107,7 +107,7 @@ export default function DocsSidebar({ spaceId }: { spaceId: string }) {
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <DocsTree docs={rootDocs} spaceId={spaceId} level={0} />
+                    <DocsTree docs={rootDocs} workspaceId={workspaceId} level={0} />
                   </div>
                 </>
               )}

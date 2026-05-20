@@ -6,7 +6,7 @@ import DashboardHeader from "./DashboardHeader";
 import DashboardGroup from "./DashboardGroup";
 import DashboardEmpty from "./DashboardEmpty";
 
-export default function DocsDashboard({ spaceId }: { spaceId: string }) {
+export default function DocsDashboard({ workspaceId }: { workspaceId: string }) {
   const { 
     documents, 
     selectDocument, 
@@ -44,7 +44,7 @@ export default function DocsDashboard({ spaceId }: { spaceId: string }) {
   }, [filteredDocs]);
 
   const handleCreate = () => {
-    const newDoc = createDocument(spaceId);
+    const newDoc = createDocument(workspaceId);
     selectDocument(newDoc.id);
   };
 

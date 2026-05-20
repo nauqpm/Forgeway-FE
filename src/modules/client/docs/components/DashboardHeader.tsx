@@ -26,7 +26,7 @@ export default function DashboardHeader({
               <Layout className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-[#172B4D] dark:text-gray-100 tracking-tight">Space Documentation</h1>
+              <h1 className="text-2xl font-bold text-[#172B4D] dark:text-gray-100 tracking-tight">Workspace Documentation</h1>
               <p className="text-[#6B778C] dark:text-gray-400 text-sm font-medium">Capture and share knowledge with your team.</p>
             </div>
           </div>

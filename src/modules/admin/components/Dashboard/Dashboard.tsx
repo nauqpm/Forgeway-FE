@@ -17,7 +17,7 @@ export interface AdminDashboardProps {
 
 export default function AdminDashboard({ className = "" }: AdminDashboardProps) {
   const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
-  const [stats, setStats] = useState({ projects: 0, members: 0, spaces: 0 });
+  const [stats, setStats] = useState({ projects: 0, members: 0, workspaces: 0 });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("assigned");
 
@@ -43,17 +43,17 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             .get(apiRoutes.WORKSPACES.BY_ID(ws._id))
             .catch(() => ({ data: {} })),
           api
-            .get(`${apiRoutes.SPACES.BASE}?workspaceId=${ws._id}`)
+            .get(`${apiRoutes.WORKSPACES.BASE}?workspaceId=${ws._id}`)
             .catch(() => ({ data: [] })),
         ]);
       })
       .then((results) => {
         if (cancelled || !results) return;
-        const [projRes, wsRes, spaceRes] = results;
+        const [projRes, wsRes, workspaceRes] = results;
         setStats({
           projects: Array.isArray(projRes.data) ? projRes.data.length : 0,
           members: wsRes.data?.members?.length || 0,
-          spaces: Array.isArray(spaceRes.data) ? spaceRes.data.length : 0,
+          workspaces: Array.isArray(workspaceRes.data) ? workspaceRes.data.length : 0,
         });
       })
       .catch(() => {})
@@ -65,7 +65,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     };
   }, [setWorkspaces]);
 
-  const spaces = [
+  const workspaces = [
     {
       id: 1,
       name: "Frontend Team",
@@ -141,7 +141,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     },
   ];
 
-  const displaySpaces = spaces.slice(0, 4);
+  const displayWorkspaces = workspaces.slice(0, 4);
   const filteredTasks = tasks.filter((task) => task.type === activeTab);
 
   if (loading) return null;
@@ -154,7 +154,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         </h1>
 
         <Link
-          href="/spaces"
+          href="/workspaces"
           className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
         >
           Xem tất cả →
@@ -162,25 +162,25 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {displaySpaces.map((space) => (
+        {displayWorkspaces.map((workspace) => (
           <Link
-            key={space.id}
-            href={`/spaces/${space.id}`}
+            key={workspace.id}
+            href={`/workspaces/${workspace.id}`}
             className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500 transition-all"
           >
             <div className="flex items-start gap-4">
               <div
-                className={`w-12 h-12 ${space.color} rounded-xl flex items-center justify-center flex-shrink-0`}
+                className={`w-12 h-12 ${workspace.color} rounded-xl flex items-center justify-center flex-shrink-0`}
               >
-                <space.icon className="w-6 h-6 text-white" />
+                <workspace.icon className="w-6 h-6 text-white" />
               </div>
 
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                  {space.name}
+                  {workspace.name}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {space.description}
+                  {workspace.description}
                 </p>
               </div>
             </div>

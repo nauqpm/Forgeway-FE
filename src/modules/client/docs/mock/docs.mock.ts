@@ -9,7 +9,7 @@ export const MOCK_DOCS: Document[] = [
     title: "Getting Started",
     content: "<h1>Getting Started</h1><p>Welcome to your new workspace. Here you can write documentation.</p>",
     parentId: null,
-    spaceId: "space-1",
+    workspaceId: "Workspace-1",
     createdAt: now,
     updatedAt: now,
     category: "Frontend"
@@ -19,7 +19,7 @@ export const MOCK_DOCS: Document[] = [
     title: "Installation",
     content: "<h2>Installation Guide</h2><p>Run <code>npm install</code> to get started.</p>",
     parentId: "doc-1",
-    spaceId: "space-1",
+    workspaceId: "Workspace-1",
     createdAt: now,
     updatedAt: now,
     category: "Frontend"
@@ -29,7 +29,7 @@ export const MOCK_DOCS: Document[] = [
     title: "Authentication",
     content: "<h2>Authentication</h2><p>Learn how to authenticate your API requests.</p>",
     parentId: "doc-1",
-    spaceId: "space-1",
+    workspaceId: "Workspace-1",
     createdAt: now,
     updatedAt: now,
     category: "Backend"
@@ -39,7 +39,7 @@ export const MOCK_DOCS: Document[] = [
     title: "API Reference",
     content: "<h1>API Reference</h1><p>List of all available endpoints.</p>",
     parentId: null,
-    spaceId: "space-1",
+    workspaceId: "Workspace-1",
     createdAt: now,
     updatedAt: now,
     category: "Backend"
@@ -49,7 +49,7 @@ export const MOCK_DOCS: Document[] = [
     title: "Endpoints",
     content: "<h2>Endpoints</h2><p>GET /api/v1/users</p>",
     parentId: "doc-4",
-    spaceId: "space-1",
+    workspaceId: "Workspace-1",
     createdAt: now,
     updatedAt: now,
     category: "Backend"
@@ -59,7 +59,7 @@ export const MOCK_DOCS: Document[] = [
     title: "Design System",
     content: "<h1>Design System</h1><p>Our UI components and styles.</p>",
     parentId: null,
-    spaceId: "space-1",
+    workspaceId: "Workspace-1",
     createdAt: now,
     updatedAt: now,
     category: "Frontend"

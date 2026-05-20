@@ -153,7 +153,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
 
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add people to this space</h2>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add people to this Workspace</h2>
           <button
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"

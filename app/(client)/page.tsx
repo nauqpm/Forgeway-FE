@@ -240,7 +240,7 @@ export default function DashboardPage() {
                 { icon: ListTodo, label: "Công việc của tôi", href: "/my-tasks", color: "text-blue-600", bg: "hover:bg-blue-50" },
                 { icon: CheckSquare, label: "Tạo Công việc", href: "/projects", color: "text-green-600", bg: "hover:bg-green-50" },
                 { icon: FolderKanban, label: "Tất cả Dự án", href: "/projects", color: "text-purple-600", bg: "hover:bg-purple-50" },
-                { icon: FileText, label: "Cơ sở Tri thức", href: "/spaces", color: "text-amber-600", bg: "hover:bg-amber-50" },
+                { icon: FileText, label: "Cơ sở Tri thức", href: "/workspaces", color: "text-amber-600", bg: "hover:bg-amber-50" },
               ].map((item) => (
                 <Link key={item.href + item.label} href={item.href} className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${item.bg} transition-colors`}>
                   <item.icon className={`w-4 h-4 ${item.color}`} />

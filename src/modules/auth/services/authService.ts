@@ -19,6 +19,8 @@ import type {
   AuthApiError,
 } from '../types/auth.types';
 
+type AuthUserResponse = AuthUser & { spaceRoles?: AuthUser['workspaceRoles'] };
+
 // ─── Login ───────────────────────────────────────────────────────────────────
 
 export const loginAPI = async (data: LoginRequest): Promise<LoginResponse> => {
@@ -51,13 +53,13 @@ export const logoutAPI = async (): Promise<{ message: string }> => {
 // ─── Get Current User ────────────────────────────────────────────────────────
 
 export const getCurrentUserAPI = async (): Promise<AuthUser> => {
-  const response = await api.get<AuthUser>('/auth/me', {
+  const response = await api.get<AuthUserResponse>('/auth/me', {
     withCredentials: true,
   });
   return {
     ...response.data,
     permissions: response.data.permissions || [],
-    spaceRoles: response.data.spaceRoles || [],
+    workspaceRoles: response.data.workspaceRoles || response.data.spaceRoles || [],
   };
 };
 

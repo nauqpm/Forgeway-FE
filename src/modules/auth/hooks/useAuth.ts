@@ -71,10 +71,13 @@ export const useAuth = () => {
           try {
             currentUser = await getCurrentUserAPI();
           } catch {
+            const legacyUser = response.user as typeof response.user & {
+              spaceRoles?: typeof response.user.workspaceRoles;
+            };
             currentUser = {
               ...response.user,
               permissions: response.user.permissions || [],
-              spaceRoles: response.user.spaceRoles || [],
+              workspaceRoles: response.user.workspaceRoles || legacyUser.spaceRoles || [],
             };
           }
           setUser(currentUser);
