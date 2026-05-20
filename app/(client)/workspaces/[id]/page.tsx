@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, use, useMemo, useRef } from "react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import IssueDetailModal from "@/modules/client/workspaces/components/IssueDetailModal";
@@ -10,7 +9,11 @@ import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceCo
 import SprintModal from "@/modules/client/workspaces/components/SprintModal";
 import BulkActionBar from "@/modules/admin/components/common/components/BulkActionBar";
 
-import { Workspace } from "@/modules/client/workspaces/types/workspace.type";
+import {
+  getWorkspaceTemplate,
+  Workspace,
+  WorkspaceTab,
+} from "@/modules/client/workspaces/types/workspace.type";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import { Sprint } from "@/modules/client/workspaces/types/sprint.type";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
@@ -46,9 +49,7 @@ export default function WorkspaceDetailPage({
   const { id: workspaceId } = use(params);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<
-    "board" | "backlog" | "timeline" | "summary" | "pages" | "list" | "calendar"
-  >("pages");
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>("pages");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
   const [sprints, setSprints] = useState<Sprint[]>(MOCK_SPRINTS);
   const [issues, setIssues] = useState<Issue[]>(MOCK_ISSUES);
@@ -144,15 +145,18 @@ export default function WorkspaceDetailPage({
       setListGridDrawerOpen(false);
       if (listViewMode === "split") setSelectedIssue(null);
     }
-  }, [activeTab]);
+  }, [activeTab, listViewMode]);
 
   useEffect(() => {
     if (!workspaceId) return;
     api.get(apiRoutes.WORKSPACES.BY_ID(workspaceId))
       .then((res) => {
-        setWorkspace(res.data);
-        if (res.data.template === "kanban") setActiveTab("board");
-        else if (res.data.template === "scrum") setActiveTab("backlog");
+        const nextWorkspace = res.data as Workspace;
+        const template = getWorkspaceTemplate(nextWorkspace);
+
+        setWorkspace(nextWorkspace);
+        if (template === "scrum") setActiveTab("backlog");
+        else setActiveTab("board");
       })
       .catch(() => {})
       .finally(() => setLoading(false));

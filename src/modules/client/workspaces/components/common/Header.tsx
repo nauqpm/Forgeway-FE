@@ -9,7 +9,7 @@ import {
   Settings,
   Plus,
 } from "lucide-react";
-import { Workspace } from "../../types/workspace.type";
+import { getWorkspaceTemplate, Workspace } from "../../types/workspace.type";
 import InviteModal from "@/modules/admin/components/common/components/InviteModal";
 
 interface HeaderProps {
@@ -20,6 +20,7 @@ interface HeaderProps {
 
 const Header = ({ workspace, workspaceId, setShowCreateIssue }: HeaderProps) => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const template = getWorkspaceTemplate(workspace);
 
   return (
     <div className="flex items-center justify-between mb-8">
@@ -31,9 +32,9 @@ const Header = ({ workspace, workspaceId, setShowCreateIssue }: HeaderProps) => 
           <ArrowRight className="w-5 h-5 text-gray-500 dark:text-gray-400 rotate-180" />
         </Link>
         <div
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${workspace.template === "scrum" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-emerald-500 to-teal-600"}`}
+          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${template === "scrum" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-emerald-500 to-teal-600"}`}
         >
-          {workspace.template === "scrum" ? (
+          {template === "scrum" ? (
             <Repeat className="w-7 h-7 text-white" />
           ) : (
             <Columns className="w-7 h-7 text-white" />
