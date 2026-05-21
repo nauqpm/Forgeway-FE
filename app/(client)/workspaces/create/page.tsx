@@ -27,7 +27,7 @@ export default function CreateWorkspacePage() {
         key: form.key,
         description: form.description,
         type: form.template,
-        access: form.visibility === "public" ? "open" : "private",
+        access: form.visibility === "public" ? "public" : "private",
       });
       router.push("/workspaces");
     } catch {

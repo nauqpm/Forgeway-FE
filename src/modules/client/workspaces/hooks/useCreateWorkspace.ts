@@ -8,7 +8,7 @@ interface CreateWorkspaceInput {
   description?: string;
   key?: string;
   type?: "kanban" | "scrum";
-  access?: "private" | "open";
+  access?: "private" | "public";
 }
 
 export function useCreateWorkspace() {
@@ -22,7 +22,7 @@ export function useCreateWorkspace() {
         description: input.description || undefined,
         key: input.key || undefined,
         type: input.type || "kanban",
-        access: input.access || "open",
+        access: input.access || "public",
       });
       toast.success(`Workspace "${res.data.name}" đã được tạo`);
       return res.data;
