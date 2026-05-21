@@ -44,34 +44,31 @@ const PasswordPolicyChecklist: React.FC<PasswordPolicyChecklistProps> = ({
 
   if (!password) return null;
 
+  // Filter only failed rules (only errors)
+  const failedRules = RULES.filter((rule) => !result[rule.key]);
+
+  // If there are no failed rules, don't display the pop-up
+  if (failedRules.length === 0) return null;
+
   return (
-    <div className={`space-y-1.5 ${className}`}>
-      {RULES.map((rule) => {
-        const passed = result[rule.key];
-        return (
+    <div
+      className={`absolute left-0 right-0 top-full mt-2 z-50 bg-white/95 backdrop-blur-md border border-rose-200/80 rounded-2xl p-4 shadow-xl animate-fadeIn ${className}`}
+    >
+      <div className="text-xs font-bold text-rose-600 mb-2 flex items-center gap-1.5">
+        <X className="w-4 h-4 text-rose-500 stroke-[2.5]" />
+        <span>Mật khẩu chưa đạt các yêu cầu sau:</span>
+      </div>
+      <div className="space-y-1.5 pl-1">
+        {failedRules.map((rule) => (
           <div
             key={rule.key}
-            className={`flex items-center gap-2 text-xs transition-colors duration-200 ${
-              passed ? 'text-green-600' : 'text-gray-400'
-            }`}
+            className="flex items-center gap-2 text-xs text-gray-700 font-medium"
           >
-            <span
-              className={`flex-shrink-0 w-4 h-4 flex items-center justify-center rounded-full transition-all duration-200 ${
-                passed
-                  ? 'bg-green-100 text-green-600'
-                  : 'bg-gray-100 text-gray-400'
-              }`}
-            >
-              {passed ? (
-                <Check className="w-3 h-3" />
-              ) : (
-                <X className="w-3 h-3" />
-              )}
-            </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" />
             <span>{rule.label}</span>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 };

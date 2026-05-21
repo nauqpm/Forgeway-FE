@@ -8,4 +8,5 @@ export const AUTH_ROUTES = {
   SSO_CALLBACK: "/sso-callback",
   ACCESS_DENIED: "/access-denied",
   DASHBOARD: "/",
+  ADMIN_DASHBOARD: "/admin",
 };

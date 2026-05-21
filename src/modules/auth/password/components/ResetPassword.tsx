@@ -49,39 +49,55 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-2">
-            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center">
-              <Zap className="w-7 h-7 text-white" />
-            </div>
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Đặt lại mật khẩu</h1>
-          <p className="text-gray-500 text-sm mt-1">Nhập email, mã OTP và mật khẩu mới</p>
-        </div>
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden">
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute top-0 left-0 w-full h-full object-cover z-0"
+      >
+        <source src="/videos/mixkit-clouds-and-blue-sky-background-2408-full-hd.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+      {/* Overlay to tone down the video contrast and ensure the text/form is readable */}
+      <div className="absolute top-0 left-0 w-full h-full bg-slate-900/10 z-10" />
+
+      {/* Glassmorphism Card */}
+      <div className="w-full max-w-md relative z-20">
+        <div className="bg-white/30 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10 transition-all duration-300 hover:shadow-indigo-500/10 hover:border-white/55">
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2 mb-3 group">
+              <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105">
+                <Zap className="w-7 h-7 text-white" />
+              </div>
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Đặt lại mật khẩu</h1>
+            <p className="text-gray-600 text-sm mt-1.5 font-semibold">Nhập email, mã OTP và mật khẩu mới</p>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="ten@company.com"
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mã OTP</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Mã OTP</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
                   type="text"
                   value={otp}
@@ -90,42 +106,44 @@ const ResetPassword = () => {
                   placeholder="Nhập mã 6 chữ số"
                   pattern="[0-9]{6}"
                   maxLength={6}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Mật khẩu mới</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Nhập mật khẩu mới"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-              />
-              <PasswordPolicyChecklist password={password} className="mt-2" />
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Mật khẩu mới</label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="Nhập mật khẩu mới"
+                  className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
+                />
+                <PasswordPolicyChecklist password={password} />
+              </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Xác nhận mật khẩu</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Xác nhận mật khẩu</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 placeholder="Nhập lại mật khẩu mới"
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
               />
             </div>
 
-            {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+            {error && <p className="text-red-600 text-sm text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">{error}</p>}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-[0.99] transition-all shadow-md hover:shadow-indigo-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -138,8 +156,8 @@ const ResetPassword = () => {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
-            <Link href="/login" className="text-indigo-600 font-medium hover:text-indigo-800">
+          <p className="text-center text-sm text-gray-600 mt-6 font-medium">
+            <Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
               Quay lại trang đăng nhập
             </Link>
           </p>

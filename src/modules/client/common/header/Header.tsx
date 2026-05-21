@@ -31,12 +31,12 @@ export default function Header() {
     return (
       <header className="border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
               <span className="text-white font-bold text-sm">AL</span>
             </div>
             <span className="font-bold text-lg text-gray-900 dark:text-white">AL-TASK</span>
-          </div>
+          </Link>
           <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
         </div>
       </header>
@@ -46,11 +46,16 @@ export default function Header() {
   return (
     <header className="border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">AL</span>
-          </div>
-          <span className="font-bold text-lg text-gray-900 dark:text-white">AL-TASK</span>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">AL</span>
+            </div>
+            <span className="font-bold text-lg text-gray-900 dark:text-white">AL-TASK</span>
+          </Link>
+          <Link href="/aboutUs" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            Về chúng tôi
+          </Link>
         </div>
 
         {isAuthenticated ? (

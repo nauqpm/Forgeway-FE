@@ -82,8 +82,9 @@ export const useAuth = () => {
           }
           */
 
-          // Hoàn thành đăng nhập, chuyển vào trang chủ
-          router.push(AUTH_ROUTES.DASHBOARD);
+          // Chuyển hướng dựa trên role
+          const route = currentUser.role === 'super_admin' ? AUTH_ROUTES.ADMIN_DASHBOARD : AUTH_ROUTES.DASHBOARD;
+          router.push(route);
         } else {
           // Trả về lỗi nếu đăng nhập thành công nhưng không lấy được profile
           throw new Error('Không thể lấy thông tin người dùng sau khi đăng nhập.');
@@ -91,7 +92,7 @@ export const useAuth = () => {
 
         return response;
       } catch (error: unknown) {
-        // Bước 6: Xử lý các loại lỗi từ backend trả về
+        // Bước 7: Xử lý các loại lỗi từ backend trả về
         const err = error as { response?: { data?: AuthApiError } };
         const errorCode = err.response?.data?.code;
 
@@ -116,7 +117,7 @@ export const useAuth = () => {
 
         throw error; // Ném lỗi ra ngoài để UI (LoginForm) catch lại và hiển thị
       } finally {
-        setLoading(false); // Bước 7: Luôn tắt trạng thái tải
+        setLoading(false); // Bước 8: Luôn tắt trạng thái tải
       }
     },
     [router, setUser, setLoading, resetFailedAttempts, incrementFailedAttempts, setLockout, setSuspendedMessage, setGlobalPermissions],

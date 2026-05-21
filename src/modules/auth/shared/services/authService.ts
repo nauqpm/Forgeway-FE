@@ -125,6 +125,6 @@ export const extractAuthError = (error: unknown): AuthApiError => {
   }
   return {
     code: 'INVALID_CREDENTIALS' as AuthApiError['code'],
-    message: err.response?.data?.message || err.message || 'Da co loi xay ra',
+    message: err.response?.data?.message || err.message || 'Đã có lỗi xảy ra',
   };
 };

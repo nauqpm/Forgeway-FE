@@ -8,7 +8,7 @@ const productLinks = [
 ];
 
 const companyLinks = [
-  { label: "Giới thiệu", href: "#" },
+  { label: "Giới thiệu", href: "/aboutUs" },
   { label: "Liên hệ", href: "#" },
   { label: "Blog", href: "#" },
   { label: "Tuyển dụng", href: "#" },
