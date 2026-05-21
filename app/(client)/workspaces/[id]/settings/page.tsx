@@ -6,7 +6,9 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
-import { ArrowLeft, Save, Trash2, Globe, Lock, Columns, Repeat, Users, ShieldAlert, Settings } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Globe, Lock, Columns, Repeat, Users, ShieldAlert, Settings, Mail, Send, Clock, X, Loader2 } from "lucide-react";
+import toast from 'react-hot-toast';
+import { inviteService, PendingInvite } from '@/modules/client/workspaces/services/inviteService';
 
 export default function SpaceSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: workspaceId } = use(params);
@@ -21,6 +23,13 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
     description: "",
     visibility: "public",
   });
+
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'workspace_admin' | 'member' | 'viewer'>('member');
+  const [inviting, setInviting] = useState(false);
+  const [invites, setInvites] = useState<PendingInvite[]>([]);
+  const [loadingInvites, setLoadingInvites] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -37,6 +46,15 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
       .finally(() => setLoading(false));
   }, [workspaceId]);
 
+  useEffect(() => {
+    if (activeTab !== 'members' || !workspaceId) return;
+    setLoadingInvites(true);
+    inviteService.listInvites(workspaceId)
+      .then(setInvites)
+      .catch(() => toast.error('Không thể tải danh sách lời mời.'))
+      .finally(() => setLoadingInvites(false));
+  }, [activeTab, workspaceId]);
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -45,6 +63,7 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
       router.push(`/workspaces/${workspaceId}`);
     } catch (e) {
       console.error("Save failed", e);
+      toast.error('Không thể lưu cài đặt.');
     } finally {
       setSaving(false);
     }
@@ -57,7 +76,38 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
         router.push("/workspaces");
       } catch (e) {
         console.error("Delete failed", e);
+        toast.error('Không thể xóa workspace. Bạn có thể không có quyền thực hiện thao tác này.');
       }
+    }
+  };
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      await inviteService.sendInvite(workspaceId, { email: inviteEmail.trim(), role: inviteRole });
+      toast.success(`Đã gửi lời mời tới ${inviteEmail.trim()}`);
+      setInviteEmail('');
+      const updated = await inviteService.listInvites(workspaceId);
+      setInvites(updated);
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message || 'Không thể gửi lời mời.');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleCancelInvite = async (inviteId: string) => {
+    setCancellingId(inviteId);
+    try {
+      await inviteService.cancelInvite(workspaceId, inviteId);
+      setInvites(prev => prev.filter(i => i._id !== inviteId));
+      toast.success('Đã hủy lời mời.');
+    } catch {
+      toast.error('Không thể hủy lời mời.');
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -193,40 +243,94 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
           )}
 
           {activeTab === "members" && (
-            <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">Danh sách thành viên</h2>
-                <button className="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-sm font-medium transition-colors">
-                  + Mời thành viên
-                </button>
+            <div className="space-y-8">
+              {/* Invite Form */}
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-indigo-600" /> Mời thành viên
+                </h2>
+                <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="email"
+                    required
+                    placeholder="email@example.com"
+                    value={inviteEmail}
+                    onChange={e => setInviteEmail(e.target.value)}
+                    className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+                  />
+                  <select
+                    value={inviteRole}
+                    onChange={e => setInviteRole(e.target.value as typeof inviteRole)}
+                    className="px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                  >
+                    <option value="workspace_admin">Admin</option>
+                    <option value="member">Member</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                  <button
+                    type="submit"
+                    disabled={inviting}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {inviting ? 'Đang gửi...' : 'Gửi lời mời'}
+                  </button>
+                </form>
               </div>
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700">
-                    <tr>
-                      <th className="px-4 py-3">Tên / Email</th>
-                      <th className="px-4 py-3 w-32">Vai trò</th>
-                      <th className="px-4 py-3 w-20"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                    {/* Mock Member */}
-                    <tr className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-4 py-3 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs">U</div>
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">Bạn (Owner)</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">user@example.com</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md text-xs font-semibold">Admin</span>
-                      </td>
-                      <td className="px-4 py-3">
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+
+              {/* Pending Invites */}
+              <div>
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4" /> Lời mời đang chờ
+                </h3>
+
+                {loadingInvites ? (
+                  <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Đang tải...
+                  </div>
+                ) : invites.length === 0 ? (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 py-4">Không có lời mời nào đang chờ.</p>
+                ) : (
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700">
+                        <tr>
+                          <th className="px-4 py-3">Email</th>
+                          <th className="px-4 py-3 w-28">Vai trò</th>
+                          <th className="px-4 py-3 w-36">Hết hạn</th>
+                          <th className="px-4 py-3 w-16"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                        {invites.map(inv => (
+                          <tr key={inv._id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                            <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">{inv.invitedEmail}</td>
+                            <td className="px-4 py-3">
+                              <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-xs font-semibold">
+                                {inv.role}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
+                              {new Date(inv.expiresAt).toLocaleDateString('vi-VN')}
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => handleCancelInvite(inv._id)}
+                                disabled={cancellingId === inv._id}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
+                                title="Hủy lời mời"
+                              >
+                                {cancellingId === inv._id
+                                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  : <X className="w-3.5 h-3.5" />}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
