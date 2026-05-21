@@ -28,6 +28,17 @@ export default function AcceptInvitePage({ token }: Props) {
       .finally(() => setLoadingInvite(false));
   }, [token]);
 
+  // Auto-redirect when invite was already accepted (e.g. register flow — processPostRegisterInvites accepted it before user lands here)
+  useEffect(() => {
+    if (
+      invite?.status === 'accepted' &&
+      isAuthenticated &&
+      user?.email.toLowerCase() === invite.invitedEmail.toLowerCase()
+    ) {
+      router.replace(`/workspaces/${invite.workspaceId}`);
+    }
+  }, [invite, isAuthenticated, user, router]);
+
   const handleAccept = async () => {
     setAccepting(true);
     try {
@@ -107,7 +118,7 @@ export default function AcceptInvitePage({ token }: Props) {
           <span className="font-semibold text-indigo-600 dark:text-indigo-400">{invite.role}</span>.
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
-          Gửi tới: {invite.invitedEmail} · Hết hạn: {new Date(invite.expiresAt).toLocaleDateString('vi-VN')}
+          Gửi tới: {invite.invitedEmail}{invite.expiresAt ? ` · Hết hạn: ${new Date(invite.expiresAt).toLocaleDateString('vi-VN')}` : ''}
         </p>
 
         {isExpiredOrUsed && (
