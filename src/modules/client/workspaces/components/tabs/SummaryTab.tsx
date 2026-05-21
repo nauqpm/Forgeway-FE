@@ -3,13 +3,13 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
   SlidersHorizontal,
-  ExternalLink,
   CheckCircle2,
   PencilLine,
   CalendarClock,
   FileText,
 } from "lucide-react";
 import { Issue } from "../../types/issue.type";
+import WorkspaceMembersPanel from "../WorkspaceMembersPanel";
 
 type DashboardMetric = {
   completed: number;
@@ -18,27 +18,6 @@ type DashboardMetric = {
   dueSoon: number;
 };
 
-type IssueActivity = {
-  id: string;
-  userName: string;
-  userInitials: string;
-  actionLabel: string;
-  issueKey: string;
-  issueTitle: string;
-  status: string;
-  time: string;
-};
-
-const formatRelativeTime = (isoDate: string) => {
-  const diffMs = Date.now() - new Date(isoDate).getTime();
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  if (diffMinutes < 1) return "just now";
-  if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} days ago`;
-};
 
 const SUMMARY_FILTER_FIELDS = [
   { id: "assignee", label: "Assignee" },
@@ -53,15 +32,14 @@ const SUMMARY_FILTER_FIELDS = [
 
 type SummaryTabProps = {
   issues: Issue[];
-  workspaceKey: string;
+  workspaceId: string;
 };
 
-export default function SummaryTab({ issues, workspaceKey }: SummaryTabProps) {
+export default function SummaryTab({ issues, workspaceId }: SummaryTabProps) {
   const [isSummaryFilterOpen, setIsSummaryFilterOpen] = useState(false);
   const [summaryFilterSearch, setSummaryFilterSearch] = useState("");
   const [selectedSummaryFields, setSelectedSummaryFields] = useState<string[]>([]);
   const summaryFilterRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const handleDocumentClick = (event: MouseEvent) => {
       if (
@@ -141,137 +119,20 @@ export default function SummaryTab({ issues, workspaceKey }: SummaryTabProps) {
   }, [issues, selectedSummaryFields]);
 
   const dashboardData = useMemo(() => {
-    const now = new Date();
-    const sevenDaysLater = new Date(now);
-    sevenDaysLater.setDate(now.getDate() + 7);
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(now.getDate() - 7);
-
-    const keyMetrics: DashboardMetric = {
-      completed: summaryFilteredIssues.filter((i) => i.status === "Done").length,
-      updated: summaryFilteredIssues.filter(
-        (i) => new Date(i.updatedAt || i.createdAt || 0) >= sevenDaysAgo
-      ).length,
-      created: summaryFilteredIssues.filter(
-        (i) => new Date(i.createdAt || i.updatedAt || 0) >= sevenDaysAgo
-      ).length,
-      dueSoon: summaryFilteredIssues.filter((i) => {
-        if (!i.endDate || i.status === "Done") return false;
-        const due = new Date(i.endDate);
-        return due >= now && due <= sevenDaysLater;
-      }).length,
-    };
-
-    const statusDistribution = [
-      {
-        name: "To Do",
-        value: summaryFilteredIssues.filter((i) => i.status === "To Do").length,
-        color: "#FB8C00",
-      },
-      {
-        name: "In Progress",
-        value: summaryFilteredIssues.filter((i) => i.status === "In Progress").length,
-        color: "#A855F7",
-      },
-      {
-        name: "Done",
-        value: summaryFilteredIssues.filter((i) => i.status === "Done").length,
-        color: "#7CB342",
-      },
-    ].filter((item) => item.value > 0);
-
-    const totalWorkItems = summaryFilteredIssues.length || 1;
-
-    const priorities = ["Highest", "High", "Medium", "Low", "Lowest", "None"].map((level) => ({
-      level,
-      count: summaryFilteredIssues.filter((i) =>
-        level === "None" ? !i.priority : i.priority === level
-      ).length,
-    }));
-    const maxPriorityCount = Math.max(...priorities.map((p) => p.count), 1);
-
-    const typeBreakdown = (
-      Array.from(
-        summaryFilteredIssues.reduce((acc, i) => {
-          acc.set(i.type, (acc.get(i.type) || 0) + 1);
-          return acc;
-        }, new Map<string, number>())
-      ) as [string, number][]
-    ).map(([type, count]) => ({
-      type,
-      count,
-      percent: Math.round((count / totalWorkItems) * 100),
-    }));
-
-    const summaryAssignees = (
-      Array.from(
-        summaryFilteredIssues.reduce((acc, i) => {
-          const id = i.assignee || "U";
-          if (!acc.has(id)) acc.set(id, { id, color: i.color || "bg-gray-400" });
-          return acc;
-        }, new Map<string, { id: string; color: string }>())
-      ) as [string, { id: string; color: string }][]
-    ).map(([, v]) => v);
-
-    const teamWorkload = summaryAssignees.map((user) => {
-      const count = summaryFilteredIssues.filter((i) => i.assignee === user.id).length;
-      return {
-        assignee: user.id === "U" ? "Unassigned" : user.id,
-        color: user.color,
-        count,
-        percent: Math.round((count / totalWorkItems) * 100),
-      };
-    });
-
-    const epicStatsMap = summaryFilteredIssues.reduce((acc, i) => {
-      if (!i.epic) return acc;
-      const cur = acc.get(i.epic) || { total: 0, done: 0 };
-      cur.total += 1;
-      if (i.status === "Done") cur.done += 1;
-      acc.set(i.epic, cur);
-      return acc;
-    }, new Map<string, { total: number; done: number }>());
-
-    const epicProgress = (
-      Array.from(epicStatsMap.entries()) as [string, { total: number; done: number }][]
-    ).map(([epic, v]) => ({
-      epic,
-      total: v.total,
-      done: v.done,
-      percent: v.total === 0 ? 0 : Math.round((v.done / v.total) * 100),
-    }));
-
-    const activities: IssueActivity[] = [...summaryFilteredIssues]
-      .sort(
-        (a, b) =>
-          new Date(b.updatedAt || b.createdAt || 0).getTime() -
-          new Date(a.updatedAt || a.createdAt || 0).getTime()
-      )
-      .slice(0, 8)
-      .map((i) => ({
-        id: i.id,
-        userName: i.assignee === "U" ? "Unassigned" : `User ${i.assignee || "U"}`,
-        userInitials: i.assignee || "U",
-        actionLabel: i.createdAt === i.updatedAt ? "created issue" : "updated issue",
-        issueKey: `${workspaceKey}-${100 + parseInt(i.id, 10)}`,
-        issueTitle: i.title,
-        status: i.status || "To Do",
-        time: formatRelativeTime(i.updatedAt || i.createdAt || new Date().toISOString()),
-      }));
-
+    const keyMetrics: DashboardMetric = { completed: 0, updated: 0, created: 0, dueSoon: 0 };
+    const priorities = ["Highest", "High", "Medium", "Low", "Lowest", "None"].map((level) => ({ level, count: 0 }));
     return {
       keyMetrics,
-      statusDistribution,
+      statusDistribution: [] as { name: string; value: number; color: string }[],
       priorities,
-      maxPriorityCount,
-      typeBreakdown,
-      teamWorkload,
-      epicProgress,
-      activities,
-      totalWorkItems,
+      maxPriorityCount: 1,
+      typeBreakdown: [] as { type: string; count: number; percent: number }[],
+      teamWorkload: [] as { assignee: string; color: string; count: number; percent: number }[],
+      epicProgress: [] as { epic: string; total: number; done: number; percent: number }[],
+      totalWorkItems: 0,
       totalVisibleItems: summaryFilteredIssues.length,
     };
-  }, [summaryFilteredIssues, workspaceKey]);
+  }, [summaryFilteredIssues]);
 
   return (
     <div className="w-full space-y-5">
@@ -466,46 +327,6 @@ export default function SummaryTab({ issues, workspaceKey }: SummaryTabProps) {
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Recent activity</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Stay up to date with what&apos;s happening across the Workspace.
-            </p>
-          </div>
-          <button className="w-9 h-9 rounded-md border border-gray-200 dark:border-gray-800 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-            <ExternalLink className="w-4 h-4" />
-          </button>
-        </div>
-        <div className="max-h-64 overflow-y-auto pr-2 space-y-4">
-          {dashboardData.activities.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">No activity yet.</p>
-          ) : (
-            dashboardData.activities.map((activity) => (
-              <div key={activity.id} className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-indigo-600 text-white text-[10px] font-semibold flex items-center justify-center shrink-0">
-                  {activity.userInitials}
-                </div>
-                <div className="text-sm">
-                  <p className="text-gray-700 dark:text-gray-300 leading-6">
-                    <span className="font-semibold text-blue-700">{activity.userName}</span>{" "}
-                    {activity.actionLabel} on{" "}
-                    <span className="text-blue-700 hover:underline cursor-pointer">
-                      {activity.issueKey}: {activity.issueTitle}
-                    </span>{" "}
-                    <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300">
-                      {activity.status.toUpperCase()}
-                    </span>
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{activity.time}</p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Priority breakdown</h3>
@@ -649,6 +470,8 @@ export default function SummaryTab({ issues, workspaceKey }: SummaryTabProps) {
           )}
         </div>
       </div>
+
+      <WorkspaceMembersPanel workspaceId={workspaceId} />
     </div>
   );
 }

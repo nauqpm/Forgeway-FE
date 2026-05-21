@@ -279,7 +279,7 @@ export default function WorkspaceDetailPage({
         }}
         summaryProps={{
           issues,
-          workspaceKey: workspace.key,
+          workspaceId,
         }}
         calendarProps={{
           issues,

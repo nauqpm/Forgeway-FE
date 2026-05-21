@@ -19,6 +19,8 @@ export const apiRoutes = {
         REMOVE_MEMBER: (id: string, userId: string) => `/workspaces/${id}/members/${userId}`,
         UPDATE_MEMBER: (id: string, userId: string) => `/workspaces/${id}/members/${userId}`,
         INVITE: '/invite/send',
+        INVITES: (id: string) => `/workspaces/${id}/invites`,
+        INVITE_BY_ID: (id: string, inviteId: string) => `/workspaces/${id}/invites/${inviteId}`,
     },
     PROJECTS: {
         BASE: '/projects',
