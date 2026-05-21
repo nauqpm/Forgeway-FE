@@ -1,14 +1,20 @@
 import React from "react";
 
-import { Workspace } from "../../types/workspace.type";
+import {
+  getWorkspaceTemplate,
+  Workspace,
+  WorkspaceTab,
+} from "../../types/workspace.type";
 
 interface TabProps {
   workspace: Workspace;
-  activeTab: string;
-  setActiveTab: any;
+  activeTab: WorkspaceTab;
+  setActiveTab: (tab: WorkspaceTab) => void;
 }
 
 const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
+  const template = getWorkspaceTemplate(workspace);
+
   return (
     <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900/50 p-1 rounded-xl w-fit mb-6">
       <button
@@ -17,27 +23,19 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
       >
         Summary
       </button>
-      {workspace.template === "kanban" && (
-        <button
-          onClick={() => setActiveTab("board")}
-          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-        >
-          Board
-        </button>
-      )}
-      {workspace.template === "scrum" && (
+      <button
+        onClick={() => setActiveTab("board")}
+        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+      >
+        Board
+      </button>
+      {template === "scrum" && (
         <>
           <button
             onClick={() => setActiveTab("backlog")}
             className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "backlog" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
           >
             Backlog
-          </button>
-          <button
-            onClick={() => setActiveTab("board")}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-          >
-            Board
           </button>
         </>
       )}
