@@ -1,26 +1,18 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
 import type { AuthUser, Permission, UserRole } from "@/modules/auth/shared/types/auth.types";
+import { useAuth as useModuleAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 import { usePermissionStore } from "@/modules/auth/permission/stores/permissionStore";
-import {
-  getCurrentUserAPI,
-  logoutAPI,
-} from "@/modules/auth/shared/services/authService";
 import { getMyPermissionsAPI } from "@/modules/auth/permission/services/permissionService";
 import { handleSsoCallbackAPI } from "@/modules/auth/sso/services/ssoService";
-import { clearTokens } from "@/modules/auth/shared/services/tokenService";
-import { setupAuthInterceptors } from "@/modules/auth/shared/services/axiosAuthInterceptor";
-import { useSessionStore } from "@/modules/auth/shared/stores/authStore";
-import { useSecurityStore } from "@/modules/auth/shared/stores/authStore";
 
 interface User {
   id: string;
@@ -61,37 +53,20 @@ const normalizeUser = (
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
-  const {
-    user: storeUser,
-    isAuthenticated,
-    isLoading,
-    isInitialized,
-    setUser,
-    setLoading,
-    setInitialized,
-    clearAuth,
-  } = useAuthStore();
+  const moduleAuth = useModuleAuth();
+  const { setUser } = useAuthStore();
   const {
     globalPermissions,
     setGlobalPermissions,
-    clearPermissions,
   } = usePermissionStore();
-  const { clearSessionState } = useSessionStore();
-  const { clearSecurityState } = useSecurityStore();
-
-  useEffect(() => {
-    setupAuthInterceptors();
-  }, []);
 
   const fetchUserPermissions = useCallback(async (): Promise<Permission[]> => {
     try {
       const { permissions } = await getMyPermissionsAPI();
       setGlobalPermissions(permissions);
-      if (useAuthStore.getState().user) {
-        setUser({
-          ...useAuthStore.getState().user!,
-          permissions,
-        });
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        setUser({ ...currentUser, permissions });
       }
       return permissions;
     } catch {
@@ -99,44 +74,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return [];
     }
   }, [setGlobalPermissions, setUser]);
-
-  const refreshCurrentUser = useCallback(async () => {
-    const currentUser = await getCurrentUserAPI();
-    const legacyUser = currentUser as typeof currentUser & {
-      spaceRoles?: typeof currentUser.workspaceRoles;
-    };
-    setUser({
-      ...currentUser,
-      permissions: currentUser.permissions || [],
-      workspaceRoles: currentUser.workspaceRoles || legacyUser.spaceRoles || [],
-    });
-    await fetchUserPermissions();
-  }, [fetchUserPermissions, setUser]);
-
-  useEffect(() => {
-    const initAuth = async () => {
-      if (isInitialized) return;
-
-      setLoading(true);
-      try {
-        await refreshCurrentUser();
-      } catch {
-        clearAuth();
-        clearPermissions();
-      } finally {
-        setInitialized(true);
-      }
-    };
-
-    initAuth();
-  }, [
-    clearAuth,
-    clearPermissions,
-    isInitialized,
-    refreshCurrentUser,
-    setInitialized,
-    setLoading,
-  ]);
 
   const login = useCallback(
     async (token?: string) => {
@@ -150,45 +87,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      await refreshCurrentUser();
+      await moduleAuth.refreshUser();
+      await fetchUserPermissions();
       router.replace("/");
     },
-    [fetchUserPermissions, refreshCurrentUser, router, setUser],
+    [fetchUserPermissions, moduleAuth, router, setUser],
   );
 
   const logout = useCallback(async () => {
-    try {
-      await logoutAPI();
-    } catch {
-      // Client state must still be cleared if the session has already expired.
-    } finally {
-      clearTokens();
-      clearAuth();
-      clearPermissions();
-      clearSessionState();
-      clearSecurityState();
-      router.replace("/login");
-    }
-  }, [
-    clearAuth,
-    clearPermissions,
-    clearSecurityState,
-    clearSessionState,
-    router,
-  ]);
+    await moduleAuth.logout();
+  }, [moduleAuth]);
 
   const verifyToken = useCallback(async (): Promise<void> => {
-    try {
-      await refreshCurrentUser();
-    } catch {
-      await logout();
+    const user = await moduleAuth.refreshUser();
+    if (!user) {
+      await moduleAuth.logout();
     }
-  }, [logout, refreshCurrentUser]);
+  }, [moduleAuth]);
 
   const effectivePermissions =
-    globalPermissions.length > 0 ? globalPermissions : storeUser?.permissions || [];
-  const user = storeUser
-    ? normalizeUser(storeUser, effectivePermissions)
+    globalPermissions.length > 0 ? globalPermissions : moduleAuth.user?.permissions || [];
+  const user = moduleAuth.user
+    ? normalizeUser(moduleAuth.user, effectivePermissions)
     : null;
 
   const hasAdminAccess = (): boolean => {
@@ -215,14 +135,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         token: null,
         user,
-        isAuthenticated,
-        isLoading: isLoading || !isInitialized,
+        isAuthenticated: moduleAuth.isAuthenticated,
+        isLoading: moduleAuth.isLoading || !moduleAuth.isInitialized,
         login,
         logout,
         hasAdminAccess,
         hasPermission,
         fetchUserPermissions,
-        isLoadingPermissions: isLoading || !isInitialized,
+        isLoadingPermissions: moduleAuth.isLoading || !moduleAuth.isInitialized,
         verifyToken,
       }}
     >
@@ -236,3 +156,4 @@ export const useAuth = (): AuthContextType => {
   if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
+

@@ -38,8 +38,24 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       setSuccess(true);
       return response;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      setError(error.response?.data?.message || error.message || "Da co loi xay ra");
+      const error = err as {
+        response?: { status?: number; data?: { code?: string; message?: string } };
+      };
+      const status = error.response?.status;
+      const code = error.response?.data?.code;
+      const backendMessage = error.response?.data?.message?.toLowerCase() || "";
+
+      if (code === "RATE_LIMITED" || status === 429) {
+        setError("Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.");
+      } else if (code === "EMAIL_NOT_VERIFIED") {
+        setError("Email chưa được xác minh. Vui lòng xác minh email trước khi đặt lại mật khẩu.");
+      } else if (backendMessage.includes("not found") || backendMessage.includes("khong ton tai")) {
+        setError("Email không tồn tại trong hệ thống.");
+      } else if (status === 400 || status === 404) {
+        setError("Không thể gửi mã OTP. Vui lòng kiểm tra lại email.");
+      } else {
+        setError("Không thể gửi mã OTP lúc này. Vui lòng thử lại sau.");
+      }
       throw err;
     } finally {
       setLoading(false);
@@ -55,8 +71,21 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       setSuccess(true);
       return response;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      setError(error.response?.data?.message || error.message || "Ma OTP khong hop le");
+      const error = err as {
+        response?: { status?: number; data?: { code?: string } };
+      };
+      const status = error.response?.status;
+      const code = error.response?.data?.code;
+
+      if (code === "RATE_LIMITED" || status === 429) {
+        setError("Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.");
+      } else if (status === 401 || status === 403) {
+        setError("Mã OTP không hợp lệ hoặc đã hết hạn.");
+      } else if (status === 400) {
+        setError("Vui lòng kiểm tra lại mã OTP.");
+      } else {
+        setError("Xác thực mã OTP thất bại. Vui lòng thử lại.");
+      }
       throw err;
     } finally {
       setLoading(false);
@@ -76,8 +105,23 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       setSuccess(true);
       return response;
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } }; message?: string };
-      setError(error.response?.data?.message || error.message || "Khong the dat lai mat khau");
+      const error = err as {
+        response?: { status?: number; data?: { code?: string } };
+      };
+      const status = error.response?.status;
+      const code = error.response?.data?.code;
+
+      if (code === "RATE_LIMITED" || status === 429) {
+        setError("Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.");
+      } else if (code === "PASSWORD_TOO_WEAK") {
+        setError("Mật khẩu mới chưa đạt yêu cầu bảo mật.");
+      } else if (status === 401 || status === 403) {
+        setError("Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã OTP mới.");
+      } else if (status === 400) {
+        setError("Không thể đặt lại mật khẩu. Vui lòng kiểm tra lại thông tin.");
+      } else {
+        setError("Đặt lại mật khẩu thất bại. Vui lòng thử lại sau.");
+      }
       throw err;
     } finally {
       setLoading(false);
