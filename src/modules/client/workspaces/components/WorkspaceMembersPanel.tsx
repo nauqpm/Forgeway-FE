@@ -97,7 +97,7 @@ function InviteForm({ workspaceId, onClose, onSuccess }: InviteFormProps) {
   };
 
   return (
-    <div className="border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl p-4 mb-4">
+    <div className="border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/30 rounded-xl p-4 mb-4 shadow-sm dark:shadow-none">
       <div className="flex items-center justify-between mb-3">
         <p className="text-sm font-semibold text-indigo-800 dark:text-indigo-300">
           Invite to workspace
@@ -105,7 +105,7 @@ function InviteForm({ workspaceId, onClose, onSuccess }: InviteFormProps) {
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="p-1 rounded-full text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -125,7 +125,7 @@ function InviteForm({ workspaceId, onClose, onSuccess }: InviteFormProps) {
             className={`w-full px-3 py-2 text-sm rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors ${
               emailError
                 ? "border-red-400 dark:border-red-600"
-                : "border-gray-300 dark:border-gray-600"
+                : "border-gray-300 dark:border-gray-700"
             }`}
           />
           {emailError && (
@@ -137,7 +137,7 @@ function InviteForm({ workspaceId, onClose, onSuccess }: InviteFormProps) {
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="appearance-none w-full sm:w-32 px-3 py-2 pr-7 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+            className="appearance-none w-full sm:w-32 px-3 py-2 pr-7 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
           >
             {ROLES.map((r) => (
               <option key={r.value} value={r.value}>
@@ -145,13 +145,13 @@ function InviteForm({ workspaceId, onClose, onSuccess }: InviteFormProps) {
               </option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+          <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
         </div>
 
         <button
           type="submit"
           disabled={submitting || !email}
-          className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed rounded-lg transition-colors flex-shrink-0"
+          className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 dark:disabled:bg-indigo-900/50 disabled:cursor-not-allowed rounded-lg transition-colors flex-shrink-0"
         >
           {submitting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -270,7 +270,7 @@ export default function WorkspaceMembersPanel({ workspaceId }: WorkspaceMembersP
             return (
               <div
                 key={user._id}
-                className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors"
               >
                 <MemberAvatar user={user} />
                 <div className="min-w-0 flex-1">

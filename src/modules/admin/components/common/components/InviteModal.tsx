@@ -126,36 +126,82 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
     user: u
   }));
 
+  const isDark =
+    typeof document !== 'undefined' &&
+    document.documentElement.classList.contains('dark');
+
   const customStyles = {
     control: (base: any, state: any) => ({
       ...base,
+      backgroundColor: isDark ? '#111827' : '#ffffff',
       minHeight: '44px',
-      borderColor: state.isFocused ? '#6366f1' : '#d1d5db',
+      borderColor: state.isFocused ? '#6366f1' : isDark ? '#374151' : '#d1d5db',
       boxShadow: state.isFocused ? '0 0 0 1px #6366f1' : 'none',
       '&:hover': {
-        borderColor: state.isFocused ? '#6366f1' : '#9ca3af'
+        borderColor: state.isFocused ? '#6366f1' : isDark ? '#4b5563' : '#9ca3af'
       },
       borderRadius: '0.5rem'
     }),
+    menu: (base: any) => ({
+      ...base,
+      backgroundColor: isDark ? '#111827' : '#ffffff',
+      border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+      boxShadow: isDark
+        ? '0 20px 25px -5px rgb(0 0 0 / 0.45)'
+        : '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+      zIndex: 60,
+    }),
+    option: (base: any, state: any) => ({
+      ...base,
+      backgroundColor: state.isFocused
+        ? isDark ? '#1f2937' : '#eef2ff'
+        : isDark ? '#111827' : '#ffffff',
+      color: isDark ? '#f9fafb' : '#111827',
+      ':active': {
+        backgroundColor: isDark ? '#374151' : '#e0e7ff',
+      },
+    }),
+    input: (base: any) => ({
+      ...base,
+      color: isDark ? '#ffffff' : '#111827',
+    }),
+    placeholder: (base: any) => ({
+      ...base,
+      color: isDark ? '#9ca3af' : '#6b7280',
+    }),
+    singleValue: (base: any) => ({
+      ...base,
+      color: isDark ? '#ffffff' : '#111827',
+    }),
     multiValue: (base: any) => ({
       ...base,
-      backgroundColor: '#f3f4f6',
+      backgroundColor: isDark ? '#312e81' : '#f3f4f6',
       borderRadius: '0.375rem',
     }),
     multiValueLabel: (base: any) => ({
       ...base,
-      color: '#374151',
+      color: isDark ? '#e0e7ff' : '#374151',
       fontSize: '0.875rem',
       fontWeight: 500,
       padding: '2px 6px',
     }),
     multiValueRemove: (base: any) => ({
       ...base,
-      color: '#6b7280',
+      color: isDark ? '#c7d2fe' : '#6b7280',
       ':hover': {
-        backgroundColor: '#e5e7eb',
-        color: '#ef4444',
+        backgroundColor: isDark ? '#4338ca' : '#e5e7eb',
+        color: isDark ? '#fecaca' : '#ef4444',
       },
+    }),
+    clearIndicator: (base: any) => ({
+      ...base,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      ':hover': { color: isDark ? '#e5e7eb' : '#374151' },
+    }),
+    dropdownIndicator: (base: any) => ({
+      ...base,
+      color: isDark ? '#9ca3af' : '#6b7280',
+      ':hover': { color: isDark ? '#e5e7eb' : '#374151' },
     }),
   };
 
@@ -228,36 +274,22 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
                     <button
                       key={user.id}
                       onClick={() => handleQuickAdd(user)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium transition-colors border border-indigo-100"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-medium transition-colors border border-indigo-100 dark:border-indigo-800"
                     >
-                      <span className="text-indigo-600">+</span> {user.name}
+                      <span className="text-indigo-600 dark:text-indigo-300">+</span> {user.name}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Integrations (UI only as per MVP assumption) */}
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Or invite from integrations</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm">
-                  <Mail className="w-4 h-4 text-red-500" /> Google
-                </button>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm">
-                  <MessageSquare className="w-4 h-4 text-purple-600" /> Slack
-                </button>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm">
-                  <Briefcase className="w-4 h-4 text-blue-600" /> Microsoft
-                </button>
-              </div>
-            </div>
+            
 
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-950/70 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center w-full sm:w-auto justify-between sm:justify-start gap-4">
             <button 
               onClick={handleCopyLink}
@@ -269,13 +301,11 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
           </div>
 
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> Protected by reCAPTCHA
-            </span>
+            
             <button 
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 border border-transparent dark:border-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>

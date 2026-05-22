@@ -21,6 +21,7 @@ import { Filters } from "@/modules/client/workspaces/types/filter.type";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAssignees } from "@/modules/client/workspaces/hooks/useAssignees";
+import { taskService } from "@/modules/client/workspaces/services/taskService";
 
 import { filterIssues } from "@/modules/client/workspaces/utils/filterIssues";
 import {
@@ -38,9 +39,6 @@ import Tabs from "@/modules/client/workspaces/components/common/Tabs";
 
 import CreateIssueModal from "@/modules/client/workspaces/components/issues/CreateIssueModal";
 
-import { MOCK_ISSUES } from "@/modules/client/workspaces/constants/mockIssues";
-import { MOCK_SPRINTS } from "@/modules/client/workspaces/constants/mockSprints";
-
 export default function WorkspaceDetailPage({
   params,
 }: {
@@ -51,8 +49,8 @@ export default function WorkspaceDetailPage({
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("pages");
   const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
-  const [sprints, setSprints] = useState<Sprint[]>(MOCK_SPRINTS);
-  const [issues, setIssues] = useState<Issue[]>(MOCK_ISSUES);
+  const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [issues, setIssues] = useState<Issue[]>([]);
 
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [newIssueForm, setNewIssueForm] = useState<{
@@ -104,6 +102,7 @@ export default function WorkspaceDetailPage({
     handleUpdateIssueDate,
     updateIssueDirectly,
   } = useIssueHandlers({
+    workspaceKey: workspaceId,
     issues,
     setIssues,
     setShowCreateIssue,
@@ -150,13 +149,18 @@ export default function WorkspaceDetailPage({
   useEffect(() => {
     if (!workspaceId) return;
     api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceId))
-      .then((res) => {
-        const nextWorkspace = res.data as Workspace;
+      .then(async (workspaceResponse) => {
+        const nextWorkspace = (
+          workspaceResponse.data?.data ?? workspaceResponse.data
+        ) as Workspace;
         const template = getWorkspaceTemplate(nextWorkspace);
 
         setWorkspace(nextWorkspace);
         if (template === "scrum") setActiveTab("backlog");
         else setActiveTab("board");
+
+        const nextIssues = await taskService.listBoardTasks(workspaceId);
+        setIssues(nextIssues);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
