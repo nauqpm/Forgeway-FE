@@ -170,7 +170,7 @@ export default function ListTab({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-4">
+    <div className="workspace-panel bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
       <div className="flex flex-wrap items-center justify-end gap-3 mb-4">
         <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5 bg-gray-100 dark:bg-gray-800">
           <button
@@ -216,7 +216,7 @@ export default function ListTab({
           onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
         />
       ) : (
-        <div className="flex flex-col lg:grid lg:grid-cols-[minmax(260px,340px)_1fr] h-[min(720px,calc(100vh-240px))] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
+        <div className="workspace-list-height flex flex-col lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
           <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30 shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
             <div
               ref={listSplitToolbarRef}

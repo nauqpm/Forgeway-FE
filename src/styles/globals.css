@@ -9,6 +9,145 @@ body {
     box-sizing: border-box;
 }
 
+:root {
+  --app-header-h: 56px;
+  --app-page-pad: clamp(12px, 1.2vw, 24px);
+  --app-page-pad-y: clamp(16px, 1.6vw, 28px);
+  --app-content-max: min(100%, 1440px);
+  --app-sidebar-expanded: clamp(220px, 15vw, 260px);
+  --app-sidebar-collapsed: 68px;
+  --app-popover-w: clamp(280px, 22vw, 340px);
+  --app-panel-w: clamp(300px, 24vw, 380px);
+  --app-drawer-w: clamp(320px, 28vw, 440px);
+  --app-narrow-content: min(100%, 960px);
+  --app-medium-content: min(100%, 1152px);
+  --app-wide-content: min(100%, 1440px);
+  --app-table-min-w: min(960px, calc(100vw - 48px));
+  --app-board-h: min(720px, calc(100vh - var(--app-header-h) - 124px));
+  --workspace-surface-pad: clamp(12px, 1.1vw, 20px);
+  --workspace-board-gap: clamp(16px, 1.4vw, 24px);
+  --workspace-column-w: clamp(280px, 22vw, 340px);
+  --workspace-list-sidebar-w: clamp(260px, 25vw, 360px);
+  --workspace-chart-size: clamp(220px, 24vw, 288px);
+  --workspace-settings-nav-w: clamp(220px, 20vw, 272px);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+@layer components {
+  .app-shell-offset {
+    margin-left: 0;
+  }
+
+  .app-shell-offset[data-sidebar="collapsed"] {
+    --app-current-sidebar-w: var(--app-sidebar-collapsed);
+  }
+
+  .app-shell-offset[data-sidebar="expanded"] {
+    --app-current-sidebar-w: var(--app-sidebar-expanded);
+  }
+
+  .app-header {
+    height: var(--app-header-h);
+    padding-left: var(--app-page-pad);
+    padding-right: var(--app-page-pad);
+  }
+
+  .app-main {
+    padding: var(--app-page-pad-y) var(--app-page-pad);
+  }
+
+  .app-container {
+    width: 100%;
+    max-width: var(--app-content-max);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .app-sidebar {
+    width: var(--app-sidebar-expanded);
+  }
+
+  .app-sidebar[data-collapsed="true"] {
+    width: var(--app-sidebar-collapsed);
+  }
+
+  .app-popover {
+    width: var(--app-popover-w);
+  }
+
+  .app-drawer {
+    width: min(100vw, var(--app-drawer-w));
+  }
+
+  .app-page-narrow {
+    width: 100%;
+    max-width: var(--app-narrow-content);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .app-page-medium {
+    width: 100%;
+    max-width: var(--app-medium-content);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .app-page-wide {
+    width: 100%;
+    max-width: var(--app-wide-content);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .app-table-min {
+    min-width: var(--app-table-min-w);
+  }
+
+  .workspace-surface {
+    width: 100%;
+    max-width: var(--app-content-max);
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .workspace-panel {
+    padding: var(--workspace-surface-pad);
+  }
+
+  .workspace-board-height {
+    min-height: max(420px, var(--app-board-h));
+  }
+
+  .workspace-list-height {
+    height: max(520px, var(--app-board-h));
+  }
+
+  .workspace-column {
+    width: var(--workspace-column-w);
+  }
+
+  .workspace-detail-panel {
+    width: var(--app-panel-w);
+  }
+
+  .workspace-chart {
+    width: var(--workspace-chart-size);
+    height: var(--workspace-chart-size);
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-shell-offset {
+    margin-left: var(--app-current-sidebar-w, var(--app-sidebar-expanded));
+  }
+}
+
 @layer utilities {
     .animate-fadeIn {
         animation: fadeIn 0.3s forwards;

@@ -3,6 +3,7 @@
 import BoardTab from "./tabs/BoardTab";
 import BacklogTab from "./tabs/BacklogTab";
 import TimelineTab from "./tabs/TimelineTab";
+import CalendarTab from "./tabs/CalendarTab";
 import ListTab from "./tabs/ListTab";
 import SummaryTab from "./tabs/SummaryTab";
 import { DocsLayout } from "../../docs";
@@ -51,6 +52,8 @@ export default function WorkspaceContent({
       {activeTab === "timeline" && (
         <TimelineTab {...timelineProps} />
       )}
+
+      {activeTab === "calendar" && <CalendarTab {...calendarProps} />}
       
       {activeTab === "list" && <ListTab {...listProps} />}
 

@@ -32,7 +32,7 @@ export default function WorkspacesPage() {
       return;
     }
     setLoading(true);
-    api.get(apiRoutes.WORKSPACES.BASE, { params: { workspaceId: currentWorkspace._id } })
+    api.get(apiRoutes.WORKSPACES.BASE)
       .then((res) => setWorkspacesList(res.data))
       .catch(() => setWorkspacesList([]))
       .finally(() => setLoading(false));
@@ -40,11 +40,11 @@ export default function WorkspacesPage() {
 
   if (loading) return <LoadingSpinner />;
 
-  if (!currentWorkspace) return <div className="p-6 text-center text-gray-500 dark:text-gray-400">Select a workspace first</div>;
+  if (!currentWorkspace) return <div className="app-main text-center text-gray-500 dark:text-gray-400">Select a workspace first</div>;
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+    <div className="app-page-wide">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Workspaces (Không gian làm việc)</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm">Hiển thị {workspaces.length} Workspaces trong {currentWorkspace.name}</p>
@@ -68,7 +68,7 @@ export default function WorkspacesPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {workspaces.map((workspace) => (
-            <Link key={workspace._id} href={`/workspaces/${workspace._id}`} className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-500 transition-all flex flex-col h-full cursor-pointer">
+            <Link key={workspace._id} href={`/workspaces/${workspace.key}`} className="workspace-panel group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:shadow-lg hover:border-indigo-300 dark:hover:border-indigo-500 transition-all flex flex-col h-full cursor-pointer">
               
               {/* Header Card */}
               <div className="flex items-start justify-between mb-4">

@@ -10,6 +10,9 @@ interface GuestGuardProps {
   children: React.ReactNode;
 }
 
+const isSafeCallbackUrl = (url: string) =>
+  url.startsWith('/') && !url.startsWith('//') && !url.includes('\\');
+
 /**
  * GuestGuard — Component bảo vệ các route DÀNH RIÊNG cho khách (chưa đăng nhập).
  * 
@@ -33,7 +36,10 @@ const GuestGuard: React.FC<GuestGuardProps> = ({ children }) => {
   // Bước 2: Kiểm tra và chuyển hướng nếu ĐÃ đăng nhập
   useEffect(() => {
     if (isInitialized && isAuthenticated) {
-      router.replace(AUTH_ROUTES.DASHBOARD);
+      const params = new URLSearchParams(window.location.search);
+      const callbackUrl = params.get('callbackUrl');
+      const destination = callbackUrl && isSafeCallbackUrl(callbackUrl) ? callbackUrl : AUTH_ROUTES.DASHBOARD;
+      router.replace(destination);
     }
   }, [isInitialized, isAuthenticated, router]);
 

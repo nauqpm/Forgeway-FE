@@ -27,16 +27,16 @@ export default function CreateProjectPage() {
     finally { setLoading(false); }
   };
 
-  if (!currentWorkspace) return <div className="p-6 text-center text-gray-500">Select a workspace first</div>;
+  if (!currentWorkspace) return <div className="app-main text-center text-gray-500">Select a workspace first</div>;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="app-page-narrow">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/projects" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Project</h1>
       </div>
       {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">{error}</div>}
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Project Name *</label>
           <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, key: e.target.value.toUpperCase().replace(/\s+/g, "").substring(0, 5) })} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500" placeholder="Website Redesign" required />

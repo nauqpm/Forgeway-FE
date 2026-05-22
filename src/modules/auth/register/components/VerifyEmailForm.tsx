@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,12 +15,10 @@ export default function VerifyEmailForm() {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
-  
+
   useEffect(() => {
     const emailParam = searchParams.get('email');
-    if (emailParam) {
-      setEmail(emailParam);
-    }
+    if (emailParam) setEmail(emailParam);
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +35,7 @@ export default function VerifyEmailForm() {
     setIsLoading(true);
     try {
       await verifyEmailAPI(email, otp);
-      toast.success('Xác thực email thành công! Vui lòng đăng nhập.');
+      toast.success('Tạo tài khoản thành công');
       router.push(AUTH_ROUTES.LOGIN);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
@@ -84,21 +82,14 @@ export default function VerifyEmailForm() {
               <MailCheck className="w-8 h-8 text-indigo-600" />
             </div>
           </div>
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5 text-center">Mã xác thực (OTP)</label>
-              <input 
-                type="text" 
-                value={otp} 
-                onChange={(e) => setOtp(e.target.value)} 
-                required
-                maxLength={6}
-                placeholder="Nhập 6 số"
-                className="w-full text-center text-2xl px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" 
-              />
+              <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required maxLength={6} placeholder="Nhập 6 số"
+                className="w-full text-center text-2xl px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
             </div>
-            
+
             <button type="submit" disabled={isLoading}
               className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Đang xác thực...</> : 'Xác thực tài khoản'}
@@ -106,16 +97,12 @@ export default function VerifyEmailForm() {
           </form>
 
           <div className="mt-6 flex flex-col items-center gap-4">
-            <button 
-              type="button" 
-              onClick={handleResend} 
-              disabled={isResending || !email}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50 transition-colors flex items-center gap-1"
-            >
+            <button type="button" onClick={handleResend} disabled={isResending || !email}
+              className="text-sm font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50 transition-colors flex items-center gap-1">
               {isResending ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
               Gửi lại mã xác thực
             </button>
-            
+
             <Link href={AUTH_ROUTES.LOGIN} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
               <ArrowLeft className="w-4 h-4" />
               Quay lại Đăng nhập

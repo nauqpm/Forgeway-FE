@@ -15,7 +15,6 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
   const [activeTooltip, setActiveTooltip] = useState<{ id: string, start: string, end: string, x: number, y: number } | null>(null);
   
   const ROW_HEIGHT = 48;
-  const SIDEBAR_WIDTH = 300;
 
   // Flatten and prepare data
   const items = useMemo(() => {
@@ -172,12 +171,12 @@ export default function TimelineView({ issues, sprints, onUpdateIssueDate, onCli
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col font-sans text-gray-700 dark:text-gray-200 h-[700px] relative">
+    <div className="workspace-list-height bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden flex flex-col font-sans text-gray-700 dark:text-gray-200 relative">
       {/* Main Layout */}
       <div className="flex flex-1 overflow-hidden relative">
         
         {/* LEFT PANEL: Lists */}
-        <div className="w-[300px] flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col z-10 shadow-[4px_0_12px_rgba(0,0,0,0.03)]">
+        <div className="w-[var(--workspace-list-sidebar-w)] flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex flex-col z-10 shadow-[4px_0_12px_rgba(0,0,0,0.03)]">
           {/* Header */}
           <div className="h-[60px] border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex items-center px-4 shrink-0">
             <span className="font-semibold text-sm text-gray-500 dark:text-gray-400">Work Items</span>

@@ -16,7 +16,7 @@ export default function TimelineTab({
   setSelectedIssue,
 }: TimelineTabProps) {
   return (
-    <div className="p-4">
+    <div className="workspace-panel">
       <TimelineView
         issues={filteredIssues}
         sprints={sprints}

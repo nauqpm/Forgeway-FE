@@ -326,10 +326,10 @@ export default function DataGridListView({
   const [showGroupMenu, setShowGroupMenu] = useState(false);
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col font-sans h-[700px]">
+    <div className="workspace-list-height bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col font-sans">
       {/* Top Toolbar */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 shrink-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
           {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -338,7 +338,7 @@ export default function DataGridListView({
               value={globalFilter ?? ''}
               onChange={(e) => setGlobalFilter(e.target.value)}
               placeholder="Search in list..." 
-              className="pl-9 pr-4 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64 shadow-sm"
+              className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] pl-9 pr-4 py-1.5 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm sm:w-[clamp(240px,20vw,320px)]"
             />
           </div>
 
@@ -367,7 +367,7 @@ export default function DataGridListView({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Filter Popover Button */}
           <button className="inline-flex items-center gap-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 font-medium text-sm transition-colors shadow-sm">
             <ListFilter className="w-4 h-4 text-gray-500 dark:text-gray-400" /> Filter
@@ -522,7 +522,7 @@ export default function DataGridListView({
             + Create
           </button>
         ) : (
-          <div className="flex items-center border border-indigo-500 rounded-md px-2 py-1 flex-1 max-w-3xl shadow-sm bg-white dark:bg-gray-800">
+          <div className="flex items-center border border-indigo-500 rounded-md px-2 py-1 flex-1 max-w-[min(100%,var(--app-narrow-content))] shadow-sm bg-white dark:bg-gray-800">
              {/* Type Selector thay cho tia chớp */}
              <select 
                value={newTaskType}

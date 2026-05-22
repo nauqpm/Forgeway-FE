@@ -1,24 +1,30 @@
-'use client';
+﻿'use client';
 
 // =============================================================================
-// useAuth HOOK — Main auth orchestration hook
+// useAuth HOOK - Main auth orchestration hook
 // =============================================================================
 // Composes authStore + services. This is the primary hook for components.
 
 import { useCallback, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { useAuthStore, useSecurityStore, useSessionStore } from '../stores/authStore';
+import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from '../stores/authStore';
 import { usePermissionStore } from '../../permission/stores/permissionStore';
 import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from '../services/authService';
 import { clearTokens } from '../services/tokenService';
 import { getMyPermissionsAPI } from '../../permission/services/permissionService';
 import { AUTH_ROUTES } from '../constants/auth-routes';
 import { AuthErrorCode } from '../types/auth.types';
+import { setupAuthInterceptors } from '../services/axiosAuthInterceptor';
 import type {
   LoginRequest,
   RegisterRequest,
   AuthApiError,
+  UserRole,
+  User,
 } from '../types/auth.types';
+
+let interceptorsInitialized = false;
 
 export const useAuth = () => {
   const router = useRouter();
@@ -32,14 +38,15 @@ export const useAuth = () => {
     setInitialized,
     clearAuth,
   } = useAuthStore();
+  const { setMfaChallenge } = useMfaStore();
   const { incrementFailedAttempts, resetFailedAttempts, setLockout, setSuspendedMessage } =
     useSecurityStore();
   const { setGlobalPermissions } = usePermissionStore();
 
-  // ─── Login ─────────────────────────────────────────────────────────────────
+  // --- Login ---------------------------------------------------------------
 
   /**
-   Hàm login - Xử lý logic nghiệp vụ khi người dùng đăng nhập.
+   * Hàm login - Xử lý logic nghiệp vụ khi người dùng đăng nhập.
    */
   const login = useCallback(
     async (data: LoginRequest) => {
@@ -82,8 +89,11 @@ export const useAuth = () => {
           }
           */
 
-          // Hoàn thành đăng nhập, chuyển vào trang chủ
-          router.push(AUTH_ROUTES.DASHBOARD);
+          // Chuyển hướng dựa trên role
+          const route = currentUser.role === 'super_admin'
+            ? AUTH_ROUTES.ADMIN_DASHBOARD
+            : AUTH_ROUTES.DASHBOARD;
+          router.push(route);
         } else {
           // Trả về lỗi nếu đăng nhập thành công nhưng không lấy được profile
           throw new Error('Không thể lấy thông tin người dùng sau khi đăng nhập.');
@@ -91,7 +101,7 @@ export const useAuth = () => {
 
         return response;
       } catch (error: unknown) {
-        // Bước 6: Xử lý các loại lỗi từ backend trả về
+        // Bước 7: Xử lý các loại lỗi từ backend trả về
         const err = error as { response?: { data?: AuthApiError } };
         const errorCode = err.response?.data?.code;
 
@@ -103,34 +113,55 @@ export const useAuth = () => {
             maxAttempts: 5,
             lockedUntil: err.response?.data?.details?.lockedUntil as string,
           });
+          toast.error('Tài khoản đã bị khóa tạm thời do nhập sai quá nhiều lần.');
         } else if (
           errorCode === AuthErrorCode.USER_SUSPENDED ||
           errorCode === AuthErrorCode.USER_DEACTIVATED
         ) {
           // Lỗi tài khoản bị khóa/đình chỉ
-          setSuspendedMessage(err.response?.data?.message || 'Tài khoản đã bị khóa');
+          setSuspendedMessage('Tài khoản đã bị khóa');
+          toast.error('Tài khoản đã bị khóa hoặc tạm ngưng hoạt động.');
         } else if (errorCode === AuthErrorCode.INVALID_CREDENTIALS) {
           // Lỗi sai thông tin đăng nhập, tăng số đếm lần sai
           incrementFailedAttempts();
+          toast.error('Email hoặc mật khẩu không chính xác.');
+        } else {
+          toast.error('Đăng nhập thất bại. Vui lòng thử lại sau.');
         }
 
-        throw error; // Ném lỗi ra ngoài để UI (LoginForm) catch lại và hiển thị
+        throw error; // Ném lỗi ra ngoài để UI xử lý luồng nếu cần
       } finally {
-        setLoading(false); // Bước 7: Luôn tắt trạng thái tải
+        setLoading(false); // Bước 8: Luôn tắt trạng thái tải
       }
     },
-    [router, setUser, setLoading, resetFailedAttempts, incrementFailedAttempts, setLockout, setSuspendedMessage, setGlobalPermissions],
+    [router, setUser, setLoading, setMfaChallenge, resetFailedAttempts, incrementFailedAttempts, setLockout, setSuspendedMessage, setGlobalPermissions],
   );
 
-  // ─── Register ──────────────────────────────────────────────────────────────
+  // --- Register ------------------------------------------------------------
 
   const register = useCallback(
     async (data: RegisterRequest) => {
       setLoading(true);
       try {
         const response = await registerAPI(data);
+        if (!response.success) {
+          throw new Error('Đăng ký thất bại.');
+        }
         router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
         return response;
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: AuthApiError } };
+        const errorCode = err.response?.data?.code;
+
+        if (errorCode === AuthErrorCode.EMAIL_ALREADY_EXISTS) {
+          toast.error('Email đã tồn tại. Vui lòng dùng email khác.');
+        } else if (errorCode === AuthErrorCode.USER_SUSPENDED) {
+          toast.error('Tài khoản đã bị tạm ngưng.');
+        } else {
+          toast.error('Đăng ký thất bại. Vui lòng thử lại sau.');
+        }
+
+        throw error;
       } finally {
         setLoading(false);
       }
@@ -138,7 +169,7 @@ export const useAuth = () => {
     [router, setLoading],
   );
 
-  // ─── Logout ────────────────────────────────────────────────────────────────
+  // --- Logout --------------------------------------------------------------
 
   const logout = useCallback(async () => {
     try {
@@ -155,7 +186,7 @@ export const useAuth = () => {
     }
   }, [clearAuth, router]);
 
-  // ─── Refresh Current User ──────────────────────────────────────────────────
+  // --- Refresh Current User ------------------------------------------------
 
   const refreshUser = useCallback(async () => {
     try {
@@ -168,7 +199,7 @@ export const useAuth = () => {
     }
   }, [setUser, clearAuth]);
 
-  // ─── Initialize Auth (check cookie session) ────────────────────────────────
+  // --- Initialize Auth (check cookie session) -----------------------------
 
   const initializeAuth = useCallback(async () => {
     if (isInitialized) return;
@@ -185,14 +216,21 @@ export const useAuth = () => {
         // Non-blocking
       }
     } catch {
-      // No valid session — user is not authenticated
+      // No valid session - user is not authenticated
       clearAuth();
     } finally {
       setInitialized(true);
     }
   }, [isInitialized, setUser, setLoading, setInitialized, clearAuth, setGlobalPermissions]);
 
-  // ─── Auto-initialize on mount ──────────────────────────────────────────────
+  // --- Auto-initialize on mount -------------------------------------------
+
+  useEffect(() => {
+    if (!interceptorsInitialized) {
+      setupAuthInterceptors();
+      interceptorsInitialized = true;
+    }
+  }, []);
 
   useEffect(() => {
     initializeAuth();

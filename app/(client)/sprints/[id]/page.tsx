@@ -105,7 +105,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
   const daysLeft = sprint.endDate ? Math.max(0, Math.ceil((new Date(sprint.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="app-page-narrow">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/sprints" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
           <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -139,7 +139,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {sprint.goal && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6">
+        <div className="workspace-panel bg-indigo-50 border border-indigo-100 rounded-xl mb-6">
           <p className="text-sm font-medium text-indigo-800 mb-1">Sprint Goal</p>
           <p className="text-sm text-indigo-700">{sprint.goal}</p>
         </div>
@@ -153,7 +153,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
           { label: "Progress", value: `${pct}%`, icon: TrendingUp, color: "text-indigo-600", bg: "bg-indigo-50" },
           { label: "Days Left", value: daysLeft !== null ? `${daysLeft} days` : "—", icon: Calendar, color: "text-blue-600", bg: "bg-blue-50" },
         ].map((card) => (
-          <div key={card.label} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+          <div key={card.label} className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
             <div className={`w-9 h-9 ${card.bg} rounded-lg flex items-center justify-center mb-3`}>
               <card.icon className={`w-4 h-4 ${card.color}`} />
             </div>
@@ -164,7 +164,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Progress Bars */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 mb-6">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-indigo-600" /> Sprint Progress</h2>
         <div className="space-y-4">
           <div>
@@ -189,7 +189,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
       </div>
 
       {/* Dates */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Calendar className="w-5 h-5 text-indigo-600" /> Sprint Timeline</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>

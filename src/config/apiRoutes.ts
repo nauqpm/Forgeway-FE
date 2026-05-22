@@ -12,13 +12,16 @@ export const apiRoutes = {
     },
     WORKSPACES: {
         BASE: '/workspaces',
-        BY_ID: (id: string) => `/workspaces/${id}`,
-        UPDATE: (id: string) => `/workspaces/${id}`,
-        MEMBERS: (id: string) => `/workspaces/${id}/members`,
-        ADD_MEMBER: (id: string) => `/workspaces/${id}/members`,
-        REMOVE_MEMBER: (id: string, userId: string) => `/workspaces/${id}/members/${userId}`,
-        UPDATE_MEMBER: (id: string, userId: string) => `/workspaces/${id}/members/${userId}`,
-        INVITE: '/invite/send',
+        BY_KEY: (key: string) => `/workspaces/${key}`,
+        UPDATE: (key: string) => `/workspaces/${key}`,
+        MEMBERS: (key: string) => `/workspaces/${key}/members`,
+        ADD_MEMBER: (key: string) => `/workspaces/${key}/members`,
+        REMOVE_MEMBER: (key: string, userId: string) => `/workspaces/${key}/members/${userId}`,
+        UPDATE_MEMBER: (key: string, userId: string) => `/workspaces/${key}/members/${userId}`,
+        INVITES: (key: string) => `/workspaces/${key}/invites`,
+        INVITE_BY_ID: (key: string, inviteId: string) => `/workspaces/${key}/invites/${inviteId}`,
+        INVITE_BY_TOKEN: (token: string) => `/workspaces/invites/${token}`,
+        ACCEPT_INVITE: (token: string) => `/workspaces/invites/${token}/accept`,
     },
     PROJECTS: {
         BASE: '/projects',
@@ -34,18 +37,18 @@ export const apiRoutes = {
         COLUMNS: (id: string) => `/boards/${id}/columns`,
     },
     TASKS: {
+        // New workspace-scoped board routes (use these for workspace board/backlog)
+        BOARD: (workspaceKey: string) => `/workspaces/${workspaceKey}/board`,
+        BOARD_TASK: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}`,
+        BY_SPRINT: (workspaceKey: string, sprintId: string) => `/workspaces/${workspaceKey}/board?sprintId=${sprintId}`,
+        // Legacy routes — still used by projects/tasks pages, pending migration
         BASE: '/tasks',
         BY_ID: (id: string) => `/tasks/${id}`,
-        BY_KEY: (key: string) => `/tasks/key/${key}`,
         BY_PROJECT: (projectId: string) => `/tasks/project/${projectId}`,
-        BY_SPRINT: (sprintId: string) => `/tasks/sprint/${sprintId}`,
-        BY_BOARD: (boardId: string) => `/tasks/board/${boardId}`,
-        ASSIGNEE: (userId: string) => `/tasks/assignee/${userId}`,
         MOVE: (id: string) => `/tasks/${id}/move`,
-        ASSIGN: (id: string) => `/tasks/${id}/assign`,
         STATUS: (id: string) => `/tasks/${id}/status`,
         UPDATE: (id: string) => `/tasks/${id}`,
-        LABELS: (id: string) => `/tasks/${id}/labels`,
+        ASSIGNEE: (userId: string) => `/tasks/assignee/${userId}`,
     },
     SPRINTS: {
         BASE: '/sprints',
@@ -109,10 +112,6 @@ export const apiRoutes = {
         BY_ID: (id: string) => `/users/${id}`,
         WORKSPACE_MEMBERS: '/workspaces/members',
         ALL: '/users/all',
-    },
-    INVITE: {
-        SEND: '/invite/send',
-        ACCEPT: '/invite/accept',
     },
 };
 

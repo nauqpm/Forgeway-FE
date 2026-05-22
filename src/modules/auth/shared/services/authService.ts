@@ -125,6 +125,17 @@ export const extractAuthError = (error: unknown): AuthApiError => {
   }
   return {
     code: 'INVALID_CREDENTIALS' as AuthApiError['code'],
-    message: err.response?.data?.message || err.message || 'Da co loi xay ra',
+    message: err.response?.data?.message || err.message || 'Đã có lỗi xảy ra',
+  };
+};
+
+export const extractRegisterError = (error: unknown): AuthApiError => {
+  const err = error as { response?: { data?: AuthApiError }; message?: string };
+  if (err.response?.data?.code) {
+    return err.response.data;
+  }
+  return {
+    code: 'EMAIL_ALREADY_EXISTS' as AuthApiError['code'],
+    message: err.response?.data?.message || err.message || 'Đăng ký thất bại.',
   };
 };

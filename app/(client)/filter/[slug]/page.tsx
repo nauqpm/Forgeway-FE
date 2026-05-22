@@ -97,7 +97,7 @@ function FilterDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden flex flex-col max-h-96">
+        <div className="absolute top-full left-0 mt-1 w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden flex flex-col max-h-96">
           <div className="p-2 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{label} = (equals)</span>
             {hasSelection && onClear && (
@@ -249,17 +249,17 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
   });
 
   return (
-    <div className="max-w-7xl mx-auto h-full flex flex-col pb-12">
+    <div className="app-page-wide h-full flex flex-col pb-12">
       {/* Header section similar to Jira */}
       <div className="flex flex-col gap-4 mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">{title}</h1>
             <button className="p-1.5 text-gray-400 hover:text-amber-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors">
               <Star className="w-5 h-5" />
             </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors">
               Apps <ChevronDown className="w-4 h-4" />
             </button>
@@ -305,7 +305,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
                 placeholder="Search work..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-1.5 w-64 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all sm:w-[clamp(240px,20vw,320px)]"
               />
             </div>
 
@@ -363,7 +363,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
       {/* Table View */}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm flex-1 overflow-hidden flex flex-col min-h-[400px]">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm whitespace-nowrap">
+          <table className="w-full app-table-min text-left text-sm whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">
                 <th className="px-4 py-3 w-10 text-center">

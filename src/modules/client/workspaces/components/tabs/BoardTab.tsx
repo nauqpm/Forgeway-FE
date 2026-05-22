@@ -67,7 +67,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
   return (
     <div className="flex flex-col gap-4">
       {/* Quick Filters */}
-      <div className="flex flex-wrap items-center gap-4 px-4 pt-4">
+      <div className="flex flex-wrap items-center gap-4 px-[var(--workspace-surface-pad)] pt-[var(--workspace-surface-pad)]">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -80,7 +80,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                 search: e.target.value,
               }))
             }
-            className="pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow w-64"
+            className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow sm:w-[clamp(240px,20vw,320px)]"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -156,7 +156,8 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
         >
           {(provided) => (
             <div
-              className="flex gap-6 overflow-x-auto pb-4 min-h-[500px] p-4"
+              className="workspace-board-height flex overflow-x-auto pb-[var(--workspace-surface-pad)] p-[var(--workspace-surface-pad)]"
+              style={{ gap: "var(--workspace-board-gap)" }}
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
@@ -170,7 +171,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="flex-shrink-0 w-80 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex flex-col max-h-full border border-gray-200 dark:border-gray-800 shadow-sm"
+                      className="workspace-column flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex flex-col max-h-full border border-gray-200 dark:border-gray-800 shadow-sm"
                     >
                       <div
                         {...provided.dragHandleProps}
@@ -270,7 +271,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
 
               {/* Thêm cột mới */}
               <div
-                className="flex-shrink-0 w-80 bg-transparent flex flex-col"
+                className="workspace-column flex-shrink-0 bg-transparent flex flex-col"
                 ref={columnsEndRef}
               >
                 {showCreateColumn ? (

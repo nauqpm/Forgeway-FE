@@ -37,13 +37,13 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         }
         return Promise.all([
           api
-            .get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`)
+            .get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws.key}`)
             .catch(() => ({ data: [] })),
           api
-            .get(apiRoutes.WORKSPACES.BY_ID(ws._id))
+            .get(apiRoutes.WORKSPACES.BY_KEY(ws.key))
             .catch(() => ({ data: {} })),
           api
-            .get(`${apiRoutes.WORKSPACES.BASE}?workspaceId=${ws._id}`)
+            .get(`${apiRoutes.WORKSPACES.BASE}?workspaceId=${ws.key}`)
             .catch(() => ({ data: [] })),
         ]);
       })
@@ -147,7 +147,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   if (loading) return null;
 
   return (
-    <div className={`max-w-5xl mx-auto ${className}`}>
+    <div className={`app-page-medium ${className}`}>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="px-2 text-2xl font-bold text-gray-900 dark:text-white">
           Không gian đề xuất
@@ -161,12 +161,12 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {displayWorkspaces.map((workspace) => (
           <Link
             key={workspace.id}
             href={`/workspaces/${workspace.id}`}
-            className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500 transition-all"
+            className="workspace-panel group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500 transition-all"
           >
             <div className="flex items-start gap-4">
               <div
@@ -192,7 +192,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dành cho bạn</h2>
         </div>
 
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           {tabs.map((tab) => (
             <button
               key={tab.key}

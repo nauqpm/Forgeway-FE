@@ -23,16 +23,16 @@ const Header = ({ workspace, workspaceId, setShowCreateIssue }: HeaderProps) => 
   const template = getWorkspaceTemplate(workspace);
 
   return (
-    <div className="flex items-center justify-between mb-8">
-      <div className="flex items-center gap-4">
+    <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex min-w-0 items-start gap-3 sm:gap-4">
         <Link
           href="/workspaces"
-          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="shrink-0 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         >
           <ArrowRight className="w-5 h-5 text-gray-500 dark:text-gray-400 rotate-180" />
         </Link>
         <div
-          className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner ${template === "scrum" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-emerald-500 to-teal-600"}`}
+          className={`hidden h-14 w-14 shrink-0 rounded-2xl sm:flex items-center justify-center shadow-inner ${template === "scrum" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-emerald-500 to-teal-600"}`}
         >
           {template === "scrum" ? (
             <Repeat className="w-7 h-7 text-white" />
@@ -40,8 +40,8 @@ const Header = ({ workspace, workspaceId, setShowCreateIssue }: HeaderProps) => 
             <Columns className="w-7 h-7 text-white" />
           )}
         </div>
-        <div>
-          <div className="flex items-center gap-2 mb-1">
+        <div className="min-w-0">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
             <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded text-xs font-mono font-bold">
               {workspace.key}
             </span>
@@ -63,18 +63,18 @@ const Header = ({ workspace, workspaceId, setShowCreateIssue }: HeaderProps) => 
               )}
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-            {workspace.name}
+          <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+            <span className="min-w-0 break-words">{workspace.name}</span>
             <Link
               href={`/workspaces/${workspaceId}/settings`}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              className="shrink-0 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
             >
               <Settings className="w-5 h-5" />
             </Link>
           </h1>
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2 lg:justify-end">
         <button
           onClick={() => setIsInviteModalOpen(true)}
           className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors shadow-sm"

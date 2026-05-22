@@ -133,7 +133,7 @@ export default function TaskDetailDrawer({
 
   const panelClasses = embedded
     ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 shadow-none border-0 rounded-none overflow-hidden"
-    : `fixed top-0 right-0 bottom-0 w-full max-w-4xl z-[99999] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col shadow-2xl border-l border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
+    : `fixed top-0 right-0 bottom-0 w-full max-w-[min(100vw,72rem)] z-[99999] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col shadow-2xl border-l border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`;
 
@@ -148,7 +148,7 @@ export default function TaskDetailDrawer({
 
       <div className={panelClasses}>
         {/* Top Header */}
-        <div className="h-14 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-5 shrink-0 bg-gray-100 dark:bg-gray-800">
+        <div className="app-header border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0 bg-gray-100 dark:bg-gray-800">
           <div className="flex items-center gap-2 text-sm font-medium">
             <div className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded cursor-pointer transition-colors">
               <div className="w-5 h-5 bg-[#0052CC] rounded text-white flex items-center justify-center">
@@ -181,7 +181,7 @@ export default function TaskDetailDrawer({
         {/* Content Body */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Column (Main) */}
-          <div className="flex-1 overflow-y-auto p-6 md:p-10 border-r border-gray-200 dark:border-gray-700 space-y-8 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] border-r border-gray-200 dark:border-gray-700 space-y-8 custom-scrollbar">
 
             {/* Title */}
             <div>
@@ -228,7 +228,7 @@ export default function TaskDetailDrawer({
             {/* Linked Work Items */}
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Linked work items</h3>
-              <div className="p-5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="workspace-panel bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-sm text-gray-500 dark:text-gray-400">No linked items yet</span>
                 </div>
@@ -349,7 +349,7 @@ export default function TaskDetailDrawer({
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="w-[340px] bg-gray-100 dark:bg-gray-800/50 p-6 overflow-y-auto custom-scrollbar">
+          <div className="workspace-detail-panel bg-gray-100 dark:bg-gray-800/50 p-[var(--workspace-surface-pad)] overflow-y-auto custom-scrollbar">
 
             <div className="flex items-center gap-2 mb-6">
               <div className="relative">

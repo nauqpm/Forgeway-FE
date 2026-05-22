@@ -131,7 +131,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData }: Sp
               <option value="custom">Custom</option>
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Ngày bắt đầu</label>
               <input
@@ -163,7 +163,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData }: Sp
               placeholder="Vd: Hoàn thiện tính năng thanh toán..."
             />
           </div>
-          <div className="pt-4 flex justify-end gap-3">
+          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
             <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
               Hủy
             </button>

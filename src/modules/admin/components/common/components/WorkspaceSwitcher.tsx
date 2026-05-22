@@ -47,7 +47,7 @@ export default function WorkspaceSwitcher() {
       </button>
 
       {showDropdown && (
-        <div className="absolute top-full left-0 mt-1 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+        <div className="absolute top-full left-0 mt-1 w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
           <div className="px-3 py-2">
             <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Workspaces</p>
           </div>

@@ -34,6 +34,8 @@ const processQueue = (error: unknown | null) => {
 // ─── Setup Interceptors ──────────────────────────────────────────────────────
 
 export const setupAuthInterceptors = (): void => {
+  const skipRefreshEndpoints = ['/auth/login', '/auth/register'];
+
   // ── Request Interceptor ──
   api.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -64,6 +66,11 @@ export const setupAuthInterceptors = (): void => {
       // Don't retry the refresh endpoint itself
       if (originalRequest.url?.includes('/auth/refresh')) {
         useAuthStore.getState().clearAuth();
+        return Promise.reject(error);
+      }
+
+      // Keep original auth errors for login/register instead of trying refresh
+      if (skipRefreshEndpoints.some((endpoint) => originalRequest.url?.includes(endpoint))) {
         return Promise.reject(error);
       }
 

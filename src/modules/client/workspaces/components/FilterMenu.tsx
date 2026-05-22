@@ -50,7 +50,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
   };
 
   return (
-    <div className="absolute top-16 right-0 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl z-40 animate-in slide-in-from-top-2 duration-200">
+    <div className="absolute top-16 right-0 w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl rounded-xl z-40 animate-in slide-in-from-top-2 duration-200">
       <div className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700">
         <h4 className="font-semibold text-gray-900 dark:text-white">Bộ lọc</h4>
         <button onClick={onClose} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded">
@@ -83,7 +83,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         <div className="space-y-2">
           <h5 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">Loại công việc</h5>
           <div className="grid grid-cols-2 gap-2">
-            {['Task', 'Bug', 'Story', 'Design'].map(type => {
+            {['Task', 'Bug', 'Story', 'Epic'].map(type => {
               const isSelected = filters.types?.includes(type);
               return (
                 <label key={type} className="flex items-center gap-2 cursor-pointer">

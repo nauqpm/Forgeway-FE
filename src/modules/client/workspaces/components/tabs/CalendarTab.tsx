@@ -18,7 +18,7 @@ export default function CalendarTab({
   setSelectedIssue,
 }: CalendarTabProps) {
   return (
-    <div className="p-4 min-h-[500px]">
+    <div className="workspace-panel workspace-board-height">
       <CalendarView
         issues={issues}
         sprints={sprints}

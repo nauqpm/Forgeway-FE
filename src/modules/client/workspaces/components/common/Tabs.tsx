@@ -16,16 +16,17 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
   const template = getWorkspaceTemplate(workspace);
 
   return (
-    <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900/50 p-1 rounded-xl w-fit mb-6">
+    <div className="mb-6 w-full overflow-x-auto pb-1">
+      <div className="flex w-max min-w-full items-center gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-900/50 sm:min-w-0 sm:w-fit">
       <button
         onClick={() => setActiveTab("summary")}
-        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "summary" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+        className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "summary" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
       >
         Summary
       </button>
       <button
         onClick={() => setActiveTab("board")}
-        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "board" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+        className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "board" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
       >
         Board
       </button>
@@ -33,7 +34,7 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
         <>
           <button
             onClick={() => setActiveTab("backlog")}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "backlog" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+            className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "backlog" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
           >
             Backlog
           </button>
@@ -41,28 +42,29 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
       )}
       <button
         onClick={() => setActiveTab("timeline")}
-        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "timeline" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+        className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "timeline" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
       >
         Timeline
       </button>
       <button
         onClick={() => setActiveTab("calendar")}
-        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "calendar" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+        className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "calendar" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
       >
         Calendar
       </button>
       <button
         onClick={() => setActiveTab("list")}
-        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "list" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+        className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "list" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
       >
         List
       </button>
       <button
         onClick={() => setActiveTab("pages")}
-        className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === "pages" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+        className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "pages" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
       >
         Docs
       </button>
+      </div>
     </div>
   );
 };
