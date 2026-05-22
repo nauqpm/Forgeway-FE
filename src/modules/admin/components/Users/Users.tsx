@@ -71,12 +71,12 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
       .then(([usersRes, wsData]) => {
         if (cancelled) return;
         setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
-        if (currentWorkspace?._id) {
-          return api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace._id));
+        if (currentWorkspace?.key) {
+          return api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace.key));
         }
         const ws = currentWorkspace || (wsData.length > 0 ? wsData[0] : null);
         if (ws) {
-          return api.get(apiRoutes.WORKSPACES.MEMBERS(ws._id));
+          return api.get(apiRoutes.WORKSPACES.MEMBERS(ws.key));
         }
         return null;
       })
@@ -92,11 +92,11 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail.trim() || !currentWorkspace?._id) return;
+    if (!inviteEmail.trim() || !currentWorkspace?.key) return;
     setInviting(true);
     try {
-      await api.post(apiRoutes.WORKSPACES.ADD_MEMBER(currentWorkspace._id), { email: inviteEmail, role: inviteRole });
-      const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace._id));
+      await api.post(apiRoutes.WORKSPACES.ADD_MEMBER(currentWorkspace.key), { email: inviteEmail, role: inviteRole });
+      const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace.key));
       setMembers(Array.isArray(res.data) ? res.data : []);
       setInviteEmail("");
       setShowInvite(false);
@@ -104,19 +104,19 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
   };
 
   const handleChangeRole = async (memberEmail: string, newRole: string) => {
-    if (!currentWorkspace?._id) return;
+    if (!currentWorkspace?.key) return;
     try {
-      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(currentWorkspace._id, memberEmail), { role: newRole });
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(currentWorkspace.key, memberEmail), { role: newRole });
       setMembers(prev => prev.map(m => m.email === memberEmail ? { ...m, role: newRole as WorkspaceMember["role"] } : m));
       setOpenMenu(null);
     } catch {}
   };
 
   const handleRemoveMember = async (email: string) => {
-    if (!currentWorkspace?._id) return;
+    if (!currentWorkspace?.key) return;
     if (!confirm("Xóa thành viên này khỏi workspace?")) return;
     try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(currentWorkspace._id, email));
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(currentWorkspace.key, email));
       setMembers(prev => prev.filter(m => m.email !== email));
     } catch {}
   };

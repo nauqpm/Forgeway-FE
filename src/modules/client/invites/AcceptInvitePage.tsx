@@ -35,15 +35,15 @@ export default function AcceptInvitePage({ token }: Props) {
       isAuthenticated &&
       user?.email.toLowerCase() === invite.invitedEmail.toLowerCase()
     ) {
-      router.replace(`/workspaces/${invite.workspaceId}`);
+      router.replace(`/workspaces/${invite.workspaceKey}`);
     }
   }, [invite, isAuthenticated, user, router]);
 
   const handleAccept = async () => {
     setAccepting(true);
     try {
-      const workspaceId = invite?.workspaceId;
-      if (!workspaceId) {
+      const workspaceKey = invite?.workspaceKey;
+      if (!workspaceKey) {
         toast.error('Không thể xác định workspace của lời mời.');
         return;
       }
@@ -51,7 +51,7 @@ export default function AcceptInvitePage({ token }: Props) {
       await inviteService.acceptInvite(token);
       setDone(true);
       toast.success('Bạn đã tham gia workspace thành công!');
-      setTimeout(() => router.push(`/workspaces/${workspaceId}`), 1500);
+      setTimeout(() => router.push(`/workspaces/${workspaceKey}`), 1500);
     } catch (e: any) {
       toast.error(e?.response?.data?.message || 'Không thể chấp nhận lời mời.');
     } finally {

@@ -37,13 +37,13 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         }
         return Promise.all([
           api
-            .get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`)
+            .get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws.key}`)
             .catch(() => ({ data: [] })),
           api
-            .get(apiRoutes.WORKSPACES.BY_ID(ws._id))
+            .get(apiRoutes.WORKSPACES.BY_KEY(ws.key))
             .catch(() => ({ data: {} })),
           api
-            .get(`${apiRoutes.WORKSPACES.BASE}?workspaceId=${ws._id}`)
+            .get(`${apiRoutes.WORKSPACES.BASE}?workspaceId=${ws.key}`)
             .catch(() => ({ data: [] })),
         ]);
       })

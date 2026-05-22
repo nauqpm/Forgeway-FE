@@ -149,7 +149,7 @@ export default function WorkspaceDetailPage({
 
   useEffect(() => {
     if (!workspaceId) return;
-    api.get(apiRoutes.WORKSPACES.BY_ID(workspaceId))
+    api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceId))
       .then((res) => {
         const nextWorkspace = res.data as Workspace;
         const template = getWorkspaceTemplate(nextWorkspace);

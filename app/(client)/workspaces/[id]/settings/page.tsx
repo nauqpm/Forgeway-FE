@@ -33,7 +33,7 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     if (!workspaceId) return;
-    api.get(apiRoutes.WORKSPACES.BY_ID(workspaceId))
+    api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceId))
       .then((res) => {
         setWorkspace(res.data);
         setForm({
@@ -59,7 +59,7 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
     e.preventDefault();
     setSaving(true);
     try {
-      await api.put(apiRoutes.WORKSPACES.BY_ID(workspaceId), form);
+      await api.put(apiRoutes.WORKSPACES.BY_KEY(workspaceId), form);
       router.push(`/workspaces/${workspaceId}`);
     } catch (e) {
       console.error("Save failed", e);
@@ -72,7 +72,7 @@ export default function SpaceSettingsPage({ params }: { params: Promise<{ id: st
   const handleDelete = async () => {
     if (confirm("Bạn có chắc chắn muốn xóa không gian này không? Hành động này không thể hoàn tác.")) {
       try {
-        await api.delete(apiRoutes.WORKSPACES.BY_ID(workspaceId));
+        await api.delete(apiRoutes.WORKSPACES.BY_KEY(workspaceId));
         router.push("/workspaces");
       } catch (e) {
         console.error("Delete failed", e);

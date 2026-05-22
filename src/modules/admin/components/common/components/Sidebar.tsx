@@ -424,7 +424,7 @@ export default function Sidebar({
                     {sidebarWorkspaces.slice(0, 5).map((workspace) => (
                       <Link
                         key={workspace._id}
-                        href={`/workspaces/${workspace._id}`}
+                        href={`/workspaces/${workspace.key}`}
                         className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
                       >
                         <div className="w-4 h-4 rounded bg-indigo-500 text-white flex items-center justify-center text-[10px]">
