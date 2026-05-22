@@ -106,58 +106,88 @@ interface SecurityActions {
   setLockout: (info: LockoutInfo) => void;
   incrementFailedAttempts: () => void;
   resetFailedAttempts: () => void;
+  checkAndResetLockout: () => void;
   setSuspendedMessage: (message: string | null) => void;
   clearSecurityState: () => void;
 }
 
-export const useSecurityStore = create<SecurityState & SecurityActions>((set, get) => ({
-  // ── State ──
-  lockoutInfo: null,
-  failedAttempts: 0,
-  suspendedMessage: null,
+export const useSecurityStore = create<SecurityState & SecurityActions>()(
+  persist(
+    (set, get) => ({
+      // ── State ──
+      lockoutInfo: null,
+      failedAttempts: 0,
+      suspendedMessage: null,
 
-  // ── Actions ──
-  setLockout: (lockoutInfo) => set({ lockoutInfo }),
+      // ── Actions ──
+      setLockout: (lockoutInfo) => set({ lockoutInfo }),
 
-  /**
-   * Tăng số lần đăng nhập sai (failedAttempts) và cập nhật trạng thái khóa (lockoutInfo).
-   * 
-   * Các bước chi tiết:
-   * 1. Tính toán số lần thử hiện tại cộng thêm 1 (biến `next`).
-   * 2. Kiểm tra nếu số lần `next` lớn hơn hoặc bằng giới hạn cho phép (`MAX_FAILED_ATTEMPTS`, ví dụ: 5 lần):
-   *    - Thay đổi trạng thái tài khoản thành bị khóa (`isLocked: true`).
-   *    - Set số lần thử còn lại (`remainingAttempts`) về 0.
-   * 3. Nếu chưa đạt giới hạn số lần thử:
-   *    - Giữ trạng thái không bị khóa (`isLocked: false`).
-   *    - Trừ lùi số lần thử còn lại (`MAX_FAILED_ATTEMPTS - next`).
-   */
-  incrementFailedAttempts: () => {
-    const next = get().failedAttempts + 1;
-    set({
-      failedAttempts: next,
-      lockoutInfo:
-        next >= PASSWORD_POLICY.MAX_FAILED_ATTEMPTS
-          ? {
+      /**
+       * Tăng số lần đăng nhập sai (failedAttempts) và cập nhật trạng thái khóa (lockoutInfo).
+       * 
+       * Các bước chi tiết:
+       * 1. Tính toán số lần thử hiện tại cộng thêm 1 (biến `next`).
+       * 2. Kiểm tra nếu số lần `next` lớn hơn hoặc bằng giới hạn cho phép (`MAX_FAILED_ATTEMPTS`, ví dụ: 5 lần):
+       *    - Thay đổi trạng thái tài khoản thành bị khóa (`isLocked: true`).
+       *    - Thiết lập thời gian khóa (ví dụ: 15 phút từ hiện tại).
+       *    - Set số lần thử còn lại (`remainingAttempts`) về 0.
+       * 3. Nếu chưa đạt giới hạn số lần thử:
+       *    - Giữ trạng thái không bị khóa (`isLocked: false`).
+       *    - Trừ lùi số lần thử còn lại (`MAX_FAILED_ATTEMPTS - next`).
+       */
+      incrementFailedAttempts: () => {
+        const next = get().failedAttempts + 1;
+        const max = PASSWORD_POLICY.MAX_FAILED_ATTEMPTS;
+        
+        if (next >= max) {
+          // Khóa trong 15 phút
+          const lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+          set({
+            failedAttempts: next,
+            lockoutInfo: {
               isLocked: true,
               remainingAttempts: 0,
-              maxAttempts: PASSWORD_POLICY.MAX_FAILED_ATTEMPTS,
-            }
-          : {
-              isLocked: false,
-              remainingAttempts: PASSWORD_POLICY.MAX_FAILED_ATTEMPTS - next,
-              maxAttempts: PASSWORD_POLICY.MAX_FAILED_ATTEMPTS,
+              maxAttempts: max,
+              lockedUntil,
             },
-    });
-  },
+          });
+        } else {
+          set({
+            failedAttempts: next,
+            lockoutInfo: {
+              isLocked: false,
+              remainingAttempts: max - next,
+              maxAttempts: max,
+            },
+          });
+        }
+      },
 
-  resetFailedAttempts: () => set({ failedAttempts: 0, lockoutInfo: null }),
-  setSuspendedMessage: (suspendedMessage) => set({ suspendedMessage }),
-  clearSecurityState: () => set({
-    lockoutInfo: null,
-    failedAttempts: 0,
-    suspendedMessage: null,
-  }),
-}));
+      resetFailedAttempts: () => set({ failedAttempts: 0, lockoutInfo: null }),
+
+      checkAndResetLockout: () => {
+        const { lockoutInfo } = get();
+        if (lockoutInfo?.isLocked && lockoutInfo.lockedUntil) {
+          const now = Date.now();
+          const until = new Date(lockoutInfo.lockedUntil).getTime();
+          if (now >= until) {
+            set({ lockoutInfo: null, failedAttempts: 0 });
+          }
+        }
+      },
+
+      setSuspendedMessage: (suspendedMessage) => set({ suspendedMessage }),
+      clearSecurityState: () => set({
+        lockoutInfo: null,
+        failedAttempts: 0,
+        suspendedMessage: null,
+      }),
+    }),
+    {
+      name: 'al-task-security',
+    }
+  )
+);
 
 
 // ============================================================================

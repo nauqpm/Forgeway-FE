@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
@@ -16,7 +16,7 @@ function LoginFormInner() {
   const [showPassword, setShowPassword] = useState(false);
 
   const { login, isLoading } = useAuth();
-  const { lockoutInfo } = useSecurityStore();
+  const { lockoutInfo, checkAndResetLockout } = useSecurityStore();
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -25,6 +25,14 @@ function LoginFormInner() {
       toast.error('Đăng nhập Google thất bại. Vui lòng thử lại.');
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    checkAndResetLockout();
+    const interval = setInterval(() => {
+      checkAndResetLockout();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [checkAndResetLockout]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
