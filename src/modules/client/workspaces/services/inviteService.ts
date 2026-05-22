@@ -12,7 +12,7 @@ export interface PendingInvite {
   invitedBy: { _id: string; email: string; fullName: string };
   role: string;
   status: string;
-  expiresAt: string;
+  expiresAt: string | null;
   createdAt: string;
 }
 
@@ -24,7 +24,7 @@ export interface InviteDetails {
   invitedBy: { _id: string; email: string; fullName: string };
   role: string;
   status: string;
-  expiresAt: string;
+  expiresAt: string | null;
 }
 
 export const inviteService = {

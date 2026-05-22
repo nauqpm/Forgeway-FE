@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Users, UserPlus, Search, X, Loader2, ChevronDown } from "lucide-react";
+import { useState, useEffect, useCallback, MouseEvent } from "react";
+import { Users, UserPlus, Search, X, Loader2, ChevronDown, Trash2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/config/api";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -172,6 +172,12 @@ export default function WorkspaceMembersPanel({ workspaceId }: WorkspaceMembersP
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [showInvite, setShowInvite] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    member: WorkspaceMember;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
 
   const fetchMembers = useCallback(() => {
     if (!workspaceId) return;
@@ -186,6 +192,51 @@ export default function WorkspaceMembersPanel({ workspaceId }: WorkspaceMembersP
   useEffect(() => {
     fetchMembers();
   }, [fetchMembers]);
+
+  useEffect(() => {
+    const closeMenu = () => setContextMenu(null);
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setContextMenu(null);
+    };
+
+    document.addEventListener("click", closeMenu);
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.removeEventListener("click", closeMenu);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, []);
+
+  const handleOpenContextMenu = (
+    event: MouseEvent<HTMLDivElement>,
+    member: WorkspaceMember,
+  ) => {
+    event.preventDefault();
+    setContextMenu({
+      member,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
+  const handleRemoveMember = async (member: WorkspaceMember) => {
+    const userId = member.userId?._id;
+    if (!userId) return;
+
+    setRemovingMemberId(userId);
+    try {
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceId, userId));
+      setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
+      setContextMenu(null);
+      toast.success("Đã xóa thành viên khỏi workspace.");
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? "Không thể xóa thành viên.";
+      toast.error(msg);
+    } finally {
+      setRemovingMemberId(null);
+    }
+  };
 
   const filtered = members.filter((m) => {
     const q = search.toLowerCase();
@@ -270,6 +321,7 @@ export default function WorkspaceMembersPanel({ workspaceId }: WorkspaceMembersP
             return (
               <div
                 key={user._id}
+                onContextMenu={(event) => handleOpenContextMenu(event, m)}
                 className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors"
               >
                 <MemberAvatar user={user} />
@@ -289,6 +341,28 @@ export default function WorkspaceMembersPanel({ workspaceId }: WorkspaceMembersP
               </div>
             );
           })}
+        </div>
+      )}
+
+      {contextMenu && (
+        <div
+          className="fixed z-50 w-52 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-1 shadow-xl"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => handleRemoveMember(contextMenu.member)}
+            disabled={removingMemberId === contextMenu.member.userId?._id}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+          >
+            {removingMemberId === contextMenu.member.userId?._id ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            Xóa khỏi workspace
+          </button>
         </div>
       )}
     </div>
