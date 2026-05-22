@@ -1,63 +1,43 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '../../shared/hooks/useAuth';
 import PasswordPolicyChecklist, { validatePassword } from '../../password/security/PasswordPolicyChecklist';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
+import { extractRegisterError } from '../../shared/services/authService';
 import toast from 'react-hot-toast';
 import { Zap, Eye, EyeOff, Loader2 } from 'lucide-react';
 
-
 export default function RegisterForm() {
-  const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
   const { register, isLoading } = useAuth();
 
-  /**
-   * Hàm xử lý khi người dùng submit form đăng ký
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Bước 3a: Validate độ mạnh mật khẩu (có hoa, thường, số, ký tự đặc biệt...)
     const policy = validatePassword(form.password);
     if (!policy.isValid) { toast.error('Mật khẩu chưa đáp ứng yêu cầu bảo mật'); return; }
-
-    // Bước 3b: Validate mật khẩu xác nhận
     if (form.password !== form.confirmPassword) { toast.error('Mật khẩu không trùng khớp!'); return; }
 
     try {
-      // Bước 3c: Gọi hàm đăng ký gửi data lên server
-      await register({ email: form.email, password: form.password /*, fullName: form.fullName */ });
-
-      // Bước 3d: Xử lý thành công
-      toast.success('Tài khoản đã được tạo! V vui lòng đăng nhập.');
+      await register({ email: form.email, password: form.password });
+      toast.success('Đăng ký tài khoản thành công, vui lòng xác thực email.');
     } catch (err: unknown) {
-      // Bắt lỗi khi trùng email hoặc server bị lỗi
-      const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error?.response?.data?.message || 'Đăng ký thất bại.');
+      const error = extractRegisterError(err);
+      toast.error(error.message || 'Đăng ký thất bại.');
     }
   };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden">
-      {/* Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute top-0 left-0 w-full h-full object-cover z-0"
-      >
+      <video autoPlay loop muted playsInline className="absolute top-0 left-0 w-full h-full object-cover z-0">
         <source src="/videos/mixkit-clouds-and-blue-sky-background-2408-full-hd.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-
-      {/* Overlay to tone down the video contrast and ensure the text/form is readable */}
       <div className="absolute top-0 left-0 w-full h-full bg-slate-900/10 z-10" />
 
-      {/* Glassmorphism Card */}
       <div className="w-full max-w-md relative z-20">
         <div className="bg-white/30 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10 transition-all duration-300 hover:shadow-indigo-500/10 hover:border-white/55">
           <div className="text-center mb-8">
@@ -70,7 +50,6 @@ export default function RegisterForm() {
             <p className="text-gray-600 text-sm mt-1.5 font-semibold">Bắt đầu trải nghiệm AL-TASK miễn phí</p>
           </div>
 
-          {/* Google SSO */}
           <button onClick={initiateGoogleLogin} type="button"
             className="w-full mb-6 py-3 px-4 flex items-center justify-center gap-3 bg-white/50 hover:bg-white/80 border border-white/30 rounded-xl hover:border-white transition-all font-medium text-gray-800 shadow-sm">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -91,18 +70,16 @@ export default function RegisterForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email công việc</label>
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required
-                placeholder="JaneDoe@gmail.com"
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="JaneDoe@gmail.com"
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-inner" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-1.5">Mật khẩu</label>
               <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })} required placeholder="Tối thiểu 8 ký tự"
+                <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  required placeholder="Tối thiểu 8 ký tự"
                   className="w-full px-4 py-2.5 pr-11 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-inner" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
                 <PasswordPolicyChecklist password={form.password} />
@@ -110,8 +87,7 @@ export default function RegisterForm() {
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-800 mb-1.5">Xác nhận mật khẩu</label>
-              <input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required
-                placeholder="Nhập lại mật khẩu"
+              <input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required placeholder="Nhập lại mật khẩu"
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-inner" />
             </div>
             <button type="submit" disabled={isLoading}

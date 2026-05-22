@@ -16,7 +16,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     try {
       await requestPasswordReset(email);
-      toast.success('Ma OTP da duoc gui den email cua ban');
+      toast.success('Mã OTP đã được gửi đến email của bạn');
       router.push(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch {
       // Error handled by hook

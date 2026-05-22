@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
@@ -15,16 +15,10 @@ function LoginFormInner() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Hook xử lý logic authentication chính (gọi API, set store)
   const { login, isLoading } = useAuth();
-
-  // Store lưu trạng thái bảo mật, ví dụ: tài khoản có đang bị khóa (lockout) hay không
   const { lockoutInfo } = useSecurityStore();
-
-  // Hook của Next.js để lấy tham số trên URL (query string)
   const searchParams = useSearchParams();
 
-  // Bước 4: Xử lý hiển thị lỗi nếu có mã lỗi từ SSO trả về trên URL
   useEffect(() => {
     const error = searchParams.get('error');
     if (error === 'google_auth_failed') {
@@ -32,46 +26,27 @@ function LoginFormInner() {
     }
   }, [searchParams]);
 
-  /**
-   * Hàm xử lý khi người dùng nhấn nút "Đăng nhập" (Submit form)
-   */
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Bước 1: Ngăn load lại trang
-
-    // Bước 2: Kiểm tra khóa tài khoản
+    e.preventDefault();
     if (lockoutInfo?.isLocked) return;
 
     try {
-      // Bước 3: Gọi hook login, hook này sẽ gọi API và xử lý lưu token/user
       await login({ email, password });
-
-      // Bước 4: Thành công
       toast.success('Chào mừng quay trở lại!');
-    } catch (err: unknown) {
-      // Bước 5: Bắt lỗi và hiển thị thông báo
-      const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error?.response?.data?.message || 'Đăng nhập thất bại.');
+    } catch {
+      // Error toast đã được xử lý trong useAuth.login
     }
   };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden">
-      {/* Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute top-0 left-0 w-full h-full object-cover z-0"
-      >
+      <video autoPlay loop muted playsInline className="absolute top-0 left-0 w-full h-full object-cover z-0">
         <source src="/videos/mixkit-clouds-and-blue-sky-background-2408-full-hd.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-      {/* Overlay to tone down the video contrast and ensure the text/form is readable */}
       <div className="absolute top-0 left-0 w-full h-full bg-slate-900/10 z-10" />
 
-      {/* Glassmorphism Card */}
       <div className="w-full max-w-md relative z-20">
         <div className="bg-white/30 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10 transition-all duration-300 hover:shadow-indigo-500/10 hover:border-white/55">
           <div className="text-center mb-8">
@@ -84,12 +59,10 @@ function LoginFormInner() {
             <p className="text-gray-600 text-sm mt-1.5 font-semibold">Đăng nhập tài khoản AL-TASK của bạn</p>
           </div>
 
-          {/* Lockout Alert */}
           {lockoutInfo && (lockoutInfo.isLocked || lockoutInfo.remainingAttempts < lockoutInfo.maxAttempts) && (
             <LockoutAlert lockoutInfo={lockoutInfo} className="mb-6" />
           )}
 
-          {/* Google SSO */}
           <button onClick={initiateGoogleLogin} type="button" disabled={lockoutInfo?.isLocked}
             className="w-full mb-6 py-3 px-4 flex items-center justify-center gap-3 bg-white/50 hover:bg-white/80 border border-white/30 rounded-xl hover:border-white transition-all font-medium text-gray-800 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -152,3 +125,4 @@ export default function LoginForm() {
     </Suspense>
   );
 }
+
