@@ -135,8 +135,8 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
   const displayItems = tab === "workspace" ? filteredMembers : filteredUsers;
 
   return (
-    <div className={`max-w-6xl mx-auto ${className}`}>
-      <div className="flex items-center justify-between mb-6">
+    <div className={`app-page-wide ${className}`}>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý Người dùng</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Quản lý thành viên và quyền truy cập</p>
@@ -147,8 +147,8 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
       </div>
 
       {showInvite && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-[var(--app-page-pad)]">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-[min(100%,var(--app-popover-w))]">
             <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
               <h3 className="font-semibold text-gray-900 dark:text-white">Mời Thành viên</h3>
               <button onClick={() => setShowInvite(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><MoreHorizontal className="w-5 h-5 text-gray-400" /></button>
@@ -187,7 +187,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
         </div>
       )}
 
-      <div className="flex items-center gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit">
+      <div className="flex w-full flex-wrap items-center gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg sm:w-fit">
         <button onClick={() => setTab("workspace")} className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "workspace" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}>
           Thành viên Workspace ({members.length})
         </button>
@@ -198,14 +198,15 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
 
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="p-4 border-b border-gray-100 dark:border-gray-800">
-          <div className="relative max-w-md">
+          <div className="relative max-w-[min(100%,28rem)]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Tìm kiếm ${tab === "workspace" ? "thành viên" : "người dùng"}...`}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
         </div>
 
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full app-table-min">
           <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
             <tr>
               <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Thành viên</th>
@@ -272,6 +273,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

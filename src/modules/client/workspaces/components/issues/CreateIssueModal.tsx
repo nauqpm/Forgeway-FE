@@ -64,7 +64,7 @@ export default function CreateIssueModal({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Loại Issue
@@ -130,7 +130,7 @@ export default function CreateIssueModal({
             </select>
           </div>
 
-          <div className="pt-4 flex justify-end gap-3">
+          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setShowCreateIssue(false)}

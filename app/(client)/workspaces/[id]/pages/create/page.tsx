@@ -54,7 +54,7 @@ export default function CreatePagePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="app-page-narrow">
       <div className="flex items-center gap-3 mb-6">
         <Link href={`/workspaces/${workspaceId}`} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
           <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -66,7 +66,7 @@ export default function CreatePagePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <div className="p-6 space-y-5">
+        <div className="workspace-panel space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Page Title *</label>
             <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required
@@ -115,7 +115,7 @@ export default function CreatePagePage() {
             </div>
           </div>
         </div>
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
+        <div className="px-[var(--workspace-surface-pad)] py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
           <Link href={`/workspaces/${workspaceId}`} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
             Cancel
           </Link>

@@ -87,12 +87,12 @@ export default function TaskDetailPage() {
   };
 
   if (loading) return <LoadingSpinner />;
-  if (!task) return <div className="p-6 text-center text-gray-500">Task not found</div>;
+  if (!task) return <div className="app-main text-center text-gray-500">Task not found</div>;
 
   const priority = priorityOptions.find(p => p.value === task.priority) || priorityOptions[2];
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="app-page-wide">
       <div className="flex items-start gap-4 mb-6">
         <Link href="/projects" className="mt-1 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
         <div className="flex-1">
@@ -107,7 +107,7 @@ export default function TaskDetailPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+          <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-gray-900 dark:text-white">Description</h2>
               {!editingDesc && <button onClick={() => setEditingDesc(true)} className="text-sm text-indigo-600 hover:text-indigo-800 flex items-center gap-1"><Edit3 className="w-3 h-3" /> Edit</button>}
@@ -125,7 +125,7 @@ export default function TaskDetailPage() {
             )}
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+          <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
             <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Comments ({comments.length})</h2>
             <div className="space-y-4 mb-6">
               {comments.map((comment) => (
@@ -161,7 +161,7 @@ export default function TaskDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Details</h3>
             <div className="space-y-4">
               <div>
@@ -193,7 +193,7 @@ export default function TaskDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2"><Tag className="w-4 h-4" /> Labels</h3>
             <div className="flex flex-wrap gap-2">
               {task.labels.map((label) => <span key={label} className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-medium">{label}</span>)}
@@ -201,7 +201,7 @@ export default function TaskDetailPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2"><Paperclip className="w-4 h-4" /> Attachments</h3>
             {task.attachments?.length > 0 ? (
               <div className="space-y-2">
@@ -214,7 +214,7 @@ export default function TaskDetailPage() {
             ) : <p className="text-sm text-gray-400 dark:text-gray-500">No attachments</p>}
           </div>
 
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+          <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Activity</h3>
             <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
               <p>Created: {new Date(task.createdAt).toLocaleString("vi-VN")}</p>

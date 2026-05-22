@@ -58,7 +58,7 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className={`max-w-4xl mx-auto ${className}`}>
+    <div className={`app-page-narrow ${className}`}>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Cấu hình Quy trình</h1>
       {workflows.length === 0 ? (
         <div className="flex flex-col items-center py-16 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
@@ -69,7 +69,7 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
       ) : (
         <div className="space-y-4">
           {workflows.map((wf) => (
-            <div key={wf._id} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+            <div key={wf._id} className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold text-gray-900 dark:text-white">{wf.name}</h3>

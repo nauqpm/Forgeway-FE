@@ -180,7 +180,7 @@ export default function WorkspaceDetailPage({
     );
 
   return (
-    <div className="max-w-6xl mx-auto pb-12">
+    <div className="workspace-surface pb-12">
       {/* Header */}
       <Header
         workspace={workspace}

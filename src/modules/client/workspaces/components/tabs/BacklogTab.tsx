@@ -88,9 +88,9 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
           })
         }
       >
-        <div className="space-y-6 w-full max-w-4xl mx-auto py-6">
+        <div className="workspace-surface max-w-[min(100%,72rem)] space-y-6 py-[var(--workspace-surface-pad)]">
           {/* Backlog Top Bar with Filter */}
-          <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-3 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm">
+          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Hiển thị {filteredIssues.length} kết quả
             </div>
@@ -142,8 +142,8 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                 key={sprint.id}
                 className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm group/sprint"
               >
-                <div className="bg-white dark:bg-gray-900 p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <input
                       type="checkbox"
                       checked={isAllSelected}
@@ -155,7 +155,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                       className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
                     />
                     <h3
-                      className="font-bold text-gray-900 dark:text-white flex items-center gap-2 cursor-pointer hover:underline"
+                      className="flex min-w-0 flex-wrap items-center gap-2 font-bold text-gray-900 hover:underline dark:text-white cursor-pointer"
                       onClick={() => {
                         setEditingSprint(sprint);
                         setIsSprintModalOpen(true);
@@ -168,7 +168,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                         </span>
                       )}
                     </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 flex gap-2">
+                    <p className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <span>
                         {sprint.startDate
                           ? `${sprint.startDate} - ${sprint.endDate}`
@@ -178,7 +178,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                       <span>{sprintIssues.length} issues</span>
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3 xl:justify-end">
                     <div className="flex gap-2 items-center group relative cursor-help">
                       <span className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold flex items-center justify-center">
                         {
@@ -230,9 +230,9 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...provided.dragHandleProps}
-                              className={`flex items-center justify-between bg-white dark:bg-gray-900 ${density === "compact" ? "p-2" : "p-3"} rounded-lg border ${snapshot.isDragging ? "border-indigo-400 shadow-md rotate-1 z-50 relative" : "border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-500"} transition-all group shadow-sm`}
+                              className={`flex flex-col gap-3 bg-white dark:bg-gray-900 lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-lg border ${snapshot.isDragging ? "border-indigo-400 shadow-md rotate-1 z-50 relative" : "border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-500"} transition-all group shadow-sm`}
                             >
-                              <div className="flex items-center gap-3 flex-1">
+                              <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <input
                                   type="checkbox"
                                   checked={selectedTaskIds.includes(issue.id)}
@@ -243,7 +243,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                   className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
                                 />
                                 <div
-                                  className="flex items-center gap-3 flex-1"
+                                  className="flex min-w-0 flex-1 items-center gap-3"
                                   onClick={() => setSelectedIssue(issue)}
                                 >
                                   <FileText
@@ -252,12 +252,12 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                   <span className="text-xs font-mono font-medium text-gray-500 w-16 hover:underline cursor-pointer">
                                     {workspace?.key}-{100 + parseInt(issue.id)}
                                   </span>
-                                  <span className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 cursor-pointer">
+                                  <span className="min-w-0 break-words text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 cursor-pointer">
                                     {issue.title}
                                   </span>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-3">
+                              <div className="flex flex-wrap items-center gap-3 lg:justify-end">
                                 {/* Editable Story Points */}
                                 <div className="relative group/pts">
                                   <input
@@ -356,7 +356,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
 
           {/* Backlog Section */}
           <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-50/50 dark:bg-gray-800/50">
+            <div className="flex flex-col gap-3 border-b border-gray-200 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/50 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -430,9 +430,9 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...provided.dragHandleProps}
-                            className={`flex items-center justify-between bg-white dark:bg-gray-900 ${density === "compact" ? "p-2" : "p-3"} rounded-lg border ${snapshot.isDragging ? "border-indigo-400 shadow-md rotate-1 z-50 relative" : "border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"} transition-all group`}
+                            className={`flex flex-col gap-3 bg-white dark:bg-gray-900 lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-lg border ${snapshot.isDragging ? "border-indigo-400 shadow-md rotate-1 z-50 relative" : "border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"} transition-all group`}
                           >
-                            <div className="flex items-center gap-3 flex-1">
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
                               <input
                                 type="checkbox"
                                 checked={selectedTaskIds.includes(issue.id)}
@@ -443,7 +443,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                 className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
                               />
                               <div
-                                className="flex items-center gap-3 flex-1"
+                                className="flex min-w-0 flex-1 items-center gap-3"
                                 onClick={() => setSelectedIssue(issue)}
                               >
                                 <FileText
@@ -452,12 +452,12 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                 <span className="text-xs font-mono font-medium text-gray-400 w-16 hover:underline cursor-pointer">
                                   {workspace?.key}-{100 + parseInt(issue.id)}
                                 </span>
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white cursor-pointer">
+                                <span className="min-w-0 break-words text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white cursor-pointer">
                                   {issue.title}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
                               {/* Editable Story Points */}
                               <div className="relative group/pts">
                                 <input
@@ -515,7 +515,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                 </div>
               )}
             </Droppable>
-            <div className="p-3 bg-gray-50/30 dark:bg-gray-800/30 border-t border-gray-100 dark:border-gray-800 flex items-center gap-2 relative">
+            <div className="relative flex flex-col gap-2 border-t border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-800/30 sm:flex-row sm:items-center">
               <input
                 type="text"
                 placeholder="Bạn cần làm gì tiếp theo?"

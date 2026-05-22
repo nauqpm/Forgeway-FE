@@ -280,8 +280,8 @@ export default function DataGridListView({
   });
 
   return (
-    <div className="flex h-[700px] flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex shrink-0 items-center justify-between border-b border-gray-200 bg-gray-50 p-3">
+    <div className="workspace-list-height flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 p-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input
@@ -289,7 +289,7 @@ export default function DataGridListView({
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search in list..."
-            className="w-72 rounded-lg border border-gray-300 bg-white py-1.5 pl-9 pr-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] rounded-lg border border-gray-300 bg-white py-1.5 pl-9 pr-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 sm:w-[clamp(240px,20vw,320px)]"
           />
         </div>
 

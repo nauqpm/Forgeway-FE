@@ -86,8 +86,8 @@ export default function Permissions() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
+    <div className="app-page-wide">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-white dark:text-white">Vai trò & Phân quyền</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Quản lý quyền hạn cho từng vai trò trong hệ thống</p>
@@ -103,17 +103,17 @@ export default function Permissions() {
       </div>
 
       {/* System Roles */}
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 mb-8">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 mb-8">
         <h2 className="font-semibold text-white text-xl mb-5 flex items-center gap-3">
           <Shield className="w-6 h-6 text-white" />
           Vai trò Hệ thống
         </h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {roles.map((role) => (
             <div
               key={role.id}
-              className="p-5 border border-gray-200 dark:border-gray-700 rounded-2xl hover:border-indigo-300 dark:hover:border-indigo-600 transition-all group"
+            className="workspace-panel border border-gray-200 dark:border-gray-700 rounded-2xl hover:border-indigo-300 dark:hover:border-indigo-600 transition-all group"
             >
               <div className={`w-10 h-10 rounded-xl bg-${role.color}-100 dark:bg-${role.color}-900/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                 <Users className={`w-5 h-5 text-${role.color}-600 dark:text-${role.color}-400`} />
@@ -127,7 +127,7 @@ export default function Permissions() {
 
       {/* Permissions Matrix */}
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
+        <div className="workspace-panel border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
           <h2 className="font-semibold text-xl text-white">Ma trận Phân quyền</h2>
           {saved && (
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
@@ -138,7 +138,7 @@ export default function Permissions() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px]">
+          <table className="w-full app-table-min">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
                 <th className="text-left py-4 px-6 font-medium text-gray-500 dark:text-gray-400 w-80">Quyền hạn</th>

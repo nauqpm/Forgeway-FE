@@ -115,8 +115,8 @@ export default function MyTasksPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="app-page-wide">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{tasks.length} tasks assigned to you</p>
@@ -127,7 +127,7 @@ export default function MyTasksPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 mb-6">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
@@ -137,7 +137,7 @@ export default function MyTasksPage() {
           </div>
 
           {/* Filter dropdowns */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Filter className="w-4 h-4 text-gray-400" />
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
               className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
@@ -159,7 +159,7 @@ export default function MyTasksPage() {
           <div className="h-6 w-px bg-gray-200 mx-1" />
 
           {/* Group By */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-gray-400 font-medium">Group:</span>
             <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
               {(["status", "project", "priority", "none"] as GroupBy[]).map((g) => (

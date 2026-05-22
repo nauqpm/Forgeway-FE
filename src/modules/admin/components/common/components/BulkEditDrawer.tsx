@@ -59,7 +59,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-[400px] bg-white dark:bg-gray-900 shadow-[-10px_0_30px_rgba(0,0,0,0.1)] border-l border-gray-200 dark:border-gray-700 z-50 flex flex-col transform transition-transform duration-300">
+    <div className="app-drawer fixed inset-y-0 right-0 bg-white dark:bg-gray-900 shadow-[-10px_0_30px_rgba(0,0,0,0.1)] border-l border-gray-200 dark:border-gray-700 z-50 flex flex-col transform transition-transform duration-300">
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Sửa nhiều Task ({selectedCount})</h2>
         <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400 transition-colors">

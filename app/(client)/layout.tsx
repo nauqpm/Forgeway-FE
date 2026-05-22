@@ -212,9 +212,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       />
 
       <div
-        className={`transition-all duration-300 ${sidebarCollapsed ? "lg:ml-16" : "lg:ml-60"}`}
+        data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"}
+        className="app-shell-offset transition-all duration-300"
       >
-        <header className="h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 sticky top-0 z-20 transition-colors duration-200">
+        <header className="app-header bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
           <div className="flex items-center gap-3 flex-1">
             <button
               onClick={() => setMobileOpen(true)}
@@ -222,7 +223,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </button>
-            <div className="w-full max-w-5xl relative">
+            <div className="w-full max-w-[min(100%,72rem)] relative">
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
               {/* Ghost text layer */}
               <div
@@ -356,7 +357,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <NotificationPanel onClose={() => setShowNotifications(false)} />
         )}
 
-        <main className="p-4 lg:p-6">{children}</main>
+        <main className="app-main">{children}</main>
       </div>
     </div>
   );

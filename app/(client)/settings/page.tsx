@@ -23,11 +23,11 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="app-page-narrow">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Settings</h1>
       {message && <div className={`mb-4 p-4 rounded-lg text-sm ${message.includes("success") ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"}`}>{message}</div>}
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><User className="w-5 h-5 text-indigo-500" /> Profile</h2>
         <div className="space-y-4">
           <div className="flex items-center gap-4">
@@ -40,7 +40,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Shield className="w-5 h-5 text-indigo-500" /> Security</h2>
         <button className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
           <div className="flex items-center gap-3"><Key className="w-5 h-5 text-gray-400" /><div className="text-left"><p className="text-sm font-medium text-gray-900 dark:text-white">Change Password</p><p className="text-xs text-gray-500 dark:text-gray-400">Update your account password</p></div></div>
@@ -48,7 +48,7 @@ export default function SettingsPage() {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><LogOut className="w-5 h-5 text-red-500" /> Account</h2>
         <button onClick={logout} className="w-full flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-600 dark:text-red-400">
           <LogOut className="w-5 h-5" />

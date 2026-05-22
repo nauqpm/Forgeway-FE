@@ -34,7 +34,7 @@ export default function TopBar() {
           <input
             type="text"
             placeholder="Search tasks, pages, projects..."
-            className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border border-transparent dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:bg-white dark:focus:bg-gray-700 focus:border-gray-300 dark:focus:border-gray-600 focus:outline-none w-64 transition-colors"
+            className="w-[clamp(220px,20vw,320px)] pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border border-transparent dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:bg-white dark:focus:bg-gray-700 focus:border-gray-300 dark:focus:border-gray-600 focus:outline-none transition-colors"
           />
           <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">/</kbd>
         </div>

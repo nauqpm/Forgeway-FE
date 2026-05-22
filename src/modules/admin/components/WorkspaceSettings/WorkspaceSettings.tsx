@@ -77,10 +77,10 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
   if (!workspace) return <div className={`p-6 text-center text-gray-500 dark:text-gray-400 ${className}`}>Không tìm thấy workspace</div>;
 
   return (
-    <div className={`max-w-3xl mx-auto ${className}`}>
+    <div className={`app-page-narrow ${className}`}>
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Cài đặt Workspace</h1>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-indigo-500" /> Thông tin Workspace</h2>
         <div className="space-y-4">
           <div>
@@ -101,7 +101,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> Thành viên ({members.length})</h2>
         <div className="space-y-2">
           {members.map((member) => {

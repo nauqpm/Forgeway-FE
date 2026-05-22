@@ -29,10 +29,10 @@ export default function PageViewPage() {
   }, [slug]);
 
   if (loading) return <LoadingSpinner />;
-  if (!page) return <div className="p-6 text-center text-gray-500">Page not found</div>;
+  if (!page) return <div className="app-main text-center text-gray-500">Page not found</div>;
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="app-page-narrow">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link href={`/workspaces/${workspaceId}`} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
@@ -43,7 +43,7 @@ export default function PageViewPage() {
         </Link>
       </div>
 
-      <article className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-8">
+      <article className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,32px)]">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{page.title}</h1>
 
         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">

@@ -82,11 +82,11 @@ export default function ProjectBoardPage() {
   };
 
   if (loading) return <LoadingSpinner />;
-  if (!project) return <div className="p-6 text-center text-gray-500">Project not found</div>;
+  if (!project) return <div className="app-main text-center text-gray-500">Project not found</div>;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-[calc(100vh-var(--app-header-h)-96px)]">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div className="flex items-center gap-3">
           <Link href="/projects" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
           <div>
@@ -105,7 +105,7 @@ export default function ProjectBoardPage() {
             const columnTasks = getTasksByColumn(column.id);
             return (
               <div key={column.id} onDragOver={(e) => handleDragOver(e, column.id)} onDragLeave={handleDragLeave} onDrop={(e) => handleDrop(e, column.id)}
-                className={`w-72 flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl flex flex-col ${dragOverColumn === column.id ? "ring-2 ring-indigo-400" : ""}`}>
+                className={`workspace-column flex-shrink-0 bg-gray-100 dark:bg-gray-800 rounded-xl flex flex-col ${dragOverColumn === column.id ? "ring-2 ring-indigo-400" : ""}`}>
                 <div className="flex items-center justify-between p-3">
                   <h3 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{column.name} <span className="ml-1 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-full text-xs">{columnTasks.length}</span></h3>
                   <button onClick={() => handleCreateTask(column.id)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"><Plus className="w-4 h-4 text-gray-500 dark:text-gray-400" /></button>

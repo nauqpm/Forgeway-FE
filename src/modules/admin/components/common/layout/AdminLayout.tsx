@@ -20,11 +20,10 @@ export default function AdminLayout({
         onMobileClose={() => setMobileSidebarOpen(false)}
       />
       <main
-        className={`transition-all duration-200 ${
-          sidebarCollapsed ? "lg:ml-[68px]" : "lg:ml-[240px]"
-        }`}
+        data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"}
+        className="app-shell-offset transition-all duration-200"
       >
-        <div className="p-6">{children}</div>
+        <div className="app-main">{children}</div>
       </main>
     </div>
   );

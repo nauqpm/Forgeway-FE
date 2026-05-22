@@ -31,11 +31,11 @@ export default function ProjectsPage() {
 
   const filtered = projects.filter(p => p.name.toLowerCase().includes(search.toLowerCase()) || p.key.toLowerCase().includes(search.toLowerCase()));
 
-  if (!currentWorkspace) return <div className="p-6 text-center text-gray-500">Select a workspace first</div>;
+  if (!currentWorkspace) return <div className="app-main text-center text-gray-500">Select a workspace first</div>;
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="app-page-wide">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Projects</h1>
@@ -46,8 +46,8 @@ export default function ProjectsPage() {
         </Link>
       </div>
 
-      <div className="flex items-center gap-3 mb-6">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <div className="relative flex-1 min-w-[220px] max-w-[min(100%,28rem)]">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects..." className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500" />
         </div>
@@ -68,7 +68,7 @@ export default function ProjectsPage() {
       ) : view === "grid" ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((project) => (
-            <Link key={project._id} href={`/projects/${project._id}`} className="group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500 transition-all">
+            <Link key={project._id} href={`/projects/${project._id}`} className="workspace-panel group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500 transition-all">
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">{project.key.substring(0, 2)}</div>
                 <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${project.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>{project.status}</span>
@@ -84,7 +84,8 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full app-table-min">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="text-left px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Project</th>
@@ -104,6 +105,7 @@ export default function ProjectsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

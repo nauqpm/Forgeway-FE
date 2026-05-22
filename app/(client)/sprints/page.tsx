@@ -51,7 +51,7 @@ export default function SprintsPage() {
           const c = config[sprint.status] || config.planning;
           const Icon = c.icon;
           return (
-            <div key={sprint._id} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <div key={sprint._id} className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div className={`w-10 h-10 ${c.bg} rounded-lg flex items-center justify-center flex-shrink-0`}><Icon className={`w-5 h-5 ${c.color}`} /></div>
@@ -77,7 +77,7 @@ export default function SprintsPage() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="app-page-narrow">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sprints</h1>

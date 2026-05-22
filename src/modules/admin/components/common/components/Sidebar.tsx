@@ -130,7 +130,7 @@ const PopoverNavItem = ({
 }) => {
   const isActive = activePopover === type;
   const btnRef = useRef<HTMLButtonElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [pos, setPos] = useState({ top: 0, left: "0px" });
 
   const handleToggle = () => {
     if (isActive) {
@@ -138,8 +138,12 @@ const PopoverNavItem = ({
     } else {
       if (btnRef.current) {
         const rect = btnRef.current.getBoundingClientRect();
-        const sidebarWidth = collapsed ? 68 : 240;
-        setPos({ top: rect.top, left: sidebarWidth + 12 });
+        setPos({
+          top: rect.top,
+          left: collapsed
+            ? "calc(var(--app-sidebar-collapsed) + 12px)"
+            : "calc(var(--app-sidebar-expanded) + 12px)",
+        });
       }
       setActivePopover(type);
     }
@@ -169,8 +173,8 @@ const PopoverNavItem = ({
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
-            className="fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
-            style={{ top: `${pos.top}px`, left: `${pos.left}px` }}
+            className="app-popover fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col"
+            style={{ top: `${pos.top}px`, left: pos.left }}
           >
             <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-gray-800">
               <span className="font-semibold text-slate-900 dark:text-gray-100">{item.label}</span>
@@ -289,7 +293,7 @@ export default function Sidebar({
   const [filterOpen, setFilterOpen] = useState(false);
   const [sidebarWorkspaces, setsidebarWorkspaces] = useState<any[]>([]);
   const [activePopover, setActivePopover] = useState<"recent" | "starred" | "more_workspaces" | null>(null);
-  const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: 0 });
+  const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: "0px" });
   const moreWorkspacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -299,8 +303,12 @@ export default function Sidebar({
     } else {
       if (moreWorkspacesBtnRef.current) {
         const rect = moreWorkspacesBtnRef.current.getBoundingClientRect();
-        const sidebarWidth = collapsed ? 68 : 240;
-        setMoreWorkspacesPos({ top: rect.top, left: sidebarWidth + 12 });
+        setMoreWorkspacesPos({
+          top: rect.top,
+          left: collapsed
+            ? "calc(var(--app-sidebar-collapsed) + 12px)"
+            : "calc(var(--app-sidebar-expanded) + 12px)",
+        });
       }
       setActivePopover("more_workspaces");
     }
@@ -331,12 +339,13 @@ export default function Sidebar({
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 border-r border-slate-200 dark:border-gray-800 z-40 transition-all duration-200 flex flex-col ${
-          collapsed ? "w-[68px]" : "w-[240px]"
-        } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
+        data-collapsed={collapsed}
+        className={`app-sidebar fixed top-0 left-0 h-full bg-white dark:bg-gray-900 border-r border-slate-200 dark:border-gray-800 z-40 transition-all duration-200 flex flex-col ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
       >
         {/* Logo / Brand */}
-        <div className="h-14 flex items-center justify-between px-4 border-b border-slate-100 dark:border-gray-800 flex-shrink-0">
+        <div className="app-header flex items-center justify-between border-b border-slate-100 dark:border-gray-800 flex-shrink-0">
           <Link
             href="/"
             className="flex items-center gap-2.5"
@@ -577,8 +586,8 @@ export default function Sidebar({
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
-            className="fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
-            style={{ top: `${moreWorkspacesPos.top}px`, left: `${moreWorkspacesPos.left}px` }}
+            className="app-popover fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col"
+            style={{ top: `${moreWorkspacesPos.top}px`, left: moreWorkspacesPos.left }}
           >
             <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-gray-800">
               <span className="font-semibold text-slate-900 dark:text-gray-100">Workspaces</span>

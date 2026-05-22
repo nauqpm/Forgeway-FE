@@ -313,7 +313,7 @@ export default function WorkspaceSettingsPage({
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-12">
+    <div className="workspace-surface max-w-[min(100%,64rem)] pb-12">
       <div className="flex items-center gap-3 mb-6">
         <Link
           href={`/workspaces/${workspaceKey}`}
@@ -333,8 +333,8 @@ export default function WorkspaceSettingsPage({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col md:flex-row min-h-[500px]">
-        <div className="w-full md:w-64 bg-gray-50 dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col md:flex-row min-h-[max(500px,var(--app-board-h))]">
+        <div className="w-full md:w-[var(--workspace-settings-nav-w)] bg-gray-50 dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 p-[var(--workspace-surface-pad)]">
           <nav className="space-y-1">
             <button
               type="button"
@@ -361,7 +361,7 @@ export default function WorkspaceSettingsPage({
           </nav>
         </div>
 
-        <div className="flex-1 p-6 md:p-8">
+        <div className="flex-1 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,32px)]">
           {activeTab === "general" ? (
             <GeneralSettings
               form={form}
@@ -422,7 +422,7 @@ function GeneralSettings({
   handleDelete: () => void;
 }) {
   return (
-    <form onSubmit={handleSave} className="space-y-8 max-w-xl">
+    <form onSubmit={handleSave} className="space-y-8 max-w-[min(100%,42rem)]">
       <section>
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
           Thông tin cơ bản

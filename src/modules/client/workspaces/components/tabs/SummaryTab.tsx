@@ -155,7 +155,7 @@ export default function SummaryTab({ issues, workspaceId }: SummaryTabProps) {
         </button>
 
         {isSummaryFilterOpen && (
-          <div className="absolute top-12 left-0 w-[360px] md:w-[460px] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg shadow-xl z-30 overflow-hidden">
+          <div className="absolute top-12 left-0 w-[min(calc(100vw-48px),460px)] bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg shadow-xl z-30 overflow-hidden">
             <div className="p-4 border-b border-gray-200 dark:border-gray-800">
               <input
                 autoFocus
@@ -280,7 +280,7 @@ export default function SummaryTab({ issues, workspaceId }: SummaryTabProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
             <div className="flex justify-center">
               <div
-                className="w-72 h-72 rounded-full relative"
+                className="workspace-chart rounded-full relative"
                 style={{
                   background: `conic-gradient(${dashboardData.statusDistribution
                     .map((status, index) => {

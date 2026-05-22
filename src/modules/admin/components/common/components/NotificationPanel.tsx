@@ -123,7 +123,7 @@ export default function NotificationPanel({ onClose }: { onClose: () => void }) 
   const groupOrder = ['Latest', 'Yesterday', 'Older'];
 
   return (
-    <div className="absolute right-0 top-12 w-[400px] bg-white dark:bg-gray-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 dark:border-gray-700 z-50 flex flex-col max-h-[85vh] animate-in fade-in slide-in-from-top-2 duration-200" ref={panelRef}>
+    <div className="absolute right-0 top-12 w-[min(calc(100vw-32px),var(--app-drawer-w))] bg-white dark:bg-gray-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 dark:border-gray-700 z-50 flex flex-col max-h-[85vh] animate-in fade-in slide-in-from-top-2 duration-200" ref={panelRef}>
       {/* Header */}
       <div className="px-4 pt-4 pb-0 border-b border-gray-100 dark:border-gray-700 flex flex-col gap-3">
         <div className="flex items-center justify-between">
