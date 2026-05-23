@@ -61,11 +61,12 @@ function MemberAvatar({ user }: { user: WorkspaceMember["userId"] }) {
 
 type InviteFormProps = {
   workspaceId: string;
+  workspaceMongoId?: string;
   onClose: () => void;
   onSuccess: () => void;
 };
 
-function InviteForm({ workspaceId, onClose, onSuccess }: InviteFormProps) {
+function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: InviteFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [submitting, setSubmitting] = useState(false);
@@ -83,13 +84,13 @@ function InviteForm({ workspaceId, onClose, onSuccess }: InviteFormProps) {
     setEmailError("");
     setSubmitting(true);
     try {
-      await api.post(apiRoutes.WORKSPACES.INVITES(workspaceId), { email, role });
-      toast.success(`Invitation sent to ${email}`);
+      await api.post(apiRoutes.WORKSPACES.INVITES(workspaceMongoId ?? workspaceId), { email, role });
+      toast.success(`Đã gửi lời mời tới ${email}.`);
       onSuccess();
       onClose();
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message ?? "Failed to send invitation";
+        err?.response?.data?.message ?? "Không thể gửi lời mời.";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -165,9 +166,10 @@ function InviteForm({ workspaceId, onClose, onSuccess }: InviteFormProps) {
 
 type WorkspaceMembersPanelProps = {
   workspaceId: string;
+  workspaceMongoId?: string;
 };
 
-export default function WorkspaceMembersPanel({ workspaceId }: WorkspaceMembersPanelProps) {
+export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }: WorkspaceMembersPanelProps) {
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -226,13 +228,12 @@ export default function WorkspaceMembersPanel({ workspaceId }: WorkspaceMembersP
 
     setRemovingMemberId(userId);
     try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceId, userId));
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceMongoId ?? workspaceId, userId));
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setContextMenu(null);
       toast.success("Đã xóa thành viên khỏi workspace.");
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? "Không thể xóa thành viên.";
-      toast.error(msg);
+      toast.error(err?.response?.data?.message ?? "Không thể xóa thành viên.");
     } finally {
       setRemovingMemberId(null);
     }
@@ -276,6 +277,7 @@ export default function WorkspaceMembersPanel({ workspaceId }: WorkspaceMembersP
       {showInvite && (
         <InviteForm
           workspaceId={workspaceId}
+          workspaceMongoId={workspaceMongoId}
           onClose={() => setShowInvite(false)}
           onSuccess={fetchMembers}
         />

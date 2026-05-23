@@ -288,6 +288,7 @@ export default function WorkspaceDetailPage({
         summaryProps={{
           issues,
           workspaceId,
+          workspaceMongoId: workspace?._id,
         }}
         calendarProps={{
           issues,

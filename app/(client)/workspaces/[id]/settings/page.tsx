@@ -9,6 +9,7 @@ import {
   Globe,
   Loader2,
   Lock,
+  LogOut,
   Mail,
   Save,
   Send,
@@ -22,6 +23,7 @@ import toast from "react-hot-toast";
 
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
+import { useAuth } from "@/context/AuthContext";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import {
   inviteService,
@@ -93,6 +95,7 @@ export default function WorkspaceSettingsPage({
 }) {
   const { id: workspaceKey } = use(params);
   const router = useRouter();
+  const { user } = useAuth();
 
   const [workspace, setWorkspace] = useState<WorkspaceSettings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -122,6 +125,9 @@ export default function WorkspaceSettingsPage({
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [leaveConfirm, setLeaveConfirm] = useState("");
+  const [leaving, setLeaving] = useState(false);
 
   const workspaceInviteId = workspace?._id ?? workspaceKey;
 
@@ -149,25 +155,24 @@ export default function WorkspaceSettingsPage({
   }, [workspaceKey]);
 
   useEffect(() => {
-    if (activeTab !== "members" || !workspaceInviteId) return;
-
+    if (!workspaceKey) return;
     setLoadingMembers(true);
     api
       .get(apiRoutes.WORKSPACES.MEMBERS(workspaceKey))
       .then((res) => setMembers(res.data?.data ?? res.data ?? []))
-      .catch(() => {
-        setMembers([]);
-        toast.error("Không thể tải danh sách thành viên.");
-      })
+      .catch(() => setMembers([]))
       .finally(() => setLoadingMembers(false));
+  }, [workspaceKey]);
 
+  useEffect(() => {
+    if (activeTab !== "members" || !workspaceInviteId) return;
     setLoadingInvites(true);
     inviteService
       .listInvites(workspaceInviteId)
       .then(setInvites)
       .catch(() => toast.error("Không thể tải danh sách lời mời đang chờ."))
       .finally(() => setLoadingInvites(false));
-  }, [activeTab, workspaceInviteId, workspaceKey]);
+  }, [activeTab, workspaceInviteId]);
 
   useEffect(() => {
     const closeMenu = () => setMemberMenu(null);
@@ -302,6 +307,23 @@ export default function WorkspaceSettingsPage({
     }
   };
 
+  const currentMember = members.find((m) => m.userId?._id === user?.id);
+  const isOwner = currentMember?.role === "workspace_admin" || user?.role === "super_admin";
+
+  const handleLeave = async () => {
+    setLeaving(true);
+    try {
+      await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceKey));
+      toast.success("Đã rời khỏi workspace.");
+      router.push("/workspaces");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Không thể rời khỏi workspace.");
+    } finally {
+      setLeaving(false);
+      setShowLeaveDialog(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner />;
 
   if (!workspace) {
@@ -373,6 +395,13 @@ export default function WorkspaceSettingsPage({
               setDeleteConfirm={setDeleteConfirm}
               handleSave={handleSave}
               handleDelete={handleDelete}
+              isOwner={isOwner}
+              leaving={leaving}
+              leaveConfirm={leaveConfirm}
+              setLeaveConfirm={setLeaveConfirm}
+              showLeaveDialog={showLeaveDialog}
+              setShowLeaveDialog={setShowLeaveDialog}
+              handleLeave={handleLeave}
             />
           ) : (
             <MemberSettings
@@ -410,6 +439,13 @@ function GeneralSettings({
   setDeleteConfirm,
   handleSave,
   handleDelete,
+  isOwner,
+  leaving,
+  leaveConfirm,
+  setLeaveConfirm,
+  showLeaveDialog,
+  setShowLeaveDialog,
+  handleLeave,
 }: {
   form: WorkspaceSettingsForm;
   workspace: WorkspaceSettings;
@@ -420,6 +456,13 @@ function GeneralSettings({
   setDeleteConfirm: (value: string) => void;
   handleSave: (event: FormEvent) => void;
   handleDelete: () => void;
+  isOwner: boolean;
+  leaving: boolean;
+  leaveConfirm: string;
+  setLeaveConfirm: (value: string) => void;
+  showLeaveDialog: boolean;
+  setShowLeaveDialog: (value: boolean) => void;
+  handleLeave: () => void;
 }) {
   return (
     <form onSubmit={handleSave} className="space-y-8 max-w-[min(100%,42rem)]">
@@ -562,38 +605,149 @@ function GeneralSettings({
         </button>
       </div>
 
-      <section className="mt-12 p-5 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 rounded-lg">
-        <h3 className="text-red-800 dark:text-red-200 font-bold flex items-center gap-2 mb-2">
+      <section className="mt-12 p-5 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 rounded-lg space-y-6">
+        <h3 className="text-red-800 dark:text-red-200 font-bold flex items-center gap-2">
           <ShieldAlert className="w-5 h-5" /> Vùng nguy hiểm
         </h3>
-        <p className="text-sm text-red-600 dark:text-red-300 mb-4">
-          Xóa workspace này cùng các board, backlog và nội dung liên quan. Hành
-          động này không thể hoàn tác.
-        </p>
-        <label className="block text-sm font-medium text-red-800 dark:text-red-200 mb-2">
-          Nhập <span className="font-mono">delete</span> để xác nhận
-        </label>
-        <input
-          type="text"
-          value={deleteConfirm}
-          onChange={(event) => setDeleteConfirm(event.target.value)}
-          className="w-full mb-4 px-4 py-2 border border-red-200 dark:border-red-800 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
-          placeholder="delete"
-        />
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleteConfirm !== "delete" || deleting}
-          className="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {deleting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Trash2 className="w-4 h-4" />
-          )}
-          {deleting ? "Đang xóa..." : "Xóa workspace"}
-        </button>
+
+        {/* Leave workspace */}
+        <div className="pb-6 border-b border-red-200 dark:border-red-800">
+          <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
+            Rời khỏi workspace
+          </p>
+          <p className="text-sm text-red-600 dark:text-red-300 mb-3">
+            {isOwner
+              ? "Bạn là owner của workspace. Bạn phải xóa workspace trước khi rời."
+              : "Bạn sẽ mất quyền truy cập vào workspace này."}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowLeaveDialog(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 rounded-lg text-sm font-semibold transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Rời workspace
+          </button>
+        </div>
+
+        {/* Delete workspace */}
+        <div>
+          <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
+            Xóa workspace
+          </p>
+          <p className="text-sm text-red-600 dark:text-red-300 mb-4">
+            Xóa workspace này cùng các board, backlog và nội dung liên quan. Hành
+            động này không thể hoàn tác.
+          </p>
+          <label className="block text-sm font-medium text-red-800 dark:text-red-200 mb-2">
+            Nhập <span className="font-mono">delete</span> để xác nhận
+          </label>
+          <input
+            type="text"
+            value={deleteConfirm}
+            onChange={(event) => setDeleteConfirm(event.target.value)}
+            className="w-full mb-4 px-4 py-2 border border-red-200 dark:border-red-800 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+            placeholder="delete"
+          />
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleteConfirm !== "delete" || deleting}
+            className="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {deleting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+            {deleting ? "Đang xóa..." : "Xóa workspace"}
+          </button>
+        </div>
       </section>
+
+      {/* Leave dialog */}
+      {showLeaveDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6">
+            {isOwner ? (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
+                    <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Bạn là owner của workspace này
+                  </h2>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  Bạn có muốn xóa workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span> hiện tại không? Hành động này sẽ xóa toàn bộ dữ liệu và không thể hoàn tác.
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowLeaveDialog(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLeaveDialog(false);
+                      setDeleteConfirm("");
+                      document.querySelector<HTMLInputElement>('input[placeholder="delete"]')?.focus();
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Đi tới xóa workspace
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
+                    <LogOut className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  </div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    Rời khỏi workspace
+                  </h2>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Bạn sẽ mất quyền truy cập vào workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span>. Nhập <span className="font-mono font-semibold">leave</span> để xác nhận.
+                </p>
+                <input
+                  type="text"
+                  value={leaveConfirm}
+                  onChange={(e) => setLeaveConfirm(e.target.value)}
+                  placeholder="leave"
+                  className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => { setShowLeaveDialog(false); setLeaveConfirm(""); }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLeave}
+                    disabled={leaveConfirm !== "leave" || leaving}
+                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    {leaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                    {leaving ? "Đang rời..." : "Xác nhận rời"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </form>
   );
 }

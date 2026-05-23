@@ -112,7 +112,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
         const firstMsg = (failed[0].r as PromiseRejectedResult).reason?.response?.data?.message;
         toast.error(firstMsg || 'Không thể gửi lời mời.');
       }
-    } catch (error) {
+    } catch {
       toast.error('Không thể gửi lời mời.');
     } finally {
       setIsSubmitting(false);

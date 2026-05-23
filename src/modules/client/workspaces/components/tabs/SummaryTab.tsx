@@ -33,9 +33,10 @@ const SUMMARY_FILTER_FIELDS = [
 type SummaryTabProps = {
   issues: Issue[];
   workspaceId: string;
+  workspaceMongoId?: string;
 };
 
-export default function SummaryTab({ issues, workspaceId }: SummaryTabProps) {
+export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: SummaryTabProps) {
   const [isSummaryFilterOpen, setIsSummaryFilterOpen] = useState(false);
   const [summaryFilterSearch, setSummaryFilterSearch] = useState("");
   const [selectedSummaryFields, setSelectedSummaryFields] = useState<string[]>([]);
@@ -471,7 +472,7 @@ export default function SummaryTab({ issues, workspaceId }: SummaryTabProps) {
         </div>
       </div>
 
-      <WorkspaceMembersPanel workspaceId={workspaceId} />
+      <WorkspaceMembersPanel workspaceId={workspaceId} workspaceMongoId={workspaceMongoId} />
     </div>
   );
 }
