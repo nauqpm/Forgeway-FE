@@ -16,6 +16,7 @@ export const apiRoutes = {
         UPDATE: (key: string) => `/workspaces/${key}`,
         MEMBERS: (key: string) => `/workspaces/${key}/members`,
         ADD_MEMBER: (key: string) => `/workspaces/${key}/members`,
+        LEAVE: (key: string) => `/workspaces/${key}/members/me`,
         REMOVE_MEMBER: (key: string, userId: string) => `/workspaces/${key}/members/${userId}`,
         UPDATE_MEMBER: (key: string, userId: string) => `/workspaces/${key}/members/${userId}`,
         INVITES: (key: string) => `/workspaces/${key}/invites`,

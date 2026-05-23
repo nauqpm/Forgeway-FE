@@ -92,7 +92,7 @@ const Header = ({ workspace, workspaceId, setShowCreateIssue }: HeaderProps) => 
       <InviteModal
         isOpen={isInviteModalOpen}
         onClose={() => setIsInviteModalOpen(false)}
-        projectId={workspaceId}
+        projectId={workspace._id ?? workspaceId}
       />
     </div>
   );
