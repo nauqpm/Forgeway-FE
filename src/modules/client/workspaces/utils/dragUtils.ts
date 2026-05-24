@@ -1,13 +1,14 @@
 import { DropResult } from "@hello-pangea/dnd";
-
 import { Issue } from "../types/issue.type";
+import { BoardColumn } from "../types/board.type";
 
 interface HandleBoardDragParams {
   result: DropResult;
-  columns: string[];
+  columns: BoardColumn[];
   issues: Issue[];
-  setColumns: React.Dispatch<React.SetStateAction<string[]>>;
+  setColumns: React.Dispatch<React.SetStateAction<BoardColumn[]>>;
   setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
+  handleMoveColumn?: (columnId: string, newOrder: number) => void;
 }
 
 interface HandleBacklogDragParams {
@@ -22,6 +23,7 @@ export const handleBoardDragEnd = ({
   issues,
   setColumns,
   setIssues,
+  handleMoveColumn,
 }: HandleBoardDragParams) => {
   const { destination, source, draggableId, type } = result;
 
@@ -32,12 +34,20 @@ export const handleBoardDragEnd = ({
     if (source.index === destination.index) return;
 
     const newColumns = Array.from(columns);
-
     const [removed] = newColumns.splice(source.index, 1);
-
     newColumns.splice(destination.index, 0, removed);
 
-    setColumns(newColumns);
+    // Re-assign order based on new position
+    const reorderedColumns = newColumns.map((col, idx) => ({
+      ...col,
+      order: idx,
+    }));
+
+    setColumns(reorderedColumns);
+
+    if (handleMoveColumn) {
+      handleMoveColumn(draggableId.replace("col-", ""), destination.index);
+    }
 
     return;
   }

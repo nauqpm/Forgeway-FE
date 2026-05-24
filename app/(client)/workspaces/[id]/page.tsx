@@ -8,6 +8,9 @@ import TaskDetailDrawer from "@/modules/client/workspaces/components/TaskDetailD
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
 import SprintModal from "@/modules/client/workspaces/components/SprintModal";
 import BulkActionBar from "@/modules/admin/components/common/components/BulkActionBar";
+import { useQuery } from "@tanstack/react-query";
+import { boardService } from "@/modules/client/workspaces/services/boardService";
+import { BoardColumn } from "@/modules/client/workspaces/types/board.type";
 
 import {
   getWorkspaceTemplate,
@@ -48,7 +51,6 @@ export default function WorkspaceDetailPage({
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("pages");
-  const [columns, setColumns] = useState(["To Do", "In Progress", "Done"]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
 
@@ -85,6 +87,21 @@ export default function WorkspaceDetailPage({
   const [newColumnName, setNewColumnName] = useState("");
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
+  const { data: boardData, isLoading: isBoardLoading } = useQuery({
+    queryKey: ["board", workspaceId],
+    queryFn: () => boardService.getBoardByWorkspace(workspaceId),
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  });
+
+  const [columns, setColumns] = useState<BoardColumn[]>([]);
+
+  useEffect(() => {
+    if (boardData?.columns) {
+      setColumns(boardData.columns);
+    }
+  }, [boardData]);
+
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
   const [listViewMode, setListViewMode] = useState<"grid" | "split">("grid");
@@ -110,7 +127,13 @@ export default function WorkspaceDetailPage({
     setSelectedIssue,
   });
 
-  const { handleAddColumn } = useColumnHandlers({
+  const {
+    handleAddColumn,
+    handleRenameColumn,
+    handleDeleteColumn,
+    handleMoveColumn,
+  } = useColumnHandlers({
+    workspaceKey: workspaceId,
     columns,
     newColumnName,
     setColumns,
@@ -162,11 +185,11 @@ export default function WorkspaceDetailPage({
         const nextIssues = await taskService.listBoardTasks(workspaceId);
         setIssues(nextIssues);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [workspaceId]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading || isBoardLoading) return <LoadingSpinner />;
   if (!workspace)
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -228,6 +251,9 @@ export default function WorkspaceDetailPage({
             setNewColumnName,
             handleBoardDragEnd,
             handleAddColumn,
+            handleRenameColumn,
+            handleDeleteColumn,
+            handleMoveColumn,
           },
           refs: {
             columnsEndRef,
@@ -319,9 +345,9 @@ export default function WorkspaceDetailPage({
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
       {selectedIssue &&
-      (activeTab === "timeline" ||
-        activeTab === "calendar" ||
-        (activeTab === "list" && listViewMode === "grid" && listGridDrawerOpen)) ? (
+        (activeTab === "timeline" ||
+          activeTab === "calendar" ||
+          (activeTab === "list" && listViewMode === "grid" && listGridDrawerOpen)) ? (
         <TaskDetailDrawer
           isOpen={!!selectedIssue}
           issue={selectedIssue}

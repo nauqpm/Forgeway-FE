@@ -1,15 +1,18 @@
 "use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { useState } from "react";
 import { Filters } from "../../types/filter.type";
 import { Issue } from "../../types/issue.type";
 import { Workspace } from "../../types/workspace.type";
+import { BoardColumn } from "../../types/board.type";
+import DeleteColumnModal from "../DeleteColumnModal";
 
-import { Search, Plus, Check, X } from "lucide-react";
+import { Search, Plus, Check, X, Trash2 } from "lucide-react";
 
 type BoardTabProps = {
   data: {
-    columns: string[];
+    columns: BoardColumn[];
     issues: Issue[];
     filteredIssues: Issue[];
     uniqueAssignees: any[];
@@ -25,7 +28,7 @@ type BoardTabProps = {
 
   actions: {
     setFilters: React.Dispatch<React.SetStateAction<Filters>>;
-    setColumns: React.Dispatch<React.SetStateAction<string[]>>;
+    setColumns: React.Dispatch<React.SetStateAction<BoardColumn[]>>;
     setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
 
     setSelectedIssue: (issue: Issue) => void;
@@ -38,6 +41,9 @@ type BoardTabProps = {
 
     handleBoardDragEnd: any;
     handleAddColumn: () => void;
+    handleRenameColumn: (columnId: string, name: string) => void;
+    handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
+    handleMoveColumn: (columnId: string, newOrder: number) => void;
   };
 
   refs: {
@@ -62,8 +68,20 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
 
     handleBoardDragEnd,
     handleAddColumn,
+    handleRenameColumn,
+    handleDeleteColumn,
+    handleMoveColumn,
   } = actions;
   const { columnsEndRef } = refs;
+
+  const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [columnToDelete, setColumnToDelete] = useState<BoardColumn | null>(null);
+
+  const issueMatchesColumn = (issue: Issue, col: BoardColumn) => {
+    return issue.columnId ? issue.columnId === col.id : col.mappedStatuses?.includes(issue.status);
+  };
   return (
     <div className="flex flex-col gap-4">
       {/* Quick Filters */}
@@ -146,6 +164,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
             issues,
             setColumns,
             setIssues,
+            handleMoveColumn,
           })
         }
       >
@@ -161,10 +180,10 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
               ref={provided.innerRef}
               {...provided.droppableProps}
             >
-              {columns.map((status, index) => (
+              {columns.map((column, index) => (
                 <Draggable
-                  key={status}
-                  draggableId={`col-${status}`}
+                  key={column.id}
+                  draggableId={`col-${column.id}`}
                   index={index}
                 >
                   {(provided) => (
@@ -175,29 +194,58 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                     >
                       <div
                         {...provided.dragHandleProps}
-                        className="p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl cursor-grab active:cursor-grabbing"
+                        className="p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl cursor-grab active:cursor-grabbing group/header"
+                        onDoubleClick={() => {
+                          setEditingColumnId(column.id);
+                          setEditingName(column.name);
+                        }}
                       >
-                        <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide flex items-center gap-2">
-                          {status}
-                          <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[10px] font-bold">
-                            {
-                              filteredIssues.filter((i) => i.status === status)
-                                .length
-                            }
-                          </span>
-                        </h3>
-                        <button
-                          onClick={() => {
-                            setNewIssueForm({ ...newIssueForm, status });
-                            setShowCreateIssue(true);
-                          }}
-                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors cursor-pointer"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
+                        {editingColumnId === column.id ? (
+                          <input
+                            autoFocus
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleRenameColumn(column.id, editingName);
+                                setEditingColumnId(null);
+                              }
+                              if (e.key === "Escape") setEditingColumnId(null);
+                            }}
+                            onBlur={() => setEditingColumnId(null)}
+                            className="w-full text-sm font-semibold px-2 py-1 border border-indigo-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        ) : (
+                          <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide flex items-center gap-2">
+                            {column.name}
+                            <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[10px] font-bold">
+                              {filteredIssues.filter((i) => issueMatchesColumn(i, column)).length}
+                            </span>
+                          </h3>
+                        )}
+                        <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => {
+                              setColumnToDelete(column);
+                              setDeleteModalOpen(true);
+                            }}
+                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setNewIssueForm({ ...newIssueForm, status: column.name, columnId: column.id });
+                              setShowCreateIssue(true);
+                            }}
+                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
-                      <Droppable droppableId={status} type="task">
+                      <Droppable droppableId={column.id} type="task">
                         {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
@@ -205,7 +253,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                             className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : ""}`}
                           >
                             {filteredIssues
-                              .filter((i) => i.status === status)
+                              .filter((i) => issueMatchesColumn(i, column))
                               .map((issue, issueIndex) => (
                                 <Draggable
                                   key={issue.id}
@@ -250,11 +298,11 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                                 </Draggable>
                               ))}
                             {provided.placeholder}
-                            {filteredIssues.filter((i) => i.status === status)
+                            {filteredIssues.filter((i) => issueMatchesColumn(i, column))
                               .length === 0 &&
                               !snapshot.isDraggingOver && (
                                 <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
-                                  {issues.filter((i) => i.status === status)
+                                  {issues.filter((i) => issueMatchesColumn(i, column))
                                     .length === 0
                                     ? "Kéo thả issue vào đây"
                                     : "Không có issue phù hợp"}
@@ -322,6 +370,25 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
           )}
         </Droppable>
       </DragDropContext>
+
+      {/* Import explicitly if not using Next.js dynamic imports, or ensure it's in the component tree */}
+      {deleteModalOpen && columnToDelete && (
+        <DeleteColumnModal
+          isOpen={deleteModalOpen}
+          column={columnToDelete}
+          columns={columns}
+          hasTasks={issues.some(i => issueMatchesColumn(i, columnToDelete))}
+          onClose={() => {
+            setDeleteModalOpen(false);
+            setColumnToDelete(null);
+          }}
+          onConfirm={(migrateTo) => {
+            handleDeleteColumn(columnToDelete.id, migrateTo);
+            setDeleteModalOpen(false);
+            setColumnToDelete(null);
+          }}
+        />
+      )}
     </div>
   );
 }
