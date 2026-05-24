@@ -99,14 +99,14 @@ export default function DataGridListView({
         header: () => (
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+            className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
             aria-label="Select all issues"
           />
         ),
         cell: () => (
           <input
             type="checkbox"
-            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600"
+            className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
             aria-label="Select issue"
           />
         ),
@@ -320,7 +320,7 @@ export default function DataGridListView({
                       type="checkbox"
                       checked={column.getIsVisible()}
                       onChange={column.getToggleVisibilityHandler()}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
                     />
                     <span className="text-sm capitalize text-gray-700">
                       {column.id}

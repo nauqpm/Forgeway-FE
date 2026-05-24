@@ -167,7 +167,7 @@ export default function DataGridListView({
       header: ({ table }) => (
         <input 
           type="checkbox" 
-          className="w-4 h-4 rounded text-indigo-600 cursor-pointer" 
+          className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer" 
           checked={table.getIsAllRowsSelected()}
           ref={input => {
             if (input) input.indeterminate = table.getIsSomeRowsSelected();
@@ -178,7 +178,7 @@ export default function DataGridListView({
       cell: ({ row }) => (
         <input 
           type="checkbox" 
-          className="w-4 h-4 rounded text-indigo-600 cursor-pointer" 
+          className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer" 
           checked={row.getIsSelected()}
           onChange={row.getToggleSelectedHandler()}
           onClick={(e) => e.stopPropagation()}
@@ -427,7 +427,7 @@ export default function DataGridListView({
                         type="checkbox"
                         checked={column.getIsVisible()}
                         onChange={column.getToggleVisibilityHandler()}
-                        className="rounded text-indigo-600 focus:ring-indigo-500"
+                        className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300 capitalize">{column.id}</span>
                     </label>

@@ -135,7 +135,7 @@ function FilterDropdown({
                             type="checkbox" 
                             checked={isChecked}
                             onChange={(e) => onChange(opt.id, e.target.checked)}
-                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" 
+                            className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer" 
                           />
                           {opt.icon && <span className="text-gray-400 group-hover:text-gray-600">{opt.icon}</span>}
                           {opt.color ? (
@@ -367,7 +367,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium">
                 <th className="px-4 py-3 w-10 text-center">
-                  <input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                  <input type="checkbox" className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer" />
                 </th>
                 <th className="px-4 py-3 w-10 text-center">T</th>
                 <th className="px-4 py-3">Work</th>
@@ -382,7 +382,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
               {filteredIssues.map((issue) => (
                 <tr key={issue.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 group cursor-pointer transition-colors">
                   <td className="px-4 py-3 text-center">
-                    <input type="checkbox" className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <input type="checkbox" className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity" />
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className={`w-6 h-6 rounded flex items-center justify-center mx-auto ${

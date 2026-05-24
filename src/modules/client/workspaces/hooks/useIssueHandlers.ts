@@ -1,5 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
+import { toast } from "react-hot-toast";
 
 interface CreateIssueForm {
   title: string;
@@ -39,6 +41,7 @@ export const useIssueHandlers = ({
   setNewIssueForm,
   setSelectedIssue,
 }: UseIssueHandlersProps) => {
+  const queryClient = useQueryClient();
   const updateIssueDirectly = (
     id: string,
     updates: Partial<Issue>
@@ -73,6 +76,7 @@ export const useIssueHandlers = ({
       status: "To Do",
       sprintId: null,
     });
+    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
   };
 
   const handleUpdateIssue = async (
@@ -106,10 +110,28 @@ export const useIssueHandlers = ({
     });
   };
 
+  const handleQuickCreateTask = async (title: string, sprintId: string | null = null) => {
+    if (!title.trim()) return;
+    try {
+      const issue = await taskService.createBoardTask(workspaceKey, {
+        title: title.trim(),
+        type: "Task",
+        priority: "Medium",
+        status: "To Do",
+        sprintId,
+      });
+      setIssues(prev => [...prev, issue]);
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+    } catch {
+      toast.error("Lỗi khi tạo task");
+    }
+  };
+
   return {
     handleCreateIssue,
     handleUpdateIssue,
     handleUpdateIssueDate,
     updateIssueDirectly,
+    handleQuickCreateTask,
   };
 };

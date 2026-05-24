@@ -6,9 +6,10 @@ interface SprintModalProps {
   onClose: () => void;
   onSave: (sprint: any) => void;
   initialData?: any;
+  sprintCount?: number;
 }
 
-export default function SprintModal({ isOpen, onClose, onSave, initialData }: SprintModalProps) {
+export default function SprintModal({ isOpen, onClose, onSave, initialData, sprintCount = 0 }: SprintModalProps) {
   const [formData, setFormData] = useState({
     name: '',
     duration: '2 weeks',
@@ -33,7 +34,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData }: Sp
         end.setDate(start.getDate() + 14); // 2 weeks
         
         setFormData({
-          name: 'Sprint 3', // Should be dynamic in real app
+          name: `Sprint ${sprintCount + 1}`,
           duration: '2 weeks',
           startDate: start.toISOString().split('T')[0],
           endDate: end.toISOString().split('T')[0],
@@ -89,7 +90,9 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData }: Sp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { duration, ...sprintData } = formData;
+    onSave(sprintData);
     onClose();
   };
 

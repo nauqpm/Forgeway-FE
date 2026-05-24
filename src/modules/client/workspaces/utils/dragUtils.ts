@@ -15,6 +15,7 @@ interface HandleBacklogDragParams {
   result: DropResult;
   issues: Issue[];
   setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
+  onSprintAssign?: (taskId: string, sprintId: string | null) => void;
 }
 
 export const handleBoardDragEnd = ({
@@ -122,6 +123,7 @@ export const handleBacklogDragEnd = ({
   result,
   issues,
   setIssues,
+  onSprintAssign,
 }: HandleBacklogDragParams) => {
   const { destination, source, draggableId } = result;
 
@@ -143,6 +145,7 @@ export const handleBacklogDragEnd = ({
   if (draggedIssueIndex === -1) return;
 
   const draggedIssue = newIssues[draggedIssueIndex];
+  const previousSprintId = draggedIssue.sprintId ?? null;
 
   let targetSprintId: string | null = null;
 
@@ -166,6 +169,8 @@ export const handleBacklogDragEnd = ({
       : i.sprintId ===
         destination.droppableId.replace("sprint-", "")
   );
+
+  let movedTask: Issue | null = null;
 
   // Same list reorder
   if (source.droppableId === destination.droppableId) {
@@ -193,6 +198,8 @@ export const handleBacklogDragEnd = ({
       sprintId: targetSprintId,
     };
 
+    movedTask = newIssue;
+
     const targetIndex = newIssues.findIndex(
       (i) => i.id === targetIssue?.id
     );
@@ -205,4 +212,8 @@ export const handleBacklogDragEnd = ({
   }
 
   setIssues(newIssues);
+
+  if (onSprintAssign && movedTask && movedTask.sprintId !== previousSprintId) {
+    onSprintAssign(movedTask.id, movedTask.sprintId ?? null);
+  }
 };

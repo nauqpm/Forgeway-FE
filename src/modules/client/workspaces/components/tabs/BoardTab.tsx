@@ -6,9 +6,10 @@ import { Filters } from "../../types/filter.type";
 import { Issue } from "../../types/issue.type";
 import { Workspace } from "../../types/workspace.type";
 import { BoardColumn } from "../../types/board.type";
+import { Sprint } from "../../types/sprint.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 
-import { Search, Plus, Check, X, Trash2 } from "lucide-react";
+import { Search, Plus, Check, X, Trash2, PlayCircle } from "lucide-react";
 
 type BoardTabProps = {
   data: {
@@ -17,6 +18,7 @@ type BoardTabProps = {
     filteredIssues: Issue[];
     uniqueAssignees: any[];
     workspace: Workspace;
+    activeSprint?: Sprint | null;
   };
 
   ui: {
@@ -52,7 +54,11 @@ type BoardTabProps = {
 };
 
 export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
-  const { columns, issues, filteredIssues, uniqueAssignees, workspace } = data;
+  const { columns, issues, filteredIssues, uniqueAssignees, workspace, activeSprint } = data;
+
+  const visibleIssues = workspace.type === "scrum" && activeSprint
+    ? filteredIssues.filter(i => i.sprintId === activeSprint._id)
+    : filteredIssues;
   const { filters, newIssueForm, showCreateColumn, newColumnName } = ui;
   const {
     setFilters,
@@ -82,6 +88,22 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
   const issueMatchesColumn = (issue: Issue, col: BoardColumn) => {
     return issue.columnId ? issue.columnId === col.id : col.mappedStatuses?.includes(issue.status);
   };
+  if (workspace.type === "scrum" && !activeSprint) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-4">
+          <PlayCircle className="w-8 h-8 text-indigo-500" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          Chưa có Sprint đang hoạt động
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Vui lòng bắt đầu một Sprint từ tab Backlog để xem board
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Quick Filters */}
@@ -219,7 +241,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                           <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide flex items-center gap-2">
                             {column.name}
                             <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[10px] font-bold">
-                              {filteredIssues.filter((i) => issueMatchesColumn(i, column)).length}
+                              {visibleIssues.filter((i) => issueMatchesColumn(i, column)).length}
                             </span>
                           </h3>
                         )}
@@ -252,7 +274,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                             {...provided.droppableProps}
                             className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : ""}`}
                           >
-                            {filteredIssues
+                            {visibleIssues
                               .filter((i) => issueMatchesColumn(i, column))
                               .map((issue, issueIndex) => (
                                 <Draggable
@@ -298,7 +320,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                                 </Draggable>
                               ))}
                             {provided.placeholder}
-                            {filteredIssues.filter((i) => issueMatchesColumn(i, column))
+                            {visibleIssues.filter((i) => issueMatchesColumn(i, column))
                               .length === 0 &&
                               !snapshot.isDraggingOver && (
                                 <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
