@@ -96,13 +96,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
   return (
     <div>
       <DragDropContext
-        onDragEnd={(result) =>
-          handleBacklogDragEnd({
-            result,
-            issues,
-            setIssues,
-          })
-        }
+        onDragEnd={handleBacklogDragEnd}
       >
         <div className="workspace-surface max-w-[min(100%,72rem)] space-y-6 py-[var(--workspace-surface-pad)]">
           {/* Backlog Top Bar with Filter */}

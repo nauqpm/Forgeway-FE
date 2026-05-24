@@ -95,8 +95,10 @@ const toUpdatePayload = (updates: Partial<Issue>) => ({
   ...updates,
   type: updates.type?.toLowerCase(),
   priority: updates.priority?.toLowerCase(),
-  columnId: toColumnId(updates.status),
-  status: toColumnId(updates.status),
+  ...(updates.status && {
+    columnId: toColumnId(updates.status),
+    status: toColumnId(updates.status),
+  }),
   sprintId: updates.sprintId || undefined,
 });
 

@@ -9,6 +9,7 @@ interface HandleBoardDragParams {
   setColumns: React.Dispatch<React.SetStateAction<BoardColumn[]>>;
   setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
   handleMoveColumn?: (columnId: string, newOrder: number) => void;
+  onColumnChange?: (taskId: string, columnId: string) => void;
 }
 
 interface HandleBacklogDragParams {
@@ -25,6 +26,7 @@ export const handleBoardDragEnd = ({
   setColumns,
   setIssues,
   handleMoveColumn,
+  onColumnChange,
 }: HandleBoardDragParams) => {
   const { destination, source, draggableId, type } = result;
 
@@ -73,7 +75,7 @@ export const handleBoardDragEnd = ({
       if (source.index === destination.index) return;
 
       const columnIssues = newIssues.filter(
-        (i) => i.status === sourceStatus
+        (i) => i.columnId === sourceStatus
       );
 
       const targetIssue = columnIssues[destination.index];
@@ -92,7 +94,7 @@ export const handleBoardDragEnd = ({
     } else {
       // Move different column
       const columnIssues = newIssues.filter(
-        (i) => i.status === destStatus
+        (i) => i.columnId === destStatus
       );
 
       const targetIssue = columnIssues[destination.index];
@@ -101,7 +103,7 @@ export const handleBoardDragEnd = ({
 
       const newIssue = {
         ...draggedIssue,
-        status: destStatus,
+        columnId: destStatus,
       };
 
       const targetIndex = newIssues.findIndex(
@@ -116,6 +118,10 @@ export const handleBoardDragEnd = ({
     }
 
     setIssues(newIssues);
+
+    if (onColumnChange && sourceStatus !== destStatus) {
+      onColumnChange(draggableId, destStatus);
+    }
   }
 };
 

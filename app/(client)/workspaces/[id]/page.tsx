@@ -296,7 +296,18 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd,
+            handleBoardDragEnd: (result) =>
+              handleBoardDragEnd({
+                result,
+                columns,
+                issues,
+                setColumns,
+                setIssues,
+                handleMoveColumn,
+                onColumnChange: (taskId, columnId) => {
+                  taskService.updateBoardTask(workspaceId, taskId, { columnId });
+                },
+              }),
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,

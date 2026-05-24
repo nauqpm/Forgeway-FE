@@ -178,18 +178,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
         )}
       </div>
 
-      <DragDropContext
-        onDragEnd={(result) =>
-          handleBoardDragEnd({
-            result,
-            columns,
-            issues,
-            setColumns,
-            setIssues,
-            handleMoveColumn,
-          })
-        }
-      >
+      <DragDropContext onDragEnd={handleBoardDragEnd}>
         <Droppable
           droppableId="board-columns"
           direction="horizontal"
