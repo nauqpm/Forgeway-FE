@@ -23,6 +23,10 @@ export const apiRoutes = {
         INVITE_BY_ID: (key: string, inviteId: string) => `/workspaces/${key}/invites/${inviteId}`,
         INVITE_BY_TOKEN: (token: string) => `/workspaces/invites/${token}`,
         ACCEPT_INVITE: (token: string) => `/workspaces/invites/${token}/accept`,
+        BOARD: (key: string) => `/workspaces/${key}/board`,
+        BOARD_COLUMNS: (key: string) => `/workspaces/${key}/board/columns`,
+        BOARD_COLUMN: (key: string, columnId: string) => `/workspaces/${key}/board/columns/${columnId}`,
+        BOARD_COLUMN_MOVE: (key: string, columnId: string) => `/workspaces/${key}/board/columns/${columnId}/move`,
     },
     PROJECTS: {
         BASE: '/projects',
