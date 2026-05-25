@@ -47,12 +47,35 @@ import CreateIssueModal from "@/modules/client/workspaces/components/issues/Crea
 export default function WorkspaceDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; tab?: string[] }>;
 }) {
-  const { id: workspaceId } = use(params);
+  const { id: workspaceId, tab } = use(params);
+  const tabFromUrl = tab?.[0];
+  const initialTab = (tabFromUrl as WorkspaceTab) || null;
+
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("pages");
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
+
+  const handleTabChange = (newTab: WorkspaceTab) => {
+    setActiveTab(newTab);
+    window.history.pushState(null, "", `/workspaces/${workspaceId}/${newTab}`);
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const segments = window.location.pathname.split('/');
+      const tabSegment = segments[3];
+      if (tabSegment) {
+        setActiveTab(tabSegment as WorkspaceTab);
+      } else if (workspace) {
+        const template = getWorkspaceTemplate(workspace);
+        setActiveTab(template === "scrum" ? "backlog" : "board");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [workspace, workspaceId]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
 
@@ -233,8 +256,10 @@ export default function WorkspaceDetailPage({
         const template = getWorkspaceTemplate(nextWorkspace);
 
         setWorkspace(nextWorkspace);
-        if (template === "scrum") setActiveTab("backlog");
-        else setActiveTab("board");
+        if (!initialTab) {
+          if (template === "scrum") handleTabChange("backlog");
+          else handleTabChange("board");
+        }
       })
       .catch(() => { })
       .finally(() => setLoading(false));
@@ -270,7 +295,7 @@ export default function WorkspaceDetailPage({
       )}
 
       {/* Tabs */}
-      <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={handleTabChange} />
 
       {/* Content Area */}
       <WorkspaceContent
