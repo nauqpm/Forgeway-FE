@@ -12,7 +12,7 @@ export interface Sprint {
   completedAt?: string;
   createdAt?: string;
   updatedAt?: string;
-  duration?: string;   // UI-only computed field, not from backend
+  duration?: string;
 }
 
 export interface CreateSprintInput {
@@ -20,6 +20,7 @@ export interface CreateSprintInput {
   goal?: string;
   startDate: string;
   endDate: string;
+  duration?: string;
 }
 
 export interface UpdateSprintInput {
@@ -27,4 +28,5 @@ export interface UpdateSprintInput {
   goal?: string;
   startDate?: string;
   endDate?: string;
+  duration?: string;
 }

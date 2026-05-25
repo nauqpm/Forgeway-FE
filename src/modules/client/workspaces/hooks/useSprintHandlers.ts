@@ -40,6 +40,7 @@ export const useSprintHandlers = ({
         status: "planning",
         startDate: input.startDate,
         endDate: input.endDate,
+        duration: input.duration,
       };
       setSprints([...sprints, tempSprint]);
       return { previousSprints };

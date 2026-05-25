@@ -24,8 +24,8 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
         setFormData({
           name: initialData.name || '',
           duration: initialData.duration || '2 weeks',
-          startDate: initialData.startDate || '',
-          endDate: initialData.endDate || '',
+          startDate: initialData.startDate ? initialData.startDate.split('T')[0] : '',
+          endDate: initialData.endDate ? initialData.endDate.split('T')[0] : '',
           goal: initialData.goal || ''
         });
       } else {
@@ -92,11 +92,21 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
     e.preventDefault();
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { duration, ...sprintData } = formData;
-    onSave(sprintData);
+    
+    // Both active and completed sprints restrict date changes
+    const isRestricted = initialData?.status === 'active' || initialData?.status === 'completed';
+
+    if (isRestricted) {
+      onSave({ name: sprintData.name, goal: sprintData.goal });
+    } else {
+      onSave(sprintData);
+    }
     onClose();
   };
 
   if (!isOpen) return null;
+
+  const isRestricted = initialData?.status === 'active' || initialData?.status === 'completed';
 
   return (
     <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -109,6 +119,20 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
             <X className="w-5 h-5" />
           </button>
         </div>
+        {initialData?.status === 'active' && (
+          <div className="px-6 pt-4 pb-0">
+            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+              Sprint đang chạy — chỉ có thể sửa tên và mục tiêu.
+            </p>
+          </div>
+        )}
+        {initialData?.status === 'completed' && (
+          <div className="px-6 pt-4 pb-0">
+            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+              Sprint đã kết thúc — chỉ có thể sửa tên và mục tiêu.
+            </p>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên Sprint <span className="text-red-500">*</span></label>
@@ -140,9 +164,10 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
               <input
                 type="date"
                 required
+                disabled={initialData?.status === 'active'}
                 value={formData.startDate}
                 onChange={handleStartDateChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
             <div>
@@ -150,9 +175,10 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
               <input
                 type="date"
                 required
+                disabled={initialData?.status === 'active'}
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value, duration: 'custom' })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           </div>
