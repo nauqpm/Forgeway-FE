@@ -296,7 +296,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                                       </div>
                                       <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50 dark:border-gray-800">
                                         <span className="text-xs font-mono font-bold text-gray-400">
-                                          {workspace.key}-{100 + parseInt(issue.id)}
+                                          {issue.key}
                                         </span>
                                         <div
                                           className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-900`}

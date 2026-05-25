@@ -18,6 +18,8 @@ type DataGridListViewProps = {
   issues: Issue[];
   onClickTask: (issue: Issue) => void;
   onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void;
+  onBulkUpdate?: (issueIds: string[], updates: Partial<Issue>) => Promise<void>;
+  onBulkDelete?: (issueIds: string[]) => Promise<void>;
 };
 
 const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
@@ -79,6 +81,7 @@ export default function DataGridListView({
     return issues.filter((issue) =>
       [
         issue.id,
+        issue.key,
         issue.title,
         issue.status,
         issue.priority,
@@ -114,7 +117,7 @@ export default function DataGridListView({
         enableResizing: false,
       },
       {
-        accessorKey: "id",
+        accessorKey: "key",
         header: "Key",
         size: 90,
         cell: (info) => (

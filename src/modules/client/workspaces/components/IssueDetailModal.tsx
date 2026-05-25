@@ -65,7 +65,7 @@ export default function IssueDetailModal({
   const [activeTab, setActiveTab] = useState<
     "comments" | "history" | "worklog"
   >("comments");
-  const issueKey = `${workspaceKey}-${100 + parseInt(issue.id)}`;
+  const issueKey = issue.key;
 
   const [localTitle, setLocalTitle] = useState(issue.title);
   const [isEditingTitle, setIsEditingTitle] = useState(false);

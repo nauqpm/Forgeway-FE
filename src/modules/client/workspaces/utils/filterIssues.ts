@@ -14,9 +14,7 @@ export const filterIssues = (
 
     const matchSearch =
       issue.title.toLowerCase().includes(search) ||
-      `${workspace.key}-${100 + parseInt(issue.id)}`
-        .toLowerCase()
-        .includes(search);
+      issue.key.toLowerCase().includes(search);
 
     // Board quick filters
     const matchAssigneeQuick = filters.assigneeId

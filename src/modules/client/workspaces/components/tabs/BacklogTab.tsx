@@ -284,7 +284,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                     className={`w-4 h-4 ${issue.type === "Bug" ? "text-red-500" : issue.type === "Story" ? "text-emerald-500" : "text-indigo-500"}`}
                                   />
                                   <span className="text-xs font-mono font-medium text-gray-500 w-16 hover:underline cursor-pointer">
-                                    {workspace?.key}-{100 + parseInt(issue.id)}
+                                    {issue.key}
                                   </span>
                                   <span className="min-w-0 break-words text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 cursor-pointer">
                                     {issue.title}
@@ -496,7 +496,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                   className={`w-4 h-4 ${issue.type === "Bug" ? "text-red-500" : issue.type === "Story" ? "text-emerald-500" : "text-gray-400"}`}
                                 />
                                 <span className="text-xs font-mono font-medium text-gray-400 w-16 hover:underline cursor-pointer">
-                                  {workspace?.key}-{100 + parseInt(issue.id)}
+                                  {issue.key}
                                 </span>
                                 <span className="min-w-0 break-words text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white cursor-pointer">
                                   {issue.title}

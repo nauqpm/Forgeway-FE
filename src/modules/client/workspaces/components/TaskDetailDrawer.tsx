@@ -73,7 +73,7 @@ export default function TaskDetailDrawer({
 
   if (!issue) return null;
 
-  const issueKey = `${workspaceKey}-${100 + parseInt(issue.id)}`;
+  const issueKey = issue.key;
   const timeEstimated = issue.timeEstimated || "1d 4h"; 
 
   const handleTitleBlur = () => {

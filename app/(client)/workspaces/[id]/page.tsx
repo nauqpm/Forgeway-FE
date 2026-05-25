@@ -153,6 +153,8 @@ export default function WorkspaceDetailPage({
   });
 
   const activeSprint = sprints.find(s => s.status === "active") ?? null;
+  const getIssueTaskKey = (taskId: string) =>
+    issues.find((issue) => issue.id === taskId)?.key;
 
   const {
     handleAddColumn,
@@ -192,7 +194,10 @@ export default function WorkspaceDetailPage({
       issues,
       setIssues,
       onSprintAssign: (taskId, sprintId) => {
-        taskService.updateBoardTask(workspaceId, taskId, { sprintId: sprintId ?? undefined });
+        const taskKey = getIssueTaskKey(taskId);
+        if (taskKey) {
+          taskService.updateBoardTask(workspaceId, taskKey, { sprintId: sprintId ?? undefined });
+        }
       },
     });
   };
@@ -305,7 +310,10 @@ export default function WorkspaceDetailPage({
                 setIssues,
                 handleMoveColumn,
                 onColumnChange: (taskId, columnId) => {
-                  taskService.updateBoardTask(workspaceId, taskId, { columnId });
+                  const taskKey = getIssueTaskKey(taskId);
+                  if (taskKey) {
+                    taskService.updateBoardTask(workspaceId, taskKey, { columnId });
+                  }
                 },
               }),
             handleAddColumn,
