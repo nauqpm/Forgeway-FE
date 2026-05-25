@@ -45,10 +45,12 @@ import CreateIssueModal from "@/modules/client/workspaces/components/issues/Crea
 export default function WorkspaceDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ key: string }>;
 }) {
-  const { id: workspaceId } = use(params);
+  const { key: workspaceKey } = use(params);
+
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const workspaceId = workspace?._id || "";
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("pages");
   const [sprints, setSprints] = useState<Sprint[]>([]);
@@ -88,9 +90,9 @@ export default function WorkspaceDetailPage({
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const { data: boardData, isLoading: isBoardLoading } = useQuery({
-    queryKey: ["board", workspaceId],
-    queryFn: () => boardService.getBoardByWorkspace(workspaceId),
-    enabled: !!workspaceId,
+    queryKey: ["board", workspaceKey],
+    queryFn: () => boardService.getBoardByWorkspace(workspaceKey),
+    enabled: !!workspaceKey,
     staleTime: 30_000,
   });
 
@@ -119,7 +121,7 @@ export default function WorkspaceDetailPage({
     handleUpdateIssueDate,
     updateIssueDirectly,
   } = useIssueHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     issues,
     setIssues,
     setShowCreateIssue,
@@ -133,7 +135,7 @@ export default function WorkspaceDetailPage({
     handleDeleteColumn,
     handleMoveColumn,
   } = useColumnHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     columns,
     newColumnName,
     setColumns,
@@ -170,8 +172,8 @@ export default function WorkspaceDetailPage({
   }, [activeTab, listViewMode]);
 
   useEffect(() => {
-    if (!workspaceId) return;
-    api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceId))
+    if (!workspaceKey) return;
+    api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceKey))
       .then(async (workspaceResponse) => {
         const nextWorkspace = (
           workspaceResponse.data?.data ?? workspaceResponse.data
@@ -182,12 +184,12 @@ export default function WorkspaceDetailPage({
         if (template === "scrum") setActiveTab("backlog");
         else setActiveTab("board");
 
-        const nextIssues = await taskService.listBoardTasks(workspaceId);
+        const nextIssues = await taskService.listBoardTasks(workspaceKey);
         setIssues(nextIssues);
       })
       .catch(() => { })
       .finally(() => setLoading(false));
-  }, [workspaceId]);
+  }, [workspaceKey]);
 
   if (loading || isBoardLoading) return <LoadingSpinner />;
   if (!workspace)

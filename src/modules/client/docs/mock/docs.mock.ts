@@ -1,5 +1,9 @@
+/**
+ * MOCK DATA — No longer used in production.
+ * DocsLayout now fetches real data via pagesService.
+ * Kept for reference / local development fallback only.
+ */
 import { Document } from "../types/docs.type";
-import { v4 as uuidv4 } from "uuid";
 
 const now = new Date().toISOString();
 
@@ -10,9 +14,14 @@ export const MOCK_DOCS: Document[] = [
     content: "<h1>Getting Started</h1><p>Welcome to your new workspace. Here you can write documentation.</p>",
     parentId: null,
     workspaceId: "Workspace-1",
+    slug: "getting-started",
+    authorId: "user-1",
+    version: 1,
+    status: "published",
+    labels: ["onboarding"],
+    versionHistory: [],
     createdAt: now,
     updatedAt: now,
-    category: "Frontend"
   },
   {
     id: "doc-2",
@@ -20,9 +29,14 @@ export const MOCK_DOCS: Document[] = [
     content: "<h2>Installation Guide</h2><p>Run <code>npm install</code> to get started.</p>",
     parentId: "doc-1",
     workspaceId: "Workspace-1",
+    slug: "installation",
+    authorId: "user-1",
+    version: 1,
+    status: "draft",
+    labels: [],
+    versionHistory: [],
     createdAt: now,
     updatedAt: now,
-    category: "Frontend"
   },
   {
     id: "doc-3",
@@ -30,9 +44,14 @@ export const MOCK_DOCS: Document[] = [
     content: "<h2>Authentication</h2><p>Learn how to authenticate your API requests.</p>",
     parentId: "doc-1",
     workspaceId: "Workspace-1",
+    slug: "authentication",
+    authorId: "user-1",
+    version: 1,
+    status: "draft",
+    labels: [],
+    versionHistory: [],
     createdAt: now,
     updatedAt: now,
-    category: "Backend"
   },
   {
     id: "doc-4",
@@ -40,9 +59,14 @@ export const MOCK_DOCS: Document[] = [
     content: "<h1>API Reference</h1><p>List of all available endpoints.</p>",
     parentId: null,
     workspaceId: "Workspace-1",
+    slug: "api-reference",
+    authorId: "user-1",
+    version: 1,
+    status: "published",
+    labels: ["api"],
+    versionHistory: [],
     createdAt: now,
     updatedAt: now,
-    category: "Backend"
   },
   {
     id: "doc-5",
@@ -50,9 +74,14 @@ export const MOCK_DOCS: Document[] = [
     content: "<h2>Endpoints</h2><p>GET /api/v1/users</p>",
     parentId: "doc-4",
     workspaceId: "Workspace-1",
+    slug: "endpoints",
+    authorId: "user-1",
+    version: 1,
+    status: "draft",
+    labels: [],
+    versionHistory: [],
     createdAt: now,
     updatedAt: now,
-    category: "Backend"
   },
   {
     id: "doc-6",
@@ -60,8 +89,13 @@ export const MOCK_DOCS: Document[] = [
     content: "<h1>Design System</h1><p>Our UI components and styles.</p>",
     parentId: null,
     workspaceId: "Workspace-1",
+    slug: "design-system",
+    authorId: "user-1",
+    version: 1,
+    status: "draft",
+    labels: ["frontend"],
+    versionHistory: [],
     createdAt: now,
     updatedAt: now,
-    category: "Frontend"
   }
 ];

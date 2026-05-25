@@ -8,18 +8,52 @@ import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
 import "highlight.js/styles/github.css";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useDocsStore } from "../store/docs.store";
 import EditorToolbar from "./EditorToolbar";
 import EditorHeader from "./EditorHeader";
 
 const lowlight = createLowlight(common);
 
+const AUTOSAVE_DELAY = 3000; // 3 seconds debounce
+
 export default function TiptapEditor() {
   const { documents, selectedDocumentId, updateDocument, setIsSaving } = useDocsStore();
   const document = documents.find(d => d.id === selectedDocumentId);
-  
+
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const latestContentRef = useRef<string>("");
+
+  // ── Save function ──────────────────────────────────────────
+  const saveContent = useCallback(async (content: string) => {
+    if (!selectedDocumentId) return;
+    setIsSaving(true);
+    try {
+      await updateDocument(selectedDocumentId, { content });
+    } finally {
+      setIsSaving(false);
+    }
+  }, [selectedDocumentId, updateDocument, setIsSaving]);
+
+  // ── Ctrl+S manual save ─────────────────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        // Cancel pending debounce
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current);
+          saveTimeoutRef.current = null;
+        }
+        // Save immediately
+        if (latestContentRef.current && selectedDocumentId) {
+          saveContent(latestContentRef.current);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedDocumentId, saveContent]);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -48,17 +82,19 @@ export default function TiptapEditor() {
     },
     onUpdate: ({ editor }) => {
       if (!selectedDocumentId) return;
-      
+
+      const html = editor.getHTML();
+      latestContentRef.current = html;
       setIsSaving(true);
-      
+
+      // Debounced auto-save (2 seconds)
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      
+
       saveTimeoutRef.current = setTimeout(() => {
-        updateDocument(selectedDocumentId, { content: editor.getHTML() });
-        setIsSaving(false);
-      }, 1000); // Autosave after 1s debounce
+        saveContent(html);
+      }, AUTOSAVE_DELAY);
     },
   });
 
@@ -68,16 +104,26 @@ export default function TiptapEditor() {
       const currentContent = editor.getHTML();
       if (currentContent !== document.content) {
         editor.commands.setContent(document.content);
+        latestContentRef.current = document.content;
       }
     }
   }, [selectedDocumentId, editor]); // We don't want to sync on every document update (like when autosaving)
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!document) return null;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden">
       <EditorHeader doc={document} />
-      
+
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
         {/* Sticky Toolbar with Blur */}
         <div className="sticky top-0 z-20">
@@ -95,7 +141,7 @@ export default function TiptapEditor() {
               placeholder="Untitled Page"
             />
           </div>
-          
+
           {/* Editor Content Area */}
           <div className="min-h-[600px] pb-40 dark:prose-invert">
             <EditorContent editor={editor} />
