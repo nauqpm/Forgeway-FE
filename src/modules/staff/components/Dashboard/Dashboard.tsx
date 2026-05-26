@@ -42,18 +42,15 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
           api
             .get(apiRoutes.WORKSPACES.BY_KEY(ws.key))
             .catch(() => ({ data: {} })),
-          api
-            .get(`${apiRoutes.SPACES.BASE}?workspaceId=${ws.key}`)
-            .catch(() => ({ data: [] })),
         ]);
       })
       .then((results) => {
         if (cancelled || !results) return;
-        const [projRes, wsRes, spaceRes] = results;
+        const [projRes, wsRes] = results;
         setStats({
           projects: Array.isArray(projRes.data) ? projRes.data.length : 0,
           members: wsRes.data?.members?.length || 0,
-          spaces: Array.isArray(spaceRes.data) ? spaceRes.data.length : 0,
+          spaces: 0,
         });
       })
       .catch(() => {})

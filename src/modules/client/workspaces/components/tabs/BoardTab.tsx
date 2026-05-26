@@ -163,13 +163,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                       className="workspace-column flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex flex-col max-h-full border border-gray-200 dark:border-gray-800 shadow-sm"
                     >
                       <div
-<<<<<<< HEAD
                         {...(filters.archived ? {} : provided.dragHandleProps)}
                         className={`p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
-=======
-                        {...(canUpdateWorkspace ? provided.dragHandleProps : {})}
-                        className={`p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl group/header ${canUpdateWorkspace ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
->>>>>>> 7e256a0cdb96a8a435e2f88d287b72e00d5b72a9
                         onDoubleClick={() => {
                           if (filters.archived) return;
                           setEditingColumnId(column.id);
@@ -199,13 +194,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             </span>
                           </h3>
                         )}
-<<<<<<< HEAD
                         {!filters.archived && (
                           <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-=======
-                        <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-                          {canUpdateWorkspace && (
->>>>>>> 7e256a0cdb96a8a435e2f88d287b72e00d5b72a9
                             <button
                               onClick={() => {
                                 setColumnToDelete(column);
@@ -215,11 +205,6 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
-<<<<<<< HEAD
-=======
-                          )}
-                          {canCreateTask && (
->>>>>>> 7e256a0cdb96a8a435e2f88d287b72e00d5b72a9
                             <button
                               onClick={() => {
                                 setNewIssueForm({ ...newIssueForm, status: column.name, columnId: column.id });
@@ -229,13 +214,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             >
                               <Plus className="w-4 h-4" />
                             </button>
-<<<<<<< HEAD
                           </div>
                         )}
-=======
-                          )}
-                        </div>
->>>>>>> 7e256a0cdb96a8a435e2f88d287b72e00d5b72a9
                       </div>
 
                       <Droppable droppableId={column.id} type="task">
@@ -257,7 +237,6 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                   {(provided, snapshot) => (
                                     <div
                                       ref={provided.innerRef}
-<<<<<<< HEAD
                                       {...(filters.archived ? {} : provided.draggableProps)}
                                       {...(filters.archived ? {} : provided.dragHandleProps)}
                                       onClick={() => {
@@ -265,12 +244,6 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         setSelectedIssue(issue);
                                       }}
                                       className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
-=======
-                                      {...provided.draggableProps}
-                                      {...(canMoveTask ? provided.dragHandleProps : {})}
-                                      onClick={() => setSelectedIssue(issue)}
-                                      className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${canMoveTask ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} group`}
->>>>>>> 7e256a0cdb96a8a435e2f88d287b72e00d5b72a9
                                     >
                                       <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                                         {issue.title}

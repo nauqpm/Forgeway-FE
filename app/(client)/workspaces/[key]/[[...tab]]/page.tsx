@@ -175,28 +175,14 @@ export default function WorkspaceDetailPage({
     staleTime: 30_000,
   });
 
-<<<<<<< HEAD:app/(client)/workspaces/[id]/[[...tab]]/page.tsx
-  const { data: tasksData, error: tasksError, isFetching: isTasksFetching } = useQuery({
-    queryKey: ["tasks", workspaceId, filters],
-    queryFn: () => taskService.listBoardTasks(workspaceId, {
-      search: filters.search || undefined,
-      assigneeId: filters.assignees.length > 0 ? filters.assignees : undefined,
-      reporterId: filters.reporterId || undefined,
-      priority: filters.priorities.length > 0 ? filters.priorities : undefined,
-      type: filters.types.length > 0 ? filters.types : undefined,
-      status: filters.statuses.length > 0 ? filters.statuses : undefined,
-      backlog: filters.backlog || undefined,
-      archived: filters.archived || undefined,
-      page: 1,
-      limit: 100,
-    }),
-    enabled: !!workspaceId,
-=======
-  const { data: tasksData } = useQuery({
+  const {
+    data: tasksData,
+    error: tasksError,
+    isFetching: isTasksFetching,
+  } = useQuery({
     queryKey: ["tasks", workspaceKey],
     queryFn: () => taskService.listBoardTasks(workspaceKey),
     enabled: !!workspaceKey,
->>>>>>> 7e256a0cdb96a8a435e2f88d287b72e00d5b72a9:app/(client)/workspaces/[key]/[[...tab]]/page.tsx
     staleTime: 30_000,
   });
 

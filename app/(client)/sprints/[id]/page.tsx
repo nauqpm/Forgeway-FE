@@ -53,11 +53,12 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
     if (!sprintId) return;
     const fetchData = async () => {
       try {
-        const [sprintRes, tasksRes] = await Promise.all([
-          api.get(apiRoutes.SPRINTS.BY_ID(sprintId)),
-          api.get(apiRoutes.TASKS.BY_SPRINT(sprintId)),
-        ]);
-        setSprint(sprintRes.data);
+        const sprintRes = await api.get(apiRoutes.SPRINTS.BY_ID(sprintId));
+        const nextSprint = sprintRes.data as Sprint;
+        const tasksRes = await api.get(
+          apiRoutes.TASKS.BY_SPRINT(nextSprint.projectId.key, sprintId),
+        );
+        setSprint(nextSprint);
         const tasks = tasksRes.data;
         setStats({
           totalTasks: tasks.length,
