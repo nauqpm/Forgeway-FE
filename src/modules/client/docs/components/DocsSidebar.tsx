@@ -12,9 +12,9 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
   const { documents, createDocument, selectDocument, selectedDocumentId } = useDocsStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   
-  const handleCreateRoot = () => {
-    const newDoc = createDocument(workspaceId, null);
-    selectDocument(newDoc.id);
+  const handleCreateRoot = async () => {
+    const newDoc = await createDocument(workspaceId, null);
+    if (newDoc) selectDocument(newDoc.id);
   };
 
   const rootDocs = documents.filter((doc) => doc.parentId === null);

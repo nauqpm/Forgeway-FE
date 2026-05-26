@@ -166,14 +166,14 @@ export const handleBacklogDragEnd = ({
     source.droppableId === "backlog"
       ? i.sprintId === null
       : i.sprintId ===
-        source.droppableId.replace("sprint-", "")
+      source.droppableId.replace("sprint-", "")
   );
 
   const destIssues = newIssues.filter((i) =>
     destination.droppableId === "backlog"
       ? i.sprintId === null
       : i.sprintId ===
-        destination.droppableId.replace("sprint-", "")
+      destination.droppableId.replace("sprint-", "")
   );
 
   let movedTask: Issue | null = null;

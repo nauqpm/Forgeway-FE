@@ -14,6 +14,9 @@ interface BulkActionBarProps {
   onEditFields?: () => void;
   sprints?: SprintOption[];
   onMoveSprint?: (sprintId: string | null) => void;
+  canEditTask?: boolean;
+  canDeleteTask?: boolean;
+  canMoveTask?: boolean;
 }
 
 export default function BulkActionBar({
@@ -24,6 +27,9 @@ export default function BulkActionBar({
   onEditFields,
   sprints,
   onMoveSprint,
+  canEditTask = true,
+  canDeleteTask = true,
+  canMoveTask = true,
 }: BulkActionBarProps) {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showSprintMenu, setShowSprintMenu] = useState(false);
@@ -62,6 +68,7 @@ export default function BulkActionBar({
 
         <div className="flex items-center gap-1">
           {/* Status dropdown */}
+          {canEditTask && (
           <div ref={statusRef} className="relative">
             <button
               onClick={() => { setShowStatusMenu(!showStatusMenu); setShowSprintMenu(false); }}
@@ -85,9 +92,10 @@ export default function BulkActionBar({
               </div>
             )}
           </div>
+          )}
 
           {/* Move to sprint dropdown */}
-          {onMoveSprint && (
+          {onMoveSprint && canMoveTask && (
             <div ref={sprintRef} className="relative">
               <button
                 onClick={() => { setShowSprintMenu(!showSprintMenu); setShowStatusMenu(false); }}
@@ -135,13 +143,15 @@ export default function BulkActionBar({
           )}
 
           {/* Delete */}
-          <button
-            onClick={onDelete}
-            className="flex items-center gap-2 hover:bg-red-900/40 text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            Xóa
-          </button>
+          {canDeleteTask && (
+            <button
+              onClick={onDelete}
+              className="flex items-center gap-2 hover:bg-red-900/40 text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              Xóa
+            </button>
+          )}
         </div>
 
         {/* Dismiss */}
