@@ -1,5 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
+import { toast } from "react-hot-toast";
 
 interface CreateIssueForm {
   title: string;
@@ -39,10 +41,19 @@ export const useIssueHandlers = ({
   setNewIssueForm,
   setSelectedIssue,
 }: UseIssueHandlersProps) => {
+  const queryClient = useQueryClient();
+  const getTaskKey = (id: string) => issues.find((issue) => issue.id === id)?.key;
+
   const updateIssueDirectly = (
     id: string,
     updates: Partial<Issue>
   ) => {
+    const taskKey = getTaskKey(id);
+    if (!taskKey) {
+      toast.error("Khong tim thay task key");
+      return;
+    }
+
     setIssues(
       issues.map((i) =>
         i.id === id
@@ -50,7 +61,7 @@ export const useIssueHandlers = ({
           : i
       )
     );
-    taskService.updateBoardTask(workspaceKey, id, updates).catch(() => {
+    taskService.updateBoardTask(workspaceKey, taskKey, updates).catch(() => {
       setIssues(issues);
     });
   };
@@ -73,14 +84,20 @@ export const useIssueHandlers = ({
       status: "To Do",
       sprintId: null,
     });
+    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
   };
 
   const handleUpdateIssue = async (
     updatedIssue: Issue
   ) => {
+    if (!updatedIssue.key) {
+      toast.error("Khong tim thay task key");
+      return;
+    }
+
     const savedIssue = await taskService.updateBoardTask(
       workspaceKey,
-      updatedIssue.id,
+      updatedIssue.key,
       updatedIssue,
     );
 
@@ -106,10 +123,28 @@ export const useIssueHandlers = ({
     });
   };
 
+  const handleQuickCreateTask = async (title: string, sprintId: string | null = null) => {
+    if (!title.trim()) return;
+    try {
+      const issue = await taskService.createBoardTask(workspaceKey, {
+        title: title.trim(),
+        type: "Task",
+        priority: "Medium",
+        status: "To Do",
+        sprintId,
+      });
+      setIssues(prev => [...prev, issue]);
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+    } catch {
+      toast.error("Lỗi khi tạo task");
+    }
+  };
+
   return {
     handleCreateIssue,
     handleUpdateIssue,
     handleUpdateIssueDate,
     updateIssueDirectly,
+    handleQuickCreateTask,
   };
 };

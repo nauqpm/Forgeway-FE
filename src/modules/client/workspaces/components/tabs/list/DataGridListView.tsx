@@ -18,6 +18,8 @@ type DataGridListViewProps = {
   issues: Issue[];
   onClickTask: (issue: Issue) => void;
   onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void;
+  onBulkUpdate?: (issueIds: string[], updates: Partial<Issue>) => Promise<void>;
+  onBulkDelete?: (issueIds: string[]) => Promise<void>;
 };
 
 const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
@@ -79,6 +81,7 @@ export default function DataGridListView({
     return issues.filter((issue) =>
       [
         issue.id,
+        issue.key,
         issue.title,
         issue.status,
         issue.priority,
@@ -99,14 +102,14 @@ export default function DataGridListView({
         header: () => (
           <input
             type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+            className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
             aria-label="Select all issues"
           />
         ),
         cell: () => (
           <input
             type="checkbox"
-            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-indigo-600"
+            className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
             aria-label="Select issue"
           />
         ),
@@ -114,7 +117,7 @@ export default function DataGridListView({
         enableResizing: false,
       },
       {
-        accessorKey: "id",
+        accessorKey: "key",
         header: "Key",
         size: 90,
         cell: (info) => (
@@ -320,7 +323,7 @@ export default function DataGridListView({
                       type="checkbox"
                       checked={column.getIsVisible()}
                       onChange={column.getToggleVisibilityHandler()}
-                      className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
                     />
                     <span className="text-sm capitalize text-gray-700">
                       {column.id}

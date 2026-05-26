@@ -1,5 +1,6 @@
 export interface Issue {
   id: string;
+  key: string;
   title: string;
   columnId: string;
   status: string;

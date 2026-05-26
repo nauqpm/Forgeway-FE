@@ -11,6 +11,8 @@ import BulkActionBar from "@/modules/admin/components/common/components/BulkActi
 import { useQuery } from "@tanstack/react-query";
 import { boardService } from "@/modules/client/workspaces/services/boardService";
 import { BoardColumn } from "@/modules/client/workspaces/types/board.type";
+import { sprintService } from "@/modules/client/workspaces/services/sprintService";
+import { DropResult } from "@hello-pangea/dnd";
 
 import {
   getWorkspaceTemplate,
@@ -45,14 +47,36 @@ import CreateIssueModal from "@/modules/client/workspaces/components/issues/Crea
 export default function WorkspaceDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; tab?: string[] }>;
 }) {
-  const { id: workspaceKey } = use(params);
+  const { id: workspaceId, tab } = use(params);
+  const tabFromUrl = tab?.[0];
+  const initialTab = (tabFromUrl as WorkspaceTab) || null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const workspaceId = workspace?._id || "";
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>("pages");
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
+
+  const handleTabChange = (newTab: WorkspaceTab) => {
+    setActiveTab(newTab);
+    window.history.pushState(null, "", `/workspaces/${workspaceId}/${newTab}`);
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const segments = window.location.pathname.split('/');
+      const tabSegment = segments[3];
+      if (tabSegment) {
+        setActiveTab(tabSegment as WorkspaceTab);
+      } else if (workspace) {
+        const template = getWorkspaceTemplate(workspace);
+        setActiveTab(template === "scrum" ? "backlog" : "board");
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [workspace, workspaceId]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
 
@@ -90,9 +114,23 @@ export default function WorkspaceDetailPage({
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const { data: boardData, isLoading: isBoardLoading } = useQuery({
-    queryKey: ["board", workspaceKey],
-    queryFn: () => boardService.getBoardByWorkspace(workspaceKey),
-    enabled: !!workspaceKey,
+    queryKey: ["board", workspaceId],
+    queryFn: () => boardService.getBoardByWorkspace(workspaceId),
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  });
+
+  const { data: sprintsData } = useQuery({
+    queryKey: ["sprints", workspaceId],
+    queryFn: () => sprintService.listSprints(workspaceId),
+    enabled: !!workspaceId && workspace?.type === "scrum",
+    staleTime: 30_000,
+  });
+
+  const { data: tasksData } = useQuery({
+    queryKey: ["tasks", workspaceId],
+    queryFn: () => taskService.listBoardTasks(workspaceId),
+    enabled: !!workspaceId,
     staleTime: 30_000,
   });
 
@@ -103,6 +141,14 @@ export default function WorkspaceDetailPage({
       setColumns(boardData.columns);
     }
   }, [boardData]);
+
+  useEffect(() => {
+    if (sprintsData) setSprints(sprintsData);
+  }, [sprintsData]);
+
+  useEffect(() => {
+    if (tasksData) setIssues(tasksData);
+  }, [tasksData]);
 
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
@@ -120,6 +166,7 @@ export default function WorkspaceDetailPage({
     handleUpdateIssue,
     handleUpdateIssueDate,
     updateIssueDirectly,
+    handleQuickCreateTask,
   } = useIssueHandlers({
     workspaceKey,
     issues,
@@ -129,13 +176,17 @@ export default function WorkspaceDetailPage({
     setSelectedIssue,
   });
 
+  const activeSprint = sprints.find(s => s.status === "active") ?? null;
+  const getIssueTaskKey = (taskId: string) =>
+    issues.find((issue) => issue.id === taskId)?.key;
+
   const {
     handleAddColumn,
     handleRenameColumn,
     handleDeleteColumn,
     handleMoveColumn,
   } = useColumnHandlers({
-    workspaceKey,
+    workspaceKey: workspaceId,
     columns,
     newColumnName,
     setColumns,
@@ -144,20 +195,45 @@ export default function WorkspaceDetailPage({
     columnsEndRef,
   });
 
-  const { handleCreateSprint, handleSaveSprint } = useSprintHandlers({
+  const {
+    handleCreateSprint,
+    handleSaveSprint,
+    handleEditSprint,
+    handleDeleteSprint,
+    handleStartSprint,
+    handleCompleteSprint,
+  } = useSprintHandlers({
+    workspaceKey: workspaceId,
     sprints,
     editingSprint,
     setSprints,
     setEditingSprint,
     setIsSprintModalOpen,
+    setIssues,
   });
+
+  const handleBacklogDragEndWithSync = (result: DropResult) => {
+    handleBacklogDragEnd({
+      result,
+      issues,
+      setIssues,
+      onSprintAssign: (taskId, sprintId) => {
+        const taskKey = getIssueTaskKey(taskId);
+        if (taskKey) {
+          taskService.updateBoardTask(workspaceId, taskKey, { sprintId: sprintId ?? undefined });
+        }
+      },
+    });
+  };
 
   const {
     toggleTaskSelection,
     toggleSprintSelection,
     handleBulkStatusChange,
+    handleBulkMoveSprint,
     handleBulkDelete,
   } = useSelectionHandlers({
+    workspaceKey: workspaceId,
     issues,
     selectedTaskIds,
     setIssues,
@@ -181,11 +257,10 @@ export default function WorkspaceDetailPage({
         const template = getWorkspaceTemplate(nextWorkspace);
 
         setWorkspace(nextWorkspace);
-        if (template === "scrum") setActiveTab("backlog");
-        else setActiveTab("board");
-
-        const nextIssues = await taskService.listBoardTasks(workspaceKey);
-        setIssues(nextIssues);
+        if (!initialTab) {
+          if (template === "scrum") handleTabChange("backlog");
+          else handleTabChange("board");
+        }
       })
       .catch(() => { })
       .finally(() => setLoading(false));
@@ -221,7 +296,7 @@ export default function WorkspaceDetailPage({
       )}
 
       {/* Tabs */}
-      <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={handleTabChange} />
 
       {/* Content Area */}
       <WorkspaceContent
@@ -235,6 +310,7 @@ export default function WorkspaceDetailPage({
             filteredIssues,
             uniqueAssignees,
             workspace,
+            activeSprint,
           },
           ui: {
             filters,
@@ -251,7 +327,21 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd,
+            handleBoardDragEnd: (result) =>
+              handleBoardDragEnd({
+                result,
+                columns,
+                issues,
+                setColumns,
+                setIssues,
+                handleMoveColumn,
+                onColumnChange: (taskId, columnId) => {
+                  const taskKey = getIssueTaskKey(taskId);
+                  if (taskKey) {
+                    taskService.updateBoardTask(workspaceId, taskKey, { columnId });
+                  }
+                },
+              }),
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -277,7 +367,7 @@ export default function WorkspaceDetailPage({
             newIssueForm,
           },
           actions: {
-            handleBacklogDragEnd,
+            handleBacklogDragEnd: handleBacklogDragEndWithSync,
             setIssues,
             setDensity,
             setFilters,
@@ -291,6 +381,11 @@ export default function WorkspaceDetailPage({
             handleCreateSprint,
             setEditingSprint,
             setIsSprintModalOpen,
+            handleStartSprint,
+            handleCompleteSprint,
+            handleEditSprint,
+            handleDeleteSprint,
+            handleQuickCreateTask,
           },
         }}
         timelineProps={{
@@ -343,6 +438,7 @@ export default function WorkspaceDetailPage({
         onClose={() => setIsSprintModalOpen(false)}
         onSave={handleSaveSprint}
         initialData={editingSprint}
+        sprintCount={sprints.length}
       />
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
@@ -375,6 +471,8 @@ export default function WorkspaceDetailPage({
         onClear={() => setSelectedTaskIds([])}
         onChangeStatus={handleBulkStatusChange}
         onDelete={handleBulkDelete}
+        sprints={sprints}
+        onMoveSprint={handleBulkMoveSprint}
       />
     </div>
   );

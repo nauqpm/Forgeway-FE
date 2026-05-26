@@ -4,7 +4,7 @@ import { Issue } from "../types/issue.type";
 
 type TaskDto = {
   id: string;
-  key?: string;
+  key: string;
   title: string;
   description?: string;
   type?: string;
@@ -61,11 +61,20 @@ const toStatusLabel = (task: TaskDto) => {
   return STATUS_BY_COLUMN[column ?? ""] ?? task.status ?? "To Do";
 };
 
+const requireTaskKey = (task: TaskDto) => {
+  if (!task.key) {
+    throw new Error("Task key is missing from backend response");
+  }
+
+  return task.key;
+};
+
 const toIssue = (task: TaskDto): Issue => {
   const assignee = task.assigneeId || "U";
 
   return {
     id: task.id,
+    key: requireTaskKey(task),
     title: task.title,
     columnId: task.columnId ?? task.boardColumnId ?? toColumnId(task.status) ?? "todo",
     status: toStatusLabel(task),
@@ -95,8 +104,10 @@ const toUpdatePayload = (updates: Partial<Issue>) => ({
   ...updates,
   type: updates.type?.toLowerCase(),
   priority: updates.priority?.toLowerCase(),
-  columnId: toColumnId(updates.status),
-  status: toColumnId(updates.status),
+  ...(updates.status && {
+    columnId: toColumnId(updates.status),
+    status: toColumnId(updates.status),
+  }),
   sprintId: updates.sprintId || undefined,
 });
 
@@ -117,17 +128,19 @@ export const taskService = {
 
   async updateBoardTask(
     workspaceKey: string,
-    taskId: string,
+    taskKey: string,
     updates: Partial<Issue>,
   ): Promise<Issue> {
     const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskId),
+      apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskKey),
       toUpdatePayload(updates),
     );
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
-  async deleteBoardTask(workspaceKey: string, taskId: string): Promise<void> {
-    await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskId));
+  async deleteBoardTask(workspaceKey: string, taskKey: string): Promise<void> {
+    await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskKey), {
+      data: { confirmText: "delete" },
+    });
   },
 };

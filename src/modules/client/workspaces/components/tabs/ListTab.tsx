@@ -117,7 +117,10 @@ export default function ListTab({
       p === "High" ? 3 : p === "Medium" ? 2 : p === "Low" ? 1 : 0;
     const statusRank = (s?: string) =>
       s === "To Do" ? 1 : s === "In Progress" ? 2 : s === "Done" ? 3 : 0;
-    const keyNum = (issue: Issue) => parseInt(String(issue.id), 10) || 0;
+    const keyNum = (issue: Issue) => {
+      const match = issue.key.match(/-(\d+)$/);
+      return match ? Number(match[1]) : 0;
+    };
 
     arr.sort((a, b) => {
       let cmp = 0;
@@ -299,7 +302,7 @@ export default function ListTab({
                   <ul className="flex-1 space-y-1 overflow-y-auto p-2">
                     {splitSortedIssues.map((issue) => {
                       const active = selectedIssue?.id === issue.id;
-                      const issueKey = `${workspaceKey}-${100 + parseInt(String(issue.id), 10)}`;
+                      const issueKey = issue.key;
                       return (
                         <li key={issue.id}>
                           <button

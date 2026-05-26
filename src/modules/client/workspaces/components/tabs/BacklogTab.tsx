@@ -2,8 +2,9 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-import { FileText, Plus } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import FilterMenu from "../FilterMenu";
+import { Sprint } from "../../types/sprint.type";
 
 type BacklogTabProps = {
   data: {
@@ -46,6 +47,14 @@ type BacklogTabProps = {
 
     setEditingSprint: any;
     setIsSprintModalOpen: any;
+
+    handleStartSprint: (sprintId: string) => void;
+    handleCompleteSprint: (sprintId: string) => void;
+    handleEditSprint: (sprint: Sprint) => void;
+    handleDeleteSprint: (sprintId: string) => void;
+    handleQuickCreateTask: (title: string, sprintId: string | null) => void;
+    isStarting?: boolean;
+    isCompleting?: boolean;
   };
 };
 
@@ -76,17 +85,18 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
     handleCreateSprint,
     setEditingSprint,
     setIsSprintModalOpen,
+    handleStartSprint,
+    handleCompleteSprint,
+    handleEditSprint,
+    handleDeleteSprint,
+    handleQuickCreateTask,
+    isStarting = false,
+    isCompleting = false,
   } = actions;
   return (
     <div>
       <DragDropContext
-        onDragEnd={(result) =>
-          handleBacklogDragEnd({
-            result,
-            issues,
-            setIssues,
-          })
-        }
+        onDragEnd={handleBacklogDragEnd}
       >
         <div className="workspace-surface max-w-[min(100%,72rem)] space-y-6 py-[var(--workspace-surface-pad)]">
           {/* Backlog Top Bar with Filter */}
@@ -152,7 +162,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                       ref={(input) => {
                         if (input) input.indeterminate = isSomeSelected;
                       }}
-                      className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                      className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
                     />
                     <h3
                       className="flex min-w-0 flex-wrap items-center gap-2 font-bold text-gray-900 hover:underline dark:text-white cursor-pointer"
@@ -162,7 +172,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                       }}
                     >
                       {sprint.name}
-                      {sprint.status === "Active" && (
+                      {sprint.status === "active" && (
                         <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs font-semibold rounded-full uppercase tracking-wide">
                           Active
                         </span>
@@ -171,7 +181,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                     <p className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <span>
                         {sprint.startDate
-                          ? `${sprint.startDate} - ${sprint.endDate}`
+                          ? `${new Date(sprint.startDate).toLocaleDateString('vi-VN')} - ${new Date(sprint.endDate!).toLocaleDateString('vi-VN')}`
                           : "Chưa có ngày"}
                       </span>
                       <span>&middot;</span>
@@ -201,8 +211,32 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                         Tiến độ: {donePoints} / {totalPoints} story points
                       </div>
                     </div>
-                    <button className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                      {sprint.status === "Active"
+                    <button
+                      onClick={() => handleEditSprint(sprint)}
+                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
+                      title="Chỉnh sửa sprint"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    {sprint.status === "planning" && (
+                      <button
+                        onClick={() => handleDeleteSprint(sprint._id)}
+                        className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors"
+                        title="Xóa sprint"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() =>
+                        sprint.status === "active"
+                          ? handleCompleteSprint(sprint._id)
+                          : handleStartSprint(sprint._id)
+                      }
+                      disabled={isStarting || isCompleting}
+                      className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      {sprint.status === "active"
                         ? "Complete Sprint"
                         : "Start Sprint"}
                     </button>
@@ -240,7 +274,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                     toggleTaskSelection(issue.id, e)
                                   }
                                   onClick={(e) => e.stopPropagation()}
-                                  className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                                  className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
                                 />
                                 <div
                                   className="flex min-w-0 flex-1 items-center gap-3"
@@ -250,7 +284,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                     className={`w-4 h-4 ${issue.type === "Bug" ? "text-red-500" : issue.type === "Story" ? "text-emerald-500" : "text-indigo-500"}`}
                                   />
                                   <span className="text-xs font-mono font-medium text-gray-500 w-16 hover:underline cursor-pointer">
-                                    {workspace?.key}-{100 + parseInt(issue.id)}
+                                    {issue.key}
                                   </span>
                                   <span className="min-w-0 break-words text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 cursor-pointer">
                                     {issue.title}
@@ -336,7 +370,19 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                     </div>
                   )}
                 </Droppable>
-                <div className="px-3 pb-3">
+                <div className="px-3 pb-3 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    placeholder="Tạo task nhanh... (Enter để lưu)"
+                    className="w-full py-1.5 px-3 text-sm bg-transparent border border-dashed border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 placeholder-gray-400 focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-400 outline-none transition-all"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                        const title = e.currentTarget.value.trim();
+                        e.currentTarget.value = "";
+                        handleQuickCreateTask(title, sprint.id);
+                      }
+                    }}
+                  />
                   <button
                     onClick={() => {
                       setNewIssueForm({
@@ -345,9 +391,9 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                       });
                       setShowCreateIssue(true);
                     }}
-                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors"
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors w-fit"
                   >
-                    <Plus className="w-4 h-4" /> Create issue
+                    <Plus className="w-4 h-4" /> Create issue (full form)
                   </button>
                 </div>
               </div>
@@ -392,7 +438,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                       input.indeterminate = isSome;
                     }
                   }}
-                  className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                  className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
                 />
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Backlog
@@ -440,7 +486,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                   toggleTaskSelection(issue.id, e)
                                 }
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                                className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
                               />
                               <div
                                 className="flex min-w-0 flex-1 items-center gap-3"
@@ -450,7 +496,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                   className={`w-4 h-4 ${issue.type === "Bug" ? "text-red-500" : issue.type === "Story" ? "text-emerald-500" : "text-gray-400"}`}
                                 />
                                 <span className="text-xs font-mono font-medium text-gray-400 w-16 hover:underline cursor-pointer">
-                                  {workspace?.key}-{100 + parseInt(issue.id)}
+                                  {issue.key}
                                 </span>
                                 <span className="min-w-0 break-words text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white cursor-pointer">
                                   {issue.title}
@@ -522,22 +568,9 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                 className="flex-1 py-1.5 px-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                    const newId = Date.now().toString();
-                    setIssues([
-                      ...issues,
-                      {
-                        id: newId,
-                        title: e.currentTarget.value,
-                        status: "To Do",
-                        priority: "Medium",
-                        type: "Task",
-                        assignee: "U",
-                        color: "bg-indigo-600",
-                        sprintId: null,
-                        storyPoints: 0,
-                      },
-                    ]);
+                    const title = e.currentTarget.value.trim();
                     e.currentTarget.value = "";
+                    handleQuickCreateTask(title, null);
                   }
                 }}
               />

@@ -1,107 +1,81 @@
 import { Issue } from "../types/issue.type";
+import { taskService } from "../services/taskService";
 
 interface Props {
+  workspaceKey: string;
   issues: Issue[];
-
   selectedTaskIds: string[];
-
-  setIssues: React.Dispatch<
-    React.SetStateAction<Issue[]>
-  >;
-
-  setSelectedTaskIds: React.Dispatch<
-    React.SetStateAction<string[]>
-  >;
+  setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
+  setSelectedTaskIds: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export const useSelectionHandlers = ({
+  workspaceKey,
   issues,
   selectedTaskIds,
   setIssues,
   setSelectedTaskIds,
 }: Props) => {
-  const toggleTaskSelection = (
-    taskId: string,
-    e?: React.ChangeEvent
-  ) => {
-    if (e) e.stopPropagation();
+  const getTaskKey = (taskId: string) => issues.find((issue) => issue.id === taskId)?.key;
 
+  const toggleTaskSelection = (taskId: string, e?: React.ChangeEvent) => {
+    if (e) e.stopPropagation();
     setSelectedTaskIds((prev) =>
-      prev.includes(taskId)
-        ? prev.filter((id) => id !== taskId)
-        : [...prev, taskId]
+      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId]
     );
   };
 
-  const toggleSprintSelection = (
-    sprintTaskIds: string[],
-    e?: React.ChangeEvent
-  ) => {
+  const toggleSprintSelection = (sprintTaskIds: string[], e?: React.ChangeEvent) => {
     if (e) e.stopPropagation();
-
     const isAllSelected =
       sprintTaskIds.length > 0 &&
-      sprintTaskIds.every((id) =>
-        selectedTaskIds.includes(id)
-      );
-
+      sprintTaskIds.every((id) => selectedTaskIds.includes(id));
     if (isAllSelected) {
-      setSelectedTaskIds((prev) =>
-        prev.filter(
-          (id) =>
-            !sprintTaskIds.includes(id)
-        )
-      );
+      setSelectedTaskIds((prev) => prev.filter((id) => !sprintTaskIds.includes(id)));
     } else {
-      setSelectedTaskIds((prev) =>
-        Array.from(
-          new Set([
-            ...prev,
-            ...sprintTaskIds,
-          ])
-        )
-      );
+      setSelectedTaskIds((prev) => Array.from(new Set([...prev, ...sprintTaskIds])));
     }
   };
 
-  const handleBulkStatusChange = (
-    newStatus: string
-  ) => {
-    setIssues(
-      issues.map((i) =>
-        selectedTaskIds.includes(i.id)
-          ? {
-              ...i,
-              status: newStatus,
-            }
-          : i
-      )
-    );
+  const handleBulkStatusChange = (newStatus: string) => {
+    setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, status: newStatus } : i));
+    selectedTaskIds.forEach((taskId) => {
+      const taskKey = getTaskKey(taskId);
+      if (taskKey) {
+        taskService.updateBoardTask(workspaceKey, taskKey, { status: newStatus } as any).catch(() => {});
+      }
+    });
+    setSelectedTaskIds([]);
+  };
 
+  const handleBulkMoveSprint = (sprintId: string | null) => {
+    setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, sprintId } : i));
+    selectedTaskIds.forEach((taskId) => {
+      const taskKey = getTaskKey(taskId);
+      if (taskKey) {
+        taskService.updateBoardTask(workspaceKey, taskKey, { sprintId } as any).catch(() => {});
+      }
+    });
     setSelectedTaskIds([]);
   };
 
   const handleBulkDelete = () => {
-    if (
-      confirm(
-        `Bạn có chắc chắn muốn xóa ${selectedTaskIds.length} tasks đã chọn?`
-      )
-    ) {
-      setIssues(
-        issues.filter(
-          (i) =>
-            !selectedTaskIds.includes(i.id)
-        )
-      );
-
-      setSelectedTaskIds([]);
-    }
+    const ids = [...selectedTaskIds];
+    setIssues(issues.filter((i) => !ids.includes(i.id)));
+    setSelectedTaskIds([]);
+    ids.forEach((taskId) => {
+      const taskKey = getTaskKey(taskId);
+      if (taskKey) {
+        taskService.deleteBoardTask(workspaceKey, taskKey).catch(() => {});
+      }
+    });
   };
 
   return {
     toggleTaskSelection,
     toggleSprintSelection,
     handleBulkStatusChange,
+    handleBulkMoveSprint,
     handleBulkDelete,
   };
 };

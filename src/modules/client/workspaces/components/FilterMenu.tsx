@@ -87,7 +87,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
               const isSelected = filters.types?.includes(type);
               return (
                 <label key={type} className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={isSelected} onChange={() => toggleArrayFilter('types', type)} className="rounded text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-4 h-4" />
+                  <input type="checkbox" checked={isSelected} onChange={() => toggleArrayFilter('types', type)} className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{type}</span>
                 </label>
               );
@@ -103,7 +103,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
               const isSelected = filters.statuses?.includes(status);
               return (
                 <label key={status} className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={isSelected} onChange={() => toggleArrayFilter('statuses', status)} className="rounded text-indigo-600 dark:text-indigo-400 focus:ring-indigo-500 w-4 h-4" />
+                  <input type="checkbox" checked={isSelected} onChange={() => toggleArrayFilter('statuses', status)} className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer" />
                   <span className="text-sm text-gray-700 dark:text-gray-300">{status}</span>
                 </label>
               );

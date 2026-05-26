@@ -1,74 +1,197 @@
-import { Sprint } from "../types/sprint.type";
-
-interface SprintFormData {
-  name: string;
-  goal?: string;
-  startDate?: string;
-  endDate?: string;
-}
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { sprintService } from "../services/sprintService";
+import { Sprint, CreateSprintInput, UpdateSprintInput } from "../types/sprint.type";
+import { Issue } from "../types/issue.type";
+import { toast } from "react-hot-toast";
 
 interface UseSprintHandlersProps {
+  workspaceKey: string;
   sprints: Sprint[];
-
   editingSprint: Sprint | null;
-
-  setSprints: React.Dispatch<
-    React.SetStateAction<Sprint[]>
-  >;
-
-  setEditingSprint: React.Dispatch<
-    React.SetStateAction<Sprint | null>
-  >;
-
-  setIsSprintModalOpen: React.Dispatch<
-    React.SetStateAction<boolean>
-  >;
+  setSprints: React.Dispatch<React.SetStateAction<Sprint[]>>;
+  setEditingSprint: React.Dispatch<React.SetStateAction<Sprint | null>>;
+  setIsSprintModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
 }
 
 export const useSprintHandlers = ({
+  workspaceKey,
   sprints,
   editingSprint,
   setSprints,
   setEditingSprint,
   setIsSprintModalOpen,
+  setIssues,
 }: UseSprintHandlersProps) => {
+  const queryClient = useQueryClient();
+
+  const createSprintMutation = useMutation({
+    mutationFn: (input: CreateSprintInput) =>
+      sprintService.createSprint(workspaceKey, input),
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      const previousSprints = sprints;
+      const tempSprint: Sprint = {
+        _id: `temp-${Date.now()}`,
+        id: `temp-${Date.now()}`,
+        workspaceId: workspaceKey,
+        name: input.name,
+        goal: input.goal,
+        status: "planning",
+        startDate: input.startDate,
+        endDate: input.endDate,
+        duration: input.duration,
+      };
+      setSprints([...sprints, tempSprint]);
+      return { previousSprints };
+    },
+    onError: (_err, _input, context) => {
+      if (context?.previousSprints) setSprints(context.previousSprints);
+      toast.error("Lỗi khi tạo sprint");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
+    },
+    onSuccess: () => {
+      toast.success("Đã tạo sprint mới");
+    },
+  });
+
+  const updateSprintMutation = useMutation({
+    mutationFn: ({ sprintId, input }: { sprintId: string; input: UpdateSprintInput }) =>
+      sprintService.updateSprint(workspaceKey, sprintId, input),
+    onMutate: async ({ sprintId, input }) => {
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      const previousSprints = sprints;
+      setSprints(sprints.map(s => s._id === sprintId ? { ...s, ...input } : s));
+      return { previousSprints };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousSprints) setSprints(context.previousSprints);
+      toast.error("Lỗi khi cập nhật sprint");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
+    },
+    onSuccess: () => {
+      toast.success("Đã cập nhật sprint");
+    },
+  });
+
+  const deleteSprintMutation = useMutation({
+    mutationFn: (sprintId: string) =>
+      sprintService.deleteSprint(workspaceKey, sprintId),
+    onMutate: async (sprintId) => {
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      const previousSprints = sprints;
+      setSprints(sprints.filter(s => s._id !== sprintId));
+      return { previousSprints };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousSprints) setSprints(context.previousSprints);
+      toast.error("Lỗi khi xóa sprint");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
+    },
+    onSuccess: () => {
+      toast.success("Đã xóa sprint");
+    },
+  });
+
+  const startSprintMutation = useMutation({
+    mutationFn: (sprintId: string) =>
+      sprintService.startSprint(workspaceKey, sprintId),
+    onMutate: async (sprintId) => {
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      const previousSprints = sprints;
+      setSprints(sprints.map(s => s._id === sprintId ? { ...s, status: "active" as const } : s));
+      return { previousSprints };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousSprints) setSprints(context.previousSprints);
+      toast.error("Lỗi khi bắt đầu sprint");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
+    },
+    onSuccess: () => {
+      toast.success("Sprint đã bắt đầu");
+    },
+  });
+
+  const completeSprintMutation = useMutation({
+    mutationFn: (sprintId: string) =>
+      sprintService.completeSprint(workspaceKey, sprintId),
+    onMutate: async (sprintId) => {
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      const previousSprints = sprints;
+      setSprints(sprints.map(s => s._id === sprintId ? { ...s, status: "completed" as const } : s));
+      return { previousSprints };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousSprints) setSprints(context.previousSprints);
+      toast.error("Lỗi khi hoàn thành sprint");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+    },
+    onSuccess: (_data, sprintId) => {
+      // Mirror backend: incomplete tasks from this sprint go back to backlog
+      setIssues(prev =>
+        prev.map(issue =>
+          issue.sprintId === sprintId && issue.status?.toLowerCase() !== 'done'
+            ? { ...issue, sprintId: null }
+            : issue
+        )
+      );
+      toast.success("Sprint hoàn thành");
+    },
+  });
+
   const handleCreateSprint = () => {
     setEditingSprint(null);
-
     setIsSprintModalOpen(true);
   };
 
-  const handleSaveSprint = (
-    sprintData: SprintFormData
-  ) => {
-    // Edit sprint
+  const handleSaveSprint = (data: CreateSprintInput | UpdateSprintInput) => {
     if (editingSprint) {
-      setSprints(
-        sprints.map((s) =>
-          s.id === editingSprint.id
-            ? {
-                ...s,
-                ...sprintData,
-              }
-            : s
-        )
-      );
-
-      return;
+      updateSprintMutation.mutate({ sprintId: editingSprint._id, input: data as UpdateSprintInput });
+    } else {
+      createSprintMutation.mutate(data as CreateSprintInput);
     }
+    setIsSprintModalOpen(false);
+    setEditingSprint(null);
+  };
 
-    // Create sprint
-    const newSprint: Sprint = {
-      id: `s${sprints.length + 1}`,
-      status: "Planned",
-      ...sprintData,
-    };
+  const handleEditSprint = (sprint: Sprint) => {
+    setEditingSprint(sprint);
+    setIsSprintModalOpen(true);
+  };
 
-    setSprints([...sprints, newSprint]);
+  const handleDeleteSprint = (sprintId: string) => {
+    deleteSprintMutation.mutate(sprintId);
+  };
+
+  const handleStartSprint = (sprintId: string) => {
+    startSprintMutation.mutate(sprintId);
+  };
+
+  const handleCompleteSprint = (sprintId: string) => {
+    completeSprintMutation.mutate(sprintId);
   };
 
   return {
     handleCreateSprint,
     handleSaveSprint,
+    handleEditSprint,
+    handleDeleteSprint,
+    handleStartSprint,
+    handleCompleteSprint,
+    isStarting: startSprintMutation.isPending,
+    isCompleting: completeSprintMutation.isPending,
   };
 };
