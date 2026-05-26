@@ -87,12 +87,6 @@ export default function TiptapEditor() {
       },
     },
     onUpdate: ({ editor }) => {
-<<<<<<< HEAD
-      if (!selectedDocumentId) return;
-
-      setIsSaving(true);
-
-=======
       if (!selectedDocumentId || !canEditPage) return;
 
       const html = editor.getHTML();
@@ -100,7 +94,6 @@ export default function TiptapEditor() {
       setIsSaving(true);
 
       // Debounced auto-save (2 seconds)
->>>>>>> 7e256a0cdb96a8a435e2f88d287b72e00d5b72a9
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
@@ -151,14 +144,8 @@ export default function TiptapEditor() {
             <input
               type="text"
               value={document.title}
-<<<<<<< HEAD
-              onChange={(e) =>
-                updateDocument(document.id, { title: e.target.value })
-              }
-=======
               onChange={(e) => updateDocument(document.id, { title: e.target.value })}
               readOnly={!canEditPage}
->>>>>>> 7e256a0cdb96a8a435e2f88d287b72e00d5b72a9
               className="w-full text-5xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-gray-100 dark:placeholder:text-gray-800 transition-all tracking-tight leading-tight"
               placeholder="Untitled Page"
             />
