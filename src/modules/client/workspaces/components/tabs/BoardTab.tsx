@@ -8,6 +8,7 @@ import { Workspace } from "../../types/workspace.type";
 import { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
 import DeleteColumnModal from "../DeleteColumnModal";
+import BoardFilters from "../BoardFilters";
 
 import { Search, Plus, Check, X, Trash2, PlayCircle } from "lucide-react";
 
@@ -26,6 +27,7 @@ type BoardTabProps = {
     newIssueForm: any;
     showCreateColumn: boolean;
     newColumnName: string;
+    isFetching?: boolean;
   };
 
   actions: {
@@ -59,7 +61,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
   const visibleIssues = workspace.type === "scrum" && activeSprint
     ? filteredIssues.filter(i => i.sprintId === activeSprint._id)
     : filteredIssues;
-  const { filters, newIssueForm, showCreateColumn, newColumnName } = ui;
+  const { filters, newIssueForm, showCreateColumn, newColumnName, isFetching } = ui;
   const {
     setFilters,
     setColumns,
@@ -105,78 +107,25 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 relative">
+      {filters.archived && (
+        <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-red-100 text-red-600 px-3 py-1 rounded-md text-xs font-bold z-10">
+          Archived View - Read Only
+        </div>
+      )}
+
+      {isFetching && (
+        <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 z-40 flex items-center justify-center backdrop-blur-[1px]">
+          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+
       {/* Quick Filters */}
-      <div className="flex flex-wrap items-center gap-4 px-[var(--workspace-surface-pad)] pt-[var(--workspace-surface-pad)]">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Tìm kiếm issue..."
-            value={filters.search}
-            onChange={(e) =>
-              setFilters((prev: Filters) => ({
-                ...prev,
-                search: e.target.value,
-              }))
-            }
-            className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow sm:w-[clamp(240px,20vw,320px)]"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Assignee:</span>
-          <div className="flex -space-x-2">
-            {uniqueAssignees.map((user) => (
-              <button
-                key={user.id}
-                onClick={() =>
-                  setFilters((prev: Filters) => ({
-                    ...prev,
-                    assigneeId: prev.assigneeId === user.id ? null : user.id,
-                  }))
-                }
-                className={`w-8 h-8 rounded-full ${user.color} text-white flex items-center justify-center text-xs font-bold ring-2 ring-white dark:ring-gray-900 hover:z-10 transition-transform hover:scale-110 ${filters.assigneeId === user.id ? "ring-indigo-500 ring-offset-2 ring-offset-white dark:ring-offset-gray-900" : ""} ${filters.assigneeId && filters.assigneeId !== user.id ? "opacity-40" : ""}`}
-                title={user.id}
-              >
-                {user.id}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">Priority:</span>
-          <select
-            value={filters.priority || ""}
-            onChange={(e) =>
-              setFilters((prev: Filters) => ({
-                ...prev,
-                priority: e.target.value || null,
-              }))
-            }
-            className="py-2 px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-          >
-            <option value="">Tất cả</option>
-            <option value="High">🔴 High</option>
-            <option value="Medium">🟠 Medium</option>
-            <option value="Low">🟢 Low</option>
-          </select>
-        </div>
-        {(filters.search || filters.assigneeId || filters.priority) && (
-          <button
-            onClick={() =>
-              setFilters((prev: Filters) => ({
-                ...prev,
-                search: "",
-                assigneeId: null,
-                priority: null,
-              }))
-            }
-            className="text-sm text-indigo-600 hover:text-indigo-800 font-medium px-2 py-1"
-          >
-            Xóa bộ lọc
-          </button>
-        )}
-      </div>
+      <BoardFilters 
+        filters={filters} 
+        setFilters={setFilters} 
+        uniqueAssignees={uniqueAssignees} 
+      />
 
       <DragDropContext onDragEnd={handleBoardDragEnd}>
         <Droppable
@@ -204,9 +153,10 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                       className="workspace-column flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex flex-col max-h-full border border-gray-200 dark:border-gray-800 shadow-sm"
                     >
                       <div
-                        {...provided.dragHandleProps}
-                        className="p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl cursor-grab active:cursor-grabbing group/header"
+                        {...(filters.archived ? {} : provided.dragHandleProps)}
+                        className={`p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
                         onDoubleClick={() => {
+                          if (filters.archived) return;
                           setEditingColumnId(column.id);
                           setEditingName(column.name);
                         }}
@@ -234,26 +184,28 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                             </span>
                           </h3>
                         )}
-                        <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => {
-                              setColumnToDelete(column);
-                              setDeleteModalOpen(true);
-                            }}
-                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setNewIssueForm({ ...newIssueForm, status: column.name, columnId: column.id });
-                              setShowCreateIssue(true);
-                            }}
-                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
+                        {!filters.archived && (
+                          <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                setColumnToDelete(column);
+                                setDeleteModalOpen(true);
+                              }}
+                              className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setNewIssueForm({ ...newIssueForm, status: column.name, columnId: column.id });
+                                setShowCreateIssue(true);
+                              }}
+                              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       <Droppable droppableId={column.id} type="task">
@@ -274,10 +226,13 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                                   {(provided, snapshot) => (
                                     <div
                                       ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      onClick={() => setSelectedIssue(issue)}
-                                      className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all cursor-grab active:cursor-grabbing group`}
+                                      {...(filters.archived ? {} : provided.draggableProps)}
+                                      {...(filters.archived ? {} : provided.dragHandleProps)}
+                                      onClick={() => {
+                                        if (filters.archived) return;
+                                        setSelectedIssue(issue);
+                                      }}
+                                      className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
                                     >
                                       <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                                         {issue.title}

@@ -16,9 +16,10 @@ import EditorHeader from "./EditorHeader";
 const lowlight = createLowlight(common);
 
 export default function TiptapEditor() {
-  const { documents, selectedDocumentId, updateDocument, setIsSaving } = useDocsStore();
-  const document = documents.find(d => d.id === selectedDocumentId);
-  
+  const { documents, selectedDocumentId, updateDocument, setIsSaving } =
+    useDocsStore();
+  const document = documents.find((d) => d.id === selectedDocumentId);
+
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const editor = useEditor({
@@ -27,8 +28,8 @@ export default function TiptapEditor() {
       StarterKit.configure({
         codeBlock: false, // We use CodeBlockLowlight instead
         heading: {
-          levels: [1, 2, 3]
-        }
+          levels: [1, 2, 3],
+        },
       }),
       CodeBlockLowlight.configure({
         lowlight,
@@ -43,18 +44,19 @@ export default function TiptapEditor() {
     content: document?.content || "",
     editorProps: {
       attributes: {
-        className: "prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none max-w-none px-8 pb-32",
+        class:
+          "prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none max-w-none px-8 pb-32",
       },
     },
     onUpdate: ({ editor }) => {
       if (!selectedDocumentId) return;
-      
+
       setIsSaving(true);
-      
+
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
-      
+
       saveTimeoutRef.current = setTimeout(() => {
         updateDocument(selectedDocumentId, { content: editor.getHTML() });
         setIsSaving(false);
@@ -77,7 +79,7 @@ export default function TiptapEditor() {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden">
       <EditorHeader doc={document} />
-      
+
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
         {/* Sticky Toolbar with Blur */}
         <div className="sticky top-0 z-20">
@@ -90,12 +92,14 @@ export default function TiptapEditor() {
             <input
               type="text"
               value={document.title}
-              onChange={(e) => updateDocument(document.id, { title: e.target.value })}
+              onChange={(e) =>
+                updateDocument(document.id, { title: e.target.value })
+              }
               className="w-full text-5xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-gray-100 dark:placeholder:text-gray-800 transition-all tracking-tight leading-tight"
               placeholder="Untitled Page"
             />
           </div>
-          
+
           {/* Editor Content Area */}
           <div className="min-h-[600px] pb-40 dark:prose-invert">
             <EditorContent editor={editor} />
