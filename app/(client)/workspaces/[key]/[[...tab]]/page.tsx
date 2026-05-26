@@ -38,6 +38,9 @@ import { useIssueHandlers } from "@/modules/client/workspaces/hooks/useIssueHand
 import { useSprintHandlers } from "@/modules/client/workspaces/hooks/useSprintHandlers";
 import { useColumnHandlers } from "@/modules/client/workspaces/hooks/useColumnHandlers";
 import { useSelectionHandlers } from "@/modules/client/workspaces/hooks/useSelectionHandlers";
+import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
+import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
@@ -54,6 +57,7 @@ export default function WorkspaceDetailPage({
   const initialTab = (tabFromUrl as WorkspaceTab) || null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const { setCurrentWorkspace } = useWorkspaceStore();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
 
@@ -159,6 +163,15 @@ export default function WorkspaceDetailPage({
   }, [issues, filters, workspace]);
 
   const uniqueAssignees = useAssignees(issues);
+  const workspacePermissions = useWorkspacePermission(workspaceKey, workspace);
+  const canCreateTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
+  const canEditTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
+  const canDeleteTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
+  const canMoveTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_MOVE);
+  const canManageSprint = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.SPRINT_MANAGE);
+  const canUpdateWorkspace = workspacePermissions.hasPermission(
+    WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE,
+  );
 
   const {
     handleCreateIssue,
@@ -256,6 +269,7 @@ export default function WorkspaceDetailPage({
         const template = getWorkspaceTemplate(nextWorkspace);
 
         setWorkspace(nextWorkspace);
+        setCurrentWorkspace(nextWorkspace as any);
         if (!initialTab) {
           if (template === "scrum") handleTabChange("backlog");
           else handleTabChange("board");
@@ -285,6 +299,8 @@ export default function WorkspaceDetailPage({
         workspace={workspace}
         workspaceId={workspaceKey}
         setShowCreateIssue={setShowCreateIssue}
+        canCreateTask={canCreateTask}
+        canUpdateWorkspace={canUpdateWorkspace}
       />
 
       {/* Description */}
@@ -326,21 +342,23 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result: any) =>
-              handleBoardDragEnd({
-                result,
-                columns,
-                issues,
-                setColumns,
-                setIssues,
-                handleMoveColumn,
-                onColumnChange: (taskId, columnId) => {
-                  const taskKey = getIssueTaskKey(taskId);
-                  if (taskKey) {
-                    taskService.updateBoardTask(workspaceKey, taskKey, { columnId });
-                  }
-                },
-              }),
+            handleBoardDragEnd: (result : any) =>
+              canMoveTask
+                ? handleBoardDragEnd({
+                    result,
+                    columns,
+                    issues,
+                    setColumns,
+                    setIssues,
+                    handleMoveColumn,
+                    onColumnChange: (taskId, columnId) => {
+                      const taskKey = getIssueTaskKey(taskId);
+                      if (taskKey) {
+                        taskService.updateBoardTask(workspaceKey, taskKey, { columnId });
+                      }
+                    },
+                })
+              : undefined,
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -348,6 +366,11 @@ export default function WorkspaceDetailPage({
           },
           refs: {
             columnsEndRef,
+          },
+          permissions: {
+            canCreateTask,
+            canMoveTask,
+            canUpdateWorkspace,
           },
         }}
         backlogProps={{
@@ -385,6 +408,12 @@ export default function WorkspaceDetailPage({
             handleEditSprint,
             handleDeleteSprint,
             handleQuickCreateTask,
+          },
+          permissions: {
+            canCreateTask,
+            canEditTask,
+            canMoveTask,
+            canManageSprint,
           },
         }}
         timelineProps={{
@@ -472,6 +501,9 @@ export default function WorkspaceDetailPage({
         onDelete={handleBulkDelete}
         sprints={sprints}
         onMoveSprint={handleBulkMoveSprint}
+        canEditTask={canEditTask}
+        canDeleteTask={canDeleteTask}
+        canMoveTask={canMoveTask}
       />
     </div>
   );
