@@ -45,9 +45,9 @@ import CreateIssueModal from "@/modules/client/workspaces/components/issues/Crea
 export default function WorkspaceDetailPage({
   params,
 }: {
-  params: Promise<{ key: string }>;
+  params: Promise<{ id: string }>;
 }) {
-  const { key: workspaceKey } = use(params);
+  const { id: workspaceKey } = use(params);
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const workspaceId = workspace?._id || "";
