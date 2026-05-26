@@ -15,6 +15,7 @@ import {
   Send,
   Settings,
   ShieldAlert,
+  ShieldCheck,
   Trash2,
   Users,
   X,
@@ -75,6 +76,12 @@ const ROLE_BADGES: Record<string, string> = {
   viewer: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
 };
 
+const MEMBER_ROLE_OPTIONS: { value: InviteRole; label: string }[] = [
+  { value: "workspace_admin", label: "Quản trị viên" },
+  { value: "member", label: "Thành viên" },
+  { value: "viewer", label: "Người xem" },
+];
+
 const normalizeWorkspace = (payload: any): WorkspaceSettings =>
   (payload?.data ?? payload) as WorkspaceSettings;
 
@@ -119,6 +126,7 @@ export default function WorkspaceSettingsPage({
     y: number;
   } | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<InviteRole>("member");
   const [inviting, setInviting] = useState(false);
@@ -282,12 +290,52 @@ export default function WorkspaceSettingsPage({
     event: MouseEvent<HTMLDivElement>,
     member: WorkspaceMember,
   ) => {
+    if (member.userId?._id === user?.id) return;
     event.preventDefault();
     setMemberMenu({
       member,
       x: event.clientX,
       y: event.clientY,
     });
+  };
+
+  const handleClickMember = (
+    event: MouseEvent<HTMLDivElement>,
+    member: WorkspaceMember,
+  ) => {
+    if (member.userId?._id === user?.id) return;
+    setMemberMenu({
+      member,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
+  const handleUpdateMemberRole = async (
+    member: WorkspaceMember,
+    role: InviteRole,
+  ) => {
+    const userId = member.userId?._id;
+    if (!userId || member.role === role) {
+      setMemberMenu(null);
+      return;
+    }
+
+    setUpdatingMemberId(userId);
+    try {
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceKey, userId), { role });
+      setMembers((prev) =>
+        prev.map((item) =>
+          item.userId?._id === userId ? { ...item, role } : item,
+        ),
+      );
+      setMemberMenu(null);
+      toast.success("Đã cập nhật quyền thành viên.");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Không thể cập nhật quyền thành viên.");
+    } finally {
+      setUpdatingMemberId(null);
+    }
   };
 
   const handleRemoveMember = async (member: WorkspaceMember) => {
@@ -419,7 +467,10 @@ export default function WorkspaceSettingsPage({
               handleCancelInvite={handleCancelInvite}
               memberMenu={memberMenu}
               removingMemberId={removingMemberId}
+              updatingMemberId={updatingMemberId}
               handleOpenMemberMenu={handleOpenMemberMenu}
+              handleClickMember={handleClickMember}
+              handleUpdateMemberRole={handleUpdateMemberRole}
               handleRemoveMember={handleRemoveMember}
             />
           )}
@@ -767,7 +818,10 @@ function MemberSettings({
   handleCancelInvite,
   memberMenu,
   removingMemberId,
+  updatingMemberId,
   handleOpenMemberMenu,
+  handleClickMember,
+  handleUpdateMemberRole,
   handleRemoveMember,
 }: {
   members: WorkspaceMember[];
@@ -784,10 +838,16 @@ function MemberSettings({
   handleCancelInvite: (inviteId: string) => void;
   memberMenu: { member: WorkspaceMember; x: number; y: number } | null;
   removingMemberId: string | null;
+  updatingMemberId: string | null;
   handleOpenMemberMenu: (
     event: MouseEvent<HTMLDivElement>,
     member: WorkspaceMember,
   ) => void;
+  handleClickMember: (
+    event: MouseEvent<HTMLDivElement>,
+    member: WorkspaceMember,
+  ) => void;
+  handleUpdateMemberRole: (member: WorkspaceMember, role: InviteRole) => void;
   handleRemoveMember: (member: WorkspaceMember) => void;
 }) {
   return (
@@ -823,8 +883,9 @@ function MemberSettings({
               return (
                 <div
                   key={user?._id ?? `${displayName}-${member.role}`}
+                  onClick={(event) => handleClickMember(event, member)}
                   onContextMenu={(event) => handleOpenMemberMenu(event, member)}
-                  className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3"
+                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/70"
                 >
                   {user?.avatar ? (
                     <img
@@ -862,6 +923,32 @@ function MemberSettings({
             style={{ left: memberMenu.x, top: memberMenu.y }}
             onClick={(event) => event.stopPropagation()}
           >
+            <div className="border-b border-gray-100 dark:border-gray-800 px-3 py-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Cấp quyền
+              </p>
+            </div>
+            {MEMBER_ROLE_OPTIONS.map((role) => (
+              <button
+                key={role.value}
+                type="button"
+                onClick={() => handleUpdateMemberRole(memberMenu.member, role.value)}
+                disabled={updatingMemberId === memberMenu.member.userId?._id}
+                className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 ${
+                  memberMenu.member.role === role.value
+                    ? "text-indigo-600 dark:text-indigo-300 font-semibold"
+                    : "text-gray-700 dark:text-gray-200"
+                }`}
+              >
+                {updatingMemberId === memberMenu.member.userId?._id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ShieldCheck className="w-4 h-4" />
+                )}
+                {role.label}
+              </button>
+            ))}
+            <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
             <button
               type="button"
               onClick={() => handleRemoveMember(memberMenu.member)}

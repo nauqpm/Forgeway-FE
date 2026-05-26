@@ -12,12 +12,16 @@ import { useEffect, useRef } from "react";
 import { useDocsStore } from "../store/docs.store";
 import EditorToolbar from "./EditorToolbar";
 import EditorHeader from "./EditorHeader";
+import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
+import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
 
 const lowlight = createLowlight(common);
 
 export default function TiptapEditor() {
   const { documents, selectedDocumentId, updateDocument, setIsSaving } = useDocsStore();
   const document = documents.find(d => d.id === selectedDocumentId);
+  const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
+  const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
   
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -41,13 +45,14 @@ export default function TiptapEditor() {
       }),
     ],
     content: document?.content || "",
+    editable: canEditPage,
     editorProps: {
       attributes: {
         className: "prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none max-w-none px-8 pb-32",
       },
     },
     onUpdate: ({ editor }) => {
-      if (!selectedDocumentId) return;
+      if (!selectedDocumentId || !canEditPage) return;
       
       setIsSaving(true);
       
@@ -72,6 +77,10 @@ export default function TiptapEditor() {
     }
   }, [selectedDocumentId, editor]); // We don't want to sync on every document update (like when autosaving)
 
+  useEffect(() => {
+    editor?.setEditable(canEditPage);
+  }, [canEditPage, editor]);
+
   if (!document) return null;
 
   return (
@@ -81,7 +90,7 @@ export default function TiptapEditor() {
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
         {/* Sticky Toolbar with Blur */}
         <div className="sticky top-0 z-20">
-          <EditorToolbar editor={editor} />
+          {canEditPage && <EditorToolbar editor={editor} />}
         </div>
 
         <div className="max-w-[760px] mx-auto px-10 py-16">
@@ -91,6 +100,7 @@ export default function TiptapEditor() {
               type="text"
               value={document.title}
               onChange={(e) => updateDocument(document.id, { title: e.target.value })}
+              readOnly={!canEditPage}
               className="w-full text-5xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-gray-100 dark:placeholder:text-gray-800 transition-all tracking-tight leading-tight"
               placeholder="Untitled Page"
             />

@@ -51,9 +51,15 @@ type BoardTabProps = {
   refs: {
     columnsEndRef: React.RefObject<HTMLDivElement | null>;
   };
+
+  permissions?: {
+    canCreateTask: boolean;
+    canMoveTask: boolean;
+    canUpdateWorkspace: boolean;
+  };
 };
 
-export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
+export default function BoardTab({ data, ui, actions, refs, permissions }: BoardTabProps) {
   const { columns, issues, filteredIssues, uniqueAssignees, workspace, activeSprint } = data;
 
   const visibleIssues = workspace.type === "scrum" && activeSprint
@@ -79,6 +85,9 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
     handleMoveColumn,
   } = actions;
   const { columnsEndRef } = refs;
+  const canCreateTask = permissions?.canCreateTask ?? true;
+  const canMoveTask = permissions?.canMoveTask ?? true;
+  const canUpdateWorkspace = permissions?.canUpdateWorkspace ?? true;
 
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
@@ -196,6 +205,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                   key={column.id}
                   draggableId={`col-${column.id}`}
                   index={index}
+                  isDragDisabled={!canUpdateWorkspace}
                 >
                   {(provided) => (
                     <div
@@ -204,8 +214,8 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                       className="workspace-column flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex flex-col max-h-full border border-gray-200 dark:border-gray-800 shadow-sm"
                     >
                       <div
-                        {...provided.dragHandleProps}
-                        className="p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl cursor-grab active:cursor-grabbing group/header"
+                        {...(canUpdateWorkspace ? provided.dragHandleProps : {})}
+                        className={`p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl group/header ${canUpdateWorkspace ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
                         onDoubleClick={() => {
                           setEditingColumnId(column.id);
                           setEditingName(column.name);
@@ -235,24 +245,28 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                           </h3>
                         )}
                         <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => {
-                              setColumnToDelete(column);
-                              setDeleteModalOpen(true);
-                            }}
-                            className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setNewIssueForm({ ...newIssueForm, status: column.name, columnId: column.id });
-                              setShowCreateIssue(true);
-                            }}
-                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
+                          {canUpdateWorkspace && (
+                            <button
+                              onClick={() => {
+                                setColumnToDelete(column);
+                                setDeleteModalOpen(true);
+                              }}
+                              className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {canCreateTask && (
+                            <button
+                              onClick={() => {
+                                setNewIssueForm({ ...newIssueForm, status: column.name, columnId: column.id });
+                                setShowCreateIssue(true);
+                              }}
+                              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -270,14 +284,15 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                                   key={issue.id}
                                   draggableId={issue.id}
                                   index={issueIndex}
+                                  isDragDisabled={!canMoveTask}
                                 >
                                   {(provided, snapshot) => (
                                     <div
                                       ref={provided.innerRef}
                                       {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
+                                      {...(canMoveTask ? provided.dragHandleProps : {})}
                                       onClick={() => setSelectedIssue(issue)}
-                                      className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all cursor-grab active:cursor-grabbing group`}
+                                      className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${canMoveTask ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"} group`}
                                     >
                                       <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                                         {issue.title}
@@ -333,7 +348,7 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                 className="workspace-column flex-shrink-0 bg-transparent flex flex-col"
                 ref={columnsEndRef}
               >
-                {showCreateColumn ? (
+                {canUpdateWorkspace && showCreateColumn ? (
                   <div className="bg-white dark:bg-gray-900 rounded-xl border border-indigo-200 dark:border-indigo-800 p-3 shadow-sm">
                     <input
                       type="text"
@@ -368,14 +383,14 @@ export default function BoardTab({ data, ui, actions, refs }: BoardTabProps) {
                       </button>
                     </div>
                   </div>
-                ) : (
+                ) : canUpdateWorkspace ? (
                   <button
                     onClick={() => setShowCreateColumn(true)}
                     className="flex items-center gap-2 w-full bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl p-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all font-medium text-sm justify-center"
                   >
                     <Plus className="w-5 h-5" /> Thêm cột mới
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
           )}
