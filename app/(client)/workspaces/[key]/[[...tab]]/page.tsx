@@ -47,20 +47,19 @@ import CreateIssueModal from "@/modules/client/workspaces/components/issues/Crea
 export default function WorkspaceDetailPage({
   params,
 }: {
-  params: Promise<{ id: string; tab?: string[] }>;
+  params: Promise<{ key: string; tab?: string[] }>;
 }) {
-  const { id: workspaceId, tab } = use(params);
+  const { key: workspaceKey, tab } = use(params);
   const tabFromUrl = tab?.[0];
   const initialTab = (tabFromUrl as WorkspaceTab) || null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
-  const workspaceId = workspace?._id || "";
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
 
   const handleTabChange = (newTab: WorkspaceTab) => {
     setActiveTab(newTab);
-    window.history.pushState(null, "", `/workspaces/${workspaceId}/${newTab}`);
+    window.history.pushState(null, "", `/workspaces/${workspaceKey}/${newTab}`);
   };
 
   useEffect(() => {
@@ -76,7 +75,7 @@ export default function WorkspaceDetailPage({
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [workspace, workspaceId]);
+  }, [workspace, workspaceKey]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
 
@@ -114,23 +113,23 @@ export default function WorkspaceDetailPage({
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const { data: boardData, isLoading: isBoardLoading } = useQuery({
-    queryKey: ["board", workspaceId],
-    queryFn: () => boardService.getBoardByWorkspace(workspaceId),
-    enabled: !!workspaceId,
+    queryKey: ["board", workspaceKey],
+    queryFn: () => boardService.getBoardByWorkspace(workspaceKey),
+    enabled: !!workspaceKey,
     staleTime: 30_000,
   });
 
   const { data: sprintsData } = useQuery({
-    queryKey: ["sprints", workspaceId],
-    queryFn: () => sprintService.listSprints(workspaceId),
-    enabled: !!workspaceId && workspace?.type === "scrum",
+    queryKey: ["sprints", workspaceKey],
+    queryFn: () => sprintService.listSprints(workspaceKey),
+    enabled: !!workspaceKey && workspace?.type === "scrum",
     staleTime: 30_000,
   });
 
   const { data: tasksData } = useQuery({
-    queryKey: ["tasks", workspaceId],
-    queryFn: () => taskService.listBoardTasks(workspaceId),
-    enabled: !!workspaceId,
+    queryKey: ["tasks", workspaceKey],
+    queryFn: () => taskService.listBoardTasks(workspaceKey),
+    enabled: !!workspaceKey,
     staleTime: 30_000,
   });
 
@@ -186,7 +185,7 @@ export default function WorkspaceDetailPage({
     handleDeleteColumn,
     handleMoveColumn,
   } = useColumnHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     columns,
     newColumnName,
     setColumns,
@@ -203,7 +202,7 @@ export default function WorkspaceDetailPage({
     handleStartSprint,
     handleCompleteSprint,
   } = useSprintHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     sprints,
     editingSprint,
     setSprints,
@@ -220,7 +219,7 @@ export default function WorkspaceDetailPage({
       onSprintAssign: (taskId, sprintId) => {
         const taskKey = getIssueTaskKey(taskId);
         if (taskKey) {
-          taskService.updateBoardTask(workspaceId, taskKey, { sprintId: sprintId ?? undefined });
+          taskService.updateBoardTask(workspaceKey, taskKey, { sprintId: sprintId ?? undefined });
         }
       },
     });
@@ -233,7 +232,7 @@ export default function WorkspaceDetailPage({
     handleBulkMoveSprint,
     handleBulkDelete,
   } = useSelectionHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     issues,
     selectedTaskIds,
     setIssues,
@@ -284,7 +283,7 @@ export default function WorkspaceDetailPage({
       {/* Header */}
       <Header
         workspace={workspace}
-        workspaceId={workspaceId}
+        workspaceId={workspaceKey}
         setShowCreateIssue={setShowCreateIssue}
       />
 
@@ -302,7 +301,7 @@ export default function WorkspaceDetailPage({
       <WorkspaceContent
         activeTab={activeTab}
         workspace={workspace}
-        workspaceId={workspaceId}
+        workspaceId={workspace._id}
         boardProps={{
           data: {
             columns,
@@ -327,7 +326,7 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result) =>
+            handleBoardDragEnd: (result: any) =>
               handleBoardDragEnd({
                 result,
                 columns,
@@ -338,7 +337,7 @@ export default function WorkspaceDetailPage({
                 onColumnChange: (taskId, columnId) => {
                   const taskKey = getIssueTaskKey(taskId);
                   if (taskKey) {
-                    taskService.updateBoardTask(workspaceId, taskKey, { columnId });
+                    taskService.updateBoardTask(workspaceKey, taskKey, { columnId });
                   }
                 },
               }),
@@ -398,7 +397,7 @@ export default function WorkspaceDetailPage({
           filteredIssues,
           selectedIssue,
           workspaceKey: workspace.key,
-          workspaceId,
+          workspaceId: workspace._id,
           listViewMode,
           listGridDrawerOpen,
           setSelectedIssue,
@@ -410,7 +409,7 @@ export default function WorkspaceDetailPage({
         }}
         summaryProps={{
           issues,
-          workspaceId,
+          workspaceId: workspace._id,
           workspaceMongoId: workspace?._id,
         }}
         calendarProps={{
