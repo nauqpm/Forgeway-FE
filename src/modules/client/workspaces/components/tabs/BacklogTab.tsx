@@ -65,6 +65,23 @@ type BacklogTabProps = {
   };
 };
 
+const statusSelectClasses = (status: string) => {
+  const base =
+    "px-2 py-1 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none disabled:cursor-not-allowed disabled:opacity-60";
+
+  if (status === "Done") {
+    return `${base} bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300`;
+  }
+
+  if (status === "In Progress") {
+    return `${base} bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300`;
+  }
+
+  return `${base} bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300`;
+};
+
+const statusOptionClass = "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200";
+
 export default function BacklogTab({ data, ui, actions, permissions }: BacklogTabProps) {
   const {
     issues,
@@ -339,23 +356,23 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     })
                                   }
                                   disabled={!canEditTask}
-                                  className={`px-2 py-1 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none ${issue.status === "Done" ? "bg-green-50 text-green-700" : issue.status === "In Progress" ? "bg-blue-50 text-blue-700" : "bg-gray-100 text-gray-700"}`}
+                                  className={statusSelectClasses(issue.status)}
                                 >
                                   <option
                                     value="To Do"
-                                    className="bg-white text-gray-700"
+                                    className={statusOptionClass}
                                   >
                                     To Do
                                   </option>
                                   <option
                                     value="In Progress"
-                                    className="bg-white text-gray-700"
+                                    className={statusOptionClass}
                                   >
                                     In Progress
                                   </option>
                                   <option
                                     value="Done"
-                                    className="bg-white text-gray-700"
+                                    className={statusOptionClass}
                                   >
                                     Done
                                   </option>
@@ -557,11 +574,17 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   })
                                 }
                                 disabled={!canEditTask}
-                                className={`px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none`}
+                                className={statusSelectClasses(issue.status)}
                               >
-                                <option value="To Do">To Do</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="Done">Done</option>
+                                <option value="To Do" className={statusOptionClass}>
+                                  To Do
+                                </option>
+                                <option value="In Progress" className={statusOptionClass}>
+                                  In Progress
+                                </option>
+                                <option value="Done" className={statusOptionClass}>
+                                  Done
+                                </option>
                               </select>
 
                               {/* Assignee */}

@@ -73,14 +73,12 @@ const Header = ({
           </div>
           <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
             <span className="min-w-0 break-words">{workspace.name}</span>
-            {canUpdateWorkspace && (
-              <Link
-                href={`/workspaces/${workspaceId}/settings`}
-                className="shrink-0 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-              >
-                <Settings className="w-5 h-5" />
-              </Link>
-            )}
+            <Link
+              href={`/workspaces/${workspaceId}/settings`}
+              className="shrink-0 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+            >
+              <Settings className="w-5 h-5" />
+            </Link>
           </h1>
         </div>
       </div>

@@ -5,18 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Clock,
   Globe,
   Loader2,
   Lock,
   LogOut,
-  Mail,
   Save,
-  Send,
   Settings,
   ShieldAlert,
-  ShieldCheck,
   Trash2,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -25,6 +22,7 @@ import toast from "react-hot-toast";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
+import InviteModal from "@/modules/admin/components/common/components/InviteModal";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import {
   inviteService,
@@ -109,6 +107,7 @@ export default function WorkspaceSettingsPage({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<"general" | "members">("general");
+  const [memberSubTab, setMemberSubTab] = useState<"list" | "invites">("list");
 
   const [form, setForm] = useState<WorkspaceSettingsForm>({
     name: "",
@@ -117,6 +116,7 @@ export default function WorkspaceSettingsPage({
     access: "public",
   });
   const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
@@ -130,6 +130,7 @@ export default function WorkspaceSettingsPage({
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<InviteRole>("member");
   const [inviting, setInviting] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -182,20 +183,18 @@ export default function WorkspaceSettingsPage({
       .finally(() => setLoadingInvites(false));
   }, [activeTab, workspaceInviteId]);
 
-  useEffect(() => {
-    const closeMenu = () => setMemberMenu(null);
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMemberMenu(null);
-    };
-
-    document.addEventListener("click", closeMenu);
-    document.addEventListener("keydown", closeOnEscape);
-
-    return () => {
-      document.removeEventListener("click", closeMenu);
-      document.removeEventListener("keydown", closeOnEscape);
-    };
-  }, []);
+  const refreshInvites = async () => {
+    if (!workspaceInviteId) return;
+    setLoadingInvites(true);
+    try {
+      const updated = await inviteService.listInvites(workspaceInviteId);
+      setInvites(updated);
+    } catch {
+      toast.error("Không thể tải danh sách lời mời đang chờ.");
+    } finally {
+      setLoadingInvites(false);
+    }
+  };
 
   const handleSave = async (event: FormEvent) => {
     event.preventDefault();
@@ -242,6 +241,7 @@ export default function WorkspaceSettingsPage({
     try {
       await api.delete(apiRoutes.WORKSPACES.BY_KEY(workspaceKey));
       toast.success("Đã xóa workspace.");
+      setShowDeleteDialog(false);
       router.push("/workspaces");
     } catch (error: any) {
       console.error("Delete failed", error);
@@ -356,9 +356,15 @@ export default function WorkspaceSettingsPage({
   };
 
   const currentMember = members.find((m) => m.userId?._id === user?.id);
-  const isOwner = currentMember?.role === "workspace_admin" || user?.role === "super_admin";
+  const canManageWorkspace =
+    currentMember?.role === "workspace_admin" || user?.role === "super_admin";
 
   const handleLeave = async () => {
+    if (leaveConfirm !== "leave") {
+      toast.error('Nhập "leave" để xác nhận.');
+      return;
+    }
+
     setLeaving(true);
     try {
       await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceKey));
@@ -439,11 +445,13 @@ export default function WorkspaceSettingsPage({
               saving={saving}
               deleting={deleting}
               deleteConfirm={deleteConfirm}
+              showDeleteDialog={showDeleteDialog}
               setForm={setForm}
               setDeleteConfirm={setDeleteConfirm}
+              setShowDeleteDialog={setShowDeleteDialog}
               handleSave={handleSave}
               handleDelete={handleDelete}
-              isOwner={isOwner}
+              canManageWorkspace={canManageWorkspace}
               leaving={leaving}
               leaveConfirm={leaveConfirm}
               setLeaveConfirm={setLeaveConfirm}
@@ -455,6 +463,12 @@ export default function WorkspaceSettingsPage({
             <MemberSettings
               members={members}
               loadingMembers={loadingMembers}
+              memberSubTab={memberSubTab}
+              setMemberSubTab={setMemberSubTab}
+              showInviteModal={showInviteModal}
+              setShowInviteModal={setShowInviteModal}
+              workspaceInviteId={workspaceInviteId}
+              currentUserId={user?.id}
               inviteEmail={inviteEmail}
               inviteRole={inviteRole}
               inviting={inviting}
@@ -464,6 +478,7 @@ export default function WorkspaceSettingsPage({
               setInviteEmail={setInviteEmail}
               setInviteRole={setInviteRole}
               handleInvite={handleInvite}
+              refreshInvites={refreshInvites}
               handleCancelInvite={handleCancelInvite}
               memberMenu={memberMenu}
               removingMemberId={removingMemberId}
@@ -472,6 +487,7 @@ export default function WorkspaceSettingsPage({
               handleClickMember={handleClickMember}
               handleUpdateMemberRole={handleUpdateMemberRole}
               handleRemoveMember={handleRemoveMember}
+              canManageWorkspace={canManageWorkspace}
             />
           )}
         </div>
@@ -486,11 +502,13 @@ function GeneralSettings({
   saving,
   deleting,
   deleteConfirm,
+  showDeleteDialog,
   setForm,
   setDeleteConfirm,
+  setShowDeleteDialog,
   handleSave,
   handleDelete,
-  isOwner,
+  canManageWorkspace,
   leaving,
   leaveConfirm,
   setLeaveConfirm,
@@ -503,11 +521,13 @@ function GeneralSettings({
   saving: boolean;
   deleting: boolean;
   deleteConfirm: string;
+  showDeleteDialog: boolean;
   setForm: (form: WorkspaceSettingsForm) => void;
   setDeleteConfirm: (value: string) => void;
+  setShowDeleteDialog: (value: boolean) => void;
   handleSave: (event: FormEvent) => void;
   handleDelete: () => void;
-  isOwner: boolean;
+  canManageWorkspace: boolean;
   leaving: boolean;
   leaveConfirm: string;
   setLeaveConfirm: (value: string) => void;
@@ -521,6 +541,11 @@ function GeneralSettings({
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
           Thông tin cơ bản
         </h2>
+        {!canManageWorkspace && (
+          <p className="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-800/60 dark:text-gray-300">
+            Bạn có thể xem thông tin workspace. Chỉ quản trị viên mới có quyền chỉnh sửa.
+          </p>
+        )}
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -530,6 +555,7 @@ function GeneralSettings({
               type="text"
               value={form.name}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
+              disabled={!canManageWorkspace}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
               required
             />
@@ -544,6 +570,7 @@ function GeneralSettings({
               onChange={(event) =>
                 setForm({ ...form, description: event.target.value })
               }
+              disabled={!canManageWorkspace}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
               rows={3}
             />
@@ -590,6 +617,7 @@ function GeneralSettings({
                 onChange={() =>
                   setForm({ ...form, access: option.value as WorkspaceAccess })
                 }
+                disabled={!canManageWorkspace}
                 className="text-indigo-600 focus:ring-indigo-500"
               />
               <div className="flex items-center gap-2">
@@ -628,6 +656,7 @@ function GeneralSettings({
                 onChange={() =>
                   setForm({ ...form, status: option.value as WorkspaceStatus })
                 }
+                disabled={!canManageWorkspace}
                 className="text-indigo-600 focus:ring-indigo-500"
               />
               <span className="text-sm font-medium text-gray-900 dark:text-white">
@@ -638,6 +667,7 @@ function GeneralSettings({
         </div>
       </section>
 
+      {canManageWorkspace && (
       <div className="flex items-center gap-3 pt-4">
         <button
           type="submit"
@@ -655,6 +685,7 @@ function GeneralSettings({
           )}
         </button>
       </div>
+      )}
 
       <section className="mt-12 p-5 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 rounded-lg space-y-6">
         <h3 className="text-red-800 dark:text-red-200 font-bold flex items-center gap-2">
@@ -667,14 +698,14 @@ function GeneralSettings({
             Rời khỏi workspace
           </p>
           <p className="text-sm text-red-600 dark:text-red-300 mb-3">
-            {isOwner
+            {canManageWorkspace
               ? "Bạn là owner của workspace. Bạn phải xóa workspace trước khi rời."
               : "Bạn sẽ mất quyền truy cập vào workspace này."}
           </p>
           <button
             type="button"
             onClick={() => setShowLeaveDialog(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 rounded-lg text-sm font-semibold transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-amber-600/20"
           >
             <LogOut className="w-4 h-4" />
             Rời workspace
@@ -682,45 +713,82 @@ function GeneralSettings({
         </div>
 
         {/* Delete workspace */}
+        {canManageWorkspace && (
         <div>
           <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
             Xóa workspace
           </p>
           <p className="text-sm text-red-600 dark:text-red-300 mb-4">
-            Xóa workspace này cùng các board, backlog và nội dung liên quan. Hành
-            động này không thể hoàn tác.
+            Xóa workspace này cùng các board, backlog và nội dung liên quan. Hành động nay không thể hoàn tác.
           </p>
-          <label className="block text-sm font-medium text-red-800 dark:text-red-200 mb-2">
-            Nhập <span className="font-mono">delete</span> để xác nhận
-          </label>
-          <input
-            type="text"
-            value={deleteConfirm}
-            onChange={(event) => setDeleteConfirm(event.target.value)}
-            className="w-full mb-4 px-4 py-2 border border-red-200 dark:border-red-800 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
-            placeholder="delete"
-          />
           <button
             type="button"
-            onClick={handleDelete}
-            disabled={deleteConfirm !== "delete" || deleting}
-            className="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => {
+              setDeleteConfirm("");
+              setShowDeleteDialog(true);
+            }}
+            className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm shadow-red-600/20"
           >
-            {deleting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Trash2 className="w-4 h-4" />
-            )}
-            {deleting ? "Đang xóa..." : "Xóa workspace"}
+            <Trash2 className="w-4 h-4" />
+            Xóa workspace
           </button>
         </div>
+        )}
       </section>
+
+      {/* Delete dialog */}
+      {showDeleteDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                Xóa workspace
+              </h2>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Hành động nay sẽ xóa workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span> và không thể hoàn tác. Nhập <span className="font-mono font-semibold">delete</span> để xác nhận.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirm}
+              onChange={(event) => setDeleteConfirm(event.target.value)}
+              placeholder="delete"
+              className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              autoFocus
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  setDeleteConfirm("");
+                }}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleteConfirm !== "delete" || deleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+              >
+                {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {deleting ? "Đang xóa..." : "Xác nhận xóa"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Leave dialog */}
       {showLeaveDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6">
-            {isOwner ? (
+            {canManageWorkspace ? (
               <>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
@@ -806,26 +874,32 @@ function GeneralSettings({
 function MemberSettings({
   members,
   loadingMembers,
-  inviteEmail,
-  inviteRole,
-  inviting,
+  memberSubTab,
+  setMemberSubTab,
+  canManageWorkspace,
+  showInviteModal,
+  setShowInviteModal,
+  workspaceInviteId,
+  currentUserId,
   invites,
   loadingInvites,
   cancellingId,
-  setInviteEmail,
-  setInviteRole,
-  handleInvite,
+  refreshInvites,
   handleCancelInvite,
-  memberMenu,
   removingMemberId,
   updatingMemberId,
-  handleOpenMemberMenu,
-  handleClickMember,
   handleUpdateMemberRole,
   handleRemoveMember,
 }: {
   members: WorkspaceMember[];
   loadingMembers: boolean;
+  memberSubTab: "list" | "invites";
+  setMemberSubTab: (value: "list" | "invites") => void;
+  canManageWorkspace: boolean;
+  showInviteModal: boolean;
+  setShowInviteModal: (value: boolean) => void;
+  workspaceInviteId: string;
+  currentUserId?: string;
   inviteEmail: string;
   inviteRole: InviteRole;
   inviting: boolean;
@@ -835,6 +909,7 @@ function MemberSettings({
   setInviteEmail: (value: string) => void;
   setInviteRole: (value: InviteRole) => void;
   handleInvite: (event: FormEvent) => void;
+  refreshInvites: () => Promise<void>;
   handleCancelInvite: (inviteId: string) => void;
   memberMenu: { member: WorkspaceMember; x: number; y: number } | null;
   removingMemberId: string | null;
@@ -850,224 +925,220 @@ function MemberSettings({
   handleUpdateMemberRole: (member: WorkspaceMember, role: InviteRole) => void;
   handleRemoveMember: (member: WorkspaceMember) => void;
 }) {
+  const closeInviteModal = () => {
+    setShowInviteModal(false);
+    void refreshInvites();
+  };
+
+  const listTabClass = memberSubTab === "list"
+    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white"
+    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white";
+  const invitesTabClass = memberSubTab === "invites"
+    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white"
+    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white";
+
   return (
-    <div className="space-y-8">
-      <section>
-        <div className="flex items-center justify-between mb-4">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-600" /> Thành viên hiện tại
+            <Users className="w-5 h-5 text-indigo-600" /> Thành viên
           </h2>
-          {!loadingMembers && (
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {members.length} thành viên
-            </span>
-          )}
-        </div>
-
-        {loadingMembers ? (
-          <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
-            <Loader2 className="w-4 h-4 animate-spin" /> Đang tải thành viên...
-          </div>
-        ) : members.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-5 text-sm text-gray-500 dark:text-gray-400 text-center">
-            Chưa có thành viên nào trong workspace này.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {members.map((member) => {
-              const user = member.userId;
-              const displayName = user?.fullName || user?.email || "Người dùng";
-              const roleLabel = ROLE_LABELS[member.role] ?? member.role;
-              const badgeClass = ROLE_BADGES[member.role] ?? ROLE_BADGES.member;
-
-              return (
-                <div
-                  key={user?._id ?? `${displayName}-${member.role}`}
-                  onClick={(event) => handleClickMember(event, member)}
-                  onContextMenu={(event) => handleOpenMemberMenu(event, member)}
-                  className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/70"
-                >
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={displayName}
-                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <span className="w-10 h-10 rounded-full bg-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
-                      {getMemberInitials(member)}
-                    </span>
-                  )}
-
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                      {displayName}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {user?.email || "Chưa có email"}
-                    </p>
-                  </div>
-
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 ${badgeClass}`}>
-                    {roleLabel}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {memberMenu && (
-          <div
-            className="fixed z-50 w-52 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-1 shadow-xl"
-            style={{ left: memberMenu.x, top: memberMenu.y }}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="border-b border-gray-100 dark:border-gray-800 px-3 py-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                Cấp quyền
-              </p>
-            </div>
-            {MEMBER_ROLE_OPTIONS.map((role) => (
-              <button
-                key={role.value}
-                type="button"
-                onClick={() => handleUpdateMemberRole(memberMenu.member, role.value)}
-                disabled={updatingMemberId === memberMenu.member.userId?._id}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 ${
-                  memberMenu.member.role === role.value
-                    ? "text-indigo-600 dark:text-indigo-300 font-semibold"
-                    : "text-gray-700 dark:text-gray-200"
-                }`}
-              >
-                {updatingMemberId === memberMenu.member.userId?._id ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <ShieldCheck className="w-4 h-4" />
-                )}
-                {role.label}
-              </button>
-            ))}
-            <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
-            <button
-              type="button"
-              onClick={() => handleRemoveMember(memberMenu.member)}
-              disabled={removingMemberId === memberMenu.member.userId?._id}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
-            >
-              {removingMemberId === memberMenu.member.userId?._id ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              Xóa khỏi workspace
-            </button>
-          </div>
-        )}
-      </section>
-
-      <section>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-          <Mail className="w-5 h-5 text-indigo-600" /> Mời thành viên
-        </h2>
-        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="email"
-            required
-            placeholder="email@example.com"
-            value={inviteEmail}
-            onChange={(event) => setInviteEmail(event.target.value)}
-            className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-          />
-          <select
-            value={inviteRole}
-            onChange={(event) => setInviteRole(event.target.value as InviteRole)}
-            className="px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
-          >
-            <option value="workspace_admin">Admin</option>
-            <option value="member">Member</option>
-            <option value="viewer">Viewer</option>
-          </select>
-          <button
-            type="submit"
-            disabled={inviting}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 whitespace-nowrap"
-          >
-            {inviting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-            {inviting ? "Đang gửi..." : "Gửi lời mời"}
-          </button>
-        </form>
-      </section>
-
-      <section>
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-          <Clock className="w-4 h-4" /> Lời mời đang chờ
-        </h3>
-
-        {loadingInvites ? (
-          <div className="flex items-center gap-2 text-sm text-gray-400 py-4">
-            <Loader2 className="w-4 h-4 animate-spin" /> Đang tải...
-          </div>
-        ) : invites.length === 0 ? (
-          <p className="text-sm text-gray-400 dark:text-gray-500 py-4">
-            Không có lời mời nào đang chờ.
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Quản lý quyền truy cập và các lời mời đang chờ trong workspace.
           </p>
-        ) : (
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-gray-700">
-                <tr>
-                  <th className="px-4 py-3">Email</th>
-                  <th className="px-4 py-3 w-28">Vai trò</th>
-                  <th className="px-4 py-3 w-36">Hết hạn</th>
-                  <th className="px-4 py-3 w-16"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                {invites.map((invite) => (
-                  <tr
-                    key={invite._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                  >
-                    <td className="px-4 py-3 text-gray-900 dark:text-white font-medium">
-                      {invite.invitedEmail}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 rounded text-xs font-semibold">
-                        {ROLE_LABELS[invite.role] ?? invite.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
-                      {invite.expiresAt
-                        ? new Date(invite.expiresAt).toLocaleDateString("vi-VN")
-                        : "Không hết hạn"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        type="button"
-                        onClick={() => handleCancelInvite(invite._id)}
-                        disabled={cancellingId === invite._id}
-                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors disabled:opacity-50"
-                        title="Hủy lời mời"
-                      >
-                        {cancellingId === invite._id ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <X className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        </div>
+        {canManageWorkspace && (
+        <button
+          type="button"
+          onClick={() => setShowInviteModal(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-600/20 transition-colors hover:bg-indigo-700"
+        >
+          <UserPlus className="h-4 w-4" />
+          Mời thành viên
+        </button>
         )}
-      </section>
+      </div>
+
+      <div className="inline-flex rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-gray-700 dark:bg-gray-800">
+        <button
+          type="button"
+          onClick={() => setMemberSubTab("list")}
+          className={"rounded-md px-3 py-1.5 text-sm font-semibold transition-colors " + listTabClass}
+        >
+          Danh sách ({members.length})
+        </button>
+        {canManageWorkspace && (
+        <button
+          type="button"
+          onClick={() => setMemberSubTab("invites")}
+          className={"rounded-md px-3 py-1.5 text-sm font-semibold transition-colors " + invitesTabClass}
+        >
+          Lời mời ({invites.length})
+        </button>
+        )}
+      </div>
+
+      {memberSubTab === "list" || !canManageWorkspace ? (
+        <section>
+          {loadingMembers ? (
+            <div className="flex items-center gap-2 py-8 text-sm text-gray-400">
+              <Loader2 className="h-4 w-4 animate-spin" /> Dang tai thanh vien...
+            </div>
+          ) : members.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              Chưa có thành viên nào trong workspace này.
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {members.map((member) => {
+                  const memberUser = member.userId;
+                  const displayName = memberUser?.fullName || memberUser?.email || "Người dùng";
+                  const roleLabel = ROLE_LABELS[member.role] ?? member.role;
+                  const badgeClass = ROLE_BADGES[member.role] ?? ROLE_BADGES.member;
+                  const memberId = memberUser?._id;
+                  const isSelf = memberId === currentUserId;
+                  const isBusy = updatingMemberId === memberId || removingMemberId === memberId;
+
+                  return (
+                    <div
+                      key={memberId ?? displayName + "-" + member.role}
+                      className="flex flex-col gap-3 bg-white p-4 dark:bg-gray-900 sm:flex-row sm:items-center"
+                    >
+                      <div className="flex min-w-0 flex-1 items-center gap-3">
+                        {memberUser?.avatar ? (
+                          <img
+                            src={memberUser.avatar}
+                            alt={displayName}
+                            className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                            {getMemberInitials(member)}
+                          </span>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                              {displayName}
+                            </p>
+                            {isSelf && (
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                Bạn
+                              </span>
+                            )}
+                          </div>
+                          <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                            {memberUser?.email || "Chưa có email"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 sm:w-60 sm:flex-row sm:items-center sm:justify-end">
+                        
+                        <select
+                          value={member.role === "space_admin" ? "workspace_admin" : member.role}
+                          onChange={(event) => handleUpdateMemberRole(member, event.target.value as InviteRole)}
+                          disabled={!canManageWorkspace || isSelf || isBusy}
+                          className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                        >
+                          {MEMBER_ROLE_OPTIONS.map((role) => (
+                            <option key={role.value} value={role.value}>
+                              {role.label}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(member)}
+                          disabled={!canManageWorkspace || isSelf || isBusy}
+                          className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-900/20"
+                        >
+                          {removingMemberId === memberId ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                          Kick
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </section>
+      ) : (
+        <section>
+          {loadingInvites ? (
+            <div className="flex items-center gap-2 py-8 text-sm text-gray-400">
+              <Loader2 className="h-4 w-4 animate-spin" /> Đang tải lời mời...
+            </div>
+          ) : invites.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+              Không có lời mời nào đang chờ.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+              <table className="w-full min-w-[620px] text-left text-sm">
+                <thead className="border-b border-gray-200 bg-gray-50 font-medium text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                  <tr>
+                    <th className="px-4 py-3">Email</th>
+                    <th className="px-4 py-3 w-36">Vai trò</th>
+                    <th className="px-4 py-3 w-40">Trạng thái</th>
+                    <th className="px-4 py-3 w-24 text-right">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                  {invites.map((invite) => (
+                    <tr key={invite._id} className="bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800/60">
+                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                        {invite.invitedEmail}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                          {ROLE_LABELS[invite.role] ?? invite.role}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                        {invite.expiresAt
+                          ? "Hết hạn " + new Date(invite.expiresAt).toLocaleDateString("vi-VN")
+                          : "Đang chờ, không hết hạn"}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleCancelInvite(invite._id)}
+                          disabled={cancellingId === invite._id}
+                          className="inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:text-red-300 dark:hover:bg-red-900/20"
+                        >
+                          {cancellingId === invite._id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <X className="h-4 w-4" />
+                          )}
+                          Hủy
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {canManageWorkspace && (
+        <InviteModal
+          isOpen={showInviteModal}
+          onClose={closeInviteModal}
+          projectId={workspaceInviteId}
+        />
+      )}
     </div>
   );
 }
+
