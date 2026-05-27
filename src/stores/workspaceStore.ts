@@ -3,10 +3,11 @@ import { create } from 'zustand';
 interface Workspace {
     _id: string;
     name: string;
+    key?: string;
     slug: string;
     description?: string;
-    ownerId: string;
-    members: { userId: string; role: string }[];
+    ownerId: string | { _id?: string; id?: string };
+    members: { userId: string | { _id?: string; id?: string }; role: string }[];
 }
 
 interface Project {

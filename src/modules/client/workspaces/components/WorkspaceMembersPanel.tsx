@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, MouseEvent } from "react";
-import { Users, UserPlus, Search, X, Loader2, ChevronDown, Trash2 } from "lucide-react";
+import { Users, UserPlus, Search, X, Loader2, ChevronDown, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/config/api";
 import { apiRoutes } from "@/config/apiRoutes";
+import { useAuth } from "@/context/AuthContext";
+import { WORKSPACE_PERMISSIONS } from "../constants/workspacePermissions";
+import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
 
 type WorkspaceMember = {
   userId: {
@@ -17,8 +20,8 @@ type WorkspaceMember = {
 };
 
 const ROLES = [
+  { value: "workspace_admin", label: "Admin" },
   { value: "member", label: "Member" },
-  { value: "space_admin", label: "Admin" },
   { value: "viewer", label: "Viewer" },
 ];
 
@@ -170,6 +173,9 @@ type WorkspaceMembersPanelProps = {
 };
 
 export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }: WorkspaceMembersPanelProps) {
+  const { user: authUser } = useAuth();
+  const { hasPermission } = useWorkspacePermission(workspaceId);
+  const canManageMembers = hasPermission(WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -180,6 +186,7 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
     y: number;
   } | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
 
   const fetchMembers = useCallback(() => {
     if (!workspaceId) return;
@@ -215,11 +222,51 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
     member: WorkspaceMember,
   ) => {
     event.preventDefault();
+    if (!canManageMembers || member.userId?._id === authUser?.id) return;
     setContextMenu({
       member,
       x: event.clientX,
       y: event.clientY,
     });
+  };
+
+  const handleOpenMemberMenu = (
+    event: MouseEvent<HTMLDivElement>,
+    member: WorkspaceMember,
+  ) => {
+    if (!canManageMembers || member.userId?._id === authUser?.id) return;
+    setContextMenu({
+      member,
+      x: event.clientX,
+      y: event.clientY,
+    });
+  };
+
+  const handleUpdateMemberRole = async (
+    member: WorkspaceMember,
+    role: string,
+  ) => {
+    const userId = member.userId?._id;
+    if (!userId || member.role === role) {
+      setContextMenu(null);
+      return;
+    }
+
+    setUpdatingMemberId(userId);
+    try {
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceId, userId), { role });
+      setMembers((prev) =>
+        prev.map((item) =>
+          item.userId?._id === userId ? { ...item, role } : item,
+        ),
+      );
+      setContextMenu(null);
+      toast.success("Đã cập nhật quyền thành viên.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Không thể cập nhật quyền thành viên.");
+    } finally {
+      setUpdatingMemberId(null);
+    }
   };
 
   const handleRemoveMember = async (member: WorkspaceMember) => {
@@ -266,6 +313,7 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
         </div>
         <button
           onClick={() => setShowInvite((v) => !v)}
+          disabled={!canManageMembers}
           className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors"
         >
           <UserPlus className="w-4 h-4" />
@@ -323,8 +371,9 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
             return (
               <div
                 key={user._id}
+                onClick={(event) => handleOpenMemberMenu(event, m)}
                 onContextMenu={(event) => handleOpenContextMenu(event, m)}
-                className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors"
+                className={`flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/70 transition-colors ${canManageMembers && user._id !== authUser?.id ? "cursor-pointer" : ""}`}
               >
                 <MemberAvatar user={user} />
                 <div className="min-w-0 flex-1">
@@ -352,6 +401,32 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(event) => event.stopPropagation()}
         >
+          <div className="border-b border-gray-100 dark:border-gray-800 px-3 py-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Cấp quyền
+            </p>
+          </div>
+          {ROLES.map((role) => (
+            <button
+              key={role.value}
+              type="button"
+              onClick={() => handleUpdateMemberRole(contextMenu.member, role.value)}
+              disabled={updatingMemberId === contextMenu.member.userId?._id}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 ${
+                contextMenu.member.role === role.value
+                  ? "text-indigo-600 dark:text-indigo-300 font-semibold"
+                  : "text-gray-700 dark:text-gray-200"
+              }`}
+            >
+              {updatingMemberId === contextMenu.member.userId?._id ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="w-4 h-4" />
+              )}
+              {role.label}
+            </button>
+          ))}
+          <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
           <button
             type="button"
             onClick={() => handleRemoveMember(contextMenu.member)}

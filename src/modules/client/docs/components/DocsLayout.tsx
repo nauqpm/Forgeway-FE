@@ -5,19 +5,18 @@ import { useDocsStore } from "../store/docs.store";
 import DocsSidebar from "./DocsSidebar";
 import TiptapEditor from "../editor/TiptapEditor";
 import DocsDashboard from "./DocsDashboard";
-import { MOCK_DOCS } from "../mock/docs.mock";
 import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 
 export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
-  const { documents, setDocuments, selectedDocumentId } = useDocsStore();
+  const { documents, selectedDocumentId, isLoading, loadRootPages } = useDocsStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    if (documents.length === 0) {
-      setDocuments(MOCK_DOCS);
-    }
+    // Load root pages from API instead of mock data
+    loadRootPages(workspaceId);
     setMounted(true);
-  }, []);
+  }, [workspaceId]);
 
   if (!mounted) return null;
 
@@ -28,31 +27,40 @@ export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
       
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col bg-white overflow-hidden relative">
-        <AnimatePresence mode="wait">
-          {!selectedDocumentId ? (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-              className="h-full w-full flex flex-col"
-            >
-              <DocsDashboard workspaceId={workspaceId} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="editor"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.2 }}
-              className="h-full w-full flex flex-col"
-            >
-              <TiptapEditor />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {isLoading && documents.length === 0 ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-500">
+              <Loader2 className="w-6 h-6 animate-spin" />
+              <span className="text-sm font-medium">Loading pages...</span>
+            </div>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            {!selectedDocumentId ? (
+              <motion.div
+                key="dashboard"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="h-full w-full flex flex-col"
+              >
+                <DocsDashboard workspaceId={workspaceId} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="editor"
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="h-full w-full flex flex-col"
+              >
+                <TiptapEditor />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </main>
     </div>
   );

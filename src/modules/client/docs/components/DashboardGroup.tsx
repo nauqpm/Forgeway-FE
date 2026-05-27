@@ -9,7 +9,6 @@ interface DashboardGroupProps {
   docs: Document[];
   idx: number;
   onSelect: (id: string) => void;
-  onDuplicate: (id: string) => void;
   onRename: (id: string, currentTitle: string) => void;
   onDelete: (id: string) => void;
 }
@@ -19,7 +18,6 @@ export default function DashboardGroup({
   docs,
   idx,
   onSelect,
-  onDuplicate,
   onRename,
   onDelete,
 }: DashboardGroupProps) {
@@ -52,7 +50,6 @@ export default function DashboardGroup({
                   key={doc.id}
                   doc={doc}
                   onSelect={onSelect}
-                  onDuplicate={onDuplicate}
                   onRename={onRename}
                   onDelete={onDelete}
                 />

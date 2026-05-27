@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use, useMemo, useRef } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import IssueDetailModal from "@/modules/client/workspaces/components/IssueDetailModal";
@@ -38,6 +39,9 @@ import { useIssueHandlers } from "@/modules/client/workspaces/hooks/useIssueHand
 import { useSprintHandlers } from "@/modules/client/workspaces/hooks/useSprintHandlers";
 import { useColumnHandlers } from "@/modules/client/workspaces/hooks/useColumnHandlers";
 import { useSelectionHandlers } from "@/modules/client/workspaces/hooks/useSelectionHandlers";
+import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
+import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
@@ -47,19 +51,20 @@ import CreateIssueModal from "@/modules/client/workspaces/components/issues/Crea
 export default function WorkspaceDetailPage({
   params,
 }: {
-  params: Promise<{ id: string; tab?: string[] }>;
+  params: Promise<{ key: string; tab?: string[] }>;
 }) {
-  const { id: workspaceId, tab } = use(params);
+  const { key: workspaceKey, tab } = use(params);
   const tabFromUrl = tab?.[0];
   const initialTab = (tabFromUrl as WorkspaceTab) || null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const { setCurrentWorkspace } = useWorkspaceStore();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
 
   const handleTabChange = (newTab: WorkspaceTab) => {
     setActiveTab(newTab);
-    window.history.pushState(null, "", `/workspaces/${workspaceId}/${newTab}`);
+    window.history.pushState(null, "", `/workspaces/${workspaceKey}/${newTab}`);
   };
 
   useEffect(() => {
@@ -75,7 +80,7 @@ export default function WorkspaceDetailPage({
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [workspace, workspaceId]);
+  }, [workspace, workspaceKey]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
 
@@ -95,14 +100,58 @@ export default function WorkspaceDetailPage({
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
-  const [filters, setFilters] = useState<Filters>({
-    search: "",
-    assigneeId: null,
-    priority: null,
-    assignees: [],
-    types: [],
-    statuses: [],
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const [filters, setFilters] = useState<Filters>(() => {
+    return {
+      search: searchParams?.get("search") || "",
+      assigneeId: null,
+      reporterId: null,
+      priority: null,
+      type: null,
+      assignees: searchParams?.get("assignees")?.split(",").filter(Boolean) || [],
+      types: searchParams?.get("types")?.split(",").filter(Boolean) || [],
+      statuses: searchParams?.get("statuses")?.split(",").filter(Boolean) || [],
+      priorities: searchParams?.get("priorities")?.split(",").filter(Boolean) || [],
+      backlog: searchParams?.get("backlog") === "true",
+      archived: searchParams?.get("archived") === "true",
+    };
   });
+
+  // Sync to URL silently
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    
+    if (filters.search) params.set("search", filters.search);
+    else params.delete("search");
+    
+    if (filters.assignees.length > 0) params.set("assignees", filters.assignees.join(","));
+    else params.delete("assignees");
+    
+    if (filters.types.length > 0) params.set("types", filters.types.join(","));
+    else params.delete("types");
+    
+    if (filters.statuses.length > 0) params.set("statuses", filters.statuses.join(","));
+    else params.delete("statuses");
+    
+    if (filters.priorities.length > 0) params.set("priorities", filters.priorities.join(","));
+    else params.delete("priorities");
+    
+    if (filters.backlog) params.set("backlog", "true");
+    else params.delete("backlog");
+    
+    if (filters.archived) params.set("archived", "true");
+    else params.delete("archived");
+    
+    const query = params.toString();
+    const newUrl = query ? `${pathname}?${query}` : pathname;
+    
+    if (window.location.pathname + window.location.search !== newUrl) {
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [filters, pathname]);
   const [density, setDensity] = useState<"default" | "compact">("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -113,23 +162,27 @@ export default function WorkspaceDetailPage({
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const { data: boardData, isLoading: isBoardLoading } = useQuery({
-    queryKey: ["board", workspaceId],
-    queryFn: () => boardService.getBoardByWorkspace(workspaceId),
-    enabled: !!workspaceId,
+    queryKey: ["board", workspaceKey],
+    queryFn: () => boardService.getBoardByWorkspace(workspaceKey),
+    enabled: !!workspaceKey,
     staleTime: 30_000,
   });
 
   const { data: sprintsData } = useQuery({
-    queryKey: ["sprints", workspaceId],
-    queryFn: () => sprintService.listSprints(workspaceId),
-    enabled: !!workspaceId && workspace?.type === "scrum",
+    queryKey: ["sprints", workspaceKey],
+    queryFn: () => sprintService.listSprints(workspaceKey),
+    enabled: !!workspaceKey && workspace?.type === "scrum",
     staleTime: 30_000,
   });
 
-  const { data: tasksData } = useQuery({
-    queryKey: ["tasks", workspaceId],
-    queryFn: () => taskService.listBoardTasks(workspaceId),
-    enabled: !!workspaceId,
+  const {
+    data: tasksData,
+    error: tasksError,
+    isFetching: isTasksFetching,
+  } = useQuery({
+    queryKey: ["tasks", workspaceKey],
+    queryFn: () => taskService.listBoardTasks(workspaceKey),
+    enabled: !!workspaceKey,
     staleTime: 30_000,
   });
 
@@ -159,6 +212,15 @@ export default function WorkspaceDetailPage({
   }, [issues, filters, workspace]);
 
   const uniqueAssignees = useAssignees(issues);
+  const workspacePermissions = useWorkspacePermission(workspaceKey, workspace);
+  const canCreateTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
+  const canEditTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
+  const canDeleteTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
+  const canMoveTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_MOVE);
+  const canManageSprint = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.SPRINT_MANAGE);
+  const canUpdateWorkspace = workspacePermissions.hasPermission(
+    WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE,
+  );
 
   const {
     handleCreateIssue,
@@ -167,7 +229,7 @@ export default function WorkspaceDetailPage({
     updateIssueDirectly,
     handleQuickCreateTask,
   } = useIssueHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     issues,
     setIssues,
     setShowCreateIssue,
@@ -185,7 +247,7 @@ export default function WorkspaceDetailPage({
     handleDeleteColumn,
     handleMoveColumn,
   } = useColumnHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     columns,
     newColumnName,
     setColumns,
@@ -202,7 +264,7 @@ export default function WorkspaceDetailPage({
     handleStartSprint,
     handleCompleteSprint,
   } = useSprintHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     sprints,
     editingSprint,
     setSprints,
@@ -219,7 +281,7 @@ export default function WorkspaceDetailPage({
       onSprintAssign: (taskId, sprintId) => {
         const taskKey = getIssueTaskKey(taskId);
         if (taskKey) {
-          taskService.updateBoardTask(workspaceId, taskKey, { sprintId: sprintId ?? undefined });
+          taskService.updateBoardTask(workspaceKey, taskKey, { sprintId: sprintId ?? undefined });
         }
       },
     });
@@ -232,7 +294,7 @@ export default function WorkspaceDetailPage({
     handleBulkMoveSprint,
     handleBulkDelete,
   } = useSelectionHandlers({
-    workspaceKey: workspaceId,
+    workspaceKey,
     issues,
     selectedTaskIds,
     setIssues,
@@ -247,8 +309,8 @@ export default function WorkspaceDetailPage({
   }, [activeTab, listViewMode]);
 
   useEffect(() => {
-    if (!workspaceId) return;
-    api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceId))
+    if (!workspaceKey) return;
+    api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceKey))
       .then(async (workspaceResponse) => {
         const nextWorkspace = (
           workspaceResponse.data?.data ?? workspaceResponse.data
@@ -256,6 +318,7 @@ export default function WorkspaceDetailPage({
         const template = getWorkspaceTemplate(nextWorkspace);
 
         setWorkspace(nextWorkspace);
+        setCurrentWorkspace(nextWorkspace as any);
         if (!initialTab) {
           if (template === "scrum") handleTabChange("backlog");
           else handleTabChange("board");
@@ -263,9 +326,26 @@ export default function WorkspaceDetailPage({
       })
       .catch(() => { })
       .finally(() => setLoading(false));
-  }, [workspaceId]);
+  }, [workspaceKey]);
 
   if (loading || isBoardLoading) return <LoadingSpinner />;
+
+  if (tasksError) {
+    const errorData = (tasksError as any).response?.data;
+    const status = (tasksError as any).response?.status;
+    let errorMessage = "Đã xảy ra lỗi khi tải dữ liệu board";
+    if (status === 401) errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+    if (status === 403) errorMessage = "Bạn không có quyền truy cập workspace này.";
+    if (status === 404) errorMessage = "Workspace không tồn tại.";
+    if (status === 400) errorMessage = "Bộ lọc không hợp lệ.";
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-red-500 mb-4">{errorMessage}</p>
+        <button onClick={() => window.location.reload()} className="text-indigo-600 hover:text-indigo-800">Tải lại trang</button>
+      </div>
+    );
+  }
+
   if (!workspace)
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -283,8 +363,10 @@ export default function WorkspaceDetailPage({
       {/* Header */}
       <Header
         workspace={workspace}
-        workspaceId={workspaceId}
+        workspaceId={workspaceKey}
         setShowCreateIssue={setShowCreateIssue}
+        canCreateTask={canCreateTask}
+        canUpdateWorkspace={canUpdateWorkspace}
       />
 
       {/* Description */}
@@ -301,7 +383,7 @@ export default function WorkspaceDetailPage({
       <WorkspaceContent
         activeTab={activeTab}
         workspace={workspace}
-        workspaceId={workspaceId}
+        workspaceId={workspace._id}
         boardProps={{
           data: {
             columns,
@@ -316,6 +398,7 @@ export default function WorkspaceDetailPage({
             newIssueForm,
             showCreateColumn,
             newColumnName,
+            isFetching: isTasksFetching,
           },
           actions: {
             setFilters,
@@ -326,21 +409,23 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result) =>
-              handleBoardDragEnd({
-                result,
-                columns,
-                issues,
-                setColumns,
-                setIssues,
-                handleMoveColumn,
-                onColumnChange: (taskId, columnId) => {
-                  const taskKey = getIssueTaskKey(taskId);
-                  if (taskKey) {
-                    taskService.updateBoardTask(workspaceId, taskKey, { columnId });
-                  }
-                },
-              }),
+            handleBoardDragEnd: (result : any) =>
+              canMoveTask
+                ? handleBoardDragEnd({
+                    result,
+                    columns,
+                    issues,
+                    setColumns,
+                    setIssues,
+                    handleMoveColumn,
+                    onColumnChange: (taskId, columnId) => {
+                      const taskKey = getIssueTaskKey(taskId);
+                      if (taskKey) {
+                        taskService.updateBoardTask(workspaceKey, taskKey, { columnId });
+                      }
+                    },
+                })
+              : undefined,
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -348,6 +433,11 @@ export default function WorkspaceDetailPage({
           },
           refs: {
             columnsEndRef,
+          },
+          permissions: {
+            canCreateTask,
+            canMoveTask,
+            canUpdateWorkspace,
           },
         }}
         backlogProps={{
@@ -386,6 +476,12 @@ export default function WorkspaceDetailPage({
             handleDeleteSprint,
             handleQuickCreateTask,
           },
+          permissions: {
+            canCreateTask,
+            canEditTask,
+            canMoveTask,
+            canManageSprint,
+          },
         }}
         timelineProps={{
           filteredIssues,
@@ -397,7 +493,7 @@ export default function WorkspaceDetailPage({
           filteredIssues,
           selectedIssue,
           workspaceKey: workspace.key,
-          workspaceId,
+          workspaceId: workspace._id,
           listViewMode,
           listGridDrawerOpen,
           setSelectedIssue,
@@ -409,7 +505,7 @@ export default function WorkspaceDetailPage({
         }}
         summaryProps={{
           issues,
-          workspaceId,
+          workspaceId: workspace._id,
           workspaceMongoId: workspace?._id,
         }}
         calendarProps={{
@@ -472,6 +568,9 @@ export default function WorkspaceDetailPage({
         onDelete={handleBulkDelete}
         sprints={sprints}
         onMoveSprint={handleBulkMoveSprint}
+        canEditTask={canEditTask}
+        canDeleteTask={canDeleteTask}
+        canMoveTask={canMoveTask}
       />
     </div>
   );

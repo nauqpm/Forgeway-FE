@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronRight, ChevronDown, FileText, Plus, MoreHorizontal, Trash, Edit2, Copy } from "lucide-react";
+import { ChevronRight, FileText, Plus, MoreHorizontal, Trash, Edit2, Loader2 } from "lucide-react";
 import { useDocsStore } from "../store/docs.store";
 import { Document } from "../types/docs.type";
 import DocsTree from "./DocsTree";
@@ -18,22 +18,26 @@ export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemPr
     documents, 
     selectedDocumentId, 
     expandedNodes, 
+    loadedChildrenOf,
     toggleExpand, 
     selectDocument,
     createDocument,
     deleteDocument,
     renameDocument,
-    duplicateDocument
+    loadChildren,
   } = useDocsStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(doc.title);
   const [showMenu, setShowMenu] = useState(false);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const children = documents.filter(d => d.parentId === doc.id);
-  const hasChildren = children.length > 0;
+  const hasLoadedChildren = loadedChildrenOf.includes(doc.id);
+  // Show expand arrow optimistically (always show until we know it has no children)
+  const hasChildren = children.length > 0 || !hasLoadedChildren;
   const isExpanded = expandedNodes.includes(doc.id);
   const isSelected = selectedDocumentId === doc.id;
 
@@ -54,8 +58,16 @@ export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemPr
     }
   }, [isEditing]);
 
-  const handleToggle = (e: React.MouseEvent) => {
+  const handleToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // If expanding and children not yet loaded → lazy load
+    if (!isExpanded && !hasLoadedChildren) {
+      setIsLoadingChildren(true);
+      await loadChildren(doc.id);
+      setIsLoadingChildren(false);
+    }
+    
     toggleExpand(doc.id);
   };
 
@@ -63,27 +75,24 @@ export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemPr
     selectDocument(doc.id);
   };
 
-  const handleAddChild = (e: React.MouseEvent) => {
+  const handleAddChild = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const newDoc = createDocument(workspaceId, doc.id);
+    
+    // If children not loaded yet, load them first
+    if (!hasLoadedChildren) {
+      await loadChildren(doc.id);
+    }
+    
+    const newDoc = await createDocument(workspaceId, doc.id);
     if (!isExpanded) toggleExpand(doc.id);
-    selectDocument(newDoc.id);
+    if (newDoc) selectDocument(newDoc.id);
     setShowMenu(false);
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm("Delete this document and all sub-pages?")) {
-      deleteDocument(doc.id);
-    }
-    setShowMenu(false);
-  };
-
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newDoc = duplicateDocument(doc.id);
-    if (newDoc) {
-      selectDocument(newDoc.id);
+      await deleteDocument(doc.id);
     }
     setShowMenu(false);
   };
@@ -131,12 +140,16 @@ export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemPr
             className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isSelected ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-600"} ${hasChildren ? "hover:bg-gray-200/50 dark:hover:bg-gray-800" : "opacity-0 cursor-default"}`}
             onClick={handleToggle}
           >
-            <motion.div
-              animate={{ rotate: isExpanded ? 90 : 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ChevronRight className="w-3.5 h-3.5" />
-            </motion.div>
+            {isLoadingChildren ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <motion.div
+                animate={{ rotate: isExpanded ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </motion.div>
+            )}
           </button>
           
           <FileText className={`w-4 h-4 shrink-0 ${isSelected ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400"}`} />
@@ -188,12 +201,6 @@ export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemPr
                 >
                   <Edit2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> Rename
                 </button>
-                <button 
-                  onClick={handleDuplicate}
-                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] dark:text-gray-300 hover:bg-[#F4F5F7] dark:hover:bg-gray-800 flex items-center gap-2.5 transition-colors"
-                >
-                  <Copy className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> Duplicate
-                </button>
                 <div className="my-1 border-t border-gray-50 dark:border-gray-800" />
                 <button 
                   onClick={handleDelete}
@@ -208,7 +215,7 @@ export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemPr
       </div>
 
       <AnimatePresence initial={false}>
-        {isExpanded && hasChildren && (
+        {isExpanded && children.length > 0 && (
           <motion.div 
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}

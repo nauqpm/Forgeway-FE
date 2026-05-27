@@ -9,12 +9,12 @@ import CalendarToolbar from './CalendarToolbar';
 import UnscheduledSidebar from './UnscheduledSidebar';
 import CalendarEventContent from './CalendarEventContent';
 
-import { Issue } from '@/modules/client/spaces/types/issue.type';
-import { Sprint } from '@/modules/client/spaces/types/sprint.type';
-import { CalendarViewType, CalendarFilters } from '@/modules/client/spaces/types/calendar.type';
-import { useCalendarData } from '@/modules/client/spaces/hooks/useCalendarData';
-import { useCalendarHandlers } from '@/modules/client/spaces/hooks/useCalendarHandlers';
-import { useAssignees } from '@/modules/client/spaces/hooks/useAssignees';
+import { Issue } from '@/modules/client/workspaces/types/issue.type';
+import { Sprint } from '@/modules/client/workspaces/types/sprint.type';
+import { CalendarViewType, CalendarFilters } from '@/modules/client/workspaces/types/calendar.type';
+import { useCalendarData } from '@/modules/client/workspaces/hooks/useCalendarData';
+import { useCalendarHandlers } from '@/modules/client/workspaces/hooks/useCalendarHandlers';
+import { useAssignees } from '@/modules/client/workspaces/hooks/useAssignees';
 
 interface CalendarViewProps {
   issues: Issue[];

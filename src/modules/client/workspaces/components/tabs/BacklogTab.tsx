@@ -56,9 +56,33 @@ type BacklogTabProps = {
     isStarting?: boolean;
     isCompleting?: boolean;
   };
+
+  permissions?: {
+    canCreateTask: boolean;
+    canEditTask: boolean;
+    canMoveTask: boolean;
+    canManageSprint: boolean;
+  };
 };
 
-export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
+const statusSelectClasses = (status: string) => {
+  const base =
+    "px-2 py-1 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none disabled:cursor-not-allowed disabled:opacity-60";
+
+  if (status === "Done") {
+    return `${base} bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300`;
+  }
+
+  if (status === "In Progress") {
+    return `${base} bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300`;
+  }
+
+  return `${base} bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300`;
+};
+
+const statusOptionClass = "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200";
+
+export default function BacklogTab({ data, ui, actions, permissions }: BacklogTabProps) {
   const {
     issues,
     filteredIssues,
@@ -93,10 +117,14 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
     isStarting = false,
     isCompleting = false,
   } = actions;
+  const canCreateTask = permissions?.canCreateTask ?? true;
+  const canEditTask = permissions?.canEditTask ?? true;
+  const canMoveTask = permissions?.canMoveTask ?? true;
+  const canManageSprint = permissions?.canManageSprint ?? true;
   return (
     <div>
       <DragDropContext
-        onDragEnd={handleBacklogDragEnd}
+        onDragEnd={canMoveTask ? handleBacklogDragEnd : () => undefined}
       >
         <div className="workspace-surface max-w-[min(100%,72rem)] space-y-6 py-[var(--workspace-surface-pad)]">
           {/* Backlog Top Bar with Filter */}
@@ -212,6 +240,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                         Tiến độ: {donePoints} / {totalPoints} story points
                       </div>
                     </div>
+                    {canManageSprint && (
                     <button
                       onClick={() => handleEditSprint(sprint)}
                       disabled={sprint.status === "completed"}
@@ -220,7 +249,8 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
-                    {sprint.status === "planning" && (
+                    )}
+                    {canManageSprint && sprint.status === "planning" && (
                       <button
                         onClick={() => handleDeleteSprint(sprint._id)}
                         className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors"
@@ -229,6 +259,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
+                    {canManageSprint && (
                     <button
                       onClick={() =>
                         sprint.status === "active"
@@ -244,6 +275,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                           ? "Completed"
                           : "Start Sprint"}
                     </button>
+                    )}
                   </div>
                 </div>
 
@@ -262,12 +294,13 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                           key={issue.id}
                           draggableId={issue.id}
                           index={index}
+                          isDragDisabled={!canMoveTask}
                         >
                           {(provided, snapshot) => (
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              {...provided.dragHandleProps}
+                              {...(canMoveTask ? provided.dragHandleProps : {})}
                               className={`flex flex-col gap-3 bg-white dark:bg-gray-900 lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-lg border ${snapshot.isDragging ? "border-indigo-400 shadow-md rotate-1 z-50 relative" : "border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-500"} transition-all group shadow-sm`}
                             >
                               <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -311,6 +344,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                           parseInt(e.target.value) || 0,
                                       })
                                     }
+                                    disabled={!canEditTask}
                                     placeholder="-"
                                     className="w-8 h-6 text-center text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-indigo-500 outline-none transition-colors appearance-none"
                                     title="Story Points"
@@ -325,23 +359,24 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                       status: e.target.value,
                                     })
                                   }
-                                  className={`px-2 py-1 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none ${issue.status === "Done" ? "bg-green-50 text-green-700" : issue.status === "In Progress" ? "bg-blue-50 text-blue-700" : "bg-gray-100 text-gray-700"}`}
+                                  disabled={!canEditTask}
+                                  className={statusSelectClasses(issue.status)}
                                 >
                                   <option
                                     value="To Do"
-                                    className="bg-white text-gray-700"
+                                    className={statusOptionClass}
                                   >
                                     To Do
                                   </option>
                                   <option
                                     value="In Progress"
-                                    className="bg-white text-gray-700"
+                                    className={statusOptionClass}
                                   >
                                     In Progress
                                   </option>
                                   <option
                                     value="Done"
-                                    className="bg-white text-gray-700"
+                                    className={statusOptionClass}
                                   >
                                     Done
                                   </option>
@@ -383,7 +418,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                       if (e.key === "Enter" && e.currentTarget.value.trim()) {
                         const title = e.currentTarget.value.trim();
                         e.currentTarget.value = "";
-                        handleQuickCreateTask(title, sprint.id);
+                        if (canCreateTask) handleQuickCreateTask(title, sprint.id);
                       }
                     }}
                   />
@@ -395,7 +430,8 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                       });
                       setShowCreateIssue(true);
                     }}
-                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors w-fit"
+                    disabled={!canCreateTask}
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 disabled:opacity-50 disabled:hover:bg-transparent p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors w-fit"
                   >
                     <Plus className="w-4 h-4" /> Create issue (full form)
                   </button>
@@ -452,12 +488,14 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                   </span>
                 </h3>
               </div>
+              {canManageSprint && (
               <button
                 onClick={handleCreateSprint}
                 className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
               >
                 Create Sprint
               </button>
+              )}
             </div>
 
             <Droppable droppableId="backlog" type="backlog-issue">
@@ -470,16 +508,17 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                   {filteredIssues
                     .filter((i) => i.sprintId === null)
                     .map((issue, index) => (
-                      <Draggable
+                        <Draggable
                         key={issue.id}
                         draggableId={issue.id}
                         index={index}
+                        isDragDisabled={!canMoveTask}
                       >
                         {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            {...provided.dragHandleProps}
+                            {...(canMoveTask ? provided.dragHandleProps : {})}
                             className={`flex flex-col gap-3 bg-white dark:bg-gray-900 lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-lg border ${snapshot.isDragging ? "border-indigo-400 shadow-md rotate-1 z-50 relative" : "border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"} transition-all group`}
                           >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -523,6 +562,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                         parseInt(e.target.value) || 0,
                                     })
                                   }
+                                  disabled={!canEditTask}
                                   placeholder="-"
                                   className="w-8 h-6 text-center text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-indigo-500 outline-none transition-colors appearance-none"
                                   title="Story Points"
@@ -537,11 +577,18 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                                     status: e.target.value,
                                   })
                                 }
-                                className={`px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none`}
+                                disabled={!canEditTask}
+                                className={statusSelectClasses(issue.status)}
                               >
-                                <option value="To Do">To Do</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="Done">Done</option>
+                                <option value="To Do" className={statusOptionClass}>
+                                  To Do
+                                </option>
+                                <option value="In Progress" className={statusOptionClass}>
+                                  In Progress
+                                </option>
+                                <option value="Done" className={statusOptionClass}>
+                                  Done
+                                </option>
                               </select>
 
                               {/* Assignee */}
@@ -574,7 +621,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                   if (e.key === "Enter" && e.currentTarget.value.trim()) {
                     const title = e.currentTarget.value.trim();
                     e.currentTarget.value = "";
-                    handleQuickCreateTask(title, null);
+                    if (canCreateTask) handleQuickCreateTask(title, null);
                   }
                 }}
               />
@@ -583,7 +630,8 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                   setNewIssueForm({ ...newIssueForm, sprintId: null });
                   setShowCreateIssue(true);
                 }}
-                className="text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100 px-3 py-1.5 rounded transition-colors whitespace-nowrap"
+                disabled={!canCreateTask}
+                className="text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100 disabled:opacity-50 px-3 py-1.5 rounded transition-colors whitespace-nowrap"
               >
                 Mở modal...
               </button>

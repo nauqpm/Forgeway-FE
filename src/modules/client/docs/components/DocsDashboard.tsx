@@ -13,7 +13,6 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
     createDocument, 
     renameDocument, 
     deleteDocument, 
-    duplicateDocument 
   } = useDocsStore();
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,16 +35,17 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   }, [documents, searchQuery, sortOrder]);
 
   const groups = useMemo(() => {
-    const categories = Array.from(new Set(filteredDocs.map(d => d.category || "General")));
-    return categories.map(cat => ({
-      name: cat,
-      docs: filteredDocs.filter(d => (d.category || "General") === cat)
+    // Group by status instead of category (which no longer exists in the type)
+    const statuses = Array.from(new Set(filteredDocs.map(d => d.status === 'published' ? 'Published' : 'Draft')));
+    return statuses.map(status => ({
+      name: status,
+      docs: filteredDocs.filter(d => (d.status === 'published' ? 'Published' : 'Draft') === status)
     }));
   }, [filteredDocs]);
 
-  const handleCreate = () => {
-    const newDoc = createDocument(workspaceId);
-    selectDocument(newDoc.id);
+  const handleCreate = async () => {
+    const newDoc = await createDocument(workspaceId);
+    if (newDoc) selectDocument(newDoc.id);
   };
 
   const handleRename = (id: string, currentTitle: string) => {
@@ -76,7 +76,6 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
               docs={group.docs}
               idx={idx}
               onSelect={selectDocument}
-              onDuplicate={duplicateDocument}
               onRename={handleRename}
               onDelete={handleDelete}
             />

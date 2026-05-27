@@ -2,7 +2,7 @@
 
 import type { EventContentArg } from '@fullcalendar/core';
 import { isAfter, parseISO } from 'date-fns';
-import { Issue } from '@/modules/client/spaces/types/issue.type';
+import { Issue } from '@/modules/client/workspaces/types/issue.type';
 
 export default function CalendarEventContent({ eventInfo }: { eventInfo: EventContentArg }) {
   const { extendedProps, start, end } = eventInfo.event;
