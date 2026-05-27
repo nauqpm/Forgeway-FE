@@ -167,6 +167,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                     <h3
                       className="flex min-w-0 flex-wrap items-center gap-2 font-bold text-gray-900 hover:underline dark:text-white cursor-pointer"
                       onClick={() => {
+                        if (sprint.status === "completed") return;
                         setEditingSprint(sprint);
                         setIsSprintModalOpen(true);
                       }}
@@ -213,6 +214,7 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                     </div>
                     <button
                       onClick={() => handleEditSprint(sprint)}
+                      disabled={sprint.status === "completed"}
                       className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
                       title="Chỉnh sửa sprint"
                     >
@@ -233,12 +235,14 @@ export default function BacklogTab({ data, ui, actions }: BacklogTabProps) {
                           ? handleCompleteSprint(sprint._id)
                           : handleStartSprint(sprint._id)
                       }
-                      disabled={isStarting || isCompleting}
+                      disabled={isStarting || isCompleting || sprint.status === "completed" || sprint._id.startsWith("temp-")}
                       className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
                     >
                       {sprint.status === "active"
                         ? "Complete Sprint"
-                        : "Start Sprint"}
+                        : sprint.status === "completed"
+                          ? "Completed"
+                          : "Start Sprint"}
                     </button>
                   </div>
                 </div>
