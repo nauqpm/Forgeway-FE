@@ -10,7 +10,7 @@ export default function FilterChip({ label, onRemove }: FilterChipProps) {
     <button
       type="button"
       onClick={onRemove}
-      className="inline-flex h-7 max-w-full items-center gap-1 rounded-md border border-red-200 bg-red-50 px-2 text-xs font-medium text-red-700 transition-colors hover:bg-red-100 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70"
+      className="inline-flex h-7 max-w-full items-center gap-1 rounded-md border border-indigo-200 bg-indigo-50 px-2 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-950/70"
     >
       <span className="truncate">{label}</span>
       <X className="h-3 w-3 shrink-0" />

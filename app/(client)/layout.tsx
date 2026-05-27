@@ -15,7 +15,7 @@ import { Filters } from "@/modules/client/workspaces/types/filter.type";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
-  const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspacesLoaded } = useWorkspaceStore();
+  const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspaces, workspacesLoaded } = useWorkspaceStore();
   const { theme, setTheme } = useTheme();
   const { hasAdminAccess } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -32,6 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     search: "",
     assigneeId: null,
     reporterId: null,
+    taskKey: null,
     workspaceKey,
     lastUpdated: null,
     priority: null,
@@ -45,7 +46,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
   const [isTaskSearchReady, setIsTaskSearchReady] = useState(false);
 
-  const searchProjects = (currentWorkspace ? [currentWorkspace] : [])
+  const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
     .map((workspace) => ({
       id: workspace._id,
       name: workspace.name,
@@ -77,7 +78,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthenticated && !workspacesLoaded) {
       api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
-        setWorkspaces(res.data);
+        setWorkspaces(res.data?.data ?? res.data);
       }).catch(() => {});
     }
   }, [isAuthenticated, workspacesLoaded, setWorkspaces]);
@@ -108,6 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       ...prev,
       workspaceKey,
       search: params.get("search") || "",
+      taskKey: params.get("taskKey"),
       statuses: csv(params.get("status")).map((item) => {
         if (item === "todo") return "To Do";
         if (item === "inprogress") return "In Progress";
@@ -134,6 +136,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     const normalize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "");
 
     setOrDelete("search", taskSearchFilters.search.trim());
+    setOrDelete("taskKey", taskSearchFilters.taskKey);
     setOrDelete("status", taskSearchFilters.statuses.map(normalize).join(","));
     setOrDelete("type", taskSearchFilters.types.map(normalize).join(","));
     setOrDelete("priority", taskSearchFilters.priorities.map(normalize).join(","));
@@ -190,6 +193,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 projects={searchProjects}
                 assignees={searchAssignees}
                 workspaceKey={activeWorkspaceKey}
+                currentUserId={user?.id}
                 currentUserName={user?.fullName || user?.email}
                 className=""
                 inputClassName="h-10 text-sm"
@@ -197,13 +201,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.push(workspaceKey ? `/workspaces/${workspaceKey}` : "/workspaces/create")}
-              className="hidden items-center gap-2 rounded-lg bg-red-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-red-700 sm:inline-flex"
-            >
-              <Plus className="w-4 h-4" />
-              Create
-            </button>
             {/* Theme toggle */}
             <button
               onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}

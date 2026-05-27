@@ -2,6 +2,7 @@ export interface Filters {
   search: string;
   assigneeId: string | null;
   reporterId: string | null;
+  taskKey?: string | null;
   workspaceKey?: string | null;
   lastUpdated?: string | null;
   priority: string | null;

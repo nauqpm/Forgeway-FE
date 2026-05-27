@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronDown, Clock, FolderKanban, UserCircle, Users } from "lucide-react";
+import { ChevronDown, Clock, Flag, FolderKanban, UserCircle, Users } from "lucide-react";
 import { Filters } from "../types/filter.type";
 
 type TaskFilterPanelProps = {
@@ -8,10 +8,16 @@ type TaskFilterPanelProps = {
   projects: { id: string; name: string; key: string }[];
   assignees: { id: string; name: string; avatar?: string }[];
   workspaceKey: string;
+  selectedWorkspaceKey?: string | null;
+  onSelectWorkspace?: (workspaceKey: string) => void;
+  currentUserId?: string;
   currentUserName?: string;
 };
 
 const lastUpdatedOptions = ["Any time", "Today", "Yesterday", "Past 7 days", "Past 30 days", "Past year"];
+const statuses = ["To Do", "In Progress", "Testing", "Done"];
+const types = ["Task", "Bug", "Story", "Epic"];
+const priorities = ["Lowest", "Low", "Medium", "High", "Highest"];
 
 function Section({
   title,
@@ -25,7 +31,7 @@ function Section({
   return (
     <section className="border-b border-gray-100 pb-4 last:border-0 last:pb-0 dark:border-gray-800">
       <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        <Icon className="h-4 w-4 text-red-500" />
+        <Icon className="h-4 w-4 text-indigo-500" />
         {title}
       </div>
       <div className="space-y-1">{children}</div>
@@ -52,10 +58,10 @@ function CheckboxRow({
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 rounded border-gray-300 text-red-600 focus:ring-red-500 dark:border-gray-600 dark:bg-gray-900"
+        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900"
       />
       {avatar && (
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
           {avatar}
         </span>
       )}
@@ -73,9 +79,12 @@ export default function TaskFilterPanel({
   projects,
   assignees,
   workspaceKey,
+  selectedWorkspaceKey,
+  onSelectWorkspace,
+  currentUserId,
   currentUserName,
 }: TaskFilterPanelProps) {
-  const toggleArray = (field: "assignees", value: string) => {
+  const toggleArray = (field: "assignees" | "statuses" | "types" | "priorities", value: string) => {
     setFilters((prev) => {
       const current = prev[field];
       return {
@@ -101,17 +110,17 @@ export default function TaskFilterPanel({
       </Section>
 
       <Section title="Filter by project" icon={FolderKanban}>
-        {(projects.length > 0 ? projects : [{ id: workspaceKey, name: `${workspaceKey} board`, key: workspaceKey }]).slice(0, 4).map((project) => (
+        {(projects.length > 0 ? projects : [{ id: workspaceKey, name: `${workspaceKey} board`, key: workspaceKey }]).slice(0, 8).map((project) => (
           <CheckboxRow
             key={project.id}
-            checked={project.key === workspaceKey}
+            checked={project.key === (selectedWorkspaceKey || workspaceKey)}
             label={project.name}
             detail={project.key}
             avatar={project.key.slice(0, 2).toUpperCase()}
-            onChange={() => undefined}
+            onChange={() => onSelectWorkspace?.(project.key)}
           />
         ))}
-        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400">
+        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
           Show more <ChevronDown className="h-4 w-4" />
         </button>
       </Section>
@@ -127,19 +136,63 @@ export default function TaskFilterPanel({
             onChange={() => toggleArray("assignees", user.id)}
           />
         ))}
-        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-red-600 hover:text-red-700 dark:text-red-400">
+        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
           Show more <ChevronDown className="h-4 w-4" />
         </button>
       </Section>
 
       <Section title="Filter by reporter" icon={UserCircle}>
         <CheckboxRow
-          checked={filters.reporterId === "me"}
+          checked={Boolean(currentUserId && filters.reporterId === currentUserId)}
           label="Reported by me"
           detail={currentUserName}
           avatar={(currentUserName || "Me").slice(0, 2).toUpperCase()}
-          onChange={() => setFilters((prev) => ({ ...prev, reporterId: prev.reporterId === "me" ? null : "me" }))}
+          onChange={() => {
+            if (!currentUserId) return;
+            setFilters((prev) => ({
+              ...prev,
+              reporterId: prev.reporterId === currentUserId ? null : currentUserId,
+            }));
+          }}
         />
+      </Section>
+
+      <Section title="Filter by task fields" icon={Flag}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <p className="mb-1 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Status</p>
+            {statuses.map((status) => (
+              <CheckboxRow
+                key={status}
+                checked={filters.statuses.includes(status)}
+                label={status}
+                onChange={() => toggleArray("statuses", status)}
+              />
+            ))}
+          </div>
+          <div>
+            <p className="mb-1 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Type</p>
+            {types.map((type) => (
+              <CheckboxRow
+                key={type}
+                checked={filters.types.includes(type)}
+                label={type}
+                onChange={() => toggleArray("types", type)}
+              />
+            ))}
+          </div>
+          <div>
+            <p className="mb-1 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Priority</p>
+            {priorities.map((priority) => (
+              <CheckboxRow
+                key={priority}
+                checked={filters.priorities.includes(priority)}
+                label={priority}
+                onChange={() => toggleArray("priorities", priority)}
+              />
+            ))}
+          </div>
+        </div>
       </Section>
     </div>
   );

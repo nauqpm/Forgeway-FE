@@ -16,7 +16,7 @@ export default function RecentItem({ icon: Icon, title, meta, tone = "gray" }: R
       <span
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${
           tone === "red"
-            ? "bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-300"
+            ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-300"
             : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300"
         }`}
       >
