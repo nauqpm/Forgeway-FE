@@ -119,6 +119,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       priorities: csv(params.get("priority")).map(label),
       assignees: csv(params.get("assigneeId")),
       reporterId: params.get("reporterId"),
+      lastUpdated: params.get("lastUpdated"),
       backlog: params.get("backlog") === "true",
       archived: params.get("archived") === "true",
     }));
@@ -142,6 +143,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setOrDelete("priority", taskSearchFilters.priorities.map(normalize).join(","));
     setOrDelete("assigneeId", taskSearchFilters.assignees.join(","));
     setOrDelete("reporterId", taskSearchFilters.reporterId);
+    setOrDelete("lastUpdated", taskSearchFilters.lastUpdated);
     if (taskSearchFilters.backlog) params.set("backlog", "true");
     else params.delete("backlog");
     if (taskSearchFilters.archived) params.set("archived", "true");
