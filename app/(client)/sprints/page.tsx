@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -11,9 +12,14 @@ import { Zap, Clock, CheckCircle, Calendar, Play, ArrowRight } from "lucide-reac
 interface Sprint { _id: string; name: string; goal?: string; status: string; startDate: string; endDate: string; projectId?: any; }
 
 export default function SprintsPage() {
+  const router = useRouter();
   const { currentWorkspace } = useWorkspaceStore();
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    router.replace("/workspaces");
+  }, [router]);
 
   useEffect(() => {
     if (!currentWorkspace?._id) { setLoading(false); return; }
