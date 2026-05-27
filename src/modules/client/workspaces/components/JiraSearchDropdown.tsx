@@ -22,11 +22,9 @@ type JiraSearchDropdownProps = {
 
 const apps = ["Task", "Docs"];
 const goToLinks = ["Boards", "Projects", "Filters", "Plans", "People"];
-const TASK_KEY_PATTERN = /^[A-Z][A-Z0-9]+-\d+$/i;
+const TASK_KEY_PATTERN = /^[A-Z][A-Z0-9]*-\d+$/i;
 
-const toTaskFilters = (filters: Filters): TaskFilters => ({
-  search: filters.search,
-  taskKey: filters.taskKey ?? undefined,
+const toSuggestionTaskFilters = (filters: Filters): TaskFilters => ({
   status: filters.statuses,
   type: filters.types,
   priority: filters.priorities,
@@ -34,7 +32,24 @@ const toTaskFilters = (filters: Filters): TaskFilters => ({
   reporterId: filters.reporterId ?? undefined,
   backlog: filters.backlog,
   archived: filters.archived,
+  limit: 100,
 });
+
+const compactSearchText = (value: string) =>
+  value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const matchesTaskSearch = (task: { key: string; title: string }, search: string) => {
+  const query = search.trim().toLowerCase();
+  if (!query) return true;
+
+  const compactQuery = compactSearchText(query);
+  return (
+    task.key.toLowerCase().includes(query) ||
+    task.title.toLowerCase().includes(query) ||
+    compactSearchText(task.key).includes(compactQuery) ||
+    compactSearchText(task.title).includes(compactQuery)
+  );
+};
 
 const matchesLastUpdated = (updatedAt: string | undefined, lastUpdated?: string | null) => {
   if (!lastUpdated || lastUpdated === "Any time") return true;
@@ -73,16 +88,17 @@ export default function JiraSearchDropdown({
   const rootRef = useRef<HTMLDivElement>(null);
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const activeWorkspaceKey = filters.workspaceKey || workspaceKey;
-  const taskFilters = toTaskFilters(filters);
+  const suggestionTaskFilters = toSuggestionTaskFilters(filters);
 
   const { data: searchTasks = [], isFetching: isFetchingTasks } = useQuery({
-    queryKey: ["jira-search-tasks", activeWorkspaceKey, taskFilters],
-    queryFn: () => taskService.getBoardTasks(activeWorkspaceKey, taskFilters),
+    queryKey: ["jira-search-tasks", activeWorkspaceKey, suggestionTaskFilters],
+    queryFn: () => taskService.getBoardTasks(activeWorkspaceKey, suggestionTaskFilters),
     enabled: isOpen && Boolean(activeWorkspaceKey) && (projects.length > 0 || Boolean(filters.workspaceKey || workspaceKey)),
     staleTime: 15_000,
   });
 
   const visibleTasks = searchTasks
+    .filter((task) => matchesTaskSearch(task, filters.search))
     .filter((task) => matchesLastUpdated(task.updatedAt, filters.lastUpdated))
     .slice(0, 8);
 
@@ -188,13 +204,21 @@ export default function JiraSearchDropdown({
                   {!isFetchingTasks && visibleTasks.length === 0 && (
                     <p className="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">No work items match these filters.</p>
                   )}
-                  {visibleTasks.slice(0, 3).map((task) => (
+                  {visibleTasks.map((task) => (
                     <RecentItem
                       key={task.id}
                       icon={CheckSquare}
                       title={`${task.key} ${task.title}`}
                       meta={`${task.type} · ${task.status} · ${task.priority}`}
                       tone="red"
+                      onClick={() => {
+                        setFilters((prev) => ({
+                          ...prev,
+                          search: task.key,
+                          taskKey: task.key,
+                        }));
+                        setIsOpen(false);
+                      }}
                     />
                   ))}
                 </section>

@@ -5,12 +5,14 @@ type RecentItemProps = {
   title: string;
   meta: string;
   tone?: "red" | "gray";
+  onClick?: () => void;
 };
 
-export default function RecentItem({ icon: Icon, title, meta, tone = "gray" }: RecentItemProps) {
+export default function RecentItem({ icon: Icon, title, meta, tone = "gray", onClick }: RecentItemProps) {
   return (
     <button
       type="button"
+      onClick={onClick}
       className="flex w-full min-w-0 items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
     >
       <span
