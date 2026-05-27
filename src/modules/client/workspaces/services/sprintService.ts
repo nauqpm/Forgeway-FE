@@ -12,39 +12,39 @@ const toSprint = (raw: any): Sprint => ({
 });
 
 export const sprintService = {
-  async listSprints(workspaceKey: string): Promise<Sprint[]> {
-    const res = await api.get(apiRoutes.WORKSPACES.SPRINTS(workspaceKey));
+  async listSprints(workspaceId: string): Promise<Sprint[]> {
+    const res = await api.get(apiRoutes.WORKSPACES.SPRINTS(workspaceId));
     const data = normalize<any[]>(res);
     return (Array.isArray(data) ? data : []).map(toSprint);
   },
 
-  async createSprint(workspaceKey: string, input: CreateSprintInput): Promise<Sprint> {
-    const res = await api.post(apiRoutes.WORKSPACES.SPRINTS(workspaceKey), input);
+  async createSprint(workspaceId: string, input: CreateSprintInput): Promise<Sprint> {
+    const res = await api.post(apiRoutes.WORKSPACES.SPRINTS(workspaceId), input);
     return toSprint(normalize(res));
   },
 
-  async updateSprint(workspaceKey: string, sprintId: string, input: UpdateSprintInput): Promise<Sprint> {
-    const res = await api.patch(apiRoutes.WORKSPACES.SPRINT(workspaceKey, sprintId), input);
+  async updateSprint(workspaceId: string, sprintId: string, input: UpdateSprintInput): Promise<Sprint> {
+    const res = await api.patch(apiRoutes.WORKSPACES.SPRINT(workspaceId, sprintId), input);
     return toSprint(normalize(res));
   },
 
-  async deleteSprint(workspaceKey: string, sprintId: string): Promise<void> {
-    await api.delete(apiRoutes.WORKSPACES.SPRINT(workspaceKey, sprintId));
+  async deleteSprint(workspaceId: string, sprintId: string): Promise<void> {
+    await api.delete(apiRoutes.WORKSPACES.SPRINT(workspaceId, sprintId));
   },
 
-  async startSprint(workspaceKey: string, sprintId: string): Promise<Sprint> {
-    const res = await api.post(apiRoutes.WORKSPACES.SPRINT_START(workspaceKey, sprintId));
+  async startSprint(workspaceId: string, sprintId: string): Promise<Sprint> {
+    const res = await api.post(apiRoutes.WORKSPACES.SPRINT_START(workspaceId, sprintId));
     return toSprint(normalize(res));
   },
 
-  async completeSprint(workspaceKey: string, sprintId: string): Promise<Sprint> {
-    const res = await api.post(apiRoutes.WORKSPACES.SPRINT_COMPLETE(workspaceKey, sprintId));
+  async completeSprint(workspaceId: string, sprintId: string): Promise<Sprint> {
+    const res = await api.post(apiRoutes.WORKSPACES.SPRINT_COMPLETE(workspaceId, sprintId));
     return toSprint(normalize(res));
   },
 
-  async getActiveSprint(workspaceKey: string): Promise<Sprint | null> {
+  async getActiveSprint(workspaceId: string): Promise<Sprint | null> {
     try {
-      const res = await api.get(apiRoutes.WORKSPACES.ACTIVE_SPRINT(workspaceKey));
+      const res = await api.get(apiRoutes.WORKSPACES.ACTIVE_SPRINT(workspaceId));
       const data = normalize<any>(res);
       return data ? toSprint(data) : null;
     } catch {

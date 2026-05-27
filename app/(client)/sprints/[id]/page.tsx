@@ -15,6 +15,7 @@ interface Sprint {
   _id: string;
   name: string;
   goal?: string;
+  workspaceId?: string | { _id: string; name: string; key: string };
   projectId: { _id: string; name: string; key: string };
   startDate?: string;
   endDate?: string;
@@ -55,8 +56,12 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
       try {
         const sprintRes = await api.get(apiRoutes.SPRINTS.BY_ID(sprintId));
         const nextSprint = sprintRes.data as Sprint;
+        const sprintWorkspaceId =
+          typeof nextSprint.workspaceId === "string"
+            ? nextSprint.workspaceId
+            : nextSprint.workspaceId?._id ?? nextSprint.projectId._id;
         const tasksRes = await api.get(
-          apiRoutes.TASKS.BY_SPRINT(nextSprint.projectId.key, sprintId),
+          apiRoutes.TASKS.BY_SPRINT(sprintWorkspaceId, sprintId),
         );
         setSprint(nextSprint);
         const tasks = tasksRes.data;

@@ -58,6 +58,7 @@ export default function WorkspaceDetailPage({
   const initialTab = (tabFromUrl as WorkspaceTab) || null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const workspaceApiId = workspace?._id;
   const { setCurrentWorkspace } = useWorkspaceStore();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
@@ -162,16 +163,16 @@ export default function WorkspaceDetailPage({
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const { data: boardData, isLoading: isBoardLoading } = useQuery({
-    queryKey: ["board", workspaceKey],
-    queryFn: () => boardService.getBoardByWorkspace(workspaceKey),
-    enabled: !!workspaceKey,
+    queryKey: ["board", workspaceApiId],
+    queryFn: () => boardService.getBoardByWorkspace(workspaceApiId!),
+    enabled: !!workspaceApiId,
     staleTime: 30_000,
   });
 
   const { data: sprintsData } = useQuery({
-    queryKey: ["sprints", workspaceKey],
-    queryFn: () => sprintService.listSprints(workspaceKey),
-    enabled: !!workspaceKey && workspace?.type === "scrum",
+    queryKey: ["sprints", workspaceApiId],
+    queryFn: () => sprintService.listSprints(workspaceApiId!),
+    enabled: !!workspaceApiId && workspace?.type === "scrum",
     staleTime: 30_000,
   });
 
@@ -180,9 +181,9 @@ export default function WorkspaceDetailPage({
     error: tasksError,
     isFetching: isTasksFetching,
   } = useQuery({
-    queryKey: ["tasks", workspaceKey],
-    queryFn: () => taskService.listBoardTasks(workspaceKey),
-    enabled: !!workspaceKey,
+    queryKey: ["tasks", workspaceApiId],
+    queryFn: () => taskService.listBoardTasks(workspaceApiId!),
+    enabled: !!workspaceApiId,
     staleTime: 30_000,
   });
 
@@ -229,7 +230,7 @@ export default function WorkspaceDetailPage({
     updateIssueDirectly,
     handleQuickCreateTask,
   } = useIssueHandlers({
-    workspaceKey,
+    workspaceId: workspaceApiId ?? "",
     issues,
     setIssues,
     setShowCreateIssue,
@@ -238,8 +239,6 @@ export default function WorkspaceDetailPage({
   });
 
   const activeSprint = sprints.find(s => s.status === "active") ?? null;
-  const getIssueTaskKey = (taskId: string) =>
-    issues.find((issue) => issue.id === taskId)?.key;
 
   const {
     handleAddColumn,
@@ -247,7 +246,7 @@ export default function WorkspaceDetailPage({
     handleDeleteColumn,
     handleMoveColumn,
   } = useColumnHandlers({
-    workspaceKey,
+    workspaceId: workspaceApiId ?? "",
     columns,
     newColumnName,
     setColumns,
@@ -264,7 +263,7 @@ export default function WorkspaceDetailPage({
     handleStartSprint,
     handleCompleteSprint,
   } = useSprintHandlers({
-    workspaceKey,
+    workspaceId: workspaceApiId ?? "",
     sprints,
     editingSprint,
     setSprints,
@@ -279,9 +278,8 @@ export default function WorkspaceDetailPage({
       issues,
       setIssues,
       onSprintAssign: (taskId, sprintId) => {
-        const taskKey = getIssueTaskKey(taskId);
-        if (taskKey) {
-          taskService.updateBoardTask(workspaceKey, taskKey, { sprintId: sprintId ?? undefined });
+        if (workspaceApiId) {
+          taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined });
         }
       },
     });
@@ -294,7 +292,7 @@ export default function WorkspaceDetailPage({
     handleBulkMoveSprint,
     handleBulkDelete,
   } = useSelectionHandlers({
-    workspaceKey,
+    workspaceId: workspaceApiId ?? "",
     issues,
     selectedTaskIds,
     setIssues,
@@ -419,9 +417,8 @@ export default function WorkspaceDetailPage({
                     setIssues,
                     handleMoveColumn,
                     onColumnChange: (taskId, columnId) => {
-                      const taskKey = getIssueTaskKey(taskId);
-                      if (taskKey) {
-                        taskService.updateBoardTask(workspaceKey, taskKey, { columnId });
+                      if (workspaceApiId) {
+                        taskService.updateBoardTask(workspaceApiId, taskId, { columnId });
                       }
                     },
                 })

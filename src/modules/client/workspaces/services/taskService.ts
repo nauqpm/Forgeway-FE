@@ -143,7 +143,7 @@ const toUpdatePayload = (updates: Partial<Issue>) => ({
 
 export const taskService = {
   async listBoardTasks(
-    workspaceKey: string,
+    workspaceId: string,
     filters?: import("../types/filter.type").BoardTaskFilters,
   ): Promise<Issue[]> {
     const params = new URLSearchParams();
@@ -200,8 +200,8 @@ export const taskService = {
 
     const queryString = params.toString();
     const url = queryString
-      ? `${apiRoutes.TASKS.BOARD(workspaceKey)}?${queryString}`
-      : apiRoutes.TASKS.BOARD(workspaceKey);
+      ? `${apiRoutes.TASKS.BOARD(workspaceId)}?${queryString}`
+      : apiRoutes.TASKS.BOARD(workspaceId);
 
     const response = await api.get(url);
     const tasks = normalizeResponseData<TaskDto[]>(response);
@@ -232,11 +232,11 @@ export const taskService = {
   },
 
   async createBoardTask(
-    workspaceKey: string,
+    workspaceId: string,
     input: CreateTaskInput,
   ): Promise<Issue> {
     const response = await api.post(
-      apiRoutes.TASKS.BOARD(workspaceKey),
+      apiRoutes.TASKS.BOARD(workspaceId),
       toCreatePayload(input),
     );
 
@@ -244,12 +244,12 @@ export const taskService = {
   },
 
   async updateBoardTask(
-    workspaceKey: string,
-    taskKey: string,
+    workspaceId: string,
+    taskId: string,
     updates: Partial<Issue>,
   ): Promise<Issue> {
     const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskKey),
+      apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId),
       toUpdatePayload(updates),
     );
 
@@ -257,10 +257,10 @@ export const taskService = {
   },
 
   async deleteBoardTask(
-    workspaceKey: string,
-    taskKey: string,
+    workspaceId: string,
+    taskId: string,
   ): Promise<void> {
-    await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskKey), {
+    await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId), {
       data: { confirmText: "delete" },
     });
   },
