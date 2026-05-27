@@ -139,6 +139,9 @@ export default function WorkspaceSettingsPage({
   const [leaving, setLeaving] = useState(false);
 
   const workspaceInviteId = workspace?._id ?? workspaceKey;
+  const currentMember = members.find((m) => m.userId?._id === user?.id);
+  const canManageWorkspace =
+    currentMember?.role === "workspace_admin" || user?.role === "super_admin";
 
   useEffect(() => {
     if (!workspaceKey) return;
@@ -175,22 +178,28 @@ export default function WorkspaceSettingsPage({
 
   useEffect(() => {
     if (activeTab !== "members" || !workspaceInviteId) return;
+    if (!canManageWorkspace) {
+      setInvites([]);
+      setLoadingInvites(false);
+      return;
+    }
+
     setLoadingInvites(true);
     inviteService
       .listInvites(workspaceInviteId)
       .then(setInvites)
-      .catch(() => toast.error("Không thể tải danh sách lời mời đang chờ."))
+      .catch(() => setInvites([]))
       .finally(() => setLoadingInvites(false));
-  }, [activeTab, workspaceInviteId]);
+  }, [activeTab, canManageWorkspace, workspaceInviteId]);
 
   const refreshInvites = async () => {
-    if (!workspaceInviteId) return;
+    if (!workspaceInviteId || !canManageWorkspace) return;
     setLoadingInvites(true);
     try {
       const updated = await inviteService.listInvites(workspaceInviteId);
       setInvites(updated);
     } catch {
-      toast.error("Không thể tải danh sách lời mời đang chờ.");
+      setInvites([]);
     } finally {
       setLoadingInvites(false);
     }
@@ -354,10 +363,6 @@ export default function WorkspaceSettingsPage({
       setRemovingMemberId(null);
     }
   };
-
-  const currentMember = members.find((m) => m.userId?._id === user?.id);
-  const canManageWorkspace =
-    currentMember?.role === "workspace_admin" || user?.role === "super_admin";
 
   const handleLeave = async () => {
     if (leaveConfirm !== "leave") {
