@@ -94,7 +94,6 @@ export interface RefreshTokenResponse {
 
 export interface ForgotPasswordRequest {
   email: string;
-  resetMethod: 'otp';
 }
 
 export interface ResetPasswordByGrantRequest {

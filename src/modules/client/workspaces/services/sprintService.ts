@@ -1,6 +1,11 @@
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
-import { Sprint, CreateSprintInput, UpdateSprintInput } from "../types/sprint.type";
+import {
+  Sprint,
+  CreateSprintInput,
+  UpdateSprintInput,
+  StartSprintInput,
+} from "../types/sprint.type";
 
 const normalize = <T>(payload: any): T =>
   payload?.data?.data ?? payload?.data ?? payload;
@@ -32,13 +37,27 @@ export const sprintService = {
     await api.delete(apiRoutes.WORKSPACES.SPRINT(workspaceId, sprintId));
   },
 
-  async startSprint(workspaceId: string, sprintId: string): Promise<Sprint> {
-    const res = await api.post(apiRoutes.WORKSPACES.SPRINT_START(workspaceId, sprintId));
+  async startSprint(
+    workspaceId: string,
+    sprintId: string,
+    input: StartSprintInput,
+  ): Promise<Sprint> {
+    const res = await api.post(
+      apiRoutes.WORKSPACES.SPRINT_START(workspaceId, sprintId),
+      input,
+    );
     return toSprint(normalize(res));
   },
 
-  async completeSprint(workspaceId: string, sprintId: string): Promise<Sprint> {
-    const res = await api.post(apiRoutes.WORKSPACES.SPRINT_COMPLETE(workspaceId, sprintId));
+  async completeSprint(
+    workspaceId: string,
+    sprintId: string,
+    input: { moveToSprintId?: string } = {},
+  ): Promise<Sprint> {
+    const res = await api.post(
+      apiRoutes.WORKSPACES.SPRINT_COMPLETE(workspaceId, sprintId),
+      input,
+    );
     return toSprint(normalize(res));
   },
 

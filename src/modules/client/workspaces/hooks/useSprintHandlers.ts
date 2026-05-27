@@ -31,9 +31,10 @@ export const useSprintHandlers = ({
     onMutate: async (input) => {
       await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
+      const tempId = `temp-${Date.now()}`;
       const tempSprint: Sprint = {
-        _id: `temp-${Date.now()}`,
-        id: `temp-${Date.now()}`,
+        _id: tempId,
+        id: tempId,
         workspaceId,
         name: input.name,
         goal: input.goal,
@@ -47,7 +48,7 @@ export const useSprintHandlers = ({
     },
     onError: (_err, _input, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error("Lỗi khi tạo sprint");
+      toast.error("Lỗi khi tạo sprint mới");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
@@ -63,7 +64,7 @@ export const useSprintHandlers = ({
     onMutate: async ({ sprintId, input }) => {
       await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
-      setSprints(sprints.map(s => s._id === sprintId ? { ...s, ...input } : s));
+      setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, ...input } : s)));
       return { previousSprints };
     },
     onError: (_err, _vars, context) => {
@@ -84,7 +85,7 @@ export const useSprintHandlers = ({
     onMutate: async (sprintId) => {
       await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
-      setSprints(sprints.filter(s => s._id !== sprintId));
+      setSprints(sprints.filter((s) => s._id !== sprintId));
       return { previousSprints };
     },
     onError: (_err, _id, context) => {
@@ -100,12 +101,12 @@ export const useSprintHandlers = ({
   });
 
   const startSprintMutation = useMutation({
-    mutationFn: (sprintId: string) =>
-      sprintService.startSprint(workspaceId, sprintId),
-    onMutate: async (sprintId) => {
+    mutationFn: ({ sprintId, input }: { sprintId: string; input: { startDate: string; endDate: string } }) =>
+      sprintService.startSprint(workspaceId, sprintId, input),
+    onMutate: async ({ sprintId }) => {
       await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
-      setSprints(sprints.map(s => s._id === sprintId ? { ...s, status: "active" as const } : s));
+      setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, status: "active" as const } : s)));
       return { previousSprints };
     },
     onError: (_err, _id, context) => {
@@ -127,7 +128,7 @@ export const useSprintHandlers = ({
     onMutate: async (sprintId) => {
       await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
-      setSprints(sprints.map(s => s._id === sprintId ? { ...s, status: "completed" as const } : s));
+      setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, status: "completed" as const } : s)));
       return { previousSprints };
     },
     onError: (_err, _id, context) => {
@@ -140,15 +141,14 @@ export const useSprintHandlers = ({
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onSuccess: (_data, sprintId) => {
-      // Mirror backend: incomplete tasks from this sprint go back to backlog
-      setIssues(prev =>
-        prev.map(issue =>
-          issue.sprintId === sprintId && issue.status?.toLowerCase() !== 'done'
+      setIssues((prev) =>
+        prev.map((issue) =>
+          issue.sprintId === sprintId && issue.status?.toLowerCase() !== "done"
             ? { ...issue, sprintId: null }
-            : issue
-        )
+            : issue,
+        ),
       );
-      toast.success("Sprint hoàn thành");
+      toast.success("Sprint đã hoàn thành");
     },
   });
 
@@ -168,6 +168,10 @@ export const useSprintHandlers = ({
   };
 
   const handleEditSprint = (sprint: Sprint) => {
+    if (sprint.status === "completed") {
+      toast.error("Sprint đã hoàn thành nên không thể chỉnh sửa");
+      return;
+    }
     setEditingSprint(sprint);
     setIsSprintModalOpen(true);
   };
@@ -177,7 +181,35 @@ export const useSprintHandlers = ({
   };
 
   const handleStartSprint = (sprintId: string) => {
-    startSprintMutation.mutate(sprintId);
+    const sprint = sprints.find((s) => s._id === sprintId);
+    if (!sprint) {
+      toast.error("Không tìm thấy sprint");
+      return;
+    }
+    if (sprint._id.startsWith("temp-")) {
+      toast.error("Sprint đang được tạo, vui lòng đợi đồng bộ");
+      return;
+    }
+    if (sprint.status !== "planning") {
+      toast.error("Chỉ sprint đang lên kế hoạch mới có thể bắt đầu");
+      return;
+    }
+    if (!sprint.startDate || !sprint.endDate) {
+      toast.error("Sprint thiếu ngày bắt đầu hoặc kết thúc");
+      return;
+    }
+    if (new Date(sprint.endDate) <= new Date(sprint.startDate)) {
+      toast.error("Ngày kết thúc phải sau ngày bắt đầu");
+      return;
+    }
+
+    startSprintMutation.mutate({
+      sprintId,
+      input: {
+        startDate: sprint.startDate,
+        endDate: sprint.endDate,
+      },
+    });
   };
 
   const handleCompleteSprint = (sprintId: string) => {

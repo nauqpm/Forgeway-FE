@@ -34,7 +34,7 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
     setError(null);
     setSuccess(false);
     try {
-      const response = await requestPasswordResetAPI({ email, resetMethod: "otp" });
+      const response = await requestPasswordResetAPI({ email });
       setSuccess(true);
       return response;
     } catch (err: unknown) {

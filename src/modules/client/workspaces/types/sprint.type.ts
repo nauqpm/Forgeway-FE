@@ -30,3 +30,8 @@ export interface UpdateSprintInput {
   endDate?: string;
   duration?: string;
 }
+
+export interface StartSprintInput {
+  startDate: string;
+  endDate: string;
+}
