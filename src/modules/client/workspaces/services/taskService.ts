@@ -1,6 +1,7 @@
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "../types/issue.type";
+import { TaskFilters } from "../types/filter.type";
 
 type TaskDto = {
   id: string;
@@ -141,94 +142,57 @@ const toUpdatePayload = (updates: Partial<Issue>) => ({
   sprintId: updates.sprintId || undefined,
 });
 
+export const buildTaskQuery = (filters?: TaskFilters) => {
+  if (!filters) return "";
+  const activeFilters = filters;
+
+  const params: string[] = [];
+  const addValue = (key: string, value?: string | number | boolean | null) => {
+    if (value === undefined || value === null || value === "" || value === false) return;
+    params.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+  };
+  const addArray = (key: string, value?: string | string[] | null) => {
+    const values = toArray(value).filter(Boolean);
+    if (values.length === 0) return;
+    params.push(`${encodeURIComponent(key)}=${values.map((item) => encodeURIComponent(item)).join(",")}`);
+  };
+  const normalizedStatus = toArray(activeFilters.status)
+    .map((status) => COLUMN_BY_STATUS[status] ?? normalizeValue(status))
+    .filter(Boolean) as string[];
+
+  addArray("status", normalizedStatus);
+  addValue("columnId", activeFilters.columnId);
+  addValue("sprintId", activeFilters.sprintId);
+  addArray("assigneeId", activeFilters.assigneeId);
+  addArray("reporterId", activeFilters.reporterId);
+  addArray("type", normalizeArray(activeFilters.type));
+  addArray("priority", normalizeArray(activeFilters.priority));
+  addValue("taskKey", activeFilters.taskKey);
+  addValue("search", activeFilters.search?.trim());
+  addValue("backlog", activeFilters.backlog === true ? "true" : undefined);
+  addValue("archived", activeFilters.archived === true ? "true" : undefined);
+  addValue("page", activeFilters.page);
+  addValue("limit", activeFilters.limit);
+
+  return params.length > 0 ? `?${params.join("&")}` : "";
+};
+
 export const taskService = {
+  async getBoardTasks(
+    workspaceId: string,
+    filters?: TaskFilters,
+  ): Promise<Issue[]> {
+    const response = await api.get(
+      `${apiRoutes.TASKS.BOARD(workspaceId)}${buildTaskQuery(filters)}`,
+    );
+    return normalizeResponseData<TaskDto[]>(response).map(toIssue);
+  },
+
   async listBoardTasks(
     workspaceId: string,
-    filters?: import("../types/filter.type").BoardTaskFilters,
+    filters?: TaskFilters,
   ): Promise<Issue[]> {
-    const params = new URLSearchParams();
-
-    const appendString = (key: string, value?: string | null) => {
-      if (!value) return;
-      params.append(key, value);
-    };
-
-    const appendBoolean = (key: string, value?: boolean) => {
-      if (value === true) {
-        params.append(key, "true");
-      }
-    };
-
-    const appendNumber = (key: string, value?: number) => {
-      if (value !== undefined && value !== null) {
-        params.append(key, String(value));
-      }
-    };
-
-    const appendStatus = (value?: string | string[] | null) => {
-      const normalized = toArray(value)
-        .map((status) => COLUMN_BY_STATUS[status] ?? normalizeValue(status))
-        .filter(Boolean) as string[];
-
-      if (normalized.length > 0) {
-        params.append("status", normalized.join(","));
-      }
-    };
-
-    const selectedTypes = normalizeArray(filters?.type as string | string[]);
-    const selectedPriorities = normalizeArray(filters?.priority as string | string[]);
-    const selectedAssignees = toArray(filters?.assigneeId as string | string[]);
-
-    if (filters) {
-      appendStatus(filters.status);
-
-      appendString("columnId", filters.columnId);
-      appendString("sprintId", filters.sprintId);
-      appendString("reporterId", Array.isArray(filters.reporterId) ? filters.reporterId[0] : filters.reporterId);
-
-      // Không gửi type / priority / assigneeId lên BE khi multi vì BE đang trả 400.
-      // Sẽ filter lại ở FE sau khi lấy data.
-
-      appendString("search", filters.search?.trim());
-
-      appendBoolean("backlog", filters.backlog);
-      appendBoolean("archived", filters.archived);
-
-      appendNumber("page", filters.page);
-      appendNumber("limit", filters.limit);
-    }
-
-    const queryString = params.toString();
-    const url = queryString
-      ? `${apiRoutes.TASKS.BOARD(workspaceId)}?${queryString}`
-      : apiRoutes.TASKS.BOARD(workspaceId);
-
-    const response = await api.get(url);
-    const tasks = normalizeResponseData<TaskDto[]>(response);
-
-    let issues = tasks.map(toIssue);
-
-    if (selectedTypes.length > 0) {
-      issues = issues.filter((issue) => {
-        const issueType = normalizeValue(issue.type);
-        return issueType ? selectedTypes.includes(issueType) : false;
-      });
-    }
-
-    if (selectedPriorities.length > 0) {
-      issues = issues.filter((issue) => {
-        const issuePriority = normalizeValue(issue.priority);
-        return issuePriority ? selectedPriorities.includes(issuePriority) : false;
-      });
-    }
-
-    if (selectedAssignees.length > 0) {
-      issues = issues.filter((issue) => {
-        return selectedAssignees.includes(issue.assignee);
-      });
-    }
-
-    return issues;
+    return taskService.getBoardTasks(workspaceId, filters);
   },
 
   async createBoardTask(

@@ -7,14 +7,15 @@ import Sidebar from "@/modules/admin/components/common/components/Sidebar";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
-import { Loader2, Menu, Search, Sun, Moon, Monitor, User, Settings, LogOut, Shield } from "lucide-react";
-import { parseJQL } from "@/utils/jqlParser";
-import { useRouter } from "next/navigation";
+import { Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut, Shield, Plus } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
+import JiraSearchDropdown from "@/modules/client/workspaces/components/JiraSearchDropdown";
+import { Filters } from "@/modules/client/workspaces/types/filter.type";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
-  const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspacesLoaded } = useWorkspaceStore();
+  const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspaces, workspacesLoaded } = useWorkspaceStore();
   const { theme, setTheme } = useTheme();
   const { hasAdminAccess } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -23,147 +24,46 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const [jqlQuery, setJqlQuery] = useState("");
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestionMode, setSuggestionMode] = useState<"keyword" | "value">("keyword");
-  const [suggestionKey, setSuggestionKey] = useState<string | null>(null);
-  const [highlightedIdx, setHighlightedIdx] = useState(0);
-  const [ghostText, setGhostText] = useState("");
-  const searchRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const pathname = usePathname();
+  const workspaceKey = pathname?.startsWith("/workspaces/") ? pathname.split("/")[2] : "";
+  const activeWorkspaceKey = workspaceKey || currentWorkspace?.key || currentWorkspace?.slug || "AL";
+  const [taskSearchFilters, setTaskSearchFilters] = useState<Filters>({
+    search: "",
+    assigneeId: null,
+    reporterId: null,
+    taskKey: null,
+    workspaceKey,
+    lastUpdated: null,
+    priority: null,
+    type: null,
+    assignees: [],
+    types: [],
+    statuses: [],
+    priorities: [],
+    backlog: false,
+    archived: false,
+  });
+  const [isTaskSearchReady, setIsTaskSearchReady] = useState(false);
 
-  const jqlSuggestions: Record<string, string[]> = {
-    status: ["To Do", "In Progress", "Done"],
-    priority: ["High", "Medium", "Low"],
-    assignee: ["me", "unassigned", "admin", "quanp"]
-  };
+  const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
+    .map((workspace) => ({
+      id: workspace._id,
+      name: workspace.name,
+      key: workspace.key || workspace.slug,
+    }))
+    .filter((workspace) => Boolean(workspace.key));
+  const searchAssignees = (currentWorkspace?.members ?? []).map((member) => {
+    const memberId =
+      typeof member.userId === "string"
+        ? member.userId
+        : member.userId._id || member.userId.id || "member";
 
-  const allKeywords = ["status:", "priority:", "assignee:"];
-
-  // Tính danh sách gợi ý hiện tại
-  const currentSuggestions: string[] = (() => {
-    if (suggestionMode === "value" && suggestionKey) return jqlSuggestions[suggestionKey] ?? [];
-    return allKeywords;
-  })();
-
-  const handleJqlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setJqlQuery(val);
-    setHighlightedIdx(0);
-
-    const lastWord = val.split(" ").pop() || "";
-
-    // Trường hợp 1: gõ xong keyword + ':' → hiện value suggestions
-    if (lastWord.endsWith(":")) {
-      const key = lastWord.slice(0, -1).toLowerCase();
-      if (jqlSuggestions[key]) {
-        setSuggestionKey(key);
-        setSuggestionMode("value");
-        setShowSuggestions(true);
-        setGhostText("");
-        return;
-      }
-    }
-
-    // Trường hợp 2: đang gõ giữa keyword → hiện keyword suggestions lọc theo prefix
-    if (lastWord && !lastWord.includes(":")) {
-      const matchedKws = allKeywords.filter(k => k.startsWith(lastWord.toLowerCase()));
-      if (matchedKws.length > 0) {
-        // Ghost text cho keyword khớp duy nhất
-        setGhostText(matchedKws.length === 1 ? matchedKws[0].slice(lastWord.length) : "");
-        setSuggestionMode("keyword");
-        setSuggestionKey(null);
-        setShowSuggestions(true);
-        return;
-      }
-    }
-
-    // Không khớp gì → ẩn dropdown
-    setShowSuggestions(false);
-    setGhostText("");
-    setSuggestionMode("keyword");
-  };
-
-  const handleSuggestionPick = (suggestion: string) => {
-    const words = jqlQuery.split(" ");
-    words.pop(); // bỏ từ đang gõ
-
-    let newQuery: string;
-    if (suggestionMode === "keyword") {
-      // Pick keyword (ví dụ: "status:") → chèn vào, chuyển sang gợi ý value
-      newQuery = [...words, suggestion].join(" ");
-      setJqlQuery(newQuery);
-      setGhostText("");
-      // Sau khi chèn keyword, tự động chuyển sang value suggestions
-      const key = suggestion.replace(":", "").toLowerCase();
-      if (jqlSuggestions[key]) {
-        setSuggestionKey(key);
-        setSuggestionMode("value");
-        setShowSuggestions(true);
-      } else {
-        setShowSuggestions(false);
-      }
-      setHighlightedIdx(0);
-      setTimeout(() => searchRef.current?.focus(), 0);
-      return;
-    }
-
-    // Pick value → hoàn chỉnh cặp key:value
-    const fmtVal = suggestion.includes(" ") ? `"${suggestion}"` : suggestion;
-    newQuery = [...words, `${suggestionKey}:${fmtVal} `].join(" ");
-    setJqlQuery(newQuery);
-    setShowSuggestions(false);
-    setSuggestionKey(null);
-    setSuggestionMode("keyword");
-    setHighlightedIdx(0);
-    setGhostText("");
-    console.log("[JQL Parsed]", parseJQL(newQuery));
-    setTimeout(() => searchRef.current?.focus(), 0);
-  };
-
-  // currentSuggestions đã được tính ở trên nhưng cần lọc theo prefix khi mode=keyword
-  const filteredSuggestions: string[] = (() => {
-    if (suggestionMode === "value") return currentSuggestions;
-    const lastWord = jqlQuery.split(" ").pop() || "";
-    return currentSuggestions.filter(k => k.startsWith(lastWord.toLowerCase()));
-  })();
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const suggestions = filteredSuggestions;
-
-    if (e.key === "Tab") {
-      e.preventDefault();
-      if (showSuggestions && suggestions.length > 0) {
-        // Tab cycle qua các mục, chưa pick
-        setHighlightedIdx(i => (i + 1) % suggestions.length);
-      } else if (ghostText) {
-        setJqlQuery(prev => prev + ghostText);
-        setGhostText("");
-      }
-      return;
-    }
-
-    if (e.key === "Enter") {
-      if (showSuggestions && suggestions.length > 0) {
-        e.preventDefault();
-        handleSuggestionPick(suggestions[highlightedIdx]);
-      }
-      return;
-    }
-
-    if (e.key === "ArrowDown" && showSuggestions) {
-      e.preventDefault();
-      setHighlightedIdx(i => (i + 1) % suggestions.length);
-    }
-    if (e.key === "ArrowUp" && showSuggestions) {
-      e.preventDefault();
-      setHighlightedIdx(i => (i - 1 + suggestions.length) % suggestions.length);
-    }
-    if (e.key === "Escape") {
-      setShowSuggestions(false);
-      setGhostText("");
-    }
-  };
+    return {
+      id: memberId,
+      name: memberId === user?.id ? user?.fullName || user?.email || "You" : memberId,
+    };
+  });
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -178,7 +78,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isAuthenticated && !workspacesLoaded) {
       api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
-        setWorkspaces(res.data);
+        setWorkspaces(res.data?.data ?? res.data);
       }).catch(() => {});
     }
   }, [isAuthenticated, workspacesLoaded, setWorkspaces]);
@@ -188,6 +88,69 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       router.replace("/login");
     }
   }, [isAuthenticated, isLoading, router]);
+
+  useEffect(() => {
+    if (!workspaceKey || typeof window === "undefined") {
+      setIsTaskSearchReady(false);
+      setTaskSearchFilters((prev) => ({ ...prev, workspaceKey }));
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const csv = (value: string | null) => value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
+    const label = (value: string) =>
+      value
+        .split(/[-_\s]+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ");
+
+    setTaskSearchFilters((prev) => ({
+      ...prev,
+      workspaceKey,
+      search: params.get("search") || "",
+      taskKey: params.get("taskKey"),
+      statuses: csv(params.get("status")).map((item) => {
+        if (item === "todo") return "To Do";
+        if (item === "inprogress") return "In Progress";
+        return label(item);
+      }),
+      types: csv(params.get("type")).map(label),
+      priorities: csv(params.get("priority")).map(label),
+      assignees: csv(params.get("assigneeId")),
+      reporterId: params.get("reporterId"),
+      backlog: params.get("backlog") === "true",
+      archived: params.get("archived") === "true",
+    }));
+    setIsTaskSearchReady(true);
+  }, [workspaceKey]);
+
+  useEffect(() => {
+    if (!workspaceKey || !isTaskSearchReady || typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const setOrDelete = (key: string, value?: string | null) => {
+      if (value) params.set(key, value);
+      else params.delete(key);
+    };
+    const normalize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "");
+
+    setOrDelete("search", taskSearchFilters.search.trim());
+    setOrDelete("taskKey", taskSearchFilters.taskKey);
+    setOrDelete("status", taskSearchFilters.statuses.map(normalize).join(","));
+    setOrDelete("type", taskSearchFilters.types.map(normalize).join(","));
+    setOrDelete("priority", taskSearchFilters.priorities.map(normalize).join(","));
+    setOrDelete("assigneeId", taskSearchFilters.assignees.join(","));
+    setOrDelete("reporterId", taskSearchFilters.reporterId);
+    if (taskSearchFilters.backlog) params.set("backlog", "true");
+    else params.delete("backlog");
+    if (taskSearchFilters.archived) params.set("archived", "true");
+    else params.delete("archived");
+
+    const query = params.toString();
+    window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
+    window.dispatchEvent(new CustomEvent("taskFiltersChanged", { detail: taskSearchFilters }));
+  }, [isTaskSearchReady, pathname, taskSearchFilters, workspaceKey]);
 
   if (isLoading) {
     return (
@@ -223,45 +186,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </button>
-            <div className="w-full max-w-[min(100%,72rem)] relative">
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 z-10" />
-              {/* Ghost text layer */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute left-9 top-1/2 -translate-y-1/2 text-sm text-gray-400 whitespace-pre select-none"
-              >
-                <span className="invisible">{jqlQuery}</span>
-                <span>{ghostText}</span>
-              </div>
-              <input
-                ref={searchRef}
-                type="text"
-                id="jql-search"
-                value={jqlQuery}
-                onChange={handleJqlChange}
-                onKeyDown={handleKeyDown}
-                onBlur={() => setTimeout(() => { setShowSuggestions(false); setGhostText(""); }, 150)}
-                placeholder='Tìm kiếm... (VD: status:"Done" priority:High)'
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white dark:focus:bg-gray-800 text-gray-900 dark:text-white transition relative z-[1]"
-                autoComplete="off"
+            <div className="hidden w-[clamp(520px,44vw,680px)] md:block">
+              <JiraSearchDropdown
+                filters={taskSearchFilters}
+                setFilters={setTaskSearchFilters}
+                projects={searchProjects}
+                assignees={searchAssignees}
+                workspaceKey={activeWorkspaceKey}
+                currentUserId={user?.id}
+                currentUserName={user?.fullName || user?.email}
+                className=""
+                inputClassName="h-10 text-sm"
               />
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <ul className="absolute top-full left-0 mt-1 w-52 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-lg overflow-hidden z-50 py-1">
-                  {filteredSuggestions.map((opt, idx) => (
-                    <li
-                      key={opt}
-                      onMouseDown={() => handleSuggestionPick(opt)}
-                      className={`px-4 py-2 text-sm cursor-pointer transition-colors ${
-                        idx === highlightedIdx
-                          ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-medium"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-                      }`}
-                    >
-                      {opt}
-                    </li>
-                  ))}
-                </ul>
-              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -362,3 +298,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+
