@@ -55,18 +55,33 @@ const matchesLastUpdated = (updatedAt: string | undefined, lastUpdated?: string 
   if (!lastUpdated || lastUpdated === "Any time") return true;
   if (!updatedAt) return false;
 
-  const updated = new Date(updatedAt).getTime();
-  const now = Date.now();
-  const oneDay = 24 * 60 * 60 * 1000;
+  const updated = new Date(updatedAt);
+  if (Number.isNaN(updated.getTime())) return false;
 
-  if (lastUpdated === "Today") return new Date(updatedAt).toDateString() === new Date().toDateString();
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+  const startOfRange = (daysAgo: number) => {
+    const start = new Date(startOfToday);
+    start.setDate(start.getDate() - daysAgo);
+    return start;
+  };
+
+  if (lastUpdated === "Today") return updated >= startOfToday && updated <= now;
   if (lastUpdated === "Yesterday") {
-    const yesterday = new Date(now - oneDay);
-    return new Date(updatedAt).toDateString() === yesterday.toDateString();
+    return updated >= startOfYesterday && updated < startOfToday;
   }
-  if (lastUpdated === "Past 7 days") return updated >= now - 7 * oneDay;
-  if (lastUpdated === "Past 30 days") return updated >= now - 30 * oneDay;
-  if (lastUpdated === "Past year") return updated >= now - 365 * oneDay;
+  if (lastUpdated === "Past 7 days") return updated >= startOfRange(6) && updated <= now;
+  if (lastUpdated === "Past 30 days") return updated >= startOfRange(29) && updated <= now;
+  if (lastUpdated === "Past year") {
+    const start = new Date(startOfToday);
+    start.setFullYear(start.getFullYear() - 1);
+    return updated >= start && updated <= now;
+  }
 
   return true;
 };
@@ -158,7 +173,7 @@ export default function JiraSearchDropdown({
             onFocus={() => setIsOpen(true)}
             onClick={() => setIsOpen(true)}
             onChange={(event) => handleSearchChange(event.target.value)}
-            placeholder="Search Jira"
+            placeholder="Search"
             className={`${inputClassName} w-full rounded-[10px] border border-gray-300 bg-white pl-10 pr-11 font-medium text-gray-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-500`}
           />
           <button

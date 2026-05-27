@@ -9,6 +9,14 @@ import { Suspense } from "react";
 export const   metadata = {
     title: "AL-TASK — Project Management for Modern Teams",
     description: "AL-TASK is a Jira + Confluence alternative. Manage projects, track tasks, plan sprints, and store team knowledge — all in one place.",
+    icons: {
+      icon: [
+        { url: "/favicon.ico?v=2", sizes: "any" },
+        { url: "/automationland-tab-logo.png?v=2", type: "image/png", sizes: "512x512" },
+      ],
+      shortcut: "/favicon.ico?v=2",
+      apple: "/automationland-tab-logo.png?v=2",
+    },
     openGraph: {
       title: "AL-TASK",
       type: "website",
@@ -25,7 +33,9 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <head>
-        <link rel="icon" href="/logo-yaviet/logo 1.png" sizes="any" />
+        <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
+        <link rel="icon" type="image/png" href="/automationland-tab-logo.png?v=2" sizes="512x512" />
+        <link rel="shortcut icon" href="/favicon.ico?v=2" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
