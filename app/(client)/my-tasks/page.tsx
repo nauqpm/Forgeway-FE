@@ -121,8 +121,8 @@ export default function MyTasksPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{tasks.length} tasks assigned to you</p>
         </div>
-        <Link href="/projects" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors">
-          <Plus className="w-4 h-4" /> Create Task
+        <Link href="/workspaces" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors">
+          Go to Workspaces
         </Link>
       </div>
 
@@ -191,8 +191,8 @@ export default function MyTasksPage() {
           </div>
           <p className="text-gray-500 dark:text-gray-400 font-medium text-lg">No tasks assigned</p>
           <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Tasks you create or are assigned to will appear here</p>
-          <Link href="/projects" className="mt-4 inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors">
-            <Plus className="w-4 h-4" /> Go to Projects
+          <Link href="/workspaces" className="mt-4 inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors">
+            <Plus className="w-4 h-4" /> Go to Workspaces
           </Link>
         </div>
       ) : groupBy === "none" ? (

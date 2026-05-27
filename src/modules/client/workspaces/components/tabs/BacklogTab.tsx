@@ -409,33 +409,35 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     </div>
                   )}
                 </Droppable>
-                <div className="px-3 pb-3 flex flex-col gap-2">
-                  <input
-                    type="text"
-                    placeholder="Tạo task nhanh... (Enter để lưu)"
-                    className="w-full py-1.5 px-3 text-sm bg-transparent border border-dashed border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 placeholder-gray-400 focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-400 outline-none transition-all"
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                        const title = e.currentTarget.value.trim();
-                        e.currentTarget.value = "";
-                        if (canCreateTask) handleQuickCreateTask(title, sprint.id);
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      setNewIssueForm({
-                        ...newIssueForm,
-                        sprintId: sprint.id,
-                      });
-                      setShowCreateIssue(true);
-                    }}
-                    disabled={!canCreateTask}
-                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 disabled:opacity-50 disabled:hover:bg-transparent p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors w-fit"
-                  >
-                    <Plus className="w-4 h-4" /> Create issue (full form)
-                  </button>
-                </div>
+                {sprint.status !== "completed" && (
+                  <div className="px-3 pb-3 flex flex-col gap-2">
+                    <input
+                      type="text"
+                      placeholder="Tạo task nhanh... (Enter để lưu)"
+                      className="w-full py-1.5 px-3 text-sm bg-transparent border border-dashed border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 placeholder-gray-400 focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-400 outline-none transition-all"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                          const title = e.currentTarget.value.trim();
+                          e.currentTarget.value = "";
+                          if (canCreateTask) handleQuickCreateTask(title, sprint.id);
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => {
+                        setNewIssueForm({
+                          ...newIssueForm,
+                          sprintId: sprint.id,
+                        });
+                        setShowCreateIssue(true);
+                      }}
+                      disabled={!canCreateTask}
+                      className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 disabled:opacity-50 disabled:hover:bg-transparent p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors w-fit"
+                    >
+                      <Plus className="w-4 h-4" /> Create issue (full form)
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

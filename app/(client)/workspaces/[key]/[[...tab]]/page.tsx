@@ -7,6 +7,8 @@ import IssueDetailModal from "@/modules/client/workspaces/components/IssueDetail
 import TaskDetailDrawer from "@/modules/client/workspaces/components/TaskDetailDrawer";
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
 import SprintModal from "@/modules/client/workspaces/components/SprintModal";
+import StartSprintModal from "@/modules/client/workspaces/components/StartSprintModal";
+import CompleteSprintModal from "@/modules/client/workspaces/components/CompleteSprintModal";
 import BulkActionBar from "@/modules/admin/components/common/components/BulkActionBar";
 import { useQuery } from "@tanstack/react-query";
 import { boardService } from "@/modules/client/workspaces/services/boardService";
@@ -208,7 +210,15 @@ export default function WorkspaceDetailPage({
     handleEditSprint,
     handleDeleteSprint,
     handleStartSprint,
+    handleConfirmStartSprint,
     handleCompleteSprint,
+    handleConfirmCompleteSprint,
+    startSprintTarget,
+    setStartSprintTarget,
+    completeSprintTarget,
+    setCompleteSprintTarget,
+    isStarting,
+    isCompleting,
   } = useSprintHandlers({
     workspaceId: workspaceApiId ?? "",
     sprints,
@@ -354,7 +364,7 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result : any) =>
+            handleBoardDragEnd: (result: any) =>
               canMoveTask
                 ? handleBoardDragEnd({
                     result,
@@ -369,7 +379,7 @@ export default function WorkspaceDetailPage({
                       }
                     },
                 })
-              : undefined,
+                : undefined,
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -419,6 +429,8 @@ export default function WorkspaceDetailPage({
             handleEditSprint,
             handleDeleteSprint,
             handleQuickCreateTask,
+            isStarting,
+            isCompleting,
           },
           permissions: {
             canCreateTask,
@@ -479,6 +491,28 @@ export default function WorkspaceDetailPage({
         initialData={editingSprint}
         sprintCount={sprints.length}
       />
+
+      {/* Start Sprint Modal */}
+      {startSprintTarget && (
+        <StartSprintModal
+          isOpen={!!startSprintTarget}
+          onClose={() => setStartSprintTarget(null)}
+          onConfirm={handleConfirmStartSprint}
+          sprint={startSprintTarget}
+        />
+      )}
+
+      {/* Complete Sprint Modal */}
+      {completeSprintTarget && (
+        <CompleteSprintModal
+          isOpen={!!completeSprintTarget}
+          onClose={() => setCompleteSprintTarget(null)}
+          onConfirm={handleConfirmCompleteSprint}
+          sprint={completeSprintTarget}
+          sprints={sprints}
+          workspaceId={workspace._id}
+        />
+      )}
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
       {selectedIssue &&

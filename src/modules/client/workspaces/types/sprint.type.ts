@@ -18,8 +18,8 @@ export interface Sprint {
 export interface CreateSprintInput {
   name: string;
   goal?: string;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
   duration?: string;
 }
 
@@ -34,4 +34,14 @@ export interface UpdateSprintInput {
 export interface StartSprintInput {
   startDate: string;
   endDate: string;
+}
+
+export interface CompleteSprintResult {
+  _id: string;
+  id: string;
+  workspaceId: string;
+  name: string;
+  status: 'completed';
+  completedAt: string;
+  incompleteTasksMovedTo?: string;
 }

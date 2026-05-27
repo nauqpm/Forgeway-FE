@@ -8,11 +8,12 @@ import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { ArrowLeft, User, Tag, Calendar, Flag, MessageSquare, Paperclip, Send, Edit3 } from "lucide-react";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 interface Task {
   _id: string; key: string; title: string; description?: string; type: string;
   status: string; priority: string; assigneeId?: any; reporterId?: any;
-  labels: string[]; dueDate?: string; projectId?: any; storyPoints?: number;
+  labels: string[]; dueDate?: string; projectId?: any; workspaceId?: string; storyPoints?: number;
   attachments: any[]; createdAt: string; updatedAt: string;
 }
 interface Comment { _id: string; content: string; authorId: any; createdAt: string; }
@@ -30,6 +31,7 @@ export default function TaskDetailPage() {
   const params = useParams();
   const taskId = params.id as string;
   const { user } = useAuth();
+  const { workspaces } = useWorkspaceStore();
   const [task, setTask] = useState<Task | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -91,17 +93,24 @@ export default function TaskDetailPage() {
 
   const priority = priorityOptions.find(p => p.value === task.priority) || priorityOptions[2];
 
+  const workspace = task ? workspaces.find(w => w._id === task.workspaceId) : null;
+  const backHref = workspace ? `/workspaces/${workspace.key}` : "/workspaces";
+
   return (
     <div className="app-page-wide">
       <div className="flex items-start gap-4 mb-6">
-        <Link href="/projects" className="mt-1 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
+        <Link href={backHref} className="mt-1 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
             <span className={`px-2 py-0.5 text-xs rounded text-white ${typeColors[task.type] || "bg-gray-400"}`}>{task.type}</span>
             <span className="text-sm text-gray-500 dark:text-gray-400">{task.key}</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{task.title}</h1>
-          {task.projectId?.name && <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">in <Link href={`/projects/${task.projectId._id}`} className="text-indigo-600 hover:underline">{task.projectId.name}</Link></p>}
+          {workspace && (
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              in <Link href={`/workspaces/${workspace.key}`} className="text-indigo-600 hover:underline">{workspace.name}</Link>
+            </p>
+          )}
         </div>
       </div>
 

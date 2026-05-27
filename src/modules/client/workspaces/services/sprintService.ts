@@ -5,6 +5,7 @@ import {
   CreateSprintInput,
   UpdateSprintInput,
   StartSprintInput,
+  CompleteSprintResult,
 } from "../types/sprint.type";
 
 const normalize = <T>(payload: any): T =>
@@ -53,12 +54,34 @@ export const sprintService = {
     workspaceId: string,
     sprintId: string,
     input: { moveToSprintId?: string } = {},
-  ): Promise<Sprint> {
+  ): Promise<CompleteSprintResult> {
     const res = await api.post(
       apiRoutes.WORKSPACES.SPRINT_COMPLETE(workspaceId, sprintId),
       input,
     );
-    return toSprint(normalize(res));
+    const data = normalize<any>(res);
+    return {
+      ...data,
+      _id: data._id,
+      id: data._id,
+    };
+  },
+
+  async getCompleteSprintPreview(
+    workspaceId: string,
+    sprintId: string,
+  ): Promise<{
+    sprintId: string;
+    sprintName: string;
+    totalTasks: number;
+    completedTasks: number;
+    incompleteTasks: number;
+    incompleteTaskList: any[];
+  }> {
+    const res = await api.get(
+      apiRoutes.WORKSPACES.SPRINT_COMPLETE_PREVIEW(workspaceId, sprintId),
+    );
+    return normalize(res);
   },
 
   async getActiveSprint(workspaceId: string): Promise<Sprint | null> {

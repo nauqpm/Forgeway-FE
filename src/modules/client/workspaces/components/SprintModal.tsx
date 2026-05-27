@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { toast } from "react-hot-toast";
 
 interface SprintModalProps {
   isOpen: boolean;
@@ -46,6 +47,14 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
 
   const handleDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const dur = e.target.value;
+    if (dur === 'custom') {
+      setFormData({
+        ...formData,
+        duration: dur,
+      });
+      return;
+    }
+
     let days = 0;
     if (dur === '1 week') days = 7;
     if (dur === '2 weeks') days = 14;
@@ -62,7 +71,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
       ...formData,
       duration: dur,
       startDate: start.toISOString().split('T')[0],
-      endDate: end.toISOString().split('T')[0]
+      endDate: days > 0 ? end.toISOString().split('T')[0] : formData.endDate
     });
   };
 
@@ -90,23 +99,37 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { duration, ...sprintData } = formData;
+
+    if ((formData.startDate && !formData.endDate) || (!formData.startDate && formData.endDate)) {
+      toast.error("Vui lòng nhập cả ngày bắt đầu và kết thúc, hoặc để trống cả hai");
+      return;
+    }
+
+    if (formData.startDate && formData.endDate && new Date(formData.endDate) <= new Date(formData.startDate)) {
+      toast.error("Ngày kết thúc phải sau ngày bắt đầu");
+      return;
+    }
     
-    // Both active and completed sprints restrict date changes
-    const isRestricted = initialData?.status === 'active' || initialData?.status === 'completed';
+    const cleanData = {
+      ...formData,
+      startDate: formData.startDate || undefined,
+      endDate: formData.endDate || undefined,
+    };
+    
+    // Only active sprints restrict date changes
+    const isRestricted = initialData?.status === 'active';
 
     if (isRestricted) {
-      onSave({ name: sprintData.name, goal: sprintData.goal });
+      onSave({ name: formData.name, goal: formData.goal });
     } else {
-      onSave(sprintData);
+      onSave(cleanData);
     }
     onClose();
   };
 
   if (!isOpen) return null;
 
-  const isRestricted = initialData?.status === 'active' || initialData?.status === 'completed';
+  const isRestricted = initialData?.status === 'active';
 
   return (
     <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -123,13 +146,6 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
           <div className="px-6 pt-4 pb-0">
             <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
               Sprint đang chạy — chỉ có thể sửa tên và mục tiêu.
-            </p>
-          </div>
-        )}
-        {initialData?.status === 'completed' && (
-          <div className="px-6 pt-4 pb-0">
-            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
-              Sprint đã kết thúc — chỉ có thể sửa tên và mục tiêu.
             </p>
           </div>
         )}
@@ -163,8 +179,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Ngày bắt đầu</label>
               <input
                 type="date"
-                required
-                disabled={initialData?.status === 'active'}
+                disabled={isRestricted}
                 value={formData.startDate}
                 onChange={handleStartDateChange}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -174,8 +189,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Ngày kết thúc</label>
               <input
                 type="date"
-                required
-                disabled={initialData?.status === 'active'}
+                disabled={isRestricted}
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value, duration: 'custom' })}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"

@@ -27,11 +27,11 @@ export const apiRoutes = {
         BOARD_COLUMNS: (workspaceId: string) => `/workspaces/${workspaceId}/board/columns`,
         BOARD_COLUMN: (workspaceId: string, columnId: string) => `/workspaces/${workspaceId}/board/columns/${columnId}`,
         BOARD_COLUMN_MOVE: (workspaceId: string, columnId: string) => `/workspaces/${workspaceId}/board/columns/${columnId}/move`,
-        // Sprint routes
         SPRINTS: (workspaceId: string) => `/workspaces/${workspaceId}/sprints`,
         SPRINT: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/sprints/${sprintId}`,
         SPRINT_START: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/sprints/${sprintId}/start`,
         SPRINT_COMPLETE: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/sprints/${sprintId}/complete`,
+        SPRINT_COMPLETE_PREVIEW: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/sprints/${sprintId}/complete-preview`,
         ACTIVE_SPRINT: (workspaceId: string) => `/workspaces/${workspaceId}/active-sprint`,
         BACKLOG: (workspaceId: string) => `/workspaces/${workspaceId}/backlog`,
     },
