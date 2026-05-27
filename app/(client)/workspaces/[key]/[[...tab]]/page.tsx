@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, use, useMemo, useRef } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import IssueDetailModal from "@/modules/client/workspaces/components/IssueDetailModal";
@@ -22,8 +21,6 @@ import {
 } from "@/modules/client/workspaces/types/workspace.type";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import { Sprint } from "@/modules/client/workspaces/types/sprint.type";
-import { Filters } from "@/modules/client/workspaces/types/filter.type";
-
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAssignees } from "@/modules/client/workspaces/hooks/useAssignees";
@@ -40,6 +37,7 @@ import { useSprintHandlers } from "@/modules/client/workspaces/hooks/useSprintHa
 import { useColumnHandlers } from "@/modules/client/workspaces/hooks/useColumnHandlers";
 import { useSelectionHandlers } from "@/modules/client/workspaces/hooks/useSelectionHandlers";
 import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
+import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
@@ -100,58 +98,7 @@ export default function WorkspaceDetailPage({
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-
-  const [filters, setFilters] = useState<Filters>(() => {
-    return {
-      search: searchParams?.get("search") || "",
-      assigneeId: null,
-      reporterId: null,
-      priority: null,
-      type: null,
-      assignees: searchParams?.get("assignees")?.split(",").filter(Boolean) || [],
-      types: searchParams?.get("types")?.split(",").filter(Boolean) || [],
-      statuses: searchParams?.get("statuses")?.split(",").filter(Boolean) || [],
-      priorities: searchParams?.get("priorities")?.split(",").filter(Boolean) || [],
-      backlog: searchParams?.get("backlog") === "true",
-      archived: searchParams?.get("archived") === "true",
-    };
-  });
-
-  // Sync to URL silently
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    
-    if (filters.search) params.set("search", filters.search);
-    else params.delete("search");
-    
-    if (filters.assignees.length > 0) params.set("assignees", filters.assignees.join(","));
-    else params.delete("assignees");
-    
-    if (filters.types.length > 0) params.set("types", filters.types.join(","));
-    else params.delete("types");
-    
-    if (filters.statuses.length > 0) params.set("statuses", filters.statuses.join(","));
-    else params.delete("statuses");
-    
-    if (filters.priorities.length > 0) params.set("priorities", filters.priorities.join(","));
-    else params.delete("priorities");
-    
-    if (filters.backlog) params.set("backlog", "true");
-    else params.delete("backlog");
-    
-    if (filters.archived) params.set("archived", "true");
-    else params.delete("archived");
-    
-    const query = params.toString();
-    const newUrl = query ? `${pathname}?${query}` : pathname;
-    
-    if (window.location.pathname + window.location.search !== newUrl) {
-      window.history.replaceState(null, "", newUrl);
-    }
-  }, [filters, pathname]);
+  const { filters, setFilters, taskFilters } = useTaskFilters(workspaceKey);
   const [density, setDensity] = useState<"default" | "compact">("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -180,8 +127,8 @@ export default function WorkspaceDetailPage({
     error: tasksError,
     isFetching: isTasksFetching,
   } = useQuery({
-    queryKey: ["tasks", workspaceKey],
-    queryFn: () => taskService.listBoardTasks(workspaceKey),
+    queryKey: ["tasks", workspaceKey, taskFilters],
+    queryFn: () => taskService.getBoardTasks(workspaceKey, taskFilters),
     enabled: !!workspaceKey,
     staleTime: 30_000,
   });
