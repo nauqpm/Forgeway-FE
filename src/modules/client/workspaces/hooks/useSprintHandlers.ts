@@ -1,8 +1,17 @@
-﻿import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { sprintService } from "../services/sprintService";
 import { Sprint, CreateSprintInput, UpdateSprintInput } from "../types/sprint.type";
 import { Issue } from "../types/issue.type";
 import { toast } from "react-hot-toast";
+
+const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  const err = error as { response?: { data?: { message?: string | string[] } } };
+  const message = err?.response?.data?.message;
+  if (Array.isArray(message) && message.length > 0) return message.join(", ");
+  if (typeof message === "string" && message.trim()) return message;
+  return fallback;
+};
 
 interface UseSprintHandlersProps {
   workspaceKey: string;
@@ -24,6 +33,8 @@ export const useSprintHandlers = ({
   setIssues,
 }: UseSprintHandlersProps) => {
   const queryClient = useQueryClient();
+  const [startSprintTarget, setStartSprintTarget] = useState<Sprint | null>(null);
+  const [completeSprintTarget, setCompleteSprintTarget] = useState<Sprint | null>(null);
 
   const createSprintMutation = useMutation({
     mutationFn: (input: CreateSprintInput) =>
@@ -46,9 +57,9 @@ export const useSprintHandlers = ({
       setSprints([...sprints, tempSprint]);
       return { previousSprints };
     },
-    onError: (_err, _input, context) => {
+    onError: (err, _input, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error("Lỗi khi tạo sprint mới");
+      toast.error(getApiErrorMessage(err, "Lỗi khi tạo sprint mới"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
@@ -67,9 +78,9 @@ export const useSprintHandlers = ({
       setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, ...input } : s)));
       return { previousSprints };
     },
-    onError: (_err, _vars, context) => {
+    onError: (err, _vars, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error("Lỗi khi cập nhật sprint");
+      toast.error(getApiErrorMessage(err, "Lỗi khi cập nhật sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
@@ -88,9 +99,9 @@ export const useSprintHandlers = ({
       setSprints(sprints.filter((s) => s._id !== sprintId));
       return { previousSprints };
     },
-    onError: (_err, _id, context) => {
+    onError: (err, _id, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error("Lỗi khi xóa sprint");
+      toast.error(getApiErrorMessage(err, "Lỗi khi xóa sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
@@ -109,9 +120,9 @@ export const useSprintHandlers = ({
       setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, status: "active" as const } : s)));
       return { previousSprints };
     },
-    onError: (_err, _id, context) => {
+    onError: (err, _id, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error("Lỗi khi bắt đầu sprint");
+      toast.error(getApiErrorMessage(err, "Lỗi khi bắt đầu sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
@@ -123,31 +134,24 @@ export const useSprintHandlers = ({
   });
 
   const completeSprintMutation = useMutation({
-    mutationFn: (sprintId: string) =>
-      sprintService.completeSprint(workspaceKey, sprintId),
-    onMutate: async (sprintId) => {
+    mutationFn: ({ sprintId, input }: { sprintId: string; input?: { moveToSprintId?: string } }) =>
+      sprintService.completeSprint(workspaceKey, sprintId, input),
+    onMutate: async ({ sprintId }) => {
       await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
       const previousSprints = sprints;
       setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, status: "completed" as const } : s)));
       return { previousSprints };
     },
-    onError: (_err, _id, context) => {
+    onError: (err, _id, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error("Lỗi khi hoàn thành sprint");
+      toast.error(getApiErrorMessage(err, "Lỗi khi hoàn thành sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
       queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
     },
-    onSuccess: (_data, sprintId) => {
-      setIssues((prev) =>
-        prev.map((issue) =>
-          issue.sprintId === sprintId && issue.status?.toLowerCase() !== "done"
-            ? { ...issue, sprintId: null }
-            : issue,
-        ),
-      );
+    onSuccess: () => {
       toast.success("Sprint đã hoàn thành");
     },
   });
@@ -195,7 +199,7 @@ export const useSprintHandlers = ({
       return;
     }
     if (!sprint.startDate || !sprint.endDate) {
-      toast.error("Sprint thiếu ngày bắt đầu hoặc kết thúc");
+      setStartSprintTarget(sprint);
       return;
     }
     if (new Date(sprint.endDate) <= new Date(sprint.startDate)) {
@@ -212,8 +216,34 @@ export const useSprintHandlers = ({
     });
   };
 
+  const handleConfirmStartSprint = (startDate: string, endDate: string) => {
+    if (!startSprintTarget) return;
+    startSprintMutation.mutate({
+      sprintId: startSprintTarget._id,
+      input: {
+        startDate,
+        endDate,
+      },
+    });
+    setStartSprintTarget(null);
+  };
+
   const handleCompleteSprint = (sprintId: string) => {
-    completeSprintMutation.mutate(sprintId);
+    const sprint = sprints.find((s) => s._id === sprintId);
+    if (!sprint) {
+      toast.error("Không tìm thấy sprint");
+      return;
+    }
+    setCompleteSprintTarget(sprint);
+  };
+
+  const handleConfirmCompleteSprint = (moveToSprintId?: string) => {
+    if (!completeSprintTarget) return;
+    completeSprintMutation.mutate({
+      sprintId: completeSprintTarget._id,
+      input: { moveToSprintId },
+    });
+    setCompleteSprintTarget(null);
   };
 
   return {
@@ -222,7 +252,13 @@ export const useSprintHandlers = ({
     handleEditSprint,
     handleDeleteSprint,
     handleStartSprint,
+    handleConfirmStartSprint,
     handleCompleteSprint,
+    handleConfirmCompleteSprint,
+    startSprintTarget,
+    setStartSprintTarget,
+    completeSprintTarget,
+    setCompleteSprintTarget,
     isStarting: startSprintMutation.isPending,
     isCompleting: completeSprintMutation.isPending,
   };

@@ -41,13 +41,19 @@ export const filterIssues = (
         ? filters.statuses.includes(issue.status)
         : true;
 
+    const matchPriorities =
+      filters.priorities.length > 0
+        ? filters.priorities.includes(issue.priority)
+        : true;
+
     return (
       matchSearch &&
       matchAssigneeQuick &&
       matchPriorityQuick &&
       matchAssignees &&
       matchTypes &&
-      matchStatuses
+      matchStatuses &&
+      matchPriorities
     );
   });
 };

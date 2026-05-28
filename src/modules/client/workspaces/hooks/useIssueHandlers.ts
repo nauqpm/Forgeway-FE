@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
@@ -9,6 +10,7 @@ interface CreateIssueForm {
   priority: string;
   status: string;
   sprintId: string | null;
+  assigneeId: string;
 }
 
 interface UseIssueHandlersProps {
@@ -42,16 +44,23 @@ export const useIssueHandlers = ({
   setSelectedIssue,
 }: UseIssueHandlersProps) => {
   const queryClient = useQueryClient();
+<<<<<<< HEAD
+=======
+
+>>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
   const updateIssueDirectly = (
     id: string,
     updates: Partial<Issue>
   ) => {
+<<<<<<< HEAD
     const existingIssue = issues.find((issue) => issue.id === id);
     if (!existingIssue) {
       toast.error("Không tìm thấy task");
       return;
     }
 
+=======
+>>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
     setIssues(
       issues.map((i) =>
         i.id === id
@@ -70,29 +79,40 @@ export const useIssueHandlers = ({
   ) => {
     e.preventDefault();
 
-    if (!newIssueForm.title.trim()) return;
+    if (!newIssueForm.title.trim() || isCreatingRef.current) return;
 
-    const issue = await taskService.createBoardTask(workspaceKey, newIssueForm);
-    setIssues([...issues, issue]);
-    setShowCreateIssue(false);
-    setNewIssueForm({
-      title: "",
-      type: "Task",
-      priority: "Medium",
-      status: "To Do",
-      sprintId: null,
-    });
-    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+    isCreatingRef.current = true;
+    try {
+      const issue = await taskService.createBoardTask(workspaceKey, newIssueForm);
+      setIssues((current) => [...current, issue]);
+      setShowCreateIssue(false);
+      setNewIssueForm({
+        title: "",
+        type: "Task",
+        priority: "Medium",
+        status: "To Do",
+        sprintId: null,
+        assigneeId: "",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Khong tao duoc issue");
+    } finally {
+      isCreatingRef.current = false;
+    }
   };
 
   const handleUpdateIssue = async (
     updatedIssue: Issue
   ) => {
+<<<<<<< HEAD
     if (!updatedIssue.id) {
       toast.error("Không tìm thấy task ID");
       return;
     }
 
+=======
+>>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
     const savedIssue = await taskService.updateBoardTask(
       workspaceKey,
       updatedIssue.id,
@@ -122,7 +142,8 @@ export const useIssueHandlers = ({
   };
 
   const handleQuickCreateTask = async (title: string, sprintId: string | null = null) => {
-    if (!title.trim()) return;
+    if (!title.trim() || isCreatingRef.current) return;
+    isCreatingRef.current = true;
     try {
       const issue = await taskService.createBoardTask(workspaceKey, {
         title: title.trim(),
@@ -133,8 +154,10 @@ export const useIssueHandlers = ({
       });
       setIssues(prev => [...prev, issue]);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
-    } catch {
-      toast.error("Lỗi khi tạo task");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Loi khi tao task");
+    } finally {
+      isCreatingRef.current = false;
     }
   };
 

@@ -59,6 +59,12 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
         List
       </button>
       <button
+        onClick={() => setActiveTab("archive")}
+        className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "archive" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+      >
+        Archive
+      </button>
+      <button
         onClick={() => setActiveTab("pages")}
         className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "pages" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
       >

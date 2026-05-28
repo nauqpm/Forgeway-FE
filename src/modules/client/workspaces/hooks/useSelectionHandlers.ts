@@ -16,6 +16,10 @@ export const useSelectionHandlers = ({
   setIssues,
   setSelectedTaskIds,
 }: Props) => {
+<<<<<<< HEAD
+=======
+
+>>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
   const toggleTaskSelection = (taskId: string, e?: React.ChangeEvent) => {
     if (e) e.stopPropagation();
     setSelectedTaskIds((prev) =>
@@ -38,7 +42,11 @@ export const useSelectionHandlers = ({
   const handleBulkStatusChange = (newStatus: string) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, status: newStatus } : i));
     selectedTaskIds.forEach((taskId) => {
+<<<<<<< HEAD
       taskService.updateBoardTask(workspaceKey, taskId, { status: newStatus } as any).catch(() => {});
+=======
+      taskService.updateBoardTask(workspaceKey, taskId, { status: newStatus } as any).catch(() => { });
+>>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
     });
     setSelectedTaskIds([]);
   };
@@ -46,7 +54,11 @@ export const useSelectionHandlers = ({
   const handleBulkMoveSprint = (sprintId: string | null) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, sprintId } : i));
     selectedTaskIds.forEach((taskId) => {
+<<<<<<< HEAD
       taskService.updateBoardTask(workspaceKey, taskId, { sprintId } as any).catch(() => {});
+=======
+      taskService.updateBoardTask(workspaceKey, taskId, { sprintId } as any).catch(() => { });
+>>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
     });
     setSelectedTaskIds([]);
   };
@@ -56,7 +68,11 @@ export const useSelectionHandlers = ({
     setIssues(issues.filter((i) => !ids.includes(i.id)));
     setSelectedTaskIds([]);
     ids.forEach((taskId) => {
+<<<<<<< HEAD
       taskService.deleteBoardTask(workspaceKey, taskId).catch(() => {});
+=======
+      taskService.deleteBoardTask(workspaceKey, taskId).catch(() => { });
+>>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
     });
   };
 
