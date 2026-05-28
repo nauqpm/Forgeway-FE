@@ -31,6 +31,7 @@ export type WorkspaceTab =
   | "timeline"
   | "calendar"
   | "list"
+  | "archive"
   | "pages";
 
 export const getWorkspaceTemplate = (workspace: Workspace): "kanban" | "scrum" =>

@@ -20,6 +20,15 @@ type TaskDto = {
   dueDate?: string;
   createdAt?: string;
   updatedAt?: string;
+  isArchived?: boolean;
+  archivedAt?: string | null;
+  archivedBy?: string | null;
+  archivedByUser?: {
+    id?: string;
+    fullName?: string;
+    email?: string;
+    avatar?: string;
+  } | null;
 };
 
 type CreateTaskInput = {
@@ -119,6 +128,10 @@ const toIssue = (task: TaskDto): Issue => {
     storyPoints: task.storyPoints ?? 0,
     startDate: task.createdAt?.split("T")[0],
     endDate: task.dueDate?.split("T")[0],
+    isArchived: task.isArchived,
+    archivedAt: task.archivedAt ?? null,
+    archivedBy: task.archivedBy ?? null,
+    archivedByUser: task.archivedByUser ?? null,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
   };
@@ -243,11 +256,33 @@ export const taskService = {
 
   async deleteBoardTask(
     workspaceKey: string,
-    taskKey: string,
+    taskId: string,
   ): Promise<void> {
-    await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskKey), {
+    await api.delete(apiRoutes.TASKS.BOARD_TASK_DELETE(workspaceKey, taskId), {
       data: { confirmText: "delete" },
     });
+  },
+
+  async archiveBoardTask(
+    workspaceKey: string,
+    taskId: string,
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_ARCHIVE(workspaceKey, taskId),
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
+  },
+
+  async restoreBoardTask(
+    workspaceKey: string,
+    taskId: string,
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_RESTORE(workspaceKey, taskId),
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
   },
 };
 

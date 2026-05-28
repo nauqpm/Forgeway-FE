@@ -10,7 +10,7 @@ import { Sprint } from "../../types/sprint.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
 
-import { Search, Plus, Check, X, Trash2, PlayCircle, UserRound } from "lucide-react";
+import { Archive, MoreHorizontal, Search, Plus, Check, X, Trash2, PlayCircle, UserRound } from "lucide-react";
 
 type BoardTabProps = {
   data: {
@@ -49,6 +49,8 @@ type BoardTabProps = {
     handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
     handleMoveColumn: (columnId: string, newOrder: number) => void;
     updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
+    onArchiveIssue?: (issue: Issue) => void;
+    onDeleteIssue?: (issue: Issue) => void;
   };
 
   refs: {
@@ -60,6 +62,7 @@ type BoardTabProps = {
     canEditTask?: boolean;
     canMoveTask: boolean;
     canUpdateWorkspace: boolean;
+    canArchiveTask?: boolean;
   };
 };
 
@@ -88,12 +91,15 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     handleDeleteColumn,
     handleMoveColumn,
     updateIssueDirectly,
+    onArchiveIssue,
+    onDeleteIssue,
   } = actions;
   const { columnsEndRef } = refs;
   const canCreateTask = permissions?.canCreateTask ?? true;
   const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canUpdateWorkspace = permissions?.canUpdateWorkspace ?? true;
+  const canArchiveTask = permissions?.canArchiveTask ?? true;
 
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
@@ -101,8 +107,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [columnToDelete, setColumnToDelete] = useState<BoardColumn | null>(null);
   const [assigneeMenuIssueId, setAssigneeMenuIssueId] = useState<string | null>(null);
   const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<React.CSSProperties>({});
+  const [actionMenuIssueId, setActionMenuIssueId] = useState<string | null>(null);
+  const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
   const assigneeMenuRef = useRef<HTMLDivElement>(null);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
 
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
@@ -143,18 +153,21 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   }, [memberSearch, workspaceMembers]);
 
   useEffect(() => {
-    if (!assigneeMenuIssueId) return;
+    if (!assigneeMenuIssueId && !actionMenuIssueId) return;
 
     const handlePointerDown = (event: MouseEvent) => {
       if (!assigneeMenuRef.current?.contains(event.target as Node)) {
         setAssigneeMenuIssueId(null);
         setMemberSearch("");
       }
+      if (!actionMenuRef.current?.contains(event.target as Node)) {
+        setActionMenuIssueId(null);
+      }
     };
 
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [assigneeMenuIssueId]);
+  }, [assigneeMenuIssueId, actionMenuIssueId]);
 
   const getIssueAssignee = (issue: Issue) => {
     const assigneeId = issue.assigneeId ?? issue.assignee;
@@ -173,6 +186,18 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const issueMatchesColumn = (issue: Issue, col: BoardColumn) => {
     return issue.columnId ? issue.columnId === col.id : col.mappedStatuses?.includes(issue.status);
   };
+
+  const closeDeleteIssueModal = () => {
+    setIssueToDelete(null);
+    setDeleteConfirmText("");
+  };
+
+  const confirmDeleteIssue = () => {
+    if (!issueToDelete || deleteConfirmText !== "delete") return;
+    onDeleteIssue?.(issueToDelete);
+    closeDeleteIssueModal();
+  };
+
   if (workspace.type === "scrum" && !activeSprint) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -317,8 +342,64 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         if (filters.archived) return;
                                         setSelectedIssue(issue);
                                       }}
-                                      className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      className={`relative bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
                                     >
+                                      {!filters.archived && canArchiveTask && onArchiveIssue && (
+                                        <div
+                                          className="absolute right-2 top-2 z-20"
+                                          ref={actionMenuIssueId === issue.id ? actionMenuRef : undefined}
+                                        >
+                                          <button
+                                            type="button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              setActionMenuIssueId((current) => current === issue.id ? null : issue.id);
+                                            }}
+                                            onMouseDown={(event) => event.stopPropagation()}
+                                            className={`rounded-md p-1 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-700 group-hover:opacity-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 ${
+                                              actionMenuIssueId === issue.id ? "opacity-100" : ""
+                                            }`}
+                                            aria-label="Issue actions"
+                                            title="Issue actions"
+                                          >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                          </button>
+
+                                          {actionMenuIssueId === issue.id && (
+                                            <div
+                                              onClick={(event) => event.stopPropagation()}
+                                              onMouseDown={(event) => event.stopPropagation()}
+                                              className="absolute right-0 top-full z-30 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700 dark:bg-gray-900"
+                                            >
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setActionMenuIssueId(null);
+                                                  onArchiveIssue(issue);
+                                                }}
+                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                                              >
+                                                <Archive className="h-4 w-4" />
+                                                Archive
+                                              </button>
+                                              {onDeleteIssue && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setActionMenuIssueId(null);
+                                                    setIssueToDelete(issue);
+                                                    setDeleteConfirmText("");
+                                                  }}
+                                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                  Delete
+                                                </button>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
                                       <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                                         {issue.title}
                                       </p>
@@ -530,6 +611,69 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
             setColumnToDelete(null);
           }}
         />
+      )}
+
+      {issueToDelete && (
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div className="flex items-start justify-between gap-4 border-b border-gray-200 p-5 dark:border-gray-800">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Delete work item
+                </h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  This permanently deletes {issueToDelete.key}. Archive it instead if you may need it later.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeDeleteIssueModal}
+                className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                aria-label="Close delete confirmation"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3 p-5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Type <span className="font-mono font-semibold text-red-600">delete</span> to confirm
+              </label>
+              <input
+                autoFocus
+                value={deleteConfirmText}
+                onChange={(event) => setDeleteConfirmText(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") confirmDeleteIssue();
+                  if (event.key === "Escape") closeDeleteIssueModal();
+                }}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:ring-red-950"
+                placeholder="delete"
+              />
+            </div>
+            <div className="flex justify-end gap-2 border-t border-gray-200 p-4 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={() => {
+                  const issue = issueToDelete;
+                  closeDeleteIssueModal();
+                  onArchiveIssue?.(issue);
+                }}
+                disabled={!onArchiveIssue}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                Archive
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteIssue}
+                disabled={deleteConfirmText !== "delete"}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

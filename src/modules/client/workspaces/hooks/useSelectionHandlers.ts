@@ -56,10 +56,7 @@ export const useSelectionHandlers = ({
     setIssues(issues.filter((i) => !ids.includes(i.id)));
     setSelectedTaskIds([]);
     ids.forEach((taskId) => {
-      const taskKey = issues.find((issue) => issue.id === taskId)?.key;
-      if (taskKey) {
-        taskService.deleteBoardTask(workspaceKey, taskKey).catch(() => {});
-      }
+      taskService.deleteBoardTask(workspaceKey, taskId).catch(() => {});
     });
   };
 
