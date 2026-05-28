@@ -454,7 +454,6 @@ export default function WorkspaceDetailPage({
                     setIssues,
                     handleMoveColumn,
                     onColumnChange: (taskId, columnId) => {
-<<<<<<< HEAD
                       taskService.moveBoardTask(workspaceKey, taskId, { columnId })
                         .then(() => {
                           queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceKey, taskId] });
@@ -463,9 +462,6 @@ export default function WorkspaceDetailPage({
                           queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
                           toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
                         });
-=======
-                      taskService.updateBoardTask(workspaceKey, taskId, { columnId });
->>>>>>> ac9fd39764351fa195e221b17e6df3baecc9626f
                     },
                 })
               : undefined,
