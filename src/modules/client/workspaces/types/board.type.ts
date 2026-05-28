@@ -2,7 +2,9 @@ export interface BoardColumn {
   id: string;
   name: string;
   order: number;
+  wipLimit?: number;
   mappedStatuses: string[];
+  isDone?: boolean;
 }
 
 export interface Board {

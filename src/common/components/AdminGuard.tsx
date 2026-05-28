@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 
 interface AdminGuardProps {
   children: React.ReactNode;
 }
 
 export function AdminGuard({ children }: AdminGuardProps) {
-  const { hasAdminAccess, isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
   const [checked, setChecked] = useState(false);
 
@@ -26,13 +27,13 @@ export function AdminGuard({ children }: AdminGuardProps) {
       return;
     }
 
-    if (!hasAdminAccess()) {
+    if (!isGlobalAdminRole(user.role)) {
       router.replace("/unauthorized");
       return;
     }
 
     setChecked(true);
-  }, [isAuthenticated, isLoading, user, hasAdminAccess, router]);
+  }, [isAuthenticated, isLoading, user, router]);
 
   if (isLoading || !checked) {
     return (

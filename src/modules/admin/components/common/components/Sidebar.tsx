@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
+import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import {
@@ -286,7 +287,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { currentWorkspace } = useWorkspaceStore();
-  const { hasAdminAccess } = useAuth();
+  const { user } = useAuth();
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
@@ -325,7 +326,7 @@ export default function Sidebar({
       .catch(() => setsidebarWorkspaces([]));
   }, [currentWorkspace]);
 
-  const isAdmin = hasAdminAccess();
+  const isAdmin = isGlobalAdminRole(user?.role);
 
   return (
     <>

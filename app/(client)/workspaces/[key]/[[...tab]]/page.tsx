@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useState, use, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
-import IssueDetailModal from "@/modules/client/workspaces/components/IssueDetailModal";
-import TaskDetailDrawer from "@/modules/client/workspaces/components/TaskDetailDrawer";
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
-import SprintModal from "@/modules/client/workspaces/components/SprintModal";
-import StartSprintModal from "@/modules/client/workspaces/components/StartSprintModal";
-import CompleteSprintModal from "@/modules/client/workspaces/components/CompleteSprintModal";
-import BulkActionBar from "@/modules/admin/components/common/components/BulkActionBar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { boardService } from "@/modules/client/workspaces/services/boardService";
@@ -43,11 +38,39 @@ import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWor
 import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
 
-import CreateIssueModal from "@/modules/client/workspaces/components/issues/CreateIssueModal";
+const CreateIssueModal = dynamic(
+  () => import("@/modules/client/workspaces/components/issues/CreateIssueModal"),
+  { ssr: false },
+);
+const SprintModal = dynamic(
+  () => import("@/modules/client/workspaces/components/SprintModal"),
+  { ssr: false },
+);
+const StartSprintModal = dynamic(
+  () => import("@/modules/client/workspaces/components/StartSprintModal"),
+  { ssr: false },
+);
+const CompleteSprintModal = dynamic(
+  () => import("@/modules/client/workspaces/components/CompleteSprintModal"),
+  { ssr: false },
+);
+const TaskDetailDrawer = dynamic(
+  () => import("@/modules/client/workspaces/components/TaskDetailDrawer"),
+  { ssr: false },
+);
+const IssueDetailModal = dynamic(
+  () => import("@/modules/client/workspaces/components/IssueDetailModal"),
+  { ssr: false },
+);
+const BulkActionBar = dynamic(
+  () => import("@/modules/admin/components/common/components/BulkActionBar"),
+  { ssr: false },
+);
 
 export default function WorkspaceDetailPage({
   params,
@@ -151,6 +174,8 @@ export default function WorkspaceDetailPage({
   });
 
   const [columns, setColumns] = useState<BoardColumn[]>([]);
+
+  useWorkspaceSocket(workspaceApiId);
 
   useEffect(() => {
     if (boardData?.columns) {

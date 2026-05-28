@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
+import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import {
   LayoutDashboard,
   BookOpen,
@@ -280,7 +281,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { currentWorkspace } = useWorkspaceStore();
-  const { hasAdminAccess } = useAuth();
+  const { user } = useAuth();
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [spaceOpen, setSpaceOpen] = useState(true);
@@ -327,7 +328,7 @@ export default function Sidebar({
     return () => window.removeEventListener("spaces_updated", fetchSpaces);
   }, [currentWorkspace]);
 
-  const isAdmin = hasAdminAccess();
+  const isAdmin = isGlobalAdminRole(user?.role);
 
   return (
     <>
