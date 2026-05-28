@@ -16,6 +16,7 @@ import {
   Settings,
   Zap,
   User,
+  Archive,
 } from "lucide-react";
 import Link from "next/link";
 import { MentionsInput, Mention } from "react-mentions";
@@ -28,6 +29,7 @@ interface IssueDetailModalProps {
   workspaceKey: string;
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
+  onArchiveIssue?: (issue: any) => void;
 }
 
 const workspaceMembers = [
@@ -61,6 +63,7 @@ export default function IssueDetailModal({
   workspaceKey,
   onClose,
   onUpdateIssue,
+  onArchiveIssue,
 }: IssueDetailModalProps) {
   const [activeTab, setActiveTab] = useState<
     "comments" | "history" | "worklog"
@@ -76,6 +79,7 @@ export default function IssueDetailModal({
   const [subtasks, setSubtasks] = useState<any[]>(issue.subtasks || []);
 
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState(false);
 
   const [timeLogged, setTimeLogged] = useState(issue.timeLogged || 0);
   const timeEstimated = issue.timeEstimated || "1d 4h"; // Mock default
@@ -176,9 +180,32 @@ export default function IssueDetailModal({
             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
               <Share2 className="w-4 h-4" />
             </button>
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowActionMenu((open) => !open)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
+                aria-label="Issue actions"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+              {showActionMenu && (
+                <div className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowActionMenu(false);
+                      onArchiveIssue?.(issue);
+                    }}
+                    disabled={!onArchiveIssue}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <Archive className="h-4 w-4" />
+                    Archive
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
               <Maximize2 className="w-4 h-4" />

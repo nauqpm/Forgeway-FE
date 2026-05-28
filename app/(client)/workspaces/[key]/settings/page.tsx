@@ -139,6 +139,7 @@ export default function WorkspaceSettingsPage({
   const [leaving, setLeaving] = useState(false);
 
   const workspaceInviteId = workspace?._id ?? workspaceKey;
+  const workspaceApiId = workspace?._id;
   const currentMember = members.find((m) => m.userId?._id === user?.id);
   const canManageWorkspace =
     currentMember?.role === "workspace_admin" || user?.role === "super_admin";
@@ -167,14 +168,14 @@ export default function WorkspaceSettingsPage({
   }, [workspaceKey]);
 
   useEffect(() => {
-    if (!workspaceKey) return;
+    if (!workspaceApiId) return;
     setLoadingMembers(true);
     api
-      .get(apiRoutes.WORKSPACES.MEMBERS(workspaceKey))
+      .get(apiRoutes.WORKSPACES.MEMBERS(workspaceApiId))
       .then((res) => setMembers(res.data?.data ?? res.data ?? []))
       .catch(() => setMembers([]))
       .finally(() => setLoadingMembers(false));
-  }, [workspaceKey]);
+  }, [workspaceApiId]);
 
   useEffect(() => {
     if (activeTab !== "members" || !workspaceInviteId) return;
@@ -222,7 +223,9 @@ export default function WorkspaceSettingsPage({
         access: form.access,
       };
 
-      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceKey), payload);
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceApiId), payload);
       const updatedWorkspace = normalizeWorkspace(res.data);
       setWorkspace(updatedWorkspace);
       setForm({
@@ -248,7 +251,9 @@ export default function WorkspaceSettingsPage({
 
     setDeleting(true);
     try {
-      await api.delete(apiRoutes.WORKSPACES.BY_KEY(workspaceKey));
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      await api.delete(apiRoutes.WORKSPACES.BY_KEY(workspaceApiId));
       toast.success("Đã xóa workspace.");
       setShowDeleteDialog(false);
       router.push("/workspaces");
@@ -332,7 +337,9 @@ export default function WorkspaceSettingsPage({
 
     setUpdatingMemberId(userId);
     try {
-      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceKey, userId), { role });
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceApiId, userId), { role });
       setMembers((prev) =>
         prev.map((item) =>
           item.userId?._id === userId ? { ...item, role } : item,
@@ -353,7 +360,9 @@ export default function WorkspaceSettingsPage({
 
     setRemovingMemberId(userId);
     try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceKey, userId));
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceApiId, userId));
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setMemberMenu(null);
       toast.success("Đã xóa thành viên khỏi workspace.");
@@ -372,7 +381,9 @@ export default function WorkspaceSettingsPage({
 
     setLeaving(true);
     try {
-      await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceKey));
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceApiId));
       toast.success("Đã rời khỏi workspace.");
       router.push("/workspaces");
     } catch (error: any) {

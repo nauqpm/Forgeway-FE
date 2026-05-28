@@ -6,6 +6,7 @@ import TimelineTab from "./tabs/TimelineTab";
 import CalendarTab from "./tabs/CalendarTab";
 import ListTab from "./tabs/ListTab";
 import SummaryTab from "./tabs/SummaryTab";
+import ArchiveTab from "./tabs/ArchiveTab";
 import { DocsLayout } from "../../docs";
 
 type WorkspaceContentProps = {
@@ -20,6 +21,7 @@ type WorkspaceContentProps = {
   listProps: any;
   summaryProps: any;
   calendarProps: any;
+  archiveProps: any;
 };
 
 export default function WorkspaceContent({
@@ -32,6 +34,7 @@ export default function WorkspaceContent({
   listProps,
   summaryProps,
   calendarProps,
+  archiveProps,
 }: WorkspaceContentProps) {
   return (
     <div
@@ -56,6 +59,8 @@ export default function WorkspaceContent({
       {activeTab === "calendar" && <CalendarTab {...calendarProps} />}
       
       {activeTab === "list" && <ListTab {...listProps} />}
+
+      {activeTab === "archive" && <ArchiveTab {...archiveProps} />}
 
       {activeTab === "summary" && <SummaryTab {...summaryProps} />}
     </div>

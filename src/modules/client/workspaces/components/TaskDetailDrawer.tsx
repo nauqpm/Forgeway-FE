@@ -5,7 +5,7 @@ import {
   X, Maximize2, Share2, Eye, Lock,
   MoreHorizontal, Plus, Link as LinkIcon,
   FileText, ChevronDown, Paperclip, Settings,
-  Zap, User
+  Zap, User, Archive
 } from 'lucide-react';
 import Link from 'next/link';
 import { MentionsInput, Mention } from 'react-mentions';
@@ -19,6 +19,7 @@ interface TaskDetailDrawerProps {
   workspaceKey: string;
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
+  onArchiveIssue?: (issue: any) => void;
   /** Embedded in split list view: no overlay, no fixed positioning */
   embedded?: boolean;
 }
@@ -47,6 +48,7 @@ export default function TaskDetailDrawer({
   workspaceKey,
   onClose,
   onUpdateIssue,
+  onArchiveIssue,
   embedded = false,
 }: TaskDetailDrawerProps) {
   const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'worklog'>('comments');
@@ -56,6 +58,7 @@ export default function TaskDetailDrawer({
   const [comments, setComments] = useState<any[]>([]);
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
 
   // Sync state when issue prop changes
@@ -67,6 +70,7 @@ export default function TaskDetailDrawer({
       setTimeLogged(issue.timeLogged || 0);
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
+      setShowActionMenu(false);
       setCommentInput('');
     }
   }, [issue]);
@@ -171,7 +175,32 @@ export default function TaskDetailDrawer({
               <Eye className="w-4 h-4" /> <span>1</span>
             </button>
             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Share2 className="w-4 h-4" /></button>
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><MoreHorizontal className="w-4 h-4" /></button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowActionMenu((open) => !open)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
+                aria-label="Issue actions"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+              {showActionMenu && (
+                <div className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowActionMenu(false);
+                      onArchiveIssue?.(issue);
+                    }}
+                    disabled={!onArchiveIssue}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                  >
+                    <Archive className="h-4 w-4" />
+                    Archive
+                  </button>
+                </div>
+              )}
+            </div>
             <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Maximize2 className="w-4 h-4" /></button>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><X className="w-4 h-4" /></button>

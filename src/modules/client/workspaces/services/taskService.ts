@@ -20,6 +20,15 @@ type TaskDto = {
   dueDate?: string;
   createdAt?: string;
   updatedAt?: string;
+  isArchived?: boolean;
+  archivedAt?: string | null;
+  archivedBy?: string | null;
+  archivedByUser?: {
+    id?: string;
+    fullName?: string;
+    email?: string;
+    avatar?: string;
+  } | null;
 };
 
 type CreateTaskInput = {
@@ -28,6 +37,7 @@ type CreateTaskInput = {
   priority: string;
   status: string;
   sprintId: string | null;
+  assigneeId?: string | null;
 };
 
 const COLUMN_BY_STATUS: Record<string, string> = {
@@ -112,11 +122,16 @@ const toIssue = (task: TaskDto): Issue => {
     priority: toUiLabel(task.priority, "Medium"),
     type: toUiLabel(task.type, "Task"),
     assignee,
+    assigneeId: task.assigneeId,
     color: "bg-indigo-600",
     sprintId: task.sprintId ?? null,
     storyPoints: task.storyPoints ?? 0,
     startDate: task.createdAt?.split("T")[0],
     endDate: task.dueDate?.split("T")[0],
+    isArchived: task.isArchived,
+    archivedAt: task.archivedAt ?? null,
+    archivedBy: task.archivedBy ?? null,
+    archivedByUser: task.archivedByUser ?? null,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
   };
@@ -129,18 +144,37 @@ const toCreatePayload = (input: CreateTaskInput) => ({
   columnId: toColumnId(input.status),
   status: toColumnId(input.status),
   sprintId: input.sprintId || undefined,
+  assigneeId: input.assigneeId || undefined,
 });
 
-const toUpdatePayload = (updates: Partial<Issue>) => ({
-  ...updates,
-  type: normalizeValue(updates.type),
-  priority: normalizeValue(updates.priority),
-  ...(updates.status && {
-    columnId: toColumnId(updates.status),
-    status: toColumnId(updates.status),
-  }),
-  sprintId: updates.sprintId || undefined,
-});
+const toUpdatePayload = (updates: Partial<Issue>) => {
+  const {
+    assignee,
+    assigneeId,
+    color,
+    createdAt,
+    endDate,
+    id,
+    key,
+    startDate,
+    updatedAt,
+    ...payload
+  } = updates;
+
+  const nextAssigneeId = assigneeId ?? (assignee && assignee !== "U" ? assignee : undefined);
+
+  return {
+    ...payload,
+    ...(nextAssigneeId !== undefined && { assigneeId: nextAssigneeId }),
+    type: normalizeValue(updates.type),
+    priority: normalizeValue(updates.priority),
+    ...(updates.status && {
+      columnId: toColumnId(updates.status),
+      status: toColumnId(updates.status),
+    }),
+    sprintId: updates.sprintId || undefined,
+  };
+};
 
 export const buildTaskQuery = (filters?: TaskFilters) => {
   if (!filters) return "";
@@ -212,6 +246,30 @@ export const taskService = {
     taskId: string,
     updates: Partial<Issue>,
   ): Promise<Issue> {
+    const isMoveUpdate =
+      updates.status !== undefined ||
+      updates.columnId !== undefined ||
+      updates.sprintId !== undefined;
+
+    if (isMoveUpdate) {
+      const payload: Record<string, any> = {};
+      if (updates.status !== undefined) {
+        payload.status = toColumnId(updates.status);
+        payload.columnId = toColumnId(updates.status);
+      } else if (updates.columnId !== undefined) {
+        payload.columnId = updates.columnId;
+      }
+      if (updates.sprintId !== undefined) {
+        payload.sprintId = updates.sprintId;
+      }
+
+      const response = await api.patch(
+        apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceId, taskId),
+        payload,
+      );
+      return toIssue(normalizeResponseData<TaskDto>(response));
+    }
+
     const response = await api.patch(
       apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId),
       toUpdatePayload(updates),
@@ -227,5 +285,27 @@ export const taskService = {
     await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId), {
       data: { confirmText: "delete" },
     });
+  },
+
+  async archiveBoardTask(
+    workspaceId: string,
+    taskId: string,
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_ARCHIVE(workspaceId, taskId),
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
+  },
+
+  async restoreBoardTask(
+    workspaceId: string,
+    taskId: string,
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_RESTORE(workspaceId, taskId),
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
   },
 };
