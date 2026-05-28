@@ -1,7 +1,9 @@
 export interface Issue {
   id: string;
+  _id?: string;
   key: string;
   title: string;
+  description?: string;
   columnId: string;
   status: string;
   priority: string;

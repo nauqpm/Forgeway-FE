@@ -4,7 +4,8 @@ import { Issue } from "../types/issue.type";
 import { TaskFilters } from "../types/filter.type";
 
 type TaskDto = {
-  id: string;
+  _id?: string;
+  id?: string;
   key: string;
   title: string;
   description?: string;
@@ -38,6 +39,23 @@ type CreateTaskInput = {
   status: string;
   sprintId: string | null;
   assigneeId?: string | null;
+};
+
+export type TaskActivity = {
+  id: string;
+  workspaceId?: string;
+  taskId: string;
+  taskKey?: string;
+  actorId?: string;
+  actor?: {
+    id?: string;
+    fullName?: string;
+    email?: string;
+    avatar?: string;
+  } | null;
+  type: string;
+  metadata?: Record<string, any>;
+  createdAt?: string;
 };
 
 const COLUMN_BY_STATUS: Record<string, string> = {
@@ -110,11 +128,22 @@ const requireTaskKey = (task: TaskDto) => {
   return task.key;
 };
 
+const requireTaskId = (task: TaskDto) => {
+  const id = task.id ?? task._id;
+  if (!id) {
+    throw new Error("Task id is missing from backend response");
+  }
+
+  return id;
+};
+
 const toIssue = (task: TaskDto): Issue => {
   const assignee = task.assigneeId || "U";
+  const id = requireTaskId(task);
 
   return {
-    id: task.id,
+    id,
+    _id: task._id,
     key: requireTaskKey(task),
     title: task.title,
     columnId: task.columnId ?? task.boardColumnId ?? toColumnId(task.status) ?? "todo",
@@ -151,29 +180,38 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
   const {
     assignee,
     assigneeId,
-    color,
-    createdAt,
+    columnId,
+    description,
     endDate,
-    id,
-    key,
-    startDate,
-    updatedAt,
-    ...payload
+    priority,
+    sprintId,
+    status,
+    storyPoints,
+    title,
+    type,
   } = updates;
 
   const nextAssigneeId = assigneeId ?? (assignee && assignee !== "U" ? assignee : undefined);
+  const payload: Record<string, unknown> = {};
 
-  return {
-    ...payload,
-    ...(nextAssigneeId !== undefined && { assigneeId: nextAssigneeId }),
-    type: normalizeValue(updates.type),
-    priority: normalizeValue(updates.priority),
-    ...(updates.status && {
-      columnId: toColumnId(updates.status),
-      status: toColumnId(updates.status),
-    }),
-    sprintId: updates.sprintId || undefined,
-  };
+  if (title !== undefined) payload.title = title;
+  if (description !== undefined) payload.description = description;
+  if (storyPoints !== undefined) payload.storyPoints = storyPoints;
+  if (columnId !== undefined) {
+    payload.columnId = columnId;
+  }
+  if (endDate !== undefined) payload.dueDate = endDate || undefined;
+  if (nextAssigneeId !== undefined) payload.assigneeId = nextAssigneeId;
+  if (type !== undefined) payload.type = normalizeValue(type);
+  if (priority !== undefined) payload.priority = normalizeValue(priority);
+  if (status !== undefined) {
+    const normalizedStatus = toColumnId(status);
+    if (columnId === undefined) payload.columnId = normalizedStatus;
+    payload.status = normalizedStatus;
+  }
+  if (sprintId !== undefined) payload.sprintId = sprintId || undefined;
+
+  return payload;
 };
 
 export const buildTaskQuery = (filters?: TaskFilters) => {
@@ -254,6 +292,19 @@ export const taskService = {
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
+  async moveBoardTask(
+    workspaceKey: string,
+    taskId: string,
+    input: { columnId: string },
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceKey, taskId),
+      input,
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
+  },
+
   async deleteBoardTask(
     workspaceKey: string,
     taskId: string,
@@ -283,6 +334,17 @@ export const taskService = {
     );
 
     return toIssue(normalizeResponseData<TaskDto>(response));
+  },
+
+  async getTaskActivities(
+    workspaceKey: string,
+    taskId: string,
+  ): Promise<TaskActivity[]> {
+    const response = await api.get(
+      apiRoutes.TASKS.BOARD_TASK_ACTIVITIES(workspaceKey, taskId),
+    );
+
+    return normalizeResponseData<TaskActivity[]>(response);
   },
 };
 

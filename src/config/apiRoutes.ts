@@ -32,7 +32,6 @@ export const apiRoutes = {
         SPRINT: (key: string, sprintId: string) => `/workspaces/${key}/sprints/${sprintId}`,
         SPRINT_START: (key: string, sprintId: string) => `/workspaces/${key}/sprints/${sprintId}/start`,
         SPRINT_COMPLETE: (key: string, sprintId: string) => `/workspaces/${key}/sprints/${sprintId}/complete`,
-        SPRINT_COMPLETE_PREVIEW: (key: string, sprintId: string) => `/workspaces/${key}/sprints/${sprintId}/complete-preview`,
         ACTIVE_SPRINT: (key: string) => `/workspaces/${key}/active-sprint`,
         BACKLOG: (key: string) => `/workspaces/${key}/backlog`,
     },
@@ -52,7 +51,13 @@ export const apiRoutes = {
     TASKS: {
         // New workspace-scoped board routes (use these for workspace board/backlog)
         BOARD: (workspaceKey: string) => `/workspaces/${workspaceKey}/board/tasks`,
-        BOARD_TASK: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}`,
+        BOARD_TASK: (workspaceKey: string, taskKey: string) => `/workspaces/${workspaceKey}/board/tasks/${taskKey}`,
+        BOARD_TASK_UPDATE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}`,
+        BOARD_TASK_MOVE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/move`,
+        BOARD_TASK_DELETE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}`,
+        BOARD_TASK_ARCHIVE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/archive`,
+        BOARD_TASK_RESTORE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/restore`,
+        BOARD_TASK_ACTIVITIES: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/activities`,
         BY_SPRINT: (workspaceKey: string, sprintId: string) => `/workspaces/${workspaceKey}/board?sprintId=${sprintId}`,
         // Legacy routes — still used by projects/tasks pages, pending migration
         BASE: '/tasks',
