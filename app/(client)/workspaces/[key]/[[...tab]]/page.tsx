@@ -279,10 +279,7 @@ export default function WorkspaceDetailPage({
       issues,
       setIssues,
       onSprintAssign: (taskId, sprintId) => {
-        const taskKey = getIssueTaskKey(taskId);
-        if (taskKey) {
-          taskService.updateBoardTask(workspaceKey, taskKey, { sprintId: sprintId ?? undefined });
-        }
+        taskService.updateBoardTask(workspaceKey, taskId, { sprintId: sprintId ?? undefined });
       },
     });
   };
@@ -419,10 +416,7 @@ export default function WorkspaceDetailPage({
                     setIssues,
                     handleMoveColumn,
                     onColumnChange: (taskId, columnId) => {
-                      const taskKey = getIssueTaskKey(taskId);
-                      if (taskKey) {
-                        taskService.updateBoardTask(workspaceKey, taskKey, { columnId });
-                      }
+                      taskService.updateBoardTask(workspaceKey, taskId, { columnId });
                     },
                 })
               : undefined,
