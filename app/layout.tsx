@@ -11,11 +11,11 @@ export const   metadata = {
     description: "SDLC Platform is a Jira + Confluence alternative. Manage projects, track tasks, plan sprints, and store team knowledge — all in one place.",
     icons: {
       icon: [
-        { url: "/favicon.ico?v=2", sizes: "any" },
-        { url: "/automationland-tab-logo.png?v=2", type: "image/png", sizes: "512x512" },
+        { url: "/favicon.ico?v=5", sizes: "any" },
+        { url: "/icon.png?v=5", type: "image/png", sizes: "512x512" },
       ],
-      shortcut: "/favicon.ico?v=2",
-      apple: "/automationland-tab-logo.png?v=2",
+      shortcut: "/favicon.ico?v=5",
+      apple: "/apple-icon.png?v=5",
     },
     openGraph: {
       title: "SDLC Platform",
@@ -33,9 +33,9 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <head>
-        <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
-        <link rel="icon" type="image/png" href="/automationland-tab-logo.png?v=2" sizes="512x512" />
-        <link rel="shortcut icon" href="/favicon.ico?v=2" />
+        <link rel="icon" href="/favicon.ico?v=5" sizes="any" />
+        <link rel="icon" type="image/png" href="/icon.png?v=5" sizes="512x512" />
+        <link rel="shortcut icon" href="/favicon.ico?v=5" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
