@@ -356,7 +356,7 @@ export default function Sidebar({
             </div>
             {!collapsed && (
               <span className="font-bold text-slate-900 dark:text-gray-100 text-lg tracking-tight">
-                AL-TASK
+                SDLC Platform
               </span>
             )}
           </Link>

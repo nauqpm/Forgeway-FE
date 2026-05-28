@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, X } from "lucide-react";
+import { Workspace } from "../../types/workspace.type";
 
 type CreateIssueModalProps = {
   showCreateIssue: boolean;
@@ -11,6 +12,7 @@ type CreateIssueModalProps = {
   setNewIssueForm: any;
 
   handleCreateIssue: any;
+  workspace: Workspace;
 };
 
 export default function CreateIssueModal({
@@ -19,8 +21,23 @@ export default function CreateIssueModal({
   newIssueForm,
   setNewIssueForm,
   handleCreateIssue,
+  workspace,
 }: CreateIssueModalProps) {
   if (!showCreateIssue) return null;
+
+  const workspaceMembers = (workspace.members ?? [])
+    .map((member) => {
+      const user = member.userId;
+      const id = typeof user === "string" ? user : user._id ?? user.id ?? "";
+      const name = typeof user === "string" ? user : user.fullName || user.name || user.email || id;
+      const email = typeof user === "string" ? "" : user.email ?? "";
+
+      return {
+        id,
+        label: email && email !== name ? `${name} (${email})` : name || "Member",
+      };
+    })
+    .filter((member) => member.id);
 
   return (
     <div className="fixed inset-0 bg-gray-900/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -127,6 +144,30 @@ export default function CreateIssueModal({
               <option value="To Do">⭕ To Do</option>
               <option value="In Progress">⏳ In Progress</option>
               <option value="Done">✅ Done</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+              Assignee
+            </label>
+
+            <select
+              value={newIssueForm.assigneeId ?? ""}
+              onChange={(e) =>
+                setNewIssueForm({
+                  ...newIssueForm,
+                  assigneeId: e.target.value,
+                })
+              }
+              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
+              <option value="">Unassigned</option>
+              {workspaceMembers.map((member) => (
+                <option key={member.id} value={member.id}>
+                  {member.label}
+                </option>
+              ))}
             </select>
           </div>
 
