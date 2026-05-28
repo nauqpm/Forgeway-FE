@@ -39,11 +39,16 @@ const statusConfig: Record<string, { color: string; bg: string; icon: any }> = {
 };
 
 export default function SprintDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const router = useRouter();
   const [sprint, setSprint] = useState<Sprint | null>(null);
   const [stats, setStats] = useState<SprintStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [sprintId, setSprintId] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    router.replace("/workspaces");
+  }, [router]);
 
   useEffect(() => {
     params.then(p => setSprintId(p.id));

@@ -44,17 +44,11 @@ export const useIssueHandlers = ({
   setSelectedIssue,
 }: UseIssueHandlersProps) => {
   const queryClient = useQueryClient();
-  const isCreatingRef = useRef(false);
 
   const updateIssueDirectly = (
     id: string,
     updates: Partial<Issue>
   ) => {
-    if (!id) {
-      toast.error("Khong tim thay task id");
-      return;
-    }
-
     setIssues(
       issues.map((i) =>
         i.id === id
@@ -62,17 +56,9 @@ export const useIssueHandlers = ({
           : i
       )
     );
-    taskService.updateBoardTask(workspaceKey, id, updates)
-      .then((savedIssue) => {
-        setIssues((current) =>
-          current.map((issue) => issue.id === savedIssue.id ? savedIssue : issue)
-        );
-        queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
-      })
-      .catch((error) => {
-        setIssues(issues);
-        toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
-      });
+    taskService.updateBoardTask(workspaceKey, id, updates).catch(() => {
+      setIssues(issues);
+    });
   };
 
   const handleCreateIssue = async (
@@ -107,11 +93,6 @@ export const useIssueHandlers = ({
   const handleUpdateIssue = async (
     updatedIssue: Issue
   ) => {
-    if (!updatedIssue.key) {
-      toast.error("Khong tim thay task key");
-      return;
-    }
-
     const savedIssue = await taskService.updateBoardTask(
       workspaceKey,
       updatedIssue.id,
