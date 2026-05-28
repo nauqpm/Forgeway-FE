@@ -7,7 +7,7 @@ import Sidebar from "@/modules/admin/components/common/components/Sidebar";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
-import { Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut, Shield, Plus } from "lucide-react";
+import { LayoutDashboard, Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut, Plus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
 import JiraSearchDropdown from "@/modules/client/workspaces/components/JiraSearchDropdown";
@@ -17,7 +17,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspaces, workspacesLoaded } = useWorkspaceStore();
   const { theme, setTheme } = useTheme();
-  const { hasAdminAccess } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -259,6 +258,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                   </div>
                   <button
+                    onClick={() => { router.push("/dashboard"); setShowUserMenu(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                  </button>
+                  <button
                     onClick={() => { router.push("/account"); setShowUserMenu(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
@@ -270,14 +275,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   >
                     <Settings className="w-4 h-4" /> Cài đặt
                   </button>
-                  {hasAdminAccess() && (
-                    <button
-                      onClick={() => { router.push("/admin"); setShowUserMenu(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <Shield className="w-4 h-4" /> Trang quản trị
-                    </button>
-                  )}
                   <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
                   <button
                     onClick={() => { logout(); setShowUserMenu(false); }}

@@ -36,7 +36,7 @@ interface SidebarProps {
 }
 
 const mainNav = [
-  { icon: LayoutDashboard, label: "Bảng điều khiển", href: "/admin" },
+  { icon: LayoutDashboard, label: "Bảng điều khiển", href: "/dashboard" },
   { icon: Clock7, label: "Gần đây", href: "/recent" },
   { icon: Star, label: "Đã đánh dấu", href: "/starred" },
   {
@@ -50,10 +50,10 @@ const mainNav = [
 ];
 
 const adminNav = [
-  { icon: UserCog, label: "Quản lý Người dùng", href: "/admin/users" },
-  { icon: Building2, label: "Cài đặt Workspace", href: "/admin/workspace" },
-  { icon: Zap, label: "Quy trình", href: "/admin/workflows" },
-  { icon: Shield, label: "Phân quyền", href: "/admin/permissions" },
+  { icon: UserCog, label: "Quản lý Người dùng", href: "/dashboard/users" },
+  { icon: Building2, label: "Cài đặt Workspace", href: "/dashboard/workspace" },
+  { icon: Zap, label: "Quy trình", href: "/dashboard/workflows" },
+  { icon: Shield, label: "Phân quyền", href: "/dashboard/permissions" },
 ];
 
 const optionFilter = [
@@ -287,7 +287,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const { currentWorkspace } = useWorkspaceStore();
   const { hasAdminAccess } = useAuth();
-  const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/admin"));
+  const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
