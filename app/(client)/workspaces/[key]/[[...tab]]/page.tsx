@@ -7,6 +7,8 @@ import IssueDetailModal from "@/modules/client/workspaces/components/IssueDetail
 import TaskDetailDrawer from "@/modules/client/workspaces/components/TaskDetailDrawer";
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
 import SprintModal from "@/modules/client/workspaces/components/SprintModal";
+import StartSprintModal from "@/modules/client/workspaces/components/StartSprintModal";
+import CompleteSprintModal from "@/modules/client/workspaces/components/CompleteSprintModal";
 import BulkActionBar from "@/modules/admin/components/common/components/BulkActionBar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
@@ -102,7 +104,58 @@ export default function WorkspaceDetailPage({
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
-  const { filters, setFilters, taskFilters } = useTaskFilters(workspaceKey);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const [filters, setFilters] = useState<Filters>(() => {
+    return {
+      search: searchParams?.get("search") || "",
+      assigneeId: null,
+      reporterId: null,
+      priority: null,
+      type: null,
+      assignees: searchParams?.get("assignees")?.split(",").filter(Boolean) || [],
+      types: searchParams?.get("types")?.split(",").filter(Boolean) || [],
+      statuses: searchParams?.get("statuses")?.split(",").filter(Boolean) || [],
+      priorities: searchParams?.get("priorities")?.split(",").filter(Boolean) || [],
+      backlog: searchParams?.get("backlog") === "true",
+      archived: searchParams?.get("archived") === "true",
+    };
+  });
+
+  // Sync to URL silently
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (filters.search) params.set("search", filters.search);
+    else params.delete("search");
+
+    if (filters.assignees.length > 0) params.set("assignees", filters.assignees.join(","));
+    else params.delete("assignees");
+
+    if (filters.types.length > 0) params.set("types", filters.types.join(","));
+    else params.delete("types");
+
+    if (filters.statuses.length > 0) params.set("statuses", filters.statuses.join(","));
+    else params.delete("statuses");
+
+    if (filters.priorities.length > 0) params.set("priorities", filters.priorities.join(","));
+    else params.delete("priorities");
+
+    if (filters.backlog) params.set("backlog", "true");
+    else params.delete("backlog");
+
+    if (filters.archived) params.set("archived", "true");
+    else params.delete("archived");
+
+    const query = params.toString();
+    const newUrl = query ? `${pathname}?${query}` : pathname;
+
+    if (window.location.pathname + window.location.search !== newUrl) {
+      window.history.replaceState(null, "", newUrl);
+    }
+  }, [filters, pathname]);
   const [density, setDensity] = useState<"default" | "compact">("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -221,7 +274,15 @@ export default function WorkspaceDetailPage({
     handleEditSprint,
     handleDeleteSprint,
     handleStartSprint,
+    handleConfirmStartSprint,
     handleCompleteSprint,
+    handleConfirmCompleteSprint,
+    startSprintTarget,
+    setStartSprintTarget,
+    completeSprintTarget,
+    setCompleteSprintTarget,
+    isStarting,
+    isCompleting,
   } = useSprintHandlers({
     workspaceKey,
     sprints,
@@ -437,20 +498,20 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result : any) =>
+            handleBoardDragEnd: (result: any) =>
               canMoveTask
                 ? handleBoardDragEnd({
-                    result,
-                    columns,
-                    issues,
-                    setColumns,
-                    setIssues,
-                    handleMoveColumn,
-                    onColumnChange: (taskId, columnId) => {
-                      taskService.updateBoardTask(workspaceKey, taskId, { columnId });
-                    },
+                  result,
+                  columns,
+                  issues,
+                  setColumns,
+                  setIssues,
+                  handleMoveColumn,
+                  onColumnChange: (taskId, columnId) => {
+                    taskService.updateBoardTask(workspaceKey, taskId, { columnId });
+                  },
                 })
-              : undefined,
+                : undefined,
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -504,6 +565,8 @@ export default function WorkspaceDetailPage({
             handleEditSprint,
             handleDeleteSprint,
             handleQuickCreateTask,
+            isStarting,
+            isCompleting,
           },
           permissions: {
             canCreateTask,
@@ -570,6 +633,28 @@ export default function WorkspaceDetailPage({
         initialData={editingSprint}
         sprintCount={sprints.length}
       />
+
+      {/* Start Sprint Modal */}
+      {startSprintTarget && (
+        <StartSprintModal
+          isOpen={!!startSprintTarget}
+          onClose={() => setStartSprintTarget(null)}
+          onConfirm={handleConfirmStartSprint}
+          sprint={startSprintTarget}
+        />
+      )}
+
+      {/* Complete Sprint Modal */}
+      {completeSprintTarget && (
+        <CompleteSprintModal
+          isOpen={!!completeSprintTarget}
+          onClose={() => setCompleteSprintTarget(null)}
+          onConfirm={handleConfirmCompleteSprint}
+          sprint={completeSprintTarget}
+          sprints={sprints}
+          workspaceKey={workspace.key}
+        />
+      )}
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
       {selectedIssue &&
