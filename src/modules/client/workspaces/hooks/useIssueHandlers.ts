@@ -50,11 +50,19 @@ export const useIssueHandlers = ({
     id: string,
     updates: Partial<Issue>
   ) => {
+<<<<<<< HEAD
     if (!id) {
       toast.error("Khong tim thay task id");
       return;
     }
 
+=======
+    const existingIssue = issues.find((issue) => issue.id === id);
+    if (!existingIssue) {
+      toast.error("Không tìm thấy task");
+      return;
+    }
+>>>>>>> ac9fd39764351fa195e221b17e6df3baecc9626f
     setIssues(
       issues.map((i) =>
         i.id === id
@@ -108,10 +116,15 @@ export const useIssueHandlers = ({
   const handleUpdateIssue = async (
     updatedIssue: Issue
   ) => {
-    if (!updatedIssue.key) {
-      toast.error("Khong tim thay task key");
+    if (!updatedIssue.id) {
+      toast.error("Không tìm thấy task ID");
       return;
     }
+    const savedIssue = await taskService.updateBoardTask(
+      workspaceKey,
+      updatedIssue.id,
+      updatedIssue,
+    );
 
     try {
       const savedIssue = await taskService.updateBoardTask(

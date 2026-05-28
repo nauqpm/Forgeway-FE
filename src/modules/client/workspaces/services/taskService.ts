@@ -284,8 +284,32 @@ export const taskService = {
     taskId: string,
     updates: Partial<Issue>,
   ): Promise<Issue> {
+    const isMoveUpdate =
+      updates.status !== undefined ||
+      updates.columnId !== undefined ||
+      updates.sprintId !== undefined;
+
+    if (isMoveUpdate) {
+      const payload: Record<string, any> = {};
+      if (updates.status !== undefined) {
+        payload.status = toColumnId(updates.status);
+        payload.columnId = toColumnId(updates.status);
+      } else if (updates.columnId !== undefined) {
+        payload.columnId = updates.columnId;
+      }
+      if (updates.sprintId !== undefined) {
+        payload.sprintId = updates.sprintId;
+      }
+
+      const response = await api.patch(
+        apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceKey, taskId),
+        payload,
+      );
+      return toIssue(normalizeResponseData<TaskDto>(response));
+    }
+
     const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK_UPDATE(workspaceKey, taskId),
+      apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskId),
       toUpdatePayload(updates),
     );
 
@@ -309,7 +333,7 @@ export const taskService = {
     workspaceKey: string,
     taskId: string,
   ): Promise<void> {
-    await api.delete(apiRoutes.TASKS.BOARD_TASK_DELETE(workspaceKey, taskId), {
+    await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskId), {
       data: { confirmText: "delete" },
     });
   },
