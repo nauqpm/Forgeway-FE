@@ -224,15 +224,13 @@ export default function WorkspaceDetailPage({
     handleEditSprint,
     handleDeleteSprint,
     handleStartSprint,
-    handleConfirmStartSprint,
     handleCompleteSprint,
+    handleConfirmStartSprint,
     handleConfirmCompleteSprint,
     startSprintTarget,
     setStartSprintTarget,
     completeSprintTarget,
     setCompleteSprintTarget,
-    isStarting,
-    isCompleting,
   } = useSprintHandlers({
     workspaceId: workspaceApiId ?? "",
     sprints,
@@ -250,7 +248,14 @@ export default function WorkspaceDetailPage({
       setIssues,
       onSprintAssign: (taskId, sprintId) => {
         if (workspaceApiId) {
-          taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined });
+          taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
+            .then(() => {
+              queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+            })
+            .catch((error) => {
+              queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+              toast.error(error?.response?.data?.message || "Khong cap nhat duoc sprint cua task");
+            });
         }
       },
     });
@@ -450,7 +455,7 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result: any) =>
+            handleBoardDragEnd: (result : any) =>
               canMoveTask
                 ? handleBoardDragEnd({
                     result,
@@ -461,11 +466,18 @@ export default function WorkspaceDetailPage({
                     handleMoveColumn,
                     onColumnChange: (taskId, columnId) => {
                       if (workspaceApiId) {
-                        taskService.updateBoardTask(workspaceApiId, taskId, { columnId });
+                        taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
+                          .then(() => {
+                            queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+                          })
+                          .catch((error) => {
+                            queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+                            toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+                          });
                       }
                     },
                 })
-                : undefined,
+              : undefined,
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -519,8 +531,6 @@ export default function WorkspaceDetailPage({
             handleEditSprint,
             handleDeleteSprint,
             handleQuickCreateTask,
-            isStarting,
-            isCompleting,
           },
           permissions: {
             canCreateTask,
@@ -618,7 +628,7 @@ export default function WorkspaceDetailPage({
         <TaskDetailDrawer
           isOpen={!!selectedIssue}
           issue={selectedIssue}
-          workspaceKey={workspace.key}
+          workspaceId={workspace._id}
           onClose={() => {
             setSelectedIssue(null);
             setListGridDrawerOpen(false);
@@ -629,7 +639,7 @@ export default function WorkspaceDetailPage({
       ) : selectedIssue && !(activeTab === "list" && listViewMode === "split") ? (
         <IssueDetailModal
           issue={selectedIssue}
-          workspaceKey={workspace.key}
+          workspaceId={workspace._id}
           onClose={() => setSelectedIssue(null)}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
