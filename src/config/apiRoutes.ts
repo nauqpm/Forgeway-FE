@@ -53,9 +53,11 @@ export const apiRoutes = {
         BOARD: (workspaceKey: string) => `/workspaces/${workspaceKey}/board/tasks`,
         BOARD_TASK: (workspaceKey: string, taskKey: string) => `/workspaces/${workspaceKey}/board/tasks/${taskKey}`,
         BOARD_TASK_UPDATE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}`,
+        BOARD_TASK_MOVE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/move`,
         BOARD_TASK_DELETE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}`,
         BOARD_TASK_ARCHIVE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/archive`,
         BOARD_TASK_RESTORE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/restore`,
+        BOARD_TASK_ACTIVITIES: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/activities`,
         BY_SPRINT: (workspaceKey: string, sprintId: string) => `/workspaces/${workspaceKey}/board?sprintId=${sprintId}`,
         // Legacy routes — still used by projects/tasks pages, pending migration
         BASE: '/tasks',

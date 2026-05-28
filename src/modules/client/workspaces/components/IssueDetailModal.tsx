@@ -23,6 +23,7 @@ import { MentionsInput, Mention } from "react-mentions";
 import IssueSubtasks from "@/modules/admin/components/common/components/IssueSubtasks";
 import TimeTrackingSidebar from "@/modules/admin/components/common/components/TimeTrackingSidebar";
 import IssueDescription from "@/modules/admin/components/common/components/IssueDescription";
+import TaskActivityHistory from "./TaskActivityHistory";
 
 interface IssueDetailModalProps {
   issue: any;
@@ -322,6 +323,8 @@ export default function IssueDetailModal({
                   </button>
                 </div>
               </div>
+              {activeTab === "comments" && (
+                <>
               <div className="flex gap-4 pt-2">
                 <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
                   QP
@@ -453,6 +456,16 @@ export default function IssueDetailModal({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+                </>
+              )}
+              {activeTab === "history" && (
+                <TaskActivityHistory workspaceKey={workspaceKey} taskId={issue.id} taskKey={issue.key} />
+              )}
+              {activeTab === "worklog" && (
+                <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                  No work log entries yet.
                 </div>
               )}
             </div>

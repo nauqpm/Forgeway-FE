@@ -68,6 +68,7 @@ export const useIssueHandlers = ({
           current.map((issue) => issue.id === savedIssue.id ? savedIssue : issue)
         );
         queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+        queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceKey, id] });
       })
       .catch((error) => {
         setIssues(issues);
@@ -112,21 +113,27 @@ export const useIssueHandlers = ({
       return;
     }
 
-    const savedIssue = await taskService.updateBoardTask(
-      workspaceKey,
-      updatedIssue.id,
-      updatedIssue,
-    );
+    try {
+      const savedIssue = await taskService.updateBoardTask(
+        workspaceKey,
+        updatedIssue.id,
+        updatedIssue,
+      );
 
-    setIssues(
-      issues.map((i) =>
-        i.id === savedIssue.id
-          ? savedIssue
-          : i
-      )
-    );
+      setIssues(
+        issues.map((i) =>
+          i.id === savedIssue.id
+            ? savedIssue
+            : i
+        )
+      );
 
-    setSelectedIssue(savedIssue);
+      setSelectedIssue(savedIssue);
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceKey, updatedIssue.id] });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
+    }
   };
 
   const handleUpdateIssueDate = (

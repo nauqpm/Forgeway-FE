@@ -238,7 +238,14 @@ export default function WorkspaceDetailPage({
       issues,
       setIssues,
       onSprintAssign: (taskId, sprintId) => {
-        taskService.updateBoardTask(workspaceKey, taskId, { sprintId: sprintId ?? undefined });
+        taskService.updateBoardTask(workspaceKey, taskId, { sprintId: sprintId ?? undefined })
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceKey, taskId] });
+          })
+          .catch((error) => {
+            queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+            toast.error(error?.response?.data?.message || "Khong cap nhat duoc sprint cua task");
+          });
       },
     });
   };
@@ -447,7 +454,14 @@ export default function WorkspaceDetailPage({
                     setIssues,
                     handleMoveColumn,
                     onColumnChange: (taskId, columnId) => {
-                      taskService.updateBoardTask(workspaceKey, taskId, { columnId });
+                      taskService.moveBoardTask(workspaceKey, taskId, { columnId })
+                        .then(() => {
+                          queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceKey, taskId] });
+                        })
+                        .catch((error) => {
+                          queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+                          toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+                        });
                     },
                 })
               : undefined,
