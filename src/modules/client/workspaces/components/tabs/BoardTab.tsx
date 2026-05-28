@@ -1,7 +1,7 @@
 "use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Filters } from "../../types/filter.type";
 import { Issue } from "../../types/issue.type";
 import { Workspace } from "../../types/workspace.type";
@@ -10,7 +10,7 @@ import { Sprint } from "../../types/sprint.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
 
-import { Search, Plus, Check, X, Trash2, PlayCircle } from "lucide-react";
+import { Search, Plus, Check, X, Trash2, PlayCircle, UserRound } from "lucide-react";
 
 type BoardTabProps = {
   data: {
@@ -48,6 +48,7 @@ type BoardTabProps = {
     handleRenameColumn: (columnId: string, name: string) => void;
     handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
     handleMoveColumn: (columnId: string, newOrder: number) => void;
+    updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
   };
 
   refs: {
@@ -56,6 +57,7 @@ type BoardTabProps = {
 
   permissions?: {
     canCreateTask: boolean;
+    canEditTask?: boolean;
     canMoveTask: boolean;
     canUpdateWorkspace: boolean;
   };
@@ -85,9 +87,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     handleRenameColumn,
     handleDeleteColumn,
     handleMoveColumn,
+    updateIssueDirectly,
   } = actions;
   const { columnsEndRef } = refs;
   const canCreateTask = permissions?.canCreateTask ?? true;
+  const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canUpdateWorkspace = permissions?.canUpdateWorkspace ?? true;
 
@@ -95,6 +99,76 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [editingName, setEditingName] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState<BoardColumn | null>(null);
+  const [assigneeMenuIssueId, setAssigneeMenuIssueId] = useState<string | null>(null);
+  const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<React.CSSProperties>({});
+  const [memberSearch, setMemberSearch] = useState("");
+  const assigneeMenuRef = useRef<HTMLDivElement>(null);
+
+  const workspaceMembers = useMemo(() => {
+    return (workspace.members ?? [])
+      .map((member) => {
+        const user = member.userId;
+        const id = typeof user === "string" ? user : user._id ?? user.id ?? "";
+        const name = typeof user === "string" ? user : user.fullName || user.name || user.email || id;
+        const email = typeof user === "string" ? "" : user.email ?? "";
+        const avatar = typeof user === "string" ? undefined : user.avatar || user.avatarUrl || user.image;
+
+        return {
+          id,
+          name: name || "Member",
+          email,
+          role: member.role,
+          avatar,
+          initials: (name || email || id || "?")
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+        };
+      })
+      .filter((member) => member.id);
+  }, [workspace.members]);
+
+  const filteredWorkspaceMembers = useMemo(() => {
+    const query = memberSearch.trim().toLowerCase();
+    if (!query) return workspaceMembers;
+
+    return workspaceMembers.filter((member) =>
+      [member.name, member.email, member.id, member.role]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query)),
+    );
+  }, [memberSearch, workspaceMembers]);
+
+  useEffect(() => {
+    if (!assigneeMenuIssueId) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!assigneeMenuRef.current?.contains(event.target as Node)) {
+        setAssigneeMenuIssueId(null);
+        setMemberSearch("");
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [assigneeMenuIssueId]);
+
+  const getIssueAssignee = (issue: Issue) => {
+    const assigneeId = issue.assigneeId ?? issue.assignee;
+    return workspaceMembers.find((member) => member.id === assigneeId);
+  };
+
+  const handleAssignIssue = (issue: Issue, memberId: string) => {
+    updateIssueDirectly(issue.id, {
+      assigneeId: memberId,
+      assignee: memberId,
+    });
+    setAssigneeMenuIssueId(null);
+    setMemberSearch("");
+  };
 
   const issueMatchesColumn = (issue: Issue, col: BoardColumn) => {
     return issue.columnId ? issue.columnId === col.id : col.mappedStatuses?.includes(issue.status);
@@ -264,10 +338,101 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         <span className="text-xs font-mono font-bold text-gray-400">
                                           {issue.key}
                                         </span>
-                                        <div
-                                          className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-900`}
-                                        >
-                                          {issue.assignee}
+                                        <div className="relative" ref={assigneeMenuIssueId === issue.id ? assigneeMenuRef : undefined}>
+                                          <button
+                                            type="button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              if (filters.archived || !canEditTask) return;
+                                              const rect = event.currentTarget.getBoundingClientRect();
+                                              setAssigneeMenuIssueId((current) => current === issue.id ? null : issue.id);
+                                              setAssigneeMenuPosition({
+                                                position: "fixed",
+                                                top: rect.bottom + 8,
+                                                left: Math.max(8, Math.min(rect.right - 288, window.innerWidth - 304)),
+                                              });
+                                              setMemberSearch("");
+                                            }}
+                                            onMouseDown={(event) => event.stopPropagation()}
+                                            className={`w-7 h-7 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white transition dark:ring-gray-900 ${
+                                              filters.archived || !canEditTask
+                                                ? "cursor-default"
+                                                : "hover:ring-indigo-300 dark:hover:ring-indigo-500"
+                                            }`}
+                                            title="Assign member"
+                                            aria-label="Assign member"
+                                          >
+                                            {getIssueAssignee(issue)?.avatar ? (
+                                              <img
+                                                src={getIssueAssignee(issue)?.avatar}
+                                                alt=""
+                                                className="h-full w-full rounded-full object-cover"
+                                              />
+                                            ) : (
+                                              getIssueAssignee(issue)?.initials || <UserRound className="h-3.5 w-3.5" />
+                                            )}
+                                          </button>
+
+                                          {assigneeMenuIssueId === issue.id && (
+                                            <div
+                                              onClick={(event) => event.stopPropagation()}
+                                              onMouseDown={(event) => event.stopPropagation()}
+                                              style={assigneeMenuPosition}
+                                              className="z-[9999] w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
+                                            >
+                                              <div className="border-b border-gray-100 p-2 dark:border-gray-800">
+                                                <div className="relative">
+                                                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                                  <input
+                                                    autoFocus
+                                                    value={memberSearch}
+                                                    onChange={(event) => setMemberSearch(event.target.value)}
+                                                    placeholder="Search member"
+                                                    className="h-9 w-full rounded-md border border-gray-200 bg-white pl-8 pr-3 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                                                  />
+                                                </div>
+                                              </div>
+                                              <div className="max-h-64 overflow-y-auto p-1">
+                                                {filteredWorkspaceMembers.length === 0 ? (
+                                                  <div className="px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                                    Không tìm thấy member.
+                                                  </div>
+                                                ) : (
+                                                  filteredWorkspaceMembers.map((member) => {
+                                                    const active = (issue.assigneeId ?? issue.assignee) === member.id;
+
+                                                    return (
+                                                      <button
+                                                        key={member.id}
+                                                        type="button"
+                                                        onClick={() => handleAssignIssue(issue, member.id)}
+                                                        className={`flex w-full min-w-0 items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition ${
+                                                          active
+                                                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
+                                                            : "text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                                                        }`}
+                                                      >
+                                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                                                          {member.avatar ? (
+                                                            <img src={member.avatar} alt="" className="h-full w-full rounded-full object-cover" />
+                                                          ) : (
+                                                            member.initials
+                                                          )}
+                                                        </span>
+                                                        <span className="min-w-0 flex-1">
+                                                          <span className="block truncate font-medium">{member.name}</span>
+                                                          <span className="block truncate text-xs text-gray-500 dark:text-gray-400">
+                                                            {member.email || member.role}
+                                                          </span>
+                                                        </span>
+                                                        {active && <Check className="h-4 w-4 shrink-0" />}
+                                                      </button>
+                                                    );
+                                                  })
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
                                     </div>

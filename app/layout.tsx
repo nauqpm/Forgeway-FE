@@ -7,8 +7,8 @@ import ToastProvider from "@/common/providers/ToastProvider";
 import { Suspense } from "react";
 
 export const   metadata = {
-    title: "AL-TASK — Project Management for Modern Teams",
-    description: "AL-TASK is a Jira + Confluence alternative. Manage projects, track tasks, plan sprints, and store team knowledge — all in one place.",
+    title: "SDLC Platform — Project Management for Modern Teams",
+    description: "SDLC Platform is a Jira + Confluence alternative. Manage projects, track tasks, plan sprints, and store team knowledge — all in one place.",
     icons: {
       icon: [
         { url: "/favicon.ico?v=2", sizes: "any" },
@@ -18,7 +18,7 @@ export const   metadata = {
       apple: "/automationland-tab-logo.png?v=2",
     },
     openGraph: {
-      title: "AL-TASK",
+      title: "SDLC Platform",
       type: "website",
       locale: "en_US",
     },

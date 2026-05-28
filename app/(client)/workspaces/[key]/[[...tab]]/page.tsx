@@ -89,12 +89,14 @@ export default function WorkspaceDetailPage({
     priority: string;
     status: string;
     sprintId: string | null;
+    assigneeId: string;
   }>({
     title: "",
     type: "Task",
     priority: "Medium",
     status: "To Do",
     sprintId: null,
+    assigneeId: "",
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
@@ -185,8 +187,6 @@ export default function WorkspaceDetailPage({
   });
 
   const activeSprint = sprints.find(s => s.status === "active") ?? null;
-  const getIssueTaskKey = (taskId: string) =>
-    issues.find((issue) => issue.id === taskId)?.key;
 
   const {
     handleAddColumn,
@@ -226,10 +226,7 @@ export default function WorkspaceDetailPage({
       issues,
       setIssues,
       onSprintAssign: (taskId, sprintId) => {
-        const taskKey = getIssueTaskKey(taskId);
-        if (taskKey) {
-          taskService.updateBoardTask(workspaceKey, taskKey, { sprintId: sprintId ?? undefined });
-        }
+        taskService.updateBoardTask(workspaceKey, taskId, { sprintId: sprintId ?? undefined });
       },
     });
   };
@@ -262,10 +259,23 @@ export default function WorkspaceDetailPage({
         const nextWorkspace = (
           workspaceResponse.data?.data ?? workspaceResponse.data
         ) as Workspace;
+        let workspaceMembers = nextWorkspace.members ?? [];
+
+        try {
+          const membersResponse = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceKey));
+          workspaceMembers = membersResponse.data?.data ?? membersResponse.data ?? workspaceMembers;
+        } catch {
+          workspaceMembers = nextWorkspace.members ?? [];
+        }
+
+        const workspaceWithMembers = {
+          ...nextWorkspace,
+          members: workspaceMembers,
+        };
         const template = getWorkspaceTemplate(nextWorkspace);
 
-        setWorkspace(nextWorkspace);
-        setCurrentWorkspace(nextWorkspace as any);
+        setWorkspace(workspaceWithMembers);
+        setCurrentWorkspace(workspaceWithMembers as any);
         if (!initialTab) {
           if (template === "scrum") handleTabChange("backlog");
           else handleTabChange("board");
@@ -352,6 +362,7 @@ export default function WorkspaceDetailPage({
             setColumns,
             setIssues,
             setSelectedIssue,
+            updateIssueDirectly,
             setNewIssueForm,
             setShowCreateIssue,
             setShowCreateColumn,
@@ -366,10 +377,7 @@ export default function WorkspaceDetailPage({
                     setIssues,
                     handleMoveColumn,
                     onColumnChange: (taskId, columnId) => {
-                      const taskKey = getIssueTaskKey(taskId);
-                      if (taskKey) {
-                        taskService.updateBoardTask(workspaceKey, taskKey, { columnId });
-                      }
+                      taskService.updateBoardTask(workspaceKey, taskId, { columnId });
                     },
                 })
               : undefined,
@@ -383,6 +391,7 @@ export default function WorkspaceDetailPage({
           },
           permissions: {
             canCreateTask,
+            canEditTask,
             canMoveTask,
             canUpdateWorkspace,
           },
@@ -471,6 +480,7 @@ export default function WorkspaceDetailPage({
           newIssueForm={newIssueForm}
           setNewIssueForm={setNewIssueForm}
           handleCreateIssue={handleCreateIssue}
+          workspace={workspace}
         />
       )}
 

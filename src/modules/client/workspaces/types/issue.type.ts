@@ -7,6 +7,7 @@ export interface Issue {
   priority: string;
   type: string;
   assignee: string;
+  assigneeId?: string;
   color: string;
   sprintId: string | null;
   storyPoints: number;

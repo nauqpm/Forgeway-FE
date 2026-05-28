@@ -28,6 +28,7 @@ type CreateTaskInput = {
   priority: string;
   status: string;
   sprintId: string | null;
+  assigneeId?: string | null;
 };
 
 const COLUMN_BY_STATUS: Record<string, string> = {
@@ -112,6 +113,7 @@ const toIssue = (task: TaskDto): Issue => {
     priority: toUiLabel(task.priority, "Medium"),
     type: toUiLabel(task.type, "Task"),
     assignee,
+    assigneeId: task.assigneeId,
     color: "bg-indigo-600",
     sprintId: task.sprintId ?? null,
     storyPoints: task.storyPoints ?? 0,
@@ -129,18 +131,37 @@ const toCreatePayload = (input: CreateTaskInput) => ({
   columnId: toColumnId(input.status),
   status: toColumnId(input.status),
   sprintId: input.sprintId || undefined,
+  assigneeId: input.assigneeId || undefined,
 });
 
-const toUpdatePayload = (updates: Partial<Issue>) => ({
-  ...updates,
-  type: normalizeValue(updates.type),
-  priority: normalizeValue(updates.priority),
-  ...(updates.status && {
-    columnId: toColumnId(updates.status),
-    status: toColumnId(updates.status),
-  }),
-  sprintId: updates.sprintId || undefined,
-});
+const toUpdatePayload = (updates: Partial<Issue>) => {
+  const {
+    assignee,
+    assigneeId,
+    color,
+    createdAt,
+    endDate,
+    id,
+    key,
+    startDate,
+    updatedAt,
+    ...payload
+  } = updates;
+
+  const nextAssigneeId = assigneeId ?? (assignee && assignee !== "U" ? assignee : undefined);
+
+  return {
+    ...payload,
+    ...(nextAssigneeId !== undefined && { assigneeId: nextAssigneeId }),
+    type: normalizeValue(updates.type),
+    priority: normalizeValue(updates.priority),
+    ...(updates.status && {
+      columnId: toColumnId(updates.status),
+      status: toColumnId(updates.status),
+    }),
+    sprintId: updates.sprintId || undefined,
+  };
+};
 
 export const buildTaskQuery = (filters?: TaskFilters) => {
   if (!filters) return "";
@@ -209,11 +230,11 @@ export const taskService = {
 
   async updateBoardTask(
     workspaceKey: string,
-    taskKey: string,
+    taskId: string,
     updates: Partial<Issue>,
   ): Promise<Issue> {
     const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskKey),
+      apiRoutes.TASKS.BOARD_TASK_UPDATE(workspaceKey, taskId),
       toUpdatePayload(updates),
     );
 
