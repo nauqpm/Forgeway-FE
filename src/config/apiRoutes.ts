@@ -53,10 +53,9 @@ export const apiRoutes = {
         // New workspace-scoped board routes (use these for workspace board/backlog)
         BOARD: (workspaceKey: string) => `/workspaces/${workspaceKey}/board/tasks`,
         BOARD_TASK: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}`,
-<<<<<<< HEAD
         BOARD_TASK_MOVE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/move`,
-=======
->>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
+        BOARD_TASK_ARCHIVE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/archive`,
+        BOARD_TASK_RESTORE: (workspaceKey: string, taskId: string) => `/workspaces/${workspaceKey}/board/${taskId}/restore`,
         BY_SPRINT: (workspaceKey: string, sprintId: string) => `/workspaces/${workspaceKey}/board?sprintId=${sprintId}`,
         // Legacy routes — still used by projects/tasks pages, pending migration
         BASE: '/tasks',

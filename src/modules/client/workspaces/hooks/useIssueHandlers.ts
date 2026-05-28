@@ -44,23 +44,17 @@ export const useIssueHandlers = ({
   setSelectedIssue,
 }: UseIssueHandlersProps) => {
   const queryClient = useQueryClient();
-<<<<<<< HEAD
-=======
+  const isCreatingRef = useRef(false);
 
->>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
   const updateIssueDirectly = (
     id: string,
     updates: Partial<Issue>
   ) => {
-<<<<<<< HEAD
     const existingIssue = issues.find((issue) => issue.id === id);
     if (!existingIssue) {
       toast.error("Không tìm thấy task");
       return;
     }
-
-=======
->>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
     setIssues(
       issues.map((i) =>
         i.id === id
@@ -105,14 +99,10 @@ export const useIssueHandlers = ({
   const handleUpdateIssue = async (
     updatedIssue: Issue
   ) => {
-<<<<<<< HEAD
     if (!updatedIssue.id) {
       toast.error("Không tìm thấy task ID");
       return;
     }
-
-=======
->>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
     const savedIssue = await taskService.updateBoardTask(
       workspaceKey,
       updatedIssue.id,

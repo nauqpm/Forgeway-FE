@@ -104,58 +104,7 @@ export default function WorkspaceDetailPage({
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-
-  const [filters, setFilters] = useState<Filters>(() => {
-    return {
-      search: searchParams?.get("search") || "",
-      assigneeId: null,
-      reporterId: null,
-      priority: null,
-      type: null,
-      assignees: searchParams?.get("assignees")?.split(",").filter(Boolean) || [],
-      types: searchParams?.get("types")?.split(",").filter(Boolean) || [],
-      statuses: searchParams?.get("statuses")?.split(",").filter(Boolean) || [],
-      priorities: searchParams?.get("priorities")?.split(",").filter(Boolean) || [],
-      backlog: searchParams?.get("backlog") === "true",
-      archived: searchParams?.get("archived") === "true",
-    };
-  });
-
-  // Sync to URL silently
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-
-    if (filters.search) params.set("search", filters.search);
-    else params.delete("search");
-
-    if (filters.assignees.length > 0) params.set("assignees", filters.assignees.join(","));
-    else params.delete("assignees");
-
-    if (filters.types.length > 0) params.set("types", filters.types.join(","));
-    else params.delete("types");
-
-    if (filters.statuses.length > 0) params.set("statuses", filters.statuses.join(","));
-    else params.delete("statuses");
-
-    if (filters.priorities.length > 0) params.set("priorities", filters.priorities.join(","));
-    else params.delete("priorities");
-
-    if (filters.backlog) params.set("backlog", "true");
-    else params.delete("backlog");
-
-    if (filters.archived) params.set("archived", "true");
-    else params.delete("archived");
-
-    const query = params.toString();
-    const newUrl = query ? `${pathname}?${query}` : pathname;
-
-    if (window.location.pathname + window.location.search !== newUrl) {
-      window.history.replaceState(null, "", newUrl);
-    }
-  }, [filters, pathname]);
+  const { filters, setFilters, taskFilters } = useTaskFilters(workspaceKey);
   const [density, setDensity] = useState<"default" | "compact">("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -501,7 +450,6 @@ export default function WorkspaceDetailPage({
             handleBoardDragEnd: (result: any) =>
               canMoveTask
                 ? handleBoardDragEnd({
-<<<<<<< HEAD
                     result,
                     columns,
                     issues,
@@ -511,17 +459,6 @@ export default function WorkspaceDetailPage({
                     onColumnChange: (taskId, columnId) => {
                       taskService.updateBoardTask(workspaceKey, taskId, { columnId });
                     },
-=======
-                  result,
-                  columns,
-                  issues,
-                  setColumns,
-                  setIssues,
-                  handleMoveColumn,
-                  onColumnChange: (taskId, columnId) => {
-                    taskService.updateBoardTask(workspaceKey, taskId, { columnId });
-                  },
->>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
                 })
                 : undefined,
             handleAddColumn,

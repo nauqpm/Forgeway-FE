@@ -271,11 +271,7 @@ export const taskService = {
     }
 
     const response = await api.patch(
-<<<<<<< HEAD
       apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskId),
-=======
-      apiRoutes.TASKS.BOARD_TASK_UPDATE(workspaceKey, taskId),
->>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
       toUpdatePayload(updates),
     );
 
@@ -286,11 +282,7 @@ export const taskService = {
     workspaceKey: string,
     taskId: string,
   ): Promise<void> {
-<<<<<<< HEAD
     await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceKey, taskId), {
-=======
-    await api.delete(apiRoutes.TASKS.BOARD_TASK_DELETE(workspaceKey, taskId), {
->>>>>>> e2ca565c5041cc52b3e8d6599129ed85f858f233
       data: { confirmText: "delete" },
     });
   },
