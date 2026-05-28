@@ -71,12 +71,12 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
       .then(([usersRes, wsData]) => {
         if (cancelled) return;
         setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
-        if (currentWorkspace?.key) {
-          return api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace.key));
+        if (currentWorkspace?._id) {
+          return api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace._id));
         }
         const ws = currentWorkspace || (wsData.length > 0 ? wsData[0] : null);
-        if (ws) {
-          return api.get(apiRoutes.WORKSPACES.MEMBERS(ws.key));
+        if (ws?._id) {
+          return api.get(apiRoutes.WORKSPACES.MEMBERS(ws._id));
         }
         return null;
       })
@@ -92,32 +92,32 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail.trim() || !currentWorkspace?.key) return;
+    if (!inviteEmail.trim() || !currentWorkspace?._id) return;
     setInviting(true);
     try {
-      await api.post(apiRoutes.WORKSPACES.ADD_MEMBER(currentWorkspace.key), { email: inviteEmail, role: inviteRole });
-      const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace.key));
+      await api.post(apiRoutes.WORKSPACES.ADD_MEMBER(currentWorkspace._id), { email: inviteEmail, role: inviteRole });
+      const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace._id));
       setMembers(Array.isArray(res.data) ? res.data : []);
       setInviteEmail("");
       setShowInvite(false);
     } catch {} finally { setInviting(false); }
   };
 
-  const handleChangeRole = async (memberEmail: string, newRole: string) => {
-    if (!currentWorkspace?.key) return;
+  const handleChangeRole = async (memberUserId: string, newRole: string) => {
+    if (!currentWorkspace?._id) return;
     try {
-      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(currentWorkspace.key, memberEmail), { role: newRole });
-      setMembers(prev => prev.map(m => m.email === memberEmail ? { ...m, role: newRole as WorkspaceMember["role"] } : m));
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(currentWorkspace._id, memberUserId), { role: newRole });
+      setMembers(prev => prev.map(m => m.userId === memberUserId ? { ...m, role: newRole as WorkspaceMember["role"] } : m));
       setOpenMenu(null);
     } catch {}
   };
 
-  const handleRemoveMember = async (email: string) => {
-    if (!currentWorkspace?.key) return;
+  const handleRemoveMember = async (memberUserId: string) => {
+    if (!currentWorkspace?._id) return;
     if (!confirm("Xóa thành viên này khỏi workspace?")) return;
     try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(currentWorkspace.key, email));
-      setMembers(prev => prev.filter(m => m.email !== email));
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(currentWorkspace._id, memberUserId));
+      setMembers(prev => prev.filter(m => m.userId !== memberUserId));
     } catch {}
   };
 
@@ -234,15 +234,15 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                 <td className="px-5 py-3.5">
                   {tab === "workspace" ? (
                     <div className="relative">
-                      <button onClick={() => setOpenMenu(openMenu === item.email ? null : item.email)}
+                      <button onClick={() => setOpenMenu(openMenu === item.userId ? null : item.userId)}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${roleColors[item.role] || roleColors.member} hover:opacity-80 transition-opacity`}>
                         {roleLabels[item.role] || item.role}
                         <ChevronDown className="w-3 h-3" />
                       </button>
-                      {openMenu === item.email && item.role !== "owner" && (
+                      {openMenu === item.userId && item.role !== "owner" && (
                         <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 py-1 min-w-[160px]">
                           {["admin", "member", "viewer"].map((r) => (
-                            <button key={r} onClick={() => handleChangeRole(item.email, r)}
+                            <button key={r} onClick={() => handleChangeRole(item.userId, r)}
                               className={`w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${item.role === r ? "text-indigo-600 dark:text-indigo-400 font-medium" : "text-gray-700 dark:text-gray-300"}`}>
                               {roleLabels[r]}
                             </button>
@@ -262,7 +262,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                 <td className="px-5 py-3.5 text-sm text-gray-500 dark:text-gray-400">{new Date(item.createdAt || item.joinedAt).toLocaleDateString("vi-VN", { day: "numeric", month: "short", year: "numeric" })}</td>
                 <td className="px-5 py-3.5 text-right">
                   {tab === "workspace" && item.role !== "owner" && (
-                    <button onClick={() => handleRemoveMember(item.email)}
+                    <button onClick={() => handleRemoveMember(item.userId)}
                       className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Xóa khỏi workspace">
                       <Trash2 className="w-4 h-4" />
                     </button>

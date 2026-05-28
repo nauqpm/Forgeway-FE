@@ -47,19 +47,21 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
   }, [setWorkspaces]);
 
   const handleSave = async () => {
-    if (!currentWorkspace?.key) return;
+    const workspaceId = currentWorkspace?._id ?? workspace?._id;
+    if (!workspaceId) return;
     setSaving(true);
     try {
-      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(currentWorkspace.key), form);
+      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceId), form);
       setWorkspace(res.data);
       setCurrentWorkspace(res.data);
     } catch {} finally { setSaving(false); }
   };
 
   const handleRemoveMember = async (userId: string) => {
-    if (!currentWorkspace?.key) return;
+    const workspaceId = currentWorkspace?._id ?? workspace?._id;
+    if (!workspaceId) return;
     try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(currentWorkspace.key, userId));
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceId, userId));
       setMembers(members.filter(m => m.userId._id !== userId));
     } catch {}
   };
