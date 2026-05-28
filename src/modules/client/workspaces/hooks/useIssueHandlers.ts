@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
@@ -9,6 +10,7 @@ interface CreateIssueForm {
   priority: string;
   status: string;
   sprintId: string | null;
+  assigneeId: string;
 }
 
 interface UseIssueHandlersProps {
@@ -42,15 +44,14 @@ export const useIssueHandlers = ({
   setSelectedIssue,
 }: UseIssueHandlersProps) => {
   const queryClient = useQueryClient();
-  const getTaskKey = (id: string) => issues.find((issue) => issue.id === id)?.key;
+  const isCreatingRef = useRef(false);
 
   const updateIssueDirectly = (
     id: string,
     updates: Partial<Issue>
   ) => {
-    const taskKey = getTaskKey(id);
-    if (!taskKey) {
-      toast.error("Khong tim thay task key");
+    if (!id) {
+      toast.error("Khong tim thay task id");
       return;
     }
 
@@ -61,9 +62,17 @@ export const useIssueHandlers = ({
           : i
       )
     );
-    taskService.updateBoardTask(workspaceKey, taskKey, updates).catch(() => {
-      setIssues(issues);
-    });
+    taskService.updateBoardTask(workspaceKey, id, updates)
+      .then((savedIssue) => {
+        setIssues((current) =>
+          current.map((issue) => issue.id === savedIssue.id ? savedIssue : issue)
+        );
+        queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+      })
+      .catch((error) => {
+        setIssues(issues);
+        toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
+      });
   };
 
   const handleCreateIssue = async (
@@ -72,19 +81,27 @@ export const useIssueHandlers = ({
   ) => {
     e.preventDefault();
 
-    if (!newIssueForm.title.trim()) return;
+    if (!newIssueForm.title.trim() || isCreatingRef.current) return;
 
-    const issue = await taskService.createBoardTask(workspaceKey, newIssueForm);
-    setIssues([...issues, issue]);
-    setShowCreateIssue(false);
-    setNewIssueForm({
-      title: "",
-      type: "Task",
-      priority: "Medium",
-      status: "To Do",
-      sprintId: null,
-    });
-    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+    isCreatingRef.current = true;
+    try {
+      const issue = await taskService.createBoardTask(workspaceKey, newIssueForm);
+      setIssues((current) => [...current, issue]);
+      setShowCreateIssue(false);
+      setNewIssueForm({
+        title: "",
+        type: "Task",
+        priority: "Medium",
+        status: "To Do",
+        sprintId: null,
+        assigneeId: "",
+      });
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Khong tao duoc issue");
+    } finally {
+      isCreatingRef.current = false;
+    }
   };
 
   const handleUpdateIssue = async (
@@ -97,7 +114,7 @@ export const useIssueHandlers = ({
 
     const savedIssue = await taskService.updateBoardTask(
       workspaceKey,
-      updatedIssue.key,
+      updatedIssue.id,
       updatedIssue,
     );
 
@@ -124,7 +141,8 @@ export const useIssueHandlers = ({
   };
 
   const handleQuickCreateTask = async (title: string, sprintId: string | null = null) => {
-    if (!title.trim()) return;
+    if (!title.trim() || isCreatingRef.current) return;
+    isCreatingRef.current = true;
     try {
       const issue = await taskService.createBoardTask(workspaceKey, {
         title: title.trim(),
@@ -135,8 +153,10 @@ export const useIssueHandlers = ({
       });
       setIssues(prev => [...prev, issue]);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
-    } catch {
-      toast.error("Lỗi khi tạo task");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Loi khi tao task");
+    } finally {
+      isCreatingRef.current = false;
     }
   };
 

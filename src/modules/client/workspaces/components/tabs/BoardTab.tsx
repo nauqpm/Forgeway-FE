@@ -1,7 +1,7 @@
 "use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Filters } from "../../types/filter.type";
 import { Issue } from "../../types/issue.type";
 import { Workspace } from "../../types/workspace.type";
@@ -10,7 +10,7 @@ import { Sprint } from "../../types/sprint.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
 
-import { Search, Plus, Check, X, Trash2, PlayCircle } from "lucide-react";
+import { Archive, MoreHorizontal, Search, Plus, Check, X, Trash2, PlayCircle, UserRound } from "lucide-react";
 
 type BoardTabProps = {
   data: {
@@ -48,6 +48,9 @@ type BoardTabProps = {
     handleRenameColumn: (columnId: string, name: string) => void;
     handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
     handleMoveColumn: (columnId: string, newOrder: number) => void;
+    updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
+    onArchiveIssue?: (issue: Issue) => void;
+    onDeleteIssue?: (issue: Issue) => void;
   };
 
   refs: {
@@ -56,8 +59,10 @@ type BoardTabProps = {
 
   permissions?: {
     canCreateTask: boolean;
+    canEditTask?: boolean;
     canMoveTask: boolean;
     canUpdateWorkspace: boolean;
+    canArchiveTask?: boolean;
   };
 };
 
@@ -85,20 +90,114 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     handleRenameColumn,
     handleDeleteColumn,
     handleMoveColumn,
+    updateIssueDirectly,
+    onArchiveIssue,
+    onDeleteIssue,
   } = actions;
   const { columnsEndRef } = refs;
   const canCreateTask = permissions?.canCreateTask ?? true;
+  const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canUpdateWorkspace = permissions?.canUpdateWorkspace ?? true;
+  const canArchiveTask = permissions?.canArchiveTask ?? true;
 
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [columnToDelete, setColumnToDelete] = useState<BoardColumn | null>(null);
+  const [assigneeMenuIssueId, setAssigneeMenuIssueId] = useState<string | null>(null);
+  const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<React.CSSProperties>({});
+  const [actionMenuIssueId, setActionMenuIssueId] = useState<string | null>(null);
+  const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
+  const assigneeMenuRef = useRef<HTMLDivElement>(null);
+  const actionMenuRef = useRef<HTMLDivElement>(null);
+
+  const workspaceMembers = useMemo(() => {
+    return (workspace.members ?? [])
+      .map((member) => {
+        const user = member.userId;
+        const id = typeof user === "string" ? user : user._id ?? user.id ?? "";
+        const name = typeof user === "string" ? user : user.fullName || user.name || user.email || id;
+        const email = typeof user === "string" ? "" : user.email ?? "";
+        const avatar = typeof user === "string" ? undefined : user.avatar || user.avatarUrl || user.image;
+
+        return {
+          id,
+          name: name || "Member",
+          email,
+          role: member.role,
+          avatar,
+          initials: (name || email || id || "?")
+            .split(/\s+/)
+            .filter(Boolean)
+            .map((part) => part[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+        };
+      })
+      .filter((member) => member.id);
+  }, [workspace.members]);
+
+  const filteredWorkspaceMembers = useMemo(() => {
+    const query = memberSearch.trim().toLowerCase();
+    if (!query) return workspaceMembers;
+
+    return workspaceMembers.filter((member) =>
+      [member.name, member.email, member.id, member.role]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(query)),
+    );
+  }, [memberSearch, workspaceMembers]);
+
+  useEffect(() => {
+    if (!assigneeMenuIssueId && !actionMenuIssueId) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!assigneeMenuRef.current?.contains(event.target as Node)) {
+        setAssigneeMenuIssueId(null);
+        setMemberSearch("");
+      }
+      if (!actionMenuRef.current?.contains(event.target as Node)) {
+        setActionMenuIssueId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [assigneeMenuIssueId, actionMenuIssueId]);
+
+  const getIssueAssignee = (issue: Issue) => {
+    const assigneeId = issue.assigneeId ?? issue.assignee;
+    return workspaceMembers.find((member) => member.id === assigneeId);
+  };
+
+  const handleAssignIssue = (issue: Issue, memberId: string) => {
+    updateIssueDirectly(issue.id, {
+      assigneeId: memberId,
+      assignee: memberId,
+    });
+    setAssigneeMenuIssueId(null);
+    setMemberSearch("");
+  };
 
   const issueMatchesColumn = (issue: Issue, col: BoardColumn) => {
     return issue.columnId ? issue.columnId === col.id : col.mappedStatuses?.includes(issue.status);
   };
+
+  const closeDeleteIssueModal = () => {
+    setIssueToDelete(null);
+    setDeleteConfirmText("");
+  };
+
+  const confirmDeleteIssue = () => {
+    if (!issueToDelete || deleteConfirmText !== "delete") return;
+    onDeleteIssue?.(issueToDelete);
+    closeDeleteIssueModal();
+  };
+
   if (workspace.type === "scrum" && !activeSprint) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -243,8 +342,64 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         if (filters.archived) return;
                                         setSelectedIssue(issue);
                                       }}
-                                      className={`bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      className={`relative bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
                                     >
+                                      {!filters.archived && canArchiveTask && onArchiveIssue && (
+                                        <div
+                                          className="absolute right-2 top-2 z-20"
+                                          ref={actionMenuIssueId === issue.id ? actionMenuRef : undefined}
+                                        >
+                                          <button
+                                            type="button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              setActionMenuIssueId((current) => current === issue.id ? null : issue.id);
+                                            }}
+                                            onMouseDown={(event) => event.stopPropagation()}
+                                            className={`rounded-md p-1 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-700 group-hover:opacity-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 ${
+                                              actionMenuIssueId === issue.id ? "opacity-100" : ""
+                                            }`}
+                                            aria-label="Issue actions"
+                                            title="Issue actions"
+                                          >
+                                            <MoreHorizontal className="h-4 w-4" />
+                                          </button>
+
+                                          {actionMenuIssueId === issue.id && (
+                                            <div
+                                              onClick={(event) => event.stopPropagation()}
+                                              onMouseDown={(event) => event.stopPropagation()}
+                                              className="absolute right-0 top-full z-30 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700 dark:bg-gray-900"
+                                            >
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setActionMenuIssueId(null);
+                                                  onArchiveIssue(issue);
+                                                }}
+                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                                              >
+                                                <Archive className="h-4 w-4" />
+                                                Archive
+                                              </button>
+                                              {onDeleteIssue && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setActionMenuIssueId(null);
+                                                    setIssueToDelete(issue);
+                                                    setDeleteConfirmText("");
+                                                  }}
+                                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                  Delete
+                                                </button>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
                                       <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                                         {issue.title}
                                       </p>
@@ -264,10 +419,101 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         <span className="text-xs font-mono font-bold text-gray-400">
                                           {issue.key}
                                         </span>
-                                        <div
-                                          className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white dark:ring-gray-900`}
-                                        >
-                                          {issue.assignee}
+                                        <div className="relative" ref={assigneeMenuIssueId === issue.id ? assigneeMenuRef : undefined}>
+                                          <button
+                                            type="button"
+                                            onClick={(event) => {
+                                              event.stopPropagation();
+                                              if (filters.archived || !canEditTask) return;
+                                              const rect = event.currentTarget.getBoundingClientRect();
+                                              setAssigneeMenuIssueId((current) => current === issue.id ? null : issue.id);
+                                              setAssigneeMenuPosition({
+                                                position: "fixed",
+                                                top: rect.bottom + 8,
+                                                left: Math.max(8, Math.min(rect.right - 288, window.innerWidth - 304)),
+                                              });
+                                              setMemberSearch("");
+                                            }}
+                                            onMouseDown={(event) => event.stopPropagation()}
+                                            className={`w-7 h-7 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white transition dark:ring-gray-900 ${
+                                              filters.archived || !canEditTask
+                                                ? "cursor-default"
+                                                : "hover:ring-indigo-300 dark:hover:ring-indigo-500"
+                                            }`}
+                                            title="Assign member"
+                                            aria-label="Assign member"
+                                          >
+                                            {getIssueAssignee(issue)?.avatar ? (
+                                              <img
+                                                src={getIssueAssignee(issue)?.avatar}
+                                                alt=""
+                                                className="h-full w-full rounded-full object-cover"
+                                              />
+                                            ) : (
+                                              getIssueAssignee(issue)?.initials || <UserRound className="h-3.5 w-3.5" />
+                                            )}
+                                          </button>
+
+                                          {assigneeMenuIssueId === issue.id && (
+                                            <div
+                                              onClick={(event) => event.stopPropagation()}
+                                              onMouseDown={(event) => event.stopPropagation()}
+                                              style={assigneeMenuPosition}
+                                              className="z-[9999] w-72 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
+                                            >
+                                              <div className="border-b border-gray-100 p-2 dark:border-gray-800">
+                                                <div className="relative">
+                                                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                                  <input
+                                                    autoFocus
+                                                    value={memberSearch}
+                                                    onChange={(event) => setMemberSearch(event.target.value)}
+                                                    placeholder="Search member"
+                                                    className="h-9 w-full rounded-md border border-gray-200 bg-white pl-8 pr-3 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+                                                  />
+                                                </div>
+                                              </div>
+                                              <div className="max-h-64 overflow-y-auto p-1">
+                                                {filteredWorkspaceMembers.length === 0 ? (
+                                                  <div className="px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                                    Không tìm thấy member.
+                                                  </div>
+                                                ) : (
+                                                  filteredWorkspaceMembers.map((member) => {
+                                                    const active = (issue.assigneeId ?? issue.assignee) === member.id;
+
+                                                    return (
+                                                      <button
+                                                        key={member.id}
+                                                        type="button"
+                                                        onClick={() => handleAssignIssue(issue, member.id)}
+                                                        className={`flex w-full min-w-0 items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition ${
+                                                          active
+                                                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
+                                                            : "text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                                                        }`}
+                                                      >
+                                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                                                          {member.avatar ? (
+                                                            <img src={member.avatar} alt="" className="h-full w-full rounded-full object-cover" />
+                                                          ) : (
+                                                            member.initials
+                                                          )}
+                                                        </span>
+                                                        <span className="min-w-0 flex-1">
+                                                          <span className="block truncate font-medium">{member.name}</span>
+                                                          <span className="block truncate text-xs text-gray-500 dark:text-gray-400">
+                                                            {member.email || member.role}
+                                                          </span>
+                                                        </span>
+                                                        {active && <Check className="h-4 w-4 shrink-0" />}
+                                                      </button>
+                                                    );
+                                                  })
+                                                )}
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
                                     </div>
@@ -365,6 +611,69 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
             setColumnToDelete(null);
           }}
         />
+      )}
+
+      {issueToDelete && (
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+            <div className="flex items-start justify-between gap-4 border-b border-gray-200 p-5 dark:border-gray-800">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Delete work item
+                </h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  This permanently deletes {issueToDelete.key}. Archive it instead if you may need it later.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeDeleteIssueModal}
+                className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                aria-label="Close delete confirmation"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3 p-5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Type <span className="font-mono font-semibold text-red-600">delete</span> to confirm
+              </label>
+              <input
+                autoFocus
+                value={deleteConfirmText}
+                onChange={(event) => setDeleteConfirmText(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") confirmDeleteIssue();
+                  if (event.key === "Escape") closeDeleteIssueModal();
+                }}
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:ring-red-950"
+                placeholder="delete"
+              />
+            </div>
+            <div className="flex justify-end gap-2 border-t border-gray-200 p-4 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={() => {
+                  const issue = issueToDelete;
+                  closeDeleteIssueModal();
+                  onArchiveIssue?.(issue);
+                }}
+                disabled={!onArchiveIssue}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                Archive
+              </button>
+              <button
+                type="button"
+                onClick={confirmDeleteIssue}
+                disabled={deleteConfirmText !== "delete"}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

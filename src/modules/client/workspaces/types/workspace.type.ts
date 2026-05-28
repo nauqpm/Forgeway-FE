@@ -4,7 +4,18 @@ export interface Workspace {
   key: string;
   ownerId?: string | { _id?: string; id?: string };
   members?: {
-    userId: string | { _id?: string; id?: string };
+    userId:
+      | string
+      | {
+          _id?: string;
+          id?: string;
+          fullName?: string;
+          name?: string;
+          email?: string;
+          avatar?: string;
+          avatarUrl?: string;
+          image?: string;
+        };
     role: string;
   }[];
   description?: string;
@@ -20,6 +31,7 @@ export type WorkspaceTab =
   | "timeline"
   | "calendar"
   | "list"
+  | "archive"
   | "pages";
 
 export const getWorkspaceTemplate = (workspace: Workspace): "kanban" | "scrum" =>
