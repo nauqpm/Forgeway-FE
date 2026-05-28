@@ -12,7 +12,7 @@ export const apiRoutes = {
     },
     WORKSPACES: {
         BASE: '/workspaces',
-        BY_KEY: (key: string) => `/workspaces/${key}`,
+        BY_ID: (workspaceId: string) => `/workspaces/${workspaceId}`,
         UPDATE: (workspaceId: string) => `/workspaces/${workspaceId}`,
         MEMBERS: (workspaceId: string) => `/workspaces/${workspaceId}/members`,
         ADD_MEMBER: (workspaceId: string) => `/workspaces/${workspaceId}/members`,

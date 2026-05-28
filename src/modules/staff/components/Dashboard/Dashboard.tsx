@@ -40,7 +40,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             .get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`)
             .catch(() => ({ data: [] })),
           api
-            .get(apiRoutes.WORKSPACES.BY_KEY(ws.key))
+            .get(apiRoutes.WORKSPACES.BY_ID(ws._id))
             .catch(() => ({ data: {} })),
         ]);
       })

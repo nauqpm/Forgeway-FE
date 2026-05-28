@@ -33,7 +33,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
         setWorkspaces(res.data);
         const ws = currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
         if (!ws) { setLoading(false); return; }
-        return api.get(apiRoutes.WORKSPACES.BY_KEY(ws.key));
+        return api.get(apiRoutes.WORKSPACES.BY_ID(ws._id));
       })
       .then((res) => {
         if (cancelled || !res) return;

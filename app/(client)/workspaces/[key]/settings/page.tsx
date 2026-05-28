@@ -28,6 +28,7 @@ import {
   inviteService,
   PendingInvite,
 } from "@/modules/client/workspaces/services/inviteService";
+import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
 type WorkspaceStatus = "active" | "archived";
 type WorkspaceAccess = "public" | "private";
@@ -138,7 +139,7 @@ export default function WorkspaceSettingsPage({
   const [leaveConfirm, setLeaveConfirm] = useState("");
   const [leaving, setLeaving] = useState(false);
 
-  const workspaceInviteId = workspace?._id ?? workspaceKey;
+  const workspaceInviteId = workspace?._id;
   const workspaceApiId = workspace?._id;
   const currentMember = members.find((m) => m.userId?._id === user?.id);
   const canManageWorkspace =
@@ -148,10 +149,9 @@ export default function WorkspaceSettingsPage({
     if (!workspaceKey) return;
 
     setLoading(true);
-    api
-      .get(apiRoutes.WORKSPACES.BY_KEY(workspaceKey))
-      .then((res) => {
-        const nextWorkspace = normalizeWorkspace(res.data);
+    resolveWorkspaceFromRouteKey(workspaceKey)
+      .then((resolvedWorkspace) => {
+        const nextWorkspace = normalizeWorkspace(resolvedWorkspace);
         setWorkspace(nextWorkspace);
         setForm({
           name: nextWorkspace.name || "",
@@ -253,7 +253,7 @@ export default function WorkspaceSettingsPage({
     try {
       if (!workspaceApiId) throw new Error("Missing workspace id");
 
-      await api.delete(apiRoutes.WORKSPACES.BY_KEY(workspaceApiId));
+      await api.delete(apiRoutes.WORKSPACES.BY_ID(workspaceApiId));
       toast.success("Đã xóa workspace.");
       setShowDeleteDialog(false);
       router.push("/workspaces");

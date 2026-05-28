@@ -23,6 +23,7 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAssignees } from "@/modules/client/workspaces/hooks/useAssignees";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
+import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
 import { filterIssues } from "@/modules/client/workspaces/utils/filterIssues";
 import {
@@ -128,7 +129,7 @@ export default function WorkspaceDetailPage({
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
-  const { filters, setFilters, taskFilters } = useTaskFilters(workspaceKey);
+  const { filters, setFilters, taskFilters } = useTaskFilters(workspaceApiId ?? "");
   const [density, setDensity] = useState<"default" | "compact">("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -201,7 +202,7 @@ export default function WorkspaceDetailPage({
   }, [issues, filters, workspace]);
 
   const uniqueAssignees = useAssignees(issues);
-  const workspacePermissions = useWorkspacePermission(workspaceKey, workspace);
+  const workspacePermissions = useWorkspacePermission(workspaceApiId ?? "", workspace);
   const canCreateTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
   const canEditTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
   const canDeleteTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
@@ -367,11 +368,8 @@ export default function WorkspaceDetailPage({
 
   useEffect(() => {
     if (!workspaceKey) return;
-    api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceKey))
-      .then(async (workspaceResponse) => {
-        const nextWorkspace = (
-          workspaceResponse.data?.data ?? workspaceResponse.data
-        ) as Workspace;
+    resolveWorkspaceFromRouteKey(workspaceKey)
+      .then(async (nextWorkspace) => {
         let workspaceMembers = nextWorkspace.members ?? [];
 
         try {
