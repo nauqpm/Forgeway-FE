@@ -2,19 +2,46 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "../types/issue.type";
 import { TaskFilters } from "../types/filter.type";
+import { TaskDetailResponse } from "../types/task-detail.type";
+
+type TaskUserDto = {
+  id?: string;
+  fullName?: string;
+  email?: string;
+  avatar?: string;
+} | null;
+
+type TaskSprintDto = {
+  id?: string;
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+} | null;
+
+type TaskBoardDto = {
+  id?: string;
+  name?: string;
+} | null;
 
 type TaskDto = {
   _id?: string;
   id?: string;
+  workspaceId?: string;
   key: string;
   title: string;
   description?: string;
   type?: string;
   status?: string;
   priority?: string;
+  rank?: string;
   assigneeId?: string;
+  assignee?: TaskUserDto;
   reporterId?: string;
+  reporter?: TaskUserDto;
   sprintId?: string;
+  sprint?: TaskSprintDto;
+  boardId?: string;
+  board?: TaskBoardDto;
   columnId?: string;
   boardColumnId?: string;
   storyPoints?: number;
@@ -30,6 +57,9 @@ type TaskDto = {
     email?: string;
     avatar?: string;
   } | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
 };
 
 type CreateTaskInput = {
@@ -54,8 +84,43 @@ export type TaskActivity = {
     avatar?: string;
   } | null;
   type: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt?: string;
+};
+
+export type TaskComment = {
+  id: string;
+  _id?: string;
+  workspaceId: string;
+  content: string;
+  authorId: string;
+  author: {
+    id?: string;
+    fullName?: string;
+    email?: string;
+    avatar?: string;
+  } | null;
+  targetType: string;
+  targetId: string;
+  parentId: string | null;
+  mentions: string[];
+  isDeleted: boolean;
+  editedAt: string | null;
+  createdAt: string;
+};
+
+export type PaginatedActivitiesResponse = {
+  activities: TaskActivity[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type PaginatedTasksResponse = {
+  tasks: Issue[];
+  total: number;
+  page: number;
+  limit: number;
 };
 
 const COLUMN_BY_STATUS: Record<string, string> = {
@@ -146,6 +211,7 @@ const toIssue = (task: TaskDto): Issue => {
     _id: task._id,
     key: requireTaskKey(task),
     title: task.title,
+    description: task.description ?? "",
     columnId: task.columnId ?? task.boardColumnId ?? toColumnId(task.status) ?? "todo",
     status: toStatusLabel(task),
     priority: toUiLabel(task.priority, "Medium"),
@@ -166,6 +232,35 @@ const toIssue = (task: TaskDto): Issue => {
   };
 };
 
+const formatAssignee = (task: TaskDto) =>
+  task.assignee?.fullName || task.assignee?.email || task.assigneeId || "U";
+
+const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
+  const issue = toIssue(task);
+
+  return {
+    ...issue,
+    workspaceId: task.workspaceId ?? "",
+    description: task.description ?? "",
+    type: toUiLabel(task.type, "Task"),
+    priority: toUiLabel(task.priority, "Medium"),
+    status: toStatusLabel(task),
+    rank: task.rank ?? "",
+    assignee: task.assignee ?? null,
+    assigneeDisplayName: formatAssignee(task),
+    reporterId: task.reporterId ?? null,
+    reporter: task.reporter ?? null,
+    sprint: task.sprint ?? undefined,
+    boardId: task.boardId,
+    board: task.board ?? undefined,
+    dueDate: task.dueDate ?? null,
+    isArchived: task.isArchived ?? false,
+    isDeleted: task.isDeleted ?? false,
+    createdAt: task.createdAt ?? "",
+    updatedAt: task.updatedAt ?? "",
+  };
+};
+
 const toCreatePayload = (input: CreateTaskInput) => ({
   title: input.title,
   type: normalizeValue(input.type),
@@ -174,6 +269,15 @@ const toCreatePayload = (input: CreateTaskInput) => ({
   status: toColumnId(input.status),
   sprintId: input.sprintId || undefined,
   assigneeId: input.assigneeId || undefined,
+});
+
+const toTaskComment = (comment: TaskComment): TaskComment => ({
+  ...comment,
+  id: comment.id || comment._id || "",
+  authorId:
+    comment.authorId ||
+    comment.author?.id ||
+    "",
 });
 
 const toUpdatePayload = (updates: Partial<Issue>) => {
@@ -191,7 +295,9 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     type,
   } = updates;
 
-  const nextAssigneeId = assigneeId ?? (assignee && assignee !== "U" ? assignee : undefined);
+  const nextAssigneeId =
+    assigneeId ??
+    (typeof assignee === "string" && assignee !== "U" ? assignee : undefined);
   const payload: Record<string, unknown> = {};
 
   if (title !== undefined) payload.title = title;
@@ -245,6 +351,8 @@ export const buildTaskQuery = (filters?: TaskFilters) => {
   addValue("archived", activeFilters.archived === true ? "true" : undefined);
   addValue("page", activeFilters.page);
   addValue("limit", activeFilters.limit);
+  addValue("sortBy", activeFilters.sortBy);
+  addValue("sortOrder", activeFilters.sortOrder);
 
   return params.length > 0 ? `?${params.join("&")}` : "";
 };
@@ -257,7 +365,9 @@ export const taskService = {
     const response = await api.get(
       `${apiRoutes.TASKS.BOARD(workspaceId)}${buildTaskQuery(filters)}`,
     );
-    return normalizeResponseData<TaskDto[]>(response).map(toIssue);
+    const payload = normalizeResponseData<any>(response);
+    const tasks: TaskDto[] = Array.isArray(payload) ? payload : (payload?.tasks ?? []);
+    return tasks.map(toIssue);
   },
 
   async listBoardTasks(
@@ -265,6 +375,17 @@ export const taskService = {
     filters?: TaskFilters,
   ): Promise<Issue[]> {
     return taskService.getBoardTasks(workspaceId, filters);
+  },
+
+  async getBoardTaskDetail(
+    workspaceId: string,
+    taskKey: string,
+  ): Promise<TaskDetailResponse> {
+    const response = await api.get(
+      apiRoutes.TASKS.BOARD_TASK_BY_KEY(workspaceId, taskKey),
+    );
+
+    return toTaskDetail(normalizeResponseData<TaskDto>(response));
   },
 
   async createBoardTask(
@@ -363,11 +484,87 @@ export const taskService = {
   async getTaskActivities(
     workspaceId: string,
     taskId: string,
-  ): Promise<TaskActivity[]> {
+    page = 1,
+    limit = 20,
+  ): Promise<PaginatedActivitiesResponse> {
     const response = await api.get(
-      apiRoutes.TASKS.BOARD_TASK_ACTIVITIES(workspaceId, taskId),
+      `${apiRoutes.TASKS.BOARD_TASK_ACTIVITIES(workspaceId, taskId)}?page=${page}&limit=${limit}`,
     );
+    const payload = normalizeResponseData<Record<string, unknown>>(response);
+    const activities: TaskActivity[] = Array.isArray(payload)
+      ? (payload as TaskActivity[])
+      : ((payload?.activities ?? []) as TaskActivity[]);
+    return {
+      activities,
+      total: typeof payload?.total === "number" ? payload.total : activities.length,
+      page: typeof payload?.page === "number" ? payload.page : page,
+      limit: typeof payload?.limit === "number" ? payload.limit : limit,
+    };
+  },
 
-    return normalizeResponseData<TaskActivity[]>(response);
+  async getArchivedTasks(
+    workspaceId: string,
+    filters?: Pick<TaskFilters, "page" | "limit" | "sortBy" | "sortOrder">,
+  ): Promise<PaginatedTasksResponse> {
+    const query = buildTaskQuery(filters);
+    const response = await api.get(
+      `${apiRoutes.TASKS.BOARD_ARCHIVES(workspaceId)}${query}`,
+    );
+    const payload = normalizeResponseData<Record<string, unknown>>(response);
+    const raw: TaskDto[] = Array.isArray(payload)
+      ? (payload as TaskDto[])
+      : ((payload?.tasks ?? []) as TaskDto[]);
+    return {
+      tasks: raw.map(toIssue),
+      total: typeof payload?.total === "number" ? payload.total : raw.length,
+      page: typeof payload?.page === "number" ? payload.page : (filters?.page ?? 1),
+      limit: typeof payload?.limit === "number" ? payload.limit : (filters?.limit ?? 20),
+    };
+  },
+
+  async getComments(workspaceId: string, taskId: string): Promise<TaskComment[]> {
+    const response = await api.get(
+      apiRoutes.TASKS.BOARD_TASK_COMMENTS(workspaceId, taskId),
+    );
+    const payload = normalizeResponseData<unknown>(response);
+    return (Array.isArray(payload) ? payload : []).map((comment) =>
+      toTaskComment(comment as TaskComment),
+    );
+  },
+
+  async createComment(
+    workspaceId: string,
+    taskId: string,
+    content: string,
+    parentId?: string | null,
+    mentions?: string[],
+  ): Promise<TaskComment> {
+    const body: Record<string, unknown> = { content };
+    if (parentId) body.parentId = parentId;
+    if (mentions?.length) body.mentions = mentions;
+    const response = await api.post(
+      apiRoutes.TASKS.BOARD_TASK_COMMENTS(workspaceId, taskId),
+      body,
+    );
+    return toTaskComment(normalizeResponseData<TaskComment>(response));
+  },
+
+  async updateComment(
+    workspaceId: string,
+    taskId: string,
+    commentId: string,
+    content: string,
+  ): Promise<TaskComment> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId),
+      { content },
+    );
+    return toTaskComment(normalizeResponseData<TaskComment>(response));
+  },
+
+  async deleteComment(workspaceId: string, taskId: string, commentId: string): Promise<void> {
+    await api.delete(
+      apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId),
+    );
   },
 };

@@ -40,6 +40,7 @@ type ListTabProps = {
   listViewMode: "grid" | "split";
   listGridDrawerOpen: boolean;
   setSelectedIssue: (issue: Issue | null) => void;
+  onOpenIssue?: (issue: Issue) => void;
   setListViewMode: (mode: "grid" | "split") => void;
   setListGridDrawerOpen: (open: boolean) => void;
   updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
@@ -55,6 +56,7 @@ export default function ListTab({
   listViewMode,
   listGridDrawerOpen,
   setSelectedIssue,
+  onOpenIssue,
   setListViewMode,
   setListGridDrawerOpen,
   updateIssueDirectly,
@@ -211,7 +213,11 @@ export default function ListTab({
         <DataGridListView
           issues={filteredIssues}
           onClickTask={(issue) => {
-            setSelectedIssue(issue);
+            if (onOpenIssue) {
+              onOpenIssue(issue);
+            } else {
+              setSelectedIssue(issue);
+            }
             setListGridDrawerOpen(true);
           }}
           onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}

@@ -29,6 +29,8 @@ export interface TaskFilters {
   archived?: boolean;
   page?: number;
   limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export type BoardTaskFilters = TaskFilters;

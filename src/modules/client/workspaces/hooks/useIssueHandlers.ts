@@ -69,6 +69,9 @@ export const useIssueHandlers = ({
         );
         queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
+        if (savedIssue.key) {
+          queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
+        }
       })
       .catch((error) => {
         setIssues(issues);
@@ -131,6 +134,9 @@ export const useIssueHandlers = ({
       setSelectedIssue(savedIssue);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, updatedIssue.id] });
+      if (savedIssue.key) {
+        queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
+      }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   X,
   Maximize2,
@@ -17,46 +17,44 @@ import {
   Zap,
   User,
   Archive,
+  AlertTriangle,
+  ArchiveRestore,
 } from "lucide-react";
 import Link from "next/link";
-import { MentionsInput, Mention } from "react-mentions";
+import { TaskDetailResponse } from "../types/task-detail.type";
 import IssueSubtasks from "@/modules/admin/components/common/components/IssueSubtasks";
 import TimeTrackingSidebar from "@/modules/admin/components/common/components/TimeTrackingSidebar";
 import IssueDescription from "@/modules/admin/components/common/components/IssueDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
+import TaskComments from "./TaskComments";
 
 interface IssueDetailModalProps {
-  issue: any;
+  issue: TaskDetailResponse | any;
   workspaceId: string;
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
+  detailUrl?: string;
 }
 
-const workspaceMembers = [
-  { id: "nam", username: "nam" },
-  { id: "admin", username: "admin" },
-  { id: "quanp", username: "quanp" },
-];
+const getUserDisplayName = (user: any, fallback?: string | null) => {
+  if (typeof user === "string") return user;
+  return user?.fullName || user?.email || fallback || "Unassigned";
+};
 
-const renderCommentText = (text: string) => {
-  if (!text) return null;
-  const parts = text.split(/(\[@[^\]]+\]\([^)]+\))/g);
-  return parts.map((part, i) => {
-    const match = part.match(/\[@([^\]]+)\]\(([^)]+)\)/);
-    if (match) {
-      return (
-        <a
-          key={i}
-          href={`/profile/${match[2]}`}
-          className="text-[#0052CC] font-medium hover:underline bg-[#E9F2FF] px-1 rounded"
-        >
-          @{match[1]}
-        </a>
-      );
-    }
-    return <span key={i}>{part}</span>;
-  });
+const formatDate = (value?: string | null) => {
+  if (!value) return "None";
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+  }).format(new Date(value));
+};
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return "Unknown";
+  return new Intl.DateTimeFormat("vi-VN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 };
 
 export default function IssueDetailModal({
@@ -65,46 +63,49 @@ export default function IssueDetailModal({
   onClose,
   onUpdateIssue,
   onArchiveIssue,
+  detailUrl,
 }: IssueDetailModalProps) {
   const [activeTab, setActiveTab] = useState<
     "comments" | "history" | "worklog"
   >("comments");
-  const issueKey = issue.key;
-
-  const [localTitle, setLocalTitle] = useState(issue.title);
+  const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-
-  const [commentInput, setCommentInput] = useState("");
-  const [comments, setComments] = useState<any[]>(issue.comments || []);
-
-  const [subtasks, setSubtasks] = useState<any[]>(issue.subtasks || []);
-
+  const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const [timeLogged, setTimeLogged] = useState(0);
 
-  const [timeLogged, setTimeLogged] = useState(issue.timeLogged || 0);
+  useEffect(() => {
+    if (issue) {
+      setLocalTitle(issue.title);
+      setSubtasks(issue.subtasks || []);
+      setTimeLogged(issue.timeLogged || 0);
+      setIsEditingTitle(false);
+      setShowStatusDropdown(false);
+      setShowActionMenu(false);
+    }
+  }, [issue]);
+
+  if (!issue) return null;
+
+  const issueKey = issue.key;
   const timeEstimated = issue.timeEstimated || "1d 4h"; // Mock default
+  const assigneeName =
+    issue.assigneeDisplayName ||
+    getUserDisplayName(issue.assignee, issue.assigneeId);
+  const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
+  const dueDateLabel = formatDate(issue.dueDate ?? issue.endDate);
+  const sprintLabel = issue.sprint?.name || issue.sprintId || "None";
+  const boardLabel = issue.board?.name || issue.boardId || "None";
+  const storyPointsLabel =
+    issue.storyPoints === null || issue.storyPoints === undefined
+      ? "None"
+      : String(issue.storyPoints);
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
     if (localTitle !== issue.title && onUpdateIssue) {
       onUpdateIssue({ ...issue, title: localTitle });
-    }
-  };
-
-  const handleAddComment = () => {
-    if (!commentInput.trim()) return;
-    const newComment = {
-      id: Date.now(),
-      text: commentInput,
-      author: "QP",
-      timestamp: "Just now",
-    };
-    const updatedComments = [...comments, newComment];
-    setComments(updatedComments);
-    setCommentInput("");
-    if (onUpdateIssue) {
-      onUpdateIssue({ ...issue, comments: updatedComments });
     }
   };
 
@@ -116,6 +117,7 @@ export default function IssueDetailModal({
   };
 
   const handleAddSubtask = (title: string) => {
+    if (issue.isArchived) return;
     const newSubtask = {
       id: `sub-${Date.now()}`,
       title,
@@ -130,6 +132,7 @@ export default function IssueDetailModal({
   };
 
   const handleUpdateSubtaskStatus = (id: string, newStatus: string) => {
+    if (issue.isArchived) return;
     const updatedSubtasks = subtasks.map((t) =>
       t.id === id ? { ...t, status: newStatus } : t,
     );
@@ -140,6 +143,7 @@ export default function IssueDetailModal({
   };
 
   const handleLogWork = (minutes: number, description: string) => {
+    if (issue.isArchived) return;
     const newLogged = timeLogged + minutes;
     setTimeLogged(newLogged);
     if (onUpdateIssue) {
@@ -198,7 +202,7 @@ export default function IssueDetailModal({
                       setShowActionMenu(false);
                       onArchiveIssue?.(issue);
                     }}
-                    disabled={!onArchiveIssue}
+                    disabled={!onArchiveIssue || issue.isArchived}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
                   >
                     <Archive className="h-4 w-4" />
@@ -208,9 +212,20 @@ export default function IssueDetailModal({
               )}
             </div>
             <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-              <Maximize2 className="w-4 h-4" />
-            </button>
+            {detailUrl ? (
+              <Link
+                href={detailUrl}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
+                aria-label="Open full task detail"
+                title="Open full task detail"
+              >
+                <Maximize2 className="w-4 h-4" />
+              </Link>
+            ) : (
+              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
+                <Maximize2 className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
@@ -224,9 +239,29 @@ export default function IssueDetailModal({
         <div className="flex flex-1 overflow-hidden">
           {/* Left Column (Main) */}
           <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] border-r border-gray-200 dark:border-gray-700 space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
+            
+            {/* Archived Banner */}
+            {issue.isArchived && (
+              <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
+                  <span className="text-yellow-700 text-sm font-medium">
+                    This task was archived by {issue.archivedByUser?.fullName || 'Unknown'} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : 'Unknown Date'}. It is currently read-only.
+                  </span>
+                </div>
+                <button 
+                  onClick={() => { console.log("Restore triggered") }}
+                  className="flex items-center px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-sm font-semibold rounded transition-colors"
+                >
+                  <ArchiveRestore className="w-4 h-4 mr-1.5" />
+                  Restore
+                </button>
+              </div>
+            )}
+
             {/* Title */}
             <div>
-              {isEditingTitle ? (
+              {isEditingTitle && !issue.isArchived ? (
                 <input
                   autoFocus
                   type="text"
@@ -240,8 +275,8 @@ export default function IssueDetailModal({
                 />
               ) : (
                 <h1
-                  onClick={() => setIsEditingTitle(true)}
-                  className="text-3xl font-semibold text-gray-900 dark:text-white leading-tight mb-4 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 -ml-2 rounded cursor-pointer transition-colors"
+                  onClick={() => { if (!issue.isArchived) setIsEditingTitle(true); }}
+                  className={`text-3xl font-semibold text-gray-900 dark:text-white leading-tight mb-4 p-2 -ml-2 rounded transition-colors ${issue.isArchived ? 'opacity-90' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}
                 >
                   {localTitle}
                 </h1>
@@ -256,7 +291,7 @@ export default function IssueDetailModal({
               <IssueDescription
                 initialContent={issue.description || ""}
                 onSave={(newDesc) => {
-                  if (onUpdateIssue) {
+                  if (onUpdateIssue && !issue.isArchived) {
                     onUpdateIssue({ ...issue, description: newDesc });
                   }
                 }}
@@ -270,7 +305,7 @@ export default function IssueDetailModal({
               onUpdateStatus={handleUpdateSubtaskStatus}
             />
 
-            {/* Linked Work Items - Tích hợp Document */}
+            {/* Linked Work Items */}
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 Linked work items
@@ -284,7 +319,7 @@ export default function IssueDetailModal({
                 <div className="flex items-center gap-3">
                   <Link
                     href={`/docs/create?issueId=${issue.id}`}
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-bold rounded transition-colors"
+                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-bold rounded transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
                   >
                     <Plus className="w-4 h-4" /> Create new Document
                   </Link>
@@ -324,141 +359,12 @@ export default function IssueDetailModal({
                 </div>
               </div>
               {activeTab === "comments" && (
-                <>
-              <div className="flex gap-4 pt-2">
-                <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                  QP
-                </div>
-                <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
-                  <div className="mb-4 text-sm relative z-50">
-                    <style
-                      dangerouslySetInnerHTML={{
-                        __html: `
-                      .mentions__control { min-height: 36px; }
-                      .mentions__input { width: 100%; outline: none; border: none; background: transparent; color: #172B4D; font-family: inherit; font-size: inherit; }
-                      .mentions__suggestions__list { background-color: #F4F5F7; border: 1px solid #DFE1E6; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; z-index: 100; position: absolute; min-width: 200px; margin-top: 4px; }
-                      .mentions__suggestions__item { padding: 8px 12px; cursor: pointer; transition: background-color 0.2s; }
-                      .mentions__suggestions__item--focused { background-color: #EBECF0; }
-                    `,
-                      }}
-                    />
-                    <MentionsInput
-                      value={commentInput}
-                      onChange={(e) => setCommentInput(e.target.value)}
-                      onKeyDown={(e: any) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleAddComment();
-                        }
-                      }}
-                      placeholder="Add a comment... (@ to mention)"
-                      className="mentions w-full bg-transparent text-[#172B4D] text-sm"
-                      a11ySuggestionsListLabel={"Suggested mentions"}
-                    >
-                      <Mention
-                        trigger="@"
-                        data={workspaceMembers.map((u) => ({
-                          id: u.id,
-                          display: u.username,
-                        }))}
-                        markup="[@__display__](__id__)"
-                        renderSuggestion={(
-                          suggestion,
-                          search,
-                          highlightedDisplay,
-                        ) => (
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                              {suggestion.display
-                                ?.toString()
-                                .charAt(0)
-                                .toUpperCase()}
-                            </div>
-                            <span className="text-sm text-[#172B4D]">
-                              {highlightedDisplay}
-                            </span>
-                          </div>
-                        )}
-                        className="text-[#0052CC] bg-[#E9F2FF] rounded px-1 font-medium"
-                      />
-                    </MentionsInput>
-                  </div>
-                  {!commentInput && (
-                    <div className="flex items-center gap-2">
-                      <span
-                        onClick={() =>
-                          setCommentInput("Who is working on this...?")
-                        }
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors"
-                      >
-                        Who is working on this...?
-                      </span>
-                      <span
-                        onClick={() => setCommentInput("Status update...")}
-                        className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors"
-                      >
-                        Status update...
-                      </span>
-                    </div>
-                  )}
-                  {commentInput && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleAddComment}
-                        className="px-3 py-1.5 bg-[#0052CC] hover:bg-[#0065FF] text-white text-xs font-medium rounded transition-colors"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setCommentInput("")}
-                        className="px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-medium rounded transition-colors"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                  <div className="mt-5 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                      Pro tip: press{" "}
-                      <span className="font-bold bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700">
-                        Enter
-                      </span>{" "}
-                      to comment
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Render Comments */}
-              {comments.length > 0 && (
-                <div className="space-y-4 mt-6">
-                  {comments.map((comment: any) => (
-                    <div key={comment.id} className="flex gap-4">
-                      <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                        {comment.author}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-gray-900 dark:text-white text-sm font-semibold">
-                            {comment.author}
-                          </span>
-                          <span className="text-gray-500 dark:text-gray-400 text-xs">
-                            {comment.timestamp}
-                          </span>
-                        </div>
-                        <p className="text-gray-900 dark:text-white text-sm whitespace-pre-wrap">
-                          {renderCommentText(comment.text)}
-                        </p>
-                        <div className="flex gap-3 mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                          <button className="hover:underline">Edit</button>
-                          <button className="hover:underline">Delete</button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-                </>
+                <TaskComments
+                  workspaceId={workspaceId}
+                  taskId={issue.id}
+                  isArchived={issue.isArchived ?? false}
+                  isDeleted={issue.isDeleted ?? false}
+                />
               )}
               {activeTab === "history" && (
                 <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
@@ -476,10 +382,11 @@ export default function IssueDetailModal({
             <div className="flex items-center gap-2 mb-6">
               <div className="relative">
                 <button
-                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors"
+                  onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
+                  disabled={issue.isArchived}
+                  className={`flex items-center gap-2 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                 >
-                  {issue.status} <ChevronDown className="w-4 h-4" />
+                  {issue.status} {!issue.isArchived && <ChevronDown className="w-4 h-4" />}
                 </button>
                 {showStatusDropdown && (
                   <div className="absolute top-full mt-1 left-0 w-40 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
@@ -517,9 +424,7 @@ export default function IssueDetailModal({
                         <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center border border-gray-200 dark:border-gray-700">
                           <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                         </div>
-                        {issue.assignee === "U" || issue.assignee === "A"
-                          ? "Unassigned"
-                          : issue.assignee}
+                        {assigneeName}
                       </div>
                       <a
                         href="#"
@@ -530,22 +435,22 @@ export default function IssueDetailModal({
                     </div>
                   </div>
 
-                  {/* Labels */}
+                  {/* Type */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Labels</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Type</div>
                     <div className="col-span-2">
                       <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        None
+                        {issue.type}
                       </div>
                     </div>
                   </div>
 
-                  {/* Parent */}
+                  {/* Reporter */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Parent</div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Reporter</div>
                     <div className="col-span-2">
                       <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        None
+                        {reporterName}
                       </div>
                     </div>
                   </div>
@@ -557,7 +462,43 @@ export default function IssueDetailModal({
                     </div>
                     <div className="col-span-2">
                       <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        None
+                        {dueDateLabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Story points */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                      Story points
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                        {storyPointsLabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sprint */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                      Sprint
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                        {sprintLabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Board */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                      Board
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                        {boardLabel}
                       </div>
                     </div>
                   </div>
@@ -585,8 +526,8 @@ export default function IssueDetailModal({
 
               {/* Meta information */}
               <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                <p>Created just now</p>
-                <p>Updated just now</p>
+                <p>Created {formatDateTime(issue.createdAt)}</p>
+                <p>Updated {formatDateTime(issue.updatedAt)}</p>
               </div>
             </div>
           </div>

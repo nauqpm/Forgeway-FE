@@ -51,6 +51,7 @@ export const apiRoutes = {
     TASKS: {
         // New workspace-scoped board routes (use these for workspace board/backlog)
         BOARD: (workspaceId: string) => `/workspaces/${workspaceId}/board/tasks`,
+        BOARD_TASK_BY_KEY: (workspaceId: string, taskKey: string) => `/workspaces/${workspaceId}/board/key/${taskKey}`,
         BOARD_TASK: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}`,
         BOARD_TASK_UPDATE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}`,
         BOARD_TASK_MOVE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/move`,
@@ -58,6 +59,9 @@ export const apiRoutes = {
         BOARD_TASK_ARCHIVE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/archive`,
         BOARD_TASK_RESTORE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/restore`,
         BOARD_TASK_ACTIVITIES: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/activities`,
+        BOARD_ARCHIVES: (workspaceId: string) => `/workspaces/${workspaceId}/board/archives`,
+        BOARD_TASK_COMMENTS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments`,
+        BOARD_TASK_COMMENT: (workspaceId: string, taskId: string, commentId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments/${commentId}`,
         BY_SPRINT: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/board/tasks?sprintId=${sprintId}`,
         // Legacy routes — still used by projects/tasks pages, pending migration
         BASE: '/tasks',

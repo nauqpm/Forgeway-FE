@@ -2,6 +2,7 @@ export interface Workspace {
   _id: string;
   name: string;
   key: string;
+  slug?: string;
   ownerId?: string | { _id?: string; id?: string };
   members?: {
     userId:

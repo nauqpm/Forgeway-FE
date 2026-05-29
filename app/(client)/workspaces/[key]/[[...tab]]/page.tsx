@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use, useMemo, useRef } from "react";
+import { useCallback, useEffect, useState, use, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
@@ -26,6 +26,7 @@ import { taskService } from "@/modules/client/workspaces/services/taskService";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
 import { filterIssues } from "@/modules/client/workspaces/utils/filterIssues";
+import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
 import {
   handleBoardDragEnd,
   handleBacklogDragEnd,
@@ -73,6 +74,14 @@ const BulkActionBar = dynamic(
   { ssr: false },
 );
 
+const getRouteStateFromPath = (pathname: string) => {
+  const segments = pathname.split("/").filter(Boolean);
+  const tabSegment = segments[2] as WorkspaceTab | undefined;
+  const taskKey = tabSegment && segments[3] === "key" ? segments[4] ?? null : null;
+
+  return { tabSegment, taskKey };
+};
+
 export default function WorkspaceDetailPage({
   params,
 }: {
@@ -82,6 +91,7 @@ export default function WorkspaceDetailPage({
   const queryClient = useQueryClient();
   const tabFromUrl = tab?.[0];
   const initialTab = (tabFromUrl as WorkspaceTab) || null;
+  const initialTaskKey = tabFromUrl && tab?.[1] === "key" ? tab?.[2] ?? null : null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const workspaceApiId = workspace?._id;
@@ -91,18 +101,25 @@ export default function WorkspaceDetailPage({
 
   const handleTabChange = (newTab: WorkspaceTab) => {
     setActiveTab(newTab);
+    setSelectedIssue(null);
+    setSelectedTaskKey(null);
+    setListGridDrawerOpen(false);
     window.history.pushState(null, "", `/workspaces/${workspaceKey}/${newTab}`);
   };
 
   useEffect(() => {
     const handlePopState = () => {
-      const segments = window.location.pathname.split('/');
-      const tabSegment = segments[3];
+      const { tabSegment, taskKey } = getRouteStateFromPath(window.location.pathname);
       if (tabSegment) {
         setActiveTab(tabSegment as WorkspaceTab);
       } else if (workspace) {
         const template = getWorkspaceTemplate(workspace);
         setActiveTab(template === "scrum" ? "backlog" : "board");
+      }
+      setSelectedTaskKey(taskKey);
+      if (!taskKey) {
+        setSelectedIssue(null);
+        setListGridDrawerOpen(false);
       }
     };
     window.addEventListener("popstate", handlePopState);
@@ -128,6 +145,7 @@ export default function WorkspaceDetailPage({
     assigneeId: "",
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
+  const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(initialTaskKey);
 
   const { filters, setFilters, taskFilters } = useTaskFilters(workspaceApiId ?? "");
   const [density, setDensity] = useState<"default" | "compact">("default");
@@ -164,15 +182,59 @@ export default function WorkspaceDetailPage({
     staleTime: 30_000,
   });
 
-  const {
-    data: archivedTasksData,
-    isFetching: isArchivedTasksFetching,
-  } = useQuery({
-    queryKey: ["archivedTasks", workspaceApiId],
-    queryFn: () => taskService.getBoardTasks(workspaceApiId!, { archived: true }),
+  const [archivePage, setArchivePage] = useState(1);
+  const [archivedItems, setArchivedItems] = useState<Issue[]>([]);
+  const [archiveTotal, setArchiveTotal] = useState(0);
+
+  const { data: archivePageData, isFetching: isArchivedTasksFetching } = useQuery({
+    queryKey: ["archivedTasks", workspaceApiId, archivePage],
+    queryFn: () =>
+      taskService.getArchivedTasks(workspaceApiId!, {
+        page: archivePage,
+        limit: 20,
+        sortBy: "archivedAt",
+        sortOrder: "desc",
+      }),
     enabled: !!workspaceApiId && activeTab === "archive",
     staleTime: 30_000,
   });
+
+  useEffect(() => {
+    if (!archivePageData) return;
+    setArchiveTotal(archivePageData.total);
+    setArchivedItems((prev) =>
+      archivePage === 1
+        ? archivePageData.tasks
+        : [...prev, ...archivePageData.tasks],
+    );
+  }, [archivePageData, archivePage]);
+
+  const resetArchiveList = useCallback(() => {
+    setArchivePage(1);
+    setArchivedItems([]);
+    setArchiveTotal(0);
+  }, []);
+
+  const handleLoadMoreArchive = useCallback(() => {
+    setArchivePage((p) => p + 1);
+  }, []);
+
+  const {
+    data: selectedTaskDetail,
+  } = useQuery({
+    queryKey: ["taskDetail", workspaceApiId, selectedTaskKey],
+    queryFn: () => taskService.getBoardTaskDetail(workspaceApiId!, selectedTaskKey!),
+    enabled: !!workspaceApiId && !!selectedTaskKey,
+    staleTime: 30_000,
+  });
+
+  const activeIssueDetail = useMemo(() => {
+    if (selectedTaskDetail && workspace) {
+      return enrichTaskDetailUsers(selectedTaskDetail, workspace.members);
+    }
+
+    return selectedTaskDetail ?? selectedIssue;
+  }, [selectedIssue, selectedTaskDetail, workspace]);
 
   const [columns, setColumns] = useState<BoardColumn[]>([]);
 
@@ -189,8 +251,14 @@ export default function WorkspaceDetailPage({
   }, [sprintsData]);
 
   useEffect(() => {
-    if (tasksData) setIssues(tasksData);
-  }, [tasksData]);
+    if (!tasksData) return;
+
+    setIssues(tasksData);
+    if (selectedTaskKey && !selectedIssue) {
+      const matchingIssue = tasksData.find((issue) => issue.key === selectedTaskKey);
+      if (matchingIssue) setSelectedIssue(matchingIssue);
+    }
+  }, [selectedIssue, selectedTaskKey, tasksData]);
 
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
@@ -226,6 +294,36 @@ export default function WorkspaceDetailPage({
     setNewIssueForm,
     setSelectedIssue,
   });
+
+  const openTaskDetail = useCallback((issue: Issue) => {
+    if (!issue.key) {
+      toast.error("Khong tim thay task key");
+      return;
+    }
+
+    setSelectedIssue(issue);
+    setSelectedTaskKey(issue.key);
+
+    const detailUrl = `/workspaces/${workspaceKey}/${activeTab}/key/${issue.key}`;
+    window.history.pushState({ ...window.history.state, as: detailUrl }, "", detailUrl);
+  }, [activeTab, workspaceKey]);
+
+  const closeTaskDetail = useCallback(() => {
+    const shouldResetUrl = Boolean(selectedTaskKey);
+
+    setSelectedIssue(null);
+    setSelectedTaskKey(null);
+    setListGridDrawerOpen(false);
+
+    if (shouldResetUrl) {
+      const baseUrl = `/workspaces/${workspaceKey}/${activeTab}`;
+      window.history.pushState({ ...window.history.state, as: baseUrl }, "", baseUrl);
+    }
+  }, [activeTab, selectedTaskKey, workspaceKey]);
+
+  const detailUrl = activeIssueDetail?.key
+    ? `/workspaces/${workspaceKey}/${activeTab}/key/${activeIssueDetail.key}`
+    : undefined;
 
   const activeSprint = sprints.find(s => s.status === "active") ?? null;
 
@@ -297,9 +395,9 @@ export default function WorkspaceDetailPage({
       await taskService.archiveBoardTask(workspaceApiId, issue.id);
       setIssues((current) => current.filter((item) => item.id !== issue.id));
       setSelectedIssue(null);
+      resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceApiId] });
-      toast.success("Da archive work item");
+      toast.success("Đã archive work item");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong archive duoc work item");
     }
@@ -318,9 +416,9 @@ export default function WorkspaceDetailPage({
           ? current.map((item) => item.id === restoredIssue.id ? restoredIssue : item)
           : [...current, restoredIssue],
       );
+      resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceApiId] });
-      toast.success("Da restore work item");
+      toast.success("Đã restore work item");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong restore duoc work item");
     }
@@ -337,9 +435,9 @@ export default function WorkspaceDetailPage({
       setIssues((current) => current.filter((item) => item.id !== issue.id));
       setSelectedTaskIds((current) => current.filter((id) => id !== issue.id));
       setSelectedIssue((current) => current?.id === issue.id ? null : current);
+      resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceApiId] });
-      toast.success("Da delete work item");
+      toast.success("Đã delete work item");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong delete duoc work item");
     }
@@ -368,6 +466,10 @@ export default function WorkspaceDetailPage({
 
   useEffect(() => {
     if (!workspaceKey) return;
+
+    let isActive = true;
+    setLoading(true);
+
     resolveWorkspaceFromRouteKey(workspaceKey)
       .then(async (nextWorkspace) => {
         let workspaceMembers = nextWorkspace.members ?? [];
@@ -385,16 +487,25 @@ export default function WorkspaceDetailPage({
         };
         const template = getWorkspaceTemplate(nextWorkspace);
 
+        if (!isActive) return;
+
         setWorkspace(workspaceWithMembers);
         setCurrentWorkspace(workspaceWithMembers as any);
         if (!initialTab) {
-          if (template === "scrum") handleTabChange("backlog");
-          else handleTabChange("board");
+          const defaultTab = template === "scrum" ? "backlog" : "board";
+          setActiveTab(defaultTab);
+          window.history.replaceState(null, "", `/workspaces/${workspaceKey}/${defaultTab}`);
         }
       })
       .catch(() => { })
-      .finally(() => setLoading(false));
-  }, [workspaceKey]);
+      .finally(() => {
+        if (isActive) setLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [initialTab, setCurrentWorkspace, workspaceKey]);
 
   if (loading || isBoardLoading) return <LoadingSpinner />;
 
@@ -472,7 +583,7 @@ export default function WorkspaceDetailPage({
             setFilters,
             setColumns,
             setIssues,
-            setSelectedIssue,
+            setSelectedIssue: openTaskDetail,
             updateIssueDirectly,
             setNewIssueForm,
             setShowCreateIssue,
@@ -543,7 +654,7 @@ export default function WorkspaceDetailPage({
             toggleTaskSelection,
             toggleSprintSelection,
             updateIssueDirectly,
-            setSelectedIssue,
+            setSelectedIssue: openTaskDetail,
             setNewIssueForm,
             setShowCreateIssue,
             handleCreateSprint,
@@ -566,7 +677,7 @@ export default function WorkspaceDetailPage({
           filteredIssues,
           sprints,
           handleUpdateIssueDate,
-          setSelectedIssue,
+          setSelectedIssue: openTaskDetail,
         }}
         listProps={{
           filteredIssues,
@@ -576,6 +687,7 @@ export default function WorkspaceDetailPage({
           listViewMode,
           listGridDrawerOpen,
           setSelectedIssue,
+          onOpenIssue: openTaskDetail,
           setListViewMode,
           setListGridDrawerOpen,
           updateIssueDirectly,
@@ -591,12 +703,15 @@ export default function WorkspaceDetailPage({
           issues,
           sprints,
           handleUpdateIssueDate,
-          setSelectedIssue,
+          setSelectedIssue: openTaskDetail,
         }}
         archiveProps={{
-          issues: archivedTasksData ?? [],
-          isLoading: isArchivedTasksFetching,
+          issues: archivedItems,
+          isLoading: isArchivedTasksFetching && archivePage === 1 && archivedItems.length === 0,
           onRestore: handleRestoreIssue,
+          total: archiveTotal,
+          onLoadMore: handleLoadMoreArchive,
+          isLoadingMore: isArchivedTasksFetching && archivePage > 1,
         }}
       />
 
@@ -644,28 +759,27 @@ export default function WorkspaceDetailPage({
       )}
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
-      {selectedIssue &&
+      {activeIssueDetail &&
         (activeTab === "timeline" ||
           activeTab === "calendar" ||
           (activeTab === "list" && listViewMode === "grid" && listGridDrawerOpen)) ? (
         <TaskDetailDrawer
-          isOpen={!!selectedIssue}
-          issue={selectedIssue}
+          isOpen={!!activeIssueDetail}
+          issue={activeIssueDetail}
           workspaceId={workspace._id}
-          onClose={() => {
-            setSelectedIssue(null);
-            setListGridDrawerOpen(false);
-          }}
+          onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
+          detailUrl={detailUrl}
         />
-      ) : selectedIssue && !(activeTab === "list" && listViewMode === "split") ? (
+      ) : activeIssueDetail && !(activeTab === "list" && listViewMode === "split") ? (
         <IssueDetailModal
-          issue={selectedIssue}
+          issue={activeIssueDetail}
           workspaceId={workspace._id}
-          onClose={() => setSelectedIssue(null)}
+          onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
+          detailUrl={detailUrl}
         />
       ) : null}
 
