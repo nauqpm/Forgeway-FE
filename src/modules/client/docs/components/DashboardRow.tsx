@@ -27,7 +27,12 @@ export default function DashboardRow({
             <FileText className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-sm font-bold text-[#172B4D] dark:text-gray-200 group-hover:text-[#0052CC] dark:group-hover:text-blue-400 transition-colors block leading-tight">{doc.title}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-[#172B4D] dark:text-gray-200 group-hover:text-[#0052CC] dark:group-hover:text-blue-400 transition-colors block leading-tight">{doc.title}</span>
+              <span className={`px-2 py-0.5 text-[10px] rounded-full font-semibold ${doc.source === "upload" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"}`}>
+                {doc.source === "upload" ? "UPLOAD" : "DOCS"}
+              </span>
+            </div>
             <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 block">Created on {new Date(doc.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
@@ -48,20 +53,24 @@ export default function DashboardRow({
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-          <button 
-            onClick={(e) => { e.stopPropagation(); onRename(doc.id, doc.title); }}
-            className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 transition-all hover:shadow-sm border border-transparent hover:border-gray-100 dark:hover:border-gray-600"
-            title="Rename"
-          >
-            <FileText className="w-4 h-4" />
-          </button>
-          <button 
-            onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
-            className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-all hover:shadow-sm border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
-            title="Delete"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
+          {doc.source !== "upload" && (
+            <>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onRename(doc.id, doc.title); }}
+                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 transition-all hover:shadow-sm border border-transparent hover:border-gray-100 dark:hover:border-gray-600"
+                title="Rename"
+              >
+                <FileText className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
+                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-all hover:shadow-sm border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+                title="Delete"
+              >
+                <MoreHorizontal className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       </td>
     </tr>

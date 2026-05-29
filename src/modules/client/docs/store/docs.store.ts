@@ -17,6 +17,7 @@ const getDescendantIds = (docs: Document[], parentId: string): string[] => {
 export const useDocsStore = create<DocsState>((set, get) => ({
   documents: [],
   selectedDocumentId: null,
+  selectedImportedDocumentId: null,
   expandedNodes: [],
   searchQuery: "",
   isSaving: false,
@@ -30,7 +31,7 @@ export const useDocsStore = create<DocsState>((set, get) => ({
   selectDocument: (id) => {
     const state = get();
     if (!id) {
-      set({ selectedDocumentId: null });
+      set({ selectedDocumentId: null, selectedImportedDocumentId: null });
       return;
     }
 
@@ -50,10 +51,17 @@ export const useDocsStore = create<DocsState>((set, get) => ({
 
     set({
       selectedDocumentId: id,
+      selectedImportedDocumentId: null,
       expandedNodes: toExpand,
       recentDocumentIds: newRecent
     });
   },
+
+  selectImportedDocument: (id) =>
+    set({
+      selectedImportedDocumentId: id,
+      selectedDocumentId: null,
+    }),
 
   toggleExpand: (id) => set((state) => {
     const isExpanded = state.expandedNodes.includes(id);

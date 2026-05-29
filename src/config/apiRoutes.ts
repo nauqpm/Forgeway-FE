@@ -140,6 +140,17 @@ export const apiRoutes = {
         BY_ID: (id: string) => `/attachments/${id}`,
         DOWNLOAD: (id: string) => `/attachments/${id}/download`,
     },
+    DOCUMENTS: {
+        BASE: '/documents',
+        UPLOAD: '/documents/upload',
+        BY_ID: (id: string) => `/documents/${id}`,
+        ATTACH: (id: string) => `/documents/${id}/attach`,
+        DETACH: (id: string) => `/documents/${id}/detach`,
+        BY_WORKSPACE: (workspaceId: string) => `/documents/workspace/${workspaceId}`,
+        VIEW: (id: string) => `/documents/${id}/view`,
+        PREVIEW: (id: string) => `/documents/${id}/preview`,
+        DOWNLOAD: (id: string) => `/documents/${id}/download`,
+    },
     USERS: {
         BASE: '/users',
         PROFILE: '/users/profile',

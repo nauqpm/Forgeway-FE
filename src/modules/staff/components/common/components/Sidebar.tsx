@@ -25,6 +25,7 @@ import {
   ListFilter,
   Search,
   Columns,
+  FolderOpen,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -44,8 +45,9 @@ const mainNav = [
     href: "/spaces",
     badge: null,
   },
-  { icon: ListFilter, label: "Filters", href: "/filter" },
-  { icon: BarChart3, label: "Reports", href: "/reports", badge: "soon" },
+  { icon: ListFilter, label: "Bộ lọc", href: "/filter" },
+  { icon: FolderOpen, label: "Thư viện tài liệu", href: "/documents" },
+  { icon: BarChart3, label: "Báo cáo", href: "/reports", badge: "sắp có" },
 ];
 
 const adminNav = [
@@ -499,8 +501,9 @@ export default function Sidebar({
                 )}
               </div>
 
-              {/* Reports */}
-              <NavItem item={mainNav[5]} showBadge pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+              <NavItem item={mainNav[5]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+              {/* Báo cáo */}
+              <NavItem item={mainNav[6]} showBadge pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
             </div>
           </div>
 

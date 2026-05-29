@@ -1,13 +1,16 @@
 "use client";
 
 import { useDocsStore } from "../store/docs.store";
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DashboardHeader from "./DashboardHeader";
 import DashboardGroup from "./DashboardGroup";
 import DashboardEmpty from "./DashboardEmpty";
+import { documentService } from "../services/documentService";
+import { DocumentItem } from "../types/document.type";
+import { toast } from "react-hot-toast";
 
 export default function DocsDashboard({ workspaceId }: { workspaceId: string }) {
-  const { 
+  const {
     documents, 
     selectDocument, 
     createDocument, 
@@ -17,9 +20,37 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "az">("newest");
+  const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
+  const [personalDocs, setPersonalDocs] = useState<DocumentItem[]>([]);
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadUploadedDocs = async () => {
+    try {
+      const list = await documentService.getByWorkspace(workspaceId);
+      setUploadedDocs(list);
+    } catch {
+      setUploadedDocs([]);
+    }
+  };
+
+  const loadPersonalDocs = async () => {
+    try {
+      const list = await documentService.listMine();
+      setPersonalDocs(list);
+    } catch {
+      setPersonalDocs([]);
+    }
+  };
+
+  useEffect(() => {
+    loadUploadedDocs();
+    loadPersonalDocs();
+  }, [workspaceId]);
 
   const filteredDocs = useMemo(() => {
-    let result = documents.filter(doc => 
+    const result = documents.filter(doc =>
       doc.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -35,13 +66,23 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   }, [documents, searchQuery, sortOrder]);
 
   const groups = useMemo(() => {
-    // Group by status instead of category (which no longer exists in the type)
+    // Docs pages created in wiki editor
     const statuses = Array.from(new Set(filteredDocs.map(d => d.status === 'published' ? 'Published' : 'Draft')));
     return statuses.map(status => ({
       name: status,
-      docs: filteredDocs.filter(d => (d.status === 'published' ? 'Published' : 'Draft') === status)
+      docs: filteredDocs
+        .filter(d => (d.status === 'published' ? 'Published' : 'Draft') === status)
+        .map((d) => ({ ...d, source: "docs" as const })),
     }));
   }, [filteredDocs]);
+
+  const filteredUploads = useMemo(
+    () =>
+      uploadedDocs.filter((doc) =>
+        doc.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      ),
+    [uploadedDocs, searchQuery],
+  );
 
   const handleCreate = async () => {
     const newDoc = await createDocument(workspaceId);
@@ -57,15 +98,98 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
     if (confirm("Delete this page?")) deleteDocument(id);
   };
 
+  const handleImportFile = () => {
+    fileInputRef.current?.click();
+  };
+
+  const importableLibraryDocs = useMemo(() => {
+    const attachedIds = new Set(uploadedDocs.map((d) => d._id));
+    return personalDocs.filter((d) => !attachedIds.has(d._id));
+  }, [personalDocs, uploadedDocs]);
+
   return (
     <div className="flex-1 flex flex-col bg-[#F9FAFB] dark:bg-gray-950 overflow-hidden h-full">
-      <DashboardHeader 
+      <DashboardHeader
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         sortOrder={sortOrder}
         setSortOrder={setSortOrder}
         onCreatePage={handleCreate}
+        onImportFile={handleImportFile}
+        onImportFromLibrary={() => {
+          setSelectedLibraryIds([]);
+          setShowLibraryModal(true);
+        }}
       />
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          try {
+            await documentService.upload(file, { workspaceIds: [workspaceId] });
+            await loadUploadedDocs();
+            await loadPersonalDocs();
+            window.dispatchEvent(new Event("docs_uploads_changed"));
+            toast.success("Đã thêm file vào workspace");
+          } catch (error: unknown) {
+            toast.error("Thêm vào workspace thất bại");
+          } finally {
+            e.target.value = "";
+          }
+        }}
+      />
+      {showLibraryModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-xl p-4">
+            <h3 className="text-lg font-semibold mb-3">Thêm từ thư viện</h3>
+            <div className="max-h-80 overflow-auto border rounded-lg">
+              {importableLibraryDocs.map((doc) => (
+                <label key={doc._id} className="flex items-center gap-2 p-2 border-b last:border-b-0">
+                  <input
+                    type="checkbox"
+                    checked={selectedLibraryIds.includes(doc._id)}
+                    onChange={(e) =>
+                      setSelectedLibraryIds((curr) =>
+                        e.target.checked ? [...curr, doc._id] : curr.filter((id) => id !== doc._id),
+                      )
+                    }
+                  />
+                  <span className="text-sm">{doc.name}</span>
+                </label>
+              ))}
+              {importableLibraryDocs.length === 0 && (
+                <p className="p-3 text-sm text-gray-500">Không có file nào để khả dụng để thêm vào</p>
+              )}
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="px-3 py-2 rounded-lg border"
+                onClick={() => setShowLibraryModal(false)}
+              >
+                Hủy
+              </button>
+              <button
+                className="px-3 py-2 rounded-lg bg-indigo-600 text-white disabled:opacity-50"
+                disabled={!selectedLibraryIds.length}
+                onClick={async () => {
+                  await Promise.all(
+                    selectedLibraryIds.map((id) => documentService.attach(id, [workspaceId])),
+                  );
+                  await loadUploadedDocs();
+                  window.dispatchEvent(new Event("docs_uploads_changed"));
+                  setShowLibraryModal(false);
+                  toast.success("Thêm từ thư viện");
+                }}
+              >
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex-1 overflow-y-auto px-10 py-10 custom-scrollbar">
         <div className="max-w-6xl mx-auto space-y-12">
@@ -81,7 +205,65 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
             />
           ))}
 
-          {groups.length === 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-5 px-1">
+              <div className="w-1.5 h-4 bg-amber-500 rounded-full" />
+              <h3 className="text-[12px] font-bold text-[#42526E] dark:text-gray-300 uppercase tracking-[0.1em]">
+                File được tải lên từ bên ngoài 
+              </h3>
+              <span className="ml-2 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px] font-bold text-gray-500 dark:text-gray-400">
+                {filteredUploads.length}
+              </span>
+            </div>
+            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.02),0_1px_2px_rgba(0,0,0,0.04)]">
+              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                {filteredUploads.map((doc) => (
+                  <div key={doc._id} className="px-6 py-4 flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-[#172B4D] dark:text-gray-100">{doc.name}</p>
+                        <span className="px-2 py-0.5 text-[10px] rounded-full font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                          {doc.extension.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {doc.extension} · {(doc.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={documentService.downloadUrl(doc._id)}
+                        className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                      >
+                        Tải về máy
+                      </a>
+                      <button
+                        className="px-3 py-1.5 text-xs rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/20"
+                        onClick={async () => {
+                          if (!window.confirm("Gỡ tài liệu này khỏi workspace?")) return;
+                          try {
+                            await documentService.detach(doc._id, workspaceId);
+                            await loadUploadedDocs();
+                            window.dispatchEvent(new Event("docs_uploads_changed"));
+                            toast.success("Đã gỡ khỏi workspace");
+                          } catch {
+                            toast.error("Không thể gỡ tài liệu");
+                          }
+                        }}
+                      >
+                        Gỡ khỏi workspace
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {filteredUploads.length === 0 && (
+                  <p className="px-6 py-5 text-sm text-gray-500">Không có file nào được tải lên. </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {groups.length === 0 && filteredUploads.length === 0 && (
             <DashboardEmpty onClearFilters={() => setSearchQuery("")} />
           )}
         </div>
