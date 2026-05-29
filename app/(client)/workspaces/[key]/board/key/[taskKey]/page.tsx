@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import TaskDetailDrawer from "@/modules/client/workspaces/components/TaskDetailDrawer";
+import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
@@ -122,9 +122,7 @@ export default function TaskDetailDeepLinkPage() {
   }
 
   return (
-    <TaskDetailDrawer
-      embedded
-      isOpen
+    <TaskDetailModal
       issue={issue}
       workspaceId={workspace._id}
       onClose={backToBoard}

@@ -90,9 +90,7 @@ export default function WorkspacesPage() {
                 </div>
               </div>
 
-              {/* Body */}
-              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-6 flex-grow">{workspace.description || "Không có mô tả"}</p>
-              
+
               {/* Footer Metrics */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-800">
                 <div className="flex items-center gap-4">

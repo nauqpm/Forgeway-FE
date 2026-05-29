@@ -65,8 +65,12 @@ const TaskDetailDrawer = dynamic(
   () => import("@/modules/client/workspaces/components/TaskDetailDrawer"),
   { ssr: false },
 );
-const IssueDetailModal = dynamic(
-  () => import("@/modules/client/workspaces/components/IssueDetailModal"),
+const TaskDetailModal = dynamic(
+  () => import("@/modules/client/workspaces/components/TaskDetailModal"),
+  { ssr: false },
+);
+const TaskDetailList = dynamic(
+  () => import("@/modules/client/workspaces/components/TaskDetailList"),
   { ssr: false },
 );
 const BulkActionBar = dynamic(
@@ -548,12 +552,7 @@ export default function WorkspaceDetailPage({
         canUpdateWorkspace={canUpdateWorkspace}
       />
 
-      {/* Description */}
-      {workspace.description && (
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-6 bg-white dark:bg-gray-900 rounded-lg px-4 py-3 border border-gray-200 dark:border-gray-800">
-          {workspace.description}
-        </p>
-      )}
+
 
       {/* Tabs */}
       <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={handleTabChange} />
@@ -589,29 +588,29 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result : any) =>
+            handleBoardDragEnd: (result: any) =>
               canMoveTask
                 ? handleBoardDragEnd({
-                    result,
-                    columns,
-                    issues,
-                    setColumns,
-                    setIssues,
-                    handleMoveColumn,
-                    onColumnChange: (taskId, columnId) => {
-                      if (workspaceApiId) {
-                        taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
-                          .then(() => {
-                            queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
-                          })
-                          .catch((error) => {
-                            queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-                            toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
-                          });
-                      }
-                    },
+                  result,
+                  columns,
+                  issues,
+                  setColumns,
+                  setIssues,
+                  handleMoveColumn,
+                  onColumnChange: (taskId, columnId) => {
+                    if (workspaceApiId) {
+                      taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
+                        .then(() => {
+                          queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+                        })
+                        .catch((error) => {
+                          queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+                          toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+                        });
+                    }
+                  },
                 })
-              : undefined,
+                : undefined,
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -759,10 +758,7 @@ export default function WorkspaceDetailPage({
       )}
 
       {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
-      {activeIssueDetail &&
-        (activeTab === "timeline" ||
-          activeTab === "calendar" ||
-          (activeTab === "list" && listViewMode === "grid" && listGridDrawerOpen)) ? (
+      {activeIssueDetail && (activeTab === "timeline" || activeTab === "calendar") ? (
         <TaskDetailDrawer
           isOpen={!!activeIssueDetail}
           issue={activeIssueDetail}
@@ -772,8 +768,8 @@ export default function WorkspaceDetailPage({
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
           detailUrl={detailUrl}
         />
-      ) : activeIssueDetail && !(activeTab === "list" && listViewMode === "split") ? (
-        <IssueDetailModal
+      ) : activeIssueDetail && activeTab !== "list" ? (
+        <TaskDetailModal
           issue={activeIssueDetail}
           workspaceId={workspace._id}
           onClose={closeTaskDetail}

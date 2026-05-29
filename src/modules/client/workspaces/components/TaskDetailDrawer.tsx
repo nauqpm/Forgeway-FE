@@ -65,6 +65,32 @@ export default function TaskDetailDrawer({
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
 
+  // Resize state
+  const [drawerWidth, setDrawerWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      // Drawer is on the right. Width is window width - mouse X position
+      let newWidth = window.innerWidth - e.clientX;
+      const maxWidth = window.innerWidth * 0.5; // Max 50% of the screen
+      
+      if (newWidth < 300) newWidth = 300;
+      if (newWidth > maxWidth) newWidth = maxWidth;
+      
+      setDrawerWidth(newWidth);
+    };
+    const handleMouseUp = () => setIsResizing(false);
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
   // Sync state when issue prop changes
   useEffect(() => {
     if (issue) {
@@ -142,7 +168,7 @@ export default function TaskDetailDrawer({
 
   const panelClasses = embedded
     ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 shadow-none border-0 rounded-none overflow-hidden"
-    : `fixed top-0 right-0 bottom-0 w-full max-w-[min(100vw,72rem)] z-[99999] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col shadow-2xl border-l border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
+    : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col shadow-2xl border-l border-gray-200 dark:border-gray-700 transform ${isResizing ? '' : 'transition-transform duration-300 ease-in-out'} ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`;
 
@@ -150,12 +176,22 @@ export default function TaskDetailDrawer({
     <>
       {!embedded && (
         <div
-          className={`fixed inset-0 z-[99998] bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          className={`fixed inset-0 z-[99998] bg-transparent transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
           onClick={onClose}
         />
       )}
 
-      <div className={panelClasses}>
+      <div className={panelClasses} style={{ width: embedded ? '100%' : `${drawerWidth}px` }}>
+        {!embedded && (
+          <div 
+            className={`absolute top-0 left-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize z-[100000] hover:bg-[#0052CC]/50 transition-colors ${isResizing ? 'bg-[#0052CC]' : 'bg-transparent'}`}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsResizing(true);
+            }}
+          />
+        )}
+        
         {/* Top Header */}
         <div className="app-header border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0 bg-gray-100 dark:bg-gray-800">
           <div className="flex items-center gap-2 text-sm font-medium">
@@ -225,11 +261,10 @@ export default function TaskDetailDrawer({
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Column (Main) */}
-          <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] border-r border-gray-200 dark:border-gray-700 space-y-8 custom-scrollbar">
-
+        {/* Content Body - Single Vertical Column */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-900">
+          <div className="p-4 md:p-6 space-y-8">
+            
             {/* Archived Banner */}
             {issue.isArchived && (
               <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
@@ -271,106 +306,23 @@ export default function TaskDetailDrawer({
               )}
             </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Description</h3>
-              <IssueDescription
-                initialContent={issue.description || ''}
-                onSave={(newDesc) => {
-                  if (onUpdateIssue && !issue.isArchived) {
-                    onUpdateIssue({ ...issue, description: newDesc });
-                  }
-                }}
-              />
-            </div>
-
-            {/* Subtasks */}
-            <IssueSubtasks
-              subtasks={subtasks}
-              onAdd={handleAddSubtask}
-              onUpdateStatus={handleUpdateSubtaskStatus}
-            />
-
-            {/* Linked Work Items */}
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Linked work items</h3>
-              <div className="workspace-panel bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">No linked items yet</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/docs/create?issueId=${issue.id}`}
-                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-bold rounded transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
-                  >
-                    <Plus className="w-4 h-4" /> Create new Document
-                  </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
-                    <LinkIcon className="w-4 h-4" /> Link existing item
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity */}
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <span>Show:</span>
-                  <button
-                    onClick={() => setActiveTab('comments')}
-                    className={`px-3 py-1 rounded font-medium transition-colors ${activeTab === 'comments' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                  >Comments</button>
-                  <button
-                    onClick={() => setActiveTab('history')}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === 'history' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                  >History</button>
-                  <button
-                    onClick={() => setActiveTab('worklog')}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === 'worklog' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                  >Work log</button>
-                </div>
-              </div>
-              {activeTab === 'comments' && (
-                <TaskComments
-                  workspaceId={workspaceId}
-                  taskId={issue.id}
-                  isArchived={issue.isArchived ?? false}
-                  isDeleted={issue.isDeleted ?? false}
-                />
-              )}
-              {activeTab === 'history' && (
-                <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
-              )}
-              {activeTab === 'worklog' && (
-                <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                  No work log entries yet.
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* Right Column (Sidebar) */}
-          <div className="workspace-detail-panel bg-gray-100 dark:bg-gray-800/50 p-[var(--workspace-surface-pad)] overflow-y-auto custom-scrollbar">
-
-            <div className="flex items-center gap-2 mb-6">
+            {/* Top Quick Actions (Status, Settings) */}
+            <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <button
                   onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
                   disabled={issue.isArchived}
-                  className={`flex items-center gap-2 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                  className={`flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-semibold rounded-md transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                 >
-                  {issue.status} {!issue.isArchived && <ChevronDown className="w-4 h-4" />}
+                  {issue.status} {!issue.isArchived && <ChevronDown className="w-4 h-4 text-gray-500" />}
                 </button>
                 {showStatusDropdown && (
-                  <div className="absolute top-full mt-1 left-0 w-40 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
+                  <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
                     {["To Do", "In Progress", "Done"].map((s) => (
                       <button
                         key={s}
                         onClick={() => handleStatusChange(s)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? 'bg-gray-200 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? 'bg-gray-100 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
                         {s}
                       </button>
@@ -378,106 +330,185 @@ export default function TaskDetailDrawer({
                   </div>
                 )}
               </div>
-              <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 rounded transition-colors"><Zap className="w-4 h-4" /></button>
-              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
-                <Settings className="w-4 h-4" /> Improve Task
+              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md transition-colors border border-gray-200 dark:border-gray-700">
+                <Zap className="w-4 h-4" /> Automations
+              </button>
+              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md transition-colors border border-gray-200 dark:border-gray-700">
+                <Settings className="w-4 h-4" /> Config
               </button>
             </div>
 
-            <div className="space-y-6">
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
-                <button className="w-full flex items-center justify-between p-3 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg transition-colors">
-                  Details <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                </button>
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
-                  {/* Assignee */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1">Assignee</div>
-                    <div className="col-span-2 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center border border-gray-200 dark:border-gray-700">
-                          <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
-                        </div>
-                        {assigneeName}
-                      </div>
-                      <a href="#" className="text-sm text-[#0052CC] hover:underline font-medium block">Assign to me</a>
+            {/* Details List (Assignee, Reporter, Priority, etc) */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 overflow-hidden">
+              <div className="w-full flex items-center justify-between p-3 text-sm font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                Details
+              </div>
+              <div className="p-4 flex flex-col space-y-2">
+                {/* Assignee */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Assignee</div>
+                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                     </div>
+                    <span className="truncate">{assigneeName}</span>
                   </div>
+                </div>
 
-                  {/* Type */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Type</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">{issue.type}</div>
+                {/* Reporter */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Reporter</div>
+                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold text-[10px]">
+                      {reporterName.substring(0, 2).toUpperCase()}
                     </div>
+                    <span className="truncate">{reporterName}</span>
                   </div>
+                </div>
 
-                  {/* Reporter */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Reporter</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">{reporterName}</div>
-                    </div>
+                {/* Type */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Type</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {issue.type}
                   </div>
+                </div>
 
-                  {/* Due date */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Due date</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">{dueDateLabel}</div>
-                    </div>
+                {/* Priority */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Priority</div>
+                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {issue.priority}
                   </div>
+                </div>
 
-                  {/* Story points */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Story points</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">{storyPointsLabel}</div>
-                    </div>
+                {/* Due date */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Due date</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {dueDateLabel}
                   </div>
+                </div>
 
-                  {/* Sprint */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Sprint</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">{sprintLabel}</div>
-                    </div>
+                {/* Sprint */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Sprint</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors truncate">
+                    {sprintLabel}
                   </div>
+                </div>
 
-                  {/* Board */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Board</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">{boardLabel}</div>
-                    </div>
-                  </div>
-
-                  {/* Priority */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Priority</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer flex items-center gap-2 transition-colors">
-                        {issue.priority}
-                      </div>
-                    </div>
+                {/* Story points */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Story points</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {storyPointsLabel}
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Time Tracking */}
+            {/* Description */}
+            <div className="space-y-3">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Description</h3>
+              <div className="pl-1">
+                <IssueDescription
+                  initialContent={issue.description || ''}
+                  onSave={(newDesc: string) => {
+                    if (onUpdateIssue && !issue.isArchived) {
+                      onUpdateIssue({ ...issue, description: newDesc });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Subtasks */}
+            <div className="pt-2">
+              <IssueSubtasks
+                subtasks={subtasks}
+                onAdd={handleAddSubtask}
+                onUpdateStatus={handleUpdateSubtaskStatus}
+              />
+            </div>
+
+            {/* Time Tracking */}
+            <div className="pt-2">
               <TimeTrackingSidebar 
                 timeEstimated={timeEstimated} 
                 timeLogged={timeLogged} 
                 onLogWork={handleLogWork} 
               />
+            </div>
 
-              {/* Meta information */}
-              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                <p>Created {formatDateTime(issue.createdAt)}</p>
-                <p>Updated {formatDateTime(issue.updatedAt)}</p>
+            {/* Linked Work Items */}
+            <div className="space-y-3 pt-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Linked work items</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">No linked items yet</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href={`/docs/create?issueId=${issue.id}`}
+                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-bold rounded transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
+                  >
+                    <Plus className="w-4 h-4" /> Create Document
+                  </Link>
+                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
+                    <LinkIcon className="w-4 h-4" /> Link item
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Activity (Comments, History, Worklog) */}
+            <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h3>
+                <div className="flex items-center gap-1 text-sm bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                  <button
+                    onClick={() => setActiveTab('comments')}
+                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'comments' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  >Comments</button>
+                  <button
+                    onClick={() => setActiveTab('history')}
+                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'history' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  >History</button>
+                  <button
+                    onClick={() => setActiveTab('worklog')}
+                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'worklog' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  >Worklog</button>
+                </div>
               </div>
 
+              <div className="pt-2">
+                {activeTab === 'comments' && (
+                  <TaskComments
+                    workspaceId={workspaceId}
+                    taskId={issue.id}
+                    isArchived={issue.isArchived ?? false}
+                    isDeleted={issue.isDeleted ?? false}
+                  />
+                )}
+                {activeTab === 'history' && (
+                  <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
+                )}
+                {activeTab === 'worklog' && (
+                  <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400 text-center">
+                    No work log entries yet.
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Meta information */}
+            <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-4 pt-4 pb-8">
+              <span>Created: {formatDateTime(issue.createdAt)}</span>
+              <span>•</span>
+              <span>Updated: {formatDateTime(issue.updatedAt)}</span>
+            </div>
+
           </div>
         </div>
       </div>

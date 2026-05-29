@@ -28,7 +28,7 @@ import IssueDescription from "@/modules/admin/components/common/components/Issue
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
 
-interface IssueDetailModalProps {
+interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
   onClose: () => void;
@@ -57,14 +57,14 @@ const formatDateTime = (value?: string | null) => {
   }).format(new Date(value));
 };
 
-export default function IssueDetailModal({
+export default function TaskDetailModal({
   issue,
   workspaceId,
   onClose,
   onUpdateIssue,
   onArchiveIssue,
   detailUrl,
-}: IssueDetailModalProps) {
+}: TaskDetailModalProps) {
   const [activeTab, setActiveTab] = useState<
     "comments" | "history" | "worklog"
   >("comments");
@@ -290,7 +290,7 @@ export default function IssueDetailModal({
               </h3>
               <IssueDescription
                 initialContent={issue.description || ""}
-                onSave={(newDesc) => {
+                onSave={(newDesc: string) => {
                   if (onUpdateIssue && !issue.isArchived) {
                     onUpdateIssue({ ...issue, description: newDesc });
                   }

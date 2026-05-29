@@ -2,16 +2,19 @@
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
-  FileText,
   LayoutGrid,
   PanelRight,
-  RotateCw,
-  ArrowDownWideNarrow,
+  Search,
+  SlidersHorizontal,
   ChevronDown,
+  ArrowDownWideNarrow,
+  RotateCw,
+  FileText,
 } from "lucide-react";
 import { Issue } from "../../types/issue.type";
 import DataGridListView from "@/modules/admin/components/common/components/DataGridListView";
 import TaskDetailDrawer from "../TaskDetailDrawer";
+import TaskDetailList from "../TaskDetailList";
 
 type ListSplitSortField =
   | "created"
@@ -68,12 +71,20 @@ export default function ListTab({
   const [listSplitOrderOpen, setListSplitOrderOpen] = useState(false);
   const listSplitToolbarRef = useRef<HTMLDivElement>(null);
   const splitJustActivatedRef = useRef(false);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
   useEffect(() => {
     if (!workspaceId) return;
     try {
       const saved = localStorage.getItem(`list_view_mode_${workspaceId}`);
-      setListViewMode(saved === "split" ? "split" : "grid");
+      if (mountedRef.current) {
+        setListViewMode(saved === "split" ? "split" : "grid");
+      }
     } catch {
       /* ignore */
     }
@@ -176,19 +187,37 @@ export default function ListTab({
 
   return (
     <div className="workspace-panel bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-      <div className="flex flex-wrap items-center justify-end gap-3 mb-4">
-        <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 p-0.5 bg-gray-100 dark:bg-gray-800">
+      {/* Toolbar: search/filter left, view-toggle right */}
+      <div className="flex items-center gap-2 mb-3 px-1">
+        {/* Left: Search + Filter */}
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <div className="relative flex-1 max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search issues..."
+              className="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-1 focus:ring-[#0052CC] focus:border-[#0052CC] transition-colors"
+            />
+          </div>
+          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md transition-colors">
+            <SlidersHorizontal className="w-3.5 h-3.5" />
+            Filter
+          </button>
+        </div>
+
+        {/* Right: Table / Split icon-only toggle */}
+        <div className="inline-flex items-center rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
           <button
             type="button"
             onClick={() => setListViewModePersisted("grid")}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              listViewMode === "grid"
-                ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
             title="Table view"
+            className={`p-1.5 transition-colors ${
+              listViewMode === "grid"
+                ? "bg-[#0052CC] text-white"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
           >
-            <LayoutGrid className="w-4 h-4" /> Table
+            <LayoutGrid className="w-4 h-4" />
           </button>
           <button
             type="button"
@@ -197,33 +226,47 @@ export default function ListTab({
               setListGridDrawerOpen(false);
               setListViewModePersisted("split");
             }}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              listViewMode === "split"
-                ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
             title="Split view"
+            className={`p-1.5 transition-colors border-l border-gray-200 dark:border-gray-700 ${
+              listViewMode === "split"
+                ? "bg-[#0052CC] text-white"
+                : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            }`}
           >
-            <PanelRight className="w-4 h-4" /> Split
+            <PanelRight className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {listViewMode === "grid" ? (
-        <DataGridListView
-          issues={filteredIssues}
-          onClickTask={(issue) => {
-            if (onOpenIssue) {
-              onOpenIssue(issue);
-            } else {
-              setSelectedIssue(issue);
-            }
-            setListGridDrawerOpen(true);
-          }}
-          onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
-          onBulkUpdate={async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates))}
-          onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
-        />
+        <div className="flex w-full overflow-hidden workspace-list-height">
+          <div className="flex-1 overflow-x-auto min-w-0">
+            <DataGridListView
+              issues={filteredIssues}
+              onClickTask={(issue) => {
+                if (onOpenIssue) {
+                  onOpenIssue(issue);
+                } else {
+                  setSelectedIssue(issue);
+                }
+              }}
+              onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
+              onBulkUpdate={async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates))}
+              onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
+            />
+          </div>
+          {selectedIssue && (
+            <TaskDetailList
+              issue={selectedIssue}
+              workspaceId={workspaceId}
+              onClose={() => {
+                setSelectedIssue(null);
+                setListGridDrawerOpen(false);
+              }}
+              onUpdateIssue={handleUpdateIssue}
+            />
+          )}
+        </div>
       ) : (
         <div className="workspace-list-height flex flex-col lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
           <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30 shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
@@ -374,9 +417,7 @@ export default function ListTab({
                 Chọn một issue ở cột trái để xem chi tiết.
               </div>
             ) : splitSortedIssues.some((i) => i.id === selectedIssue.id) ? (
-              <TaskDetailDrawer
-                embedded
-                isOpen={true}
+              <TaskDetailList
                 issue={selectedIssue}
                 workspaceId={workspaceId}
                 onClose={() => setSelectedIssue(null)}

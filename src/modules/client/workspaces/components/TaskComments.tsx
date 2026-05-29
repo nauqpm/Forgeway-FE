@@ -20,8 +20,8 @@ type RawMemberDto = {
   id?: string;
   _id?: string;
   userId?:
-    | { id?: string; _id?: string; fullName?: string; email?: string }
-    | string;
+  | { id?: string; _id?: string; fullName?: string; email?: string }
+  | string;
   user?: { id?: string; _id?: string; fullName?: string; email?: string };
   fullName?: string;
   email?: string;
@@ -78,6 +78,61 @@ const getAuthorInitials = (author: TaskComment["author"]): string => {
     .toUpperCase();
 };
 
+const renderRichText = (content: string) => {
+  // Matches both `[@Name](id)` and `@[Name](id)` syntax in case of legacy data
+  const mentionRegex = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = mentionRegex.exec(content)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(content.substring(lastIndex, match.index));
+    }
+    parts.push(
+      <span
+        key={match.index}
+        className="text-[#0052CC] dark:text-[#4C9AFF] bg-[#E9F2FF] dark:bg-[#0052CC]/20 px-1 py-0.5 rounded font-medium"
+      >
+        @{match[1]}
+      </span>
+    );
+    lastIndex = mentionRegex.lastIndex;
+  }
+
+  if (lastIndex < content.length) {
+    parts.push(content.substring(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : content;
+};
+
+interface CommentNode extends TaskComment {
+  children: CommentNode[];
+}
+
+const buildCommentTree = (flatComments: TaskComment[]): CommentNode[] => {
+  const map = new Map<string, CommentNode>();
+  const roots: CommentNode[] = [];
+
+  flatComments.forEach((c) => map.set(c.id, { ...c, children: [] }));
+
+  flatComments.forEach((c) => {
+    const node = map.get(c.id)!;
+    if (c.parentId && map.has(c.parentId)) {
+      map.get(c.parentId)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  const sortFn = (a: CommentNode, b: CommentNode) =>
+    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+
+  Array.from(map.values()).forEach((node) => node.children.sort(sortFn));
+  return roots.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+};
+
 export default function TaskComments({
   workspaceId,
   taskId,
@@ -90,6 +145,7 @@ export default function TaskComments({
   const [commentInput, setCommentInput] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
 
   const commentsKey = useMemo(
     () => ["taskComments", workspaceId, taskId],
@@ -132,7 +188,7 @@ export default function TaskComments({
 
   const createMutation = useMutation({
     mutationFn: (content: string) =>
-      taskService.createComment(workspaceId, taskId, content),
+      taskService.createComment(workspaceId, taskId, content, replyingToId),
     onMutate: async (content) => {
       await queryClient.cancelQueries({ queryKey: commentsKey });
       const prev = queryClient.getQueryData<TaskComment[]>(commentsKey) ?? [];
@@ -143,15 +199,15 @@ export default function TaskComments({
         authorId: currentUserId ?? "",
         author: user
           ? {
-              id: user.id,
-              fullName: user.fullName,
-              email: user.email,
-              avatar: user.avatar,
-            }
+            id: user.id,
+            fullName: user.fullName,
+            email: user.email,
+            avatar: user.avatar,
+          }
           : null,
         targetType: "task",
         targetId: taskId,
-        parentId: null,
+        parentId: replyingToId || null,
         mentions: [],
         isDeleted: false,
         editedAt: null,
@@ -163,6 +219,10 @@ export default function TaskComments({
     onError: (_err, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
       toast.error("Failed to post comment");
+    },
+    onSuccess: () => {
+      setReplyingToId(null);
+      setCommentInput("");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: commentsKey });
@@ -197,8 +257,8 @@ export default function TaskComments({
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          "Failed to update comment",
+        err?.message ||
+        "Failed to update comment",
       );
     },
     onSettled: () => {
@@ -226,8 +286,8 @@ export default function TaskComments({
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
       toast.error(
         err?.response?.data?.message ||
-          err?.message ||
-          "Failed to delete comment",
+        err?.message ||
+        "Failed to delete comment",
       );
     },
     onSettled: () => {
@@ -257,6 +317,125 @@ export default function TaskComments({
     setEditContent("");
   }, []);
 
+  const handleReplyStart = useCallback((comment: TaskComment) => {
+    const authorName = comment.author?.fullName || comment.author?.email || "Unknown";
+    const authorId = comment.author?.id || comment.authorId;
+    setReplyingToId(comment.id);
+    setCommentInput(`[@${authorName}](${authorId}) `);
+    document.querySelector<HTMLInputElement>('.tc-m__input')?.focus();
+  }, []);
+
+  const commentTree = useMemo(() => buildCommentTree(comments), [comments]);
+
+  const renderCommentNode = (node: CommentNode, depth: number = 0) => {
+    const authorName = node.author?.fullName || node.author?.email || "Unknown";
+    const initials = getAuthorInitials(node.author);
+    const isEditing = editingId === node.id;
+    const isOwnComment = Boolean(
+      currentUserId &&
+      (node.authorId === currentUserId || node.author?.id === currentUserId),
+    );
+
+    const visualDepth = Math.min(depth, 3);
+
+    return (
+      <div key={node.id} className="mt-4">
+        <div className="flex gap-4" style={{ marginLeft: `${visualDepth * 1.5}rem` }}>
+          <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
+            {node.author?.avatar ? (
+              <img src={node.author.avatar} alt={authorName} className="w-full h-full object-cover" />
+            ) : (
+              initials
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-gray-900 dark:text-white text-sm font-semibold">{authorName}</span>
+              <span className="text-gray-500 dark:text-gray-400 text-xs">{formatDateTime(node.createdAt)}</span>
+              {node.editedAt && <span className="text-gray-400 dark:text-gray-500 text-xs">(edited)</span>}
+            </div>
+
+            {isEditing ? (
+              <div className="space-y-2">
+                <textarea
+                  autoFocus
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={3}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleEditSave();
+                    }
+                    if (e.key === "Escape") handleEditCancel();
+                  }}
+                  className="w-full border border-[#0052CC] rounded px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none resize-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleEditSave}
+                    disabled={editMutation.isPending}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#0052CC] text-white text-xs font-medium rounded transition-colors disabled:opacity-60"
+                  >
+                    <Check className="h-3 w-3" />
+                    {editMutation.isPending ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    onClick={handleEditCancel}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded transition-colors"
+                  >
+                    <X className="h-3 w-3" />
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-gray-900 dark:text-white text-sm whitespace-pre-wrap leading-relaxed">
+                  {renderRichText(node.content)}
+                </p>
+                <div className="flex gap-3 mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                  {!isArchived && (
+                    <button
+                      className="inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+                      onClick={() => handleReplyStart(node)}
+                    >
+                      Reply
+                    </button>
+                  )}
+                  {!isArchived && isOwnComment && (
+                    <>
+                      <button
+                        onClick={() => handleEditStart(node)}
+                        className="inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteMutation.mutate(node.id)}
+                        disabled={deleteMutation.isPending}
+                        className="inline-flex items-center gap-1 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-60"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        {node.children && node.children.length > 0 && (
+          <div className="mt-2">
+            {node.children.map((child) => renderCommentNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Safe early return after all hooks — no API calls made when isDeleted
   if (isDeleted) return null;
 
@@ -273,11 +452,23 @@ export default function TaskComments({
     <div className="space-y-4">
       {/* Input — hidden when archived */}
       {!isArchived && (
-        <div className="flex gap-4 pt-2">
-          <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
-            QP
-          </div>
-          <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
+        <>
+          {replyingToId && (
+            <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-md text-xs text-blue-700 dark:text-blue-300 font-medium mb-2">
+              <span>Replying to comment...</span>
+              <button
+                onClick={() => setReplyingToId(null)}
+                className="hover:bg-blue-100 dark:hover:bg-blue-900/40 p-0.5 rounded transition-colors"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+          <div className="flex gap-4 pt-2">
+            <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
+              {user ? getAuthorInitials(user as any) : "U"}
+            </div>
+            <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
             <div className="mb-4 text-sm relative z-50">
               <style
                 dangerouslySetInnerHTML={{
@@ -325,7 +516,8 @@ export default function TaskComments({
                       </span>
                     </div>
                   )}
-                  className="text-[#0052CC] bg-[#E9F2FF] rounded px-1 font-medium"
+                  className="text-[#0052CC] bg-[#E9F2FF] dark:text-[#4C9AFF] dark:bg-[#0052CC]/20"
+                  displayTransform={(id, display) => `@${display}`}
                 />
               </MentionsInput>
             </div>
@@ -379,130 +571,15 @@ export default function TaskComments({
                 to comment
               </p>
             </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Comment list */}
-      {sortedComments.length > 0 ? (
-        <div className="space-y-4 mt-2">
-          {sortedComments.map((comment) => {
-            const authorName =
-              comment.author?.fullName || comment.author?.email || "Unknown";
-            const initials = getAuthorInitials(comment.author);
-            const isEditing = editingId === comment.id;
-            const isOwnComment = Boolean(
-              currentUserId &&
-                (comment.authorId === currentUserId ||
-                  comment.author?.id === currentUserId),
-            );
-
-            return (
-              <div key={comment.id} className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
-                  {comment.author?.avatar ? (
-                    <img
-                      src={comment.author.avatar}
-                      alt={authorName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    initials
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-gray-900 dark:text-white text-sm font-semibold">
-                      {authorName}
-                    </span>
-                    <span className="text-gray-500 dark:text-gray-400 text-xs">
-                      {formatDateTime(comment.createdAt)}
-                    </span>
-                    {comment.editedAt && (
-                      <span className="text-gray-400 dark:text-gray-500 text-xs">
-                        (edited)
-                      </span>
-                    )}
-                  </div>
-
-                  {isEditing ? (
-                    <div className="space-y-2">
-                      <textarea
-                        autoFocus
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        rows={3}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleEditSave();
-                          }
-                          if (e.key === "Escape") handleEditCancel();
-                        }}
-                        className="w-full border border-[#0052CC] rounded px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none resize-none"
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleEditSave}
-                          disabled={editMutation.isPending}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#0052CC] text-white text-xs font-medium rounded transition-colors disabled:opacity-60"
-                        >
-                          <Check className="h-3 w-3" />
-                          {editMutation.isPending ? "Saving..." : "Save"}
-                        </button>
-                        <button
-                          onClick={handleEditCancel}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <p className="text-gray-900 dark:text-white text-sm whitespace-pre-wrap">
-                        {comment.content}
-                      </p>
-                      <div className="flex gap-3 mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                        {!isArchived && (
-                          <button
-                            className="inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
-                            onClick={() => {
-                              // Placeholder for reply logic
-                              setCommentInput(`@${authorName} `);
-                              document.querySelector<HTMLInputElement>('.tc-m__input')?.focus();
-                            }}
-                          >
-                            Reply
-                          </button>
-                        )}
-                        {!isArchived && isOwnComment && (
-                          <>
-                            <button
-                              onClick={() => handleEditStart(comment)}
-                              className="inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
-                            >
-                              <Pencil className="h-3 w-3" />
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => deleteMutation.mutate(comment.id)}
-                              disabled={deleteMutation.isPending}
-                              className="inline-flex items-center gap-1 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-60"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                              Delete
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+      {commentTree.length > 0 ? (
+        <div className="space-y-2 mt-2">
+          {commentTree.map((node) => renderCommentNode(node, 0))}
         </div>
       ) : (
         !isLoadingComments && (

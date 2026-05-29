@@ -31,7 +31,7 @@ const Header = ({
   const template = getWorkspaceTemplate(workspace);
 
   return (
-    <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
       <div className="flex min-w-0 items-start gap-3 sm:gap-4">
         <Link
           href="/workspaces"
