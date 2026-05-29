@@ -14,7 +14,7 @@ const getApiErrorMessage = (error: unknown, fallback: string): string => {
 };
 
 interface UseSprintHandlersProps {
-  workspaceKey: string;
+  workspaceId: string;
   sprints: Sprint[];
   editingSprint: Sprint | null;
   setSprints: React.Dispatch<React.SetStateAction<Sprint[]>>;
@@ -24,7 +24,7 @@ interface UseSprintHandlersProps {
 }
 
 export const useSprintHandlers = ({
-  workspaceKey,
+  workspaceId,
   sprints,
   editingSprint,
   setSprints,
@@ -38,15 +38,15 @@ export const useSprintHandlers = ({
 
   const createSprintMutation = useMutation({
     mutationFn: (input: CreateSprintInput) =>
-      sprintService.createSprint(workspaceKey, input),
+      sprintService.createSprint(workspaceId, input),
     onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
       const tempId = `temp-${Date.now()}`;
       const tempSprint: Sprint = {
         _id: tempId,
         id: tempId,
-        workspaceId: workspaceKey,
+        workspaceId,
         name: input.name,
         goal: input.goal,
         status: "planning",
@@ -62,7 +62,7 @@ export const useSprintHandlers = ({
       toast.error(getApiErrorMessage(err, "Lỗi khi tạo sprint mới"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
     },
     onSuccess: () => {
       toast.success("Đã tạo sprint mới");
@@ -71,9 +71,9 @@ export const useSprintHandlers = ({
 
   const updateSprintMutation = useMutation({
     mutationFn: ({ sprintId, input }: { sprintId: string; input: UpdateSprintInput }) =>
-      sprintService.updateSprint(workspaceKey, sprintId, input),
+      sprintService.updateSprint(workspaceId, sprintId, input),
     onMutate: async ({ sprintId, input }) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
       setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, ...input } : s)));
       return { previousSprints };
@@ -83,7 +83,7 @@ export const useSprintHandlers = ({
       toast.error(getApiErrorMessage(err, "Lỗi khi cập nhật sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
     },
     onSuccess: () => {
       toast.success("Đã cập nhật sprint");
@@ -92,9 +92,9 @@ export const useSprintHandlers = ({
 
   const deleteSprintMutation = useMutation({
     mutationFn: (sprintId: string) =>
-      sprintService.deleteSprint(workspaceKey, sprintId),
+      sprintService.deleteSprint(workspaceId, sprintId),
     onMutate: async (sprintId) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
       setSprints(sprints.filter((s) => s._id !== sprintId));
       return { previousSprints };
@@ -104,7 +104,7 @@ export const useSprintHandlers = ({
       toast.error(getApiErrorMessage(err, "Lỗi khi xóa sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
     },
     onSuccess: () => {
       toast.success("Đã xóa sprint");
@@ -113,9 +113,9 @@ export const useSprintHandlers = ({
 
   const startSprintMutation = useMutation({
     mutationFn: ({ sprintId, input }: { sprintId: string; input: { startDate: string; endDate: string } }) =>
-      sprintService.startSprint(workspaceKey, sprintId, input),
+      sprintService.startSprint(workspaceId, sprintId, input),
     onMutate: async ({ sprintId }) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
       setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, status: "active" as const } : s)));
       return { previousSprints };
@@ -125,8 +125,8 @@ export const useSprintHandlers = ({
       toast.error(getApiErrorMessage(err, "Lỗi khi bắt đầu sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     },
     onSuccess: () => {
       toast.success("Sprint đã bắt đầu");
@@ -135,9 +135,9 @@ export const useSprintHandlers = ({
 
   const completeSprintMutation = useMutation({
     mutationFn: ({ sprintId, input }: { sprintId: string; input?: { moveToSprintId?: string } }) =>
-      sprintService.completeSprint(workspaceKey, sprintId, input),
+      sprintService.completeSprint(workspaceId, sprintId, input),
     onMutate: async ({ sprintId }) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
       const previousSprints = sprints;
       setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, status: "completed" as const } : s)));
       return { previousSprints };
@@ -147,9 +147,9 @@ export const useSprintHandlers = ({
       toast.error(getApiErrorMessage(err, "Lỗi khi hoàn thành sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceKey] });
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onSuccess: () => {
       toast.success("Sprint đã hoàn thành");

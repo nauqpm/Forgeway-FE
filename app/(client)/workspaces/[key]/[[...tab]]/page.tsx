@@ -1,15 +1,10 @@
 "use client";
 
 import { useEffect, useState, use, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
-import IssueDetailModal from "@/modules/client/workspaces/components/IssueDetailModal";
-import TaskDetailDrawer from "@/modules/client/workspaces/components/TaskDetailDrawer";
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
-import SprintModal from "@/modules/client/workspaces/components/SprintModal";
-import StartSprintModal from "@/modules/client/workspaces/components/StartSprintModal";
-import CompleteSprintModal from "@/modules/client/workspaces/components/CompleteSprintModal";
-import BulkActionBar from "@/modules/admin/components/common/components/BulkActionBar";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { boardService } from "@/modules/client/workspaces/services/boardService";
@@ -28,6 +23,7 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAssignees } from "@/modules/client/workspaces/hooks/useAssignees";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
+import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
 import { filterIssues } from "@/modules/client/workspaces/utils/filterIssues";
 import {
@@ -43,11 +39,39 @@ import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWor
 import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
 
-import CreateIssueModal from "@/modules/client/workspaces/components/issues/CreateIssueModal";
+const CreateIssueModal = dynamic(
+  () => import("@/modules/client/workspaces/components/issues/CreateIssueModal"),
+  { ssr: false },
+);
+const SprintModal = dynamic(
+  () => import("@/modules/client/workspaces/components/SprintModal"),
+  { ssr: false },
+);
+const StartSprintModal = dynamic(
+  () => import("@/modules/client/workspaces/components/StartSprintModal"),
+  { ssr: false },
+);
+const CompleteSprintModal = dynamic(
+  () => import("@/modules/client/workspaces/components/CompleteSprintModal"),
+  { ssr: false },
+);
+const TaskDetailDrawer = dynamic(
+  () => import("@/modules/client/workspaces/components/TaskDetailDrawer"),
+  { ssr: false },
+);
+const IssueDetailModal = dynamic(
+  () => import("@/modules/client/workspaces/components/IssueDetailModal"),
+  { ssr: false },
+);
+const BulkActionBar = dynamic(
+  () => import("@/modules/admin/components/common/components/BulkActionBar"),
+  { ssr: false },
+);
 
 export default function WorkspaceDetailPage({
   params,
@@ -60,6 +84,7 @@ export default function WorkspaceDetailPage({
   const initialTab = (tabFromUrl as WorkspaceTab) || null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const workspaceApiId = workspace?._id;
   const { setCurrentWorkspace } = useWorkspaceStore();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
@@ -104,7 +129,7 @@ export default function WorkspaceDetailPage({
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
-  const { filters, setFilters, taskFilters } = useTaskFilters(workspaceKey);
+  const { filters, setFilters, taskFilters } = useTaskFilters(workspaceApiId ?? "");
   const [density, setDensity] = useState<"default" | "compact">("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -115,16 +140,16 @@ export default function WorkspaceDetailPage({
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const { data: boardData, isLoading: isBoardLoading } = useQuery({
-    queryKey: ["board", workspaceKey],
-    queryFn: () => boardService.getBoardByWorkspace(workspaceKey),
-    enabled: !!workspaceKey,
+    queryKey: ["board", workspaceApiId],
+    queryFn: () => boardService.getBoardByWorkspace(workspaceApiId!),
+    enabled: !!workspaceApiId,
     staleTime: 30_000,
   });
 
   const { data: sprintsData } = useQuery({
-    queryKey: ["sprints", workspaceKey],
-    queryFn: () => sprintService.listSprints(workspaceKey),
-    enabled: !!workspaceKey && workspace?.type === "scrum",
+    queryKey: ["sprints", workspaceApiId],
+    queryFn: () => sprintService.listSprints(workspaceApiId!),
+    enabled: !!workspaceApiId && workspace?.type === "scrum",
     staleTime: 30_000,
   });
 
@@ -133,9 +158,9 @@ export default function WorkspaceDetailPage({
     error: tasksError,
     isFetching: isTasksFetching,
   } = useQuery({
-    queryKey: ["tasks", workspaceKey, taskFilters],
-    queryFn: () => taskService.getBoardTasks(workspaceKey, taskFilters),
-    enabled: !!workspaceKey,
+    queryKey: ["tasks", workspaceApiId, taskFilters],
+    queryFn: () => taskService.getBoardTasks(workspaceApiId!, taskFilters),
+    enabled: !!workspaceApiId,
     staleTime: 30_000,
   });
 
@@ -143,13 +168,15 @@ export default function WorkspaceDetailPage({
     data: archivedTasksData,
     isFetching: isArchivedTasksFetching,
   } = useQuery({
-    queryKey: ["archivedTasks", workspaceKey],
-    queryFn: () => taskService.getBoardTasks(workspaceKey, { archived: true }),
-    enabled: !!workspaceKey && activeTab === "archive",
+    queryKey: ["archivedTasks", workspaceApiId],
+    queryFn: () => taskService.getBoardTasks(workspaceApiId!, { archived: true }),
+    enabled: !!workspaceApiId && activeTab === "archive",
     staleTime: 30_000,
   });
 
   const [columns, setColumns] = useState<BoardColumn[]>([]);
+
+  useWorkspaceSocket(workspaceApiId);
 
   useEffect(() => {
     if (boardData?.columns) {
@@ -175,7 +202,7 @@ export default function WorkspaceDetailPage({
   }, [issues, filters, workspace]);
 
   const uniqueAssignees = useAssignees(issues);
-  const workspacePermissions = useWorkspacePermission(workspaceKey, workspace);
+  const workspacePermissions = useWorkspacePermission(workspaceApiId ?? "", workspace);
   const canCreateTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
   const canEditTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
   const canDeleteTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
@@ -192,7 +219,7 @@ export default function WorkspaceDetailPage({
     updateIssueDirectly,
     handleQuickCreateTask,
   } = useIssueHandlers({
-    workspaceKey,
+    workspaceId: workspaceApiId ?? "",
     issues,
     setIssues,
     setShowCreateIssue,
@@ -208,7 +235,7 @@ export default function WorkspaceDetailPage({
     handleDeleteColumn,
     handleMoveColumn,
   } = useColumnHandlers({
-    workspaceKey,
+    workspaceId: workspaceApiId ?? "",
     columns,
     newColumnName,
     setColumns,
@@ -223,17 +250,15 @@ export default function WorkspaceDetailPage({
     handleEditSprint,
     handleDeleteSprint,
     handleStartSprint,
-    handleConfirmStartSprint,
     handleCompleteSprint,
+    handleConfirmStartSprint,
     handleConfirmCompleteSprint,
     startSprintTarget,
     setStartSprintTarget,
     completeSprintTarget,
     setCompleteSprintTarget,
-    isStarting,
-    isCompleting,
   } = useSprintHandlers({
-    workspaceKey,
+    workspaceId: workspaceApiId ?? "",
     sprints,
     editingSprint,
     setSprints,
@@ -248,23 +273,32 @@ export default function WorkspaceDetailPage({
       issues,
       setIssues,
       onSprintAssign: (taskId, sprintId) => {
-        taskService.updateBoardTask(workspaceKey, taskId, { sprintId: sprintId ?? undefined });
+        if (workspaceApiId) {
+          taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
+            .then(() => {
+              queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+            })
+            .catch((error) => {
+              queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+              toast.error(error?.response?.data?.message || "Khong cap nhat duoc sprint cua task");
+            });
+        }
       },
     });
   };
 
   const handleArchiveIssue = async (issue: Issue) => {
-    if (!issue.id) {
+    if (!workspaceApiId || !issue.id) {
       toast.error("Khong tim thay task id");
       return;
     }
 
     try {
-      await taskService.archiveBoardTask(workspaceKey, issue.id);
+      await taskService.archiveBoardTask(workspaceApiId, issue.id);
       setIssues((current) => current.filter((item) => item.id !== issue.id));
       setSelectedIssue(null);
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
-      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceApiId] });
       toast.success("Da archive work item");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong archive duoc work item");
@@ -272,20 +306,20 @@ export default function WorkspaceDetailPage({
   };
 
   const handleRestoreIssue = async (issue: Issue) => {
-    if (!issue.id) {
+    if (!workspaceApiId || !issue.id) {
       toast.error("Khong tim thay task id");
       return;
     }
 
     try {
-      const restoredIssue = await taskService.restoreBoardTask(workspaceKey, issue.id);
+      const restoredIssue = await taskService.restoreBoardTask(workspaceApiId, issue.id);
       setIssues((current) =>
         current.some((item) => item.id === restoredIssue.id)
           ? current.map((item) => item.id === restoredIssue.id ? restoredIssue : item)
           : [...current, restoredIssue],
       );
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
-      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceApiId] });
       toast.success("Da restore work item");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong restore duoc work item");
@@ -293,18 +327,18 @@ export default function WorkspaceDetailPage({
   };
 
   const handleDeleteIssue = async (issue: Issue) => {
-    if (!issue.id) {
+    if (!workspaceApiId || !issue.id) {
       toast.error("Khong tim thay task id");
       return;
     }
 
     try {
-      await taskService.deleteBoardTask(workspaceKey, issue.id);
+      await taskService.deleteBoardTask(workspaceApiId, issue.id);
       setIssues((current) => current.filter((item) => item.id !== issue.id));
       setSelectedTaskIds((current) => current.filter((id) => id !== issue.id));
       setSelectedIssue((current) => current?.id === issue.id ? null : current);
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
-      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({ queryKey: ["archivedTasks", workspaceApiId] });
       toast.success("Da delete work item");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong delete duoc work item");
@@ -318,7 +352,7 @@ export default function WorkspaceDetailPage({
     handleBulkMoveSprint,
     handleBulkDelete,
   } = useSelectionHandlers({
-    workspaceKey,
+    workspaceId: workspaceApiId ?? "",
     issues,
     selectedTaskIds,
     setIssues,
@@ -334,15 +368,12 @@ export default function WorkspaceDetailPage({
 
   useEffect(() => {
     if (!workspaceKey) return;
-    api.get(apiRoutes.WORKSPACES.BY_KEY(workspaceKey))
-      .then(async (workspaceResponse) => {
-        const nextWorkspace = (
-          workspaceResponse.data?.data ?? workspaceResponse.data
-        ) as Workspace;
+    resolveWorkspaceFromRouteKey(workspaceKey)
+      .then(async (nextWorkspace) => {
         let workspaceMembers = nextWorkspace.members ?? [];
 
         try {
-          const membersResponse = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceKey));
+          const membersResponse = await api.get(apiRoutes.WORKSPACES.MEMBERS(nextWorkspace._id));
           workspaceMembers = membersResponse.data?.data ?? membersResponse.data ?? workspaceMembers;
         } catch {
           workspaceMembers = nextWorkspace.members ?? [];
@@ -447,7 +478,7 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result: any) =>
+            handleBoardDragEnd: (result : any) =>
               canMoveTask
                 ? handleBoardDragEnd({
                     result,
@@ -457,10 +488,19 @@ export default function WorkspaceDetailPage({
                     setIssues,
                     handleMoveColumn,
                     onColumnChange: (taskId, columnId) => {
-                      taskService.updateBoardTask(workspaceKey, taskId, { columnId });
+                      if (workspaceApiId) {
+                        taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
+                          .then(() => {
+                            queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+                          })
+                          .catch((error) => {
+                            queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+                            toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+                          });
+                      }
                     },
                 })
-                : undefined,
+              : undefined,
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -514,8 +554,6 @@ export default function WorkspaceDetailPage({
             handleEditSprint,
             handleDeleteSprint,
             handleQuickCreateTask,
-            isStarting,
-            isCompleting,
           },
           permissions: {
             canCreateTask,
@@ -601,7 +639,7 @@ export default function WorkspaceDetailPage({
           onConfirm={handleConfirmCompleteSprint}
           sprint={completeSprintTarget}
           sprints={sprints}
-          workspaceKey={workspace.key}
+          workspaceId={workspace._id}
         />
       )}
 
@@ -613,7 +651,7 @@ export default function WorkspaceDetailPage({
         <TaskDetailDrawer
           isOpen={!!selectedIssue}
           issue={selectedIssue}
-          workspaceKey={workspace.key}
+          workspaceId={workspace._id}
           onClose={() => {
             setSelectedIssue(null);
             setListGridDrawerOpen(false);
@@ -624,7 +662,7 @@ export default function WorkspaceDetailPage({
       ) : selectedIssue && !(activeTab === "list" && listViewMode === "split") ? (
         <IssueDetailModal
           issue={selectedIssue}
-          workspaceKey={workspace.key}
+          workspaceId={workspace._id}
           onClose={() => setSelectedIssue(null)}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}

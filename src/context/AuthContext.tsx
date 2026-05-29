@@ -83,13 +83,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(response.user);
           await fetchUserPermissions();
         }
-        router.replace("/");
+        router.replace("/dashboard");
         return;
       }
 
       await moduleAuth.refreshUser();
       await fetchUserPermissions();
-      router.replace("/");
+      router.replace("/dashboard");
     },
     [fetchUserPermissions, moduleAuth, router, setUser],
   );

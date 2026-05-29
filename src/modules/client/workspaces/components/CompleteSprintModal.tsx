@@ -10,7 +10,7 @@ interface CompleteSprintModalProps {
   onConfirm: (moveToSprintId?: string) => void;
   sprint: Sprint | null;
   sprints: Sprint[];
-  workspaceKey: string;
+  workspaceId: string;
 }
 
 interface PreviewData {
@@ -28,19 +28,19 @@ export default function CompleteSprintModal({
   onConfirm,
   sprint,
   sprints,
-  workspaceKey,
+  workspaceId,
 }: CompleteSprintModalProps) {
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<PreviewData | null>(null);
   const [moveToSprintId, setMoveToSprintId] = useState<string>('');
 
   useEffect(() => {
-    if (isOpen && sprint && workspaceKey) {
+    if (isOpen && sprint && workspaceId) {
       setLoading(true);
       setPreview(null);
       setMoveToSprintId('');
       sprintService
-        .getCompleteSprintPreview(workspaceKey, sprint._id)
+        .getCompleteSprintPreview(workspaceId, sprint._id)
         .then((data) => {
           setPreview(data);
         })
@@ -53,7 +53,7 @@ export default function CompleteSprintModal({
           setLoading(false);
         });
     }
-  }, [isOpen, sprint, workspaceKey]);
+  }, [isOpen, sprint, workspaceId]);
 
   if (!isOpen || !sprint) return null;
 

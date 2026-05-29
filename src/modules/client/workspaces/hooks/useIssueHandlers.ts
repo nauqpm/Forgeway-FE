@@ -14,7 +14,7 @@ interface CreateIssueForm {
 }
 
 interface UseIssueHandlersProps {
-  workspaceKey: string;
+  workspaceId: string;
 
   issues: Issue[];
 
@@ -36,7 +36,7 @@ interface UseIssueHandlersProps {
 }
 
 export const useIssueHandlers = ({
-  workspaceKey,
+  workspaceId,
   issues,
   setIssues,
   setShowCreateIssue,
@@ -60,11 +60,20 @@ export const useIssueHandlers = ({
         i.id === id
           ? { ...i, ...updates }
           : i
-      )
+        )
     );
-    taskService.updateBoardTask(workspaceKey, id, updates).catch(() => {
-      setIssues(issues);
-    });
+    taskService.updateBoardTask(workspaceId, id, updates)
+      .then((savedIssue) => {
+        setIssues((current) =>
+          current.map((issue) => issue.id === savedIssue.id ? savedIssue : issue)
+        );
+        queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+        queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
+      })
+      .catch((error) => {
+        setIssues(issues);
+        toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
+      });
   };
 
   const handleCreateIssue = async (
@@ -77,7 +86,7 @@ export const useIssueHandlers = ({
 
     isCreatingRef.current = true;
     try {
-      const issue = await taskService.createBoardTask(workspaceKey, newIssueForm);
+      const issue = await taskService.createBoardTask(workspaceId, newIssueForm);
       setIssues((current) => [...current, issue]);
       setShowCreateIssue(false);
       setNewIssueForm({
@@ -88,7 +97,7 @@ export const useIssueHandlers = ({
         sprintId: null,
         assigneeId: "",
       });
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong tao duoc issue");
     } finally {
@@ -100,24 +109,31 @@ export const useIssueHandlers = ({
     updatedIssue: Issue
   ) => {
     if (!updatedIssue.id) {
-      toast.error("Không tìm thấy task ID");
+      toast.error("Khong tim thay task id");
       return;
     }
-    const savedIssue = await taskService.updateBoardTask(
-      workspaceKey,
-      updatedIssue.id,
-      updatedIssue,
-    );
 
-    setIssues(
-      issues.map((i) =>
-        i.id === savedIssue.id
-          ? savedIssue
-          : i
-      )
-    );
+    try {
+      const savedIssue = await taskService.updateBoardTask(
+        workspaceId,
+        updatedIssue.id,
+        updatedIssue,
+      );
 
-    setSelectedIssue(savedIssue);
+      setIssues(
+        issues.map((i) =>
+          i.id === savedIssue.id
+            ? savedIssue
+            : i
+        )
+      );
+
+      setSelectedIssue(savedIssue);
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, updatedIssue.id] });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
+    }
   };
 
   const handleUpdateIssueDate = (
@@ -135,7 +151,7 @@ export const useIssueHandlers = ({
     if (!title.trim() || isCreatingRef.current) return;
     isCreatingRef.current = true;
     try {
-      const issue = await taskService.createBoardTask(workspaceKey, {
+      const issue = await taskService.createBoardTask(workspaceId, {
         title: title.trim(),
         type: "Task",
         priority: "Medium",
@@ -143,7 +159,7 @@ export const useIssueHandlers = ({
         sprintId,
       });
       setIssues(prev => [...prev, issue]);
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Loi khi tao task");
     } finally {

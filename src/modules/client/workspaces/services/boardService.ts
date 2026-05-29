@@ -7,8 +7,8 @@ const normalizeResponseData = <T>(payload: any): T => {
 };
 
 export const boardService = {
-    async getBoardByWorkspace(workspaceKey: string): Promise<{ boardId: string; columns: BoardColumn[] }> {
-        const response = await api.get(apiRoutes.WORKSPACES.BOARD(workspaceKey));
+    async getBoardByWorkspace(workspaceId: string): Promise<{ boardId: string; columns: BoardColumn[] }> {
+        const response = await api.get(apiRoutes.WORKSPACES.BOARD(workspaceId));
         const data = normalizeResponseData<any>(response);
         const board = Array.isArray(data) ? data[0] : data;
 
@@ -22,21 +22,21 @@ export const boardService = {
         };
     },
 
-    async createColumn(workspaceKey: string, input: CreateColumnDto): Promise<Board> {
-        const response = await api.post(apiRoutes.WORKSPACES.BOARD_COLUMNS(workspaceKey), input);
+    async createColumn(workspaceId: string, input: CreateColumnDto): Promise<Board> {
+        const response = await api.post(apiRoutes.WORKSPACES.BOARD_COLUMNS(workspaceId), input);
         return normalizeResponseData<Board>(response);
     },
 
-    async renameColumn(workspaceKey: string, columnId: string, input: UpdateColumnDto): Promise<BoardColumn> {
-        const response = await api.patch(apiRoutes.WORKSPACES.BOARD_COLUMN(workspaceKey, columnId), input);
+    async renameColumn(workspaceId: string, columnId: string, input: UpdateColumnDto): Promise<BoardColumn> {
+        const response = await api.patch(apiRoutes.WORKSPACES.BOARD_COLUMN(workspaceId, columnId), input);
         return normalizeResponseData<BoardColumn>(response);
     },
 
-    async deleteColumn(workspaceKey: string, columnId: string, input?: DeleteColumnDto): Promise<void> {
-        await api.delete(apiRoutes.WORKSPACES.BOARD_COLUMN(workspaceKey, columnId), { data: input });
+    async deleteColumn(workspaceId: string, columnId: string, input?: DeleteColumnDto): Promise<void> {
+        await api.delete(apiRoutes.WORKSPACES.BOARD_COLUMN(workspaceId, columnId), { data: input });
     },
 
-    async moveColumn(workspaceKey: string, columnId: string, input: MoveColumnDto): Promise<void> {
-        await api.patch(apiRoutes.WORKSPACES.BOARD_COLUMN_MOVE(workspaceKey, columnId), input);
+    async moveColumn(workspaceId: string, columnId: string, input: MoveColumnDto): Promise<void> {
+        await api.patch(apiRoutes.WORKSPACES.BOARD_COLUMN_MOVE(workspaceId, columnId), input);
     },
 };

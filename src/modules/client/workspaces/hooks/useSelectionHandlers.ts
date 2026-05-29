@@ -2,7 +2,7 @@ import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
 
 interface Props {
-  workspaceKey: string;
+  workspaceId: string;
   issues: Issue[];
   selectedTaskIds: string[];
   setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
@@ -10,13 +10,12 @@ interface Props {
 }
 
 export const useSelectionHandlers = ({
-  workspaceKey,
+  workspaceId,
   issues,
   selectedTaskIds,
   setIssues,
   setSelectedTaskIds,
 }: Props) => {
-
   const toggleTaskSelection = (taskId: string, e?: React.ChangeEvent) => {
     if (e) e.stopPropagation();
     setSelectedTaskIds((prev) =>
@@ -39,7 +38,7 @@ export const useSelectionHandlers = ({
   const handleBulkStatusChange = (newStatus: string) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, status: newStatus } : i));
     selectedTaskIds.forEach((taskId) => {
-      taskService.updateBoardTask(workspaceKey, taskId, { status: newStatus } as any).catch(() => {});
+      taskService.updateBoardTask(workspaceId, taskId, { status: newStatus } as any).catch(() => {});
     });
     setSelectedTaskIds([]);
   };
@@ -47,7 +46,7 @@ export const useSelectionHandlers = ({
   const handleBulkMoveSprint = (sprintId: string | null) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, sprintId } : i));
     selectedTaskIds.forEach((taskId) => {
-      taskService.updateBoardTask(workspaceKey, taskId, { sprintId } as any).catch(() => {});
+      taskService.updateBoardTask(workspaceId, taskId, { sprintId } as any).catch(() => {});
     });
     setSelectedTaskIds([]);
   };
@@ -57,7 +56,7 @@ export const useSelectionHandlers = ({
     setIssues(issues.filter((i) => !ids.includes(i.id)));
     setSelectedTaskIds([]);
     ids.forEach((taskId) => {
-      taskService.deleteBoardTask(workspaceKey, taskId).catch(() => {});
+      taskService.deleteBoardTask(workspaceId, taskId).catch(() => {});
     });
   };
 

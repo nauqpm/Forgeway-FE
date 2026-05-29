@@ -5,6 +5,7 @@ import { CheckSquare, FolderKanban, Kanban, Search, SlidersHorizontal, Sparkles,
 import { useQuery } from "@tanstack/react-query";
 import { Filters, TaskFilters } from "../types/filter.type";
 import { taskService } from "../services/taskService";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 import RecentItem from "./RecentItem";
 import TaskFilterPanel from "./TaskFilterPanel";
 
@@ -103,12 +104,14 @@ export default function JiraSearchDropdown({
   const rootRef = useRef<HTMLDivElement>(null);
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const activeWorkspaceKey = filters.workspaceKey || workspaceKey;
+  const { currentWorkspace } = useWorkspaceStore();
+  const workspaceId = currentWorkspace?._id ?? "";
   const suggestionTaskFilters = toSuggestionTaskFilters(filters);
 
   const { data: searchTasks = [], isFetching: isFetchingTasks } = useQuery({
-    queryKey: ["jira-search-tasks", activeWorkspaceKey, suggestionTaskFilters],
-    queryFn: () => taskService.getBoardTasks(activeWorkspaceKey, suggestionTaskFilters),
-    enabled: isOpen && Boolean(activeWorkspaceKey) && (projects.length > 0 || Boolean(filters.workspaceKey || workspaceKey)),
+    queryKey: ["jira-search-tasks", workspaceId, suggestionTaskFilters],
+    queryFn: () => taskService.getBoardTasks(workspaceId, suggestionTaskFilters),
+    enabled: isOpen && Boolean(workspaceId),
     staleTime: 15_000,
   });
 

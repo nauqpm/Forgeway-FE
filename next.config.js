@@ -1,3 +1,5 @@
+const path = require("path");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -19,6 +21,7 @@ const nextConfig = {
       },
     ],
   },
+  outputFileTracingRoot: path.join(__dirname),
 };
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;

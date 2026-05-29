@@ -5,7 +5,7 @@ import { BoardColumn } from "../types/board.type";
 import { toast } from "react-hot-toast";
 
 interface UseColumnHandlersProps {
-  workspaceKey: string;
+  workspaceId: string;
   columns: BoardColumn[];
   newColumnName: string;
   setColumns: React.Dispatch<React.SetStateAction<BoardColumn[]>>;
@@ -15,7 +15,7 @@ interface UseColumnHandlersProps {
 }
 
 export const useColumnHandlers = ({
-  workspaceKey,
+  workspaceId,
   columns,
   newColumnName,
   setColumns,
@@ -26,9 +26,9 @@ export const useColumnHandlers = ({
   const queryClient = useQueryClient();
 
   const createColumnMutation = useMutation({
-    mutationFn: (name: string) => boardService.createColumn(workspaceKey, { name }),
+    mutationFn: (name: string) => boardService.createColumn(workspaceId, { name }),
     onMutate: async (name) => {
-      await queryClient.cancelQueries({ queryKey: ["board", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["board", workspaceId] });
       const previousColumns = columns;
       
       const newColumn: BoardColumn = {
@@ -59,7 +59,7 @@ export const useColumnHandlers = ({
       toast.error("Lỗi khi tạo cột: " + err.message);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     },
     onSuccess: () => {
       toast.success("Đã thêm cột mới");
@@ -68,9 +68,9 @@ export const useColumnHandlers = ({
 
   const renameColumnMutation = useMutation({
     mutationFn: ({ columnId, name }: { columnId: string; name: string }) =>
-      boardService.renameColumn(workspaceKey, columnId, { name }),
+      boardService.renameColumn(workspaceId, columnId, { name }),
     onMutate: async ({ columnId, name }) => {
-      await queryClient.cancelQueries({ queryKey: ["board", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["board", workspaceId] });
       const previousColumns = columns;
       
       setColumns(columns.map(c => c.id === columnId ? { ...c, name } : c));
@@ -84,7 +84,7 @@ export const useColumnHandlers = ({
       toast.error("Lỗi khi đổi tên cột: " + err.message);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     },
     onSuccess: () => {
       toast.success("Đã đổi tên cột");
@@ -93,9 +93,9 @@ export const useColumnHandlers = ({
 
   const deleteColumnMutation = useMutation({
     mutationFn: ({ columnId, migrateTo }: { columnId: string; migrateTo?: string }) =>
-      boardService.deleteColumn(workspaceKey, columnId, { targetColumnId: migrateTo }),
+      boardService.deleteColumn(workspaceId, columnId, { targetColumnId: migrateTo }),
     onMutate: async ({ columnId }) => {
-      await queryClient.cancelQueries({ queryKey: ["board", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["board", workspaceId] });
       const previousColumns = columns;
       
       setColumns(columns.filter(c => c.id !== columnId));
@@ -109,7 +109,7 @@ export const useColumnHandlers = ({
       toast.error("Lỗi khi xóa cột: " + err.message);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     },
     onSuccess: () => {
       toast.success("Đã xóa cột");
@@ -118,9 +118,9 @@ export const useColumnHandlers = ({
 
   const moveColumnMutation = useMutation({
     mutationFn: ({ columnId, newOrder }: { columnId: string; newOrder: number }) =>
-      boardService.moveColumn(workspaceKey, columnId, { targetIndex: newOrder }),
+      boardService.moveColumn(workspaceId, columnId, { targetIndex: newOrder }),
     onMutate: async ({ columnId, newOrder }) => {
-      await queryClient.cancelQueries({ queryKey: ["board", workspaceKey] });
+      await queryClient.cancelQueries({ queryKey: ["board", workspaceId] });
       const previousColumns = columns;
       
       // Optimistic update for order is complex, we assume the caller (drag end handler) 
@@ -134,7 +134,7 @@ export const useColumnHandlers = ({
       toast.error("Lỗi khi di chuyển cột: " + err.message);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceKey] });
+      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     }
   });
 
@@ -165,4 +165,4 @@ export const useColumnHandlers = ({
     handleMoveColumn,
     isCreating: createColumnMutation.isPending,
   };
-};
+};

@@ -1,13 +1,45 @@
 "use client";
 
-import BoardTab from "./tabs/BoardTab";
-import BacklogTab from "./tabs/BacklogTab";
-import TimelineTab from "./tabs/TimelineTab";
-import CalendarTab from "./tabs/CalendarTab";
-import ListTab from "./tabs/ListTab";
-import SummaryTab from "./tabs/SummaryTab";
-import ArchiveTab from "./tabs/ArchiveTab";
-import { DocsLayout } from "../../docs";
+import dynamic from "next/dynamic";
+import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+
+const tabLoading = () => <LoadingSpinner />;
+
+const BoardTab = dynamic(() => import("./tabs/BoardTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
+const BacklogTab = dynamic(() => import("./tabs/BacklogTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
+const TimelineTab = dynamic(() => import("./tabs/TimelineTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
+const CalendarTab = dynamic(() => import("./tabs/CalendarTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
+const ListTab = dynamic(() => import("./tabs/ListTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
+const SummaryTab = dynamic(() => import("./tabs/SummaryTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
+const ArchiveTab = dynamic(() => import("./tabs/ArchiveTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
+const DocsLayout = dynamic(
+  () => import("../../docs").then((module) => module.DocsLayout),
+  {
+    ssr: false,
+    loading: tabLoading,
+  },
+);
 
 type WorkspaceContentProps = {
   activeTab: string;

@@ -28,6 +28,7 @@ import {
   inviteService,
   PendingInvite,
 } from "@/modules/client/workspaces/services/inviteService";
+import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
 type WorkspaceStatus = "active" | "archived";
 type WorkspaceAccess = "public" | "private";
@@ -138,16 +139,19 @@ export default function WorkspaceSettingsPage({
   const [leaveConfirm, setLeaveConfirm] = useState("");
   const [leaving, setLeaving] = useState(false);
 
-  const workspaceInviteId = workspace?._id ?? workspaceKey;
+  const workspaceInviteId = workspace?._id;
+  const workspaceApiId = workspace?._id;
+  const currentMember = members.find((m) => m.userId?._id === user?.id);
+  const canManageWorkspace =
+    currentMember?.role === "workspace_admin" || user?.role === "super_admin";
 
   useEffect(() => {
     if (!workspaceKey) return;
 
     setLoading(true);
-    api
-      .get(apiRoutes.WORKSPACES.BY_KEY(workspaceKey))
-      .then((res) => {
-        const nextWorkspace = normalizeWorkspace(res.data);
+    resolveWorkspaceFromRouteKey(workspaceKey)
+      .then((resolvedWorkspace) => {
+        const nextWorkspace = normalizeWorkspace(resolvedWorkspace);
         setWorkspace(nextWorkspace);
         setForm({
           name: nextWorkspace.name || "",
@@ -164,33 +168,39 @@ export default function WorkspaceSettingsPage({
   }, [workspaceKey]);
 
   useEffect(() => {
-    if (!workspaceKey) return;
+    if (!workspaceApiId) return;
     setLoadingMembers(true);
     api
-      .get(apiRoutes.WORKSPACES.MEMBERS(workspaceKey))
+      .get(apiRoutes.WORKSPACES.MEMBERS(workspaceApiId))
       .then((res) => setMembers(res.data?.data ?? res.data ?? []))
       .catch(() => setMembers([]))
       .finally(() => setLoadingMembers(false));
-  }, [workspaceKey]);
+  }, [workspaceApiId]);
 
   useEffect(() => {
     if (activeTab !== "members" || !workspaceInviteId) return;
+    if (!canManageWorkspace) {
+      setInvites([]);
+      setLoadingInvites(false);
+      return;
+    }
+
     setLoadingInvites(true);
     inviteService
       .listInvites(workspaceInviteId)
       .then(setInvites)
-      .catch(() => toast.error("Không thể tải danh sách lời mời đang chờ."))
+      .catch(() => setInvites([]))
       .finally(() => setLoadingInvites(false));
-  }, [activeTab, workspaceInviteId]);
+  }, [activeTab, canManageWorkspace, workspaceInviteId]);
 
   const refreshInvites = async () => {
-    if (!workspaceInviteId) return;
+    if (!workspaceInviteId || !canManageWorkspace) return;
     setLoadingInvites(true);
     try {
       const updated = await inviteService.listInvites(workspaceInviteId);
       setInvites(updated);
     } catch {
-      toast.error("Không thể tải danh sách lời mời đang chờ.");
+      setInvites([]);
     } finally {
       setLoadingInvites(false);
     }
@@ -213,7 +223,9 @@ export default function WorkspaceSettingsPage({
         access: form.access,
       };
 
-      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceKey), payload);
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceApiId), payload);
       const updatedWorkspace = normalizeWorkspace(res.data);
       setWorkspace(updatedWorkspace);
       setForm({
@@ -239,7 +251,9 @@ export default function WorkspaceSettingsPage({
 
     setDeleting(true);
     try {
-      await api.delete(apiRoutes.WORKSPACES.BY_KEY(workspaceKey));
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      await api.delete(apiRoutes.WORKSPACES.BY_ID(workspaceApiId));
       toast.success("Đã xóa workspace.");
       setShowDeleteDialog(false);
       router.push("/workspaces");
@@ -323,7 +337,9 @@ export default function WorkspaceSettingsPage({
 
     setUpdatingMemberId(userId);
     try {
-      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceKey, userId), { role });
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceApiId, userId), { role });
       setMembers((prev) =>
         prev.map((item) =>
           item.userId?._id === userId ? { ...item, role } : item,
@@ -344,7 +360,9 @@ export default function WorkspaceSettingsPage({
 
     setRemovingMemberId(userId);
     try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceKey, userId));
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceApiId, userId));
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setMemberMenu(null);
       toast.success("Đã xóa thành viên khỏi workspace.");
@@ -355,10 +373,6 @@ export default function WorkspaceSettingsPage({
     }
   };
 
-  const currentMember = members.find((m) => m.userId?._id === user?.id);
-  const canManageWorkspace =
-    currentMember?.role === "workspace_admin" || user?.role === "super_admin";
-
   const handleLeave = async () => {
     if (leaveConfirm !== "leave") {
       toast.error('Nhập "leave" để xác nhận.');
@@ -367,7 +381,9 @@ export default function WorkspaceSettingsPage({
 
     setLeaving(true);
     try {
-      await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceKey));
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+
+      await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceApiId));
       toast.success("Đã rời khỏi workspace.");
       router.push("/workspaces");
     } catch (error: any) {

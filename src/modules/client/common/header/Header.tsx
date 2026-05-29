@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
-  User,
-  Shield,
-  Settings,
-  LogOut,
   ChevronDown,
+  LayoutDashboard,
   Loader2,
+  LogOut,
+  Settings,
+  User,
 } from "lucide-react";
 
 export default function Header() {
-  const { isAuthenticated, isLoading, user, logout, hasAdminAccess } = useAuth();
+  const { isAuthenticated, isLoading, user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -23,6 +23,7 @@ export default function Header() {
         setDropdownOpen(false);
       }
     }
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -53,7 +54,10 @@ export default function Header() {
             </div>
             <span className="font-bold text-lg text-gray-900 dark:text-white">AL-TASK</span>
           </Link>
-          <Link href="/aboutUs" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link
+            href="/aboutUs"
+            className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          >
             Về chúng tôi
           </Link>
         </div>
@@ -85,6 +89,15 @@ export default function Header() {
                 </div>
 
                 <Link
+                  href="/dashboard"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  <LayoutDashboard className="w-4 h-4 text-indigo-500" />
+                  Dashboard
+                </Link>
+
+                <Link
                   href="/account"
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   onClick={() => setDropdownOpen(false)}
@@ -92,17 +105,6 @@ export default function Header() {
                   <User className="w-4 h-4 text-indigo-500" />
                   Trang cá nhân
                 </Link>
-
-                {hasAdminAccess() && (
-                  <Link
-                    href="/admin"
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <Shield className="w-4 h-4 text-amber-500" />
-                    Trang quản trị
-                  </Link>
-                )}
 
                 <Link
                   href="/settings"
@@ -130,10 +132,16 @@ export default function Header() {
           </div>
         ) : (
           <div className="flex items-center gap-4">
-            <Link href="/login" className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            <Link
+              href="/login"
+              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            >
               Đăng nhập
             </Link>
-            <Link href="/register" className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+            <Link
+              href="/register"
+              className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            >
               Bắt đầu ngay
             </Link>
           </div>

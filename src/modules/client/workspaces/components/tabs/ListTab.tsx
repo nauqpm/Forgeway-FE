@@ -372,7 +372,7 @@ export default function ListTab({
                 embedded
                 isOpen={true}
                 issue={selectedIssue}
-                workspaceKey={workspaceKey}
+                workspaceId={workspaceId}
                 onClose={() => setSelectedIssue(null)}
                 onUpdateIssue={handleUpdateIssue}
               />

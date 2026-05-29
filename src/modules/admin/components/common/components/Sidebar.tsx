@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
+import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import {
@@ -36,7 +37,7 @@ interface SidebarProps {
 }
 
 const mainNav = [
-  { icon: LayoutDashboard, label: "Bảng điều khiển", href: "/admin" },
+  { icon: LayoutDashboard, label: "Bảng điều khiển", href: "/dashboard" },
   { icon: Clock7, label: "Gần đây", href: "/recent" },
   { icon: Star, label: "Đã đánh dấu", href: "/starred" },
   {
@@ -50,10 +51,10 @@ const mainNav = [
 ];
 
 const adminNav = [
-  { icon: UserCog, label: "Quản lý Người dùng", href: "/admin/users" },
-  { icon: Building2, label: "Cài đặt Workspace", href: "/admin/workspace" },
-  { icon: Zap, label: "Quy trình", href: "/admin/workflows" },
-  { icon: Shield, label: "Phân quyền", href: "/admin/permissions" },
+  { icon: UserCog, label: "Quản lý Người dùng", href: "/dashboard/users" },
+  { icon: Building2, label: "Cài đặt Workspace", href: "/dashboard/workspace" },
+  { icon: Zap, label: "Quy trình", href: "/dashboard/workflows" },
+  { icon: Shield, label: "Phân quyền", href: "/dashboard/permissions" },
 ];
 
 const optionFilter = [
@@ -286,8 +287,8 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { currentWorkspace } = useWorkspaceStore();
-  const { hasAdminAccess } = useAuth();
-  const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/admin"));
+  const { user } = useAuth();
+  const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -325,7 +326,7 @@ export default function Sidebar({
       .catch(() => setsidebarWorkspaces([]));
   }, [currentWorkspace]);
 
-  const isAdmin = hasAdminAccess();
+  const isAdmin = isGlobalAdminRole(user?.role);
 
   return (
     <>
