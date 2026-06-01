@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  X, Maximize2, Share2, Eye, Lock,
+  X,
   MoreHorizontal, Plus, Link as LinkIcon,
-  FileText, ChevronDown, Paperclip, Settings,
+  FileText, ChevronDown, Settings,
   Zap, User, Archive, AlertTriangle, ArchiveRestore
 } from 'lucide-react';
 import Link from 'next/link';
@@ -14,6 +14,8 @@ import TimeTrackingSidebar from "@/modules/admin/components/common/components/Ti
 import IssueDescription from "@/modules/admin/components/common/components/IssueDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
+import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
+import { useAuth } from "@/context/AuthContext";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
@@ -54,9 +56,9 @@ export default function TaskDetailDrawer({
   onClose,
   onUpdateIssue,
   onArchiveIssue,
-  detailUrl,
   embedded = false,
 }: TaskDetailDrawerProps) {
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'worklog'>('comments');
   const [localTitle, setLocalTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -211,11 +213,6 @@ export default function TaskDetailDrawer({
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Lock className="w-4 h-4" /></button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-              <Eye className="w-4 h-4" /> <span>1</span>
-            </button>
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Share2 className="w-4 h-4" /></button>
             <div className="relative">
               <button
                 type="button"
@@ -242,21 +239,6 @@ export default function TaskDetailDrawer({
                 </div>
               )}
             </div>
-            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
-            {detailUrl ? (
-              <Link
-                href={detailUrl}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
-                aria-label="Open full task detail"
-                title="Open full task detail"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </Link>
-            ) : (
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-                <Maximize2 className="w-4 h-4" />
-              </button>
-            )}
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><X className="w-4 h-4" /></button>
           </div>
         </div>
@@ -422,6 +404,14 @@ export default function TaskDetailDrawer({
                 />
               </div>
             </div>
+
+            <TaskAttachmentsPanel
+              workspaceId={workspaceId}
+              taskId={issue.id}
+              isArchived={issue.isArchived ?? false}
+              currentUserId={user?.id}
+              accessToken={token}
+            />
 
             {/* Subtasks */}
             <div className="pt-2">

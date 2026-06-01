@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { Issue } from "../../types/issue.type";
 import DataGridListView from "@/modules/admin/components/common/components/DataGridListView";
-import TaskDetailDrawer from "../TaskDetailDrawer";
 import TaskDetailList from "../TaskDetailList";
 
 type ListSplitSortField =
@@ -38,12 +37,9 @@ const LIST_SPLIT_SORT_OPTIONS: { id: ListSplitSortField; label: string }[] = [
 type ListTabProps = {
   filteredIssues: Issue[];
   selectedIssue: Issue | null;
-  workspaceKey: string;
   workspaceId: string;
   listViewMode: "grid" | "split";
-  listGridDrawerOpen: boolean;
   setSelectedIssue: (issue: Issue | null) => void;
-  onOpenIssue?: (issue: Issue) => void;
   setListViewMode: (mode: "grid" | "split") => void;
   setListGridDrawerOpen: (open: boolean) => void;
   updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
@@ -54,12 +50,9 @@ type ListTabProps = {
 export default function ListTab({
   filteredIssues,
   selectedIssue,
-  workspaceKey,
   workspaceId,
   listViewMode,
-  listGridDrawerOpen,
   setSelectedIssue,
-  onOpenIssue,
   setListViewMode,
   setListGridDrawerOpen,
   updateIssueDirectly,
@@ -185,88 +178,89 @@ export default function ListTab({
     }
   };
 
-  return (
-    <div className="workspace-panel bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-      {/* Toolbar: search/filter left, view-toggle right */}
-      <div className="flex items-center gap-2 mb-3 px-1">
-        {/* Left: Search + Filter */}
-        <div className="flex items-center gap-1.5 flex-1 min-w-0">
-          <div className="relative flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search issues..."
-              className="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-1 focus:ring-[#0052CC] focus:border-[#0052CC] transition-colors"
-            />
-          </div>
-          <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md transition-colors">
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            Filter
-          </button>
+  const listToolbar = (
+    <div className="flex items-center gap-2 mb-3 px-1">
+      {/* Left: Search + Filter */}
+      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search issues..."
+            className="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-1 focus:ring-[#0052CC] focus:border-[#0052CC] transition-colors"
+          />
         </div>
-
-        {/* Right: Table / Split icon-only toggle */}
-        <div className="inline-flex items-center rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
-          <button
-            type="button"
-            onClick={() => setListViewModePersisted("grid")}
-            title="Table view"
-            className={`p-1.5 transition-colors ${
-              listViewMode === "grid"
-                ? "bg-[#0052CC] text-white"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-            }`}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              splitJustActivatedRef.current = true;
-              setListGridDrawerOpen(false);
-              setListViewModePersisted("split");
-            }}
-            title="Split view"
-            className={`p-1.5 transition-colors border-l border-gray-200 dark:border-gray-700 ${
-              listViewMode === "split"
-                ? "bg-[#0052CC] text-white"
-                : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-            }`}
-          >
-            <PanelRight className="w-4 h-4" />
-          </button>
-        </div>
+        <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md transition-colors">
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          Filter
+        </button>
       </div>
 
+      {/* Right: Table / Split icon-only toggle */}
+      <div className="inline-flex items-center rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
+        <button
+          type="button"
+          onClick={() => setListViewModePersisted("grid")}
+          title="Table view"
+          className={`p-1.5 transition-colors ${
+            listViewMode === "grid"
+              ? "bg-[#0052CC] text-white"
+              : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          }`}
+        >
+          <LayoutGrid className="w-4 h-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            splitJustActivatedRef.current = true;
+            setListGridDrawerOpen(false);
+            setListViewModePersisted("split");
+          }}
+          title="Split view"
+          className={`p-1.5 transition-colors border-l border-gray-200 dark:border-gray-700 ${
+            listViewMode === "split"
+              ? "bg-[#0052CC] text-white"
+              : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+          }`}
+        >
+          <PanelRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="workspace-panel bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-200">
+      {(listViewMode === "split" || !selectedIssue) && listToolbar}
+
       {listViewMode === "grid" ? (
-        <div className="flex w-full overflow-hidden workspace-list-height">
-          <div className="flex-1 overflow-x-auto min-w-0">
-            <DataGridListView
-              issues={filteredIssues}
-              onClickTask={(issue) => {
-                if (onOpenIssue) {
-                  onOpenIssue(issue);
-                } else {
-                  setSelectedIssue(issue);
-                }
-              }}
-              onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
-              onBulkUpdate={async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates))}
-              onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
-            />
-          </div>
-          {selectedIssue && (
+        selectedIssue ? (
+          <div className="workspace-list-height overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 transition-all duration-200">
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
+              showBackButton
               onClose={() => {
                 setSelectedIssue(null);
                 setListGridDrawerOpen(false);
               }}
               onUpdateIssue={handleUpdateIssue}
             />
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="flex w-full overflow-hidden workspace-list-height transition-all duration-200">
+            <div className="flex-1 overflow-x-auto min-w-0">
+            <DataGridListView
+              issues={filteredIssues}
+              onClickTask={(issue) => setSelectedIssue(issue)}
+              onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
+              onBulkUpdate={async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates))}
+              onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
+            />
+            </div>
+          </div>
+        )
       ) : (
         <div className="workspace-list-height flex flex-col lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
           <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30 shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
@@ -420,7 +414,11 @@ export default function ListTab({
               <TaskDetailList
                 issue={selectedIssue}
                 workspaceId={workspaceId}
-                onClose={() => setSelectedIssue(null)}
+                showBackButton={false}
+                onClose={() => {
+                  setSelectedIssue(null);
+                  setListGridDrawerOpen(false);
+                }}
                 onUpdateIssue={handleUpdateIssue}
               />
             ) : (

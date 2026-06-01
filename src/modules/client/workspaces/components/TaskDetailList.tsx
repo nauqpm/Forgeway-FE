@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  X, Maximize2, Share2, Eye, Lock,
   MoreHorizontal, Plus, Link as LinkIcon,
-  FileText, ChevronDown, ChevronRight, Settings,
+  ChevronDown, ChevronRight, Settings,
   Zap, User, Archive, AlertTriangle, ArchiveRestore,
   ArrowLeft,
 } from "lucide-react";
@@ -15,11 +14,14 @@ import TimeTrackingSidebar from "@/modules/admin/components/common/components/Ti
 import IssueDescription from "@/modules/admin/components/common/components/IssueDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
+import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
+import { useAuth } from "@/context/AuthContext";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
   onClose: () => void;
+  showBackButton?: boolean;
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
   detailUrl?: string;
@@ -55,10 +57,11 @@ export default function TaskDetailList({
   issue,
   workspaceId,
   onClose,
+  showBackButton = true,
   onUpdateIssue,
   onArchiveIssue,
-  detailUrl,
 }: TaskDetailListProps) {
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<"comments" | "history" | "worklog">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -145,14 +148,18 @@ export default function TaskDetailList({
       <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1D2125]">
         {/* Breadcrumb */}
         <div className="flex items-center gap-1.5 text-sm font-medium min-w-0">
-          <button
-            onClick={onClose}
-            className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back</span>
-          </button>
-          <span className="text-gray-400 dark:text-gray-600 shrink-0">/</span>
+          {showBackButton && (
+            <>
+              <button
+                onClick={onClose}
+                className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </button>
+              <span className="text-gray-400 dark:text-gray-600 shrink-0">/</span>
+            </>
+          )}
           <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer transition-colors shrink-0">
             <div className="w-4 h-4 bg-[#0052CC] text-white flex items-center justify-center rounded-sm">
               <span className="text-[9px] font-bold">✓</span>
@@ -167,11 +174,6 @@ export default function TaskDetailList({
 
         {/* Actions */}
         <div className="flex items-center gap-0.5 shrink-0 ml-2">
-          <button className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 rounded transition-colors"><Lock className="w-4 h-4" /></button>
-          <button className="flex items-center gap-1 px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 rounded transition-colors text-xs">
-            <Eye className="w-4 h-4" /><span>1</span>
-          </button>
-          <button className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 rounded transition-colors"><Share2 className="w-4 h-4" /></button>
           <div className="relative">
             <button
               onClick={() => setShowActionMenu((o) => !o)}
@@ -191,19 +193,6 @@ export default function TaskDetailList({
               </div>
             )}
           </div>
-          <div className="w-px h-5 bg-gray-200 dark:border-gray-700 mx-0.5" />
-          {detailUrl ? (
-            <Link href={detailUrl} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 rounded transition-colors">
-              <Maximize2 className="w-4 h-4" />
-            </Link>
-          ) : (
-            <button className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 rounded transition-colors">
-              <Maximize2 className="w-4 h-4" />
-            </button>
-          )}
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 rounded transition-colors">
-            <X className="w-4 h-4" />
-          </button>
         </div>
       </div>
 
@@ -260,6 +249,14 @@ export default function TaskDetailList({
               }}
             />
           </div>
+
+          <TaskAttachmentsPanel
+            workspaceId={workspaceId}
+            taskId={issue.id}
+            isArchived={issue.isArchived ?? false}
+            currentUserId={user?.id}
+            accessToken={token}
+          />
 
           {/* Subtasks */}
           <div>

@@ -686,7 +686,6 @@ export default function WorkspaceDetailPage({
           listViewMode,
           listGridDrawerOpen,
           setSelectedIssue,
-          onOpenIssue: openTaskDetail,
           setListViewMode,
           setListGridDrawerOpen,
           updateIssueDirectly,
