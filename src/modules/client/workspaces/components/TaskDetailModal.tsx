@@ -23,6 +23,8 @@ import IssueDescription from "@/modules/admin/components/common/components/Issue
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
+import TaskCoverBanner from "./covers/TaskCoverBanner";
+import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
 
 interface TaskDetailModalProps {
@@ -71,6 +73,7 @@ export default function TaskDetailModal({
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
+  const [localCover, setLocalCover] = useState<TaskCover | null>(null);
 
   useEffect(() => {
     if (issue) {
@@ -80,6 +83,7 @@ export default function TaskDetailModal({
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
+      setLocalCover(issue.cover ?? null);
     }
   }, [issue]);
 
@@ -207,6 +211,14 @@ export default function TaskDetailModal({
             </button>
           </div>
         </div>
+
+        <TaskCoverBanner
+          workspaceId={workspaceId}
+          issue={{ ...issue, cover: localCover }}
+          maxHeightClass="h-40"
+          colorHeightClass="h-20"
+          onIssueCoverChange={setLocalCover}
+        />
 
         {/* Content Body */}
         <div className="flex flex-1 overflow-hidden">

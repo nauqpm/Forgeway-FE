@@ -3,6 +3,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "../types/issue.type";
 import { TaskFilters } from "../types/filter.type";
 import { TaskDetailResponse } from "../types/task-detail.type";
+import type { TaskCover } from "../types/task-cover.type";
 
 type TaskUserDto = {
   id?: string;
@@ -60,6 +61,7 @@ type TaskDto = {
   isDeleted?: boolean;
   deletedAt?: string | null;
   deletedBy?: string | null;
+  cover?: TaskCover | null;
 };
 
 type CreateTaskInput = {
@@ -229,6 +231,7 @@ const toIssue = (task: TaskDto): Issue => {
     archivedByUser: task.archivedByUser ?? null,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    cover: task.cover ?? null,
   };
 };
 
@@ -258,6 +261,7 @@ const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
     isDeleted: task.isDeleted ?? false,
     createdAt: task.createdAt ?? "",
     updatedAt: task.updatedAt ?? "",
+    cover: task.cover ?? null,
   };
 };
 

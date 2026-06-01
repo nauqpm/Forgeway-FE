@@ -63,6 +63,7 @@ export const apiRoutes = {
         BOARD_TASK_ATTACHMENT: (workspaceId: string, taskId: string, attachmentId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments/${attachmentId}`,
         BOARD_TASK_ATTACHMENT_PREVIEW: (workspaceId: string, taskId: string, attachmentId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments/${attachmentId}/preview`,
         BOARD_TASK_ATTACHMENT_DOWNLOAD: (workspaceId: string, taskId: string, attachmentId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments/${attachmentId}/download`,
+        BOARD_TASK_COVER: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/cover`,
         BOARD_ARCHIVES: (workspaceId: string) => `/workspaces/${workspaceId}/board/archives`,
         BOARD_TASK_COMMENTS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments`,
         BOARD_TASK_COMMENT: (workspaceId: string, taskId: string, commentId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments/${commentId}`,

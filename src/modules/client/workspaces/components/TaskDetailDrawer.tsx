@@ -15,6 +15,8 @@ import IssueDescription from "@/modules/admin/components/common/components/Issue
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
+import TaskCoverBanner from "./covers/TaskCoverBanner";
+import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
 
 interface TaskDetailDrawerProps {
@@ -66,6 +68,7 @@ export default function TaskDetailDrawer({
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
+  const [localCover, setLocalCover] = useState<TaskCover | null>(null);
 
   // Resize state
   const [drawerWidth, setDrawerWidth] = useState(400);
@@ -102,6 +105,7 @@ export default function TaskDetailDrawer({
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
+      setLocalCover(issue.cover ?? null);
     }
   }, [issue]);
 
@@ -242,6 +246,14 @@ export default function TaskDetailDrawer({
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><X className="w-4 h-4" /></button>
           </div>
         </div>
+
+        <TaskCoverBanner
+          workspaceId={workspaceId}
+          issue={{ ...issue, cover: localCover }}
+          maxHeightClass="h-32"
+          colorHeightClass="h-16"
+          onIssueCoverChange={setLocalCover}
+        />
 
         {/* Content Body - Single Vertical Column */}
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-900">

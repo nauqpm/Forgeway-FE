@@ -1,3 +1,5 @@
+import type { TaskCover } from "./task-cover.type";
+
 export interface TaskDetailUser {
   id?: string;
   fullName?: string;
@@ -65,4 +67,5 @@ export interface TaskDetailResponse {
   timeEstimated?: string;
   startDate?: string;
   endDate?: string;
+  cover?: TaskCover | null;
 }

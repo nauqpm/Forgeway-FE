@@ -7,10 +7,21 @@ import { Issue } from "../../types/issue.type";
 import { Workspace } from "../../types/workspace.type";
 import { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
+import type { TaskCover } from "../../types/task-cover.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
+import BoardTaskActionMenu from "../covers/BoardTaskActionMenu";
 
-import { Archive, MoreHorizontal, Search, Plus, Check, X, Trash2, PlayCircle, UserRound } from "lucide-react";
+import {
+  Check,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+  UserRound,
+  X,
+  PlayCircle,
+} from "lucide-react";
 
 type BoardTabProps = {
   data: {
@@ -108,6 +119,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [assigneeMenuIssueId, setAssigneeMenuIssueId] = useState<string | null>(null);
   const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<React.CSSProperties>({});
   const [actionMenuIssueId, setActionMenuIssueId] = useState<string | null>(null);
+  const [actionMenuAnchorRect, setActionMenuAnchorRect] = useState<DOMRect | null>(null);
   const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
@@ -153,21 +165,18 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   }, [memberSearch, workspaceMembers]);
 
   useEffect(() => {
-    if (!assigneeMenuIssueId && !actionMenuIssueId) return;
+    if (!assigneeMenuIssueId) return;
 
     const handlePointerDown = (event: MouseEvent) => {
       if (!assigneeMenuRef.current?.contains(event.target as Node)) {
         setAssigneeMenuIssueId(null);
         setMemberSearch("");
       }
-      if (!actionMenuRef.current?.contains(event.target as Node)) {
-        setActionMenuIssueId(null);
-      }
     };
 
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [assigneeMenuIssueId, actionMenuIssueId]);
+  }, [assigneeMenuIssueId]);
 
   const getIssueAssignee = (issue: Issue) => {
     const assigneeId = issue.assigneeId ?? issue.assignee;
@@ -181,6 +190,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     });
     setAssigneeMenuIssueId(null);
     setMemberSearch("");
+  };
+
+  const patchIssueCover = (issueId: string, cover: TaskCover | null) => {
+    setIssues((current) =>
+      current.map((item) => (item.id === issueId ? { ...item, cover } : item)),
+    );
   };
 
   const issueMatchesColumn = (issue: Issue, col: BoardColumn) => {
@@ -213,6 +228,10 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       </div>
     );
   }
+
+  const activeActionIssue = actionMenuIssueId
+    ? issues.find((item) => item.id === actionMenuIssueId) ?? null
+    : null;
 
   return (
     <div className="flex flex-col gap-4 relative">
@@ -342,9 +361,25 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         if (filters.archived) return;
                                         setSelectedIssue(issue);
                                       }}
-                                      className={`relative bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      className={`relative overflow-visible rounded-lg border bg-white shadow-sm dark:bg-gray-900 ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
                                     >
-                                      {!filters.archived && canArchiveTask && onArchiveIssue && (
+                                      {issue.cover?.type === "image" && (
+                                        <div className="h-28 w-full overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800">
+                                          <img
+                                            src={issue.cover.imageUrl}
+                                            alt=""
+                                            className="h-full w-full object-cover"
+                                          />
+                                        </div>
+                                      )}
+                                      {issue.cover?.type === "color" && (
+                                        <div
+                                          className="h-7 w-full rounded-t-lg"
+                                          style={{ background: issue.cover.color }}
+                                        />
+                                      )}
+
+                                      {!filters.archived && (canEditTask || canArchiveTask || Boolean(onDeleteIssue)) && (
                                         <div
                                           className="absolute right-2 top-2 z-20"
                                           ref={actionMenuIssueId === issue.id ? actionMenuRef : undefined}
@@ -353,10 +388,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                             type="button"
                                             onClick={(event) => {
                                               event.stopPropagation();
+                                              setActionMenuAnchorRect(event.currentTarget.getBoundingClientRect());
                                               setActionMenuIssueId((current) => current === issue.id ? null : issue.id);
                                             }}
                                             onMouseDown={(event) => event.stopPropagation()}
-                                            className={`rounded-md p-1 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-700 group-hover:opacity-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 ${
+                                            className={`rounded-md bg-white/90 p-1 text-gray-500 opacity-0 shadow-sm transition-all hover:bg-gray-100 hover:text-gray-800 group-hover:opacity-100 dark:bg-gray-950/80 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100 ${
                                               actionMenuIssueId === issue.id ? "opacity-100" : ""
                                             }`}
                                             aria-label="Issue actions"
@@ -364,62 +400,29 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                           >
                                             <MoreHorizontal className="h-4 w-4" />
                                           </button>
-
-                                          {actionMenuIssueId === issue.id && (
-                                            <div
-                                              onClick={(event) => event.stopPropagation()}
-                                              onMouseDown={(event) => event.stopPropagation()}
-                                              className="absolute right-0 top-full z-30 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700 dark:bg-gray-900"
-                                            >
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  setActionMenuIssueId(null);
-                                                  onArchiveIssue(issue);
-                                                }}
-                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
-                                              >
-                                                <Archive className="h-4 w-4" />
-                                                Archive
-                                              </button>
-                                              {onDeleteIssue && (
-                                                <button
-                                                  type="button"
-                                                  onClick={() => {
-                                                    setActionMenuIssueId(null);
-                                                    setIssueToDelete(issue);
-                                                    setDeleteConfirmText("");
-                                                  }}
-                                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                                                >
-                                                  <Trash2 className="h-4 w-4" />
-                                                  Delete
-                                                </button>
-                                              )}
-                                            </div>
-                                          )}
                                         </div>
                                       )}
-                                      <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                                        {issue.title}
-                                      </p>
-                                      <div className="flex flex-wrap gap-1.5 mb-3">
-                                        <span
-                                          className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === "High" ? "bg-red-50 text-red-600" : issue.priority === "Medium" ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}
-                                        >
-                                          {issue.priority}
-                                        </span>
-                                        <span
-                                          className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}
-                                        >
-                                          {issue.type}
-                                        </span>
-                                      </div>
-                                      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50 dark:border-gray-800">
-                                        <span className="text-xs font-mono font-bold text-gray-400">
-                                          {issue.key}
-                                        </span>
-                                        <div className="relative" ref={assigneeMenuIssueId === issue.id ? assigneeMenuRef : undefined}>
+                                      <div className="p-3.5">
+                                        <p className="mb-2 text-sm font-medium leading-snug text-gray-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                                          {issue.title}
+                                        </p>
+                                        <div className="mb-3 flex flex-wrap gap-1.5">
+                                          <span
+                                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === "High" ? "bg-red-50 text-red-600" : issue.priority === "Medium" ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}
+                                          >
+                                            {issue.priority}
+                                          </span>
+                                          <span
+                                            className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}
+                                          >
+                                            {issue.type}
+                                          </span>
+                                        </div>
+                                        <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-2 dark:border-gray-800">
+                                          <span className="text-xs font-mono font-bold text-gray-400">
+                                            {issue.key}
+                                          </span>
+                                          <div className="relative" ref={assigneeMenuIssueId === issue.id ? assigneeMenuRef : undefined}>
                                           <button
                                             type="button"
                                             onClick={(event) => {
@@ -517,6 +520,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         </div>
                                       </div>
                                     </div>
+                                    </div>
                                   )}
                                 </Draggable>
                               ))}
@@ -593,6 +597,29 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           )}
         </Droppable>
       </DragDropContext>
+
+      {activeActionIssue && (
+        <BoardTaskActionMenu
+          workspaceId={workspace._id}
+          workspaceKey={workspace.key}
+          issue={activeActionIssue}
+          columns={columns}
+          anchorRect={actionMenuAnchorRect}
+          canArchiveTask={canArchiveTask}
+          canEditTask={canEditTask}
+          onClose={() => {
+            setActionMenuIssueId(null);
+            setActionMenuAnchorRect(null);
+          }}
+          onArchiveIssue={onArchiveIssue}
+          onDeleteIssue={(issue) => {
+            setIssueToDelete(issue);
+            setDeleteConfirmText("");
+          }}
+          onUpdateIssue={updateIssueDirectly}
+          onCoverChange={patchIssueCover}
+        />
+      )}
 
       {/* Import explicitly if not using Next.js dynamic imports, or ensure it's in the component tree */}
       {deleteModalOpen && columnToDelete && (
