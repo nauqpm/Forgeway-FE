@@ -134,6 +134,7 @@ export default function WorkspaceDetailPage({
   const [issues, setIssues] = useState<Issue[]>([]);
   const [isDraggingIssue, setIsDraggingIssue] = useState(false);
   const reorderInFlightRef = useRef(new Set<string>());
+  const pendingReorderRef = useRef(new Map<string, TaskReorderSyncInput>());
 
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [newIssueForm, setNewIssueForm] = useState<{
@@ -343,9 +344,14 @@ export default function WorkspaceDetailPage({
   };
 
   const syncTaskReorder = useCallback(
-    ({ taskId, columnId, status, sprintId, beforeTaskId, afterTaskId }: TaskReorderSyncInput) => {
+    (input: TaskReorderSyncInput) => {
       if (!workspaceApiId) return;
-      if (reorderInFlightRef.current.has(taskId)) return;
+      const { taskId, columnId, status, sprintId, beforeTaskId, afterTaskId } = input;
+
+      if (reorderInFlightRef.current.has(taskId)) {
+        pendingReorderRef.current.set(taskId, input);
+        return;
+      }
 
       reorderInFlightRef.current.add(taskId);
 
@@ -358,11 +364,25 @@ export default function WorkspaceDetailPage({
           afterTaskId,
         })
         .then((updatedTask) => {
-          setIssues((current) =>
-            current.map((issue) =>
-              issue.id === updatedTask.id ? updatedTask : issue,
-            ),
-          );
+          const hasQueuedReorder = pendingReorderRef.current.has(taskId);
+
+          if (!hasQueuedReorder) {
+            setIssues((current) =>
+              current.map((issue) =>
+                issue.id === updatedTask.id ? updatedTask : issue,
+              ),
+            );
+            queryClient.setQueriesData<Issue[]>(
+              { queryKey: ["tasks", workspaceApiId] },
+              (current) =>
+                Array.isArray(current)
+                  ? current.map((issue) =>
+                      issue.id === updatedTask.id ? updatedTask : issue,
+                    )
+                  : current,
+            );
+          }
+
           queryClient.invalidateQueries({
             queryKey: ["taskActivities", workspaceApiId, taskId],
           });
@@ -375,6 +395,12 @@ export default function WorkspaceDetailPage({
         })
         .finally(() => {
           reorderInFlightRef.current.delete(taskId);
+          const queuedReorder = pendingReorderRef.current.get(taskId);
+
+          if (queuedReorder) {
+            pendingReorderRef.current.delete(taskId);
+            window.setTimeout(() => syncTaskReorder(queuedReorder), 0);
+          }
         });
     },
     [queryClient, workspaceApiId],
