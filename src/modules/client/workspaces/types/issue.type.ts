@@ -1,3 +1,5 @@
+import type { TaskCover } from "./task-cover.type";
+
 export interface Issue {
   id: string;
   _id?: string;
@@ -28,4 +30,5 @@ export interface Issue {
   } | null;
   createdAt?: string;
   updatedAt?: string;
+  cover?: TaskCover | null;
 }

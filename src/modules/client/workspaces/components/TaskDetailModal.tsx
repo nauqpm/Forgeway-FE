@@ -3,16 +3,11 @@
 import React, { useState, useEffect } from "react";
 import {
   X,
-  Maximize2,
-  Share2,
-  Eye,
-  Lock,
   MoreHorizontal,
   Plus,
   Link as LinkIcon,
   FileText,
   ChevronDown,
-  Paperclip,
   Settings,
   Zap,
   User,
@@ -27,6 +22,10 @@ import TimeTrackingSidebar from "@/modules/admin/components/common/components/Ti
 import IssueDescription from "@/modules/admin/components/common/components/IssueDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
+import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
+import TaskCoverBanner from "./covers/TaskCoverBanner";
+import type { TaskCover } from "../types/task-cover.type";
+import { useAuth } from "@/context/AuthContext";
 
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
@@ -63,8 +62,8 @@ export default function TaskDetailModal({
   onClose,
   onUpdateIssue,
   onArchiveIssue,
-  detailUrl,
 }: TaskDetailModalProps) {
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<
     "comments" | "history" | "worklog"
   >("comments");
@@ -74,6 +73,7 @@ export default function TaskDetailModal({
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
+  const [localCover, setLocalCover] = useState<TaskCover | null>(null);
 
   useEffect(() => {
     if (issue) {
@@ -83,6 +83,7 @@ export default function TaskDetailModal({
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
+      setLocalCover(issue.cover ?? null);
     }
   }, [issue]);
 
@@ -176,15 +177,6 @@ export default function TaskDetailModal({
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-              <Lock className="w-4 h-4" />
-            </button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-              <Eye className="w-4 h-4" /> <span>1</span>
-            </button>
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-              <Share2 className="w-4 h-4" />
-            </button>
             <div className="relative">
               <button
                 type="button"
@@ -211,21 +203,6 @@ export default function TaskDetailModal({
                 </div>
               )}
             </div>
-            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
-            {detailUrl ? (
-              <Link
-                href={detailUrl}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
-                aria-label="Open full task detail"
-                title="Open full task detail"
-              >
-                <Maximize2 className="w-4 h-4" />
-              </Link>
-            ) : (
-              <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-                <Maximize2 className="w-4 h-4" />
-              </button>
-            )}
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
@@ -234,6 +211,14 @@ export default function TaskDetailModal({
             </button>
           </div>
         </div>
+
+        <TaskCoverBanner
+          workspaceId={workspaceId}
+          issue={{ ...issue, cover: localCover }}
+          maxHeightClass="h-40"
+          colorHeightClass="h-20"
+          onIssueCoverChange={setLocalCover}
+        />
 
         {/* Content Body */}
         <div className="flex flex-1 overflow-hidden">
@@ -297,6 +282,14 @@ export default function TaskDetailModal({
                 }}
               />
             </div>
+
+            <TaskAttachmentsPanel
+              workspaceId={workspaceId}
+              taskId={issue.id}
+              isArchived={issue.isArchived ?? false}
+              currentUserId={user?.id}
+              accessToken={token}
+            />
 
             {/* Subtasks */}
             <IssueSubtasks

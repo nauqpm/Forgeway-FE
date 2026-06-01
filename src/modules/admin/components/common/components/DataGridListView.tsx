@@ -115,22 +115,25 @@ export default function DataGridListView({
 
   const handleBulkStatusChange = async (status: string) => {
     if (!onBulkUpdate) return;
-    await onBulkUpdate(getSelectedTaskIds(), { status });
+    const ids = getSelectedTaskIds();
     setRowSelection({});
+    await onBulkUpdate(ids, { status });
   };
 
   const handleBulkEditSubmit = async (payload: any) => {
     if (!onBulkUpdate) return;
-    await onBulkUpdate(getSelectedTaskIds(), payload);
+    const ids = getSelectedTaskIds();
     setIsBulkEditDrawerOpen(false);
     setRowSelection({});
+    await onBulkUpdate(ids, payload);
   };
 
   const handleBulkDelete = async () => {
     if (!onBulkDelete) return;
     if (confirm(`Are you sure you want to delete ${selectedCount} items?`)) {
-      await onBulkDelete(getSelectedTaskIds());
+      const ids = getSelectedTaskIds();
       setRowSelection({});
+      await onBulkDelete(ids);
     }
   };
 
@@ -607,7 +610,7 @@ export default function DataGridListView({
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
       `}} />
 
-      <BulkActionBar 
+      <BulkActionBar
         selectedCount={selectedCount}
         onClear={() => setRowSelection({})}
         onChangeStatus={handleBulkStatusChange}
@@ -615,13 +618,15 @@ export default function DataGridListView({
         onDelete={handleBulkDelete}
       />
 
-      <BulkEditDrawer 
-        isOpen={isBulkEditDrawerOpen}
-        onClose={() => setIsBulkEditDrawerOpen(false)}
-        selectedCount={selectedCount}
-        uniqueAssignees={uniqueAssignees}
-        onSubmit={handleBulkEditSubmit}
-      />
+      {isBulkEditDrawerOpen && (
+        <BulkEditDrawer
+          isOpen={isBulkEditDrawerOpen}
+          onClose={() => setIsBulkEditDrawerOpen(false)}
+          selectedCount={selectedCount}
+          uniqueAssignees={uniqueAssignees}
+          onSubmit={handleBulkEditSubmit}
+        />
+      )}
     </div>
   );
 }
