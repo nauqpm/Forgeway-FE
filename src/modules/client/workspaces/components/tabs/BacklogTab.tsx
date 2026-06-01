@@ -3,7 +3,9 @@
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
+import { compareIssueRank } from "../../utils/dragUtils";
 import { Sprint } from "../../types/sprint.type";
 
 type BacklogTabProps = {
@@ -25,6 +27,7 @@ type BacklogTabProps = {
 
   actions: {
     handleBacklogDragEnd: any;
+    handleBacklogDragStart?: any;
 
     setIssues: any;
 
@@ -96,6 +99,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
   const {
     handleBacklogDragEnd,
+    handleBacklogDragStart,
     setIssues,
     setDensity,
     setFilters,
@@ -121,9 +125,44 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canManageSprint = permissions?.canManageSprint ?? true;
+
+
+  const issuesBySprintId = useMemo(() => {
+    const assignedIssueIds = new Set<string>();
+    const next = new Map<string | null, any[]>();
+
+    sprints.forEach((sprint) => {
+      const sprintId = sprint.id ?? sprint._id;
+      const sprintIssues = filteredIssues
+        .filter((issue) => {
+          if (assignedIssueIds.has(issue.id)) return false;
+          if (issue.sprintId !== sprintId) return false;
+          assignedIssueIds.add(issue.id);
+          return true;
+        })
+        .sort(compareIssueRank);
+
+      next.set(sprintId, sprintIssues);
+    });
+
+    const backlogIssues = filteredIssues
+      .filter((issue) => {
+        if (assignedIssueIds.has(issue.id)) return false;
+        return issue.sprintId === null;
+      })
+      .sort(compareIssueRank);
+
+    next.set(null, backlogIssues);
+    return next;
+  }, [filteredIssues, sprints]);
+
+  const getSprintIssues = (sprint: any) => issuesBySprintId.get(sprint.id ?? sprint._id) ?? [];
+  const backlogIssues = issuesBySprintId.get(null) ?? [];
+
   return (
     <div>
       <DragDropContext
+        onBeforeDragStart={handleBacklogDragStart}
         onDragEnd={canMoveTask ? handleBacklogDragEnd : () => undefined}
       >
         <div className="workspace-surface max-w-[min(100%,72rem)] space-y-6 py-[var(--workspace-surface-pad)]">
@@ -156,9 +195,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
           {/* Sprints Mapping */}
           {sprints.map((sprint) => {
-            const sprintIssues = filteredIssues.filter(
-              (i) => i.sprintId === sprint.id,
-            );
+            const sprintIssues = getSprintIssues(sprint);
             const totalPoints = sprintIssues.reduce(
               (sum, i) => sum + (i.storyPoints || 0),
               0,
@@ -449,27 +486,21 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <input
                   type="checkbox"
                   checked={
-                    filteredIssues.filter((i) => i.sprintId === null).length >
-                      0 &&
-                    filteredIssues
-                      .filter((i) => i.sprintId === null)
+                    backlogIssues.length > 0 &&
+                    backlogIssues
                       .map((i) => i.id)
                       .every((id) => selectedTaskIds.includes(id))
                   }
                   onChange={(e) =>
                     toggleSprintSelection(
-                      filteredIssues
-                        .filter((i) => i.sprintId === null)
-                        .map((i) => i.id),
+                      backlogIssues.map((i) => i.id),
                       e,
                     )
                   }
                   onClick={(e) => e.stopPropagation()}
                   ref={(input) => {
                     if (input) {
-                      const backlogIds = filteredIssues
-                        .filter((i) => i.sprintId === null)
-                        .map((i) => i.id);
+                      const backlogIds = backlogIssues.map((i) => i.id);
                       const isAll =
                         backlogIds.length > 0 &&
                         backlogIds.every((id) => selectedTaskIds.includes(id));
@@ -485,7 +516,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Backlog
                   <span className="text-gray-400 dark:text-gray-500 font-normal text-sm">
-                    ({filteredIssues.filter((i) => i.sprintId === null).length}{" "}
+                    ({backlogIssues.length}{" "}
                     issues)
                   </span>
                 </h3>
@@ -507,8 +538,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                   {...provided.droppableProps}
                   className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? "bg-gray-50/80 dark:bg-gray-800/80" : ""}`}
                 >
-                  {filteredIssues
-                    .filter((i) => i.sprintId === null)
+                  {backlogIssues
                     .map((issue, index) => (
                         <Draggable
                         key={issue.id}

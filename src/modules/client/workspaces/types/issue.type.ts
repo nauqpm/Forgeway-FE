@@ -6,6 +6,7 @@ export interface Issue {
   description?: string;
   columnId: string;
   status: string;
+  rank?: string;
   priority: string;
   type: string;
   assignee: string;

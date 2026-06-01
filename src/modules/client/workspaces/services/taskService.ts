@@ -71,6 +71,14 @@ type CreateTaskInput = {
   assigneeId?: string | null;
 };
 
+export type ReorderTaskInput = {
+  columnId?: string;
+  status?: string;
+  sprintId?: string | null;
+  beforeTaskId?: string;
+  afterTaskId?: string;
+};
+
 export type TaskActivity = {
   id: string;
   workspaceId?: string;
@@ -214,6 +222,7 @@ const toIssue = (task: TaskDto): Issue => {
     description: task.description ?? "",
     columnId: task.columnId ?? task.boardColumnId ?? toColumnId(task.status) ?? "todo",
     status: toStatusLabel(task),
+    rank: task.rank,
     priority: toUiLabel(task.priority, "Medium"),
     type: toUiLabel(task.type, "Task"),
     assignee,
@@ -444,6 +453,19 @@ export const taskService = {
   ): Promise<Issue> {
     const response = await api.patch(
       apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceId, taskId),
+      input,
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
+  },
+
+  async reorderBoardTask(
+    workspaceId: string,
+    taskId: string,
+    input: ReorderTaskInput,
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_REORDER(workspaceId, taskId),
       input,
     );
 

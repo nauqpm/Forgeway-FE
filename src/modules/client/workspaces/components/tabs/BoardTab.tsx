@@ -9,6 +9,7 @@ import { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
+import { compareIssueRank } from "../../utils/dragUtils";
 
 import { Archive, MoreHorizontal, Search, Plus, Check, X, Trash2, PlayCircle, UserRound } from "lucide-react";
 
@@ -44,6 +45,7 @@ type BoardTabProps = {
     setNewColumnName: any;
 
     handleBoardDragEnd: any;
+    handleBoardDragStart?: any;
     handleAddColumn: () => void;
     handleRenameColumn: (columnId: string, name: string) => void;
     handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
@@ -86,6 +88,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     setNewColumnName,
 
     handleBoardDragEnd,
+    handleBoardDragStart,
     handleAddColumn,
     handleRenameColumn,
     handleDeleteColumn,
@@ -187,6 +190,29 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     return issue.columnId ? issue.columnId === col.id : col.mappedStatuses?.includes(issue.status);
   };
 
+
+  const issuesByColumnId = useMemo(() => {
+    const assignedIssueIds = new Set<string>();
+    const next = new Map<string, Issue[]>();
+
+    columns.forEach((column) => {
+      const columnIssues = visibleIssues
+        .filter((issue) => {
+          if (assignedIssueIds.has(issue.id)) return false;
+          if (!issueMatchesColumn(issue, column)) return false;
+          assignedIssueIds.add(issue.id);
+          return true;
+        })
+        .sort(compareIssueRank);
+
+      next.set(column.id, columnIssues);
+    });
+
+    return next;
+  }, [columns, visibleIssues]);
+
+  const getColumnIssues = (column: BoardColumn) => issuesByColumnId.get(column.id) ?? [];
+
   const closeDeleteIssueModal = () => {
     setIssueToDelete(null);
     setDeleteConfirmText("");
@@ -223,7 +249,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       )}
 
       {isFetching && (
-        <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 z-40 flex items-center justify-center backdrop-blur-[1px]">
+        <div className="pointer-events-none absolute inset-0 bg-white/50 dark:bg-gray-900/50 z-40 flex items-center justify-center backdrop-blur-[1px]">
           <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
@@ -235,7 +261,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         uniqueAssignees={uniqueAssignees} 
       />
 
-      <DragDropContext onDragEnd={handleBoardDragEnd}>
+      <DragDropContext onBeforeDragStart={handleBoardDragStart} onDragEnd={handleBoardDragEnd}>
         <Droppable
           droppableId="board-columns"
           direction="horizontal"
@@ -253,7 +279,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                   key={column.id}
                   draggableId={`col-${column.id}`}
                   index={index}
-                  isDragDisabled={!canUpdateWorkspace}
+                  isDragDisabled={filters.archived || !canUpdateWorkspace}
                 >
                   {(provided) => (
                     <div
@@ -289,7 +315,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide flex items-center gap-2">
                             {column.name}
                             <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[10px] font-bold">
-                              {visibleIssues.filter((i) => issueMatchesColumn(i, column)).length}
+                              {getColumnIssues(column).length}
                             </span>
                           </h3>
                         )}
@@ -322,16 +348,15 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : ""}`}
+                            className={`p-3 flex-1 overflow-visible space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : ""}`}
                           >
-                            {visibleIssues
-                              .filter((i) => issueMatchesColumn(i, column))
+                            {getColumnIssues(column)
                               .map((issue, issueIndex) => (
                                 <Draggable
                                   key={issue.id}
                                   draggableId={issue.id}
                                   index={issueIndex}
-                                  isDragDisabled={!canMoveTask}
+                                  isDragDisabled={filters.archived || !canMoveTask}
                                 >
                                   {(provided, snapshot) => (
                                     <div
@@ -521,8 +546,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                 </Draggable>
                               ))}
                             {provided.placeholder}
-                            {visibleIssues.filter((i) => issueMatchesColumn(i, column))
-                              .length === 0 &&
+                            {getColumnIssues(column).length === 0 &&
                               !snapshot.isDraggingOver && (
                                 <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
                                   {issues.filter((i) => issueMatchesColumn(i, column))

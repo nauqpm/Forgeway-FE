@@ -30,6 +30,7 @@ import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDet
 import {
   handleBoardDragEnd,
   handleBacklogDragEnd,
+  TaskReorderSyncInput,
 } from "@/modules/client/workspaces/utils/dragUtils";
 
 import { useIssueHandlers } from "@/modules/client/workspaces/hooks/useIssueHandlers";
@@ -131,6 +132,8 @@ export default function WorkspaceDetailPage({
   }, [workspace, workspaceKey]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [isDraggingIssue, setIsDraggingIssue] = useState(false);
+  const reorderInFlightRef = useRef(new Set<string>());
 
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [newIssueForm, setNewIssueForm] = useState<{
@@ -256,13 +259,14 @@ export default function WorkspaceDetailPage({
 
   useEffect(() => {
     if (!tasksData) return;
+    if (isDraggingIssue) return;
 
     setIssues(tasksData);
     if (selectedTaskKey && !selectedIssue) {
       const matchingIssue = tasksData.find((issue) => issue.key === selectedTaskKey);
       if (matchingIssue) setSelectedIssue(matchingIssue);
     }
-  }, [selectedIssue, selectedTaskKey, tasksData]);
+  }, [isDraggingIssue, selectedIssue, selectedTaskKey, tasksData]);
 
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
@@ -329,6 +333,53 @@ export default function WorkspaceDetailPage({
     ? `/workspaces/${workspaceKey}/${activeTab}/key/${activeIssueDetail.key}`
     : undefined;
 
+  const isNoopReorderError = (error: any) => {
+    const message = error?.response?.data?.message;
+    return (
+      error?.response?.status === 400 &&
+      typeof message === "string" &&
+      message.includes("Reorder did not change task position")
+    );
+  };
+
+  const syncTaskReorder = useCallback(
+    ({ taskId, columnId, status, sprintId, beforeTaskId, afterTaskId }: TaskReorderSyncInput) => {
+      if (!workspaceApiId) return;
+      if (reorderInFlightRef.current.has(taskId)) return;
+
+      reorderInFlightRef.current.add(taskId);
+
+      taskService
+        .reorderBoardTask(workspaceApiId, taskId, {
+          columnId,
+          status,
+          sprintId,
+          beforeTaskId,
+          afterTaskId,
+        })
+        .then((updatedTask) => {
+          setIssues((current) =>
+            current.map((issue) =>
+              issue.id === updatedTask.id ? updatedTask : issue,
+            ),
+          );
+          queryClient.invalidateQueries({
+            queryKey: ["taskActivities", workspaceApiId, taskId],
+          });
+        })
+        .catch((error) => {
+          if (isNoopReorderError(error)) return;
+
+          queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+          toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+        })
+        .finally(() => {
+          reorderInFlightRef.current.delete(taskId);
+        });
+    },
+    [queryClient, workspaceApiId],
+  );
+
   const activeSprint = sprints.find(s => s.status === "active") ?? null;
 
   const {
@@ -370,10 +421,12 @@ export default function WorkspaceDetailPage({
   });
 
   const handleBacklogDragEndWithSync = (result: DropResult) => {
+    setIsDraggingIssue(false);
     handleBacklogDragEnd({
       result,
       issues,
       setIssues,
+      onTaskReorder: syncTaskReorder,
       onSprintAssign: (taskId, sprintId) => {
         if (workspaceApiId) {
           taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
@@ -588,8 +641,10 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragEnd: (result: any) =>
-              canMoveTask
+            handleBoardDragStart: () => setIsDraggingIssue(true),
+            handleBoardDragEnd: (result: any) => {
+              setIsDraggingIssue(false);
+              return canMoveTask
                 ? handleBoardDragEnd({
                   result,
                   columns,
@@ -597,6 +652,7 @@ export default function WorkspaceDetailPage({
                   setColumns,
                   setIssues,
                   handleMoveColumn,
+                  onTaskReorder: syncTaskReorder,
                   onColumnChange: (taskId, columnId) => {
                     if (workspaceApiId) {
                       taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
@@ -604,13 +660,20 @@ export default function WorkspaceDetailPage({
                           queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
                         })
                         .catch((error) => {
+
+                          if (isNoopReorderError(error)) return;
+
+
                           queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+
                           toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+
                         });
                     }
                   },
                 })
-                : undefined,
+                : undefined;
+            },
             handleAddColumn,
             handleRenameColumn,
             handleDeleteColumn,
@@ -645,6 +708,7 @@ export default function WorkspaceDetailPage({
             newIssueForm,
           },
           actions: {
+            handleBacklogDragStart: () => setIsDraggingIssue(true),
             handleBacklogDragEnd: handleBacklogDragEndWithSync,
             setIssues,
             setDensity,

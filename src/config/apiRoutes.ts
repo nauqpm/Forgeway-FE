@@ -55,6 +55,7 @@ export const apiRoutes = {
         BOARD_TASK: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}`,
         BOARD_TASK_UPDATE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}`,
         BOARD_TASK_MOVE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/move`,
+        BOARD_TASK_REORDER: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/reorder`,
         BOARD_TASK_DELETE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}`,
         BOARD_TASK_ARCHIVE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/archive`,
         BOARD_TASK_RESTORE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/restore`,
