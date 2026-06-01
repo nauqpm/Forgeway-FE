@@ -11,6 +11,7 @@ import type { TaskCover } from "../../types/task-cover.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
 import BoardTaskActionMenu from "../covers/BoardTaskActionMenu";
+import { compareIssueRank } from "../../utils/dragUtils";
 
 import {
   Check,
