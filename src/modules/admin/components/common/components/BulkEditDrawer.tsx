@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 export const KEEP_AS_IS = 'KEEP_AS_IS';
@@ -19,8 +19,9 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
     dueDate: KEEP_AS_IS,
   });
 
+  const wasOpenRef = useRef(false);
   useEffect(() => {
-    if (!isOpen) {
+    if (wasOpenRef.current && !isOpen) {
       setFormData({
         status: KEEP_AS_IS,
         priority: KEEP_AS_IS,
@@ -28,6 +29,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
         dueDate: KEEP_AS_IS,
       });
     }
+    wasOpenRef.current = isOpen;
   }, [isOpen]);
 
   const handleChange = (field: string, value: string) => {
