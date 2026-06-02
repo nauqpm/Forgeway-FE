@@ -175,7 +175,7 @@ export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemPr
           <button 
             onClick={handleAddChild}
             className="p-1 text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 hover:bg-white dark:hover:bg-gray-800 rounded-md transition-all shadow-none hover:shadow-sm"
-            title="Add sub-page"
+            title="Thêm trang con"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -199,14 +199,14 @@ export default function DocsTreeItem({ doc, workspaceId, level }: DocsTreeItemPr
                   onClick={(e) => { e.stopPropagation(); setIsEditing(true); setShowMenu(false); }}
                   className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] dark:text-gray-300 hover:bg-[#F4F5F7] dark:hover:bg-gray-800 flex items-center gap-2.5 transition-colors"
                 >
-                  <Edit2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> Rename
+                  <Edit2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" /> Đổi tên
                 </button>
                 <div className="my-1 border-t border-gray-50 dark:border-gray-800" />
                 <button 
                   onClick={handleDelete}
                   className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2.5 transition-colors"
                 >
-                  <Trash className="w-3.5 h-3.5" /> Delete
+                  <Trash className="w-3.5 h-3.5" /> Xóa 
                 </button>
               </motion.div>
             )}
