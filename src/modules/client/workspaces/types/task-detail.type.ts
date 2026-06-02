@@ -1,4 +1,5 @@
 import type { TaskCover } from "./task-cover.type";
+import type { TaskLabel } from "./label.type";
 
 export interface TaskDetailUser {
   id?: string;
@@ -68,4 +69,6 @@ export interface TaskDetailResponse {
   startDate?: string;
   endDate?: string;
   cover?: TaskCover | null;
+  labels?: TaskLabel[];
+  labelIds?: string[];
 }

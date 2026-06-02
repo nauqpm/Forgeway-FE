@@ -30,6 +30,7 @@ type BoardTaskActionMenuProps = {
   onClose: () => void;
   onArchiveIssue?: (issue: Issue) => void;
   onDeleteIssue?: (issue: Issue) => void;
+  onOpenLabels?: (issue: Issue) => void;
   onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void;
   onCoverChange: (issueId: string, cover: TaskCover | null) => void;
 };
@@ -61,6 +62,7 @@ export default function BoardTaskActionMenu({
   onClose,
   onArchiveIssue,
   onDeleteIssue,
+  onOpenLabels,
   onUpdateIssue,
   onCoverChange,
 }: BoardTaskActionMenuProps) {
@@ -208,9 +210,10 @@ export default function BoardTaskActionMenu({
         <button
           type="button"
           onClick={() => {
-            // TODO: Wire to label picker once task labels are backed by API.
             onClose();
+            onOpenLabels?.(issue);
           }}
+          disabled={!onOpenLabels || !canEditTask}
           className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
         >
           <Tag className="h-4 w-4" />

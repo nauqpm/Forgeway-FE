@@ -4,6 +4,7 @@ import { Issue } from "../types/issue.type";
 import { TaskFilters } from "../types/filter.type";
 import { TaskDetailResponse } from "../types/task-detail.type";
 import type { TaskCover } from "../types/task-cover.type";
+import type { TaskLabel } from "../types/label.type";
 
 type TaskUserDto = {
   id?: string;
@@ -62,6 +63,8 @@ type TaskDto = {
   deletedAt?: string | null;
   deletedBy?: string | null;
   cover?: TaskCover | null;
+  labels?: (TaskLabel | string | { _id?: string; id?: string; name?: string })[];
+  labelIds?: string[];
 };
 
 type CreateTaskInput = {
@@ -195,6 +198,27 @@ const toStatusLabel = (task: TaskDto) => {
   return STATUS_BY_COLUMN[column ?? ""] ?? task.status ?? "To Do";
 };
 
+const toTaskLabel = (raw: TaskLabel | string | { _id?: string; id?: string; name?: string }): TaskLabel => {
+  if (typeof raw === "string") {
+    return { id: raw, name: raw };
+  }
+
+  const id = raw.id ?? raw._id ?? "";
+  return {
+    ...raw,
+    id,
+    name: raw.name ?? id,
+  };
+};
+
+const toTaskLabels = (task: TaskDto): TaskLabel[] => {
+  if (Array.isArray(task.labels)) {
+    return task.labels.map(toTaskLabel).filter((label) => label.id);
+  }
+
+  return (task.labelIds ?? []).map((id) => ({ id, name: id }));
+};
+
 const requireTaskKey = (task: TaskDto) => {
   if (!task.key) {
     throw new Error("Task key is missing from backend response");
@@ -241,6 +265,8 @@ const toIssue = (task: TaskDto): Issue => {
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
     cover: task.cover ?? null,
+    labels: toTaskLabels(task),
+    labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
   };
 };
 
@@ -271,6 +297,8 @@ const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
     createdAt: task.createdAt ?? "",
     updatedAt: task.updatedAt ?? "",
     cover: task.cover ?? null,
+    labels: toTaskLabels(task),
+    labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
   };
 };
 
@@ -358,6 +386,7 @@ export const buildTaskQuery = (filters?: TaskFilters) => {
   addArray("reporterId", activeFilters.reporterId);
   addArray("type", normalizeArray(activeFilters.type));
   addArray("priority", normalizeArray(activeFilters.priority));
+  addArray("labelIds", activeFilters.labelIds);
   addValue("taskKey", activeFilters.taskKey);
   addValue("search", activeFilters.search?.trim());
   addValue("backlog", activeFilters.backlog === true ? "true" : undefined);
@@ -502,6 +531,19 @@ export const taskService = {
   ): Promise<Issue> {
     const response = await api.patch(
       apiRoutes.TASKS.BOARD_TASK_RESTORE(workspaceId, taskId),
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
+  },
+
+  async replaceTaskLabels(
+    workspaceId: string,
+    taskId: string,
+    labelIds: string[],
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_LABELS(workspaceId, taskId),
+      { labelIds },
     );
 
     return toIssue(normalizeResponseData<TaskDto>(response));

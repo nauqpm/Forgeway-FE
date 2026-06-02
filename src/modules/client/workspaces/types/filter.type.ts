@@ -23,6 +23,7 @@ export interface TaskFilters {
   reporterId?: string | string[];
   type?: string | string[];
   priority?: string | string[];
+  labelIds?: string | string[];
   taskKey?: string;
   search?: string;
   backlog?: boolean;

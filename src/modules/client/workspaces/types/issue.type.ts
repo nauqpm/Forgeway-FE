@@ -1,4 +1,5 @@
 import type { TaskCover } from "./task-cover.type";
+import type { TaskLabel } from "./label.type";
 
 export interface Issue {
   id: string;
@@ -31,4 +32,6 @@ export interface Issue {
   createdAt?: string;
   updatedAt?: string;
   cover?: TaskCover | null;
+  labels?: TaskLabel[];
+  labelIds?: string[];
 }

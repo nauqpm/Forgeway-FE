@@ -34,6 +34,8 @@ export const apiRoutes = {
         SPRINT_COMPLETE_PREVIEW: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/sprints/${sprintId}/complete-preview`,
         ACTIVE_SPRINT: (workspaceId: string) => `/workspaces/${workspaceId}/active-sprint`,
         BACKLOG: (workspaceId: string) => `/workspaces/${workspaceId}/backlog`,
+        LABELS: (workspaceId: string) => `/workspaces/${workspaceId}/labels`,
+        LABEL: (workspaceId: string, labelId: string) => `/workspaces/${workspaceId}/labels/${labelId}`,
     },
     PROJECTS: {
         BASE: '/projects',
@@ -65,6 +67,7 @@ export const apiRoutes = {
         BOARD_TASK_ATTACHMENT_PREVIEW: (workspaceId: string, taskId: string, attachmentId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments/${attachmentId}/preview`,
         BOARD_TASK_ATTACHMENT_DOWNLOAD: (workspaceId: string, taskId: string, attachmentId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments/${attachmentId}/download`,
         BOARD_TASK_COVER: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/cover`,
+        BOARD_TASK_LABELS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/labels`,
         BOARD_ARCHIVES: (workspaceId: string) => `/workspaces/${workspaceId}/board/archives`,
         BOARD_TASK_COMMENTS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments`,
         BOARD_TASK_COMMENT: (workspaceId: string, taskId: string, commentId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments/${commentId}`,

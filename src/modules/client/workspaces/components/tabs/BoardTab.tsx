@@ -11,6 +11,7 @@ import type { TaskCover } from "../../types/task-cover.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
 import BoardTaskActionMenu from "../covers/BoardTaskActionMenu";
+import TaskLabelModal from "../labels/TaskLabelModal";
 import { compareIssueRank } from "../../utils/dragUtils";
 
 import {
@@ -123,6 +124,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<React.CSSProperties>({});
   const [actionMenuIssueId, setActionMenuIssueId] = useState<string | null>(null);
   const [actionMenuAnchorRect, setActionMenuAnchorRect] = useState<DOMRect | null>(null);
+  const [labelModalIssue, setLabelModalIssue] = useState<Issue | null>(null);
   const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
@@ -237,6 +239,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     if (!issueToDelete || deleteConfirmText !== "delete") return;
     onDeleteIssue?.(issueToDelete);
     closeDeleteIssueModal();
+  };
+
+  const handleLabelSaved = (updatedIssue: Issue) => {
+    setIssues((current) =>
+      current.map((item) => (item.id === updatedIssue.id ? updatedIssue : item)),
+    );
   };
 
   if (workspace.type === "scrum" && !activeSprint) {
@@ -442,6 +450,20 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                           >
                                             {issue.type}
                                           </span>
+                                          {(issue.labels ?? []).slice(0, 3).map((label) => (
+                                            <span
+                                              key={label.id}
+                                              title={label.name}
+                                              className="max-w-[120px] truncate rounded bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
+                                            >
+                                              {label.name}
+                                            </span>
+                                          ))}
+                                          {(issue.labels?.length ?? 0) > 3 && (
+                                            <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                              +{(issue.labels?.length ?? 0) - 3}
+                                            </span>
+                                          )}
                                         </div>
                                         <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-2 dark:border-gray-800">
                                           <span className="text-xs font-mono font-bold text-gray-400">
@@ -640,8 +662,19 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
             setIssueToDelete(issue);
             setDeleteConfirmText("");
           }}
+          onOpenLabels={(issue) => setLabelModalIssue(issue)}
           onUpdateIssue={updateIssueDirectly}
           onCoverChange={patchIssueCover}
+        />
+      )}
+
+      {labelModalIssue && (
+        <TaskLabelModal
+          isOpen={!!labelModalIssue}
+          workspaceId={workspace._id}
+          issue={labelModalIssue}
+          onClose={() => setLabelModalIssue(null)}
+          onSaved={handleLabelSaved}
         />
       )}
 
