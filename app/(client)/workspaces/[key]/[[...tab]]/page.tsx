@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, use, useMemo, useRef } from "react";
+import { flushSync } from "react-dom";
 import dynamic from "next/dynamic";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
@@ -267,7 +268,8 @@ export default function WorkspaceDetailPage({
       const matchingIssue = tasksData.find((issue) => issue.key === selectedTaskKey);
       if (matchingIssue) setSelectedIssue(matchingIssue);
     }
-  }, [isDraggingIssue, selectedIssue, selectedTaskKey, tasksData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasksData, selectedTaskKey]); // isDraggingIssue intentionally omitted: firing on drag-end would overwrite optimistic state with stale server data
 
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
@@ -447,25 +449,27 @@ export default function WorkspaceDetailPage({
   });
 
   const handleBacklogDragEndWithSync = (result: DropResult) => {
-    setIsDraggingIssue(false);
-    handleBacklogDragEnd({
-      result,
-      issues,
-      setIssues,
-      onTaskReorder: syncTaskReorder,
-      onSprintAssign: (taskId, sprintId) => {
-        if (workspaceApiId) {
-          taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
-            .then(() => {
-              queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
-            })
-            .catch((error) => {
-              queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-              toast.error(error?.response?.data?.message || "Khong cap nhat duoc sprint cua task");
-            });
-        }
-      },
+    flushSync(() => {
+      handleBacklogDragEnd({
+        result,
+        issues: filteredIssues,
+        setIssues,
+        onTaskReorder: syncTaskReorder,
+        onSprintAssign: (taskId, sprintId) => {
+          if (workspaceApiId) {
+            taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
+              .then(() => {
+                queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+              })
+              .catch((error) => {
+                queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+                toast.error(error?.response?.data?.message || "Khong cap nhat duoc sprint cua task");
+              });
+          }
+        },
+      });
     });
+    setIsDraggingIssue(false);
   };
 
   const handleArchiveIssue = async (issue: Issue) => {
@@ -669,12 +673,12 @@ export default function WorkspaceDetailPage({
             setNewColumnName,
             handleBoardDragStart: () => setIsDraggingIssue(true),
             handleBoardDragEnd: (result: any) => {
-              setIsDraggingIssue(false);
-              return canMoveTask
-                ? handleBoardDragEnd({
+              if (!canMoveTask) return;
+              flushSync(() => {
+                handleBoardDragEnd({
                   result,
                   columns,
-                  issues,
+                  issues: filteredIssues,
                   setColumns,
                   setIssues,
                   handleMoveColumn,
@@ -686,19 +690,15 @@ export default function WorkspaceDetailPage({
                           queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
                         })
                         .catch((error) => {
-
                           if (isNoopReorderError(error)) return;
-
-
                           queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-
                           toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
-
                         });
                     }
                   },
-                })
-                : undefined;
+                });
+              });
+              setIsDraggingIssue(false);
             },
             handleAddColumn,
             handleRenameColumn,
