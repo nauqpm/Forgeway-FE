@@ -15,7 +15,7 @@ import InviteModal from "@/modules/admin/components/common/components/InviteModa
 interface HeaderProps {
   workspace: Workspace;
   workspaceId: string;
-  setShowCreateIssue: React.Dispatch<React.SetStateAction<boolean>>;
+  setShowCreateIssue: () => void;
   canCreateTask?: boolean;
   canUpdateWorkspace?: boolean;
 }

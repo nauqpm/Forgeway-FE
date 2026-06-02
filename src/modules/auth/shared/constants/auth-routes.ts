@@ -7,6 +7,7 @@ export const AUTH_ROUTES = {
   MFA: "/mfa",
   SSO_CALLBACK: "/sso-callback",
   ACCESS_DENIED: "/access-denied",
+  FOR_YOU: "/for-you",
   DASHBOARD: "/dashboard",
   ADMIN_DASHBOARD: "/dashboard",
 };

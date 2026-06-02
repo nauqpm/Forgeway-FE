@@ -15,6 +15,8 @@ export interface AdminDashboardProps {
   className?: string;
 }
 
+const SHOW_STARRED_DASHBOARD_TAB = false;
+
 export default function AdminDashboard({ className = "" }: AdminDashboardProps) {
   const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
   const [stats, setStats] = useState({ projects: 0, members: 0, spaces: 0 });
@@ -105,7 +107,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     { label: "Starred", key: "starred" },
     { label: "Worked on", key: "worked" },
     { label: "Viewed", key: "viewed" },
-  ];
+  ].filter((tab) => SHOW_STARRED_DASHBOARD_TAB || tab.key !== "starred");
 
   const tasks = [
     {
