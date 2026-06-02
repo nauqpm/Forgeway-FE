@@ -429,6 +429,49 @@ body {
   border-radius: 4px;
 }
 
+/* Tiptap content tweaks */
+.tiptap-content {
+  color: #0f172a;
+}
+
+.dark .tiptap-content {
+  color: #e5e7eb;
+}
+
+.tiptap-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+  table-layout: fixed;
+}
+
+.tiptap-content th,
+.tiptap-content td {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 0.625rem;
+  vertical-align: top;
+}
+
+.dark .tiptap-content th,
+.dark .tiptap-content td {
+  border-color: #4b5563;
+}
+
+.tiptap-content ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.tiptap-content ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.tiptap-content ul[data-type="taskList"] li > label {
+  margin-top: 0.2rem;
+}
+
 /* Resize handles — show on hover, Jira-like vertical grip */
 .fc .fc-event-resizer {
   opacity: 0;
