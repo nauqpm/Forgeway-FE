@@ -1,15 +1,17 @@
 "use client";
 
 import { useDocsStore } from "../store/docs.store";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardHeader from "./DashboardHeader";
 import DashboardGroup from "./DashboardGroup";
 import DashboardEmpty from "./DashboardEmpty";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export default function DocsDashboard({ workspaceId }: { workspaceId: string }) {
+  const router = useRouter();
   const {
     documents, 
     selectDocument, 
@@ -24,7 +26,6 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   const [personalDocs, setPersonalDocs] = useState<DocumentItem[]>([]);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadUploadedDocs = async () => {
     try {
@@ -98,10 +99,6 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
     if (confirm("Delete this page?")) deleteDocument(id);
   };
 
-  const handleImportFile = () => {
-    fileInputRef.current?.click();
-  };
-
   const importableLibraryDocs = useMemo(() => {
     const attachedIds = new Set(uploadedDocs.map((d) => d._id));
     return personalDocs.filter((d) => !attachedIds.has(d._id));
@@ -115,30 +112,9 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
         sortOrder={sortOrder}
         setSortOrder={setSortOrder}
         onCreatePage={handleCreate}
-        onImportFile={handleImportFile}
         onImportFromLibrary={() => {
           setSelectedLibraryIds([]);
           setShowLibraryModal(true);
-        }}
-      />
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="hidden"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          try {
-            await documentService.upload(file, { workspaceIds: [workspaceId] });
-            await loadUploadedDocs();
-            await loadPersonalDocs();
-            window.dispatchEvent(new Event("docs_uploads_changed"));
-            toast.success("Đã thêm file vào workspace");
-          } catch (error: unknown) {
-            toast.error("Thêm vào workspace thất bại");
-          } finally {
-            e.target.value = "";
-          }
         }}
       />
       {showLibraryModal && (

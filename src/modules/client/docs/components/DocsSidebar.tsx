@@ -75,7 +75,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                 }`}
               >
                 <Layout className={`w-4 h-4 ${!selectedDocumentId ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`} />
-                All Documentation
+                Tất cả tài liệu
               </button>
 
               <div className="h-px bg-gray-100 dark:bg-gray-800 mx-1" />
@@ -87,7 +87,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
               {searchQuery ? (
                 <div className="px-2">
                   <h3 className="px-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
-                    Search Results
+                    Kết quả tìm kiếm
                   </h3>
                   <ul className="space-y-1">
                     {filteredDocs.map(doc => (
@@ -106,7 +106,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                       </li>
                     ))}
                     {filteredDocs.length === 0 && (
-                      <p className="px-3 text-xs text-gray-400 dark:text-gray-500 italic py-2">No matches found</p>
+                      <p className="px-3 text-xs text-gray-400 dark:text-gray-500 italic py-2">Không tìm thấy kết quả</p>
                     )}
                   </ul>
                 </div>
@@ -116,7 +116,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
                       <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                        Pages
+                        Tài liệu của workspace 
                       </h3>
                       <button 
                         onClick={handleCreateRoot}
@@ -131,7 +131,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
                       <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                        Imported Files
+                        Tài liệu được nhập 
                       </h3>
                     </div>
                     <ul className="space-y-1 px-1">
@@ -169,7 +169,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                         </li>
                       ))}
                       {uploadedDocs.length === 0 && (
-                        <li className="px-3 py-1.5 text-xs text-gray-400 italic">No imported files</li>
+                        <li className="px-3 py-1.5 text-xs text-gray-400 italic">Không có tệp được nhập</li>
                       )}
                     </ul>
                   </div>

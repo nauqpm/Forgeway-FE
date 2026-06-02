@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { toast } from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 import {
   Download,
   FileImage,
@@ -13,16 +15,22 @@ import {
   Search,
   Trash2,
   Upload,
+  X,
 } from "lucide-react";
 import { documentService } from "@/modules/client/docs/services/documentService";
 import { DocumentItem } from "@/modules/client/docs/types/document.type";
+import ImportedDocumentViewer from "@/modules/client/docs/components/ImportedDocumentViewer";
+import OnlineDocumentEditorModal from "@/modules/client/docs/components/OnlineDocumentEditorModal";
 
 export default function DocumentsLibraryPage() {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "name" | "size">("newest");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [editingDoc, setEditingDoc] = useState<DocumentItem | null>(null);
+  const [viewingDoc, setViewingDoc] = useState<DocumentItem | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -95,7 +103,7 @@ export default function DocumentsLibraryPage() {
               Quản lý toàn bộ tài liệu cá nhân theo bố cục dạng lưới.
             </p>
           </div>
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
+          <label className="ml-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
             <Upload className="h-4 w-4" />
             Thêm tài liệu mới 
             <input
@@ -108,7 +116,7 @@ export default function DocumentsLibraryPage() {
                   await documentService.upload(file);
                   await load();
                   toast.success("Tải lên thành công");
-                } catch (error: unknown) {
+                } catch {
                   toast.error("Tải lên thất bại");
                 } finally {
                   e.target.value = "";
@@ -116,6 +124,12 @@ export default function DocumentsLibraryPage() {
               }}
             />
           </label>
+          <Link
+            href="/documents/create"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+          >
+            Tạo tài liệu mới
+          </Link>
         </div>
       </div>
 
@@ -157,7 +171,16 @@ export default function DocumentsLibraryPage() {
             return (
               <div
                 key={doc._id}
-                className="group relative rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:border-gray-800 dark:bg-gray-900"
+                role="button"
+                tabIndex={0}
+                onClick={() => setViewingDoc(doc)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setViewingDoc(doc);
+                  }
+                }}
+                className="group relative cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-800 dark:bg-gray-900"
               >
                 <div className="mb-3 flex items-start justify-between">
                   <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
@@ -180,14 +203,29 @@ export default function DocumentsLibraryPage() {
                   >
                     <a
                       href={documentService.downloadUrl(doc._id)}
+                      onClick={(e) => e.stopPropagation()}
                       className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
                     >
                       <Download className="h-3.5 w-3.5" />
                       Tải về máy 
                     </a>
+                    {doc.documentType === "online" && user?.id === doc.uploadedBy && (
+                      <button
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          setEditingDoc(doc);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Chỉnh sửa
+                      </button>
+                    )}
                     <button
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        e.stopPropagation();
                         const nextName = window.prompt("Tên mới", doc.name)?.trim();
                         if (!nextName) return;
                         await documentService.rename(doc._id, nextName);
@@ -200,10 +238,12 @@ export default function DocumentsLibraryPage() {
                     </button>
                     <button
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        e.stopPropagation();
                         if (!window.confirm("Bạn chắc chắn muốn xóa tài liệu này? Hành động không thể hoàn tác.")) return;
                         await documentService.delete(doc._id);
                         setOpenMenuId(null);
+                        setViewingDoc((current) => (current?._id === doc._id ? null : current));
                         await load();
                       }}
                     >
@@ -225,6 +265,58 @@ export default function DocumentsLibraryPage() {
               </div>
             );
           })}
+        </div>
+      )}
+      {editingDoc && (
+        <OnlineDocumentEditorModal
+          doc={editingDoc}
+          open={Boolean(editingDoc)}
+          onClose={() => setEditingDoc(null)}
+          onSaved={async () => {
+            await load();
+          }}
+        />
+      )}
+      {viewingDoc && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4"
+          onClick={() => setViewingDoc(null)}
+        >
+          <div
+            className="flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-gray-800">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                  {viewingDoc.name}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {viewingDoc.extension.toUpperCase()} · {formatSize(viewingDoc.size)}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <a
+                  href={documentService.downloadUrl(viewingDoc._id)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-gray-800"
+                  aria-label="Tải xuống"
+                >
+                  <Download className="h-4 w-4" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setViewingDoc(null)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-gray-800"
+                  aria-label="Đóng"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+            <div className="min-h-0 flex-1">
+              <ImportedDocumentViewer doc={viewingDoc} />
+            </div>
+          </div>
         </div>
       )}
     </div>

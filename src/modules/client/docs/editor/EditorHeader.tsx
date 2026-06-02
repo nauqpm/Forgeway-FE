@@ -57,12 +57,12 @@ export default function EditorHeader({ doc }: { doc: Document }) {
           {isSaving ? (
             <span className="flex items-center text-gray-400 dark:text-gray-500">
               <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              Saving...
+              Đang lưu...
             </span>
           ) : (
             <span className="flex items-center text-gray-400 dark:text-gray-500">
               <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-500 dark:text-emerald-400" />
-              Saved
+              Đã lưu
             </span>
           )}
         </div>

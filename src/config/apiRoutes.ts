@@ -143,7 +143,9 @@ export const apiRoutes = {
     DOCUMENTS: {
         BASE: '/documents',
         UPLOAD: '/documents/upload',
+        CREATE_ONLINE: '/documents/create-online',
         BY_ID: (id: string) => `/documents/${id}`,
+        CONTENT: (id: string) => `/documents/${id}/content`,
         ATTACH: (id: string) => `/documents/${id}/attach`,
         DETACH: (id: string) => `/documents/${id}/detach`,
         BY_WORKSPACE: (workspaceId: string) => `/documents/workspace/${workspaceId}`,

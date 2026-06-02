@@ -23,6 +23,18 @@ export const documentService = {
     });
     return normalize<DocumentItem>(res);
   },
+  createOnline: async (name: string, content: string, workspaceIds?: string[]) => {
+    const res = await api.post(apiRoutes.DOCUMENTS.CREATE_ONLINE, { name, content, workspaceIds });
+    return normalize<DocumentItem>(res);
+  },
+  getContent: async (id: string): Promise<{ content: string }> => {
+    const res = await api.get(apiRoutes.DOCUMENTS.CONTENT(id));
+    return normalize<{ content: string }>(res);
+  },
+  updateContent: async (id: string, content: string): Promise<DocumentItem> => {
+    const res = await api.patch(apiRoutes.DOCUMENTS.CONTENT(id), { content });
+    return normalize<DocumentItem>(res);
+  },
   rename: async (id: string, name: string): Promise<DocumentItem> => {
     const res = await api.patch(apiRoutes.DOCUMENTS.BY_ID(id), { name });
     return normalize<DocumentItem>(res);
@@ -39,7 +51,7 @@ export const documentService = {
     const res = await api.post(apiRoutes.DOCUMENTS.DETACH(id), { workspaceId });
     return normalize<DocumentItem>(res);
   },
-  viewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5512"}${apiRoutes.DOCUMENTS.VIEW(id)}`,
-  previewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5512"}${apiRoutes.DOCUMENTS.PREVIEW(id)}`,
-  downloadUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5512"}${apiRoutes.DOCUMENTS.DOWNLOAD(id)}`,
+  viewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.VIEW(id)}`,
+  previewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.PREVIEW(id)}`,
+  downloadUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.DOWNLOAD(id)}`,
 };
