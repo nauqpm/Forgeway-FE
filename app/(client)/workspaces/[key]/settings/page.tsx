@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, MouseEvent, use, useEffect, useState } from "react";
+import { FormEvent, KeyboardEvent, MouseEvent, use, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -139,8 +139,8 @@ export default function WorkspaceSettingsPage({
   const [leaveConfirm, setLeaveConfirm] = useState("");
   const [leaving, setLeaving] = useState(false);
 
-  const workspaceInviteId = workspace?._id;
-  const workspaceApiId = workspace?._id;
+  const workspaceInviteId = workspace?._id ?? "";
+  const workspaceApiId = workspace?._id ?? "";
   const currentMember = members.find((m) => m.userId?._id === user?.id);
   const canManageWorkspace =
     currentMember?.role === "workspace_admin" || user?.role === "super_admin";
@@ -394,6 +394,20 @@ export default function WorkspaceSettingsPage({
     }
   };
 
+  const handleDeleteConfirmKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || deleting) return;
+
+    event.preventDefault();
+    void handleDelete();
+  };
+
+  const handleLeaveConfirmKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== "Enter" || leaving) return;
+
+    event.preventDefault();
+    void handleLeave();
+  };
+
   if (loading) return <LoadingSpinner />;
 
   if (!workspace) {
@@ -474,6 +488,8 @@ export default function WorkspaceSettingsPage({
               showLeaveDialog={showLeaveDialog}
               setShowLeaveDialog={setShowLeaveDialog}
               handleLeave={handleLeave}
+              handleDeleteConfirmKeyDown={handleDeleteConfirmKeyDown}
+              handleLeaveConfirmKeyDown={handleLeaveConfirmKeyDown}
             />
           ) : (
             <MemberSettings
@@ -531,6 +547,8 @@ function GeneralSettings({
   showLeaveDialog,
   setShowLeaveDialog,
   handleLeave,
+  handleDeleteConfirmKeyDown,
+  handleLeaveConfirmKeyDown,
 }: {
   form: WorkspaceSettingsForm;
   workspace: WorkspaceSettings;
@@ -550,6 +568,8 @@ function GeneralSettings({
   showLeaveDialog: boolean;
   setShowLeaveDialog: (value: boolean) => void;
   handleLeave: () => void;
+  handleDeleteConfirmKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
+  handleLeaveConfirmKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
 }) {
   return (
     <form onSubmit={handleSave} className="space-y-8 max-w-[min(100%,42rem)]">
@@ -771,6 +791,7 @@ function GeneralSettings({
               type="text"
               value={deleteConfirm}
               onChange={(event) => setDeleteConfirm(event.target.value)}
+              onKeyDown={handleDeleteConfirmKeyDown}
               placeholder="delete"
               className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
               autoFocus
@@ -830,7 +851,10 @@ function GeneralSettings({
                     onClick={() => {
                       setShowLeaveDialog(false);
                       setDeleteConfirm("");
-                      document.querySelector<HTMLInputElement>('input[placeholder="delete"]')?.focus();
+                      setShowDeleteDialog(true);
+                      window.setTimeout(() => {
+                        document.querySelector<HTMLInputElement>('input[placeholder="delete"]')?.focus();
+                      }, 0);
                     }}
                     className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
                   >
@@ -856,6 +880,7 @@ function GeneralSettings({
                   type="text"
                   value={leaveConfirm}
                   onChange={(e) => setLeaveConfirm(e.target.value)}
+                  onKeyDown={handleLeaveConfirmKeyDown}
                   placeholder="leave"
                   className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   autoFocus

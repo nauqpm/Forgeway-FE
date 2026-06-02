@@ -359,7 +359,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             </button>
                             <button
                               onClick={() => {
-                                setNewIssueForm({ ...newIssueForm, status: column.name, columnId: column.id });
+                                setNewIssueForm({
+                                  ...newIssueForm,
+                                  status: column.name,
+                                  columnId: column.id,
+                                  sprintId: activeSprint?._id ?? null,
+                                });
                                 setShowCreateIssue(true);
                               }}
                               className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors"

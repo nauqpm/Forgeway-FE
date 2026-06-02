@@ -302,7 +302,6 @@ export const handleBacklogDragEnd = ({
       sprintId: optimisticMovedTask.sprintId ?? null,
       ...neighbors,
     });
-    return;
   }
 
   if (onSprintAssign && optimisticMovedTask.sprintId !== previousSprintId) {

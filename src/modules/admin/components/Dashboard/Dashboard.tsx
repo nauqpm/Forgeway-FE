@@ -51,6 +51,8 @@ const workspaceIdOf = (workspace: ForYouWorkspace) => workspace.id || workspace.
 const workspaceRouteKeyOf = (workspace: ForYouWorkspace) =>
   workspace.key || workspace.slug || workspaceIdOf(workspace);
 
+const SHOW_STARRED_DASHBOARD_TAB = false;
+
 const toWorkspaceCard = (workspace: ForYouWorkspace, index: number) => {
   const icons = [LayoutDashboard, Database, BookOpen, CheckCircle2];
   const colors = ["bg-blue-500", "bg-green-500", "bg-indigo-500", "bg-cyan-600"];
@@ -179,7 +181,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     { label: "Starred", key: "starred" },
     { label: "Worked on", key: "worked" },
     { label: "Viewed", key: "viewed" },
-  ];
+  ].filter((tab) => SHOW_STARRED_DASHBOARD_TAB || tab.key !== "starred");
 
   const displayWorkspaces = useMemo(
     () => workspaces.slice(0, 4).map(toWorkspaceCard),
