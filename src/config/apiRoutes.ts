@@ -1,6 +1,7 @@
 // /src/config/apiRoutes.ts
 
 export const apiRoutes = {
+    FOR_YOU: '/for-you',
     AUTH: {
         LOGIN: '/auth/login',
         REGISTER: '/auth/register',
@@ -123,6 +124,7 @@ export const apiRoutes = {
     },
     DASHBOARD: {
         WORKSPACE: (workspaceId: string) => `/dashboard/workspace/${workspaceId}`,
+        WORKSPACE_STATS: (workspaceId: string) => `/dashboard/workspace/${workspaceId}/stats`,
         PROJECT: (projectId: string) => `/dashboard/project/${projectId}`,
         USER: '/dashboard/user/me',
         SPRINT: (sprintId: string) => `/dashboard/sprint/${sprintId}`,

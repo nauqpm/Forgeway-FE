@@ -1,107 +1,178 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { BookOpen, CheckCircle2, Database, LayoutDashboard } from "lucide-react";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
-import {
-  BookOpen,
-  LayoutDashboard,
-  Database,
-} from "lucide-react";
-import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import { taskService } from "@/modules/client/workspaces/services/taskService";
+import type { Issue } from "@/modules/client/workspaces/types/issue.type";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export interface AdminDashboardProps {
   className?: string;
 }
 
+type ForYouWorkspace = {
+  id?: string;
+  _id?: string;
+  name: string;
+  slug?: string;
+  key?: string;
+  type?: string;
+  role?: string;
+  relationship?: string;
+  ownershipLabel?: string;
+  updatedAt?: string;
+};
+
+type UserDashboardStats = {
+  tasksAssigned?: number;
+  tasksByStatus?: Record<string, number>;
+  tasksByPriority?: Record<string, number>;
+  recentlyCompleted?: Issue[];
+  recentActivity?: unknown[];
+};
+
+type DashboardTask = {
+  id: string;
+  key: string;
+  title: string;
+  type: "assigned" | "worked";
+  workspaceKey: string;
+  meta: string;
+};
+
+const normalizePayload = <T,>(payload: any): T => payload?.data?.data ?? payload?.data ?? payload;
+
+const workspaceIdOf = (workspace: ForYouWorkspace) => workspace.id || workspace._id || "";
+
+const workspaceRouteKeyOf = (workspace: ForYouWorkspace) =>
+  workspace.key || workspace.slug || workspaceIdOf(workspace);
+
+const toWorkspaceCard = (workspace: ForYouWorkspace, index: number) => {
+  const icons = [LayoutDashboard, Database, BookOpen, CheckCircle2];
+  const colors = ["bg-blue-500", "bg-green-500", "bg-indigo-500", "bg-cyan-600"];
+
+  return {
+    ...workspace,
+    id: workspaceIdOf(workspace),
+    routeKey: workspaceRouteKeyOf(workspace),
+    description:
+      workspace.ownershipLabel ||
+      workspace.relationship ||
+      workspace.role ||
+      workspace.type ||
+      "Workspace",
+    icon: icons[index % icons.length],
+    color: colors[index % colors.length],
+  };
+};
+
+const toDashboardTask = (
+  issue: Issue,
+  workspace: ForYouWorkspace,
+  type: "assigned" | "worked",
+): DashboardTask => {
+  const workspaceId = workspaceIdOf(workspace);
+  const workspaceKey = workspaceRouteKeyOf(workspace);
+
+  return {
+    id: `${workspaceId}-${issue.id}`,
+    key: issue.key,
+    title: issue.title,
+    type,
+    workspaceKey,
+    meta: `${issue.key} • ${workspace.name} • ${issue.status}`,
+  };
+};
+
 export default function AdminDashboard({ className = "" }: AdminDashboardProps) {
-  const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
-  const [stats, setStats] = useState({ projects: 0, members: 0, workspaces: 0 });
+  const { setWorkspaces } = useWorkspaceStore();
+  const { user } = useAuth();
+  const [workspaces, setDashboardWorkspaces] = useState<ForYouWorkspace[]>([]);
+  const [assignedTasks, setAssignedTasks] = useState<DashboardTask[]>([]);
+  const [workedTasks, setWorkedTasks] = useState<DashboardTask[]>([]);
+  const [userStats, setUserStats] = useState<UserDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("assigned");
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    api
-      .get(apiRoutes.WORKSPACES.BASE)
-      .then((res) => {
+
+    const loadDashboard = async () => {
+      setLoading(true);
+
+      try {
+        const [forYouResponse, userDashboardResponse] = await Promise.all([
+          api.get(apiRoutes.FOR_YOU).catch(() => ({ data: { workspaces: [] } })),
+          api.get(apiRoutes.DASHBOARD.USER).catch(() => ({ data: {} })),
+        ]);
+
         if (cancelled) return;
-        setWorkspaces(res.data);
-        const ws =
-          currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
-        if (!ws) {
-          setLoading(false);
+
+        const forYouPayload = normalizePayload<any>(forYouResponse);
+        const nextWorkspaces: ForYouWorkspace[] = Array.isArray(forYouPayload)
+          ? forYouPayload
+          : forYouPayload?.workspaces ?? [];
+        const nextUserStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
+
+        setDashboardWorkspaces(nextWorkspaces);
+        setWorkspaces(nextWorkspaces as any);
+        setUserStats(nextUserStats);
+
+        if (!user?.id || nextWorkspaces.length === 0) {
+          setAssignedTasks([]);
+          setWorkedTasks([]);
           return;
         }
-        return Promise.all([
-          api
-            .get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`)
-            .catch(() => ({ data: [] })),
-          api
-            .get(apiRoutes.WORKSPACES.BY_ID(ws._id))
-            .catch(() => ({ data: {} })),
-          api
-            .get(`${apiRoutes.WORKSPACES.BASE}?workspaceId=${ws._id}`)
-            .catch(() => ({ data: [] })),
-        ]);
-      })
-      .then((results) => {
-        if (cancelled || !results) return;
-        const [projRes, wsRes, workspaceRes] = results;
-        setStats({
-          projects: Array.isArray(projRes.data) ? projRes.data.length : 0,
-          members: wsRes.data?.members?.length || 0,
-          workspaces: Array.isArray(workspaceRes.data) ? workspaceRes.data.length : 0,
-        });
-      })
-      .catch(() => {})
-      .finally(() => {
+
+        const assignedGroups = await Promise.all(
+          nextWorkspaces.slice(0, 6).map(async (workspace) => {
+            const workspaceId = workspaceIdOf(workspace);
+            if (!workspaceId) return [];
+
+            const tasks = await taskService
+              .getBoardTasks(workspaceId, {
+                assigneeId: user.id,
+                page: 1,
+                limit: 5,
+                sortBy: "updatedAt",
+                sortOrder: "desc",
+              })
+              .catch(() => []);
+
+            return tasks.map((task) => toDashboardTask(task, workspace, "assigned"));
+          }),
+        );
+
+        if (cancelled) return;
+
+        const completedTasks = Array.isArray(nextUserStats?.recentlyCompleted)
+          ? nextUserStats.recentlyCompleted
+              .map((task) => {
+                const workspace =
+                  nextWorkspaces.find((item) => workspaceIdOf(item) === (task as any).workspaceId) ||
+                  nextWorkspaces[0];
+                return workspace ? toDashboardTask(task, workspace, "worked") : null;
+              })
+              .filter(Boolean) as DashboardTask[]
+          : [];
+
+        setAssignedTasks(assignedGroups.flat().slice(0, 10));
+        setWorkedTasks(completedTasks.slice(0, 10));
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    };
+
+    loadDashboard();
+
     return () => {
       cancelled = true;
     };
-  }, [setWorkspaces]);
-
-  const workspaces = [
-    {
-      id: 1,
-      name: "Frontend Team",
-      description: "Quản lý task FE",
-      icon: LayoutDashboard,
-      color: "bg-blue-500",
-    },
-    {
-      id: 2,
-      name: "Backend Team",
-      description: "API & Database",
-      icon: Database,
-      color: "bg-green-500",
-    },
-    {
-      id: 3,
-      name: "Backend Team",
-      description: "API & Database",
-      icon: Database,
-      color: "bg-green-500",
-    },
-    {
-      id: 5,
-      name: "Backend Team",
-      description: "API & Database",
-      icon: Database,
-      color: "bg-green-500",
-    },
-    {
-      id: 9,
-      name: "Backend Team",
-      description: "API & Database",
-      icon: Database,
-      color: "bg-green-500",
-    },
-  ];
+  }, [setWorkspaces, user?.id]);
 
   const tabs = [
     { label: "Được giao cho tôi", key: "assigned" },
@@ -110,39 +181,18 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     { label: "Đã xem", key: "viewed" },
   ];
 
-  const tasks = [
-    {
-      id: "KAN-1",
-      title: "Nhiệm vụ 2",
-      type: "worked",
-      project: "KAN-2",
-      team: "Nhóm phần mềm của tôi",
-    },
-    {
-      id: "KAN-2",
-      title: "Nhiệm vụ 2",
-      type: "assigned",
-      project: "KAN-2",
-      team: "Nhóm phần mềm của tôi",
-    },
-    {
-      id: "KAN-4",
-      title: "Nhiệm vụ 2",
-      type: "starred",
-      project: "KAN-2",
-      team: "Nhóm phần mềm của tôi",
-    },
-    {
-      id: "KAN-9",
-      title: "Nhiệm vụ 2",
-      type: "assigned",
-      project: "KAN-2",
-      team: "Nhóm phần mềm của tôi",
-    },
-  ];
-
-  const displayWorkspaces = workspaces.slice(0, 4);
-  const filteredTasks = tasks.filter((task) => task.type === activeTab);
+  const displayWorkspaces = useMemo(
+    () => workspaces.slice(0, 4).map(toWorkspaceCard),
+    [workspaces],
+  );
+  const filteredTasks =
+    activeTab === "assigned" ? assignedTasks : activeTab === "worked" ? workedTasks : [];
+  const emptyMessage =
+    activeTab === "starred"
+      ? "Backend hiện chưa có API cho danh sách đã đóng dấu sao."
+      : activeTab === "viewed"
+        ? "Backend mới ghi audit khi xem task, chưa có API lấy danh sách đã xem."
+        : "Không có task phù hợp.";
 
   if (loading) return null;
 
@@ -161,46 +211,74 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {displayWorkspaces.map((workspace) => (
-          <Link
-            key={workspace.id}
-            href={`/workspaces/${workspace.id}`}
-            className="workspace-panel group bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 hover:shadow-md hover:border-indigo-200 dark:hover:border-indigo-500 transition-all"
-          >
-            <div className="flex items-start gap-4">
-              <div
-                className={`w-12 h-12 ${workspace.color} rounded-xl flex items-center justify-center flex-shrink-0`}
-              >
-                <workspace.icon className="w-6 h-6 text-white" />
-              </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {displayWorkspaces.length === 0 ? (
+          <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+            Chưa có workspace đề xuất.
+          </div>
+        ) : (
+          displayWorkspaces.map((workspace) => (
+            <Link
+              key={workspace.id}
+              href={`/workspaces/${workspace.routeKey}`}
+              className="workspace-panel group rounded-xl border border-gray-200 bg-white transition-all hover:border-indigo-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-indigo-500"
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${workspace.color}`}
+                >
+                  <workspace.icon className="h-6 w-6 text-white" />
+                </div>
 
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                  {workspace.name}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  {workspace.description}
-                </p>
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold text-gray-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                    {workspace.name}
+                  </h3>
+                  <p className="mt-1 truncate text-sm text-gray-500 dark:text-gray-400">
+                    {workspace.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))
+        )}
       </div>
+
       <div className="mt-10">
         <div className="mb-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dành cho bạn</h2>
         </div>
 
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Task được giao</p>
+            <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
+              {assignedTasks.length}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Đã hoàn thành gần đây</p>
+            <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
+              {workedTasks.length}
+            </p>
+          </div>
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+            <p className="text-xs text-gray-500 dark:text-gray-400">Workspace đề xuất</p>
+            <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
+              {workspaces.length}
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-4 flex flex-wrap gap-2">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-3 py-1.5 text-sm rounded-md transition ${
+              className={`rounded-md px-3 py-1.5 text-sm transition ${
                 activeTab === tab.key
-                  ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 font-medium"
-                  : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  ? "bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
+                  : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
               }`}
             >
               {tab.label}
@@ -211,29 +289,42 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">Tóm lại</div>
 
         <div className="space-y-2">
-          {filteredTasks.map((task) => (
-            <div
-              key={task.id}
-              className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                  <BookOpen className="w-4 h-4 text-green-600" />
-                </div>
-
-                <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{task.title}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {task.type} • {task.project} • {task.team}
-                  </p>
-                </div>
-              </div>
-
-              <button className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded">
-                TÓM LẠI
-              </button>
+          {filteredTasks.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+              {emptyMessage}
             </div>
-          ))}
+          ) : (
+            filteredTasks.map((task) => (
+              <Link
+                key={task.id}
+                href={`/workspaces/${task.workspaceKey}/board/key/${task.key}`}
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 transition hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-green-100 dark:bg-green-900/30">
+                    {task.type === "worked" ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <BookOpen className="h-4 w-4 text-green-600" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-gray-900 dark:text-white">
+                      {task.title}
+                    </p>
+                    <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                      {task.meta}
+                    </p>
+                  </div>
+                </div>
+
+                <span className="ml-3 rounded bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                  Mở
+                </span>
+              </Link>
+            ))
+          )}
         </div>
       </div>
     </div>
