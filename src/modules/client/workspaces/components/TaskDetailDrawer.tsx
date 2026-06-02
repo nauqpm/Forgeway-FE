@@ -16,6 +16,7 @@ import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
+import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
 
@@ -373,6 +374,18 @@ export default function TaskDetailDrawer({
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Priority</div>
                   <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
                     {issue.priority}
+                  </div>
+                </div>
+
+                {/* Labels */}
+                <div className="flex items-start min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0 pt-1.5">Labels</div>
+                  <div className="min-w-0 flex-1">
+                    <TaskLabelsField
+                      workspaceId={workspaceId}
+                      issue={issue}
+                      disabled={issue.isArchived}
+                    />
                   </div>
                 </div>
 

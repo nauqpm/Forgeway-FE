@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import { Check, Loader2, Plus, Search, Tag, X } from "lucide-react";
+import { Check, Loader2, Plus, Search, Tag, Trash2, X } from "lucide-react";
 import type { Issue } from "../../types/issue.type";
 import type { TaskLabel } from "../../types/label.type";
 import { labelService } from "../../services/labelService";
@@ -30,6 +30,8 @@ export default function TaskLabelModal({
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deletingIds, setDeletingIds] = useState<string[]>([]);
+  const [labelToDelete, setLabelToDelete] = useState<TaskLabel | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -37,6 +39,8 @@ export default function TaskLabelModal({
     setSelectedIds(issue.labelIds ?? issue.labels?.map((label) => label.id) ?? []);
     setQuery("");
     setNewLabelName("");
+    setDeletingIds([]);
+    setLabelToDelete(null);
     setLoading(true);
 
     labelService
@@ -87,6 +91,33 @@ export default function TaskLabelModal({
     }
   };
 
+  const confirmDeleteLabel = async () => {
+    if (!labelToDelete) return;
+    const label = labelToDelete;
+    setDeletingIds((current) => [...current, label.id]);
+    try {
+      await labelService.deleteLabel(workspaceId, label.id);
+
+      const nextLabels = labels.filter((item) => item.id !== label.id);
+      const nextSelectedIds = selectedIds.filter((id) => id !== label.id);
+      const nextIssueLabels = (issue.labels ?? []).filter((item) => item.id !== label.id);
+
+      setLabels(nextLabels);
+      setSelectedIds(nextSelectedIds);
+      onSaved({
+        ...issue,
+        labels: nextIssueLabels,
+        labelIds: nextSelectedIds,
+      });
+      setLabelToDelete(null);
+      toast.success("Da xoa label");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Khong xoa duoc label");
+    } finally {
+      setDeletingIds((current) => current.filter((id) => id !== label.id));
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -114,7 +145,7 @@ export default function TaskLabelModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
+        className="relative w-full max-w-lg overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4 border-b border-gray-200 p-5 dark:border-gray-800">
@@ -185,24 +216,83 @@ export default function TaskLabelModal({
               filteredLabels.map((label) => {
                 const active = selectedIds.includes(label.id);
                 return (
-                  <button
+                  <div
                     key={label.id}
-                    type="button"
-                    onClick={() => toggleLabel(label.id)}
                     className={`flex w-full items-center justify-between gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors ${
                       active
                         ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300"
                         : "text-gray-700 hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
                     }`}
                   >
-                    <span className="min-w-0 truncate">{label.name}</span>
-                    {active && <Check className="h-4 w-4 shrink-0" />}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleLabel(label.id)}
+                      className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+                    >
+                      <span className="min-w-0 truncate">{label.name}</span>
+                      {active && <Check className="h-4 w-4 shrink-0" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLabelToDelete(label)}
+                      disabled={deletingIds.includes(label.id)}
+                      className="shrink-0 rounded p-1 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+                      aria-label={`Delete ${label.name}`}
+                      title="Delete label"
+                    >
+                      {deletingIds.includes(label.id) ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 );
               })
             )}
           </div>
         </div>
+
+        {labelToDelete && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-900/50 p-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm overflow-hidden rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
+              <div className="border-b border-gray-200 p-5 dark:border-gray-800">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-300">
+                    <Trash2 className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="text-base font-semibold text-gray-900 dark:text-white">
+                      Delete label
+                    </h4>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      Delete <span className="font-semibold text-gray-700 dark:text-gray-200">"{labelToDelete.name}"</span>? This will remove it from all tasks.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 p-4">
+                <button
+                  type="button"
+                  onClick={() => setLabelToDelete(null)}
+                  disabled={deletingIds.includes(labelToDelete.id)}
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteLabel}
+                  disabled={deletingIds.includes(labelToDelete.id)}
+                  className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {deletingIds.includes(labelToDelete.id) && <Loader2 className="h-4 w-4 animate-spin" />}
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex justify-end gap-2 border-t border-gray-200 p-4 dark:border-gray-800">
           <button

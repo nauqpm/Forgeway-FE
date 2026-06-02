@@ -24,6 +24,7 @@ import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
+import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
 
@@ -469,6 +470,20 @@ export default function TaskDetailModal({
                       <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
                         {storyPointsLabel}
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Labels */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                      Labels
+                    </div>
+                    <div className="col-span-2">
+                      <TaskLabelsField
+                        workspaceId={workspaceId}
+                        issue={issue}
+                        disabled={issue.isArchived}
+                      />
                     </div>
                   </div>
 
