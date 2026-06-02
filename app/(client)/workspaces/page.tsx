@@ -46,11 +46,11 @@ export default function WorkspacesPage() {
     <div className="app-page-wide">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Workspaces (Không gian làm việc)</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">Hiển thị {workspaces.length} Workspaces trong {currentWorkspace.name}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">Workspaces</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Showing {workspaces.length} Workspaces in {currentWorkspace.name}</p>
         </div>
         <Link href="/workspaces/create" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-all shadow-sm">
-          <Plus className="w-4 h-4" /> Tạo Workspace Mới
+          <Plus className="w-4 h-4" /> Create New Workspace
         </Link>
       </div>
 
@@ -59,10 +59,10 @@ export default function WorkspacesPage() {
           <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
             <BookOpen className="w-8 h-8 text-gray-400" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Chưa có Workspace nào</h3>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 max-w-sm text-center">Tạo một Workspace mới để bắt đầu tổ chức công việc, lưu trữ tài liệu và quản lý dự án cho team của bạn.</p>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No workspaces yet</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 max-w-sm text-center">Create a new workspace to start organizing work, storing documents, and managing projects for your team.</p>
           <Link href="/workspaces/create" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 font-medium text-sm shadow-sm">
-            <Plus className="w-4 h-4" /> Bắt đầu tạo Workspace
+            <Plus className="w-4 h-4" /> Create your first workspace
           </Link>
         </div>
       ) : (

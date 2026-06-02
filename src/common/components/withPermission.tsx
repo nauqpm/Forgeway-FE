@@ -107,7 +107,7 @@ export const withPermission = (
 
     // Show loading while checking
     if (isLoading || isLoadingPermissions) {
-      return <div>Đang kiểm tra quyền truy cập...</div>;
+      return <div>Checking access permissions...</div>;
     }
 
     // Render component if access is granted

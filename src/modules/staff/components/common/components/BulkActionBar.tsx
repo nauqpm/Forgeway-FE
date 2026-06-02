@@ -31,7 +31,7 @@ export default function BulkActionBar({ selectedCount, onClear, onChangeStatus, 
           <div className="bg-indigo-500 w-6 h-6 rounded flex items-center justify-center text-xs font-bold shadow-inner">
             {selectedCount}
           </div>
-          <span className="text-sm font-medium text-gray-300">đã chọn</span>
+          <span className="text-sm font-medium text-gray-300">selected</span>
         </div>
 
         <div className="flex items-center gap-2 relative">
@@ -40,7 +40,7 @@ export default function BulkActionBar({ selectedCount, onClear, onChangeStatus, 
             className="flex items-center gap-2 hover:bg-gray-800 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
           >
             <Edit2 className="w-4 h-4 text-blue-400" />
-            Đổi trạng thái
+            Change status
             <ChevronUp className="w-3 h-3 text-gray-500 ml-1" />
           </button>
 
@@ -67,7 +67,7 @@ export default function BulkActionBar({ selectedCount, onClear, onChangeStatus, 
               className="flex items-center gap-2 hover:bg-gray-800 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors text-gray-300 hover:text-white"
             >
               <Edit2 className="w-4 h-4" />
-              Sửa trường
+              Edit fields
             </button>
           )}
 
@@ -76,14 +76,14 @@ export default function BulkActionBar({ selectedCount, onClear, onChangeStatus, 
             className="flex items-center gap-2 hover:bg-red-900/40 text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
           >
             <Trash2 className="w-4 h-4" />
-            Xóa
+            Delete
           </button>
         </div>
 
         <button 
           onClick={onClear}
           className="ml-2 p-1.5 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors"
-          title="Bỏ chọn (ESC)"
+          title="Deselect (Esc)"
         >
           <X className="w-5 h-5" />
         </button>

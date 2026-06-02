@@ -197,7 +197,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
 
   const assigneeGroups: FilterGroup[] = [
     { name: "", options: [{ id: "current_user", label: "Current User" }, { id: "unassigned", label: "Unassigned" }] },
-    { name: "Users", options: [{ id: "user_quan", label: "Quân Phạm" }, { id: "user_minh", label: "Minh" }, { id: "user_tuan", label: "Tuấn" }, { id: "user_ha", label: "Hà" }] },
+    { name: "Users", options: [{ id: "user_quan", label: "Quan Pham" }, { id: "user_minh", label: "Minh" }, { id: "user_tuan", label: "Tuan" }, { id: "user_ha", label: "Ha" }] },
     { name: "Suggested Groups", options: [{ id: "group_jira", label: "jira-users-quanpham0405" }, { id: "group_admin", label: "org-admins" }] }
   ];
 
@@ -222,12 +222,12 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
 
   // Mock Issues (Normally fetched from API based on filters)
   const allMockIssues = [
-    { id: "1", key: "AL-101", title: "Cập nhật tài liệu API cho tính năng mới", status: "In Progress", priority: "High", type: "Task", workspace: "Backend Team", assignee: "Quân Phạm", assigneeId: "user_quan", reporter: "Minh", updatedAt: "2 giờ trước" },
-    { id: "2", key: "AL-102", title: "Sửa lỗi UI hiển thị sai trên mobile", status: "To Do", priority: "Medium", type: "Bug", workspace: "Frontend Team", assignee: "Tuấn", assigneeId: "user_tuan", reporter: "Quân Phạm", updatedAt: "Hôm qua" },
-    { id: "3", key: "AL-105", title: "Thiết kế luồng Onboarding cho user mới", status: "Done", priority: "High", type: "Story", workspace: "Design Team", assignee: "Hà", assigneeId: "user_ha", reporter: "Minh", updatedAt: "3 ngày trước" },
-    { id: "4", key: "AL-108", title: "Review Pull Request #42", status: "To Do", priority: "High", type: "Task", workspace: "Backend Team", assignee: "Quân Phạm", assigneeId: "user_quan", reporter: "Tuấn", updatedAt: "5 phút trước" },
-    { id: "5", key: "AL-110", title: "Lên kế hoạch Sprint tiếp theo", status: "In Progress", priority: "Medium", type: "Epic", workspace: "Product Team", assignee: "Minh", assigneeId: "user_minh", reporter: "Minh", updatedAt: "1 giờ trước" },
-    { id: "6", key: "QUAN-1", title: "Làm việc", status: "To Do", priority: "Medium", type: "Task", workspace: "quan", assignee: "Unassigned", assigneeId: "unassigned", reporter: "Quân Phạm", updatedAt: "1 ngày trước" },
+    { id: "1", key: "AL-101", title: "Update API documentation for the new feature", status: "In Progress", priority: "High", type: "Task", workspace: "Backend Team", assignee: "Quan Pham", assigneeId: "user_quan", reporter: "Minh", updatedAt: "2 hours ago" },
+    { id: "2", key: "AL-102", title: "Fix incorrect UI display on mobile", status: "To Do", priority: "Medium", type: "Bug", workspace: "Frontend Team", assignee: "Tuan", assigneeId: "user_tuan", reporter: "Quan Pham", updatedAt: "Yesterday" },
+    { id: "3", key: "AL-105", title: "Design the onboarding flow for new users", status: "Done", priority: "High", type: "Story", workspace: "Design Team", assignee: "Ha", assigneeId: "user_ha", reporter: "Minh", updatedAt: "3 days ago" },
+    { id: "4", key: "AL-108", title: "Review pull request #42", status: "To Do", priority: "High", type: "Task", workspace: "Backend Team", assignee: "Quan Pham", assigneeId: "user_quan", reporter: "Tuan", updatedAt: "5 minutes ago" },
+    { id: "5", key: "AL-110", title: "Plan the next sprint", status: "In Progress", priority: "Medium", type: "Epic", workspace: "Product Team", assignee: "Minh", assigneeId: "user_minh", reporter: "Minh", updatedAt: "1 hours ago" },
+    { id: "6", key: "QUAN-1", title: "Work", status: "To Do", priority: "Medium", type: "Task", workspace: "quan", assignee: "Unassigned", assigneeId: "unassigned", reporter: "Quan Pham", updatedAt: "1 days ago" },
   ];
 
   // Client-side filtering simulation (Backend will do this later)

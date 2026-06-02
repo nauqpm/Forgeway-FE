@@ -45,14 +45,14 @@ export default function KanbanBoard({ className = "" }: KanbanBoardProps) {
       id: "todo",
       title: "To Do",
       tasks: [
-        { id: "1", title: "Thiết kế UI Dashboard", priority: "high" },
-        { id: "2", title: "Tạo API login", priority: "medium" },
+        { id: "1", title: "Design dashboard UI", priority: "high" },
+        { id: "2", title: "Create login API", priority: "medium" },
       ],
     },
     {
       id: "inprogress",
       title: "In Progress",
-      tasks: [{ id: "3", title: "Làm Sidebar", priority: "low" }],
+      tasks: [{ id: "3", title: "Build sidebar", priority: "low" }],
     },
     {
       id: "done",

@@ -92,12 +92,12 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.startDate || !formData.endDate) {
-      toast.error("Vui lòng nhập đầy đủ ngày bắt đầu và kết thúc");
+      toast.error("Please enter both the start and end dates");
       return;
     }
 
     if (new Date(formData.endDate) <= new Date(formData.startDate)) {
-      toast.error("Ngày kết thúc phải sau ngày bắt đầu");
+      toast.error("The end date must be after the start date");
       return;
     }
 
@@ -115,7 +115,7 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
       <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
           <h3 className="font-bold text-gray-900 dark:text-white text-lg">
-            Bắt đầu Sprint: {sprint.name}
+            Start Sprint: {sprint.name}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
             <X className="w-5 h-5" />
@@ -124,11 +124,11 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              Vui lòng xác nhận thời gian chạy cho sprint này trước khi kích hoạt.
+              Confirm the sprint schedule before starting it.
             </p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Thời lượng (Duration)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Duration</label>
             <select
               value={formData.duration}
               onChange={handleDurationChange}
@@ -143,7 +143,7 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Ngày bắt đầu <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Start date <span className="text-red-500">*</span></label>
               <input
                 type="date"
                 required
@@ -153,7 +153,7 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Ngày kết thúc <span className="text-red-500">*</span></label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">End date <span className="text-red-500">*</span></label>
               <input
                 type="date"
                 required
@@ -165,10 +165,10 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
           </div>
           <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
             <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              Hủy
+              Cancel
             </button>
             <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
-              Bắt đầu Sprint
+              Start sprint
             </button>
           </div>
         </form>

@@ -75,7 +75,7 @@ export default function TiptapEditor() {
         openOnClick: false,
       }),
       Placeholder.configure({
-        placeholder: "Nhập nội dung vào đây...",
+        placeholder: "Enter content here...",
       }),
     ],
     content: document?.content || "",

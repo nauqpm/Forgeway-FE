@@ -30,9 +30,9 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "2",
-    actor: { name: "Nguyễn Văn A", avatar: "N" },
+    actor: { name: "Alex Nguyen", avatar: "N" },
     actionText: "changed status to Done",
-    target: { id: "102", key: "TEAMD-102", title: "Fix lỗi hiển thị sai font chữ trên Safari", type: "Bug" },
+    target: { id: "102", key: "TEAMD-102", title: "Fix incorrect font rendering on Safari", type: "Bug" },
     createdAt: new Date().toISOString(), // Today
     isRead: false,
     category: "WATCHING",
@@ -40,9 +40,9 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "3",
-    actor: { name: "Trần Thị B", avatar: "T" },
+    actor: { name: "Taylor Tran", avatar: "T" },
     actionText: "assigned this issue to you",
-    target: { id: "105", key: "TEAMD-105", title: "Nghiên cứu kiến trúc Micro-frontend", type: "Story" },
+    target: { id: "105", key: "TEAMD-105", title: "Research micro-frontend architecture", type: "Story" },
     createdAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
     isRead: true,
     category: "DIRECT",
@@ -50,9 +50,9 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   },
   {
     id: "4",
-    actor: { name: "Lê Văn C", avatar: "L" },
+    actor: { name: "Chris Le", avatar: "L" },
     actionText: "commented on",
-    target: { id: "101", key: "TEAMD-101", title: "Thiết kế lại luồng đăng nhập", type: "Task" },
+    target: { id: "101", key: "TEAMD-101", title: "Redesign the login flow", type: "Task" },
     createdAt: new Date(Date.now() - 3 * 86400000).toISOString(), // Older
     isRead: false,
     category: "WATCHING",

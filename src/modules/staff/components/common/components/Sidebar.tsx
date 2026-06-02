@@ -35,35 +35,35 @@ interface SidebarProps {
 }
 
 const mainNav = [
-  { icon: LayoutDashboard, label: "Bảng điều khiển", href: "/dashboard" },
-  { icon: Clock7, label: "Gần đây", href: "/recent" },
-  { icon: Star, label: "Đã đánh dấu", href: "/starred" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: Clock7, label: "Recent", href: "/recent" },
+  { icon: Star, label: "Starred", href: "/starred" },
   {
     icon: BookOpen,
-    label: "Không gian",
+    label: "Workspaces",
     href: "/spaces",
     badge: null,
   },
-  { icon: ListFilter, label: "Bộ lọc", href: "/filter" },
-  { icon: BarChart3, label: "Báo cáo", href: "/reports", badge: "sắp có" },
+  { icon: ListFilter, label: "Filters", href: "/filter" },
+  { icon: BarChart3, label: "Reports", href: "/reports", badge: "soon" },
 ];
 
 const adminNav = [
-  { icon: UserCog, label: "Quản lý Người dùng", href: "/dashboard/users" },
-  { icon: Building2, label: "Cài đặt Workspace", href: "/dashboard/workspace" },
-  { icon: Zap, label: "Quy trình", href: "/dashboard/workflows" },
-  { icon: Shield, label: "Phân quyền", href: "/dashboard/permissions" },
+  { icon: UserCog, label: "User Management", href: "/dashboard/users" },
+  { icon: Building2, label: "Workspace Settings", href: "/dashboard/workspace" },
+  { icon: Zap, label: "Workflows", href: "/dashboard/workflows" },
+  { icon: Shield, label: "Permissions", href: "/dashboard/permissions" },
 ];
 
 const optionFilter = [
-  { title: "Công việc của tôi", slug: "my-tasks" },
-  { title: "Do tôi tạo", slug: "created-by-me" },
-  { title: "Chưa hoàn thành của tôi", slug: "my-incomplete" },
-  { title: "Chưa hoàn thành", slug: "incomplete" },
-  { title: "Được tạo gần đây", slug: "recently-created" },
-  { title: "Đã xem gần đây", slug: "recently-viewed" },
-  { title: "Đã cập nhật gần đây", slug: "recently-updated" },
-  { title: "Đã xong gần đây", slug: "recently-completed" },
+  { title: "My tasks", slug: "my-tasks" },
+  { title: "Created by me", slug: "created-by-me" },
+  { title: "My incomplete items", slug: "my-incomplete" },
+  { title: "Incomplete", slug: "incomplete" },
+  { title: "Recently created", slug: "recently-created" },
+  { title: "Recently viewed", slug: "recently-viewed" },
+  { title: "Recently updated", slug: "recently-updated" },
+  { title: "Recently completed", slug: "recently-completed" },
 ];
 
 const NavItem = ({
@@ -192,46 +192,46 @@ const PopoverNavItem = ({
                 </div>
                 <div className="overflow-y-auto flex-1 p-2 space-y-4">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">Hôm nay</h4>
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">Today</h4>
                     <div className="space-y-0.5">
                       <Link href="/spaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 group-hover:border-slate-300 dark:group-hover:border-gray-600"><Columns className="w-4 h-4" /></div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">QUAN board</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">6 giây trước</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">6 seconds ago</p>
                         </div>
                       </Link>
                       <Link href="/spaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">Q</div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">quan</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">7 giây trước</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">7 seconds ago</p>
                         </div>
                       </Link>
                       <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded flex items-center justify-center text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300"><ListFilter className="w-4 h-4" /></div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Reported by me</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">14 giây trước</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">14 seconds ago</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">Hơn 1 tháng trước</h4>
+                    <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">More than 1 month ago</h4>
                     <div className="space-y-0.5">
                       <Link href="/spaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 group-hover:border-slate-300 dark:group-hover:border-gray-600"><Columns className="w-4 h-4" /></div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">SCRUM board</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">5 ngày trước</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">5 days ago</p>
                         </div>
                       </Link>
                       <Link href="/spaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
                         <div>
                           <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">My Software Team</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">5 ngày trước</p>
+                          <p className="text-[11px] text-slate-500 dark:text-gray-500">5 days ago</p>
                         </div>
                       </Link>
                     </div>
@@ -239,7 +239,7 @@ const PopoverNavItem = ({
                 </div>
                 <div className="p-2 border-t border-slate-100 dark:border-gray-800">
                   <button className="w-full text-left p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                    Xem tất cả mục gần đây
+                    View all recent items
                   </button>
                 </div>
               </div>
@@ -255,12 +255,12 @@ const PopoverNavItem = ({
                       <Plus className="w-3.5 h-3.5" />
                     </div>
                   </div>
-                  <h4 className="text-[15px] font-bold text-slate-900 dark:text-gray-100 mb-2 mt-4">Bạn chưa đánh dấu mục nào.</h4>
-                  <p className="text-[13px] text-slate-500 dark:text-gray-400 leading-relaxed">Đánh dấu mục quan trọng bằng biểu tượng sao để truy cập nhanh. Bạn sẽ thấy chúng hiển thị ở đây.</p>
+                  <h4 className="text-[15px] font-bold text-slate-900 dark:text-gray-100 mb-2 mt-4">You have not starred any items.</h4>
+                  <p className="text-[13px] text-slate-500 dark:text-gray-400 leading-relaxed">Star important items for quick access. They will appear here.</p>
                 </div>
                 <div className="p-2 border-t border-slate-100 dark:border-gray-800">
                   <button className="w-full text-left p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                    Xem tất cả mục đã đánh dấu
+                    View all starred items
                   </button>
                 </div>
               </div>
@@ -384,7 +384,7 @@ export default function Sidebar({
                 className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-2 px-3 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
               >
                 <Plus className="w-4 h-4" />
-                Tạo không gian mới
+                Create new workspace
               </Link>
             </div>
           )}
@@ -402,12 +402,12 @@ export default function Sidebar({
           {/* Main Navigation */}
           <div className="px-2 space-y-0.5">
             <div className="px-2 space-y-0.5">
-              {/* Bảng điều khiển */}
+              {/* Dashboard */}
               <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
               <PopoverNavItem item={mainNav[1]} type="recent" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
               <PopoverNavItem item={mainNav[2]} type="starred" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
 
-              {/* Không gian làm việc (có subnav) */}
+              {/* Workspaces with subnav */}
               <div>
                 <button
                   onClick={() => setSpaceOpen(!spaceOpen)}
@@ -418,7 +418,7 @@ export default function Sidebar({
                   {!collapsed && (
                     <>
                       <span className="text-sm font-medium flex-1 text-left">
-                        Không gian
+                        Workspaces
                       </span>
                       {spaceOpen ? (
                         <ChevronDown className="w-4 h-4" />
@@ -457,7 +457,7 @@ export default function Sidebar({
                   </div>
                 )}
               </div>
-              {/* Bộ lọc */}
+              {/* Filters */}
               <div>
                 <button
                   onClick={() => setFilterOpen(!filterOpen)}
@@ -468,7 +468,7 @@ export default function Sidebar({
                   {!collapsed && (
                     <>
                       <span className="text-sm font-medium flex-1 text-left">
-                        Bộ lọc
+                        Filters
                       </span>
                       {filterOpen ? (
                         <ChevronDown className="w-4 h-4" />
@@ -499,7 +499,7 @@ export default function Sidebar({
                 )}
               </div>
 
-              {/* Báo cáo */}
+              {/* Reports */}
               <NavItem item={mainNav[5]} showBadge pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
             </div>
           </div>
@@ -518,7 +518,7 @@ export default function Sidebar({
                     ) : (
                       <ChevronRight className="w-3 h-3" />
                     )}
-                    <span>Quản trị</span>
+                    <span>Admin</span>
                   </>
                 )}
                 {collapsed && <span className="w-full text-center">Admin</span>}
@@ -553,7 +553,7 @@ export default function Sidebar({
           {!collapsed && currentWorkspace && (
             <div className="px-3 py-2 bg-slate-50 dark:bg-gray-800 rounded-lg mb-2">
               <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">
-                Không gian làm việc
+                Workspaces
               </p>
               <p className="text-sm font-medium text-slate-800 dark:text-gray-200 truncate">
                 {currentWorkspace.name}
@@ -566,7 +566,7 @@ export default function Sidebar({
             className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${pathname === "/settings" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" : "text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 hover:text-slate-800 dark:hover:text-gray-100"}`}
           >
             <Settings className="w-[18px] h-[18px] flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">Cài đặt</span>}
+            {!collapsed && <span className="text-sm font-medium">Settings</span>}
           </Link>
         </div>
 

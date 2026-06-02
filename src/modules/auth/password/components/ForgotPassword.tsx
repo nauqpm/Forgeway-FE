@@ -16,7 +16,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     try {
       await requestPasswordReset(email);
-      toast.success('Mã OTP đã được gửi đến email của bạn');
+      toast.success('OTP has been sent to your email');
       router.push(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch {
       // Error handled by hook
@@ -49,9 +49,9 @@ const ForgotPassword = () => {
                 <Zap className="w-7 h-7 text-white" />
               </div>
             </Link>
-            <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Quên mật khẩu</h1>
+            <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Forgot password</h1>
             <p className="text-gray-600 text-sm mt-1.5 font-semibold">
-              Nhập email để nhận mã OTP đặt lại mật khẩu
+              Enter your email to receive a password reset OTP
             </p>
           </div>
 
@@ -84,17 +84,17 @@ const ForgotPassword = () => {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang xử lý...
+                  Processing...
                 </>
               ) : (
-                'Gửi mã OTP'
+                'Send OTP'
               )}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6 font-medium">
             <Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
-              Quay lại đăng nhập
+              Back to sign in
             </Link>
           </p>
         </div>

@@ -21,13 +21,13 @@ const LocationList = ({
   });
 
   if (loading) {
-    return <div className="p-3 text-center text-gray-500">Đang tải...</div>;
+    return <div className="p-3 text-center text-gray-500">Loading...</div>;
   }
 
   if (filteredItems.length === 0) {
     return (
       <div className="p-3 text-center text-gray-500">
-        Không tìm thấy kết quả
+        No results
       </div>
     );
   }

@@ -67,7 +67,7 @@ export default function SprintsPage() {
                     <div className="flex items-center gap-3 mt-2 text-xs text-gray-400 dark:text-gray-500">
                       <span>{sprint.projectId?.name}</span><span>·</span>
                       <Calendar className="w-3 h-3" />
-                      <span>{new Date(sprint.startDate).toLocaleDateString("vi-VN")} - {new Date(sprint.endDate).toLocaleDateString("vi-VN")}</span>
+                      <span>{new Date(sprint.startDate).toLocaleDateString("en-US")} - {new Date(sprint.endDate).toLocaleDateString("en-US")}</span>
                     </div>
                   </div>
                 </div>

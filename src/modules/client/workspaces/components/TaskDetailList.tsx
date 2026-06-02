@@ -37,12 +37,12 @@ const getUserDisplayName = (user: any, fallback?: string | null) => {
 
 const formatDate = (value?: string | null) => {
   if (!value) return "None";
-  return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium" }).format(new Date(value));
+  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(value));
 };
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "Unknown";
-  return new Intl.DateTimeFormat("vi-VN", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));

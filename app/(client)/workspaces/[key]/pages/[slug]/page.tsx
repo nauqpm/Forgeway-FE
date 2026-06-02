@@ -48,7 +48,7 @@ export default function PageViewPage() {
 
         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
           {page.authorId && <div className="flex items-center gap-1.5"><div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">{page.authorId.fullName?.charAt(0) || "?"}</div><span>{page.authorId.fullName || "Unknown"}</span></div>}
-          <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{new Date(page.updatedAt).toLocaleDateString("vi-VN")}</span></div>
+          <div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{new Date(page.updatedAt).toLocaleDateString("en-US")}</span></div>
           <div className="flex items-center gap-1.5"><Eye className="w-4 h-4" /><span>{page.viewCount} views</span></div>
           <span>v{page.version}</span>
         </div>

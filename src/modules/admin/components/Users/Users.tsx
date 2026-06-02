@@ -39,10 +39,10 @@ const roleColors: Record<string, string> = {
 };
 
 const roleLabels: Record<string, string> = {
-  owner: "Chủ sở hữu",
-  admin: "Quản trị viên",
-  member: "Thành viên",
-  viewer: "Người xem",
+  owner: "Owner",
+  admin: "Administrator",
+  member: "Member",
+  viewer: "Viewer",
 };
 
 export default function AdminUsers({ className = "" }: AdminUsersProps) {
@@ -114,7 +114,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
 
   const handleRemoveMember = async (memberUserId: string) => {
     if (!currentWorkspace?._id) return;
-    if (!confirm("Xóa thành viên này khỏi workspace?")) return;
+    if (!confirm("Remove this member from the workspace?")) return;
     try {
       await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(currentWorkspace._id, memberUserId));
       setMembers(prev => prev.filter(m => m.userId !== memberUserId));
@@ -138,11 +138,11 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
     <div className={`app-page-wide ${className}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Quản lý Người dùng</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Quản lý thành viên và quyền truy cập</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Manage members and access permissions</p>
         </div>
         <button onClick={() => setShowInvite(true)} disabled={!currentWorkspace} className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors disabled:opacity-50">
-          <Plus className="w-4 h-4" /> Mời Thành viên
+          <Plus className="w-4 h-4" /> Invite Member
         </button>
       </div>
 
@@ -150,12 +150,12 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-[var(--app-page-pad)]">
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-[min(100%,var(--app-popover-w))]">
             <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Mời Thành viên</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Invite Member</h3>
               <button onClick={() => setShowInvite(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><MoreHorizontal className="w-5 h-5 text-gray-400" /></button>
             </div>
             <form onSubmit={handleInvite} className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Địa chỉ Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required
@@ -164,22 +164,22 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Vai trò</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role</label>
                 <div className="relative">
                   <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none">
-                    <option value="viewer">Người xem - Chỉ có thể xem</option>
-                    <option value="member">Thành viên - Có thể tạo và chỉnh sửa</option>
-                    <option value="admin">Quản trị viên - Toàn quyền truy cập</option>
+                    <option value="viewer">Viewer - View only</option>
+                    <option value="member">Member - Can create and edit</option>
+                    <option value="admin">Administrator - Full access</option>
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                 </div>
               </div>
               <div className="flex items-center gap-3 pt-2">
-                <button type="button" onClick={() => setShowInvite(false)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Hủy</button>
+                <button type="button" onClick={() => setShowInvite(false)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
                 <button type="submit" disabled={inviting} className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50">
-                  {inviting ? "Đang gửi..." : "Gửi lời mời"}
+                  {inviting ? "Sending..." : "Send invitation"}
                 </button>
               </div>
             </form>
@@ -189,10 +189,10 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
 
       <div className="flex w-full flex-wrap items-center gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg sm:w-fit">
         <button onClick={() => setTab("workspace")} className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "workspace" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}>
-          Thành viên Workspace ({members.length})
+          Member Workspace ({members.length})
         </button>
         <button onClick={() => setTab("all")} className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "all" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}>
-          Tất cả Người dùng ({users.length})
+          All Users ({users.length})
         </button>
       </div>
 
@@ -200,7 +200,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
         <div className="p-4 border-b border-gray-100 dark:border-gray-800">
           <div className="relative max-w-[min(100%,28rem)]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Tìm kiếm ${tab === "workspace" ? "thành viên" : "người dùng"}...`}
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${tab === "workspace" ? "members" : "users"}...`}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
           </div>
         </div>
@@ -209,16 +209,16 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
         <table className="w-full app-table-min">
           <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
             <tr>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Thành viên</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Vai trò</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Trạng thái</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Ngày tham gia</th>
-              <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Hành động</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Member</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Role</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Joined date</th>
+              <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
             {displayItems.length === 0 ? (
-              <tr><td colSpan={5} className="px-5 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">Không tìm thấy {tab === "workspace" ? "thành viên" : "người dùng"} nào</td></tr>
+              <tr><td colSpan={5} className="px-5 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">No {tab === "workspace" ? "members" : "users"} found</td></tr>
             ) : displayItems.map((item: any) => (
               <tr key={item._id || item.email} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
                 <td className="px-5 py-3.5">
@@ -257,14 +257,14 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                 </td>
                 <td className="px-5 py-3.5">
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${item.status === "active" ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}>
-                    {item.status === "active" ? "Hoạt động" : "Không hoạt động"}
+                    {item.status === "active" ? "Active" : "Inactive"}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-sm text-gray-500 dark:text-gray-400">{new Date(item.createdAt || item.joinedAt).toLocaleDateString("vi-VN", { day: "numeric", month: "short", year: "numeric" })}</td>
+                <td className="px-5 py-3.5 text-sm text-gray-500 dark:text-gray-400">{new Date(item.createdAt || item.joinedAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</td>
                 <td className="px-5 py-3.5 text-right">
                   {tab === "workspace" && item.role !== "owner" && (
                     <button onClick={() => handleRemoveMember(item.userId)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Xóa khỏi workspace">
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Remove from workspace">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}

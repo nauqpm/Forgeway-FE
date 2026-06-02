@@ -52,7 +52,7 @@ export const useIssueHandlers = ({
   ) => {
     const existingIssue = issues.find((issue) => issue.id === id);
     if (!existingIssue) {
-      toast.error("Không tìm thấy task");
+      toast.error("No task");
       return;
     }
     setIssues(

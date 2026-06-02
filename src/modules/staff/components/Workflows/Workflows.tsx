@@ -59,12 +59,12 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
 
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Cấu hình Quy trình</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Workflow Configuration</h1>
       {workflows.length === 0 ? (
         <div className="flex flex-col items-center py-16 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
           <BarChart3 className="w-12 h-12 text-gray-300 dark:text-gray-600 mb-3" />
-          <p className="text-gray-500 dark:text-gray-400 font-medium">Chưa có quy trình nào được cấu hình</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm">Quy trình sẽ được tạo khi bạn tạo một dự án</p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">No workflows have been configured</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Workflows will be created when you create a project</p>
         </div>
       ) : (
         <div className="space-y-4">

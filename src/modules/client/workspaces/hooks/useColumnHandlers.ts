@@ -56,13 +56,13 @@ export const useColumnHandlers = ({
       if (context?.previousColumns) {
         setColumns(context.previousColumns);
       }
-      toast.error("Lỗi khi tạo cột: " + err.message);
+      toast.error("Error creating column: " + err.message);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     },
     onSuccess: () => {
-      toast.success("Đã thêm cột mới");
+      toast.success("Column added");
     }
   });
 
@@ -81,13 +81,13 @@ export const useColumnHandlers = ({
       if (context?.previousColumns) {
         setColumns(context.previousColumns);
       }
-      toast.error("Lỗi khi đổi tên cột: " + err.message);
+      toast.error("Error renaming column: " + err.message);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     },
     onSuccess: () => {
-      toast.success("Đã đổi tên cột");
+      toast.success("Column renamed");
     }
   });
 
@@ -106,13 +106,13 @@ export const useColumnHandlers = ({
       if (context?.previousColumns) {
         setColumns(context.previousColumns);
       }
-      toast.error("Lỗi khi xóa cột: " + err.message);
+      toast.error("Error deleting column: " + err.message);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     },
     onSuccess: () => {
-      toast.success("Đã xóa cột");
+      toast.success("Column deleted");
     }
   });
 
@@ -131,7 +131,7 @@ export const useColumnHandlers = ({
       if (context?.previousColumns) {
         setColumns(context.previousColumns);
       }
-      toast.error("Lỗi khi di chuyển cột: " + err.message);
+      toast.error("Error moving column: " + err.message);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });

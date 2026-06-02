@@ -37,16 +37,16 @@ const SessionList: React.FC = () => {
     finally { setRevoking(null); }
   };
 
-  if (loading) return <div className="flex items-center gap-2 text-gray-500 py-4"><Loader2 className="w-4 h-4 animate-spin" />Đang tải...</div>;
+  if (loading) return <div className="flex items-center gap-2 text-gray-500 py-4"><Loader2 className="w-4 h-4 animate-spin" />Loading...</div>;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Phiên đăng nhập</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Login sessions</h3>
         {sessions.filter((s) => !s.isCurrent).length > 0 && (
           <button onClick={handleRevokeAll} disabled={revoking === 'all'}
             className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1 disabled:opacity-50">
-            <X className="w-3.5 h-3.5" />Đăng xuất tất cả
+            <X className="w-3.5 h-3.5" />Sign out all
           </button>
         )}
       </div>
@@ -58,7 +58,7 @@ const SessionList: React.FC = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {s.browser || s.deviceInfo}{s.isCurrent && <span className="ml-2 text-xs text-indigo-600 font-semibold">(Hiện tại)</span>}
+                {s.browser || s.deviceInfo}{s.isCurrent && <span className="ml-2 text-xs text-indigo-600 font-semibold">(Current)</span>}
               </p>
               <p className="text-xs text-gray-500">{s.ipAddress} · {formatRelative(s.lastActiveAt)}</p>
             </div>

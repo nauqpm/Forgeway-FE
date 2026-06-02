@@ -127,7 +127,7 @@ export default function PageTreeSidebar({ initialData, workspaceId }: { initialD
   return (
     <div className="w-[var(--workspace-list-sidebar-w)] border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col rounded-l-2xl overflow-hidden shrink-0">
       <div className="p-[var(--workspace-surface-pad)] border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <h3 className="font-semibold text-gray-700 dark:text-gray-300">Tài liệu</h3>
+        <h3 className="font-semibold text-gray-700 dark:text-gray-300">Docs</h3>
         <Link href={`/workspaces/${workspaceId}/pages/create`} className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-600 dark:text-gray-400 transition-colors bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-sm">
           <Plus className="w-4 h-4" />
         </Link>

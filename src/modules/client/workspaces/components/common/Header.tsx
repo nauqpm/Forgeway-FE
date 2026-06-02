@@ -88,7 +88,7 @@ const Header = ({
             onClick={() => setIsInviteModalOpen(true)}
             className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors shadow-sm"
           >
-            Mời thành viên
+            Invite members
           </button>
         )}
         {canCreateTask && (
@@ -96,7 +96,7 @@ const Header = ({
             onClick={() => setShowCreateIssue(true)}
             className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm"
           >
-            <Plus className="w-4 h-4" /> Tạo Issue
+            <Plus className="w-4 h-4" /> Create Issue
           </button>
         )}
       </div>

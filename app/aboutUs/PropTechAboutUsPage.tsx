@@ -30,12 +30,12 @@ import {
   Stack: React + TypeScript + TailwindCSS + Framer Motion
 
   VIDEO BACKGROUND STRATEGY:
-  - Mỗi BlueprintPanel nhận prop `videoSrc?: string`
-  - Video được đặt absolute, object-cover, muted + loop + playsInline (bắt buộc cho mobile autoplay)
-  - IntersectionObserver theo dõi threshold 0.10 → play khi >=10% visible, pause khi ra khỏi viewport
-  - Overlay gradient navy phủ lên để giữ readability của text
-  - prefers-reduced-motion: video bị pause hoàn toàn, gradient vẫn hiện
-  - Fallback: nếu không có videoSrc thì render bình thường như cũ
+  - Each BlueprintPanel accepts the `videoSrc?: string` prop
+  - Video is positioned absolute with object-cover, muted, loop, and playsInline for mobile autoplay
+  - IntersectionObserver watches threshold 0.10, plays when at least 10% visible, and pauses outside the viewport
+  - A navy gradient overlay preserves text readability
+  - prefers-reduced-motion pauses video completely while keeping the gradient visible
+  - Fallback: render normally when videoSrc is not provided
 */
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
@@ -62,11 +62,11 @@ interface BlueprintPanelProps {
   children: React.ReactNode;
   variant?: "dark" | "light";
   className?: string;
-  /** URL của file video (mp4 khuyến nghị). Nếu để trống, panel render bình thường */
+  /** Video file URL; mp4 is recommended. If empty, the panel renders normally */
   videoSrc?: string;
   /**
-   * Màu overlay phủ lên video để giữ readability.
-   * Mặc định: rgba(11,19,43,0.72) cho dark, rgba(248,250,252,0.82) cho light
+   * Overlay color placed over video to preserve readability.
+   * Default: rgba(11,19,43,0.72) for dark and rgba(248,250,252,0.82) for light
    */
   videoOverlayColor?: string;
   disableScrollAnimation?: boolean;
@@ -89,23 +89,23 @@ interface WorkflowItem {
 const CAPABILITIES: CapabilityCardProps[] = [
   {
     icon: Fingerprint,
-    title: "Hệ thống Phân quyền RBAC",
+    title: "RBAC Permission System",
     description:
-      "Thiết lập cấu trúc phân quyền chi tiết theo phòng ban, vai trò, cấp bậc nhân sự sàn và chủ đầu tư để đảm bảo đúng người, đúng quyền, đúng dữ liệu.",
+      "Set up detailed permission structures by department, role, agency level, and developer team to ensure the right people access the right data.",
     chips: ["Role-based", "Audit-ready", "Least privilege"],
   },
   {
     icon: LockKeyhole,
-    title: "Xác thực Đa lớp MFA/SSO",
+    title: "Multi-layer MFA/SSO Authentication",
     description:
-      "Tích hợp đăng nhập một lần và bảo mật hai lớp nhằm bảo vệ dữ liệu giao dịch, thông tin khách hàng và luồng phê duyệt quan trọng.",
+      "Integrate single sign-on and two-factor security to protect transaction data, customer information, and critical approval flows.",
     chips: ["SSO", "MFA", "Identity security"],
   },
   {
     icon: Layers3,
-    title: "Hạ tầng Linh hoạt",
+    title: "Flexible Infrastructure",
     description:
-      "Kiến trúc có khả năng mở rộng cho khối lượng dữ liệu lớn, tối ưu độ trễ và duy trì hiệu năng ổn định trong giai đoạn cao điểm bán hàng.",
+      "Scalable architecture for large data volumes, optimized latency, and stable performance during peak sales periods.",
     chips: ["Scalable", "Low latency", "Cloud-ready"],
   },
 ];
@@ -113,18 +113,18 @@ const CAPABILITIES: CapabilityCardProps[] = [
 const WORKFLOW_ITEMS: WorkflowItem[] = [
   {
     icon: GitPullRequest,
-    title: "Pull Request trước khi deploy",
-    text: "Mỗi thay đổi đều được rà soát qua PR, kiểm tra tiêu chuẩn code và giảm rủi ro lỗi khi phát hành.",
+    title: "Pull requests before deploy",
+    text: "Every change is reviewed through pull requests, checked against code standards, and released with reduced risk.",
   },
   {
     icon: Workflow,
-    title: "Agile/Scrum linh hoạt",
-    text: "Tổ chức sprint rõ ràng, phản hồi nhanh và ưu tiên các tính năng tạo giá trị trực tiếp cho vận hành kinh doanh.",
+    title: "Flexible Agile/Scrum",
+    text: "Organize clear sprints, respond quickly, and prioritize features that create direct value for business operations.",
   },
   {
     icon: Zap,
-    title: "Vibe coding có kiểm soát",
-    text: "Chuyển đổi nhanh UI/UX phức tạp thành sản phẩm thực tế nhưng vẫn giữ cấu trúc code dễ mở rộng và bảo trì.",
+    title: "Controlled vibe coding",
+    text: "Quickly turn complex UI/UX into real products while keeping code extensible and maintainable.",
   },
 ];
 
@@ -145,7 +145,7 @@ const PARTNERS_ROW2 = [
   { name: "PCI-DSS", icon: ShieldCheck },
 ];
 
-// ─── IsMobile context — single listener cho toàn app ─────────────────────────
+// ─── IsMobile context with a single listener for the whole app ─────────────────────────
 const IsMobileContext = React.createContext(false);
 
 function IsMobileProvider({ children }: { children: React.ReactNode }) {
@@ -184,9 +184,9 @@ function usePrefersReducedMotion() {
 
 // ─── VideoBackground ──────────────────────────────────────────────────────────
 /**
- * Video đặt absolute fill, object-cover.
+ * Video is placed as absolute fill with object-cover.
  * IntersectionObserver play/pause theo visibility.
- * Tôn trọng prefers-reduced-motion: không bao giờ play nếu user đã bật setting đó.
+ * Respect prefers-reduced-motion: never play when the user has enabled that setting.
  */
 interface VideoBackgroundProps {
   src: string;
@@ -201,11 +201,11 @@ function VideoBackground({ src, overlayColor, isDark }: VideoBackgroundProps) {
     const video = videoRef.current;
     if (!video) return;
 
-    // Sửa lỗi tự động phát trên trình duyệt (React muted bug) bằng cách đặt thuộc tính DOM trực tiếp
+    // Fix browser autoplay issues by setting DOM attributes directly
     video.muted = true;
     video.defaultMuted = true;
 
-    // IntersectionObserver: tự động play khi ≥10% panel vào viewport, pause khi ra ngoài
+    // IntersectionObserver: automatically play when at least 10% of the panel enters the viewport and pause outside it
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -219,14 +219,14 @@ function VideoBackground({ src, overlayColor, isDark }: VideoBackgroundProps) {
           }
         });
       },
-      { threshold: 0.10 } // Giảm xuống 10% để nhạy hơn khi cuộn trang
+      { threshold: 0.10 } // Reduced to 10% for more responsive scrolling
     );
 
     observer.observe(video);
     return () => observer.disconnect();
   }, [src]);
 
-  // Thiết lập radial gradient giúp mờ dần viền video vào màu nền để tránh viền thô
+  // Set up a radial gradient to fade video edges into the background and avoid harsh borders
   const gradientOverlay = isDark
     ? "radial-gradient(circle, rgba(11,19,43,0) 50%, rgba(11,19,43,0.85) 85%, rgba(11,19,43,1) 100%)"
     : "radial-gradient(circle, rgba(248,250,252,0) 50%, rgba(248,250,252,0.85) 85%, rgba(248,250,252,1) 100%)";
@@ -236,21 +236,21 @@ function VideoBackground({ src, overlayColor, isDark }: VideoBackgroundProps) {
       <video
         ref={videoRef}
         src={src}
-        muted          // bắt buộc để autoplay hoạt động trên mọi browser
+        muted          // required for autoplay to work in every browser
         loop
-        playsInline    // bắt buộc trên iOS Safari để không fullscreen
-        preload="metadata" // chỉ load metadata khi không trong viewport
+        playsInline    // required on iOS Safari to avoid fullscreen playback
+        preload="metadata" // only load metadata while outside the viewport
         aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover"
         style={{ pointerEvents: "none" }}
       />
-      {/* Lớp phủ mờ dần (radial gradient) để hòa hợp video với nền của panel */}
+      {/* Fading radial-gradient overlay to blend video into the panel background */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
         style={{ background: gradientOverlay, pointerEvents: "none" }}
       />
-      {/* Gradient overlay — giữ contrast cho text bên trên */}
+      {/* Gradient overlay that keeps contrast for text above */}
       <div
         aria-hidden="true"
         className="absolute inset-0"
@@ -282,7 +282,7 @@ function NumberCounter({ value, suffix = "" }: CounterProps) {
   const count = useMotionValue(0);
 
   const rounded = useTransform<number, string>(count, (latest) =>
-    `${Math.round(latest).toLocaleString("vi-VN")}${suffix}`
+    `${Math.round(latest).toLocaleString("en-US")}${suffix}`
   );
 
   useEffect(() => {
@@ -298,7 +298,7 @@ function NumberCounter({ value, suffix = "" }: CounterProps) {
   );
 }
 
-// ─── BlueprintPanel — nâng cấp với optional video background ─────────────────
+// ─── BlueprintPanel upgraded with optional video background ─────────────────
 function BlueprintPanel({
   id,
   children,
@@ -325,7 +325,7 @@ function BlueprintPanel({
 
   const isDark = variant === "dark";
 
-  // Overlay mặc định theo variant nếu không truyền prop
+  // Default overlay follows the variant when no prop is passed
   const defaultOverlay = isDark
     ? "rgba(11,19,43,0.72)"
     : "rgba(248,250,252,0.85)";
@@ -339,7 +339,7 @@ function BlueprintPanel({
           isDark ? "bg-[#0B132B] text-white" : "bg-[#F8FAFC] text-slate-900"
         }`}
       >
-        {/* Video background — chỉ render khi có videoSrc */}
+        {/* Video background renders only when videoSrc exists */}
         {videoSrc && (
           <VideoBackground src={videoSrc} overlayColor={overlay} isDark={isDark} />
         )}
@@ -349,7 +349,7 @@ function BlueprintPanel({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.10 }}
           transition={{ duration: 0.65, delay: 0.15, ease: [0.215, 0.61, 0.355, 1.0] }}
-          // relative + z-10 để content luôn nằm trên video layer
+          // relative + z-10 keeps content above the video layer
           className="relative z-10 mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10 lg:py-24"
         >
           {children}
@@ -417,13 +417,13 @@ function HeroSection() {
           </div>
 
           <h1 className="max-w-4xl font-serif text-5xl font-bold leading-[1.1] tracking-tight sm:text-6xl lg:text-7xl">
-            Kiến tạo tương lai cho ngành Bất động sản qua lăng kính Công nghệ.
+            Building the future of real estate through a technology lens.
           </h1>
 
           <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-300 sm:text-xl">
-            Chúng tôi đồng hành cùng chủ đầu tư và sàn giao dịch trong hành trình số hóa toàn diện:
-            từ quản trị dữ liệu khách hàng, vận hành đội ngũ kinh doanh đến tự động hóa quy trình
-            giao dịch ở quy mô doanh nghiệp.
+            We partner with developers and agencies on a complete digital transformation journey:
+            from customer data management and sales team operations to process automation
+            for enterprise-scale transactions.
           </p>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -431,11 +431,11 @@ function HeroSection() {
               href="#capabilities"
               className="group inline-flex items-center justify-center gap-3 rounded-full bg-[#38BDF8] px-7 py-4 text-base font-bold text-[#0B132B] shadow-[0_18px_50px_rgba(56,189,248,0.22)] transition-all duration-300 hover:bg-[#F59E0B] hover:shadow-[0_18px_60px_rgba(245,158,11,0.28)]"
             >
-              Khám phá giải pháp của chúng tôi
+              Explore our solutions
               <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
             </a>
             <span className="text-sm font-medium text-slate-400">
-              Bảo mật cao · Linh hoạt mở rộng · Thiết kế cho B2B
+              High privacy · Flexible scaling · Designed for B2B
             </span>
           </div>
         </motion.div>
@@ -504,10 +504,10 @@ function HeroSection() {
 function ProblemMissionSection() {
   return (
     /*
-      videoSrc: thay bằng URL thực tế của bạn, ví dụ:
+      videoSrc: replace with your actual URL, for example:
         videoSrc="/videos/city-timelapse.mp4"
         videoSrc="https://cdn.yourdomain.com/bg-mission.mp4"
-      Khuyến nghị: video tối, chậm, không có audio (aerial cityscape, data center, etc.)
+      Recommendation: use a dark, slow, audio-free video such as aerial cityscape or data center footage.
     */
     <BlueprintPanel
       id="mission"
@@ -517,7 +517,7 @@ function ProblemMissionSection() {
     >
       <SectionEyebrow light>Problem &amp; Mission</SectionEyebrow>
       <h2 className="font-serif text-4xl font-bold leading-tight lg:text-5xl">
-        Khi dữ liệu, quy trình và đội ngũ chưa cùng nằm trên một hệ thống.
+        When data, processes, and teams are not yet unified in one system.
       </h2>
       <div className="mt-12 grid gap-10 lg:grid-cols-2">
         <p className="text-lg leading-8 text-slate-300">
@@ -529,17 +529,17 @@ function ProblemMissionSection() {
           <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#38BDF8]/[0.12] text-[#38BDF8]">
             <Sparkles />
           </div>
-          <h3 className="font-serif text-3xl font-bold">Sứ mệnh của chúng tôi</h3>
+          <h3 className="font-serif text-3xl font-bold">Our mission</h3>
           <p className="mt-5 text-lg leading-8 text-slate-300">
-            Tái định nghĩa cách doanh nghiệp Bất động sản vận hành bằng các giải pháp tự động hóa
-            thông minh, bảo mật theo vai trò và hạ tầng đủ linh hoạt để mở rộng theo tốc độ tăng
-            trưởng thực tế.
+            Redefine how real estate businesses operate with intelligent automation,
+            role-based security, and infrastructure flexible enough to scale with real growth.
+            
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
-              { value: 99, suffix: "%",  label: "ưu tiên bảo mật dữ liệu" },
-              { value: 24, suffix: "/7", label: "giám sát vận hành" },
-              { value: 10, suffix: "x",  label: "sẵn sàng mở rộng" },
+              { value: 99, suffix: "%",  label: "data security priority" },
+              { value: 24, suffix: "/7", label: "operations monitoring" },
+              { value: 10, suffix: "x",  label: "ready to scale" },
             ].map((stat) => (
               <div key={stat.label} className="rounded-2xl border border-white/5 bg-[#0F172A]/70 p-4">
                 <p className="font-serif text-3xl font-bold text-[#F59E0B]">
@@ -558,7 +558,7 @@ function ProblemMissionSection() {
 function CapabilitiesSection() {
   return (
     /*
-      Gợi ý: video nhẹ màu trắng/xám cho light panel —
+      Tip: use a light white/gray video for the light panel.
         videoSrc="/videos/blueprint-light.mp4"
         videoOverlayColor="rgba(248,250,252,0.88)"
     */
@@ -569,13 +569,13 @@ function CapabilitiesSection() {
       videoOverlayColor="rgba(248,250,252,0.88)"
       disableScrollAnimation={true}
     >
-      <SectionEyebrow>Năng lực công nghệ cốt lõi</SectionEyebrow>
+      <SectionEyebrow>Core technology capabilities</SectionEyebrow>
       <h2 className="font-serif text-4xl font-bold leading-tight text-slate-900 lg:text-5xl">
-        Thiết kế cho chuẩn vận hành của doanh nghiệp lớn.
+        Designed for enterprise operating standards.
       </h2>
       <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-        Các năng lực nền tảng được xây dựng để cân bằng giữa tốc độ triển khai, khả năng kiểm soát
-        và độ tin cậy khi vận hành hệ thống B2B trong ngành Bất động sản.
+        Core capabilities are built to balance delivery speed, control,
+        and reliability when operating B2B systems in real estate.
       </p>
       <div className="mt-14 grid gap-6 md:grid-cols-3">
         {CAPABILITIES.map((item) => (
@@ -596,13 +596,13 @@ function CultureWorkflowSection() {
     >
       <SectionEyebrow light>Culture &amp; Workflow</SectionEyebrow>
       <h2 className="font-serif text-4xl font-bold leading-tight lg:text-5xl">
-        Văn hóa kỹ thuật đặt sự ổn định của sản phẩm lên hàng đầu.
+        An engineering culture that puts product stability first.
       </h2>
       <div className="mt-12 grid gap-10 lg:grid-cols-2">
         <p className="text-lg leading-8 text-slate-300">
-          Chúng tôi kết hợp tốc độ của đội ngũ sản phẩm hiện đại với kỷ luật kỹ thuật của hệ thống
-          enterprise: quản lý phiên bản rõ ràng, review cẩn thận và triển khai theo quy trình có
-          thể kiểm chứng.
+          We combine the speed of modern product teams with enterprise engineering discipline:
+          clear version control, careful review, and deployment through verifiable processes.
+          
         </p>
         <div className="space-y-4">
           {WORKFLOW_ITEMS.map((item, index) => {
@@ -694,25 +694,25 @@ function TrustCard({ title, subtitle, description, icon: Icon, color, bgGlow }: 
 
 const TRUST_CARDS: TrustCardProps[] = [
   {
-    title: "Bảo mật Dữ liệu Toàn diện",
+    title: "Comprehensive Data Privacy",
     subtitle: "ISO 27001 & SOC 2 Ready",
-    description: "Mã hóa dữ liệu end-to-end, kiểm soát truy cập nghiêm ngặt RBAC và hệ thống ghi vết audit log đầy đủ đảm bảo dữ liệu của bạn luôn an toàn tuyệt đối.",
+    description: "End-to-end data encryption, strict RBAC access control, and complete audit logs keep your data secure.",
     icon: ShieldCheck,
     color: "from-sky-400 to-blue-600",
     bgGlow: "rgba(56, 189, 248, 0.15)",
   },
   {
-    title: "Quy trình Vận hành Chuẩn mực",
+    title: "Standardized Operating Process",
     subtitle: "Agile & Control",
-    description: "Các sprint phát triển rõ ràng kết hợp quy trình CI/CD tự động và review code chặt chẽ giúp triển khai nhanh chóng, giảm thiểu tối đa rủi ro gián đoạn hệ thống.",
+    description: "Clear development sprints combined with automated CI/CD and strict code review enable fast delivery while minimizing disruption risk.",
     icon: Workflow,
     color: "from-amber-400 to-orange-500",
     bgGlow: "rgba(245, 158, 11, 0.15)",
   },
   {
-    title: "Khả năng Tích hợp Hoàn hảo",
+    title: "Seamless Integration Capability",
     subtitle: "API Gateway & SDK",
-    description: "Hệ thống API chuẩn Restful và cổng webhook sẵn sàng kết nối, đồng bộ hai chiều mượt mà với các ERP, CRM hiện có của chủ đầu tư.",
+    description: "RESTful APIs and webhook gateways are ready for smooth two-way synchronization with existing ERP and CRM systems.",
     icon: Network,
     color: "from-emerald-400 to-teal-600",
     bgGlow: "rgba(16, 185, 129, 0.15)",
@@ -729,12 +729,12 @@ function TrustPartnersSection() {
       <div className="relative z-10 mx-auto max-w-7xl">
         <SectionEyebrow>Trust &amp; Partners</SectionEyebrow>
         <h2 className="font-serif text-4xl font-bold leading-tight text-slate-900 lg:text-5xl">
-          Niềm tin đến từ khả năng vận hành an toàn ở quy mô lớn.
+          Trust comes from safe operation at scale.
         </h2>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
-          Khu vực này đại diện cho sự tin cậy của các đối tác đồng hành cùng chúng tôi trên con
-          đường chuyển đổi số. Hệ thống đáp ứng các bộ tiêu chuẩn quốc tế chặt chẽ nhất nhằm cam
-          kết bảo mật cho dự án của bạn.
+          This area represents the trust of partners who accompany us on the
+          digital transformation journey. The system meets strict international standards
+          to protect your projects.
         </p>
 
         {/* Double-row Marquee */}
@@ -869,7 +869,7 @@ export default function PropTechAboutUsPage() {
             font-family: 'Playfair Display', Merriweather, Georgia, serif;
           }
 
-          /* CSS marquee — translateX(-50%) chỉ đúng khi loopedPartners = 2× PARTNERS */
+          /* CSS marquee: translateX(-50%) is correct only when loopedPartners = 2x PARTNERS */
           @keyframes marquee {
             0%   { transform: translateX(0); }
             100% { transform: translateX(-50%); }

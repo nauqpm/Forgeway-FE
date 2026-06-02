@@ -5,11 +5,11 @@ export const parseJQL = (query: string) => {
   
   while ((match = regex.exec(query)) !== null) {
     const key = match[1];
-    const value = match[3] || match[4]; // Match string có ngoặc kép hoặc không
+    const value = match[3] || match[4]; // Match quoted or unquoted strings
     filters[key] = value;
   }
   
-  // Phần text không match regex sẽ là text search thông thường
+  // Text that does not match the regex is treated as normal search text
   const textSearch = query.replace(regex, '').trim();
   
   return { filters, textSearch };

@@ -46,7 +46,7 @@ export default function CompleteSprintModal({
         })
         .catch((err) => {
           console.error(err);
-          toast.error('Lỗi khi tải thông tin xem trước sprint');
+          toast.error('Could not load sprint preview');
           onClose();
         })
         .finally(() => {
@@ -72,7 +72,7 @@ export default function CompleteSprintModal({
       <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
           <h3 className="font-bold text-gray-900 dark:text-white text-lg">
-            Hoàn thành Sprint: {sprint.name}
+            Complete Sprint: {sprint.name}
           </h3>
           <button
             onClick={onClose}
@@ -86,7 +86,7 @@ export default function CompleteSprintModal({
           <div className="p-10 flex flex-col items-center justify-center space-y-3">
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Đang tải bản xem trước sprint...
+              Loading sprint preview...
             </p>
           </div>
         ) : (
@@ -95,14 +95,14 @@ export default function CompleteSprintModal({
               <>
                 <div className="bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl p-4 space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Tổng số task:</span>
+                    <span className="text-gray-600 dark:text-gray-400">Total tasks:</span>
                     <span className="font-semibold text-gray-900 dark:text-white">
                       {preview.totalTasks}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-green-600 dark:text-green-400 font-medium">
-                      Đã hoàn thành (Done):
+                      Completed (Done):
                     </span>
                     <span className="font-bold text-green-600 dark:text-green-400">
                       {preview.completedTasks}
@@ -110,7 +110,7 @@ export default function CompleteSprintModal({
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-amber-600 dark:text-amber-400 font-medium">
-                      Chưa hoàn thành:
+                      Incomplete:
                     </span>
                     <span className="font-bold text-amber-600 dark:text-amber-400">
                       {preview.incompleteTasks}
@@ -123,14 +123,14 @@ export default function CompleteSprintModal({
                     <div className="flex gap-2 text-amber-600 dark:text-amber-400">
                       <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                       <p className="text-xs">
-                        Có {preview.incompleteTasks} task chưa hoàn thành trong sprint này. Hãy
-                        chọn nơi chuyển các task này đến:
+                        There are {preview.incompleteTasks} incomplete tasks in this sprint.
+                        Choose where to move them:
                       </p>
                     </div>
 
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                        Chuyển các task chưa xong tới
+                        Move incomplete tasks to
                       </label>
                       <select
                         value={moveToSprintId}
@@ -165,10 +165,10 @@ export default function CompleteSprintModal({
                     </div>
                     <div>
                       <h4 className="text-sm font-semibold text-green-800 dark:text-green-300">
-                        Tuyệt vời!
+                        Great!
                       </h4>
                       <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
-                        Tất cả các task trong sprint này đều đã hoàn thành.
+                        All tasks in this sprint are complete.
                       </p>
                     </div>
                   </div>
@@ -180,13 +180,13 @@ export default function CompleteSprintModal({
                     onClick={onClose}
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
-                    Hủy
+                    Cancel
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
                   >
-                    Hoàn thành Sprint
+                    Complete sprint
                   </button>
                 </div>
               </>

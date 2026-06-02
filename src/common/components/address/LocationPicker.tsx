@@ -22,7 +22,7 @@ const LocationPicker = ({
   errors,
   onTouch,
 }: LocationPickerProps) => {
-  // State cho dữ liệu từ API
+  // State for API data
   const [provinces, setProvinces] = useState<Province[]>([]);
   const [districts, setDistricts] = useState<District[]>([]);
   const [wards, setWards] = useState<Ward[]>([]);
@@ -31,17 +31,17 @@ const LocationPicker = ({
   // State cho dropdown
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
-  // State cho tìm kiếm
+  // State for search
   const [provinceSearchTerm, setProvinceSearchTerm] = useState("");
   const [districtSearchTerm, setDistrictSearchTerm] = useState("");
   const [wardSearchTerm, setWardSearchTerm] = useState("");
 
-  // Refs cho ô tìm kiếm để auto focus
+  // Refs for search inputs to auto-focus
   const provinceSearchRef = useRef<HTMLInputElement>(null);
   const districtSearchRef = useRef<HTMLInputElement>(null);
   const wardSearchRef = useRef<HTMLInputElement>(null);
 
-  // Xử lý đóng dropdown khi click ra ngoài
+  // Handle closing dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (!event.target) return;
@@ -57,7 +57,7 @@ const LocationPicker = ({
     };
   }, []);
 
-  // Toggle dropdown và reset search term
+  // Toggle dropdown and reset search term
   const toggleDropdown = (dropdown: string) => {
     if (onTouch) {
       onTouch(dropdown as "province" | "district" | "ward");
@@ -68,12 +68,12 @@ const LocationPicker = ({
     } else {
       setOpenDropdown(dropdown);
 
-      // Reset search terms khi mở dropdown mới
+      // Reset search terms when opening a new dropdown
       setProvinceSearchTerm("");
       setDistrictSearchTerm("");
       setWardSearchTerm("");
 
-      // Focus vào ô search khi mở dropdown
+      // Focus the search input when opening dropdown
       setTimeout(() => {
         if (dropdown === "province" && provinceSearchRef.current) {
           provinceSearchRef.current.focus();
@@ -86,7 +86,7 @@ const LocationPicker = ({
     }
   };
 
-  // Fetch danh sách tỉnh/thành phố khi component mount
+  // Fetch province list on component mount
   useEffect(() => {
     const fetchProvinces = async () => {
       setLoading(true);
@@ -94,7 +94,7 @@ const LocationPicker = ({
         const data = await getAllProvinces();
         setProvinces(data);
       } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu tỉnh/thành:", error);
+        console.error("Error fetching province data:", error);
       } finally {
         setLoading(false);
       }
@@ -103,7 +103,7 @@ const LocationPicker = ({
     fetchProvinces();
   }, []);
 
-  // Fetch danh sách quận/huyện khi chọn tỉnh/thành phố
+  // Fetch district list when selecting a province
   useEffect(() => {
     if (!value.province) {
       setDistricts([]);
@@ -121,11 +121,11 @@ const LocationPicker = ({
             const wardsData = await getWardsByDistrictCode(value.district);
             setWards(wardsData);
           } catch (error) {
-            console.error("Lỗi khi lấy dữ liệu phường/xã:", error);
+            console.error("Error fetching ward data:", error);
           }
         }
       } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu quận/huyện:", error);
+        console.error("Error fetching district data:", error);
       } finally {
         setLoading(false);
       }
@@ -134,7 +134,7 @@ const LocationPicker = ({
     fetchDistricts();
   }, [value.province]);
 
-  // Fetch danh sách phường/xã khi chọn quận/huyện
+  // Fetch ward list when selecting a district
   useEffect(() => {
     if (!value.district) {
       setWards([]);
@@ -147,7 +147,7 @@ const LocationPicker = ({
         const data = await getWardsByDistrictCode(value.district);
         setWards(data);
       } catch (error) {
-        console.error("Lỗi khi lấy dữ liệu phường/xã:", error);
+        console.error("Error fetching ward data:", error);
       } finally {
         setLoading(false);
       }
@@ -156,7 +156,7 @@ const LocationPicker = ({
     fetchWards();
   }, [value.district]);
 
-  // Handlers cho việc chọn địa điểm
+  // Handlers for location selection
   const handleProvinceSelect = (code: number) => {
     onChange({
       province: code,
@@ -186,18 +186,18 @@ const LocationPicker = ({
   return (
     <div className="space-y-4 mb-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Tỉnh/Thành phố */}
+        {/* Province/City */}
         <div className="location-dropdown">
           <Dropdown
-            label="Tỉnh/Thành phố"
-            value={getLocationName(value.province, provinces, "Chọn Tỉnh/TP")}
+            label="Province/City"
+            value={getLocationName(value.province, provinces, "Select Province/City")}
             isOpen={openDropdown === "province"}
             hasError={!!errors?.province}
             errorMessage={errors?.province}
             onToggle={() => toggleDropdown("province")}
           >
             <SearchInput
-              placeholder="Tìm tỉnh/thành phố..."
+              placeholder="Search provinces/cities..."
               value={provinceSearchTerm}
               onChange={setProvinceSearchTerm}
               inputRef={provinceSearchRef as React.RefObject<HTMLInputElement>}
@@ -211,14 +211,14 @@ const LocationPicker = ({
           </Dropdown>
         </div>
 
-        {/* Quận/Huyện */}
+        {/* District */}
         <div className="location-dropdown">
           <Dropdown
-            label="Quận/Huyện"
+            label="District"
             value={getLocationName(
               value.district,
               districts,
-              "Chọn Quận/Huyện"
+              "Select District"
             )}
             isOpen={openDropdown === "district"}
             isDisabled={!value.province && !value.district}
@@ -227,7 +227,7 @@ const LocationPicker = ({
             onToggle={() => toggleDropdown("district")}
           >
             <SearchInput
-              placeholder="Tìm quận/huyện..."
+              placeholder="Search districts..."
               value={districtSearchTerm}
               onChange={setDistrictSearchTerm}
               inputRef={districtSearchRef as React.RefObject<HTMLInputElement>}
@@ -241,11 +241,11 @@ const LocationPicker = ({
           </Dropdown>
         </div>
 
-        {/* Phường/Xã */}
+        {/* Ward */}
         <div className="location-dropdown">
           <Dropdown
-            label="Phường/Xã"
-            value={getLocationName(value.ward, wards, "Chọn Phường/Xã")}
+            label="Ward"
+            value={getLocationName(value.ward, wards, "Select Ward")}
             isOpen={openDropdown === "ward"}
             isDisabled={!value.district && !value.ward}
             hasError={!!errors?.ward}
@@ -253,7 +253,7 @@ const LocationPicker = ({
             onToggle={() => toggleDropdown("ward")}
           >
             <SearchInput
-              placeholder="Tìm phường/xã..."
+              placeholder="Search wards..."
               value={wardSearchTerm}
               onChange={setWardSearchTerm}
               inputRef={wardSearchRef as React.RefObject<HTMLInputElement>}

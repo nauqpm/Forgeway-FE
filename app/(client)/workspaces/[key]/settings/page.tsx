@@ -62,10 +62,10 @@ interface WorkspaceMember {
 }
 
 const ROLE_LABELS: Record<string, string> = {
-  workspace_admin: "Quản trị viên",
-  space_admin: "Quản trị viên",
-  member: "Thành viên",
-  viewer: "Người xem",
+  workspace_admin: "Administrator",
+  space_admin: "Administrator",
+  member: "Member",
+  viewer: "Viewer",
 };
 
 const ROLE_BADGES: Record<string, string> = {
@@ -76,9 +76,9 @@ const ROLE_BADGES: Record<string, string> = {
 };
 
 const MEMBER_ROLE_OPTIONS: { value: InviteRole; label: string }[] = [
-  { value: "workspace_admin", label: "Quản trị viên" },
-  { value: "member", label: "Thành viên" },
-  { value: "viewer", label: "Người xem" },
+  { value: "workspace_admin", label: "Administrator" },
+  { value: "member", label: "Member" },
+  { value: "viewer", label: "Viewer" },
 ];
 
 const normalizeWorkspace = (payload: any): WorkspaceSettings =>
@@ -162,7 +162,7 @@ export default function WorkspaceSettingsPage({
       })
       .catch(() => {
         setWorkspace(null);
-        toast.error("Không thể tải cài đặt workspace.");
+        toast.error("Could not load workspace settings.");
       })
       .finally(() => setLoading(false));
   }, [workspaceKey]);
@@ -210,7 +210,7 @@ export default function WorkspaceSettingsPage({
     event.preventDefault();
 
     if (!form.name.trim()) {
-      toast.error("Tên workspace là bắt buộc.");
+      toast.error("Workspace name is required.");
       return;
     }
 
@@ -234,10 +234,10 @@ export default function WorkspaceSettingsPage({
         status: updatedWorkspace.status || "active",
         access: updatedWorkspace.access || "public",
       });
-      toast.success("Đã lưu cài đặt workspace.");
+      toast.success("Workspace settings saved.");
     } catch (error: any) {
       console.error("Save failed", error);
-      toast.error(error?.response?.data?.message || "Không thể lưu cài đặt workspace.");
+      toast.error(error?.response?.data?.message || "Could not save workspace settings.");
     } finally {
       setSaving(false);
     }
@@ -245,7 +245,7 @@ export default function WorkspaceSettingsPage({
 
   const handleDelete = async () => {
     if (deleteConfirm !== "delete") {
-      toast.error('Nhập "delete" để xác nhận.');
+      toast.error('Enter "delete" to confirm.');
       return;
     }
 
@@ -254,12 +254,12 @@ export default function WorkspaceSettingsPage({
       if (!workspaceApiId) throw new Error("Missing workspace id");
 
       await api.delete(apiRoutes.WORKSPACES.BY_ID(workspaceApiId));
-      toast.success("Đã xóa workspace.");
+      toast.success("Workspace deleted.");
       setShowDeleteDialog(false);
       router.push("/workspaces");
     } catch (error: any) {
       console.error("Delete failed", error);
-      toast.error(error?.response?.data?.message || "Không thể xóa workspace.");
+      toast.error(error?.response?.data?.message || "Could not delete workspace.");
     } finally {
       setDeleting(false);
     }
@@ -276,12 +276,12 @@ export default function WorkspaceSettingsPage({
         email,
         role: inviteRole,
       });
-      toast.success(`Đã gửi lời mời tới ${email}.`);
+      toast.success(`Invitation sent to ${email}.`);
       setInviteEmail("");
       const updated = await inviteService.listInvites(workspaceInviteId);
       setInvites(updated);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Không thể gửi lời mời.");
+      toast.error(error?.response?.data?.message || "Could not send invitation.");
     } finally {
       setInviting(false);
     }
@@ -292,9 +292,9 @@ export default function WorkspaceSettingsPage({
     try {
       await inviteService.cancelInvite(workspaceInviteId, inviteId);
       setInvites((prev) => prev.filter((invite) => invite._id !== inviteId));
-      toast.success("Đã hủy lời mời.");
+      toast.success("Invitation canceled.");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Không thể hủy lời mời.");
+      toast.error(error?.response?.data?.message || "Could not cancel invitation.");
     } finally {
       setCancellingId(null);
     }
@@ -346,9 +346,9 @@ export default function WorkspaceSettingsPage({
         ),
       );
       setMemberMenu(null);
-      toast.success("Đã cập nhật quyền thành viên.");
+      toast.success("Member permissions updated.");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Không thể cập nhật quyền thành viên.");
+      toast.error(error?.response?.data?.message || "Could not update member permissions.");
     } finally {
       setUpdatingMemberId(null);
     }
@@ -365,9 +365,9 @@ export default function WorkspaceSettingsPage({
       await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceApiId, userId));
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setMemberMenu(null);
-      toast.success("Đã xóa thành viên khỏi workspace.");
+      toast.success("Member removed from workspace.");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Không thể xóa thành viên.");
+      toast.error(error?.response?.data?.message || "Could not remove member.");
     } finally {
       setRemovingMemberId(null);
     }
@@ -375,7 +375,7 @@ export default function WorkspaceSettingsPage({
 
   const handleLeave = async () => {
     if (leaveConfirm !== "leave") {
-      toast.error('Nhập "leave" để xác nhận.');
+      toast.error('Enter "leave" to confirm.');
       return;
     }
 
@@ -384,10 +384,10 @@ export default function WorkspaceSettingsPage({
       if (!workspaceApiId) throw new Error("Missing workspace id");
 
       await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceApiId));
-      toast.success("Đã rời khỏi workspace.");
+      toast.success("Left workspace.");
       router.push("/workspaces");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Không thể rời khỏi workspace.");
+      toast.error(error?.response?.data?.message || "Could not leave workspace.");
     } finally {
       setLeaving(false);
       setShowLeaveDialog(false);
@@ -399,7 +399,7 @@ export default function WorkspaceSettingsPage({
   if (!workspace) {
     return (
       <div className="p-10 text-center text-gray-500 dark:text-gray-400">
-        Không tìm thấy workspace.
+        Workspace not found.
       </div>
     );
   }
@@ -415,7 +415,7 @@ export default function WorkspaceSettingsPage({
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Cài đặt workspace
+            Workspace settings
           </h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">
             {workspace.name}
@@ -437,7 +437,7 @@ export default function WorkspaceSettingsPage({
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
-              <Settings className="w-4 h-4" /> Tổng quan
+              <Settings className="w-4 h-4" /> Overview
             </button>
             <button
               type="button"
@@ -448,7 +448,7 @@ export default function WorkspaceSettingsPage({
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
-              <Users className="w-4 h-4" /> Thành viên
+              <Users className="w-4 h-4" /> Member
             </button>
           </nav>
         </div>
@@ -555,17 +555,17 @@ function GeneralSettings({
     <form onSubmit={handleSave} className="space-y-8 max-w-[min(100%,42rem)]">
       <section>
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          Thông tin cơ bản
+          Basic information
         </h2>
         {!canManageWorkspace && (
           <p className="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-800/60 dark:text-gray-300">
-            Bạn có thể xem thông tin workspace. Chỉ quản trị viên mới có quyền chỉnh sửa.
+            You can view workspace information. Only administrators can edit it.
           </p>
         )}
         <div className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Tên workspace
+              Workspace name
             </label>
             <input
               type="text"
@@ -579,7 +579,7 @@ function GeneralSettings({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Mô tả
+              Description
             </label>
             <textarea
               value={form.description}
@@ -594,7 +594,7 @@ function GeneralSettings({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Mã workspace
+              Workspace key
             </label>
             <input
               type="text"
@@ -610,12 +610,12 @@ function GeneralSettings({
 
       <section>
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          Quyền truy cập
+          Access
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { value: "public", label: "Công khai", icon: Globe },
-            { value: "private", label: "Riêng tư", icon: Lock },
+            { value: "public", label: "Public", icon: Globe },
+            { value: "private", label: "Private", icon: Lock },
           ].map((option) => (
             <label
               key={option.value}
@@ -649,12 +649,12 @@ function GeneralSettings({
 
       <section>
         <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-          Trạng thái
+          Status
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
-            { value: "active", label: "Đang hoạt động" },
-            { value: "archived", label: "Đã lưu trữ" },
+            { value: "active", label: "Active" },
+            { value: "archived", label: "Archived" },
           ].map((option) => (
             <label
               key={option.value}
@@ -692,11 +692,11 @@ function GeneralSettings({
         >
           {saving ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" /> Đang lưu...
+              <Loader2 className="w-4 h-4 animate-spin" /> Saving...
             </>
           ) : (
             <>
-              <Save className="w-4 h-4" /> Lưu thay đổi
+              <Save className="w-4 h-4" /> Save changes
             </>
           )}
         </button>
@@ -705,18 +705,18 @@ function GeneralSettings({
 
       <section className="mt-12 p-5 border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 rounded-lg space-y-6">
         <h3 className="text-red-800 dark:text-red-200 font-bold flex items-center gap-2">
-          <ShieldAlert className="w-5 h-5" /> Vùng nguy hiểm
+          <ShieldAlert className="w-5 h-5" /> Danger zone
         </h3>
 
         {/* Leave workspace */}
         <div className="pb-6 border-b border-red-200 dark:border-red-800">
           <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
-            Rời khỏi workspace
+            Leave workspace
           </p>
           <p className="text-sm text-red-600 dark:text-red-300 mb-3">
             {canManageWorkspace
-              ? "Bạn là owner của workspace. Bạn phải xóa workspace trước khi rời."
-              : "Bạn sẽ mất quyền truy cập vào workspace này."}
+              ? "You are the workspace owner. You must delete the workspace before leaving."
+              : "You will lose access to this workspace."}
           </p>
           <button
             type="button"
@@ -724,7 +724,7 @@ function GeneralSettings({
             className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-amber-600/20"
           >
             <LogOut className="w-4 h-4" />
-            Rời workspace
+            Leave workspace
           </button>
         </div>
 
@@ -732,10 +732,10 @@ function GeneralSettings({
         {canManageWorkspace && (
         <div>
           <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
-            Xóa workspace
+            Delete workspace
           </p>
           <p className="text-sm text-red-600 dark:text-red-300 mb-4">
-            Xóa workspace này cùng các board, backlog và nội dung liên quan. Hành động nay không thể hoàn tác.
+            Delete this workspace along with its boards, backlog, and related content. This action cannot be undone.
           </p>
           <button
             type="button"
@@ -746,7 +746,7 @@ function GeneralSettings({
             className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm shadow-red-600/20"
           >
             <Trash2 className="w-4 h-4" />
-            Xóa workspace
+            Delete workspace
           </button>
         </div>
         )}
@@ -761,11 +761,11 @@ function GeneralSettings({
                 <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                Xóa workspace
+                Delete workspace
               </h2>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Hành động nay sẽ xóa workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span> và không thể hoàn tác. Nhập <span className="font-mono font-semibold">delete</span> để xác nhận.
+              This action will delete workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span> and cannot be undone. Enter <span className="font-mono font-semibold">delete</span> to confirm.
             </p>
             <input
               type="text"
@@ -784,7 +784,7 @@ function GeneralSettings({
                 }}
                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                Hủy
+                Cancel
               </button>
               <button
                 type="button"
@@ -793,7 +793,7 @@ function GeneralSettings({
                 className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
               >
                 {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
-                {deleting ? "Đang xóa..." : "Xác nhận xóa"}
+                {deleting ? "Deleting..." : "Confirm delete"}
               </button>
             </div>
           </div>
@@ -811,11 +811,11 @@ function GeneralSettings({
                     <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Bạn là owner của workspace này
+                    You are the owner of this workspace
                   </h2>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                  Bạn có muốn xóa workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span> hiện tại không? Hành động này sẽ xóa toàn bộ dữ liệu và không thể hoàn tác.
+                  Do you want to delete workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span> now? This action will delete all data and cannot be undone.
                 </p>
                 <div className="flex justify-end gap-3">
                   <button
@@ -823,7 +823,7 @@ function GeneralSettings({
                     onClick={() => setShowLeaveDialog(false)}
                     className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    Đóng
+                    Close
                   </button>
                   <button
                     type="button"
@@ -835,7 +835,7 @@ function GeneralSettings({
                     className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Đi tới xóa workspace
+                    Go to delete workspace
                   </button>
                 </div>
               </>
@@ -846,11 +846,11 @@ function GeneralSettings({
                     <LogOut className="w-5 h-5 text-red-600 dark:text-red-400" />
                   </div>
                   <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Rời khỏi workspace
+                    Leave workspace
                   </h2>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Bạn sẽ mất quyền truy cập vào workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span>. Nhập <span className="font-mono font-semibold">leave</span> để xác nhận.
+                  You will lose access to workspace <span className="font-semibold text-gray-900 dark:text-white">{workspace.name}</span>. Enter <span className="font-mono font-semibold">leave</span> to confirm.
                 </p>
                 <input
                   type="text"
@@ -866,7 +866,7 @@ function GeneralSettings({
                     onClick={() => { setShowLeaveDialog(false); setLeaveConfirm(""); }}
                     className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    Hủy
+                    Cancel
                   </button>
                   <button
                     type="button"
@@ -875,7 +875,7 @@ function GeneralSettings({
                     className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
                   >
                     {leaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {leaving ? "Đang rời..." : "Xác nhận rời"}
+                    {leaving ? "Leaving..." : "Confirm leave"}
                   </button>
                 </div>
               </>
@@ -958,10 +958,10 @@ function MemberSettings({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-600" /> Thành viên
+            <Users className="w-5 h-5 text-indigo-600" /> Member
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Quản lý quyền truy cập và các lời mời đang chờ trong workspace.
+            Manage access permissions and pending invitations in this workspace.
           </p>
         </div>
         {canManageWorkspace && (
@@ -971,7 +971,7 @@ function MemberSettings({
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-600/20 transition-colors hover:bg-indigo-700"
         >
           <UserPlus className="h-4 w-4" />
-          Mời thành viên
+          Invite member
         </button>
         )}
       </div>
@@ -982,7 +982,7 @@ function MemberSettings({
           onClick={() => setMemberSubTab("list")}
           className={"rounded-md px-3 py-1.5 text-sm font-semibold transition-colors " + listTabClass}
         >
-          Danh sách ({members.length})
+          List ({members.length})
         </button>
         {canManageWorkspace && (
         <button
@@ -990,7 +990,7 @@ function MemberSettings({
           onClick={() => setMemberSubTab("invites")}
           className={"rounded-md px-3 py-1.5 text-sm font-semibold transition-colors " + invitesTabClass}
         >
-          Lời mời ({invites.length})
+          Invitations ({invites.length})
         </button>
         )}
       </div>
@@ -1003,14 +1003,14 @@ function MemberSettings({
             </div>
           ) : members.length === 0 ? (
             <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              Chưa có thành viên nào trong workspace này.
+              There are no members in this workspace yet.
             </div>
           ) : (
             <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
               <div className="divide-y divide-gray-100 dark:divide-gray-800">
                 {members.map((member) => {
                   const memberUser = member.userId;
-                  const displayName = memberUser?.fullName || memberUser?.email || "Người dùng";
+                  const displayName = memberUser?.fullName || memberUser?.email || "User";
                   const roleLabel = ROLE_LABELS[member.role] ?? member.role;
                   const badgeClass = ROLE_BADGES[member.role] ?? ROLE_BADGES.member;
                   const memberId = memberUser?._id;
@@ -1041,12 +1041,12 @@ function MemberSettings({
                             </p>
                             {isSelf && (
                               <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                                Bạn
+                                You
                               </span>
                             )}
                           </div>
                           <p className="truncate text-xs text-gray-500 dark:text-gray-400">
-                            {memberUser?.email || "Chưa có email"}
+                            {memberUser?.email || "No email"}
                           </p>
                         </div>
                       </div>
@@ -1090,11 +1090,11 @@ function MemberSettings({
         <section>
           {loadingInvites ? (
             <div className="flex items-center gap-2 py-8 text-sm text-gray-400">
-              <Loader2 className="h-4 w-4 animate-spin" /> Đang tải lời mời...
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading invitations...
             </div>
           ) : invites.length === 0 ? (
             <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              Không có lời mời nào đang chờ.
+              There are no pending invitations.
             </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
@@ -1102,9 +1102,9 @@ function MemberSettings({
                 <thead className="border-b border-gray-200 bg-gray-50 font-medium text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
                   <tr>
                     <th className="px-4 py-3">Email</th>
-                    <th className="px-4 py-3 w-36">Vai trò</th>
-                    <th className="px-4 py-3 w-40">Trạng thái</th>
-                    <th className="px-4 py-3 w-24 text-right">Thao tác</th>
+                    <th className="px-4 py-3 w-36">Role</th>
+                    <th className="px-4 py-3 w-40">Status</th>
+                    <th className="px-4 py-3 w-24 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -1120,8 +1120,8 @@ function MemberSettings({
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
                         {invite.expiresAt
-                          ? "Hết hạn " + new Date(invite.expiresAt).toLocaleDateString("vi-VN")
-                          : "Đang chờ, không hết hạn"}
+                          ? "Expires " + new Date(invite.expiresAt).toLocaleDateString("en-US")
+                          : "Pending, no expiration"}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -1135,7 +1135,7 @@ function MemberSettings({
                           ) : (
                             <X className="h-4 w-4" />
                           )}
-                          Hủy
+                          Cancel
                         </button>
                       </td>
                     </tr>
