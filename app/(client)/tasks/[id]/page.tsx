@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -28,6 +29,7 @@ const priorityOptions = [
 ];
 
 export default function TaskDetailPage() {
+  usePageTitle('Task');
   const params = useParams();
   const taskId = params.id as string;
   const { user } = useAuth();

@@ -6,11 +6,13 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import { FolderKanban, Plus, LayoutGrid, List, Search, Folder } from "lucide-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 
 interface Project { _id: string; name: string; key: string; type: "scrum" | "kanban"; description?: string; status: string; members: any[]; }
 
 export default function ProjectsPage() {
+  usePageTitle('Projects');
   const { currentWorkspace } = useWorkspaceStore();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);

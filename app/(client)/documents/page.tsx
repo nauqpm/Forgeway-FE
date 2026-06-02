@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -23,6 +24,7 @@ import ImportedDocumentViewer from "@/modules/client/docs/components/ImportedDoc
 import OnlineDocumentEditorModal from "@/modules/client/docs/components/OnlineDocumentEditorModal";
 
 export default function DocumentsLibraryPage() {
+  usePageTitle('Documents');
   const { user } = useAuth();
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(false);

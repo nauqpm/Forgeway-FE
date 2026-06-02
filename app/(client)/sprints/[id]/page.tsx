@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "@/common/services/api.service";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import {
@@ -40,6 +41,7 @@ const statusConfig: Record<string, { color: string; bg: string; icon: any }> = {
 };
 
 export default function SprintDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  usePageTitle('Sprint');
   const router = useRouter();
   const [sprint, setSprint] = useState<Sprint | null>(null);
   const [stats, setStats] = useState<SprintStats | null>(null);

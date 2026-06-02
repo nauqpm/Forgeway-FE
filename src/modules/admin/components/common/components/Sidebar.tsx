@@ -49,9 +49,9 @@ const mainNav = [
     href: "/workspaces",
     badge: null,
   },
-  { icon: ListFilter, label: "Bộ lọc", href: "/filter" },
-  { icon: FolderOpen, label: "Thư viện tài liệu", href: "/documents" },
-  { icon: BarChart3, label: "Báo cáo", href: "/reports", badge: "sắp có" },
+  { icon: ListFilter, label: "Filter", href: "/filter" },
+  { icon: FolderOpen, label: "Documents", href: "/documents" },
+  { icon: BarChart3, label: "Reports", href: "/reports", badge: "Coming soon" },
 ];
 
 const adminNav = [
@@ -533,8 +533,6 @@ export default function Sidebar({
               <div className="px-2 space-y-0.5">
               {/* Dashboard */}
               <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
-              <PopoverNavItem item={mainNav[1]} type="recent" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
-              <PopoverNavItem item={mainNav[2]} type="starred" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
 
               {/* Workspaces */}
               <div>
@@ -628,9 +626,8 @@ export default function Sidebar({
                 )}
               </div>
 
-              <NavItem item={mainNav[5]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
-              {/* Báo cáo */}
-              <NavItem item={mainNav[6]} showBadge pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+              {/* Documents */}
+              <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
             </div>
           </div>
 

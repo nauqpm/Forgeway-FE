@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useCreateWorkspace } from "@/modules/client/workspaces/hooks/useCreateWorkspace";
 import { ArrowLeft, Columns, Repeat, Lock, Globe } from "lucide-react";
 import Link from "next/link";
 
 export default function CreateWorkspacePage() {
   const router = useRouter();
+  usePageTitle('Create Workspace');
   const { createWorkspace, isLoading } = useCreateWorkspace();
   const [form, setForm] = useState({
     name: "",

@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import PropTechAboutUsPage from "./PropTechAboutUsPage";
 
 export const metadata: Metadata = {
-  title: "About Us | AL-TASK - Enterprise PropTech Platform",
+  title: "About Us",
   description: "Learn more about our mission, core technology capabilities (RBAC, MFA/SSO, Scalable Architecture), and culture workflow at AL-TASK.",
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState, useRef, useEffect } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { 
   CheckCircle2, 
   CircleDashed, 
@@ -173,6 +174,7 @@ const filterTitles: Record<string, string> = {
 export default function FilterPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const title = filterTitles[slug] || "Custom filter";
+  usePageTitle(title);
 
   // Filter States (ready for backend)
   const [filterWorkspace, setFilterWorkspace] = useState<string[]>([]);

@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import api from "@/common/services/api.service";
 import { User, Shield, Key, LogOut } from "lucide-react";
 import ThemeSwitcher from "@/common/components/ThemeSwitcher";
 
 export default function SettingsPage() {
+  usePageTitle('Settings');
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState({ fullName: user?.fullName || "", email: user?.email || "" });
   const [saving, setSaving] = useState(false);

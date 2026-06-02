@@ -45,9 +45,9 @@ const mainNav = [
     href: "/spaces",
     badge: null,
   },
-  { icon: ListFilter, label: "Bộ lọc", href: "/filter" },
-  { icon: FolderOpen, label: "Thư viện tài liệu", href: "/documents" },
-  { icon: BarChart3, label: "Báo cáo", href: "/reports", badge: "sắp có" },
+  { icon: ListFilter, label: "Filter", href: "/filter" },
+  { icon: FolderOpen, label: "Documents", href: "/documents" },
+  { icon: BarChart3, label: "Reports", href: "/reports", badge: "Coming soon" },
 ];
 
 const adminNav = [

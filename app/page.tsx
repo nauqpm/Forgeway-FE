@@ -1,4 +1,6 @@
 import ClientLayout from "@/modules/client/common/layout/ClientLayout";
+
+export const metadata = { title: 'Home' };
 import Link from "next/link";
 
 export default function LandingPage() {

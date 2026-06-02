@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, use, useEffect, useState } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Save } from "lucide-react";
@@ -14,6 +15,7 @@ export default function CreateWorkspacePage({
 }: {
   params: Promise<{ key: string }>;
 }) {
+  usePageTitle('New Page');
   const { key } = use(params);
   const router = useRouter();
   const [loading, setLoading] = useState(false);

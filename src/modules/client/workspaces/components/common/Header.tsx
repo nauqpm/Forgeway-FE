@@ -15,7 +15,7 @@ import InviteModal from "@/modules/admin/components/common/components/InviteModa
 interface HeaderProps {
   workspace: Workspace;
   workspaceId: string;
-  setShowCreateIssue: () => void;
+  setShowCreateIssue: (value: boolean) => void;
   canCreateTask?: boolean;
   canUpdateWorkspace?: boolean;
 }
