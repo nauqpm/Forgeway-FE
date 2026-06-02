@@ -23,12 +23,15 @@ export interface TaskFilters {
   reporterId?: string | string[];
   type?: string | string[];
   priority?: string | string[];
+  labelIds?: string | string[];
   taskKey?: string;
   search?: string;
   backlog?: boolean;
   archived?: boolean;
   page?: number;
   limit?: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export type BoardTaskFilters = TaskFilters;

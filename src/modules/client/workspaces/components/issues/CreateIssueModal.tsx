@@ -45,7 +45,7 @@ export default function CreateIssueModal({
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
           <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
             <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            Tạo Issue mới
+            Create new issue
           </h3>
 
           <button
@@ -62,7 +62,7 @@ export default function CreateIssueModal({
         >
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Tiêu đề công việc <span className="text-red-500">*</span>
+              Work item title <span className="text-red-500">*</span>
             </label>
 
             <input
@@ -77,14 +77,14 @@ export default function CreateIssueModal({
                 })
               }
               className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm transition-all"
-              placeholder="Vd: Sửa lỗi hiển thị trên màn hình Mobile..."
+              placeholder="Example: Fix display issue on mobile..."
             />
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Loại Issue
+                Issue type
               </label>
 
               <select
@@ -106,7 +106,7 @@ export default function CreateIssueModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Mức độ ưu tiên
+                Priority
               </label>
 
               <select
@@ -128,7 +128,7 @@ export default function CreateIssueModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Trạng thái ban đầu
+              Initial status
             </label>
 
             <select
@@ -177,14 +177,14 @@ export default function CreateIssueModal({
               onClick={() => setShowCreateIssue(false)}
               className="px-5 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              Hủy bỏ
+              Cancel
             </button>
 
             <button
               type="submit"
               className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
             >
-              Tạo mới ngay
+              Create now
             </button>
           </div>
         </form>

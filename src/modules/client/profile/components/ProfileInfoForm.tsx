@@ -59,10 +59,10 @@ export function ProfileInfoForm({
       gender: form.gender as "male" | "female" | "other",
     });
     if (ok) {
-      toast.success("Cập nhật hồ sơ thành công");
+      toast.success("Profile updated successfully");
       await verifyToken();
     } else {
-      toast.error("Cập nhật thất bại");
+      toast.error("Update failed");
     }
   };
 
@@ -74,10 +74,10 @@ export function ProfileInfoForm({
     e.target.value = "";
     const ok = await onUploadAvatar(file);
     if (ok) {
-      toast.success("Cập nhật ảnh đại diện thành công");
+      toast.success("Avatar updated successfully");
       await verifyToken();
     } else {
-      toast.error("Cập nhật ảnh đại diện thất bại");
+      toast.error("Avatar update failed");
     }
   };
 
@@ -118,7 +118,7 @@ export function ProfileInfoForm({
             disabled={avatarUploading}
             onClick={() => fileInputRef.current?.click()}
             className="absolute bottom-0 right-0 w-7 h-7 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-full flex items-center justify-center shadow-md transition-colors"
-            aria-label="Thay ảnh đại diện"
+            aria-label="Change avatar"
           >
             <Camera className="w-3.5 h-3.5" />
           </button>
@@ -134,13 +134,13 @@ export function ProfileInfoForm({
 
         <div>
           <p className="font-medium text-gray-900 dark:text-white">
-            {profile.fullName ?? "Chưa cập nhật"}
+            {profile.fullName ?? "Not updated"}
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {profile.email}
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-            JPG, PNG, GIF, WEBP · tối đa 10MB
+            JPG, PNG, GIF, WEBP · max 10MB
           </p>
         </div>
       </div>
@@ -149,14 +149,14 @@ export function ProfileInfoForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Họ và tên
+            Full name
           </label>
           <input
             type="text"
             name="fullName"
             value={form.fullName}
             onChange={handleChange}
-            placeholder="Nhập họ và tên"
+            placeholder="Enter full name"
             className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
@@ -172,27 +172,27 @@ export function ProfileInfoForm({
             className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed"
           />
           <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
-            Email không thể thay đổi
+            Email cannot be changed
           </p>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Số điện thoại
+            Phone number
           </label>
           <input
             type="tel"
             name="phone"
             value={form.phone}
             onChange={handleChange}
-            placeholder="Nhập số điện thoại"
+            placeholder="Enter phone number"
             className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Ngày sinh
+            Date of birth
           </label>
           <input
             type="date"
@@ -205,7 +205,7 @@ export function ProfileInfoForm({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Giới tính
+            Gender
           </label>
           <select
             name="gender"
@@ -214,21 +214,21 @@ export function ProfileInfoForm({
             className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="male">Nam</option>
-            <option value="female">Nữ</option>
-            <option value="other">Khác</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
           </select>
         </div>
 
         <div className="md:col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Địa chỉ
+            Address
           </label>
           <input
             type="text"
             name="address"
             value={form.address}
             onChange={handleChange}
-            placeholder="Nhập địa chỉ"
+            placeholder="Enter address"
             className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
@@ -241,7 +241,7 @@ export function ProfileInfoForm({
           className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-          {saving ? "Đang lưu..." : "Lưu thay đổi"}
+          {saving ? "Saving..." : "Save changes"}
         </button>
       </div>
     </form>

@@ -11,6 +11,7 @@ interface CreateIssueForm {
   status: string;
   sprintId: string | null;
   assigneeId: string;
+  columnId?: string | null;
 }
 
 interface UseIssueHandlersProps {
@@ -52,7 +53,7 @@ export const useIssueHandlers = ({
   ) => {
     const existingIssue = issues.find((issue) => issue.id === id);
     if (!existingIssue) {
-      toast.error("Không tìm thấy task");
+      toast.error("No task");
       return;
     }
     setIssues(
@@ -69,6 +70,9 @@ export const useIssueHandlers = ({
         );
         queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
+        if (savedIssue.key) {
+          queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
+        }
       })
       .catch((error) => {
         setIssues(issues);
@@ -96,6 +100,7 @@ export const useIssueHandlers = ({
         status: "To Do",
         sprintId: null,
         assigneeId: "",
+        columnId: null,
       });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
@@ -131,6 +136,9 @@ export const useIssueHandlers = ({
       setSelectedIssue(savedIssue);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, updatedIssue.id] });
+      if (savedIssue.key) {
+        queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
+      }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
     }

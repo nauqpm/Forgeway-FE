@@ -1,127 +1,204 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { FormEvent, use, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Plus, Save } from "lucide-react";
+import { toast } from "react-hot-toast";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
-import { ArrowLeft, ArrowRight, Save, Eye, Plus } from "lucide-react";
-import Link from "next/link";
+import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
-interface Page {
-  _id: string;
-  title: string;
-  slug: string;
-  content?: string;
-  status: string;
-  labels: string[];
-  workspaceId: string;
-}
-
-export default function CreatePagePage() {
+export default function CreateWorkspacePage({
+  params,
+}: {
+  params: Promise<{ key: string }>;
+}) {
+  const { key } = use(params);
   const router = useRouter();
-  const params = useParams();
-  const workspaceId = params.id as string;
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ title: "", content: "", labels: "", status: "published" as "draft" | "published" });
+  const [resolvingWorkspace, setResolvingWorkspace] = useState(true);
+  const [workspaceId, setWorkspaceId] = useState("");
+  const [form, setForm] = useState({
+    title: "",
+    content: "",
+    labels: "",
+    status: "published" as "draft" | "published",
+  });
   const [labelInput, setLabelInput] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    resolveWorkspaceFromRouteKey(key)
+      .then((workspace) => setWorkspaceId(workspace._id))
+      .catch(() => toast.error("Khong tim thay workspace"))
+      .finally(() => setResolvingWorkspace(false));
+  }, [key]);
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim()) return;
+    if (!form.title.trim() || !workspaceId) return;
+
     setLoading(true);
     try {
-      const labels = form.labels.split(",").map(l => l.trim()).filter(Boolean);
+      const labels = form.labels.split(",").map((label) => label.trim()).filter(Boolean);
       const res = await api.post(apiRoutes.PAGES.BASE, {
-        title: form.title,
+        title: form.title.trim(),
         content: form.content,
         workspaceId,
         status: form.status,
         labels,
       });
-      router.push(`/workspaces/${workspaceId}/pages/${res.data.slug}`);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      const created = res.data?.data ?? res.data;
+      toast.success("Da tao page trong workspace");
+      router.push(`/workspaces/${key}/pages/${created.slug}`);
+    } catch {
+      toast.error("Tao page that bai");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addLabel = () => {
-    if (!labelInput.trim()) return;
-    const current = form.labels.split(",").map(l => l.trim()).filter(Boolean);
-    if (!current.includes(labelInput.trim())) {
-      setForm({ ...form, labels: [...current, labelInput.trim()].join(", ") });
+    const nextLabel = labelInput.trim();
+    if (!nextLabel) return;
+
+    const current = form.labels.split(",").map((label) => label.trim()).filter(Boolean);
+    if (!current.includes(nextLabel)) {
+      setForm((curr) => ({ ...curr, labels: [...current, nextLabel].join(", ") }));
     }
     setLabelInput("");
   };
 
   return (
     <div className="app-page-narrow">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href={`/workspaces/${workspaceId}`} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-          <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+      <div className="mb-6 flex items-center gap-3">
+        <Link
+          href={`/workspaces/${key}/docs`}
+          className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
+          <ArrowLeft className="h-5 w-5 text-gray-500 dark:text-gray-400" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Page</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Create a new document in this Workspace</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Workspace Page</h1>
+          <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">
+            Create a page that belongs to this workspace.
+          </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <form
+        onSubmit={handleSubmit}
+        className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
+      >
         <div className="workspace-panel space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Page Title *</label>
-            <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Page title *
+            </label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={(e) => setForm((curr) => ({ ...curr, title: e.target.value }))}
+              required
               placeholder="Enter page title"
-              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Content</label>
-            <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={12}
-              placeholder="Write your content here... (Markdown supported)"
-              className="w-full px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none font-mono" />
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Content
+            </label>
+            <textarea
+              value={form.content}
+              onChange={(e) => setForm((curr) => ({ ...curr, content: e.target.value }))}
+              rows={12}
+              placeholder="Write your workspace page content..."
+              className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 font-mono text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Labels</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Labels
+            </label>
             <div className="flex gap-2">
-              <input type="text" value={labelInput} onChange={(e) => setLabelInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLabel(); } }}
+              <input
+                type="text"
+                value={labelInput}
+                onChange={(e) => setLabelInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addLabel();
+                  }
+                }}
                 placeholder="Type a label and press Enter"
-                className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
-              <button type="button" onClick={addLabel}
-                className="px-4 py-2.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <Plus className="w-4 h-4" />
+                className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              />
+              <button
+                type="button"
+                onClick={addLabel}
+                className="rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <Plus className="h-4 w-4" />
               </button>
             </div>
             {form.labels && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {form.labels.split(",").map(l => l.trim()).filter(Boolean).map(label => (
-                  <span key={label} className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded text-xs font-medium">
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {form.labels.split(",").map((label) => label.trim()).filter(Boolean).map((label) => (
+                  <span
+                    key={label}
+                    className="inline-flex items-center gap-1 rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                  >
                     {label}
                   </span>
                 ))}
               </div>
             )}
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Separate multiple labels with commas</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Status
+            </label>
             <div className="flex gap-3">
-              {(["draft", "published"] as const).map(s => (
-                <label key={s} className={`flex-1 flex items-center gap-2 p-3 border rounded-xl cursor-pointer transition-colors ${form.status === s ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"}`}>
-                  <input type="radio" name="status" value={s} checked={form.status === s}
-                    onChange={() => setForm({ ...form, status: s })} />
-                  <span className="text-sm font-medium text-gray-800 dark:text-gray-200 capitalize">{s}</span>
+              {(["draft", "published"] as const).map((status) => (
+                <label
+                  key={status}
+                  className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border p-3 transition-colors ${
+                    form.status === status
+                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
+                      : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="status"
+                    value={status}
+                    checked={form.status === status}
+                    onChange={() => setForm((curr) => ({ ...curr, status }))}
+                  />
+                  <span className="text-sm font-medium capitalize text-gray-800 dark:text-gray-200">
+                    {status}
+                  </span>
                 </label>
               ))}
             </div>
           </div>
         </div>
-        <div className="px-[var(--workspace-surface-pad)] py-4 bg-gray-50 dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-3">
-          <Link href={`/workspaces/${workspaceId}`} className="px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50 px-[var(--workspace-surface-pad)] py-4 dark:border-gray-700 dark:bg-gray-800">
+          <Link
+            href={`/workspaces/${key}/docs`}
+            className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
             Cancel
           </Link>
-          <button type="submit" disabled={loading || !form.title.trim()}
-            className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2">
-            {loading ? "Creating..." : <><Save className="w-4 h-4" /> Create Page</>}
+          <button
+            type="submit"
+            disabled={loading || resolvingWorkspace || !workspaceId || !form.title.trim()}
+            className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {loading ? "Creating..." : <>
+              <Save className="h-4 w-4" /> Create Page
+            </>}
           </button>
         </div>
       </form>

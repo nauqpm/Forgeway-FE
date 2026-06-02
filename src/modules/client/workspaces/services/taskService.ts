@@ -2,19 +2,48 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "../types/issue.type";
 import { TaskFilters } from "../types/filter.type";
+import { TaskDetailResponse } from "../types/task-detail.type";
+import type { TaskCover } from "../types/task-cover.type";
+import type { TaskLabel } from "../types/label.type";
+
+type TaskUserDto = {
+  id?: string;
+  fullName?: string;
+  email?: string;
+  avatar?: string;
+} | null;
+
+type TaskSprintDto = {
+  id?: string;
+  name?: string;
+  startDate?: string;
+  endDate?: string;
+} | null;
+
+type TaskBoardDto = {
+  id?: string;
+  name?: string;
+} | null;
 
 type TaskDto = {
   _id?: string;
   id?: string;
+  workspaceId?: string;
   key: string;
   title: string;
   description?: string;
   type?: string;
   status?: string;
   priority?: string;
+  rank?: string;
   assigneeId?: string;
+  assignee?: TaskUserDto;
   reporterId?: string;
+  reporter?: TaskUserDto;
   sprintId?: string;
+  sprint?: TaskSprintDto;
+  boardId?: string;
+  board?: TaskBoardDto;
   columnId?: string;
   boardColumnId?: string;
   storyPoints?: number;
@@ -30,6 +59,12 @@ type TaskDto = {
     email?: string;
     avatar?: string;
   } | null;
+  isDeleted?: boolean;
+  deletedAt?: string | null;
+  deletedBy?: string | null;
+  cover?: TaskCover | null;
+  labels?: (TaskLabel | string | { _id?: string; id?: string; name?: string })[];
+  labelIds?: string[];
 };
 
 type CreateTaskInput = {
@@ -39,6 +74,15 @@ type CreateTaskInput = {
   status: string;
   sprintId: string | null;
   assigneeId?: string | null;
+  columnId?: string | null;
+};
+
+export type ReorderTaskInput = {
+  columnId?: string;
+  status?: string;
+  sprintId?: string | null;
+  beforeTaskId?: string;
+  afterTaskId?: string;
 };
 
 export type TaskActivity = {
@@ -54,8 +98,43 @@ export type TaskActivity = {
     avatar?: string;
   } | null;
   type: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   createdAt?: string;
+};
+
+export type TaskComment = {
+  id: string;
+  _id?: string;
+  workspaceId: string;
+  content: string;
+  authorId: string;
+  author: {
+    id?: string;
+    fullName?: string;
+    email?: string;
+    avatar?: string;
+  } | null;
+  targetType: string;
+  targetId: string;
+  parentId: string | null;
+  mentions: string[];
+  isDeleted: boolean;
+  editedAt: string | null;
+  createdAt: string;
+};
+
+export type PaginatedActivitiesResponse = {
+  activities: TaskActivity[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
+export type PaginatedTasksResponse = {
+  tasks: Issue[];
+  total: number;
+  page: number;
+  limit: number;
 };
 
 const COLUMN_BY_STATUS: Record<string, string> = {
@@ -120,6 +199,27 @@ const toStatusLabel = (task: TaskDto) => {
   return STATUS_BY_COLUMN[column ?? ""] ?? task.status ?? "To Do";
 };
 
+const toTaskLabel = (raw: TaskLabel | string | { _id?: string; id?: string; name?: string }): TaskLabel => {
+  if (typeof raw === "string") {
+    return { id: raw, name: raw };
+  }
+
+  const id = raw.id ?? raw._id ?? "";
+  return {
+    ...raw,
+    id,
+    name: raw.name ?? id,
+  };
+};
+
+const toTaskLabels = (task: TaskDto): TaskLabel[] => {
+  if (Array.isArray(task.labels)) {
+    return task.labels.map(toTaskLabel).filter((label) => label.id);
+  }
+
+  return (task.labelIds ?? []).map((id) => ({ id, name: id }));
+};
+
 const requireTaskKey = (task: TaskDto) => {
   if (!task.key) {
     throw new Error("Task key is missing from backend response");
@@ -146,8 +246,10 @@ const toIssue = (task: TaskDto): Issue => {
     _id: task._id,
     key: requireTaskKey(task),
     title: task.title,
+    description: task.description ?? "",
     columnId: task.columnId ?? task.boardColumnId ?? toColumnId(task.status) ?? "todo",
     status: toStatusLabel(task),
+    rank: task.rank,
     priority: toUiLabel(task.priority, "Medium"),
     type: toUiLabel(task.type, "Task"),
     assignee,
@@ -163,6 +265,41 @@ const toIssue = (task: TaskDto): Issue => {
     archivedByUser: task.archivedByUser ?? null,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    cover: task.cover ?? null,
+    labels: toTaskLabels(task),
+    labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
+  };
+};
+
+const formatAssignee = (task: TaskDto) =>
+  task.assignee?.fullName || task.assignee?.email || task.assigneeId || "U";
+
+const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
+  const issue = toIssue(task);
+
+  return {
+    ...issue,
+    workspaceId: task.workspaceId ?? "",
+    description: task.description ?? "",
+    type: toUiLabel(task.type, "Task"),
+    priority: toUiLabel(task.priority, "Medium"),
+    status: toStatusLabel(task),
+    rank: task.rank ?? "",
+    assignee: task.assignee ?? null,
+    assigneeDisplayName: formatAssignee(task),
+    reporterId: task.reporterId ?? null,
+    reporter: task.reporter ?? null,
+    sprint: task.sprint ?? undefined,
+    boardId: task.boardId,
+    board: task.board ?? undefined,
+    dueDate: task.dueDate ?? null,
+    isArchived: task.isArchived ?? false,
+    isDeleted: task.isDeleted ?? false,
+    createdAt: task.createdAt ?? "",
+    updatedAt: task.updatedAt ?? "",
+    cover: task.cover ?? null,
+    labels: toTaskLabels(task),
+    labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
   };
 };
 
@@ -170,10 +307,19 @@ const toCreatePayload = (input: CreateTaskInput) => ({
   title: input.title,
   type: normalizeValue(input.type),
   priority: normalizeValue(input.priority),
-  columnId: toColumnId(input.status),
+  columnId: input.columnId || toColumnId(input.status),
   status: toColumnId(input.status),
   sprintId: input.sprintId || undefined,
   assigneeId: input.assigneeId || undefined,
+});
+
+const toTaskComment = (comment: TaskComment): TaskComment => ({
+  ...comment,
+  id: comment.id || comment._id || "",
+  authorId:
+    comment.authorId ||
+    comment.author?.id ||
+    "",
 });
 
 const toUpdatePayload = (updates: Partial<Issue>) => {
@@ -191,7 +337,9 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     type,
   } = updates;
 
-  const nextAssigneeId = assigneeId ?? (assignee && assignee !== "U" ? assignee : undefined);
+  const nextAssigneeId =
+    assigneeId ??
+    (typeof assignee === "string" && assignee !== "U" ? assignee : undefined);
   const payload: Record<string, unknown> = {};
 
   if (title !== undefined) payload.title = title;
@@ -239,12 +387,15 @@ export const buildTaskQuery = (filters?: TaskFilters) => {
   addArray("reporterId", activeFilters.reporterId);
   addArray("type", normalizeArray(activeFilters.type));
   addArray("priority", normalizeArray(activeFilters.priority));
+  addArray("labelIds", activeFilters.labelIds);
   addValue("taskKey", activeFilters.taskKey);
   addValue("search", activeFilters.search?.trim());
   addValue("backlog", activeFilters.backlog === true ? "true" : undefined);
   addValue("archived", activeFilters.archived === true ? "true" : undefined);
   addValue("page", activeFilters.page);
   addValue("limit", activeFilters.limit);
+  addValue("sortBy", activeFilters.sortBy);
+  addValue("sortOrder", activeFilters.sortOrder);
 
   return params.length > 0 ? `?${params.join("&")}` : "";
 };
@@ -257,7 +408,9 @@ export const taskService = {
     const response = await api.get(
       `${apiRoutes.TASKS.BOARD(workspaceId)}${buildTaskQuery(filters)}`,
     );
-    return normalizeResponseData<TaskDto[]>(response).map(toIssue);
+    const payload = normalizeResponseData<any>(response);
+    const tasks: TaskDto[] = Array.isArray(payload) ? payload : (payload?.tasks ?? []);
+    return tasks.map(toIssue);
   },
 
   async listBoardTasks(
@@ -265,6 +418,17 @@ export const taskService = {
     filters?: TaskFilters,
   ): Promise<Issue[]> {
     return taskService.getBoardTasks(workspaceId, filters);
+  },
+
+  async getBoardTaskDetail(
+    workspaceId: string,
+    taskKey: string,
+  ): Promise<TaskDetailResponse> {
+    const response = await api.get(
+      apiRoutes.TASKS.BOARD_TASK_BY_KEY(workspaceId, taskKey),
+    );
+
+    return toTaskDetail(normalizeResponseData<TaskDto>(response));
   },
 
   async createBoardTask(
@@ -329,6 +493,19 @@ export const taskService = {
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
+  async reorderBoardTask(
+    workspaceId: string,
+    taskId: string,
+    input: ReorderTaskInput,
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_REORDER(workspaceId, taskId),
+      input,
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
+  },
+
   async deleteBoardTask(
     workspaceId: string,
     taskId: string,
@@ -360,14 +537,103 @@ export const taskService = {
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
+  async replaceTaskLabels(
+    workspaceId: string,
+    taskId: string,
+    labelIds: string[],
+  ): Promise<Issue> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_LABELS(workspaceId, taskId),
+      { labelIds },
+    );
+
+    return toIssue(normalizeResponseData<TaskDto>(response));
+  },
+
   async getTaskActivities(
     workspaceId: string,
     taskId: string,
-  ): Promise<TaskActivity[]> {
+    page = 1,
+    limit = 20,
+  ): Promise<PaginatedActivitiesResponse> {
     const response = await api.get(
-      apiRoutes.TASKS.BOARD_TASK_ACTIVITIES(workspaceId, taskId),
+      `${apiRoutes.TASKS.BOARD_TASK_ACTIVITIES(workspaceId, taskId)}?page=${page}&limit=${limit}`,
     );
+    const payload = normalizeResponseData<Record<string, unknown>>(response);
+    const activities: TaskActivity[] = Array.isArray(payload)
+      ? (payload as TaskActivity[])
+      : ((payload?.activities ?? []) as TaskActivity[]);
+    return {
+      activities,
+      total: typeof payload?.total === "number" ? payload.total : activities.length,
+      page: typeof payload?.page === "number" ? payload.page : page,
+      limit: typeof payload?.limit === "number" ? payload.limit : limit,
+    };
+  },
 
-    return normalizeResponseData<TaskActivity[]>(response);
+  async getArchivedTasks(
+    workspaceId: string,
+    filters?: Pick<TaskFilters, "page" | "limit" | "sortBy" | "sortOrder">,
+  ): Promise<PaginatedTasksResponse> {
+    const query = buildTaskQuery(filters);
+    const response = await api.get(
+      `${apiRoutes.TASKS.BOARD_ARCHIVES(workspaceId)}${query}`,
+    );
+    const payload = normalizeResponseData<Record<string, unknown>>(response);
+    const raw: TaskDto[] = Array.isArray(payload)
+      ? (payload as TaskDto[])
+      : ((payload?.tasks ?? []) as TaskDto[]);
+    return {
+      tasks: raw.map(toIssue),
+      total: typeof payload?.total === "number" ? payload.total : raw.length,
+      page: typeof payload?.page === "number" ? payload.page : (filters?.page ?? 1),
+      limit: typeof payload?.limit === "number" ? payload.limit : (filters?.limit ?? 20),
+    };
+  },
+
+  async getComments(workspaceId: string, taskId: string): Promise<TaskComment[]> {
+    const response = await api.get(
+      apiRoutes.TASKS.BOARD_TASK_COMMENTS(workspaceId, taskId),
+    );
+    const payload = normalizeResponseData<unknown>(response);
+    return (Array.isArray(payload) ? payload : []).map((comment) =>
+      toTaskComment(comment as TaskComment),
+    );
+  },
+
+  async createComment(
+    workspaceId: string,
+    taskId: string,
+    content: string,
+    parentId?: string | null,
+    mentions?: string[],
+  ): Promise<TaskComment> {
+    const body: Record<string, unknown> = { content };
+    if (parentId) body.parentId = parentId;
+    if (mentions?.length) body.mentions = mentions;
+    const response = await api.post(
+      apiRoutes.TASKS.BOARD_TASK_COMMENTS(workspaceId, taskId),
+      body,
+    );
+    return toTaskComment(normalizeResponseData<TaskComment>(response));
+  },
+
+  async updateComment(
+    workspaceId: string,
+    taskId: string,
+    commentId: string,
+    content: string,
+  ): Promise<TaskComment> {
+    const response = await api.patch(
+      apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId),
+      { content },
+    );
+    return toTaskComment(normalizeResponseData<TaskComment>(response));
+  },
+
+  async deleteComment(workspaceId: string, taskId: string, commentId: string): Promise<void> {
+    await api.delete(
+      apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId),
+    );
   },
 };

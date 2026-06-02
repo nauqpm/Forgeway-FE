@@ -31,7 +31,7 @@ export default function CreateWorkspacePage() {
       });
       router.push("/workspaces");
     } catch {
-      setError("Tạo Workspace thất bại. Vui lòng thử lại.");
+      setError("Workspace creation failed. Please try again.");
     }
   };
 
@@ -42,8 +42,8 @@ export default function CreateWorkspacePage() {
           <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Tạo không gian làm việc mới (Workspace)</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Không gian làm việc cho team của bạn</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create a new workspace</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">A workspace for your team</p>
         </div>
       </div>
 
@@ -57,19 +57,19 @@ export default function CreateWorkspacePage() {
           )}
           
           <div>
-            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Tên Workspace *</label>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Workspace Name *</label>
             <input
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value, key: e.target.value.toUpperCase().replace(/\s+/g, "").substring(0, 5) })}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Ví dụ: Đội Kỹ Thuật, Dự án Alpha"
+              placeholder="Example: Engineering Team, Project Alpha"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Mã Workspace (Key) *</label>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Workspace Key *</label>
             <input
               type="text"
               value={form.key}
@@ -79,17 +79,17 @@ export default function CreateWorkspacePage() {
               maxLength={10}
               required
             />
-            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">Key dùng để tạo mã cho công việc. Ví dụ: {form.key || "ENG"}-123.</p>
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">The key is used to generate work item codes. Example: {form.key || "ENG"}-123.</p>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Mô tả ngắn</label>
+            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Short description</label>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
               rows={3}
-              placeholder="Mô tả mục đích của Workspace này..."
+              placeholder="Describe the purpose of this workspace..."
             />
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function CreateWorkspacePage() {
 
         {/* Workspace Type / Template */}
         <div>
-          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Chọn loại Workspace (Template) *</label>
+          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Choose workspace type (template) *</label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <button 
               type="button" 
@@ -108,7 +108,7 @@ export default function CreateWorkspacePage() {
               {form.template === "kanban" && <div className="absolute top-4 right-4 w-4 h-4 rounded-full bg-indigo-600 border-4 border-indigo-100" />}
               <Columns className={`w-8 h-8 mb-3 ${form.template === "kanban" ? "text-indigo-600" : "text-gray-400 dark:text-gray-500"}`} />
               <h3 className="font-bold text-gray-900 dark:text-white mb-1">Kanban</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Tập trung vào luồng công việc liên tục. Phù hợp cho team support, vận hành, hoặc quy trình đơn giản.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Focus on continuous workflow. Suitable for support, operations, or simple processes.</p>
             </button>
 
             <button 
@@ -119,7 +119,7 @@ export default function CreateWorkspacePage() {
               {form.template === "scrum" && <div className="absolute top-4 right-4 w-4 h-4 rounded-full bg-indigo-600 border-4 border-indigo-100" />}
               <Repeat className={`w-8 h-8 mb-3 ${form.template === "scrum" ? "text-indigo-600" : "text-gray-400 dark:text-gray-500"}`} />
               <h3 className="font-bold text-gray-900 dark:text-white mb-1">Scrum</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Làm việc theo các Sprint có chu kỳ. Có Backlog riêng. Phù hợp cho dự án phát triển phần mềm.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Work in recurring sprints with a dedicated backlog. Suitable for software development projects.</p>
             </button>
           </div>
         </div>
@@ -128,11 +128,11 @@ export default function CreateWorkspacePage() {
 
         {/* Visibility */}
         <div>
-          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Quyền truy cập</label>
+          <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Access</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { value: "public", label: "Public trong Workspace", desc: "Mọi thành viên đều có thể xem", icon: Globe },
-              { value: "private", label: "Private (Riêng tư)", desc: "Chỉ người được mời mới thấy", icon: Lock },
+              { value: "public", label: "Public in Workspace", desc: "Every member can view", icon: Globe },
+              { value: "private", label: "Private (Private)", desc: "Only invited people can view", icon: Lock },
             ].map((opt) => (
               <button 
                 key={opt.value} 
@@ -153,9 +153,9 @@ export default function CreateWorkspacePage() {
         </div>
 
         <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
-          <Link href="/workspaces" className="px-6 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors">Hủy</Link>
+          <Link href="/workspaces" className="px-6 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium transition-colors">Cancel</Link>
           <button type="submit" disabled={isLoading} className="px-8 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors disabled:opacity-50 flex items-center gap-2">
-            {isLoading ? "Đang tạo..." : "Tạo Workspace"}
+            {isLoading ? "Creating..." : "Create Workspace"}
           </button>
         </div>
       </form>

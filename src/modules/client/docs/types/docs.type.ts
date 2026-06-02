@@ -27,6 +27,7 @@ export interface Document {
   status: 'draft' | 'published';
   labels: string[];
   versionHistory: VersionHistoryEntry[];
+  source?: 'docs' | 'upload';
   createdAt: string;
   updatedAt: string;
 }
@@ -80,6 +81,7 @@ export interface UpdatePagePayload {
 export interface DocsState {
   documents: Document[];
   selectedDocumentId: string | null;
+  selectedImportedDocumentId: string | null;
   expandedNodes: string[];
   searchQuery: string;
   isSaving: boolean;
@@ -91,6 +93,7 @@ export interface DocsState {
   // ── Sync actions (pure state) ──────────────────────────────
   setDocuments: (documents: Document[]) => void;
   selectDocument: (id: string | null) => void;
+  selectImportedDocument: (id: string | null) => void;
   toggleExpand: (id: string) => void;
   setSearchQuery: (query: string) => void;
   setIsSaving: (saving: boolean) => void;

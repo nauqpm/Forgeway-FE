@@ -58,7 +58,7 @@ export default function Header() {
             href="/aboutUs"
             className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
           >
-            Về chúng tôi
+            About us
           </Link>
         </div>
 
@@ -103,7 +103,7 @@ export default function Header() {
                   onClick={() => setDropdownOpen(false)}
                 >
                   <User className="w-4 h-4 text-indigo-500" />
-                  Trang cá nhân
+                  Profile
                 </Link>
 
                 <Link
@@ -112,7 +112,7 @@ export default function Header() {
                   onClick={() => setDropdownOpen(false)}
                 >
                   <Settings className="w-4 h-4 text-gray-400" />
-                  Cài đặt
+                  Settings
                 </Link>
 
                 <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
@@ -124,7 +124,7 @@ export default function Header() {
                     className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    Đăng xuất
+                    Log out
                   </button>
                 </div>
               </div>
@@ -136,13 +136,13 @@ export default function Header() {
               href="/login"
               className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
             >
-              Đăng nhập
+              Sign in
             </Link>
             <Link
               href="/register"
               className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
             >
-              Bắt đầu ngay
+              Get started
             </Link>
           </div>
         )}

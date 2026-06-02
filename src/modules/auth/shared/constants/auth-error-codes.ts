@@ -7,4 +7,4 @@ export const AUTH_ERROR_CODES = {
   INVALID_CREDENTIALS: "INVALID_CREDENTIALS",
 };
 
-// Dùng để map lỗi backend sang UI message.
+// Used to map backend errors to UI messages.

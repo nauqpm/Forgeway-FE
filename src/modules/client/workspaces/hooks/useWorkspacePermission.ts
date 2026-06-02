@@ -27,6 +27,17 @@ const getId = (value: WorkspaceMember["userId"] | WorkspacePermissionSource["own
   return value._id ?? value.id ?? "";
 };
 
+const normalizeWorkspaceRole = (role?: string | null) => {
+  if (!role) return null;
+
+  const normalized = role.trim().toLowerCase().replace(/[-\s]+/g, "_");
+  if (["workspace_admin", "space_admin", "admin", "owner"].includes(normalized)) {
+    return "workspace_admin";
+  }
+
+  return normalized;
+};
+
 export function useWorkspacePermission(
   workspaceKey: string,
   workspaceOverride?: WorkspacePermissionSource | null,
@@ -52,9 +63,8 @@ export function useWorkspacePermission(
     if (user.role === "super_admin") return "workspace_admin";
     if (!workspace) return null;
     if (getId(workspace.ownerId) === user.id) return "workspace_admin";
-    return (
-      workspace.members?.find((member) => getId(member.userId) === user.id)?.role ??
-      null
+    return normalizeWorkspaceRole(
+      workspace.members?.find((member) => getId(member.userId) === user.id)?.role,
     );
   }, [user, workspace]);
 

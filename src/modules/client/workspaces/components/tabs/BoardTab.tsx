@@ -7,10 +7,23 @@ import { Issue } from "../../types/issue.type";
 import { Workspace } from "../../types/workspace.type";
 import { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
+import type { TaskCover } from "../../types/task-cover.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
+import BoardTaskActionMenu from "../covers/BoardTaskActionMenu";
+import TaskLabelModal from "../labels/TaskLabelModal";
+import { compareIssueRank } from "../../utils/dragUtils";
 
-import { Archive, MoreHorizontal, Search, Plus, Check, X, Trash2, PlayCircle, UserRound } from "lucide-react";
+import {
+  Check,
+  MoreHorizontal,
+  Plus,
+  Search,
+  Trash2,
+  UserRound,
+  X,
+  PlayCircle,
+} from "lucide-react";
 
 type BoardTabProps = {
   data: {
@@ -44,6 +57,7 @@ type BoardTabProps = {
     setNewColumnName: any;
 
     handleBoardDragEnd: any;
+    handleBoardDragStart?: any;
     handleAddColumn: () => void;
     handleRenameColumn: (columnId: string, name: string) => void;
     handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
@@ -86,6 +100,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     setNewColumnName,
 
     handleBoardDragEnd,
+    handleBoardDragStart,
     handleAddColumn,
     handleRenameColumn,
     handleDeleteColumn,
@@ -108,6 +123,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [assigneeMenuIssueId, setAssigneeMenuIssueId] = useState<string | null>(null);
   const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<React.CSSProperties>({});
   const [actionMenuIssueId, setActionMenuIssueId] = useState<string | null>(null);
+  const [actionMenuAnchorRect, setActionMenuAnchorRect] = useState<DOMRect | null>(null);
+  const [labelModalIssue, setLabelModalIssue] = useState<Issue | null>(null);
   const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [memberSearch, setMemberSearch] = useState("");
@@ -153,21 +170,18 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   }, [memberSearch, workspaceMembers]);
 
   useEffect(() => {
-    if (!assigneeMenuIssueId && !actionMenuIssueId) return;
+    if (!assigneeMenuIssueId) return;
 
     const handlePointerDown = (event: MouseEvent) => {
       if (!assigneeMenuRef.current?.contains(event.target as Node)) {
         setAssigneeMenuIssueId(null);
         setMemberSearch("");
       }
-      if (!actionMenuRef.current?.contains(event.target as Node)) {
-        setActionMenuIssueId(null);
-      }
     };
 
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [assigneeMenuIssueId, actionMenuIssueId]);
+  }, [assigneeMenuIssueId]);
 
   const getIssueAssignee = (issue: Issue) => {
     const assigneeId = issue.assigneeId ?? issue.assignee;
@@ -183,9 +197,38 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     setMemberSearch("");
   };
 
+  const patchIssueCover = (issueId: string, cover: TaskCover | null) => {
+    setIssues((current) =>
+      current.map((item) => (item.id === issueId ? { ...item, cover } : item)),
+    );
+  };
+
   const issueMatchesColumn = (issue: Issue, col: BoardColumn) => {
     return issue.columnId ? issue.columnId === col.id : col.mappedStatuses?.includes(issue.status);
   };
+
+
+  const issuesByColumnId = useMemo(() => {
+    const assignedIssueIds = new Set<string>();
+    const next = new Map<string, Issue[]>();
+
+    columns.forEach((column) => {
+      const columnIssues = visibleIssues
+        .filter((issue) => {
+          if (assignedIssueIds.has(issue.id)) return false;
+          if (!issueMatchesColumn(issue, column)) return false;
+          assignedIssueIds.add(issue.id);
+          return true;
+        })
+        .sort(compareIssueRank);
+
+      next.set(column.id, columnIssues);
+    });
+
+    return next;
+  }, [columns, visibleIssues]);
+
+  const getColumnIssues = (column: BoardColumn) => issuesByColumnId.get(column.id) ?? [];
 
   const closeDeleteIssueModal = () => {
     setIssueToDelete(null);
@@ -198,6 +241,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     closeDeleteIssueModal();
   };
 
+  const handleLabelSaved = (updatedIssue: Issue) => {
+    setIssues((current) =>
+      current.map((item) => (item.id === updatedIssue.id ? updatedIssue : item)),
+    );
+  };
+
   if (workspace.type === "scrum" && !activeSprint) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
@@ -205,14 +254,18 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           <PlayCircle className="w-8 h-8 text-indigo-500" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          Chưa có Sprint đang hoạt động
+          No active sprint
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Vui lòng bắt đầu một Sprint từ tab Backlog để xem board
+          Start a sprint from the Backlog tab to view the board
         </p>
       </div>
     );
   }
+
+  const activeActionIssue = actionMenuIssueId
+    ? issues.find((item) => item.id === actionMenuIssueId) ?? null
+    : null;
 
   return (
     <div className="flex flex-col gap-4 relative">
@@ -223,7 +276,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       )}
 
       {isFetching && (
-        <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 z-40 flex items-center justify-center backdrop-blur-[1px]">
+        <div className="pointer-events-none absolute inset-0 bg-white/50 dark:bg-gray-900/50 z-40 flex items-center justify-center backdrop-blur-[1px]">
           <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
@@ -235,7 +288,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         uniqueAssignees={uniqueAssignees} 
       />
 
-      <DragDropContext onDragEnd={handleBoardDragEnd}>
+      <DragDropContext onBeforeDragStart={handleBoardDragStart} onDragEnd={handleBoardDragEnd}>
         <Droppable
           droppableId="board-columns"
           direction="horizontal"
@@ -253,7 +306,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                   key={column.id}
                   draggableId={`col-${column.id}`}
                   index={index}
-                  isDragDisabled={!canUpdateWorkspace}
+                  isDragDisabled={filters.archived || !canUpdateWorkspace}
                 >
                   {(provided) => (
                     <div
@@ -289,7 +342,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide flex items-center gap-2">
                             {column.name}
                             <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[10px] font-bold">
-                              {visibleIssues.filter((i) => issueMatchesColumn(i, column)).length}
+                              {getColumnIssues(column).length}
                             </span>
                           </h3>
                         )}
@@ -306,7 +359,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             </button>
                             <button
                               onClick={() => {
-                                setNewIssueForm({ ...newIssueForm, status: column.name, columnId: column.id });
+                                setNewIssueForm({
+                                  ...newIssueForm,
+                                  status: column.name,
+                                  columnId: column.id,
+                                  sprintId: activeSprint?._id ?? null,
+                                });
                                 setShowCreateIssue(true);
                               }}
                               className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors"
@@ -322,16 +380,15 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : ""}`}
+                            className={`p-3 flex-1 overflow-visible space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : ""}`}
                           >
-                            {visibleIssues
-                              .filter((i) => issueMatchesColumn(i, column))
+                            {getColumnIssues(column)
                               .map((issue, issueIndex) => (
                                 <Draggable
                                   key={issue.id}
                                   draggableId={issue.id}
                                   index={issueIndex}
-                                  isDragDisabled={!canMoveTask}
+                                  isDragDisabled={filters.archived || !canMoveTask}
                                 >
                                   {(provided, snapshot) => (
                                     <div
@@ -342,9 +399,25 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         if (filters.archived) return;
                                         setSelectedIssue(issue);
                                       }}
-                                      className={`relative bg-white dark:bg-gray-900 p-3.5 rounded-lg shadow-sm border ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      className={`relative overflow-visible rounded-lg border bg-white shadow-sm dark:bg-gray-900 ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
                                     >
-                                      {!filters.archived && canArchiveTask && onArchiveIssue && (
+                                      {issue.cover?.type === "image" && (
+                                        <div className="h-28 w-full overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800">
+                                          <img
+                                            src={issue.cover.imageUrl}
+                                            alt=""
+                                            className="h-full w-full object-cover"
+                                          />
+                                        </div>
+                                      )}
+                                      {issue.cover?.type === "color" && (
+                                        <div
+                                          className="h-7 w-full rounded-t-lg"
+                                          style={{ background: issue.cover.color }}
+                                        />
+                                      )}
+
+                                      {!filters.archived && (canEditTask || canArchiveTask || Boolean(onDeleteIssue)) && (
                                         <div
                                           className="absolute right-2 top-2 z-20"
                                           ref={actionMenuIssueId === issue.id ? actionMenuRef : undefined}
@@ -353,10 +426,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                             type="button"
                                             onClick={(event) => {
                                               event.stopPropagation();
+                                              setActionMenuAnchorRect(event.currentTarget.getBoundingClientRect());
                                               setActionMenuIssueId((current) => current === issue.id ? null : issue.id);
                                             }}
                                             onMouseDown={(event) => event.stopPropagation()}
-                                            className={`rounded-md p-1 text-gray-400 opacity-0 transition-all hover:bg-gray-100 hover:text-gray-700 group-hover:opacity-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 ${
+                                            className={`rounded-md bg-white/90 p-1 text-gray-500 opacity-0 shadow-sm transition-all hover:bg-gray-100 hover:text-gray-800 group-hover:opacity-100 dark:bg-gray-950/80 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100 ${
                                               actionMenuIssueId === issue.id ? "opacity-100" : ""
                                             }`}
                                             aria-label="Issue actions"
@@ -364,62 +438,43 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                           >
                                             <MoreHorizontal className="h-4 w-4" />
                                           </button>
-
-                                          {actionMenuIssueId === issue.id && (
-                                            <div
-                                              onClick={(event) => event.stopPropagation()}
-                                              onMouseDown={(event) => event.stopPropagation()}
-                                              className="absolute right-0 top-full z-30 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700 dark:bg-gray-900"
-                                            >
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  setActionMenuIssueId(null);
-                                                  onArchiveIssue(issue);
-                                                }}
-                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 dark:text-gray-200 dark:hover:bg-gray-800"
-                                              >
-                                                <Archive className="h-4 w-4" />
-                                                Archive
-                                              </button>
-                                              {onDeleteIssue && (
-                                                <button
-                                                  type="button"
-                                                  onClick={() => {
-                                                    setActionMenuIssueId(null);
-                                                    setIssueToDelete(issue);
-                                                    setDeleteConfirmText("");
-                                                  }}
-                                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
-                                                >
-                                                  <Trash2 className="h-4 w-4" />
-                                                  Delete
-                                                </button>
-                                              )}
-                                            </div>
-                                          )}
                                         </div>
                                       )}
-                                      <p className="text-sm font-medium text-gray-900 dark:text-white mb-2 leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                                        {issue.title}
-                                      </p>
-                                      <div className="flex flex-wrap gap-1.5 mb-3">
-                                        <span
-                                          className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === "High" ? "bg-red-50 text-red-600" : issue.priority === "Medium" ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}
-                                        >
-                                          {issue.priority}
-                                        </span>
-                                        <span
-                                          className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}
-                                        >
-                                          {issue.type}
-                                        </span>
-                                      </div>
-                                      <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50 dark:border-gray-800">
-                                        <span className="text-xs font-mono font-bold text-gray-400">
-                                          {issue.key}
-                                        </span>
-                                        <div className="relative" ref={assigneeMenuIssueId === issue.id ? assigneeMenuRef : undefined}>
+                                      <div className="p-3.5">
+                                        <p className="mb-2 text-sm font-medium leading-snug text-gray-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                                          {issue.title}
+                                        </p>
+                                        <div className="mb-3 flex flex-wrap gap-1.5">
+                                          <span
+                                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === "High" ? "bg-red-50 text-red-600" : issue.priority === "Medium" ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}
+                                          >
+                                            {issue.priority}
+                                          </span>
+                                          <span
+                                            className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}
+                                          >
+                                            {issue.type}
+                                          </span>
+                                          {(issue.labels ?? []).slice(0, 3).map((label) => (
+                                            <span
+                                              key={label.id}
+                                              title={label.name}
+                                              className="max-w-[120px] truncate rounded bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
+                                            >
+                                              {label.name}
+                                            </span>
+                                          ))}
+                                          {(issue.labels?.length ?? 0) > 3 && (
+                                            <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                              +{(issue.labels?.length ?? 0) - 3}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-2 dark:border-gray-800">
+                                          <span className="text-xs font-mono font-bold text-gray-400">
+                                            {issue.key}
+                                          </span>
+                                          <div className="relative" ref={assigneeMenuIssueId === issue.id ? assigneeMenuRef : undefined}>
                                           <button
                                             type="button"
                                             onClick={(event) => {
@@ -476,7 +531,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                               <div className="max-h-64 overflow-y-auto p-1">
                                                 {filteredWorkspaceMembers.length === 0 ? (
                                                   <div className="px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
-                                                    Không tìm thấy member.
+                                                    No members found.
                                                   </div>
                                                 ) : (
                                                   filteredWorkspaceMembers.map((member) => {
@@ -517,18 +572,18 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         </div>
                                       </div>
                                     </div>
+                                    </div>
                                   )}
                                 </Draggable>
                               ))}
                             {provided.placeholder}
-                            {visibleIssues.filter((i) => issueMatchesColumn(i, column))
-                              .length === 0 &&
+                            {getColumnIssues(column).length === 0 &&
                               !snapshot.isDraggingOver && (
                                 <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
                                   {issues.filter((i) => issueMatchesColumn(i, column))
                                     .length === 0
-                                    ? "Kéo thả issue vào đây"
-                                    : "Không có issue phù hợp"}
+                                    ? "Drag issues here"
+                                    : "No matching issues"}
                                 </div>
                               )}
                           </div>
@@ -540,7 +595,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
               ))}
               {provided.placeholder}
 
-              {/* Thêm cột mới */}
+              {/* Add new column */}
               <div
                 className="workspace-column flex-shrink-0 bg-transparent flex flex-col"
                 ref={columnsEndRef}
@@ -559,7 +614,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           setNewColumnName("");
                         }
                       }}
-                      placeholder="Tên cột mới..."
+                      placeholder="New column name..."
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                     />
                     <div className="flex items-center gap-2 mt-3">
@@ -567,7 +622,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         onClick={handleAddColumn}
                         className="flex-1 bg-indigo-600 text-white text-xs font-medium py-1.5 rounded hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1"
                       >
-                        <Check className="w-3.5 h-3.5" /> Thêm cột
+                        <Check className="w-3.5 h-3.5" /> Add column
                       </button>
                       <button
                         onClick={() => {
@@ -576,7 +631,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         }}
                         className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-medium py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1"
                       >
-                        <X className="w-3.5 h-3.5" /> Hủy
+                        <X className="w-3.5 h-3.5" /> Cancel
                       </button>
                     </div>
                   </div>
@@ -585,7 +640,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                     onClick={() => setShowCreateColumn(true)}
                     className="flex items-center gap-2 w-full bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl p-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all font-medium text-sm justify-center"
                   >
-                    <Plus className="w-5 h-5" /> Thêm cột mới
+                    <Plus className="w-5 h-5" /> Add new column
                   </button>
                 ) : null}
               </div>
@@ -593,6 +648,40 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           )}
         </Droppable>
       </DragDropContext>
+
+      {activeActionIssue && (
+        <BoardTaskActionMenu
+          workspaceId={workspace._id}
+          workspaceKey={workspace.key}
+          issue={activeActionIssue}
+          columns={columns}
+          anchorRect={actionMenuAnchorRect}
+          canArchiveTask={canArchiveTask}
+          canEditTask={canEditTask}
+          onClose={() => {
+            setActionMenuIssueId(null);
+            setActionMenuAnchorRect(null);
+          }}
+          onArchiveIssue={onArchiveIssue}
+          onDeleteIssue={(issue) => {
+            setIssueToDelete(issue);
+            setDeleteConfirmText("");
+          }}
+          onOpenLabels={(issue) => setLabelModalIssue(issue)}
+          onUpdateIssue={updateIssueDirectly}
+          onCoverChange={patchIssueCover}
+        />
+      )}
+
+      {labelModalIssue && (
+        <TaskLabelModal
+          isOpen={!!labelModalIssue}
+          workspaceId={workspace._id}
+          issue={labelModalIssue}
+          onClose={() => setLabelModalIssue(null)}
+          onSaved={handleLabelSaved}
+        />
+      )}
 
       {/* Import explicitly if not using Next.js dynamic imports, or ensure it's in the component tree */}
       {deleteModalOpen && columnToDelete && (

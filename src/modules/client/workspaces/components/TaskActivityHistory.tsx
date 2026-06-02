@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Loader2 } from "lucide-react";
 
@@ -41,6 +42,8 @@ const TYPE_MESSAGES: Record<string, string> = {
   TASK_PERMANENTLY_DELETED: "permanently deleted the work item",
 };
 
+const PAGE_LIMIT = 20;
+
 const formatValue = (value: unknown) => {
   if (value === null || value === undefined || value === "") return "None";
   return String(value);
@@ -48,9 +51,8 @@ const formatValue = (value: unknown) => {
 
 const formatDateTime = (value?: string) => {
   if (!value) return "";
-
   try {
-    return new Intl.DateTimeFormat("vi-VN", {
+    return new Intl.DateTimeFormat("en-US", {
       dateStyle: "short",
       timeStyle: "short",
     }).format(new Date(value));
@@ -72,11 +74,10 @@ const getInitials = (name: string) =>
     .toUpperCase() || "?";
 
 const getActivityMessage = (activity: TaskActivity) => {
-  const fallbackField = activity.metadata?.field;
+  const fallbackField = activity.metadata?.field as string | undefined;
   if (fallbackField && !TYPE_MESSAGES[activity.type]) {
     return `changed ${FIELD_LABELS[fallbackField] ?? fallbackField}`;
   }
-
   return TYPE_MESSAGES[activity.type] ?? activity.type.replace(/_/g, " ").toLowerCase();
 };
 
@@ -85,27 +86,50 @@ export default function TaskActivityHistory({
   taskId,
   taskKey,
 }: TaskActivityHistoryProps) {
-  const {
-    data: activities = [],
-    isFetching,
-    error,
-  } = useQuery({
-    queryKey: ["taskActivities", workspaceId, taskId, taskKey],
+  const [page, setPage] = useState(1);
+  const [allActivities, setAllActivities] = useState<TaskActivity[]>([]);
+  const [total, setTotal] = useState(0);
+
+  // Reset when task changes
+  useEffect(() => {
+    setPage(1);
+    setAllActivities([]);
+    setTotal(0);
+  }, [workspaceId, taskId]);
+
+  const { data, isFetching, error } = useQuery({
+    queryKey: ["taskActivities", workspaceId, taskId, taskKey, page],
     queryFn: async () => {
       try {
-        return await taskService.getTaskActivities(workspaceId, taskId);
-      } catch (error: any) {
-        if (error?.response?.status === 400 && taskKey && taskKey !== taskId) {
-          return taskService.getTaskActivities(workspaceId, taskKey);
+        return await taskService.getTaskActivities(workspaceId, taskId, page, PAGE_LIMIT);
+      } catch (err: unknown) {
+        const axiosErr = err as { response?: { status?: number } };
+        if (axiosErr?.response?.status === 400 && taskKey && taskKey !== taskId) {
+          return taskService.getTaskActivities(workspaceId, taskKey, page, PAGE_LIMIT);
         }
-        return [];
+        return { activities: [] as TaskActivity[], total: 0, page, limit: PAGE_LIMIT };
       }
     },
     enabled: Boolean(workspaceId && taskId),
     staleTime: 30_000,
   });
 
-  if (isFetching) {
+  // Accumulate pages — replace on page 1 (initial or task change), append on subsequent pages
+  useEffect(() => {
+    if (!data) return;
+    setTotal(data.total);
+    setAllActivities((prev) =>
+      page === 1 ? data.activities : [...prev, ...data.activities],
+    );
+  }, [data, page]);
+
+  const handleLoadMore = useCallback(() => {
+    setPage((p) => p + 1);
+  }, []);
+
+  const hasMore = allActivities.length < total;
+
+  if (isFetching && page === 1 && allActivities.length === 0) {
     return (
       <div className="flex items-center gap-2 pt-2 text-sm text-gray-500 dark:text-gray-400">
         <Loader2 className="h-4 w-4 animate-spin" />
@@ -114,7 +138,7 @@ export default function TaskActivityHistory({
     );
   }
 
-  if (error) {
+  if (error && allActivities.length === 0) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
         Could not load task history.
@@ -122,7 +146,7 @@ export default function TaskActivityHistory({
     );
   }
 
-  if (activities.length === 0) {
+  if (allActivities.length === 0 && !isFetching) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
         <Clock className="h-4 w-4" />
@@ -133,7 +157,7 @@ export default function TaskActivityHistory({
 
   return (
     <div className="space-y-4 pt-2">
-      {activities.map((activity) => {
+      {allActivities.map((activity) => {
         const actorName = getActorName(activity);
         const hasChange =
           Object.prototype.hasOwnProperty.call(activity.metadata ?? {}, "from") ||
@@ -183,6 +207,22 @@ export default function TaskActivityHistory({
           </div>
         );
       })}
+
+      {hasMore && (
+        <div className="pt-2">
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            disabled={isFetching}
+            className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 disabled:opacity-60 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+          >
+            {isFetching && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isFetching
+              ? "Loading..."
+              : `Load more (${total - allActivities.length} remaining)`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

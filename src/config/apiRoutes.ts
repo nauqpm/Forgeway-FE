@@ -1,6 +1,7 @@
 // /src/config/apiRoutes.ts
 
 export const apiRoutes = {
+    FOR_YOU: '/for-you',
     AUTH: {
         LOGIN: '/auth/login',
         REGISTER: '/auth/register',
@@ -34,6 +35,8 @@ export const apiRoutes = {
         SPRINT_COMPLETE_PREVIEW: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/sprints/${sprintId}/complete-preview`,
         ACTIVE_SPRINT: (workspaceId: string) => `/workspaces/${workspaceId}/active-sprint`,
         BACKLOG: (workspaceId: string) => `/workspaces/${workspaceId}/backlog`,
+        LABELS: (workspaceId: string) => `/workspaces/${workspaceId}/labels`,
+        LABEL: (workspaceId: string, labelId: string) => `/workspaces/${workspaceId}/labels/${labelId}`,
     },
     PROJECTS: {
         BASE: '/projects',
@@ -51,13 +54,24 @@ export const apiRoutes = {
     TASKS: {
         // New workspace-scoped board routes (use these for workspace board/backlog)
         BOARD: (workspaceId: string) => `/workspaces/${workspaceId}/board/tasks`,
+        BOARD_TASK_BY_KEY: (workspaceId: string, taskKey: string) => `/workspaces/${workspaceId}/board/key/${taskKey}`,
         BOARD_TASK: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}`,
         BOARD_TASK_UPDATE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}`,
         BOARD_TASK_MOVE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/move`,
+        BOARD_TASK_REORDER: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/reorder`,
         BOARD_TASK_DELETE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}`,
         BOARD_TASK_ARCHIVE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/archive`,
         BOARD_TASK_RESTORE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/restore`,
         BOARD_TASK_ACTIVITIES: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/activities`,
+        BOARD_TASK_ATTACHMENTS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments`,
+        BOARD_TASK_ATTACHMENT: (workspaceId: string, taskId: string, attachmentId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments/${attachmentId}`,
+        BOARD_TASK_ATTACHMENT_PREVIEW: (workspaceId: string, taskId: string, attachmentId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments/${attachmentId}/preview`,
+        BOARD_TASK_ATTACHMENT_DOWNLOAD: (workspaceId: string, taskId: string, attachmentId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments/${attachmentId}/download`,
+        BOARD_TASK_COVER: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/cover`,
+        BOARD_TASK_LABELS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/labels`,
+        BOARD_ARCHIVES: (workspaceId: string) => `/workspaces/${workspaceId}/board/archives`,
+        BOARD_TASK_COMMENTS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments`,
+        BOARD_TASK_COMMENT: (workspaceId: string, taskId: string, commentId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments/${commentId}`,
         BY_SPRINT: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/board/tasks?sprintId=${sprintId}`,
         // Legacy routes — still used by projects/tasks pages, pending migration
         BASE: '/tasks',
@@ -110,6 +124,7 @@ export const apiRoutes = {
     },
     DASHBOARD: {
         WORKSPACE: (workspaceId: string) => `/dashboard/workspace/${workspaceId}`,
+        WORKSPACE_STATS: (workspaceId: string) => `/dashboard/workspace/${workspaceId}/stats`,
         PROJECT: (projectId: string) => `/dashboard/project/${projectId}`,
         USER: '/dashboard/user/me',
         SPRINT: (sprintId: string) => `/dashboard/sprint/${sprintId}`,
@@ -124,6 +139,19 @@ export const apiRoutes = {
         BASE: '/attachments',
         BY_ID: (id: string) => `/attachments/${id}`,
         DOWNLOAD: (id: string) => `/attachments/${id}/download`,
+    },
+    DOCUMENTS: {
+        BASE: '/documents',
+        UPLOAD: '/documents/upload',
+        CREATE_ONLINE: '/documents/create-online',
+        BY_ID: (id: string) => `/documents/${id}`,
+        CONTENT: (id: string) => `/documents/${id}/content`,
+        ATTACH: (id: string) => `/documents/${id}/attach`,
+        DETACH: (id: string) => `/documents/${id}/detach`,
+        BY_WORKSPACE: (workspaceId: string) => `/documents/workspace/${workspaceId}`,
+        VIEW: (id: string) => `/documents/${id}/view`,
+        PREVIEW: (id: string) => `/documents/${id}/preview`,
+        DOWNLOAD: (id: string) => `/documents/${id}/download`,
     },
     USERS: {
         BASE: '/users',

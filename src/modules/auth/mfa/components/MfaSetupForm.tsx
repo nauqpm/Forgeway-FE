@@ -28,7 +28,7 @@ const MfaSetupForm: React.FC = () => {
 
   const downloadBackupCodes = () => {
     if (!setupData?.backupCodes) return;
-    const text = `AL-TASK Backup Codes\n${'='.repeat(30)}\n\n${setupData.backupCodes.join('\n')}\n\nLưu ý: Mỗi mã chỉ dùng được 1 lần.`;
+    const text = `AL-TASK Backup Codes\n${'='.repeat(30)}\n\n${setupData.backupCodes.join('\n')}\n\nNote: Each code can only be used once.`;
     const blob = new Blob([text], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'al-task-backup-codes.txt'; a.click();
@@ -42,22 +42,22 @@ const MfaSetupForm: React.FC = () => {
           <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mx-auto mb-3">
             <Shield className="w-6 h-6 text-indigo-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">Thiết lập MFA</h2>
+          <h2 className="text-xl font-bold text-gray-900">Set up MFA</h2>
         </div>
 
         {step === 'init' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600 text-center">Bảo vệ tài khoản với xác thực hai yếu tố (TOTP).</p>
+            <p className="text-sm text-gray-600 text-center">Protect your account with two-factor authentication (TOTP).</p>
             <button onClick={handleStart} disabled={loading}
               className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Đang thiết lập...</> : 'Bắt đầu thiết lập'}
+              {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Setting up...</> : 'Start setup'}
             </button>
           </div>
         )}
 
         {step === 'qr' && setupData && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600 text-center">Quét mã QR bằng ứng dụng xác thực (Google Authenticator, Authy...)</p>
+            <p className="text-sm text-gray-600 text-center">Scan the QR code with an authenticator app such as Google Authenticator or Authy.</p>
             <div className="flex justify-center p-4 bg-white border border-gray-100 rounded-xl">
               <img src={setupData.qrCodeUrl} alt="QR Code" className="w-48 h-48" />
             </div>
@@ -68,27 +68,27 @@ const MfaSetupForm: React.FC = () => {
               </button>
             </div>
             <button onClick={() => { setStep('verify'); clearError(); }}
-              className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">Tiếp tục</button>
+              className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700">Continue</button>
           </div>
         )}
 
         {step === 'verify' && (
           <form onSubmit={handleVerify} className="space-y-4">
-            <p className="text-sm text-gray-600 text-center">Nhập mã 6 chữ số từ ứng dụng xác thực để xác nhận.</p>
+            <p className="text-sm text-gray-600 text-center">Enter the 6-digit code from your authenticator app to confirm.</p>
             <input type="text" value={verifyCode} onChange={(e) => { setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6)); clearError(); }}
               placeholder="000000" maxLength={6}
               className="w-full px-4 py-3 border border-gray-200 rounded-xl text-center text-2xl font-mono tracking-[0.5em] focus:ring-2 focus:ring-indigo-500 outline-none" />
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
             <button type="submit" disabled={loading || verifyCode.length !== 6}
               className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50">
-              {loading ? 'Đang xác thực...' : 'Xác nhận'}
+              {loading ? 'Verifying...' : 'Confirm'}
             </button>
           </form>
         )}
 
         {step === 'backup' && setupData?.backupCodes && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600 text-center">Lưu mã dự phòng ở nơi an toàn. Mỗi mã chỉ dùng được 1 lần.</p>
+            <p className="text-sm text-gray-600 text-center">Store backup codes in a safe place. Each code can only be used once.</p>
             <div className="grid grid-cols-2 gap-2 p-4 bg-gray-50 rounded-xl">
               {setupData.backupCodes.map((c, i) => (
                 <code key={i} className="text-sm font-mono text-gray-700 text-center py-1">{c}</code>
@@ -96,9 +96,9 @@ const MfaSetupForm: React.FC = () => {
             </div>
             <button onClick={downloadBackupCodes}
               className="w-full py-2.5 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2">
-              <Download className="w-4 h-4" />Tải xuống
+              <Download className="w-4 h-4" />Download
             </button>
-            <p className="text-xs text-green-600 text-center font-medium">✓ MFA đã được thiết lập thành công!</p>
+            <p className="text-xs text-green-600 text-center font-medium">✓ MFA has been set up successfully!</p>
           </div>
         )}
       </div>

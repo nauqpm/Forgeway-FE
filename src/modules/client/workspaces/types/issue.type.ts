@@ -1,3 +1,6 @@
+import type { TaskCover } from "./task-cover.type";
+import type { TaskLabel } from "./label.type";
+
 export interface Issue {
   id: string;
   _id?: string;
@@ -6,6 +9,7 @@ export interface Issue {
   description?: string;
   columnId: string;
   status: string;
+  rank?: string;
   priority: string;
   type: string;
   assignee: string;
@@ -27,4 +31,7 @@ export interface Issue {
   } | null;
   createdAt?: string;
   updatedAt?: string;
+  cover?: TaskCover | null;
+  labels?: TaskLabel[];
+  labelIds?: string[];
 }

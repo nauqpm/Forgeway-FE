@@ -3,7 +3,9 @@
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
+import { compareIssueRank } from "../../utils/dragUtils";
 import { Sprint } from "../../types/sprint.type";
 
 type BacklogTabProps = {
@@ -25,6 +27,7 @@ type BacklogTabProps = {
 
   actions: {
     handleBacklogDragEnd: any;
+    handleBacklogDragStart?: any;
 
     setIssues: any;
 
@@ -96,6 +99,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
   const {
     handleBacklogDragEnd,
+    handleBacklogDragStart,
     setIssues,
     setDensity,
     setFilters,
@@ -121,23 +125,58 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canManageSprint = permissions?.canManageSprint ?? true;
+
+
+  const issuesBySprintId = useMemo(() => {
+    const assignedIssueIds = new Set<string>();
+    const next = new Map<string | null, any[]>();
+
+    sprints.forEach((sprint) => {
+      const sprintId = sprint.id ?? sprint._id;
+      const sprintIssues = filteredIssues
+        .filter((issue) => {
+          if (assignedIssueIds.has(issue.id)) return false;
+          if (issue.sprintId !== sprintId) return false;
+          assignedIssueIds.add(issue.id);
+          return true;
+        })
+        .sort(compareIssueRank);
+
+      next.set(sprintId, sprintIssues);
+    });
+
+    const backlogIssues = filteredIssues
+      .filter((issue) => {
+        if (assignedIssueIds.has(issue.id)) return false;
+        return issue.sprintId === null;
+      })
+      .sort(compareIssueRank);
+
+    next.set(null, backlogIssues);
+    return next;
+  }, [filteredIssues, sprints]);
+
+  const getSprintIssues = (sprint: any) => issuesBySprintId.get(sprint.id ?? sprint._id) ?? [];
+  const backlogIssues = issuesBySprintId.get(null) ?? [];
+
   return (
     <div>
       <DragDropContext
+        onBeforeDragStart={handleBacklogDragStart}
         onDragEnd={canMoveTask ? handleBacklogDragEnd : () => undefined}
       >
         <div className="workspace-surface max-w-[min(100%,72rem)] space-y-6 py-[var(--workspace-surface-pad)]">
           {/* Backlog Top Bar with Filter */}
           <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Hiển thị {filteredIssues.length} kết quả
+              Showing {filteredIssues.length} results
             </div>
             <div className="relative">
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors"
               >
-                Bộ lọc nâng cao{" "}
+                Advanced filters{" "}
                 <span className="bg-white dark:bg-gray-900 px-1.5 py-0.5 rounded text-xs text-gray-500 dark:text-gray-400 shadow-sm border border-gray-200 dark:border-gray-700">
                   Shift+F
                 </span>
@@ -156,9 +195,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
           {/* Sprints Mapping */}
           {sprints.map((sprint) => {
-            const sprintIssues = filteredIssues.filter(
-              (i) => i.sprintId === sprint.id,
-            );
+            const sprintIssues = getSprintIssues(sprint);
             const totalPoints = sprintIssues.reduce(
               (sum, i) => sum + (i.storyPoints || 0),
               0,
@@ -210,8 +247,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     <p className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
                       <span>
                         {sprint.startDate
-                          ? `${new Date(sprint.startDate).toLocaleDateString('vi-VN')} - ${new Date(sprint.endDate!).toLocaleDateString('vi-VN')}`
-                          : "Chưa có ngày"}
+                          ? `${new Date(sprint.startDate).toLocaleDateString('en-US')} - ${new Date(sprint.endDate!).toLocaleDateString('en-US')}`
+                          : "No date"}
                       </span>
                       <span>&middot;</span>
                       <span>{sprintIssues.length} issues</span>
@@ -237,7 +274,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
                       {/* Tooltip for Story Points */}
                       <div className="absolute top-full mt-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-                        Tiến độ: {donePoints} / {totalPoints} story points
+                        Progress: {donePoints} / {totalPoints} story points
                       </div>
                     </div>
                     {canManageSprint && (
@@ -245,7 +282,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       onClick={() => handleEditSprint(sprint)}
                       disabled={sprint.status === "completed"}
                       className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
-                      title="Chỉnh sửa sprint"
+                      title="Edit sprint"
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
@@ -254,7 +291,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       <button
                         onClick={() => handleDeleteSprint(sprint._id)}
                         className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors"
-                        title="Xóa sprint"
+                        title="Delete sprint"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -413,7 +450,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                   <div className="px-3 pb-3 flex flex-col gap-2">
                     <input
                       type="text"
-                      placeholder="Tạo task nhanh... (Enter để lưu)"
+                      placeholder="Quick-create task... (Enter to save)"
                       className="w-full py-1.5 px-3 text-sm bg-transparent border border-dashed border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 placeholder-gray-400 focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-400 outline-none transition-all"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && e.currentTarget.value.trim()) {
@@ -449,27 +486,21 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <input
                   type="checkbox"
                   checked={
-                    filteredIssues.filter((i) => i.sprintId === null).length >
-                      0 &&
-                    filteredIssues
-                      .filter((i) => i.sprintId === null)
+                    backlogIssues.length > 0 &&
+                    backlogIssues
                       .map((i) => i.id)
                       .every((id) => selectedTaskIds.includes(id))
                   }
                   onChange={(e) =>
                     toggleSprintSelection(
-                      filteredIssues
-                        .filter((i) => i.sprintId === null)
-                        .map((i) => i.id),
+                      backlogIssues.map((i) => i.id),
                       e,
                     )
                   }
                   onClick={(e) => e.stopPropagation()}
                   ref={(input) => {
                     if (input) {
-                      const backlogIds = filteredIssues
-                        .filter((i) => i.sprintId === null)
-                        .map((i) => i.id);
+                      const backlogIds = backlogIssues.map((i) => i.id);
                       const isAll =
                         backlogIds.length > 0 &&
                         backlogIds.every((id) => selectedTaskIds.includes(id));
@@ -485,7 +516,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   Backlog
                   <span className="text-gray-400 dark:text-gray-500 font-normal text-sm">
-                    ({filteredIssues.filter((i) => i.sprintId === null).length}{" "}
+                    ({backlogIssues.length}{" "}
                     issues)
                   </span>
                 </h3>
@@ -507,8 +538,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                   {...provided.droppableProps}
                   className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? "bg-gray-50/80 dark:bg-gray-800/80" : ""}`}
                 >
-                  {filteredIssues
-                    .filter((i) => i.sprintId === null)
+                  {backlogIssues
                     .map((issue, index) => (
                         <Draggable
                         key={issue.id}
@@ -617,7 +647,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
             <div className="relative flex flex-col gap-2 border-t border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-800/30 sm:flex-row sm:items-center">
               <input
                 type="text"
-                placeholder="Bạn cần làm gì tiếp theo?"
+                placeholder="What do you need to do next?"
                 className="flex-1 py-1.5 px-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.currentTarget.value.trim()) {
@@ -635,7 +665,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 disabled={!canCreateTask}
                 className="text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100 disabled:opacity-50 px-3 py-1.5 rounded transition-colors whitespace-nowrap"
               >
-                Mở modal...
+                Open modal...
               </button>
             </div>
           </div>

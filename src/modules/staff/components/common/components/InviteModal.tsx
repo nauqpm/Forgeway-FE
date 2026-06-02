@@ -5,9 +5,9 @@ import { toast } from 'react-hot-toast';
 
 // --- MOCK DATA ---
 const EXISTING_USERS = [
-  { id: '1', name: 'Nguyễn Văn A', email: 'nva@company.com', avatar: 'N', color: 'bg-indigo-500' },
-  { id: '2', name: 'Trần Thị B', email: 'ttb@company.com', avatar: 'T', color: 'bg-emerald-500' },
-  { id: '3', name: 'Lê Văn C', email: 'lvc@company.com', avatar: 'L', color: 'bg-blue-500' },
+  { id: '1', name: 'Alex Nguyen', email: 'nva@company.com', avatar: 'N', color: 'bg-indigo-500' },
+  { id: '2', name: 'Taylor Tran', email: 'ttb@company.com', avatar: 'T', color: 'bg-emerald-500' },
+  { id: '3', name: 'Chris Le', email: 'lvc@company.com', avatar: 'L', color: 'bg-blue-500' },
   { id: '4', name: 'Maria Garcia', email: 'maria@company.com', avatar: 'M', color: 'bg-pink-500' },
   { id: '5', name: 'John Doe', email: 'john@company.com', avatar: 'J', color: 'bg-amber-500' },
 ];
@@ -84,7 +84,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
     setIsSubmitting(true);
 
     try {
-      // Giả lập lấy token reCAPTCHA
+      // Mock getting the reCAPTCHA token
       const mockCaptchaToken = 'mock_recaptcha_token_12345';
       
       const payload = {

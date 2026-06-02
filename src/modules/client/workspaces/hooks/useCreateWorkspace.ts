@@ -24,11 +24,11 @@ export function useCreateWorkspace() {
         type: input.type || "kanban",
         access: input.access || "public",
       });
-      toast.success(`Workspace "${res.data.name}" đã được tạo`);
+      toast.success(`Workspace "${res.data.name}" has been created`);
       return res.data;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      const msg = error?.response?.data?.message || "Tạo Workspace thất bại";
+      const msg = error?.response?.data?.message || "Workspace creation failed";
       toast.error(msg);
       throw new Error(msg);
     } finally {

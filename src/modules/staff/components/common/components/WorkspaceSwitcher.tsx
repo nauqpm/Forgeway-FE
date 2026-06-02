@@ -26,11 +26,11 @@ export default function WorkspaceSwitcher() {
         await new Promise(resolve => setTimeout(resolve, 300));
         let mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
         
-        // Tạo sẵn 1 workspace default nếu chưa có
+        // Create one default workspace if none exists
         if (mockWorkspaces.length === 0) {
           const defaultWs = { 
             _id: "ws_default_" + Date.now(), 
-            name: "Không gian cá nhân", 
+            name: "Personal workspace", 
             slug: "personal-workspace", 
             ownerId: "user_1", 
             members: [] 

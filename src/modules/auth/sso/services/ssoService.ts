@@ -1,6 +1,6 @@
 /**
  * =============================================================================
- * SSO SERVICE — Dịch vụ Đăng nhập một lần (Single Sign-On) bằng Google
+ * SSO SERVICE - Single Sign-On service with Google
  * =============================================================================
 
  */
@@ -13,12 +13,12 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // ─── Initiate Google Login ───────────────────────────────────────────────────
 
 /**
- * Khởi tạo quá trình đăng nhập qua Google OAuth2.
- * 1. Chuyển hướng toàn bộ trình duyệt của người dùng đến endpoint `/auth/google` của Backend.
- * 2. Tại Backend, passport-google-oauth20 sẽ tạo url và điều hướng người dùng sang form đăng nhập của Google.
- * 3. Người dùng đồng ý cấp quyền -> Google gọi lại callback URL trên Backend kèm authorization code.
- * 4. Backend dùng code đổi lấy token, lấy thông tin user, gán HTTP-only cookie và redirect người dùng 
- *    về lại giao diện Frontend (kèm tham số thành công hoặc lỗi trên URL).
+ * Start the Google OAuth2 sign-in process.
+ * 1. Redirect the browser to the backend `/auth/google` endpoint.
+ * 2. On the backend, passport-google-oauth20 creates a URL and redirects users to Google's sign-in form.
+ * 3. Users grant access, then Google calls the backend callback URL with an authorization code.
+ * 4. The backend exchanges the code for tokens, retrieves user information, sets HTTP-only cookies, and redirects users 
+ *    back to the frontend with success or error parameters in the URL.
  */
 export const initiateGoogleLogin = (): void => {
   window.location.href = `${API_URL}/auth/google`;

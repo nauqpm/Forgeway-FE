@@ -10,6 +10,7 @@ interface HandleBoardDragParams {
   setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
   handleMoveColumn?: (columnId: string, newOrder: number) => void;
   onColumnChange?: (taskId: string, columnId: string) => void;
+  onTaskReorder?: (input: TaskReorderSyncInput) => void;
 }
 
 interface HandleBacklogDragParams {
@@ -17,7 +18,108 @@ interface HandleBacklogDragParams {
   issues: Issue[];
   setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
   onSprintAssign?: (taskId: string, sprintId: string | null) => void;
+  onTaskReorder?: (input: TaskReorderSyncInput) => void;
 }
+
+export interface TaskReorderSyncInput {
+  taskId: string;
+  columnId?: string;
+  status?: string;
+  sprintId?: string | null;
+  beforeTaskId?: string;
+  afterTaskId?: string;
+}
+
+const RANK_ALPHABET =
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const MIN_RANK_DIGIT = 0;
+const MAX_RANK_DIGIT = RANK_ALPHABET.length - 1;
+const DEFAULT_RANK = RANK_ALPHABET[Math.floor(RANK_ALPHABET.length / 2)];
+
+const compareRanks = (left?: string, right?: string) => {
+  if (left && !right) return -1;
+  if (!left && right) return 1;
+  if (!left && !right) return 0;
+
+  const leftRank = left!;
+  const rightRank = right!;
+  const maxLength = Math.max(leftRank.length, rightRank.length);
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const diff =
+      getRankDigit(leftRank, index, MIN_RANK_DIGIT) -
+      getRankDigit(rightRank, index, MIN_RANK_DIGIT);
+
+    if (diff !== 0) return diff;
+  }
+
+  return leftRank.length - rightRank.length;
+};
+
+export const compareIssueRank = (a: Issue, b: Issue) => {
+  const rankDiff = compareRanks(a.rank, b.rank);
+  if (rankDiff !== 0) return rankDiff;
+  return (a.createdAt ?? a.id).localeCompare(b.createdAt ?? b.id);
+};
+
+const getRankDigit = (rank: string, index: number, fallback: number) => {
+  if (index >= rank.length) return fallback;
+
+  const digit = RANK_ALPHABET.indexOf(rank[index]);
+  return digit === -1 ? fallback : digit;
+};
+
+const generateOptimisticRankBetween = (beforeRank?: string, afterRank?: string) => {
+  if (!beforeRank && !afterRank) return DEFAULT_RANK;
+
+  let prefix = "";
+  let index = 0;
+
+  while (true) {
+    const lowerDigit = afterRank
+      ? getRankDigit(afterRank, index, MIN_RANK_DIGIT)
+      : MIN_RANK_DIGIT;
+    const upperDigit = beforeRank
+      ? getRankDigit(beforeRank, index, MAX_RANK_DIGIT)
+      : MAX_RANK_DIGIT;
+
+    if (upperDigit - lowerDigit > 1) {
+      return `${prefix}${RANK_ALPHABET[Math.floor((lowerDigit + upperDigit) / 2)]}`;
+    }
+
+    prefix += RANK_ALPHABET[lowerDigit];
+    index += 1;
+  }
+};
+
+const getOrderedColumnIssues = (issues: Issue[], columnId: string) =>
+  issues
+    .filter((issue) => issue.columnId === columnId)
+    .sort(compareIssueRank);
+
+const getOrderedSprintIssues = (issues: Issue[], droppableId: string) =>
+  issues
+    .filter((issue) =>
+      droppableId === "backlog"
+        ? issue.sprintId === null
+        : issue.sprintId === droppableId.replace("sprint-", ""),
+    )
+    .sort(compareIssueRank);
+
+const getTaskNeighbors = (tasks: Issue[], taskId: string): Pick<TaskReorderSyncInput, "beforeTaskId" | "afterTaskId"> => {
+  const index = tasks.findIndex((task) => task.id === taskId);
+  if (index === -1) return {};
+
+  return {
+    afterTaskId: tasks[index - 1]?.id,
+    beforeTaskId: tasks[index + 1]?.id,
+  };
+};
+
+const areSameNeighbors = (
+  current: Pick<TaskReorderSyncInput, "beforeTaskId" | "afterTaskId">,
+  next: Pick<TaskReorderSyncInput, "beforeTaskId" | "afterTaskId">,
+) => current.beforeTaskId === next.beforeTaskId && current.afterTaskId === next.afterTaskId;
 
 export const handleBoardDragEnd = ({
   result,
@@ -27,6 +129,7 @@ export const handleBoardDragEnd = ({
   setIssues,
   handleMoveColumn,
   onColumnChange,
+  onTaskReorder,
 }: HandleBoardDragParams) => {
   const { destination, source, draggableId, type } = result;
 
@@ -60,64 +163,59 @@ export const handleBoardDragEnd = ({
     const sourceStatus = source.droppableId;
     const destStatus = destination.droppableId;
 
-    const draggedIssueIndex = issues.findIndex(
-      (i) => i.id === draggableId
+    const sourceColumnIssues = getOrderedColumnIssues(issues, sourceStatus);
+    const sourceIssueIndex = sourceColumnIssues.findIndex(
+      (issue) => issue.id === draggableId,
     );
 
-    if (draggedIssueIndex === -1) return;
+    if (sourceStatus === destStatus && sourceIssueIndex === destination.index) return;
 
-    const draggedIssue = issues[draggedIssueIndex];
+    const currentNeighbors = getTaskNeighbors(sourceColumnIssues, draggableId);
 
-    const newIssues = Array.from(issues);
+    const draggedIssue = issues.find((issue) => issue.id === draggableId);
 
-    // Reorder same column
-    if (sourceStatus === destStatus) {
-      if (source.index === destination.index) return;
+    if (!draggedIssue) return;
 
-      const columnIssues = newIssues.filter(
-        (i) => i.columnId === sourceStatus
-      );
+    const destinationIssuesWithoutDragged =
+      (sourceStatus === destStatus
+        ? sourceColumnIssues
+        : getOrderedColumnIssues(issues, destStatus)
+      ).filter((issue) => issue.id !== draggableId);
+    const insertIndex = Math.min(destination.index, destinationIssuesWithoutDragged.length);
+    const movedIssue: Issue = {
+      ...draggedIssue,
+      columnId: destStatus,
+      status: destStatus,
+    };
+    const destinationIssues = [...destinationIssuesWithoutDragged];
+    destinationIssues.splice(insertIndex, 0, movedIssue);
+    const neighbors = getTaskNeighbors(destinationIssues, draggableId);
 
-      const targetIssue = columnIssues[destination.index];
+    if (sourceStatus === destStatus && areSameNeighbors(currentNeighbors, neighbors)) return;
 
-      newIssues.splice(draggedIssueIndex, 1);
+    const beforeIssue = destinationIssues.find((issue) => issue.id === neighbors.beforeTaskId);
+    const afterIssue = destinationIssues.find((issue) => issue.id === neighbors.afterTaskId);
+    const optimisticMovedIssue = {
+      ...movedIssue,
+      rank: generateOptimisticRankBetween(beforeIssue?.rank, afterIssue?.rank),
+    };
 
-      const targetIndex = newIssues.findIndex(
-        (i) => i.id === targetIssue?.id
-      );
+    setIssues((current) =>
+      current.map((issue) =>
+        issue.id === draggableId ? optimisticMovedIssue : issue,
+      ),
+    );
 
-      newIssues.splice(
-        targetIndex !== -1 ? targetIndex : newIssues.length,
-        0,
-        draggedIssue
-      );
-    } else {
-      // Move different column
-      const columnIssues = newIssues.filter(
-        (i) => i.columnId === destStatus
-      );
-
-      const targetIssue = columnIssues[destination.index];
-
-      newIssues.splice(draggedIssueIndex, 1);
-
-      const newIssue = {
-        ...draggedIssue,
+    if (onTaskReorder) {
+      onTaskReorder({
+        taskId: draggableId,
         columnId: destStatus,
-      };
-
-      const targetIndex = newIssues.findIndex(
-        (i) => i.id === targetIssue?.id
-      );
-
-      newIssues.splice(
-        targetIndex !== -1 ? targetIndex : newIssues.length,
-        0,
-        newIssue
-      );
+        status: destStatus,
+        sprintId: movedIssue.sprintId ?? null,
+        ...neighbors,
+      });
+      return;
     }
-
-    setIssues(newIssues);
 
     if (onColumnChange && sourceStatus !== destStatus) {
       onColumnChange(draggableId, destStatus);
@@ -130,27 +228,28 @@ export const handleBacklogDragEnd = ({
   issues,
   setIssues,
   onSprintAssign,
+  onTaskReorder,
 }: HandleBacklogDragParams) => {
   const { destination, source, draggableId } = result;
 
   if (!destination) return;
 
+  const sourceIssues = getOrderedSprintIssues(issues, source.droppableId);
+  const sourceIssueIndex = sourceIssues.findIndex(
+    (issue) => issue.id === draggableId,
+  );
+  const currentNeighbors = getTaskNeighbors(sourceIssues, draggableId);
+
   if (
     source.droppableId === destination.droppableId &&
-    source.index === destination.index
+    sourceIssueIndex === destination.index
   ) {
     return;
   }
 
-  const newIssues = Array.from(issues);
+  const draggedIssue = issues.find((issue) => issue.id === draggableId);
 
-  const draggedIssueIndex = newIssues.findIndex(
-    (i) => i.id === draggableId
-  );
-
-  if (draggedIssueIndex === -1) return;
-
-  const draggedIssue = newIssues[draggedIssueIndex];
+  if (!draggedIssue) return;
   const previousSprintId = draggedIssue.sprintId ?? null;
 
   let targetSprintId: string | null = null;
@@ -162,64 +261,50 @@ export const handleBacklogDragEnd = ({
     );
   }
 
-  const sourceIssues = newIssues.filter((i) =>
-    source.droppableId === "backlog"
-      ? i.sprintId === null
-      : i.sprintId ===
-      source.droppableId.replace("sprint-", "")
+  const destinationIssuesWithoutDragged =
+    (source.droppableId === destination.droppableId
+      ? sourceIssues
+      : getOrderedSprintIssues(issues, destination.droppableId)
+    ).filter((issue) => issue.id !== draggableId);
+  const insertIndex = Math.min(destination.index, destinationIssuesWithoutDragged.length);
+  const movedTask: Issue = {
+    ...draggedIssue,
+    sprintId: targetSprintId,
+  };
+  const destinationIssues = [...destinationIssuesWithoutDragged];
+  destinationIssues.splice(insertIndex, 0, movedTask);
+  const neighbors = getTaskNeighbors(destinationIssues, draggableId);
+
+  if (
+    source.droppableId === destination.droppableId &&
+    areSameNeighbors(currentNeighbors, neighbors)
+  ) {
+    return;
+  }
+  const beforeIssue = destinationIssues.find((issue) => issue.id === neighbors.beforeTaskId);
+  const afterIssue = destinationIssues.find((issue) => issue.id === neighbors.afterTaskId);
+  const optimisticMovedTask = {
+    ...movedTask,
+    rank: generateOptimisticRankBetween(beforeIssue?.rank, afterIssue?.rank),
+  };
+
+  setIssues((current) =>
+    current.map((issue) =>
+      issue.id === draggableId ? optimisticMovedTask : issue,
+    ),
   );
 
-  const destIssues = newIssues.filter((i) =>
-    destination.droppableId === "backlog"
-      ? i.sprintId === null
-      : i.sprintId ===
-      destination.droppableId.replace("sprint-", "")
-  );
-
-  let movedTask: Issue | null = null;
-
-  // Same list reorder
-  if (source.droppableId === destination.droppableId) {
-    const targetIssue = sourceIssues[destination.index];
-
-    newIssues.splice(draggedIssueIndex, 1);
-
-    const targetIndex = newIssues.findIndex(
-      (i) => i.id === targetIssue?.id
-    );
-
-    newIssues.splice(
-      targetIndex !== -1 ? targetIndex : newIssues.length,
-      0,
-      draggedIssue
-    );
-  } else {
-    // Move other sprint
-    const targetIssue = destIssues[destination.index];
-
-    newIssues.splice(draggedIssueIndex, 1);
-
-    const newIssue = {
-      ...draggedIssue,
-      sprintId: targetSprintId,
-    };
-
-    movedTask = newIssue;
-
-    const targetIndex = newIssues.findIndex(
-      (i) => i.id === targetIssue?.id
-    );
-
-    newIssues.splice(
-      targetIndex !== -1 ? targetIndex : newIssues.length,
-      0,
-      newIssue
-    );
+  if (onTaskReorder) {
+    onTaskReorder({
+      taskId: optimisticMovedTask.id,
+      columnId: optimisticMovedTask.columnId,
+      status: optimisticMovedTask.columnId,
+      sprintId: optimisticMovedTask.sprintId ?? null,
+      ...neighbors,
+    });
   }
 
-  setIssues(newIssues);
-
-  if (onSprintAssign && movedTask && movedTask.sprintId !== previousSprintId) {
-    onSprintAssign(movedTask.id, movedTask.sprintId ?? null);
+  if (onSprintAssign && optimisticMovedTask.sprintId !== previousSprintId) {
+    onSprintAssign(optimisticMovedTask.id, optimisticMovedTask.sprintId ?? null);
   }
 };

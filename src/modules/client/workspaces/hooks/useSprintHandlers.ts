@@ -59,13 +59,13 @@ export const useSprintHandlers = ({
     },
     onError: (err, _input, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error(getApiErrorMessage(err, "Lỗi khi tạo sprint mới"));
+      toast.error(getApiErrorMessage(err, "Error creating sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
     },
     onSuccess: () => {
-      toast.success("Đã tạo sprint mới");
+      toast.success("Sprint created");
     },
   });
 
@@ -80,13 +80,13 @@ export const useSprintHandlers = ({
     },
     onError: (err, _vars, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error(getApiErrorMessage(err, "Lỗi khi cập nhật sprint"));
+      toast.error(getApiErrorMessage(err, "Error updating sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
     },
     onSuccess: () => {
-      toast.success("Đã cập nhật sprint");
+      toast.success("Sprint updated");
     },
   });
 
@@ -101,13 +101,13 @@ export const useSprintHandlers = ({
     },
     onError: (err, _id, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error(getApiErrorMessage(err, "Lỗi khi xóa sprint"));
+      toast.error(getApiErrorMessage(err, "Error deleting sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
     },
     onSuccess: () => {
-      toast.success("Đã xóa sprint");
+      toast.success("Sprint deleted");
     },
   });
 
@@ -122,14 +122,14 @@ export const useSprintHandlers = ({
     },
     onError: (err, _id, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error(getApiErrorMessage(err, "Lỗi khi bắt đầu sprint"));
+      toast.error(getApiErrorMessage(err, "Error starting sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
     },
     onSuccess: () => {
-      toast.success("Sprint đã bắt đầu");
+      toast.success("Sprint started");
     },
   });
 
@@ -144,7 +144,7 @@ export const useSprintHandlers = ({
     },
     onError: (err, _id, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
-      toast.error(getApiErrorMessage(err, "Lỗi khi hoàn thành sprint"));
+      toast.error(getApiErrorMessage(err, "Error completing sprint"));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
@@ -152,7 +152,7 @@ export const useSprintHandlers = ({
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
     },
     onSuccess: () => {
-      toast.success("Sprint đã hoàn thành");
+      toast.success("Sprint completed");
     },
   });
 
@@ -173,7 +173,7 @@ export const useSprintHandlers = ({
 
   const handleEditSprint = (sprint: Sprint) => {
     if (sprint.status === "completed") {
-      toast.error("Sprint đã hoàn thành nên không thể chỉnh sửa");
+      toast.error("Completed sprints cannot be edited");
       return;
     }
     setEditingSprint(sprint);
@@ -187,15 +187,15 @@ export const useSprintHandlers = ({
   const handleStartSprint = (sprintId: string) => {
     const sprint = sprints.find((s) => s._id === sprintId);
     if (!sprint) {
-      toast.error("Không tìm thấy sprint");
+      toast.error("No sprint");
       return;
     }
     if (sprint._id.startsWith("temp-")) {
-      toast.error("Sprint đang được tạo, vui lòng đợi đồng bộ");
+      toast.error("Sprint is being created. Please wait for sync");
       return;
     }
     if (sprint.status !== "planning") {
-      toast.error("Chỉ sprint đang lên kế hoạch mới có thể bắt đầu");
+      toast.error("Only planned sprints can be started");
       return;
     }
     if (!sprint.startDate || !sprint.endDate) {
@@ -203,7 +203,7 @@ export const useSprintHandlers = ({
       return;
     }
     if (new Date(sprint.endDate) <= new Date(sprint.startDate)) {
-      toast.error("Ngày kết thúc phải sau ngày bắt đầu");
+      toast.error("End date must be after start date");
       return;
     }
 
@@ -231,7 +231,7 @@ export const useSprintHandlers = ({
   const handleCompleteSprint = (sprintId: string) => {
     const sprint = sprints.find((s) => s._id === sprintId);
     if (!sprint) {
-      toast.error("Không tìm thấy sprint");
+      toast.error("No sprint");
       return;
     }
     setCompleteSprintTarget(sprint);

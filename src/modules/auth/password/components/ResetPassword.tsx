@@ -24,24 +24,24 @@ const ResetPassword = () => {
     e.preventDefault();
 
     if (!email || !otp) {
-      toast.error('Vui lòng nhập đầy đủ email và mã OTP');
+      toast.error('Please enter both email and OTP');
       return;
     }
 
     const policy = validatePassword(password);
     if (!policy.isValid) {
-      toast.error('Mật khẩu chưa đáp ứng yêu cầu bảo mật');
+      toast.error('Password does not meet the security requirements');
       return;
     }
 
     if (password !== confirmPassword) {
-      toast.error('Mật khẩu xác nhận không khớp');
+      toast.error('Password confirmation does not match');
       return;
     }
 
     try {
       await resetPasswordWithOtp(email, otp, password);
-      toast.success('Đặt lại mật khẩu thành công!');
+      toast.success('Password reset successfully!');
       router.push('/login');
     } catch {
       // Error handled by hook
@@ -74,8 +74,8 @@ const ResetPassword = () => {
                 <Zap className="w-7 h-7 text-white" />
               </div>
             </Link>
-            <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Đặt lại mật khẩu</h1>
-            <p className="text-gray-600 text-sm mt-1.5 font-semibold">Nhập email, mã OTP và mật khẩu mới</p>
+            <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Reset password</h1>
+            <p className="text-gray-600 text-sm mt-1.5 font-semibold">Enter your email, OTP, and new password</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -95,7 +95,7 @@ const ResetPassword = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Mã OTP</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">OTP</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
@@ -103,7 +103,7 @@ const ResetPassword = () => {
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   required
-                  placeholder="Nhập mã 6 chữ số"
+                  placeholder="Enter the 6-digit code"
                   pattern="[0-9]{6}"
                   maxLength={6}
                   className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
@@ -112,14 +112,14 @@ const ResetPassword = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Mật khẩu mới</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">New password</label>
               <div className="relative">
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="Nhập mật khẩu mới"
+                  placeholder="Enter new password"
                   className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
                 />
                 <PasswordPolicyChecklist password={password} />
@@ -127,13 +127,13 @@ const ResetPassword = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Xác nhận mật khẩu</label>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Confirm password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                placeholder="Nhập lại mật khẩu mới"
+                placeholder="Re-enter new password"
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
               />
             </div>
@@ -148,17 +148,17 @@ const ResetPassword = () => {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Đang xử lý...
+                  Processing...
                 </>
               ) : (
-                'Đặt lại mật khẩu'
+                'Reset password'
               )}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6 font-medium">
             <Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
-              Quay lại trang đăng nhập
+              Back to sign in
             </Link>
           </p>
         </div>

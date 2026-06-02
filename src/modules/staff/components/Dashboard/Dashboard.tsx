@@ -15,6 +15,8 @@ export interface AdminDashboardProps {
   className?: string;
 }
 
+const SHOW_STARRED_DASHBOARD_TAB = false;
+
 export default function AdminDashboard({ className = "" }: AdminDashboardProps) {
   const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
   const [stats, setStats] = useState({ projects: 0, members: 0, spaces: 0 });
@@ -66,7 +68,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     {
       id: 1,
       name: "Frontend Team",
-      description: "Quản lý task FE",
+      description: "Manage frontend tasks",
       icon: LayoutDashboard,
       color: "bg-blue-500",
     },
@@ -101,40 +103,40 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   ];
 
   const tabs = [
-    { label: "Được giao cho tôi", key: "assigned" },
-    { label: "Đã đóng dấu sao", key: "starred" },
-    { label: "Đã làm việc trên", key: "worked" },
-    { label: "Đã xem", key: "viewed" },
-  ];
+    { label: "Assigned to me", key: "assigned" },
+    { label: "Starred", key: "starred" },
+    { label: "Worked on", key: "worked" },
+    { label: "Viewed", key: "viewed" },
+  ].filter((tab) => SHOW_STARRED_DASHBOARD_TAB || tab.key !== "starred");
 
   const tasks = [
     {
       id: "KAN-1",
-      title: "Nhiệm vụ 2",
+      title: "Task 2",
       type: "worked",
       project: "KAN-2",
-      team: "Nhóm phần mềm của tôi",
+      team: "My software team",
     },
     {
       id: "KAN-2",
-      title: "Nhiệm vụ 2",
+      title: "Task 2",
       type: "assigned",
       project: "KAN-2",
-      team: "Nhóm phần mềm của tôi",
+      team: "My software team",
     },
     {
       id: "KAN-4",
-      title: "Nhiệm vụ 2",
+      title: "Task 2",
       type: "starred",
       project: "KAN-2",
-      team: "Nhóm phần mềm của tôi",
+      team: "My software team",
     },
     {
       id: "KAN-9",
-      title: "Nhiệm vụ 2",
+      title: "Task 2",
       type: "assigned",
       project: "KAN-2",
-      team: "Nhóm phần mềm của tôi",
+      team: "My software team",
     },
   ];
 
@@ -147,14 +149,14 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     <div className={`max-w-5xl mx-auto ${className}`}>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="px-2 text-2xl font-bold text-gray-900 dark:text-white">
-          Không gian đề xuất
+          Recommended workspaces
         </h1>
 
         <Link
           href="/spaces"
           className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
         >
-          Xem tất cả →
+          View all
         </Link>
       </div>
 
@@ -186,7 +188,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
       </div>
       <div className="mt-10">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dành cho bạn</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">For you</h2>
         </div>
 
         <div className="flex gap-2 mb-4">
@@ -205,7 +207,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
           ))}
         </div>
 
-        <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">Tóm lại</div>
+        <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">Summary</div>
 
         <div className="space-y-2">
           {filteredTasks.map((task) => (
@@ -227,7 +229,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
               </div>
 
               <button className="text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 px-3 py-1 rounded">
-                TÓM LẠI
+                SUMMARY
               </button>
             </div>
           ))}

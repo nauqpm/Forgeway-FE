@@ -50,11 +50,11 @@ axiosInstance.interceptors.response.use(
 
     // Handle other errors
     if (error.response?.status === 403) {
-      toast.error('Bạn không có quyền thực hiện thao tác này');
+      toast.error('You do not have permission to perform this action');
     } else if (error.response?.status === 404) {
-      toast.error('Không tìm thấy dữ liệu');
+      toast.error('Data not found');
     } else if (error.response?.status === 500) {
-      toast.error('Lỗi hệ thống, vui lòng thử lại sau');
+      toast.error('System error. Please try again later');
     }
 
     return Promise.reject(error);

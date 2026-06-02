@@ -10,13 +10,16 @@ type ArchiveTabProps = {
   isLoading?: boolean;
   isRestoring?: boolean;
   onRestore: (issue: Issue) => void;
+  total?: number;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
 };
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return "-";
 
   try {
-    return new Intl.DateTimeFormat("vi-VN", {
+    return new Intl.DateTimeFormat("en-US", {
       dateStyle: "short",
       timeStyle: "short",
     }).format(new Date(value));
@@ -30,6 +33,9 @@ export default function ArchiveTab({
   isLoading = false,
   isRestoring = false,
   onRestore,
+  total,
+  onLoadMore,
+  isLoadingMore = false,
 }: ArchiveTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -61,7 +67,9 @@ export default function ArchiveTab({
             Archived work items
           </h2>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            {issues.length} item archived
+            {total !== undefined
+              ? `Showing ${issues.length} of ${total}`
+              : `${issues.length} item archived`}
           </p>
         </div>
         <div className="relative">
@@ -162,6 +170,24 @@ export default function ArchiveTab({
           </div>
         )}
       </div>
+
+      {onLoadMore && total !== undefined && issues.length < total && (
+        <div className="flex justify-center border-t border-gray-200 p-3 dark:border-gray-800">
+          <button
+            type="button"
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+          >
+            {isLoadingMore ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : null}
+            {isLoadingMore
+              ? "Loading..."
+              : `Load more (${total - issues.length} remaining)`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

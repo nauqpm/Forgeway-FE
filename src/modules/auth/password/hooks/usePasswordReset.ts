@@ -46,15 +46,15 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       const backendMessage = error.response?.data?.message?.toLowerCase() || "";
 
       if (code === "RATE_LIMITED" || status === 429) {
-        setError("Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.");
+        setError("You are acting too quickly. Please try again in a few minutes.");
       } else if (code === "EMAIL_NOT_VERIFIED") {
-        setError("Email chưa được xác minh. Vui lòng xác minh email trước khi đặt lại mật khẩu.");
+        setError("Email has not been verified. Please verify your email before resetting your password.");
       } else if (backendMessage.includes("not found") || backendMessage.includes("khong ton tai")) {
-        setError("Email không tồn tại trong hệ thống.");
+        setError("Email does not exist in the system.");
       } else if (status === 400 || status === 404) {
-        setError("Không thể gửi mã OTP. Vui lòng kiểm tra lại email.");
+        setError("Could not send OTP. Please check the email again.");
       } else {
-        setError("Không thể gửi mã OTP lúc này. Vui lòng thử lại sau.");
+        setError("Could not send OTP right now. Please try again later.");
       }
       throw err;
     } finally {
@@ -78,13 +78,13 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       const code = error.response?.data?.code;
 
       if (code === "RATE_LIMITED" || status === 429) {
-        setError("Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.");
+        setError("You are acting too quickly. Please try again in a few minutes.");
       } else if (status === 401 || status === 403) {
-        setError("Mã OTP không hợp lệ hoặc đã hết hạn.");
+        setError("OTP is invalid or expired.");
       } else if (status === 400) {
-        setError("Vui lòng kiểm tra lại mã OTP.");
+        setError("Please check the OTP again.");
       } else {
-        setError("Xác thực mã OTP thất bại. Vui lòng thử lại.");
+        setError("OTP verification failed. Please try again.");
       }
       throw err;
     } finally {
@@ -112,15 +112,15 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       const code = error.response?.data?.code;
 
       if (code === "RATE_LIMITED" || status === 429) {
-        setError("Bạn thao tác quá nhanh. Vui lòng thử lại sau ít phút.");
+        setError("You are acting too quickly. Please try again in a few minutes.");
       } else if (code === "PASSWORD_TOO_WEAK") {
-        setError("Mật khẩu mới chưa đạt yêu cầu bảo mật.");
+        setError("New password does not meet the security requirements.");
       } else if (status === 401 || status === 403) {
-        setError("Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu mã OTP mới.");
+        setError("Password reset session is invalid or expired. Please request a new OTP.");
       } else if (status === 400) {
-        setError("Không thể đặt lại mật khẩu. Vui lòng kiểm tra lại thông tin.");
+        setError("Could not reset password. Please check the information again.");
       } else {
-        setError("Đặt lại mật khẩu thất bại. Vui lòng thử lại sau.");
+        setError("Password reset failed. Please try again later.");
       }
       throw err;
     } finally {

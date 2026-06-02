@@ -125,7 +125,7 @@ export const extractAuthError = (error: unknown): AuthApiError => {
   }
   return {
     code: 'INVALID_CREDENTIALS' as AuthApiError['code'],
-    message: err.response?.data?.message || err.message || 'Đã có lỗi xảy ra',
+    message: err.response?.data?.message || err.message || 'An error occurred',
   };
 };
 
@@ -136,6 +136,6 @@ export const extractRegisterError = (error: unknown): AuthApiError => {
   }
   return {
     code: 'EMAIL_ALREADY_EXISTS' as AuthApiError['code'],
-    message: err.response?.data?.message || err.message || 'Đăng ký thất bại.',
+    message: err.response?.data?.message || err.message || 'Registration failed.',
   };
 };

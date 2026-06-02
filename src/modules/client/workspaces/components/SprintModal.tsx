@@ -101,12 +101,12 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
     e.preventDefault();
 
     if ((formData.startDate && !formData.endDate) || (!formData.startDate && formData.endDate)) {
-      toast.error("Vui lòng nhập cả ngày bắt đầu và kết thúc, hoặc để trống cả hai");
+      toast.error("Enter both start and end dates, or leave both empty");
       return;
     }
 
     if (formData.startDate && formData.endDate && new Date(formData.endDate) <= new Date(formData.startDate)) {
-      toast.error("Ngày kết thúc phải sau ngày bắt đầu");
+      toast.error("The end date must be after the start date");
       return;
     }
     
@@ -136,7 +136,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
       <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
           <h3 className="font-bold text-gray-900 dark:text-white text-lg">
-            {initialData ? 'Chỉnh sửa Sprint' : 'Tạo Sprint mới'}
+            {initialData ? 'Edit Sprint' : 'Create Sprint'}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
             <X className="w-5 h-5" />
@@ -145,13 +145,13 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
         {initialData?.status === 'active' && (
           <div className="px-6 pt-4 pb-0">
             <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
-              Sprint đang chạy — chỉ có thể sửa tên và mục tiêu.
+              Running sprints can only have their name and goal edited.
             </p>
           </div>
         )}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tên Sprint <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sprint name <span className="text-red-500">*</span></label>
             <input
               type="text"
               required
@@ -161,7 +161,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Thời lượng (Duration)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Duration</label>
             <select
               value={formData.duration}
               onChange={handleDurationChange}
@@ -176,7 +176,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Ngày bắt đầu</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Start date</label>
               <input
                 type="date"
                 disabled={isRestricted}
@@ -186,7 +186,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Ngày kết thúc</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">End date</label>
               <input
                 type="date"
                 disabled={isRestricted}
@@ -197,21 +197,21 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mục tiêu Sprint (Goal)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sprint goal</label>
             <textarea
               value={formData.goal}
               onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
-              placeholder="Vd: Hoàn thiện tính năng thanh toán..."
+              placeholder="Example: Complete payment feature..."
             />
           </div>
           <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
             <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-              Hủy
+              Cancel
             </button>
             <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
-              {initialData ? 'Cập nhật' : 'Tạo Sprint'}
+              {initialData ? 'Update' : 'Create Sprint'}
             </button>
           </div>
         </form>

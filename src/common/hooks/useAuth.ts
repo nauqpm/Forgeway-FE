@@ -13,9 +13,9 @@ export const useAuth = () => {
         setError(null);
         try {
             const response = await axios.post(`${API_URL}/register`, { email, password });
-            console.log("Đăng ký thành công:", response.data);
+            console.log("Registration successful:", response.data);
         } catch (err: any) {
-            setError(err.response?.data?.message || "Đã có lỗi xảy ra!");
+            setError(err.response?.data?.message || "An error occurred.");
         } finally {
             setLoading(false);
         }

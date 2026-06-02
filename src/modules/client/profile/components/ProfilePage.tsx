@@ -31,7 +31,7 @@ export function ProfilePage() {
         <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <span className="text-sm">
-            {error ?? "Không thể tải hồ sơ. Vui lòng thử lại."}
+            {error ?? "Could not load profile. Please try again."}
           </span>
         </div>
       </div>
@@ -41,7 +41,7 @@ export function ProfilePage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-        Hồ sơ cá nhân
+        Personal profile
       </h1>
 
       {/* API error banner (non-fatal) */}
@@ -56,7 +56,7 @@ export function ProfilePage() {
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
           <User className="w-5 h-5 text-indigo-500" />
-          Thông tin cá nhân
+          Personal information
         </h2>
         <ProfileInfoForm
           profile={profile}
@@ -71,7 +71,7 @@ export function ProfilePage() {
       <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
         <h2 className="font-semibold text-gray-900 dark:text-white mb-5 flex items-center gap-2">
           <Key className="w-5 h-5 text-indigo-500" />
-          Bảo mật
+          Privacy
         </h2>
         <ChangePasswordForm saving={saving} onChangePassword={changePassword} />
       </div>

@@ -35,7 +35,7 @@ export const useMfa = () => {
   const verifyMfa = useCallback(
     async (code: string, mfaMethod?: MfaMethod) => {
       if (!mfaToken) {
-        setError('Phiên xác thực MFA đã hết hạn. Vui lòng đăng nhập lại.');
+        setError('Your MFA session has expired. Please sign in again.');
         return;
       }
 
@@ -55,7 +55,7 @@ export const useMfa = () => {
         return response;
       } catch (err: unknown) {
         const error = err as { response?: { data?: { message?: string } } };
-        setError(error.response?.data?.message || 'Mã xác thực không hợp lệ');
+        setError(error.response?.data?.message || 'Invalid verification code');
         throw err;
       } finally {
         setLoading(false);
@@ -75,7 +75,7 @@ export const useMfa = () => {
       return data;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Không thể thiết lập TOTP');
+      setError(error.response?.data?.message || 'Could not set up TOTP');
       throw err;
     } finally {
       setLoading(false);
@@ -92,7 +92,7 @@ export const useMfa = () => {
       return result;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Mã xác thực không đúng');
+      setError(error.response?.data?.message || 'Incorrect verification code');
       throw err;
     } finally {
       setLoading(false);
@@ -109,7 +109,7 @@ export const useMfa = () => {
       return result;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Không thể gửi mã OTP');
+      setError(error.response?.data?.message || 'Could not send OTP');
       throw err;
     } finally {
       setLoading(false);
@@ -120,7 +120,7 @@ export const useMfa = () => {
 
   const disableMfa = useCallback(async () => {
     if (user?.role && MFA_REQUIRED_ROLES.includes(user.role)) {
-      setError('Role hiện tại bắt buộc bật MFA và không thể tắt.');
+      setError('The current role requires MFA and it cannot be disabled.');
       return;
     }
 
@@ -132,7 +132,7 @@ export const useMfa = () => {
       return result;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Không thể tắt MFA');
+      setError(error.response?.data?.message || 'Could not disable MFA');
       throw err;
     } finally {
       setLoading(false);
@@ -148,7 +148,7 @@ export const useMfa = () => {
       return result.backupCodes;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Không thể lấy mã dự phòng');
+      setError(error.response?.data?.message || 'Could not get backup codes');
       throw err;
     } finally {
       setLoading(false);
@@ -162,7 +162,7 @@ export const useMfa = () => {
       return result.backupCodes;
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Không thể tạo lại mã dự phòng');
+      setError(error.response?.data?.message || 'Could not regenerate backup codes');
       throw err;
     } finally {
       setLoading(false);

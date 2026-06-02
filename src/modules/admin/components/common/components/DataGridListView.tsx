@@ -98,7 +98,7 @@ export default function DataGridListView({
       dueDate: newTaskDate || null
     });
     setTaskTitle("");
-    // Giữ nguyên type/assignee/date để user có thể tạo hàng loạt task cùng loại nhanh chóng
+    // Keep type/assignee/date unchanged so users can quickly create many tasks of the same kind
   };
 
   const handleKeyDownInlineCreate = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -115,22 +115,25 @@ export default function DataGridListView({
 
   const handleBulkStatusChange = async (status: string) => {
     if (!onBulkUpdate) return;
-    await onBulkUpdate(getSelectedTaskIds(), { status });
+    const ids = getSelectedTaskIds();
     setRowSelection({});
+    await onBulkUpdate(ids, { status });
   };
 
   const handleBulkEditSubmit = async (payload: any) => {
     if (!onBulkUpdate) return;
-    await onBulkUpdate(getSelectedTaskIds(), payload);
+    const ids = getSelectedTaskIds();
     setIsBulkEditDrawerOpen(false);
     setRowSelection({});
+    await onBulkUpdate(ids, payload);
   };
 
   const handleBulkDelete = async () => {
     if (!onBulkDelete) return;
     if (confirm(`Are you sure you want to delete ${selectedCount} items?`)) {
-      await onBulkDelete(getSelectedTaskIds());
+      const ids = getSelectedTaskIds();
       setRowSelection({});
+      await onBulkDelete(ids);
     }
   };
 
@@ -523,7 +526,7 @@ export default function DataGridListView({
           </button>
         ) : (
           <div className="flex items-center border border-indigo-500 rounded-md px-2 py-1 flex-1 max-w-[min(100%,var(--app-narrow-content))] shadow-sm bg-white dark:bg-gray-800">
-             {/* Type Selector thay cho tia chớp */}
+             {/* Type selector replacing the lightning icon */}
              <select 
                value={newTaskType}
                onChange={e => setNewTaskType(e.target.value)}
@@ -607,7 +610,7 @@ export default function DataGridListView({
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
       `}} />
 
-      <BulkActionBar 
+      <BulkActionBar
         selectedCount={selectedCount}
         onClear={() => setRowSelection({})}
         onChangeStatus={handleBulkStatusChange}
@@ -615,13 +618,15 @@ export default function DataGridListView({
         onDelete={handleBulkDelete}
       />
 
-      <BulkEditDrawer 
-        isOpen={isBulkEditDrawerOpen}
-        onClose={() => setIsBulkEditDrawerOpen(false)}
-        selectedCount={selectedCount}
-        uniqueAssignees={uniqueAssignees}
-        onSubmit={handleBulkEditSubmit}
-      />
+      {isBulkEditDrawerOpen && (
+        <BulkEditDrawer
+          isOpen={isBulkEditDrawerOpen}
+          onClose={() => setIsBulkEditDrawerOpen(false)}
+          selectedCount={selectedCount}
+          uniqueAssignees={uniqueAssignees}
+          onSubmit={handleBulkEditSubmit}
+        />
+      )}
     </div>
   );
 }

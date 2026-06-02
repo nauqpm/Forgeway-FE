@@ -1,11 +1,7 @@
-"use client";
+﻿"use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
-import Link from "@tiptap/extension-link";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import { common, createLowlight } from "lowlight";
+import DOMPurify from "dompurify";
 import "highlight.js/styles/github.css";
 
 import { useEffect, useRef, useCallback } from "react";
@@ -14,42 +10,46 @@ import EditorToolbar from "./EditorToolbar";
 import EditorHeader from "./EditorHeader";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
+import { getEditorExtensions } from "./editorExtensions";
 
-const lowlight = createLowlight(common);
+const AUTOSAVE_DELAY = 3000;
 
-const AUTOSAVE_DELAY = 3000; // 3 seconds debounce
+const sanitizeEditorHtml = (html: string) =>
+  DOMPurify.sanitize(html, {
+    USE_PROFILES: { html: true },
+    ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan"],
+  });
 
 export default function TiptapEditor() {
   const { documents, selectedDocumentId, updateDocument, setIsSaving } = useDocsStore();
-  const document = documents.find(d => d.id === selectedDocumentId);
+  const document = documents.find((d) => d.id === selectedDocumentId);
   const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
   const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
-  
+
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const latestContentRef = useRef<string>("");
 
-  // ── Save function ──────────────────────────────────────────
-  const saveContent = useCallback(async (content: string) => {
-    if (!selectedDocumentId) return;
-    setIsSaving(true);
-    try {
-      await updateDocument(selectedDocumentId, { content });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [selectedDocumentId, updateDocument, setIsSaving]);
+  const saveContent = useCallback(
+    async (content: string) => {
+      if (!selectedDocumentId) return;
+      setIsSaving(true);
+      try {
+        await updateDocument(selectedDocumentId, { content: sanitizeEditorHtml(content) });
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [selectedDocumentId, updateDocument, setIsSaving],
+  );
 
-  // ── Ctrl+S manual save ─────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
-        // Cancel pending debounce
         if (saveTimeoutRef.current) {
           clearTimeout(saveTimeoutRef.current);
           saveTimeoutRef.current = null;
         }
-        // Save immediately
         if (latestContentRef.current && selectedDocumentId) {
           saveContent(latestContentRef.current);
         }
@@ -61,29 +61,13 @@ export default function TiptapEditor() {
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: [
-      StarterKit.configure({
-        codeBlock: false, // We use CodeBlockLowlight instead
-        heading: {
-          levels: [1, 2, 3],
-        },
-      }),
-      CodeBlockLowlight.configure({
-        lowlight,
-      }),
-      Link.configure({
-        openOnClick: false,
-      }),
-      Placeholder.configure({
-        placeholder: "Nhập nội dung vào đây...",
-      }),
-    ],
+    extensions: getEditorExtensions("Nhập nội dung vào dây..."),
     content: document?.content || "",
     editable: canEditPage,
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm sm:prose-base lg:prose-lg xl:prose-2xl m-5 focus:outline-none max-w-none px-8 pb-32",
+          "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
       },
     },
     onUpdate: ({ editor }) => {
@@ -93,7 +77,6 @@ export default function TiptapEditor() {
       latestContentRef.current = html;
       setIsSaving(true);
 
-      // Debounced auto-save (2 seconds)
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
@@ -104,7 +87,6 @@ export default function TiptapEditor() {
     },
   });
 
-  // Load content when document changes
   useEffect(() => {
     if (editor && document) {
       const currentContent = editor.getHTML();
@@ -113,18 +95,15 @@ export default function TiptapEditor() {
         latestContentRef.current = document.content;
       }
     }
-  }, [selectedDocumentId, editor]); // We don't want to sync on every document update (like when autosaving)
+  }, [selectedDocumentId, editor, document]);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [canEditPage, editor]);
-
-  
+  }, []);
 
   if (!document) return null;
 
@@ -133,30 +112,38 @@ export default function TiptapEditor() {
       <EditorHeader doc={document} />
 
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
-        {/* Sticky Toolbar with Blur */}
-        <div className="sticky top-0 z-20">
-          {canEditPage && <EditorToolbar editor={editor} />}
-        </div>
+        <div className="sticky top-0 z-20">{canEditPage && <EditorToolbar editor={editor} />}</div>
 
-        <div className="max-w-[760px] mx-auto px-10 py-16">
-          {/* Page Title Section */}
-          <div className="mb-12 group">
-            <input
-              type="text"
-              value={document.title}
-              onChange={(e) => updateDocument(document.id, { title: e.target.value })}
-              readOnly={!canEditPage}
-              className="w-full text-5xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-gray-100 dark:placeholder:text-gray-800 transition-all tracking-tight leading-tight"
-              placeholder="Untitled Page"
-            />
+        <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
+          <div className="mb-10">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Tiêu đề tài liệu
+            </p>
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
+              <input
+                type="text"
+                value={document.title}
+                onChange={(e) => updateDocument(document.id, { title: e.target.value })}
+                readOnly={!canEditPage}
+                className="w-full text-4xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight"
+                placeholder="Nhập tiêu đề tài liệu..."
+              />
+            </div>
           </div>
 
-          {/* Editor Content Area */}
-          <div className="min-h-[600px] pb-40 dark:prose-invert">
-            <EditorContent editor={editor} />
+          <div className="pb-40">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              Nội dung tài liệu
+            </p>
+            <div className="min-h-[600px] rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
+              <div className="dark:prose-invert">
+                <EditorContent editor={editor} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

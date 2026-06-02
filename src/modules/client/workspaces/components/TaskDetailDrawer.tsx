@@ -2,45 +2,54 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  X, Maximize2, Share2, Eye, Lock,
+  X,
   MoreHorizontal, Plus, Link as LinkIcon,
-  FileText, ChevronDown, Paperclip, Settings,
-  Zap, User, Archive
+  FileText, ChevronDown, Settings,
+  Zap, User, Archive, AlertTriangle, ArchiveRestore
 } from 'lucide-react';
 import Link from 'next/link';
-import { MentionsInput, Mention } from 'react-mentions';
+import { TaskDetailResponse } from '../types/task-detail.type';
 import IssueSubtasks from "@/modules/admin/components/common/components/IssueSubtasks";
 import TimeTrackingSidebar from "@/modules/admin/components/common/components/TimeTrackingSidebar";
 import IssueDescription from "@/modules/admin/components/common/components/IssueDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
+import TaskComments from "./TaskComments";
+import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
+import TaskCoverBanner from "./covers/TaskCoverBanner";
+import TaskLabelsField from "./labels/TaskLabelsField";
+import type { TaskCover } from "../types/task-cover.type";
+import { useAuth } from "@/context/AuthContext";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
-  issue: any;
+  issue: TaskDetailResponse | any;
   workspaceId: string;
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
+  detailUrl?: string;
   /** Embedded in split list view: no overlay, no fixed positioning */
   embedded?: boolean;
 }
 
-const workspaceMembers = [
-  { id: "nam", username: "nam" },
-  { id: "admin", username: "admin" },
-  { id: "quanp", username: "quanp" }
-];
+const getUserDisplayName = (user: any, fallback?: string | null) => {
+  if (typeof user === 'string') return user;
+  return user?.fullName || user?.email || fallback || 'Unassigned';
+};
 
-const renderCommentText = (text: string) => {
-  if (!text) return null;
-  const parts = text.split(/(\[@[^\]]+\]\([^)]+\))/g);
-  return parts.map((part, i) => {
-    const match = part.match(/\[@([^\]]+)\]\(([^)]+)\)/);
-    if (match) {
-      return <a key={i} href={`/profile/${match[2]}`} className="text-[#0052CC] font-medium hover:underline bg-[#E9F2FF] px-1 rounded">@{match[1]}</a>;
-    }
-    return <span key={i}>{part}</span>;
-  });
+const formatDate = (value?: string | null) => {
+  if (!value) return 'None';
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+  }).format(new Date(value));
+};
+
+const formatDateTime = (value?: string | null) => {
+  if (!value) return 'Unknown';
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value));
 };
 
 export default function TaskDetailDrawer({
@@ -52,27 +61,52 @@ export default function TaskDetailDrawer({
   onArchiveIssue,
   embedded = false,
 }: TaskDetailDrawerProps) {
+  const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'worklog'>('comments');
   const [localTitle, setLocalTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [commentInput, setCommentInput] = useState('');
-  const [comments, setComments] = useState<any[]>([]);
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
+  const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+
+  // Resize state
+  const [drawerWidth, setDrawerWidth] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+
+  useEffect(() => {
+    if (!isResizing) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      // Drawer is on the right. Width is window width - mouse X position
+      let newWidth = window.innerWidth - e.clientX;
+      const maxWidth = window.innerWidth * 0.5; // Max 50% of the screen
+      
+      if (newWidth < 300) newWidth = 300;
+      if (newWidth > maxWidth) newWidth = maxWidth;
+      
+      setDrawerWidth(newWidth);
+    };
+    const handleMouseUp = () => setIsResizing(false);
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
 
   // Sync state when issue prop changes
   useEffect(() => {
     if (issue) {
       setLocalTitle(issue.title);
-      setComments(issue.comments || []);
       setSubtasks(issue.subtasks || []);
       setTimeLogged(issue.timeLogged || 0);
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
-      setCommentInput('');
+      setLocalCover(issue.cover ?? null);
     }
   }, [issue]);
 
@@ -80,22 +114,22 @@ export default function TaskDetailDrawer({
 
   const issueKey = issue.key;
   const timeEstimated = issue.timeEstimated || "1d 4h"; 
+  const assigneeName =
+    issue.assigneeDisplayName ||
+    getUserDisplayName(issue.assignee, issue.assigneeId);
+  const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
+  const dueDateLabel = formatDate(issue.dueDate ?? issue.endDate);
+  const sprintLabel = issue.sprint?.name || issue.sprintId || 'None';
+  const boardLabel = issue.board?.name || issue.boardId || 'None';
+  const storyPointsLabel =
+    issue.storyPoints === null || issue.storyPoints === undefined
+      ? 'None'
+      : String(issue.storyPoints);
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
     if (localTitle !== issue.title && onUpdateIssue) {
       onUpdateIssue({ ...issue, title: localTitle });
-    }
-  };
-
-  const handleAddComment = () => {
-    if (!commentInput.trim()) return;
-    const newComment = { id: Date.now(), text: commentInput, author: 'QP', timestamp: 'Just now' };
-    const updatedComments = [...comments, newComment];
-    setComments(updatedComments);
-    setCommentInput('');
-    if (onUpdateIssue) {
-      onUpdateIssue({ ...issue, comments: updatedComments });
     }
   };
 
@@ -107,6 +141,7 @@ export default function TaskDetailDrawer({
   };
 
   const handleAddSubtask = (title: string) => {
+    if (issue.isArchived) return;
     const newSubtask = {
       id: `sub-${Date.now()}`,
       title,
@@ -121,6 +156,7 @@ export default function TaskDetailDrawer({
   };
 
   const handleUpdateSubtaskStatus = (id: string, newStatus: string) => {
+    if (issue.isArchived) return;
     const updatedSubtasks = subtasks.map(t => t.id === id ? { ...t, status: newStatus } : t);
     setSubtasks(updatedSubtasks);
     if (onUpdateIssue) {
@@ -129,6 +165,7 @@ export default function TaskDetailDrawer({
   };
 
   const handleLogWork = (minutes: number, description: string) => {
+    if (issue.isArchived) return;
     const newLogged = timeLogged + minutes;
     setTimeLogged(newLogged);
     if (onUpdateIssue) {
@@ -138,7 +175,7 @@ export default function TaskDetailDrawer({
 
   const panelClasses = embedded
     ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 shadow-none border-0 rounded-none overflow-hidden"
-    : `fixed top-0 right-0 bottom-0 w-full max-w-[min(100vw,72rem)] z-[99999] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col shadow-2xl border-l border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out ${
+    : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col shadow-2xl border-l border-gray-200 dark:border-gray-700 transform ${isResizing ? '' : 'transition-transform duration-300 ease-in-out'} ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`;
 
@@ -146,12 +183,22 @@ export default function TaskDetailDrawer({
     <>
       {!embedded && (
         <div
-          className={`fixed inset-0 z-[99998] bg-gray-900/60 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          className={`fixed inset-0 z-[99998] bg-transparent transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
           onClick={onClose}
         />
       )}
 
-      <div className={panelClasses}>
+      <div className={panelClasses} style={{ width: embedded ? '100%' : `${drawerWidth}px` }}>
+        {!embedded && (
+          <div 
+            className={`absolute top-0 left-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize z-[100000] hover:bg-[#0052CC]/50 transition-colors ${isResizing ? 'bg-[#0052CC]' : 'bg-transparent'}`}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsResizing(true);
+            }}
+          />
+        )}
+        
         {/* Top Header */}
         <div className="app-header border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0 bg-gray-100 dark:bg-gray-800">
           <div className="flex items-center gap-2 text-sm font-medium">
@@ -171,11 +218,6 @@ export default function TaskDetailDrawer({
           </div>
 
           <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Lock className="w-4 h-4" /></button>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors">
-              <Eye className="w-4 h-4" /> <span>1</span>
-            </button>
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Share2 className="w-4 h-4" /></button>
             <div className="relative">
               <button
                 type="button"
@@ -193,7 +235,7 @@ export default function TaskDetailDrawer({
                       setShowActionMenu(false);
                       onArchiveIssue?.(issue);
                     }}
-                    disabled={!onArchiveIssue}
+                    disabled={!onArchiveIssue || issue.isArchived}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
                   >
                     <Archive className="h-4 w-4" />
@@ -202,20 +244,44 @@ export default function TaskDetailDrawer({
                 </div>
               )}
             </div>
-            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
-            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><Maximize2 className="w-4 h-4" /></button>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><X className="w-4 h-4" /></button>
           </div>
         </div>
 
-        {/* Content Body */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Column (Main) */}
-          <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] border-r border-gray-200 dark:border-gray-700 space-y-8 custom-scrollbar">
+        <TaskCoverBanner
+          workspaceId={workspaceId}
+          issue={{ ...issue, cover: localCover }}
+          maxHeightClass="h-32"
+          colorHeightClass="h-16"
+          onIssueCoverChange={setLocalCover}
+        />
+
+        {/* Content Body - Single Vertical Column */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-900">
+          <div className="p-4 md:p-6 space-y-8">
+            
+            {/* Archived Banner */}
+            {issue.isArchived && (
+              <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
+                  <span className="text-yellow-700 text-sm font-medium">
+                    This task was archived by {issue.archivedByUser?.fullName || 'Unknown'} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : 'Unknown Date'}. It is currently read-only.
+                  </span>
+                </div>
+                <button 
+                  onClick={() => { console.log("Restore triggered") }}
+                  className="flex items-center px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-sm font-semibold rounded transition-colors"
+                >
+                  <ArchiveRestore className="w-4 h-4 mr-1.5" />
+                  Restore
+                </button>
+              </div>
+            )}
 
             {/* Title */}
             <div>
-              {isEditingTitle ? (
+              {isEditingTitle && !issue.isArchived ? (
                 <input
                   autoFocus
                   type="text"
@@ -227,187 +293,31 @@ export default function TaskDetailDrawer({
                 />
               ) : (
                 <h1
-                  onClick={() => setIsEditingTitle(true)}
-                  className="text-3xl font-semibold text-gray-900 dark:text-white leading-tight mb-4 hover:bg-gray-100 dark:hover:bg-gray-700 p-2 -ml-2 rounded cursor-pointer transition-colors"
+                  onClick={() => { if (!issue.isArchived) setIsEditingTitle(true); }}
+                  className={`text-3xl font-semibold text-gray-900 dark:text-white leading-tight mb-4 p-2 -ml-2 rounded transition-colors ${issue.isArchived ? 'opacity-90' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}
                 >
                   {localTitle}
                 </h1>
               )}
             </div>
 
-            {/* Description */}
-            <div className="space-y-2">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Description</h3>
-              <IssueDescription
-                initialContent={issue.description || ''}
-                onSave={(newDesc) => {
-                  if (onUpdateIssue) {
-                    onUpdateIssue({ ...issue, description: newDesc });
-                  }
-                }}
-              />
-            </div>
-
-            {/* Subtasks */}
-            <IssueSubtasks
-              subtasks={subtasks}
-              onAdd={handleAddSubtask}
-              onUpdateStatus={handleUpdateSubtaskStatus}
-            />
-
-            {/* Linked Work Items */}
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Linked work items</h3>
-              <div className="workspace-panel bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">No linked items yet</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/docs/create?issueId=${issue.id}`}
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-bold rounded transition-colors"
-                  >
-                    <Plus className="w-4 h-4" /> Create new Document
-                  </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
-                    <LinkIcon className="w-4 h-4" /> Link existing item
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity */}
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <span>Show:</span>
-                  <button
-                    onClick={() => setActiveTab('comments')}
-                    className={`px-3 py-1 rounded font-medium transition-colors ${activeTab === 'comments' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                  >Comments</button>
-                  <button
-                    onClick={() => setActiveTab('history')}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === 'history' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                  >History</button>
-                  <button
-                    onClick={() => setActiveTab('worklog')}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === 'worklog' ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-                  >Work log</button>
-                </div>
-              </div>
-              {activeTab === 'comments' && (
-                <>
-              <div className="flex gap-4 pt-2">
-                <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                  QP
-                </div>
-                <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
-                  <div className="mb-4 text-sm relative z-50">
-                    <style dangerouslySetInnerHTML={{__html: `
-                      .mentions__control { min-height: 36px; }
-                      .mentions__input { width: 100%; outline: none; border: none; background: transparent; color: #172B4D; font-family: inherit; font-size: inherit; }
-                      .mentions__suggestions__list { background-color: #F4F5F7; border: 1px solid #DFE1E6; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; z-index: 100; position: absolute; min-width: 200px; margin-top: 4px; }
-                      .mentions__suggestions__item { padding: 8px 12px; cursor: pointer; transition: background-color 0.2s; }
-                      .mentions__suggestions__item--focused { background-color: #EBECF0; }
-                    `}} />
-                    <MentionsInput
-                      value={commentInput}
-                      onChange={(e) => setCommentInput(e.target.value)}
-                      onKeyDown={(e: any) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddComment(); } }}
-                      placeholder="Add a comment... (@ to mention)"
-                      className="mentions w-full bg-transparent text-gray-900 dark:text-white text-sm"
-                      a11ySuggestionsListLabel={"Suggested mentions"}
-                    >
-                      <Mention
-                        trigger="@"
-                        data={workspaceMembers.map(u => ({ id: u.id, display: u.username }))}
-                        markup="[@__display__](__id__)"
-                        renderSuggestion={(suggestion, search, highlightedDisplay) => (
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                              {suggestion.display?.toString().charAt(0).toUpperCase()}
-                            </div>
-                            <span className="text-sm text-gray-900 dark:text-white">{highlightedDisplay}</span>
-                          </div>
-                        )}
-                        className="text-[#0052CC] bg-[#E9F2FF] rounded px-1 font-medium"
-                      />
-                    </MentionsInput>
-                  </div>
-                  {!commentInput && (
-                    <div className="flex items-center gap-2">
-                      <span onClick={() => setCommentInput('Who is working on this...?')} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors">Who is working on this...?</span>
-                      <span onClick={() => setCommentInput('Status update...')} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors">Status update...</span>
-                    </div>
-                  )}
-                  {commentInput && (
-                    <div className="flex gap-2">
-                      <button onClick={handleAddComment} className="px-3 py-1.5 bg-[#0052CC] hover:bg-[#0065FF] text-white text-xs font-medium rounded transition-colors">Save</button>
-                      <button onClick={() => setCommentInput('')} className="px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-medium rounded transition-colors">Cancel</button>
-                    </div>
-                  )}
-                  <div className="mt-5 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400">Pro tip: press <span className="font-bold bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700">Enter</span> to comment</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Render Comments */}
-              {comments.length > 0 && (
-                <div className="space-y-4 mt-6">
-                  {comments.map((comment: any) => (
-                     <div key={comment.id} className="flex gap-4">
-                       <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
-                         {comment.author}
-                       </div>
-                       <div className="flex-1">
-                         <div className="flex items-center gap-2 mb-1">
-                           <span className="text-gray-900 dark:text-white text-sm font-semibold">{comment.author}</span>
-                           <span className="text-gray-500 dark:text-gray-400 text-xs">{comment.timestamp}</span>
-                         </div>
-                         <p className="text-gray-900 dark:text-white text-sm whitespace-pre-wrap">{renderCommentText(comment.text)}</p>
-                         <div className="flex gap-3 mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
-                           <button className="hover:underline">Edit</button>
-                           <button className="hover:underline">Delete</button>
-                         </div>
-                       </div>
-                     </div>
-                  ))}
-                </div>
-              )}
-                </>
-              )}
-              {activeTab === 'history' && (
-                <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
-              )}
-              {activeTab === 'worklog' && (
-                <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                  No work log entries yet.
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* Right Column (Sidebar) */}
-          <div className="workspace-detail-panel bg-gray-100 dark:bg-gray-800/50 p-[var(--workspace-surface-pad)] overflow-y-auto custom-scrollbar">
-
-            <div className="flex items-center gap-2 mb-6">
+            {/* Top Quick Actions (Status, Settings) */}
+            <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <button
-                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors"
+                  onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
+                  disabled={issue.isArchived}
+                  className={`flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-semibold rounded-md transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                 >
-                  {issue.status} <ChevronDown className="w-4 h-4" />
+                  {issue.status} {!issue.isArchived && <ChevronDown className="w-4 h-4 text-gray-500" />}
                 </button>
                 {showStatusDropdown && (
-                  <div className="absolute top-full mt-1 left-0 w-40 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
+                  <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
                     {["To Do", "In Progress", "Done"].map((s) => (
                       <button
                         key={s}
                         onClick={() => handleStatusChange(s)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? 'bg-gray-200 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? 'bg-gray-100 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
                         {s}
                       </button>
@@ -415,82 +325,205 @@ export default function TaskDetailDrawer({
                   </div>
                 )}
               </div>
-              <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 rounded transition-colors"><Zap className="w-4 h-4" /></button>
-              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
-                <Settings className="w-4 h-4" /> Improve Task
+              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md transition-colors border border-gray-200 dark:border-gray-700">
+                <Zap className="w-4 h-4" /> Automations
+              </button>
+              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md transition-colors border border-gray-200 dark:border-gray-700">
+                <Settings className="w-4 h-4" /> Config
               </button>
             </div>
 
-            <div className="space-y-6">
-              <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
-                <button className="w-full flex items-center justify-between p-3 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-t-lg transition-colors">
-                  Details <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                </button>
-                <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
-                  {/* Assignee */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1">Assignee</div>
-                    <div className="col-span-2 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-900 flex items-center justify-center border border-gray-200 dark:border-gray-700">
-                          <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
-                        </div>
-                        {issue.assignee === 'U' || issue.assignee === 'A' ? 'Unassigned' : issue.assignee}
-                      </div>
-                      <a href="#" className="text-sm text-[#0052CC] hover:underline font-medium block">Assign to me</a>
+            {/* Details List (Assignee, Reporter, Priority, etc) */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 overflow-hidden">
+              <div className="w-full flex items-center justify-between p-3 text-sm font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                Details
+              </div>
+              <div className="p-4 flex flex-col space-y-2">
+                {/* Assignee */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Assignee</div>
+                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                      <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                     </div>
+                    <span className="truncate">{assigneeName}</span>
                   </div>
+                </div>
 
-                  {/* Labels */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Labels</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">None</div>
+                {/* Reporter */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Reporter</div>
+                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold text-[10px]">
+                      {reporterName.substring(0, 2).toUpperCase()}
                     </div>
+                    <span className="truncate">{reporterName}</span>
                   </div>
+                </div>
 
-                  {/* Parent */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Parent</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">None</div>
-                    </div>
+                {/* Type */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Type</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {issue.type}
                   </div>
+                </div>
 
-                  {/* Due date */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Due date</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors text-indigo-700 font-semibold">{issue.startDate} to {issue.endDate}</div>
-                    </div>
+                {/* Priority */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Priority</div>
+                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {issue.priority}
                   </div>
+                </div>
 
-                  {/* Priority */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Priority</div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer flex items-center gap-2 transition-colors">
-                        {issue.priority}
-                      </div>
-                    </div>
+                {/* Labels */}
+                <div className="flex items-start min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0 pt-1.5">Labels</div>
+                  <div className="min-w-0 flex-1">
+                    <TaskLabelsField
+                      workspaceId={workspaceId}
+                      issue={issue}
+                      disabled={issue.isArchived}
+                    />
+                  </div>
+                </div>
+
+                {/* Due date */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Due date</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {dueDateLabel}
+                  </div>
+                </div>
+
+                {/* Sprint */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Sprint</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors truncate">
+                    {sprintLabel}
+                  </div>
+                </div>
+
+                {/* Story points */}
+                <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Story points</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {storyPointsLabel}
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Time Tracking */}
+            {/* Description */}
+            <div className="space-y-3">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Description</h3>
+              <div className="pl-1">
+                <IssueDescription
+                  initialContent={issue.description || ''}
+                  onSave={(newDesc: string) => {
+                    if (onUpdateIssue && !issue.isArchived) {
+                      onUpdateIssue({ ...issue, description: newDesc });
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <TaskAttachmentsPanel
+              workspaceId={workspaceId}
+              taskId={issue.id}
+              isArchived={issue.isArchived ?? false}
+              currentUserId={user?.id}
+              accessToken={token}
+            />
+
+            {/* Subtasks */}
+            <div className="pt-2">
+              <IssueSubtasks
+                subtasks={subtasks}
+                onAdd={handleAddSubtask}
+                onUpdateStatus={handleUpdateSubtaskStatus}
+              />
+            </div>
+
+            {/* Time Tracking */}
+            <div className="pt-2">
               <TimeTrackingSidebar 
                 timeEstimated={timeEstimated} 
                 timeLogged={timeLogged} 
                 onLogWork={handleLogWork} 
               />
+            </div>
 
-              {/* Meta information */}
-              <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                <p>Created just now</p>
-                <p>Updated just now</p>
+            {/* Linked Work Items */}
+            <div className="space-y-3 pt-2">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Linked work items</h3>
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">No linked items yet</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href={`/docs/create?issueId=${issue.id}`}
+                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-bold rounded transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
+                  >
+                    <Plus className="w-4 h-4" /> Create Document
+                  </Link>
+                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
+                    <LinkIcon className="w-4 h-4" /> Link item
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Activity (Comments, History, Worklog) */}
+            <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h3>
+                <div className="flex items-center gap-1 text-sm bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                  <button
+                    onClick={() => setActiveTab('comments')}
+                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'comments' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  >Comments</button>
+                  <button
+                    onClick={() => setActiveTab('history')}
+                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'history' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  >History</button>
+                  <button
+                    onClick={() => setActiveTab('worklog')}
+                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'worklog' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                  >Worklog</button>
+                </div>
               </div>
 
+              <div className="pt-2">
+                {activeTab === 'comments' && (
+                  <TaskComments
+                    workspaceId={workspaceId}
+                    taskId={issue.id}
+                    isArchived={issue.isArchived ?? false}
+                    isDeleted={issue.isDeleted ?? false}
+                  />
+                )}
+                {activeTab === 'history' && (
+                  <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
+                )}
+                {activeTab === 'worklog' && (
+                  <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400 text-center">
+                    No work log entries yet.
+                  </div>
+                )}
+              </div>
             </div>
+
+            {/* Meta information */}
+            <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-4 pt-4 pb-8">
+              <span>Created: {formatDateTime(issue.createdAt)}</span>
+              <span>•</span>
+              <span>Updated: {formatDateTime(issue.updatedAt)}</span>
+            </div>
+
           </div>
         </div>
       </div>

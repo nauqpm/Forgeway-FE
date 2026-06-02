@@ -24,6 +24,7 @@ function mapPage(raw: PageApiResponse): Document {
     status: raw.status,
     labels: raw.labels ?? [],
     versionHistory: raw.versionHistory ?? [],
+    source: 'docs',
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };
