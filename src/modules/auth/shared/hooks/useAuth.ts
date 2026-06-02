@@ -90,10 +90,7 @@ export const useAuth = () => {
           */
 
           // Redirect based on role
-          const route = currentUser.role === 'super_admin'
-            ? AUTH_ROUTES.ADMIN_DASHBOARD
-            : AUTH_ROUTES.DASHBOARD;
-          router.push(route);
+          router.push(AUTH_ROUTES.FOR_YOU);
         } else {
           // Return an error if login succeeds but profile cannot be loaded
           throw new Error('Could not load user information after sign-in.');

@@ -27,6 +27,7 @@ import {
   ListFilter,
   Search,
   Columns,
+  Sparkles,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -38,6 +39,7 @@ interface SidebarProps {
 
 const mainNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: Sparkles, label: "For You", href: "/for-you" },
   { icon: Clock7, label: "Recent", href: "/recent" },
   { icon: Star, label: "Starred", href: "/starred" },
   {
@@ -67,6 +69,8 @@ const optionFilter = [
   { title: "Recently updated", slug: "recently-updated" },
   { title: "Recently completed", slug: "recently-completed" },
 ];
+
+type SidebarPopoverType = "for_you" | "recent" | "starred" | "more_workspaces";
 
 const NavItem = ({
   item,
@@ -121,17 +125,39 @@ const PopoverNavItem = ({
   setActivePopover,
   collapsed,
   mounted,
+  forYouWorkspaces = [],
+  onMobileClose,
 }: {
   item: (typeof mainNav)[0];
-  type: "recent" | "starred";
-  activePopover: "recent" | "starred" | "more_workspaces" | null;
-  setActivePopover: (val: "recent" | "starred" | "more_workspaces" | null) => void;
+  type: "for_you" | "recent" | "starred";
+  activePopover: SidebarPopoverType | null;
+  setActivePopover: (val: SidebarPopoverType | null) => void;
   collapsed: boolean;
   mounted: boolean;
+  forYouWorkspaces?: any[];
+  onMobileClose?: () => void;
 }) => {
   const isActive = activePopover === type;
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState({ top: 0, left: "0px" });
+  const [forYouSearch, setForYouSearch] = useState("");
+  const filteredForYouWorkspaces = forYouWorkspaces.filter((workspace) => {
+    const query = forYouSearch.trim().toLowerCase();
+    if (!query) return true;
+
+    return [
+      workspace.name,
+      workspace.key,
+      workspace.slug,
+      workspace.type,
+      workspace.role,
+      workspace.relationship,
+      workspace.ownershipLabel,
+      workspace.status,
+    ]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query));
+  });
 
   const handleToggle = () => {
     if (isActive) {
@@ -183,6 +209,95 @@ const PopoverNavItem = ({
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {type === "for_you" && (
+              <div className="flex flex-col max-h-[60vh]">
+                <div className="p-3 border-b border-slate-100 dark:border-gray-800">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 dark:text-gray-500 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      value={forYouSearch}
+                      onChange={(event) => setForYouSearch(event.target.value)}
+                      placeholder="Search for you items"
+                      className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-750 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="overflow-y-auto flex-1 p-2">
+                  {forYouWorkspaces.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-indigo-500 dark:bg-indigo-900/30 dark:text-indigo-300">
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <h4 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
+                        No workspace suggestions
+                      </h4>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
+                        Workspaces you own or join will appear here.
+                      </p>
+                    </div>
+                  ) : filteredForYouWorkspaces.length === 0 ? (
+                    <div className="p-8 text-center">
+                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-gray-800 dark:text-gray-500">
+                        <Search className="h-5 w-5" />
+                      </div>
+                      <h4 className="text-sm font-semibold text-slate-900 dark:text-gray-100">
+                        No matching items
+                      </h4>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-gray-400">
+                        Try another workspace name, key, role, or status.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-0.5">
+                      {filteredForYouWorkspaces.slice(0, 8).map((workspace) => {
+                        const routeKey = workspace.key || workspace.slug || workspace.id || workspace._id;
+
+                        return (
+                          <Link
+                            key={workspace.id || workspace._id || routeKey}
+                            href={`/workspaces/${routeKey}`}
+                            className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors"
+                            onClick={() => {
+                              setActivePopover(null);
+                              onMobileClose?.();
+                            }}
+                          >
+                            <div className="w-7 h-7 rounded bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                              {workspace.name?.charAt(0) || "W"}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                {workspace.name}
+                              </p>
+                              <p className="truncate text-[11px] capitalize text-slate-500 dark:text-gray-500">
+                                {workspace.ownershipLabel || workspace.relationship || workspace.role?.replace(/_/g, " ") || workspace.type || "Workspace"}
+                              </p>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-2 border-t border-slate-100 dark:border-gray-800">
+                  <Link
+                    href="/for-you"
+                    className="flex w-full items-center justify-between p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                    onClick={() => {
+                      setActivePopover(null);
+                      onMobileClose?.();
+                    }}
+                  >
+                    <span>View all for you items</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {type === "recent" && (
               <div className="flex flex-col max-h-[60vh]">
@@ -293,7 +408,8 @@ export default function Sidebar({
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [filterOpen, setFilterOpen] = useState(false);
   const [sidebarWorkspaces, setsidebarWorkspaces] = useState<any[]>([]);
-  const [activePopover, setActivePopover] = useState<"recent" | "starred" | "more_workspaces" | null>(null);
+  const [forYouWorkspaces, setForYouWorkspaces] = useState<any[]>([]);
+  const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
   const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: "0px" });
   const moreWorkspacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -317,13 +433,21 @@ export default function Sidebar({
 
   useEffect(() => {
     setMounted(true);
-    if (!currentWorkspace) {
+    api
+      .get(apiRoutes.FOR_YOU)
+      .then((res) => {
+        const payload = res.data?.data ?? res.data;
+        setForYouWorkspaces(Array.isArray(payload) ? payload : payload?.workspaces ?? []);
+      })
+      .catch(() => setForYouWorkspaces([]));
+
+    if (currentWorkspace) {
+      api.get(apiRoutes.WORKSPACES.BASE, { params: { workspaceId: currentWorkspace._id } })
+        .then((res) => setsidebarWorkspaces(res.data))
+        .catch(() => setsidebarWorkspaces([]));
+    } else {
       setsidebarWorkspaces([]);
-      return;
     }
-    api.get(apiRoutes.WORKSPACES.BASE, { params: { workspaceId: currentWorkspace._id } })
-      .then((res) => setsidebarWorkspaces(res.data))
-      .catch(() => setsidebarWorkspaces([]));
   }, [currentWorkspace]);
 
   const isAdmin = isGlobalAdminRole(user?.role);
@@ -400,11 +524,21 @@ export default function Sidebar({
 
           {/* Main Navigation */}
           <div className="px-2 space-y-0.5">
-            <div className="px-2 space-y-0.5">
+              <div className="px-2 space-y-0.5">
               {/* Dashboard */}
               <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
-              <PopoverNavItem item={mainNav[1]} type="recent" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
-              <PopoverNavItem item={mainNav[2]} type="starred" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
+              <PopoverNavItem
+                item={mainNav[1]}
+                type="for_you"
+                activePopover={activePopover}
+                setActivePopover={setActivePopover}
+                collapsed={collapsed}
+                mounted={mounted}
+                forYouWorkspaces={forYouWorkspaces}
+                onMobileClose={onMobileClose}
+              />
+              <PopoverNavItem item={mainNav[2]} type="recent" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
+              <PopoverNavItem item={mainNav[3]} type="starred" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
 
               {/* Workspaces */}
               <div>
@@ -499,7 +633,7 @@ export default function Sidebar({
               </div>
 
               {/* Reports */}
-              <NavItem item={mainNav[5]} showBadge pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+              <NavItem item={mainNav[6]} showBadge pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
             </div>
           </div>
 
