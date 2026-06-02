@@ -433,8 +433,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                             className={`rounded-md bg-white/90 p-1 text-gray-500 opacity-0 shadow-sm transition-all hover:bg-gray-100 hover:text-gray-800 group-hover:opacity-100 dark:bg-gray-950/80 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100 ${
                                               actionMenuIssueId === issue.id ? "opacity-100" : ""
                                             }`}
-                                            aria-label="Issue actions"
-                                            title="Issue actions"
+                                            aria-label="Task actions"
+                                            title="Task actions"
                                           >
                                             <MoreHorizontal className="h-4 w-4" />
                                           </button>
@@ -582,8 +582,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                 <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
                                   {issues.filter((i) => issueMatchesColumn(i, column))
                                     .length === 0
-                                    ? "Drag issues here"
-                                    : "No matching issues"}
+                                    ? "Drag tasks here"
+                                    : "No matching tasks"}
                                 </div>
                               )}
                           </div>

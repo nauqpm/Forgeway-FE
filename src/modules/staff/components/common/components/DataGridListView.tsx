@@ -528,7 +528,7 @@ export default function DataGridListView({
                value={newTaskType}
                onChange={e => setNewTaskType(e.target.value)}
                className="outline-none text-sm bg-transparent cursor-pointer text-gray-600 dark:text-gray-300 font-medium pl-1 pr-2"
-               title="Issue Type"
+               title="Task Type"
              >
                <option value="Task">☑️ Task</option>
                <option value="Story">📗 Story</option>

@@ -9,9 +9,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { TaskDetailResponse } from "../types/task-detail.type";
-import IssueSubtasks from "@/modules/admin/components/common/components/IssueSubtasks";
+import TaskSubtasks from "@/modules/admin/components/common/components/TaskSubtasks";
 import TimeTrackingSidebar from "@/modules/admin/components/common/components/TimeTrackingSidebar";
-import IssueDescription from "@/modules/admin/components/common/components/IssueDescription";
+import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
@@ -253,7 +253,7 @@ export default function TaskDetailList({
           {/* Description */}
           <div>
             <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Description</h2>
-            <IssueDescription
+            <TaskDescription
               initialContent={issue.description || ""}
               onSave={(newDesc: string) => {
                 if (onUpdateIssue && !issue.isArchived) {
@@ -274,7 +274,7 @@ export default function TaskDetailList({
           {/* Subtasks */}
           <div>
             {/*<h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Subtasks</h2>*/}
-            <IssueSubtasks
+            <TaskSubtasks
               subtasks={subtasks}
               onAdd={handleAddSubtask}
               onUpdateStatus={handleUpdateSubtaskStatus}

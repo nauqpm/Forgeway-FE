@@ -3,7 +3,7 @@
 import { FileText, X } from "lucide-react";
 import { Workspace } from "../../types/workspace.type";
 
-type CreateIssueModalProps = {
+type CreateTaskModalProps = {
   showCreateIssue: boolean;
 
   setShowCreateIssue: (value: boolean) => void;
@@ -15,14 +15,14 @@ type CreateIssueModalProps = {
   workspace: Workspace;
 };
 
-export default function CreateIssueModal({
+export default function CreateTaskModal({
   showCreateIssue,
   setShowCreateIssue,
   newIssueForm,
   setNewIssueForm,
   handleCreateIssue,
   workspace,
-}: CreateIssueModalProps) {
+}: CreateTaskModalProps) {
   if (!showCreateIssue) return null;
 
   const workspaceMembers = (workspace.members ?? [])
@@ -45,7 +45,7 @@ export default function CreateIssueModal({
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
           <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
             <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            Create new issue
+            Create new task
           </h3>
 
           <button
@@ -84,7 +84,7 @@ export default function CreateIssueModal({
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Issue type
+                Task type
               </label>
 
               <select

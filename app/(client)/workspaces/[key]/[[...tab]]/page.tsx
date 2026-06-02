@@ -25,7 +25,7 @@ import { useAssignees } from "@/modules/client/workspaces/hooks/useAssignees";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
-import { filterIssues } from "@/modules/client/workspaces/utils/filterIssues";
+import { filterTasks } from "@/modules/client/workspaces/utils/filterTasks";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
 import {
   handleBoardDragEnd,
@@ -33,7 +33,7 @@ import {
   TaskReorderSyncInput,
 } from "@/modules/client/workspaces/utils/dragUtils";
 
-import { useIssueHandlers } from "@/modules/client/workspaces/hooks/useIssueHandlers";
+import { useTaskHandlers } from "@/modules/client/workspaces/hooks/useTaskHandlers";
 import { useSprintHandlers } from "@/modules/client/workspaces/hooks/useSprintHandlers";
 import { useColumnHandlers } from "@/modules/client/workspaces/hooks/useColumnHandlers";
 import { useSelectionHandlers } from "@/modules/client/workspaces/hooks/useSelectionHandlers";
@@ -46,8 +46,8 @@ import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
 
-const CreateIssueModal = dynamic(
-  () => import("@/modules/client/workspaces/components/issues/CreateIssueModal"),
+const CreateTaskModal = dynamic(
+  () => import("@/modules/client/workspaces/components/tasks/CreateTaskModal"),
   { ssr: false },
 );
 const SprintModal = dynamic(
@@ -278,7 +278,7 @@ export default function WorkspaceDetailPage({
   const [listGridDrawerOpen, setListGridDrawerOpen] = useState(false);
 
   const filteredIssues = useMemo(() => {
-    return filterIssues(issues, filters, workspace);
+    return filterTasks(issues, filters, workspace);
   }, [issues, filters, workspace]);
 
   const uniqueAssignees = useAssignees(issues);
@@ -298,7 +298,7 @@ export default function WorkspaceDetailPage({
     handleUpdateIssueDate,
     updateIssueDirectly,
     handleQuickCreateTask,
-  } = useIssueHandlers({
+  } = useTaskHandlers({
     workspaceId: workspaceApiId ?? "",
     issues,
     setIssues,
@@ -815,7 +815,7 @@ export default function WorkspaceDetailPage({
 
       {/* Create Issue Modal */}
       {showCreateIssue && (
-        <CreateIssueModal
+        <CreateTaskModal
           showCreateIssue={showCreateIssue}
           setShowCreateIssue={setShowCreateIssue}
           newIssueForm={newIssueForm}

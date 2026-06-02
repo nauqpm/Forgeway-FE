@@ -15,7 +15,7 @@ import {
 
 const lowlight = createLowlight(common);
 
-interface IssueDescriptionProps {
+interface TaskDescriptionProps {
   initialContent: string;
   onSave: (content: string) => void;
 }
@@ -99,7 +99,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
   );
 };
 
-export default function IssueDescription({ initialContent, onSave }: IssueDescriptionProps) {
+export default function TaskDescription({ initialContent, onSave }: TaskDescriptionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(initialContent || '');
 

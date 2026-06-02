@@ -86,7 +86,7 @@ export default function BoardFilters({
     filters.backlog ||
     filters.archived;
 
-  const tabs = ["Status", "Assignee", "Issue type", "Priority", "Other"];
+  const tabs = ["Status", "Assignee", "Task type", "Priority", "Other"];
 
   // Filtered lists
   const allStatuses = ["To Do", "In Progress", "Testing", "Done"];
@@ -108,7 +108,7 @@ export default function BoardFilters({
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search issues..."
+            placeholder="Search tasks..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             className="w-full min-w-[240px] pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
@@ -223,13 +223,13 @@ export default function BoardFilters({
               </>
             )}
 
-            {activeTab === "Issue type" && (
+            {activeTab === "Task type" && (
               <>
                 <div className="relative mb-2">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search issue types..."
+                    placeholder="Search task types..."
                     value={typeSearch}
                     onChange={(e) => setTypeSearch(e.target.value)}
                     className="w-full pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -248,7 +248,7 @@ export default function BoardFilters({
                     </label>
                   ))}
                   {filteredTypes.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">No issue types found</p>
+                    <p className="text-sm text-gray-500 text-center py-4">No task types found</p>
                   )}
                 </div>
               </>

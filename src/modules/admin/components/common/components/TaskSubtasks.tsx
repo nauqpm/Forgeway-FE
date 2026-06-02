@@ -8,13 +8,13 @@ interface Subtask {
   priority: string;
 }
 
-interface IssueSubtasksProps {
+interface TaskSubtasksProps {
   subtasks: Subtask[];
   onAdd: (title: string) => void;
   onUpdateStatus: (id: string, newStatus: string) => void;
 }
 
-export default function IssueSubtasks({ subtasks = [], onAdd, onUpdateStatus }: IssueSubtasksProps) {
+export default function TaskSubtasks({ subtasks = [], onAdd, onUpdateStatus }: TaskSubtasksProps) {
   const [newTitle, setNewTitle] = useState("");
 
   const percent = useMemo(() => {

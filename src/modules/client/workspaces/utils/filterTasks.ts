@@ -2,7 +2,7 @@ import { Issue } from "../types/issue.type";
 import { Filters } from "../types/filter.type";
 import { Workspace } from "../types/workspace.type";
 
-export const filterIssues = (
+export const filterTasks = (
   issues: Issue[],
   filters: Filters,
   workspace: Workspace | null

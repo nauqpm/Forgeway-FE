@@ -36,7 +36,7 @@ interface UseIssueHandlersProps {
   >;
 }
 
-export const useIssueHandlers = ({
+export const useTaskHandlers = ({
   workspaceId,
   issues,
   setIssues,

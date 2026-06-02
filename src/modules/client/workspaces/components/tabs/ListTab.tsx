@@ -186,7 +186,7 @@ export default function ListTab({
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
           <input
             type="text"
-            placeholder="Search issues..."
+            placeholder="Search tasks..."
             className="w-full pl-8 pr-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md text-gray-900 dark:text-gray-100 placeholder-gray-400 outline-none focus:ring-1 focus:ring-[#0052CC] focus:border-[#0052CC] transition-colors"
           />
         </div>
@@ -338,7 +338,7 @@ export default function ListTab({
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {splitSortedIssues.length === 0 ? (
                 <p className="p-4 text-sm text-gray-500 dark:text-gray-400">
-                  No issues match the current filter.
+                  No tasks match the current filter.
                 </p>
               ) : (
                 <>
@@ -408,7 +408,7 @@ export default function ListTab({
           <section className="flex min-h-[320px] flex-col overflow-hidden bg-white dark:bg-gray-900 lg:min-h-0">
             {!selectedIssue ? (
               <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                Select an issue in the left column to view details.
+                Select a task in the left column to view details.
               </div>
             ) : splitSortedIssues.some((i) => i.id === selectedIssue.id) ? (
               <TaskDetailList
@@ -423,7 +423,7 @@ export default function ListTab({
               />
             ) : (
               <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                The selected issue is no longer in the filtered list.{" "}
+                The selected task is no longer in the filtered list.{" "}
                 <button
                   type="button"
                   onClick={() => setSelectedIssue(null)}

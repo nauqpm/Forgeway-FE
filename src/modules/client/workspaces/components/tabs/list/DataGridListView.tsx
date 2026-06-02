@@ -110,7 +110,7 @@ export default function DataGridListView({
           <input
             type="checkbox"
             className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
-            aria-label="Select issue"
+            aria-label="Select task"
           />
         ),
         size: 50,
@@ -257,7 +257,7 @@ export default function DataGridListView({
           <button
             type="button"
             className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
-            aria-label="Issue actions"
+            aria-label="Task actions"
           >
             <MoreHorizontal className="h-4 w-4" />
           </button>

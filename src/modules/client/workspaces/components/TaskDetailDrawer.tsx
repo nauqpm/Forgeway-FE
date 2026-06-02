@@ -9,9 +9,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { TaskDetailResponse } from '../types/task-detail.type';
-import IssueSubtasks from "@/modules/admin/components/common/components/IssueSubtasks";
+import TaskSubtasks from "@/modules/admin/components/common/components/TaskSubtasks";
 import TimeTrackingSidebar from "@/modules/admin/components/common/components/TimeTrackingSidebar";
-import IssueDescription from "@/modules/admin/components/common/components/IssueDescription";
+import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
@@ -223,7 +223,7 @@ export default function TaskDetailDrawer({
                 type="button"
                 onClick={() => setShowActionMenu((open) => !open)}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
-                aria-label="Issue actions"
+                aria-label="Task actions"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
@@ -419,7 +419,7 @@ export default function TaskDetailDrawer({
             <div className="space-y-3">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">Description</h3>
               <div className="pl-1">
-                <IssueDescription
+                <TaskDescription
                   initialContent={issue.description || ''}
                   onSave={(newDesc: string) => {
                     if (onUpdateIssue && !issue.isArchived) {
@@ -440,7 +440,7 @@ export default function TaskDetailDrawer({
 
             {/* Subtasks */}
             <div className="pt-2">
-              <IssueSubtasks
+              <TaskSubtasks
                 subtasks={subtasks}
                 onAdd={handleAddSubtask}
                 onUpdateStatus={handleUpdateSubtaskStatus}

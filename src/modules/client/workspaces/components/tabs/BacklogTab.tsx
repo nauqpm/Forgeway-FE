@@ -471,7 +471,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       disabled={!canCreateTask}
                       className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 disabled:opacity-50 disabled:hover:bg-transparent p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors w-fit"
                     >
-                      <Plus className="w-4 h-4" /> Create issue (full form)
+                      <Plus className="w-4 h-4" /> Create task (full form)
                     </button>
                   </div>
                 )}

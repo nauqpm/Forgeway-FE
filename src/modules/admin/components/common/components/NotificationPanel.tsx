@@ -41,7 +41,7 @@ const MOCK_NOTIFICATIONS: Notification[] = [
   {
     id: "3",
     actor: { name: "Taylor Tran", avatar: "T" },
-    actionText: "assigned this issue to you",
+    actionText: "assigned this task to you",
     target: { id: "105", key: "TEAMD-105", title: "Research micro-frontend architecture", type: "Story" },
     createdAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
     isRead: true,
