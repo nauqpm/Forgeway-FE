@@ -28,6 +28,7 @@ import {
   Search,
   Columns,
   FolderOpen,
+  Sparkles,
 } from "lucide-react";
 
 interface SidebarProps {
