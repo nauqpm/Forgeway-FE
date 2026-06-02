@@ -4,58 +4,58 @@ import { useState } from "react";
 import { Shield, Check, X, Users, Save, Edit3 } from "lucide-react";
 
 const roles = [
-  { id: "admin", name: "Quản trị viên", desc: "Toàn quyền kiểm soát hệ thống", color: "indigo" },
-  { id: "member", name: "Thành viên", desc: "Tạo và quản lý công việc, dự án", color: "emerald" },
-  { id: "viewer", name: "Người xem", desc: "Chỉ xem nội dung", color: "amber" },
-  { id: "guest", name: "Khách", desc: "Quyền hạn rất hạn chế", color: "gray" },
+  { id: "admin", name: "Administrator", desc: "Full system control", color: "indigo" },
+  { id: "member", name: "Member", desc: "Create and manage tasks and projects", color: "emerald" },
+  { id: "viewer", name: "Viewer", desc: "View content only", color: "amber" },
+  { id: "guest", name: "Guest", desc: "Very limited permissions", color: "gray" },
 ];
 
 const permissionGroups = [
   {
     group: "Workspace",
-    label: "Không gian làm việc",
+    label: "Workspace",
     items: [
-      { key: "workspace:read", label: "Xem workspace" },
-      { key: "workspace:write", label: "Chỉnh sửa workspace" },
-      { key: "workspace:admin", label: "Quản trị workspace" },
+      { key: "workspace:read", label: "View workspace" },
+      { key: "workspace:write", label: "Edit workspace" },
+      { key: "workspace:admin", label: "Administer workspace" },
     ],
   },
   {
     group: "Project",
-    label: "Dự án",
+    label: "Project",
     items: [
-      { key: "project:read", label: "Xem dự án" },
-      { key: "project:write", label: "Tạo/Sửa dự án" },
-      { key: "project:delete", label: "Xóa dự án" },
+      { key: "project:read", label: "View project" },
+      { key: "project:write", label: "Create/Edit project" },
+      { key: "project:delete", label: "Delete project" },
     ],
   },
   {
     group: "Task",
-    label: "Công việc",
+    label: "Tasks",
     items: [
-      { key: "task:read", label: "Xem công việc" },
-      { key: "task:write", label: "Tạo/Sửa công việc" },
-      { key: "task:delete", label: "Xóa công việc" },
-      { key: "task:assign", label: "Giao việc" },
+      { key: "task:read", label: "View tasks" },
+      { key: "task:write", label: "Create/Edit tasks" },
+      { key: "task:delete", label: "Delete tasks" },
+      { key: "task:assign", label: "Assign tasks" },
     ],
   },
   {
     group: "Knowledge",
-    label: "Cơ sở tri thức",
+    label: "Knowledge base",
     items: [
-      { key: "space:read", label: "Xem Space" },
-      { key: "space:write", label: "Tạo/Sửa Space" },
-      { key: "space:delete", label: "Xóa Space" },
-      { key: "page:write", label: "Tạo/Sửa trang" },
-      { key: "page:delete", label: "Xóa trang" },
+      { key: "space:read", label: "View Space" },
+      { key: "space:write", label: "Create/Edit Space" },
+      { key: "space:delete", label: "Delete Space" },
+      { key: "page:write", label: "Create/Edit pages" },
+      { key: "page:delete", label: "Delete pages" },
     ],
   },
   {
     group: "User",
-    label: "Người dùng",
+    label: "User",
     items: [
-      { key: "user:read", label: "Xem danh sách người dùng" },
-      { key: "user:manage", label: "Quản lý người dùng" },
+      { key: "user:read", label: "View user list" },
+      { key: "user:manage", label: "Manage users" },
     ],
   },
 ];
@@ -89,8 +89,8 @@ export default function Permissions() {
     <div className="app-page-wide">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-white dark:text-white">Vai trò & Phân quyền</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Quản lý quyền hạn cho từng vai trò trong hệ thống</p>
+          <h1 className="text-3xl font-bold text-white dark:text-white">Roles & Permissions</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage permissions for each role in the system</p>
         </div>
         
         <button
@@ -98,7 +98,7 @@ export default function Permissions() {
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-medium transition-all active:scale-95"
         >
           <Save className="w-5 h-5" />
-          Lưu thay đổi
+          Save changes
         </button>
       </div>
 
@@ -106,7 +106,7 @@ export default function Permissions() {
       <div className="workspace-panel bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 mb-8">
         <h2 className="font-semibold text-white text-xl mb-5 flex items-center gap-3">
           <Shield className="w-6 h-6 text-white" />
-          Vai trò Hệ thống
+          System Roles
         </h2>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -128,11 +128,11 @@ export default function Permissions() {
       {/* Permissions Matrix */}
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
         <div className="workspace-panel border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
-          <h2 className="font-semibold text-xl text-white">Ma trận Phân quyền</h2>
+          <h2 className="font-semibold text-xl text-white">Permission Matrix</h2>
           {saved && (
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
               <Check className="w-4 h-4" />
-              Đã lưu thành công
+              Saved successfully
             </div>
           )}
         </div>
@@ -141,7 +141,7 @@ export default function Permissions() {
           <table className="w-full app-table-min">
             <thead>
               <tr className="border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
-                <th className="text-left py-4 px-6 font-medium text-gray-500 dark:text-gray-400 w-80">Quyền hạn</th>
+                <th className="text-left py-4 px-6 font-medium text-gray-500 dark:text-gray-400 w-80">Permission</th>
                 {roles.map(role => (
                   <th key={role.id} className="text-center py-4 px-4 font-medium text-gray-700 dark:text-gray-300">
                     {role.name}
@@ -195,7 +195,7 @@ export default function Permissions() {
       </div>
 
       <p className="text-center text-xs text-gray-400 mt-8">
-        Nhấp vào ô để bật/tắt quyền • Thay đổi sẽ được áp dụng sau khi nhấn "Lưu thay đổi"
+        Click a cell to toggle a permission. Changes apply after clicking "Save changes"
       </p>
     </div>
   );

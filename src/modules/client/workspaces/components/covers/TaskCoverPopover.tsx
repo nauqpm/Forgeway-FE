@@ -39,7 +39,7 @@ const COVER_IMAGES = [
   "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&w=800&q=80", 
   "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
 
-  // --- 2. ĐÔ THỊ, KIẾN TRÚC & ĐƯỜNG PHỐ (URBAN & ARCHITECTURE) ---
+  // --- 2. URBAN, ARCHITECTURE & STREETS (URBAN & ARCHITECTURE) ---
   "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80", 
   "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=800&q=80",
   "https://images.unsplash.com/photo-1449034446853-66c86144b0ad?auto=format&fit=crop&w=800&q=80", 
@@ -56,7 +56,7 @@ const COVER_IMAGES = [
   "https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?auto=format&fit=crop&w=800&q=80",
   "https://images.unsplash.com/photo-1523731407965-2430cd12f5e4?auto=format&fit=crop&w=800&q=80", 
 
-  // --- 3. KHÔNG GIAN LÀM VIỆC & BACKGROUND TỐI GIẢN (WORKSPACES & MINIMALIST) ---
+  // --- 3. WORKSPACES & MINIMAL BACKGROUNDS (WORKSPACES & MINIMALIST) ---
   "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80", 
   "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80",
   "https://images.unsplash.com/photo-1483058712412-4245e9b90334?auto=format&fit=crop&w=800&q=80", 

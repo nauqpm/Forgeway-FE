@@ -14,26 +14,26 @@ const isSafeCallbackUrl = (url: string) =>
   url.startsWith('/') && !url.startsWith('//') && !url.includes('\\');
 
 /**
- * GuestGuard — Component bảo vệ các route DÀNH RIÊNG cho khách (chưa đăng nhập).
+ * GuestGuard protects routes intended only for guests who are not signed in.
  * 
- * Mục đích:
- * - Được sử dụng trên các trang như /login, /register, /forgot-password.
- * - Nếu người dùng ĐÃ đăng nhập mà cố tình vào lại các trang này, hệ thống sẽ tự động 
- *   chuyển hướng họ vào trang Dashboard chính để tránh lỗi logic.
+ * Purpose:
+ * - Used on pages such as /login, /register, and /forgot-password.
+ * - If signed-in users intentionally revisit these pages, the system automatically 
+ *   redirects them to the main dashboard to avoid logic errors.
  * 
- * Các bước hoạt động:
- * 1. Lấy trạng thái đăng nhập từ `useAuthStore`.
- * 2. Dùng `useEffect` kiểm tra: Nếu đã khởi tạo xong và người dùng CÓ trạng thái isAuthenticated = true,
- *    thì lập tức đẩy vào trang DASHBOARD.
- * 3. Nếu ứng dụng chưa khởi tạo xong, hiển thị Spinner.
- * 4. Nếu đã đăng nhập thì trả về null (không render nội dung trang đăng nhập).
- * 5. Nếu thực sự là Guest (chưa đăng nhập), cho phép render `children`.
+ * How it works:
+ * 1. Read sign-in state from `useAuthStore`.
+ * 2. Use `useEffect` to check whether initialization is complete and users are authenticated.
+ *    Then immediately redirect to the dashboard.
+ * 3. Show a spinner while the app is initializing.
+ * 4. Return null if already signed in.
+ * 5. Render `children` only for actual guests.
  */
 const GuestGuard: React.FC<GuestGuardProps> = ({ children }) => {
   const router = useRouter();
   const { isAuthenticated, isInitialized } = useAuthStore();
 
-  // Bước 2: Kiểm tra và chuyển hướng nếu ĐÃ đăng nhập
+  // Step 2: check and redirect if already signed in
   useEffect(() => {
     if (isInitialized && isAuthenticated) {
       const params = new URLSearchParams(window.location.search);

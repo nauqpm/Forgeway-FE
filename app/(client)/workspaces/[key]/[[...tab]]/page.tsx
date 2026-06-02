@@ -484,7 +484,7 @@ export default function WorkspaceDetailPage({
       setSelectedIssue(null);
       resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-      toast.success("Đã archive work item");
+      toast.success("Work item archived");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong archive duoc work item");
     }
@@ -505,7 +505,7 @@ export default function WorkspaceDetailPage({
       );
       resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-      toast.success("Đã restore work item");
+      toast.success("Work item restored");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong restore duoc work item");
     }
@@ -524,7 +524,7 @@ export default function WorkspaceDetailPage({
       setSelectedIssue((current) => current?.id === issue.id ? null : current);
       resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-      toast.success("Đã delete work item");
+      toast.success("Work item deleted");
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Khong delete duoc work item");
     }
@@ -599,15 +599,15 @@ export default function WorkspaceDetailPage({
   if (tasksError) {
     const errorData = (tasksError as any).response?.data;
     const status = (tasksError as any).response?.status;
-    let errorMessage = "Đã xảy ra lỗi khi tải dữ liệu board";
-    if (status === 401) errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-    if (status === 403) errorMessage = "Bạn không có quyền truy cập workspace này.";
-    if (status === 404) errorMessage = "Workspace không tồn tại.";
-    if (status === 400) errorMessage = "Bộ lọc không hợp lệ.";
+    let errorMessage = "An error occurred while loading board data";
+    if (status === 401) errorMessage = "Your session has expired. Please sign in again.";
+    if (status === 403) errorMessage = "You do not have permission to access this workspace.";
+    if (status === 404) errorMessage = "Workspace does not exist.";
+    if (status === 400) errorMessage = "Invalid filters.";
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <p className="text-red-500 mb-4">{errorMessage}</p>
-        <button onClick={() => window.location.reload()} className="text-indigo-600 hover:text-indigo-800">Tải lại trang</button>
+        <button onClick={() => window.location.reload()} className="text-indigo-600 hover:text-indigo-800">Reload page</button>
       </div>
     );
   }
@@ -616,10 +616,10 @@ export default function WorkspaceDetailPage({
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <p className="text-gray-500 mb-4">
-          Không tìm thấy không gian (Workspace) này
+          Workspace not found
         </p>
         <Link href="/workspaces" className="text-indigo-600 hover:text-indigo-800">
-          Quay lại danh sách Workspace
+          Back to workspace list
         </Link>
       </div>
     );
@@ -803,7 +803,7 @@ export default function WorkspaceDetailPage({
         }}
       />
 
-      {/* Modal Tạo Issue */}
+      {/* Create Issue Modal */}
       {showCreateIssue && (
         <CreateIssueModal
           showCreateIssue={showCreateIssue}
@@ -846,7 +846,7 @@ export default function WorkspaceDetailPage({
         />
       )}
 
-      {/* 4. MODAL/DRAWER: CHI TIẾT ISSUE */}
+      {/* Issue detail modal/drawer */}
       {activeIssueDetail && (activeTab === "timeline" || activeTab === "calendar") ? (
         <TaskDetailDrawer
           isOpen={!!activeIssueDetail}

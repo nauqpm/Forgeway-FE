@@ -98,7 +98,7 @@ export default function DataGridListView({
       dueDate: newTaskDate || null
     });
     setTaskTitle("");
-    // Giữ nguyên type/assignee/date để user có thể tạo hàng loạt task cùng loại nhanh chóng
+    // Keep type/assignee/date unchanged so users can quickly create many tasks of the same kind
   };
 
   const handleKeyDownInlineCreate = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -526,7 +526,7 @@ export default function DataGridListView({
           </button>
         ) : (
           <div className="flex items-center border border-indigo-500 rounded-md px-2 py-1 flex-1 max-w-[min(100%,var(--app-narrow-content))] shadow-sm bg-white dark:bg-gray-800">
-             {/* Type Selector thay cho tia chớp */}
+             {/* Type selector replacing the lightning icon */}
              <select 
                value={newTaskType}
                onChange={e => setNewTaskType(e.target.value)}

@@ -49,7 +49,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
     });
 
     if (!hasChanges) {
-      alert("Bạn chưa thay đổi thông tin nào!");
+      alert("You have not changed any fields.");
       return;
     }
 
@@ -61,14 +61,14 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
   return (
     <div className="fixed inset-y-0 right-0 w-[400px] bg-white dark:bg-gray-900 shadow-[-10px_0_30px_rgba(0,0,0,0.1)] border-l border-gray-200 dark:border-gray-700 z-50 flex flex-col transform transition-transform duration-300">
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Sửa nhiều Task ({selectedCount})</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-white">Bulk edit tasks ({selectedCount})</h2>
         <button onClick={onClose} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-500 dark:text-gray-400 transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Các trường có giá trị "Giữ nguyên" sẽ không bị thay đổi khi cập nhật.</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Fields set to "Keep unchanged" will not be changed when updating.</p>
 
         {/* Status */}
         <div>
@@ -79,7 +79,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
               onChange={e => handleChange('status', e.target.value)}
               className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
             >
-              <option value={KEEP_AS_IS}>-- Giữ nguyên --</option>
+              <option value={KEEP_AS_IS}>-- Keep unchanged --</option>
               <option value="To Do">To Do</option>
               <option value="In Progress">In Progress</option>
               <option value="Done">Done</option>
@@ -96,7 +96,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
               onChange={e => handleChange('priority', e.target.value)}
               className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
             >
-              <option value={KEEP_AS_IS}>-- Giữ nguyên --</option>
+              <option value={KEEP_AS_IS}>-- Keep unchanged --</option>
               <option value="Highest">Highest</option>
               <option value="High">High</option>
               <option value="Medium">Medium</option>
@@ -115,7 +115,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
               onChange={e => handleChange('assignee', e.target.value)}
               className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
             >
-              <option value={KEEP_AS_IS}>-- Giữ nguyên --</option>
+              <option value={KEEP_AS_IS}>-- Keep unchanged --</option>
               <option value="Unassigned">Unassigned</option>
               {uniqueAssignees.map(a => (
                 <option key={a} value={a}>{a}</option>
@@ -130,7 +130,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
           <div className="flex gap-2">
             <input
               type={formData.dueDate === KEEP_AS_IS ? "text" : "date"}
-              value={formData.dueDate === KEEP_AS_IS ? "-- Giữ nguyên --" : formData.dueDate}
+              value={formData.dueDate === KEEP_AS_IS ? "-- Keep unchanged --" : formData.dueDate}
               onChange={e => handleChange('dueDate', e.target.value)}
               onFocus={(e) => {
                 if (formData.dueDate === KEEP_AS_IS) {
@@ -149,9 +149,9 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
       </div>
 
       <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-end gap-2">
-        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">Hủy</button>
+        <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">Cancel</button>
         <button onClick={handleSubmit} className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm">
-          Cập nhật ({selectedCount})
+          Update ({selectedCount})
         </button>
       </div>
     </div>

@@ -30,10 +30,10 @@ interface PolicyRule {
 }
 
 const RULES: PolicyRule[] = [
-  { key: 'minLength', label: `Tối thiểu ${PASSWORD_POLICY.MIN_LENGTH} ký tự` },
-  { key: 'hasUppercase', label: 'Có ít nhất 1 chữ in hoa (A-Z)' },
-  { key: 'hasNumber', label: 'Có ít nhất 1 chữ số (0-9)' },
-  { key: 'hasSpecialChar', label: 'Có ít nhất 1 ký tự đặc biệt (!@#$...)' },
+  { key: 'minLength', label: `At least ${PASSWORD_POLICY.MIN_LENGTH} characters` },
+  { key: 'hasUppercase', label: 'Contains at least 1 uppercase letter (A-Z)' },
+  { key: 'hasNumber', label: 'Contains at least 1 digit (0-9)' },
+  { key: 'hasSpecialChar', label: 'Contains at least 1 special character (!@#$...)' },
 ];
 
 const PasswordPolicyChecklist: React.FC<PasswordPolicyChecklistProps> = ({
@@ -56,7 +56,7 @@ const PasswordPolicyChecklist: React.FC<PasswordPolicyChecklistProps> = ({
     >
       <div className="text-xs font-bold text-rose-600 mb-2 flex items-center gap-1.5">
         <X className="w-4 h-4 text-rose-500 stroke-[2.5]" />
-        <span>Mật khẩu chưa đạt các yêu cầu sau:</span>
+        <span>Password does not meet these requirements:</span>
       </div>
       <div className="space-y-1.5 pl-1">
         {failedRules.map((rule) => (

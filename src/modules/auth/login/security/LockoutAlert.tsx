@@ -53,25 +53,25 @@ const LockoutAlert: React.FC<LockoutAlertProps> = ({ lockoutInfo, className = ''
         <div className="text-sm">
           {lockoutInfo.isLocked ? (
             <>
-              <p className="font-semibold">Tài khoản đã bị tạm khóa</p>
+              <p className="font-semibold">Account temporarily locked</p>
               {remainingSeconds !== null && remainingSeconds > 0 ? (
                 <p className="mt-1">
-                  Vui lòng thử lại sau{' '}
+                  Please try again after{' '}
                   <span className="font-mono font-bold">
                     {formatTime(remainingSeconds)}
                   </span>
                 </p>
               ) : (
                 <p className="mt-1">
-                  Vui lòng thử lại hoặc sử dụng chức năng quên mật khẩu.
+                  Please try again or use the forgot password flow.
                 </p>
               )}
             </>
           ) : (
             <p>
-              Cảnh báo: còn{' '}
-              <span className="font-bold">{lockoutInfo.remainingAttempts}</span> lần
-              thử trước khi tài khoản bị tạm khóa.
+              Warning:{' '}
+              <span className="font-bold">{lockoutInfo.remainingAttempts}</span> attempts
+              remaining before the account is temporarily locked.
             </p>
           )}
         </div>

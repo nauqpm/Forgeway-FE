@@ -254,10 +254,10 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           <PlayCircle className="w-8 h-8 text-indigo-500" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-          Chưa có Sprint đang hoạt động
+          No active sprint
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Vui lòng bắt đầu một Sprint từ tab Backlog để xem board
+          Start a sprint from the Backlog tab to view the board
         </p>
       </div>
     );
@@ -526,7 +526,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                               <div className="max-h-64 overflow-y-auto p-1">
                                                 {filteredWorkspaceMembers.length === 0 ? (
                                                   <div className="px-3 py-3 text-sm text-gray-500 dark:text-gray-400">
-                                                    Không tìm thấy member.
+                                                    No members found.
                                                   </div>
                                                 ) : (
                                                   filteredWorkspaceMembers.map((member) => {
@@ -577,8 +577,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                 <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
                                   {issues.filter((i) => issueMatchesColumn(i, column))
                                     .length === 0
-                                    ? "Kéo thả issue vào đây"
-                                    : "Không có issue phù hợp"}
+                                    ? "Drag issues here"
+                                    : "No matching issues"}
                                 </div>
                               )}
                           </div>
@@ -590,7 +590,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
               ))}
               {provided.placeholder}
 
-              {/* Thêm cột mới */}
+              {/* Add new column */}
               <div
                 className="workspace-column flex-shrink-0 bg-transparent flex flex-col"
                 ref={columnsEndRef}
@@ -609,7 +609,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           setNewColumnName("");
                         }
                       }}
-                      placeholder="Tên cột mới..."
+                      placeholder="New column name..."
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                     />
                     <div className="flex items-center gap-2 mt-3">
@@ -617,7 +617,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         onClick={handleAddColumn}
                         className="flex-1 bg-indigo-600 text-white text-xs font-medium py-1.5 rounded hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1"
                       >
-                        <Check className="w-3.5 h-3.5" /> Thêm cột
+                        <Check className="w-3.5 h-3.5" /> Add column
                       </button>
                       <button
                         onClick={() => {
@@ -626,7 +626,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         }}
                         className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-medium py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1"
                       >
-                        <X className="w-3.5 h-3.5" /> Hủy
+                        <X className="w-3.5 h-3.5" /> Cancel
                       </button>
                     </div>
                   </div>
@@ -635,7 +635,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                     onClick={() => setShowCreateColumn(true)}
                     className="flex items-center gap-2 w-full bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl p-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all font-medium text-sm justify-center"
                   >
-                    <Plus className="w-5 h-5" /> Thêm cột mới
+                    <Plus className="w-5 h-5" /> Add new column
                   </button>
                 ) : null}
               </div>

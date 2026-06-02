@@ -15,7 +15,7 @@ export default function BoardFilters({
 }: BoardFiltersProps) {
   const [searchValue, setSearchValue] = useState(filters.search || "");
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("Trạng thái");
+  const [activeTab, setActiveTab] = useState("Status");
   const popoverRef = useRef<HTMLDivElement>(null);
 
   // Local search for each tab
@@ -86,7 +86,7 @@ export default function BoardFilters({
     filters.backlog ||
     filters.archived;
 
-  const tabs = ["Trạng thái", "Người thực hiện", "Loại issue", "Mức độ ưu tiên", "Khác"];
+  const tabs = ["Status", "Assignee", "Issue type", "Priority", "Other"];
 
   // Filtered lists
   const allStatuses = ["To Do", "In Progress", "Testing", "Done"];
@@ -108,7 +108,7 @@ export default function BoardFilters({
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Tìm kiếm issue..."
+            placeholder="Search issues..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             className="w-full min-w-[240px] pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-shadow"
@@ -124,7 +124,7 @@ export default function BoardFilters({
           }`}
         >
           <Filter className="w-4 h-4" />
-          <span>Lọc</span>
+          <span>Filter</span>
           {hasActiveFilters && (
             <span className="w-2 h-2 rounded-full bg-red-500"></span>
           )}
@@ -135,7 +135,7 @@ export default function BoardFilters({
             onClick={handleClearFilters}
             className="text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-100 flex items-center gap-1 transition-colors px-2"
           >
-            <X className="w-4 h-4" /> Xóa bộ lọc
+            <X className="w-4 h-4" /> Clear filters
           </button>
         )}
       </div>
@@ -161,13 +161,13 @@ export default function BoardFilters({
 
           {/* Right Content */}
           <div className="w-2/3 p-4 overflow-y-auto bg-white dark:bg-gray-800 flex flex-col gap-3">
-            {activeTab === "Trạng thái" && (
+            {activeTab === "Status" && (
               <>
                 <div className="relative mb-2">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Tìm trạng thái..."
+                    placeholder="Search statuses..."
                     value={statusSearch}
                     onChange={(e) => setStatusSearch(e.target.value)}
                     className="w-full pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -186,19 +186,19 @@ export default function BoardFilters({
                     </label>
                   ))}
                   {filteredStatuses.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">Không tìm thấy trạng thái nào</p>
+                    <p className="text-sm text-gray-500 text-center py-4">No statuses found</p>
                   )}
                 </div>
               </>
             )}
 
-            {activeTab === "Người thực hiện" && (
+            {activeTab === "Assignee" && (
               <>
                 <div className="relative mb-2">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Tìm người thực hiện..."
+                    placeholder="Search assignees..."
                     value={assigneeSearch}
                     onChange={(e) => setAssigneeSearch(e.target.value)}
                     className="w-full pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -217,19 +217,19 @@ export default function BoardFilters({
                     </label>
                   ))}
                   {filteredAssignees.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">Không tìm thấy người nào</p>
+                    <p className="text-sm text-gray-500 text-center py-4">No assignees found</p>
                   )}
                 </div>
               </>
             )}
 
-            {activeTab === "Loại issue" && (
+            {activeTab === "Issue type" && (
               <>
                 <div className="relative mb-2">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Tìm loại issue..."
+                    placeholder="Search issue types..."
                     value={typeSearch}
                     onChange={(e) => setTypeSearch(e.target.value)}
                     className="w-full pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -248,19 +248,19 @@ export default function BoardFilters({
                     </label>
                   ))}
                   {filteredTypes.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">Không tìm thấy loại nào</p>
+                    <p className="text-sm text-gray-500 text-center py-4">No issue types found</p>
                   )}
                 </div>
               </>
             )}
 
-            {activeTab === "Mức độ ưu tiên" && (
+            {activeTab === "Priority" && (
               <>
                 <div className="relative mb-2">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Tìm mức độ ưu tiên..."
+                    placeholder="Search priorities..."
                     value={prioritySearch}
                     onChange={(e) => setPrioritySearch(e.target.value)}
                     className="w-full pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
@@ -279,15 +279,15 @@ export default function BoardFilters({
                     </label>
                   ))}
                   {filteredPriorities.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center py-4">Không tìm thấy mức độ ưu tiên nào</p>
+                    <p className="text-sm text-gray-500 text-center py-4">No priorities found</p>
                   )}
                 </div>
               </>
             )}
 
-            {activeTab === "Khác" && (
+            {activeTab === "Other" && (
               <div className="flex flex-col gap-2">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Thuộc tính bổ sung</h4>
+                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Additional attributes</h4>
                 
                 <label className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded cursor-pointer transition-colors">
                   <input
@@ -296,7 +296,7 @@ export default function BoardFilters({
                     onChange={(e) => setFilters(prev => ({ ...prev, backlog: e.target.checked }))}
                     className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Backlog (chưa vào Sprint)</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Backlog (not in sprint)</span>
                 </label>
 
                 <label className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded cursor-pointer transition-colors">
@@ -306,7 +306,7 @@ export default function BoardFilters({
                     onChange={(e) => setFilters(prev => ({ ...prev, archived: e.target.checked }))}
                     className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
                   />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Archived (đã lưu trữ)</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Archived</span>
                 </label>
               </div>
             )}

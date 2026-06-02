@@ -72,7 +72,7 @@ export const useTimezone = () => {
   );
 
   // ─── Relative Time ─────────────────────────────────────────────────────────
-  // "2 giờ trước", "vừa xong", "3 ngày trước"
+  // "2 hours ago", "just now", "3 days ago"
 
   const formatRelative = useCallback(
     (utcDate: string | Date): string => {

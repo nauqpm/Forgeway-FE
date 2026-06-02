@@ -52,7 +52,7 @@ const formatValue = (value: unknown) => {
 const formatDateTime = (value?: string) => {
   if (!value) return "";
   try {
-    return new Intl.DateTimeFormat("vi-VN", {
+    return new Intl.DateTimeFormat("en-US", {
       dateStyle: "short",
       timeStyle: "short",
     }).format(new Date(value));

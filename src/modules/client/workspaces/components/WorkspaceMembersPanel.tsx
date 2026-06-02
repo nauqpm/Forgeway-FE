@@ -88,12 +88,12 @@ function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: Invit
     setSubmitting(true);
     try {
       await api.post(apiRoutes.WORKSPACES.INVITES(workspaceMongoId ?? workspaceId), { email, role });
-      toast.success(`Đã gửi lời mời tới ${email}.`);
+      toast.success(`Invitation sent to ${email}.`);
       onSuccess();
       onClose();
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message ?? "Không thể gửi lời mời.";
+        err?.response?.data?.message ?? "Could not send invitation.";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -261,9 +261,9 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
         ),
       );
       setContextMenu(null);
-      toast.success("Đã cập nhật quyền thành viên.");
+      toast.success("Member permissions updated.");
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Không thể cập nhật quyền thành viên.");
+      toast.error(err?.response?.data?.message ?? "Could not update member permissions.");
     } finally {
       setUpdatingMemberId(null);
     }
@@ -278,9 +278,9 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
       await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceMongoId ?? workspaceId, userId));
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setContextMenu(null);
-      toast.success("Đã xóa thành viên khỏi workspace.");
+      toast.success("Member removed from workspace.");
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Không thể xóa thành viên.");
+      toast.error(err?.response?.data?.message ?? "Could not remove member.");
     } finally {
       setRemovingMemberId(null);
     }
@@ -403,7 +403,7 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
         >
           <div className="border-b border-gray-100 dark:border-gray-800 px-3 py-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-              Cấp quyền
+              Grant permission
             </p>
           </div>
           {ROLES.map((role) => (
@@ -438,7 +438,7 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
             ) : (
               <Trash2 className="w-4 h-4" />
             )}
-            Xóa khỏi workspace
+            Remove from workspace
           </button>
         </div>
       )}

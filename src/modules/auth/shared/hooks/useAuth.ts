@@ -46,42 +46,42 @@ export const useAuth = () => {
   // --- Login ---------------------------------------------------------------
 
   /**
-   * Hàm login - Xử lý logic nghiệp vụ khi người dùng đăng nhập.
+   * Login function handling sign-in business logic.
    */
   const login = useCallback(
     async (data: LoginRequest) => {
-      setLoading(true); // Bước 1: Bắt đầu tải
+      setLoading(true); // Step 1: start loading
       try {
-        // Bước 2: Gọi API đăng nhập
+        // Step 2: call sign-in API
         const response = await loginAPI(data);
 
-        // Bước 3: Kiểm tra yêu cầu MFA từ backend (Bỏ qua tạm thời)
+        // Step 3: check MFA requirement from backend, currently skipped
         /*
         if (response.mfaRequired && response.mfaToken && response.mfaMethod) {
           setMfaChallenge(response.mfaToken, response.mfaMethod);
-          router.push(AUTH_ROUTES.MFA); // Chuyển hướng trang MFA
+          router.push(AUTH_ROUTES.MFA); // Redirect to MFA page
           return response;
         }
         */
 
-        // Bước 4: Ưu tiên lấy user từ response, nếu không có thì gọi lại API /auth/me
+        // Step 4: prefer user from response, otherwise call /auth/me
         const currentUser =
           response.user ?? (await getCurrentUserAPI().catch(() => null));
 
         if (currentUser) {
-          // Bước 5: Cập nhật thông tin user và reset lỗi bảo mật
+          // Step 5: update user information and reset security errors
           setUser(currentUser);
           resetFailedAttempts();
 
-          // Tải và cập nhật quyền (permissions) cho user
+          // Load and update user permissions
           try {
             const { permissions } = await getMyPermissionsAPI();
             setGlobalPermissions(permissions);
           } catch {
-            // Không block luồng chính nếu lỗi lấy quyền
+            // Do not block the main flow if permission loading fails
           }
 
-          // Kiểm tra nếu role bắt buộc có MFA nhưng chưa bật, yêu cầu đi setup (Bỏ qua tạm thời)
+          // Check whether the role requires MFA but it is not enabled, currently skipped
           /*
           if (needsMfaSetup(currentUser)) {
             router.push(AUTH_ROUTES.MFA);
@@ -89,49 +89,49 @@ export const useAuth = () => {
           }
           */
 
-          // Chuyển hướng dựa trên role
+          // Redirect based on role
           const route = currentUser.role === 'super_admin'
             ? AUTH_ROUTES.ADMIN_DASHBOARD
             : AUTH_ROUTES.DASHBOARD;
           router.push(route);
         } else {
-          // Trả về lỗi nếu đăng nhập thành công nhưng không lấy được profile
-          throw new Error('Không thể lấy thông tin người dùng sau khi đăng nhập.');
+          // Return an error if login succeeds but profile cannot be loaded
+          throw new Error('Could not load user information after sign-in.');
         }
 
         return response;
       } catch (error: unknown) {
-        // Bước 7: Xử lý các loại lỗi từ backend trả về
+        // Step 7: handle backend error types
         const err = error as { response?: { data?: AuthApiError } };
         const errorCode = err.response?.data?.code;
 
         if (errorCode === AuthErrorCode.ACCOUNT_LOCKED) {
-          // Lỗi khóa tài khoản do nhập sai nhiều lần
+          // Account lock error due to too many failed attempts
           setLockout({
             isLocked: true,
             remainingAttempts: 0,
             maxAttempts: 5,
             lockedUntil: err.response?.data?.details?.lockedUntil as string,
           });
-          toast.error('Tài khoản đã bị khóa tạm thời do nhập sai quá nhiều lần.');
+          toast.error('Account has been temporarily locked due to too many failed attempts.');
         } else if (
           errorCode === AuthErrorCode.USER_SUSPENDED ||
           errorCode === AuthErrorCode.USER_DEACTIVATED
         ) {
-          // Lỗi tài khoản bị khóa/đình chỉ
-          setSuspendedMessage('Tài khoản đã bị khóa');
-          toast.error('Tài khoản đã bị khóa hoặc tạm ngưng hoạt động.');
+          // Account locked or suspended error
+          setSuspendedMessage('Account has been locked');
+          toast.error('Account has been locked or suspended.');
         } else if (errorCode === AuthErrorCode.INVALID_CREDENTIALS) {
-          // Lỗi sai thông tin đăng nhập, tăng số đếm lần sai
+          // Invalid credentials error; increase failed attempt count
           incrementFailedAttempts();
-          toast.error('Email hoặc mật khẩu không chính xác.');
+          toast.error('Email or password is incorrect.');
         } else {
-          toast.error('Đăng nhập thất bại. Vui lòng thử lại sau.');
+          toast.error('Sign-in failed. Please try again later.');
         }
 
-        throw error; // Ném lỗi ra ngoài để UI xử lý luồng nếu cần
+        throw error; // Throw the error so the UI can handle it if needed
       } finally {
-        setLoading(false); // Bước 8: Luôn tắt trạng thái tải
+        setLoading(false); // Step 8: always stop loading
       }
     },
     [router, setUser, setLoading, setMfaChallenge, resetFailedAttempts, incrementFailedAttempts, setLockout, setSuspendedMessage, setGlobalPermissions],
@@ -145,7 +145,7 @@ export const useAuth = () => {
       try {
         const response = await registerAPI(data);
         if (!response.success) {
-          throw new Error('Đăng ký thất bại.');
+          throw new Error('Registration failed.');
         }
         router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
         return response;
@@ -154,11 +154,11 @@ export const useAuth = () => {
         const errorCode = err.response?.data?.code;
 
         if (errorCode === AuthErrorCode.EMAIL_ALREADY_EXISTS) {
-          toast.error('Email đã tồn tại. Vui lòng dùng email khác.');
+          toast.error('Email already exists. Please use another email.');
         } else if (errorCode === AuthErrorCode.USER_SUSPENDED) {
-          toast.error('Tài khoản đã bị tạm ngưng.');
+          toast.error('Account has been suspended.');
         } else {
-          toast.error('Đăng ký thất bại. Vui lòng thử lại sau.');
+          toast.error('Registration failed. Please try again later.');
         }
 
         throw error;

@@ -158,7 +158,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-          <p className="text-sm text-gray-500 dark:text-gray-400">Đang xác thực...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Authenticating...</p>
         </div>
       </div>
     );
@@ -267,20 +267,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     onClick={() => { router.push("/account"); setShowUserMenu(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
-                    <User className="w-4 h-4" /> Hồ sơ cá nhân
+                    <User className="w-4 h-4" /> Profile
                   </button>
                   <button
                     onClick={() => { router.push("/settings"); setShowUserMenu(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
-                    <Settings className="w-4 h-4" /> Cài đặt
+                    <Settings className="w-4 h-4" /> Settings
                   </button>
                   <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
                   <button
                     onClick={() => { logout(); setShowUserMenu(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
-                    <LogOut className="w-4 h-4" /> Đăng xuất
+                    <LogOut className="w-4 h-4" /> Log out
                   </button>
                 </div>
               )}

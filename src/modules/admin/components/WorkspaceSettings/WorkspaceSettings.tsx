@@ -68,43 +68,43 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
 
   const roleIcons: Record<string, any> = { owner: Crown, admin: Shield, member: User, viewer: User };
   const roleColors: Record<string, string> = { owner: "text-amber-500", admin: "text-purple-500", member: "text-blue-500", viewer: "text-gray-400 dark:text-gray-500" };
-  const roleLabels: Record<string, string> = { owner: "Chủ sở hữu", admin: "Quản trị viên", member: "Thành viên", viewer: "Người xem" };
+  const roleLabels: Record<string, string> = { owner: "Owner", admin: "Administrator", member: "Member", viewer: "Viewer" };
 
   if (loading) return <LoadingSpinner />;
 
   if (!currentWorkspace) return (
-    <div className={`p-6 text-center text-gray-500 dark:text-gray-400 ${className}`}>Không tìm thấy workspace. Vui lòng tạo workspace trước.</div>
+    <div className={`p-6 text-center text-gray-500 dark:text-gray-400 ${className}`}>No workspace found. Please create a workspace first.</div>
   );
 
-  if (!workspace) return <div className={`p-6 text-center text-gray-500 dark:text-gray-400 ${className}`}>Không tìm thấy workspace</div>;
+  if (!workspace) return <div className={`p-6 text-center text-gray-500 dark:text-gray-400 ${className}`}>Workspace not found</div>;
 
   return (
     <div className={`app-page-narrow ${className}`}>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Cài đặt Workspace</h1>
+      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Workspace Settings</h1>
 
       <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-indigo-500" /> Thông tin Workspace</h2>
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-indigo-500" /> Workspace Information</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tên</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mô tả</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none" rows={3} />
           </div>
           <div className="flex justify-end">
             <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50">
-              {saving ? "Đang lưu..." : "Lưu thay đổi"}
+              {saving ? "Saving..." : "Save changes"}
             </button>
           </div>
         </div>
       </div>
 
       <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> Thành viên ({members.length})</h2>
+        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> Member ({members.length})</h2>
         <div className="space-y-2">
           {members.map((member) => {
             const RoleIcon = roleIcons[member.role] || User;
@@ -115,7 +115,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
                     {member.userId.fullName?.charAt(0) || member.userId.email.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{member.userId.fullName || "Người dùng"}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{member.userId.fullName || "User"}</p>
                     <p className="text-xs text-gray-400 dark:text-gray-500">{member.userId.email}</p>
                   </div>
                 </div>
@@ -124,7 +124,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
                     <RoleIcon className="w-3.5 h-3.5" /> {roleLabels[member.role] || member.role}
                   </span>
                   {member.role !== "owner" && (
-                    <button onClick={() => handleRemoveMember(member.userId._id)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-500" title="Xóa khỏi workspace">
+                    <button onClick={() => handleRemoveMember(member.userId._id)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-500" title="Remove from workspace">
                       <X className="w-4 h-4" />
                     </button>
                   )}

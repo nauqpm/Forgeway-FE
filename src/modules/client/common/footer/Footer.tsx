@@ -1,22 +1,22 @@
 import Link from "next/link";
 
 const productLinks = [
-  { label: "Tính năng", href: "#" },
+  { label: "Features", href: "#" },
   { label: "Kanban Board", href: "#" },
   { label: "Sprint Planning", href: "#" },
-  { label: "Theo dõi tiến độ", href: "#" },
+  { label: "Track progress", href: "#" },
 ];
 
 const companyLinks = [
-  { label: "Giới thiệu", href: "/aboutUs" },
-  { label: "Liên hệ", href: "#" },
+  { label: "About", href: "/aboutUs" },
+  { label: "Contact", href: "#" },
   { label: "Blog", href: "#" },
-  { label: "Tuyển dụng", href: "#" },
+  { label: "Careers", href: "#" },
 ];
 
 const legalLinks = [
-  { label: "Điều khoản", href: "#" },
-  { label: "Bảo mật", href: "#" },
+  { label: "Terms", href: "#" },
+  { label: "Privacy", href: "#" },
   { label: "Cookies", href: "#" },
 ];
 
@@ -36,14 +36,14 @@ export default function Footer() {
             </Link>
 
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-6">
-              Nền tảng quản lý dự án giúp đội ngũ làm việc rõ ràng hơn,
-              theo dõi tiến độ tốt hơn và hoàn thành công việc đúng hạn.
+              A project management platform that helps teams work with more clarity,
+              track progress better, and complete work on time.
             </p>
           </div>
 
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-              Sản phẩm
+              Product
             </h3>
             <ul className="space-y-3">
               {productLinks.map((item) => (
@@ -61,7 +61,7 @@ export default function Footer() {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-              Công ty
+              Company
             </h3>
             <ul className="space-y-3">
               {companyLinks.map((item) => (
@@ -79,23 +79,23 @@ export default function Footer() {
 
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">
-              Nhận cập nhật
+              Get updates
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 leading-6 mb-4">
-              Theo dõi những tính năng mới và mẹo quản lý dự án hiệu quả.
+              Follow new features and practical project management tips.
             </p>
 
             <form className="flex gap-2">
               <input
                 type="email"
-                placeholder="Email của bạn"
+                placeholder="Your email"
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <button
                 type="submit"
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
               >
-                Gửi
+                Send
               </button>
             </form>
           </div>

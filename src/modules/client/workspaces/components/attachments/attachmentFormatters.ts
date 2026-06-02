@@ -8,7 +8,7 @@ export const formatAttachmentSize = (size: number) => {
 
 export const formatAttachmentDate = (value?: string | null) => {
   if (!value) return "Unknown";
-  return new Intl.DateTimeFormat("vi-VN", {
+  return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));

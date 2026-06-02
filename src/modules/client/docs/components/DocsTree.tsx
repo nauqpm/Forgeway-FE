@@ -10,7 +10,7 @@ interface DocsTreeProps {
 }
 
 export default function DocsTree({ docs, workspaceId, level }: DocsTreeProps) {
-  // Sắp xếp theo title alphabet hoặc theo ngày tạo (tuỳ chỉnh). Ở đây giữ nguyên thứ tự hoặc sort theo title.
+  // Sort by title alphabetically or by creation date if needed. Keep the current order or sort by title here.
   const sortedDocs = [...docs].sort((a, b) => a.title.localeCompare(b.title));
 
   return (

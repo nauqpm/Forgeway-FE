@@ -2,11 +2,11 @@ import { Province, District, Ward } from "@/common/services/locationService";
 export const removeVietnameseDiacritics = (text: string) => {
   return text
         .toLowerCase()
-        .replace(/\s+/g, '-')     // Thay thế khoảng trắng bằng dấu gạch ngang
-        .replace(/[^\w\-]+/g, '') // Loại bỏ ký tự đặc biệt
-        .replace(/\-\-+/g, '-')   // Thay thế nhiều dấu gạch ngang liên tiếp bằng một dấu
-        .replace(/^-+/, '')       // Cắt dấu gạch ngang ở đầu
-        .replace(/-+$/, '');      // Cắt dấu gạch ngang ở cuối
+        .replace(/\s+/g, '-')     // Replace spaces with hyphens
+        .replace(/[^\w\-]+/g, '') // Remove special characters
+        .replace(/\-\-+/g, '-')   // Replace repeated hyphens with one hyphen
+        .replace(/^-+/, '')       // Trim leading hyphens
+        .replace(/-+$/, '');      // Trim trailing hyphens
 };
 export const findBestMatch = <T extends { name: string; code: number }>(
   items: T[],
@@ -14,8 +14,8 @@ export const findBestMatch = <T extends { name: string; code: number }>(
 ): T | null => {
   if (!items.length || !searchText) return null;
 
-  // Xử lý đặc biệt cho một số trường hợp cụ thể
-  // Xử lý TP.HCM
+  // Handle special cases
+  // Handle Ho Chi Minh City
   if (searchText.match(/hồ chí minh|ho chi minh|hcm|tp.hcm|tphcm/i)) {
     const hcm = items.find(
       (item) =>
@@ -25,7 +25,7 @@ export const findBestMatch = <T extends { name: string; code: number }>(
     if (hcm) return hcm;
   }
 
-  // Xử lý quận Tân Phú
+  // Handle Tan Phu district
   if (searchText.match(/tân phú|tan phu/i)) {
     const tanPhu = items.find(
       (item) =>
@@ -35,7 +35,7 @@ export const findBestMatch = <T extends { name: string; code: number }>(
     if (tanPhu) return tanPhu;
   }
 
-  // Xử lý phường Tân Thành
+  // Handle Tan Thanh ward
   if (searchText.match(/tân thành|tan thanh/i)) {
     const tanThanh = items.find(
       (item) =>
@@ -45,16 +45,16 @@ export const findBestMatch = <T extends { name: string; code: number }>(
     if (tanThanh) return tanThanh;
   }
 
-  // Chuyển searchText về dạng không dấu và lowercase
+  // Convert searchText to lowercase without diacritics
   const searchTextNormalized = removeVietnameseDiacritics(searchText.toLowerCase());
 
-  // Trước tiên, thử tìm chính xác
+  // Try exact search first
   let bestMatch = items.find(
     (item) =>
       removeVietnameseDiacritics(item.name.toLowerCase()) === searchTextNormalized
   );
 
-  // Nếu không tìm thấy kết quả chính xác, tìm sự khớp tương đối
+  // If no exact result is found, try approximate matching
   if (!bestMatch) {
     const itemsWithScores = items.map((item) => {
       const itemName = removeVietnameseDiacritics(item.name.toLowerCase());

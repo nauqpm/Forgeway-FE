@@ -25,113 +25,113 @@ export interface Ward {
 const BASE_URL = 'https://provinces.open-api.vn/api';
 
 /**
- * Lấy danh sách tất cả các tỉnh/thành phố
+ * Get all provinces/cities
  */
 export const getAllProvinces = async (): Promise<Province[]> => {
   try {
     const response = await fetch(`${BASE_URL}/p/`);
     if (!response.ok) {
-      throw new Error('Không thể lấy dữ liệu tỉnh/thành phố');
+      throw new Error('Could not fetch province/city data');
     }
     return await response.json();
   } catch (error) {
-    console.error('Lỗi khi lấy dữ liệu tỉnh/thành phố:', error);
+    console.error('Error fetching province/city data:', error);
     throw error;
   }
 };
 
 /**
- * Lấy thông tin chi tiết của một tỉnh/thành phố theo mã code
- * @param provinceCode Mã code của tỉnh/thành phố
+ * Get province/city details by code
+ * @param provinceCode Province/city code
  */
 export const getProvinceByCode = async (provinceCode: string | number): Promise<Province> => {
   try {
     const response = await fetch(`${BASE_URL}/p/${provinceCode}`);
     if (!response.ok) {
-      throw new Error(`Không thể lấy dữ liệu tỉnh/thành phố với mã ${provinceCode}`);
+      throw new Error(`Could not fetch province/city data with code ${provinceCode}`);
     }
     return await response.json();
   } catch (error) {
-    console.error(`Lỗi khi lấy dữ liệu tỉnh/thành phố với mã ${provinceCode}:`, error);
+    console.error(`Error fetching province/city data with code ${provinceCode}:`, error);
     throw error;
   }
 };
 
 /**
- * Lấy danh sách các quận/huyện của một tỉnh/thành phố
- * @param provinceCode Mã code của tỉnh/thành phố
+ * Get districts of a province/city
+ * @param provinceCode Province/city code
  */
 export const getDistrictsByProvinceCode = async (provinceCode: string | number): Promise<District[]> => {
   try {
     const response = await fetch(`${BASE_URL}/p/${provinceCode}?depth=2`);
     if (!response.ok) {
-      throw new Error(`Không thể lấy dữ liệu quận/huyện cho tỉnh/thành phố với mã ${provinceCode}`);
+      throw new Error(`Could not fetch district data for province/city with code ${provinceCode}`);
     }
     const data = await response.json();
     return data.districts || [];
   } catch (error) {
-    console.error(`Lỗi khi lấy dữ liệu quận/huyện cho tỉnh/thành phố với mã ${provinceCode}:`, error);
+    console.error(`Error fetching district data for province/city with code ${provinceCode}:`, error);
     throw error;
   }
 };
 
 /**
- * Lấy thông tin chi tiết của một quận/huyện theo mã code
- * @param districtCode Mã code của quận/huyện
+ * Get district details by code
+ * @param districtCode District code
  */
 export const getDistrictByCode = async (districtCode: string | number): Promise<District> => {
   try {
     const response = await fetch(`${BASE_URL}/d/${districtCode}`);
     if (!response.ok) {
-      throw new Error(`Không thể lấy dữ liệu quận/huyện với mã ${districtCode}`);
+      throw new Error(`Could not fetch district data with code ${districtCode}`);
     }
     return await response.json();
   } catch (error) {
-    console.error(`Lỗi khi lấy dữ liệu quận/huyện với mã ${districtCode}:`, error);
+    console.error(`Error fetching district data with code ${districtCode}:`, error);
     throw error;
   }
 };
 
 /**
- * Lấy danh sách các phường/xã của một quận/huyện
- * @param districtCode Mã code của quận/huyện
+ * Get wards of a district
+ * @param districtCode District code
  */
 export const getWardsByDistrictCode = async (districtCode: string | number): Promise<Ward[]> => {
   try {
     const response = await fetch(`${BASE_URL}/d/${districtCode}?depth=2`);
     if (!response.ok) {
-      throw new Error(`Không thể lấy dữ liệu phường/xã cho quận/huyện với mã ${districtCode}`);
+      throw new Error(`Could not fetch ward data for district with code ${districtCode}`);
     }
     const data = await response.json();
     return data.wards || [];
   } catch (error) {
-    console.error(`Lỗi khi lấy dữ liệu phường/xã cho quận/huyện với mã ${districtCode}:`, error);
+    console.error(`Error fetching ward data for district with code ${districtCode}:`, error);
     throw error;
   }
 };
 
 /**
- * Lấy thông tin chi tiết của một phường/xã theo mã code
- * @param wardCode Mã code của phường/xã
+ * Get ward details by code
+ * @param wardCode Ward code
  */
 export const getWardByCode = async (wardCode: string | number): Promise<Ward> => {
   try {
     const response = await fetch(`${BASE_URL}/w/${wardCode}`);
     if (!response.ok) {
-      throw new Error(`Không thể lấy dữ liệu phường/xã với mã ${wardCode}`);
+      throw new Error(`Could not fetch ward data with code ${wardCode}`);
     }
     return await response.json();
   } catch (error) {
-    console.error(`Lỗi khi lấy dữ liệu phường/xã với mã ${wardCode}:`, error);
+    console.error(`Error fetching ward data with code ${wardCode}:`, error);
     throw error;
   }
 };
 
 /**
- * Lấy chuỗi địa chỉ đầy đủ từ mã phường, quận, tỉnh
- * @param wardCode Mã phường/xã
- * @param districtCode Mã quận/huyện
- * @param provinceCode Mã tỉnh/thành phố
+ * Get full address from ward, district, and province codes
+ * @param wardCode Ward code
+ * @param districtCode District code
+ * @param provinceCode Province/city code
  */
 export const getFullAddress = async (
   wardCode: string | number,
@@ -147,7 +147,7 @@ export const getFullAddress = async (
 
     return `${ward.name}, ${district.name}, ${province.name}`;
   } catch (error) {
-    console.error('Lỗi khi lấy dữ liệu địa chỉ đầy đủ:', error);
+    console.error('Error fetching full address data:', error);
     throw error;
   }
 };

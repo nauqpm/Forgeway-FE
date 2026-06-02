@@ -12,25 +12,25 @@ interface AuthGuardProps {
 }
 
 /**
- * AuthGuard — Component bảo vệ các route yêu cầu đăng nhập.
+ * AuthGuard protects routes that require sign-in.
  * 
- * Mục đích: 
- * - Đảm bảo chỉ những người dùng đã xác thực (đã đăng nhập) mới có thể truy cập các trang bên trong.
- * - Nếu người dùng chưa đăng nhập, tự động chuyển hướng họ về trang đăng nhập.
+ * Purpose: 
+ * - Ensure only authenticated users can access protected pages.
+ * - Redirect unauthenticated users to the sign-in page.
  * 
- * Các bước hoạt động:
- * 1. Lấy trạng thái từ `useAuthStore` (isInitialized, isLoading, isAuthenticated).
- * 2. Dùng `useEffect` kiểm tra: Nếu app đã khởi tạo xong, không còn loading, và user KHÔNG có quyền (chưa đăng nhập),
- *    thì dùng `router.replace` đẩy người dùng ra trang LOGIN.
- * 3. Trong lúc chờ xác thực ban đầu (chưa init hoặc đang loading), hiển thị trạng thái tải (spinner hoặc fallback UI).
- * 4. Nếu chưa đăng nhập, trả về `null` để không render UI bên trong.
- * 5. Nếu hợp lệ, render các `children` (nội dung trang).
+ * How it works:
+ * 1. Read state from `useAuthStore`.
+ * 2. Use `useEffect` to check whether the app has initialized, loading is finished, and the user is not authenticated.
+ *    Then use `router.replace` to send users to the login page.
+ * 3. Show a loading state while initial authentication is pending.
+ * 4. Return null when not signed in to avoid rendering protected UI.
+ * 5. Render `children` when valid.
  */
 const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
   const router = useRouter();
   const { isAuthenticated, isLoading, isInitialized } = useAuthStore();
 
-  // Bước 2: Kiểm tra và chuyển hướng nếu chưa đăng nhập
+  // Step 2: check and redirect if not signed in
   useEffect(() => {
     if (isInitialized && !isLoading && !isAuthenticated) {
       router.replace(AUTH_ROUTES.LOGIN);
@@ -44,7 +44,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-            <p className="text-sm text-gray-500">Đang xác thực...</p>
+            <p className="text-sm text-gray-500">Verifying...</p>
           </div>
         </div>
       )

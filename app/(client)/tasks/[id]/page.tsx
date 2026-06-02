@@ -145,7 +145,7 @@ export default function TaskDetailPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-sm font-medium text-gray-900 dark:text-white">{comment.authorId?.fullName || "User"}</span>
-                      <span className="text-xs text-gray-400">{new Date(comment.createdAt).toLocaleString("vi-VN")}</span>
+                      <span className="text-xs text-gray-400">{new Date(comment.createdAt).toLocaleString("en-US")}</span>
                     </div>
                     <div className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 rounded-lg p-3 prose prose-sm" dangerouslySetInnerHTML={{ __html: comment.content }} />
                   </div>
@@ -197,7 +197,7 @@ export default function TaskDetailPage() {
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Reporter</label>
                 <span className="text-sm text-gray-800 dark:text-gray-200">{task.reporterId?.fullName || task.reporterId?.email || "—"}</span>
               </div>
-              {task.dueDate && <div><label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Due Date</label><span className={`text-sm ${new Date(task.dueDate) < new Date() ? "text-red-600" : "text-gray-800 dark:text-gray-200"}`}>{new Date(task.dueDate).toLocaleDateString("vi-VN")}</span></div>}
+              {task.dueDate && <div><label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Due Date</label><span className={`text-sm ${new Date(task.dueDate) < new Date() ? "text-red-600" : "text-gray-800 dark:text-gray-200"}`}>{new Date(task.dueDate).toLocaleDateString("en-US")}</span></div>}
               {task.storyPoints && <div><label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Story Points</label><span className="text-sm text-gray-800 dark:text-gray-200">{task.storyPoints}</span></div>}
             </div>
           </div>
@@ -226,8 +226,8 @@ export default function TaskDetailPage() {
           <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
             <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Activity</h3>
             <div className="space-y-1 text-xs text-gray-500 dark:text-gray-400">
-              <p>Created: {new Date(task.createdAt).toLocaleString("vi-VN")}</p>
-              <p>Updated: {new Date(task.updatedAt).toLocaleString("vi-VN")}</p>
+              <p>Created: {new Date(task.createdAt).toLocaleString("en-US")}</p>
+              <p>Updated: {new Date(task.updatedAt).toLocaleString("en-US")}</p>
             </div>
           </div>
         </div>

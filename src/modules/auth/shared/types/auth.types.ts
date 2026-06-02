@@ -38,11 +38,11 @@ export interface LoginResponse {
   success: boolean;
   message: string;
   user?: AuthUser;
-  /** True khi backend yêu cầu MFA trước khi cấp session */
+  /** True when the backend requires MFA before issuing a session */
   mfaRequired?: boolean;
-  /** Temporary token dùng để verify MFA */
+  /** Temporary token used to verify MFA */
   mfaToken?: string;
-  /** MFA method mà backend yêu cầu */
+  /** MFA method required by the backend */
   mfaMethod?: MfaMethod;
 }
 
@@ -69,7 +69,7 @@ export interface RegisterResponse {
 
 // ─── Token ───────────────────────────────────────────────────────────────────
 
-/** Access token + refresh token đều được backend set qua httpOnly cookie */
+/** Access and refresh tokens are both set by the backend through httpOnly cookies */
 export interface TokenPair {
   accessToken: string;
   refreshToken: string;
@@ -86,7 +86,7 @@ export interface DecodedToken {
 
 export interface RefreshTokenResponse {
   message: string;
-  /** Backend set cookie mới, response chỉ confirm success */
+  /** Backend sets a new cookie; the response only confirms success */
   expiresAt?: number;
 }
 
@@ -197,7 +197,7 @@ export interface Session {
 
 export interface TimezonePreference {
   timezone: string; // IANA timezone e.g. 'Asia/Ho_Chi_Minh'
-  locale: string; // e.g. 'vi-VN'
+  locale: string; // e.g. 'en-US'
   dateFormat?: string; // e.g. 'DD/MM/YYYY'
 }
 

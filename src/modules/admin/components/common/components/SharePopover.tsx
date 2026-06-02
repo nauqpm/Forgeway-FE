@@ -3,9 +3,9 @@ import { Share2, Link as LinkIcon, Globe, Lock, Search, Check, Users, X } from '
 
 // Mock data for search
 const MOCK_USERS = [
-  { id: '1', name: 'Nguyễn Văn A', email: 'nva@company.com', avatar: 'N' },
-  { id: '2', name: 'Trần Thị B', email: 'ttb@company.com', avatar: 'T' },
-  { id: '3', name: 'Lê Văn C', email: 'lvc@company.com', avatar: 'L' },
+  { id: '1', name: 'Alex Nguyen', email: 'nva@company.com', avatar: 'N' },
+  { id: '2', name: 'Taylor Tran', email: 'ttb@company.com', avatar: 'T' },
+  { id: '3', name: 'Chris Le', email: 'lvc@company.com', avatar: 'L' },
   { id: '4', name: 'Maria Garcia', email: 'maria@company.com', avatar: 'M' },
   { id: '5', name: 'John Doe', email: 'john@company.com', avatar: 'J' },
 ];
@@ -64,7 +64,7 @@ export default function SharePopover() {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
-      console.error('Không thể copy text: ', err);
+      console.error('Could not copy text: ', err);
     }
   };
 
@@ -79,16 +79,16 @@ export default function SharePopover() {
   };
 
   const handleSendInvite = () => {
-    // Gọi API POST /projects/:id/invite
+    // Call API POST /projects/:id/invite
     console.log("Inviting users:", selectedUsers.map(u => u.id));
-    alert(`Đã gửi lời mời tới ${selectedUsers.length} người!`);
+    alert(`Invitation sent to ${selectedUsers.length} people!`);
     setSelectedUsers([]);
     setIsOpen(false);
   };
 
   const handleWorkspaceAccessChange = (type: 'OPEN' | 'PRIVATE') => {
     setWorkspaceAccess(type);
-    // Gọi API PATCH /projects/:id/access
+    // Call API PATCH /projects/:id/access
     console.log("Updating Workspace Access to:", type);
   };
 
@@ -98,7 +98,7 @@ export default function SharePopover() {
         onClick={() => setIsOpen(!isOpen)}
         className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors shadow-sm"
       >
-        Mời thành viên
+        Invite member
       </button>
 
       {isOpen && (

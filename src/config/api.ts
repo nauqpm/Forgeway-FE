@@ -2,13 +2,13 @@
 import axios from 'axios';
 
 /**
- * Cấu hình cho API - Định nghĩa URL gốc và các endpoints
+ * API configuration with base URL and endpoints
  */
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const RESOLVED_API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SERVER_URL;
 
 /**
- * Headers chuẩn cho API requests
+ * Standard headers for API requests
  */
 export const API_HEADERS = {
     'Content-Type': 'application/json',
@@ -16,7 +16,7 @@ export const API_HEADERS = {
 };
 
 /**
- * Hàm tạo headers với JWT token nếu có
+ * Create headers with JWT token when available
  */
 export const getAuthHeaders = (token?: string | null) => {
     const headers: Record<string, string> = { ...API_HEADERS };
@@ -27,7 +27,7 @@ export const getAuthHeaders = (token?: string | null) => {
 };
 
 /**
- * Tạo URL đầy đủ cho endpoint
+ * Create the full URL for an endpoint
  */
 export const buildApiUrl = (endpoint: string): string => {
     return `${RESOLVED_API_URL}${endpoint}`;

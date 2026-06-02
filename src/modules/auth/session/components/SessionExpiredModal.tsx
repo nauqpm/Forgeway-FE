@@ -24,13 +24,13 @@ const SessionExpiredModal: React.FC = () => {
           <div className="w-14 h-14 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="w-7 h-7 text-amber-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Phiên đã hết hạn</h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Session expired</h2>
           <p className="text-sm text-gray-500 mb-6">
-            Phiên đăng nhập của bạn đã hết hạn do không hoạt động. Vui lòng đăng nhập lại để tiếp tục.
+            Your session has expired due to inactivity. Please sign in again to continue.
           </p>
           <button onClick={handleLoginAgain}
             className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors">
-            Đăng nhập lại
+            Sign in again
           </button>
         </div>
       </div>

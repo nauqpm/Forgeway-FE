@@ -123,24 +123,24 @@ export const useSecurityStore = create<SecurityState & SecurityActions>()(
       setLockout: (lockoutInfo) => set({ lockoutInfo }),
 
       /**
-       * Tăng số lần đăng nhập sai (failedAttempts) và cập nhật trạng thái khóa (lockoutInfo).
+       * Increase failed login attempts and update lockout status.
        * 
-       * Các bước chi tiết:
-       * 1. Tính toán số lần thử hiện tại cộng thêm 1 (biến `next`).
-       * 2. Kiểm tra nếu số lần `next` lớn hơn hoặc bằng giới hạn cho phép (`MAX_FAILED_ATTEMPTS`, ví dụ: 5 lần):
-       *    - Thay đổi trạng thái tài khoản thành bị khóa (`isLocked: true`).
-       *    - Thiết lập thời gian khóa (ví dụ: 15 phút từ hiện tại).
-       *    - Set số lần thử còn lại (`remainingAttempts`) về 0.
-       * 3. Nếu chưa đạt giới hạn số lần thử:
-       *    - Giữ trạng thái không bị khóa (`isLocked: false`).
-       *    - Trừ lùi số lần thử còn lại (`MAX_FAILED_ATTEMPTS - next`).
+       * Detailed steps:
+       * 1. Calculate current attempts plus one in `next`.
+       * 2. Check whether `next` is greater than or equal to the allowed limit.
+       *    - Set the account state to locked.
+       *    - Set the lock duration.
+       *    - Set remaining attempts to 0.
+       * 3. If the attempt limit has not been reached:
+       *    - Keep the account unlocked.
+       *    - Decrease remaining attempts.
        */
       incrementFailedAttempts: () => {
         const next = get().failedAttempts + 1;
         const max = PASSWORD_POLICY.MAX_FAILED_ATTEMPTS;
         
         if (next >= max) {
-          // Khóa trong 15 phút
+          // Lock for 15 minutes
           const lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
           set({
             failedAttempts: next,

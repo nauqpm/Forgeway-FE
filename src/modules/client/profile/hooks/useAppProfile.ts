@@ -25,7 +25,7 @@ export function useAppProfile() {
       const res = await api.get("/users/me");
       setProfile(res.data?.data ?? res.data);
     } catch {
-      setError("Không thể tải thông tin hồ sơ");
+      setError("Could not load profile information");
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export function useAppProfile() {
       } catch (e: unknown) {
         const msg =
           (e as { response?: { data?: { message?: string } } })?.response?.data
-            ?.message ?? "Cập nhật thất bại";
+            ?.message ?? "Update failed";
         setError(msg);
         return false;
       } finally {
@@ -60,11 +60,11 @@ export function useAppProfile() {
     async (file: File): Promise<boolean> => {
       // Client-side validation
       if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-        setError("Chỉ chấp nhận file ảnh (JPG, PNG, GIF, WEBP)");
+        setError("Only image files are accepted (JPG, PNG, GIF, WEBP)");
         return false;
       }
       if (file.size > MAX_FILE_SIZE) {
-        setError("Ảnh không được vượt quá 10MB");
+        setError("Image must not exceed 10MB");
         return false;
       }
 
@@ -86,7 +86,7 @@ export function useAppProfile() {
           uploadRes.data?.data?.path;
 
         if (!avatarUrl) {
-          setError("Upload ảnh thất bại — server không trả về URL");
+          setError("Image upload failed because the server did not return a URL");
           return false;
         }
 
@@ -103,12 +103,12 @@ export function useAppProfile() {
           const msg =
             (e as { response?: { data?: { message?: string } } })?.response
               ?.data?.message ??
-            "Ảnh đã upload nhưng chưa lưu vào hồ sơ — vui lòng thử lại";
+            "Image uploaded but was not saved to your profile. Please try again";
           setError(msg);
           return false;
         }
       } catch {
-        setError("Upload ảnh thất bại");
+        setError("Image upload failed");
         return false;
       } finally {
         setAvatarUploading(false);
@@ -130,7 +130,7 @@ export function useAppProfile() {
       } catch (e: unknown) {
         const msg =
           (e as { response?: { data?: { message?: string } } })?.response?.data
-            ?.message ?? "Đổi mật khẩu thất bại";
+            ?.message ?? "Password change failed";
         setError(msg);
         return false;
       } finally {

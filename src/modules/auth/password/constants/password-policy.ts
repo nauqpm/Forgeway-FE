@@ -6,7 +6,7 @@ export const PASSWORD_POLICY = {
   MAX_FAILED_ATTEMPTS: 5,
 };
 
-// Dùng cho:
+// Used for:
 // RegisterForm
 // ResetPasswordForm
 // PasswordPolicyChecklist

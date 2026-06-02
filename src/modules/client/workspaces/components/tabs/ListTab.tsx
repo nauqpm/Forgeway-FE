@@ -338,7 +338,7 @@ export default function ListTab({
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {splitSortedIssues.length === 0 ? (
                 <p className="p-4 text-sm text-gray-500 dark:text-gray-400">
-                  Không có issue trong bộ lọc hiện tại.
+                  No issues match the current filter.
                 </p>
               ) : (
                 <>
@@ -408,7 +408,7 @@ export default function ListTab({
           <section className="flex min-h-[320px] flex-col overflow-hidden bg-white dark:bg-gray-900 lg:min-h-0">
             {!selectedIssue ? (
               <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                Chọn một issue ở cột trái để xem chi tiết.
+                Select an issue in the left column to view details.
               </div>
             ) : splitSortedIssues.some((i) => i.id === selectedIssue.id) ? (
               <TaskDetailList
@@ -423,13 +423,13 @@ export default function ListTab({
               />
             ) : (
               <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                Issue đang chọn không còn trong danh sách sau khi lọc.{" "}
+                The selected issue is no longer in the filtered list.{" "}
                 <button
                   type="button"
                   onClick={() => setSelectedIssue(null)}
                   className="ml-1 font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
                 >
-                  Bỏ chọn
+                  Clear selection
                 </button>
               </div>
             )}

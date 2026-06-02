@@ -6,9 +6,9 @@ import { inviteService } from '@/modules/client/workspaces/services/inviteServic
 
 // --- MOCK DATA ---
 const EXISTING_USERS = [
-  { id: '1', name: 'Nguyễn Văn A', email: 'nva@company.com', avatar: 'N', color: 'bg-indigo-500' },
-  { id: '2', name: 'Trần Thị B', email: 'ttb@company.com', avatar: 'T', color: 'bg-emerald-500' },
-  { id: '3', name: 'Lê Văn C', email: 'lvc@company.com', avatar: 'L', color: 'bg-blue-500' },
+  { id: '1', name: 'Alex Nguyen', email: 'nva@company.com', avatar: 'N', color: 'bg-indigo-500' },
+  { id: '2', name: 'Taylor Tran', email: 'ttb@company.com', avatar: 'T', color: 'bg-emerald-500' },
+  { id: '3', name: 'Chris Le', email: 'lvc@company.com', avatar: 'L', color: 'bg-blue-500' },
   { id: '4', name: 'Maria Garcia', email: 'maria@company.com', avatar: 'M', color: 'bg-pink-500' },
   { id: '5', name: 'John Doe', email: 'john@company.com', avatar: 'J', color: 'bg-amber-500' },
 ];
@@ -100,20 +100,20 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
         .filter(({ r }) => r.status === 'rejected');
 
       if (failed.length === 0) {
-        toast.success(`Đã gửi lời mời tới ${emails.length} người.`);
+        toast.success(`Invitation sent to ${emails.length} people.`);
         onClose();
       } else if (failed.length < emails.length) {
         const failedEmails = failed.map(({ email, r }) => {
           const msg = (r as PromiseRejectedResult).reason?.response?.data?.message;
           return msg ? `${email} (${msg})` : email;
         });
-        toast.error(`Một số lời mời thất bại: ${failedEmails.join(', ')}`);
+        toast.error(`Some invitations failed: ${failedEmails.join(', ')}`);
       } else {
         const firstMsg = (failed[0].r as PromiseRejectedResult).reason?.response?.data?.message;
-        toast.error(firstMsg || 'Không thể gửi lời mời.');
+        toast.error(firstMsg || 'Could not send invitation.');
       }
     } catch {
-      toast.error('Không thể gửi lời mời.');
+      toast.error('Could not send invitation.');
     } finally {
       setIsSubmitting(false);
     }

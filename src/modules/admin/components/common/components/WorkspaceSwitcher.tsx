@@ -77,7 +77,7 @@ export default function WorkspaceSwitcher() {
               onClick={() => { setShowDropdown(false); router.push("/workspaces/create"); }}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
             >
-              <Plus className="w-4 h-4" /> Tạo Workspace mới
+              <Plus className="w-4 h-4" /> Create New Workspace
             </button>
           </div>
         </div>

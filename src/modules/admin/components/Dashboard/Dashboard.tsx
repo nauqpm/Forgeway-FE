@@ -84,7 +84,7 @@ const toDashboardTask = (
     title: issue.title,
     type,
     workspaceKey,
-    meta: `${issue.key} • ${workspace.name} • ${issue.status}`,
+    meta: `${issue.key} - ${workspace.name} - ${issue.status}`,
   };
 };
 
@@ -175,10 +175,10 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   }, [setWorkspaces, user?.id]);
 
   const tabs = [
-    { label: "Được giao cho tôi", key: "assigned" },
-    { label: "Đã đóng dấu sao", key: "starred" },
-    { label: "Đã làm việc trên", key: "worked" },
-    { label: "Đã xem", key: "viewed" },
+    { label: "Assigned to me", key: "assigned" },
+    { label: "Starred", key: "starred" },
+    { label: "Worked on", key: "worked" },
+    { label: "Viewed", key: "viewed" },
   ];
 
   const displayWorkspaces = useMemo(
@@ -189,10 +189,10 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     activeTab === "assigned" ? assignedTasks : activeTab === "worked" ? workedTasks : [];
   const emptyMessage =
     activeTab === "starred"
-      ? "Backend hiện chưa có API cho danh sách đã đóng dấu sao."
+      ? "The backend does not have an API for starred items yet."
       : activeTab === "viewed"
-        ? "Backend mới ghi audit khi xem task, chưa có API lấy danh sách đã xem."
-        : "Không có task phù hợp.";
+        ? "The backend records task view audit events but does not have a viewed-items API yet."
+        : "No matching tasks.";
 
   if (loading) return null;
 
@@ -200,21 +200,21 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     <div className={`app-page-medium ${className}`}>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="px-2 text-2xl font-bold text-gray-900 dark:text-white">
-          Không gian đề xuất
+          Recommended workspaces
         </h1>
 
         <Link
           href="/workspaces"
           className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
         >
-          Xem tất cả →
+              View all
         </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {displayWorkspaces.length === 0 ? (
           <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
-            Chưa có workspace đề xuất.
+            No recommended workspaces yet.
           </div>
         ) : (
           displayWorkspaces.map((workspace) => (
@@ -246,24 +246,24 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
 
       <div className="mt-10">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Dành cho bạn</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">For you</h2>
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Task được giao</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Assigned tasks</p>
             <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
               {assignedTasks.length}
             </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Đã hoàn thành gần đây</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Recently completed</p>
             <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
               {workedTasks.length}
             </p>
           </div>
           <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Workspace đề xuất</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Recommended workspaces</p>
             <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
               {workspaces.length}
             </p>
@@ -286,7 +286,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
           ))}
         </div>
 
-        <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">Tóm lại</div>
+        <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">Summary</div>
 
         <div className="space-y-2">
           {filteredTasks.length === 0 ? (
@@ -320,7 +320,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
                 </div>
 
                 <span className="ml-3 rounded bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
-                  Mở
+                  Open
                 </span>
               </Link>
             ))

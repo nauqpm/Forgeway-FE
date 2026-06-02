@@ -52,7 +52,7 @@ export default function SettingsPage() {
         <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><LogOut className="w-5 h-5 text-red-500" /> Account</h2>
         <button onClick={logout} className="w-full flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-600 dark:text-red-400">
           <LogOut className="w-5 h-5" />
-          <div className="text-left"><p className="text-sm font-medium">Đăng xuất</p><p className="text-xs opacity-75">Đăng xuất khỏi tài khoản hiện tại</p></div>
+          <div className="text-left"><p className="text-sm font-medium">Log out</p><p className="text-xs opacity-75">Sign out of the current account</p></div>
         </button>
       </div>
 
