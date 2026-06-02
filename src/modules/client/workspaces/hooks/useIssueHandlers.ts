@@ -11,6 +11,7 @@ interface CreateIssueForm {
   status: string;
   sprintId: string | null;
   assigneeId: string;
+  columnId?: string | null;
 }
 
 interface UseIssueHandlersProps {
@@ -99,6 +100,7 @@ export const useIssueHandlers = ({
         status: "To Do",
         sprintId: null,
         assigneeId: "",
+        columnId: null,
       });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {

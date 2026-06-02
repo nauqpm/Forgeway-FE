@@ -74,6 +74,7 @@ type CreateTaskInput = {
   status: string;
   sprintId: string | null;
   assigneeId?: string | null;
+  columnId?: string | null;
 };
 
 export type ReorderTaskInput = {
@@ -306,7 +307,7 @@ const toCreatePayload = (input: CreateTaskInput) => ({
   title: input.title,
   type: normalizeValue(input.type),
   priority: normalizeValue(input.priority),
-  columnId: toColumnId(input.status),
+  columnId: input.columnId || toColumnId(input.status),
   status: toColumnId(input.status),
   sprintId: input.sprintId || undefined,
   assigneeId: input.assigneeId || undefined,

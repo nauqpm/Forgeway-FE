@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState, use, useMemo, useRef } from "react";
-import { flushSync } from "react-dom";
 import dynamic from "next/dynamic";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
@@ -133,7 +132,7 @@ export default function WorkspaceDetailPage({
   }, [workspace, workspaceKey]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [issues, setIssues] = useState<Issue[]>([]);
-  const [isDraggingIssue, setIsDraggingIssue] = useState(false);
+  const isDraggingIssueRef = useRef(false);
   const reorderInFlightRef = useRef(new Set<string>());
   const pendingReorderRef = useRef(new Map<string, TaskReorderSyncInput>());
 
@@ -145,6 +144,7 @@ export default function WorkspaceDetailPage({
     status: string;
     sprintId: string | null;
     assigneeId: string;
+    columnId?: string | null;
   }>({
     title: "",
     type: "Task",
@@ -152,6 +152,7 @@ export default function WorkspaceDetailPage({
     status: "To Do",
     sprintId: null,
     assigneeId: "",
+    columnId: null,
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(initialTaskKey);
@@ -261,7 +262,7 @@ export default function WorkspaceDetailPage({
 
   useEffect(() => {
     if (!tasksData) return;
-    if (isDraggingIssue) return;
+    if (isDraggingIssueRef.current) return;
 
     setIssues(tasksData);
     if (selectedTaskKey && !selectedIssue) {
@@ -410,6 +411,19 @@ export default function WorkspaceDetailPage({
 
   const activeSprint = sprints.find(s => s.status === "active") ?? null;
 
+  const handleOpenGlobalCreateIssue = useCallback(() => {
+    if (activeTab === "board" && workspace?.type === "scrum" && activeSprint) {
+      const firstColumn = columns[0];
+      setNewIssueForm(prev => ({
+        ...prev,
+        sprintId: activeSprint._id,
+        columnId: firstColumn?.id ?? null,
+        status: firstColumn?.name ?? "To Do",
+      }));
+    }
+    setShowCreateIssue(true);
+  }, [activeTab, workspace, activeSprint, columns]);
+
   const {
     handleAddColumn,
     handleRenameColumn,
@@ -449,27 +463,25 @@ export default function WorkspaceDetailPage({
   });
 
   const handleBacklogDragEndWithSync = (result: DropResult) => {
-    flushSync(() => {
-      handleBacklogDragEnd({
-        result,
-        issues: filteredIssues,
-        setIssues,
-        onTaskReorder: syncTaskReorder,
-        onSprintAssign: (taskId, sprintId) => {
-          if (workspaceApiId) {
-            taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
-              .then(() => {
-                queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
-              })
-              .catch((error) => {
-                queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-                toast.error(error?.response?.data?.message || "Khong cap nhat duoc sprint cua task");
-              });
-          }
-        },
-      });
+    handleBacklogDragEnd({
+      result,
+      issues: filteredIssues,
+      setIssues,
+      onTaskReorder: syncTaskReorder,
+      onSprintAssign: (taskId, sprintId) => {
+        if (workspaceApiId) {
+          taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
+            .then(() => {
+              queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+            })
+            .catch((error) => {
+              queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+              toast.error(error?.response?.data?.message || "Khong cap nhat duoc sprint cua task");
+            });
+        }
+      },
     });
-    setIsDraggingIssue(false);
+    isDraggingIssueRef.current = false;
   };
 
   const handleArchiveIssue = async (issue: Issue) => {
@@ -630,7 +642,7 @@ export default function WorkspaceDetailPage({
       <Header
         workspace={workspace}
         workspaceId={workspaceKey}
-        setShowCreateIssue={setShowCreateIssue}
+        setShowCreateIssue={handleOpenGlobalCreateIssue}
         canCreateTask={canCreateTask}
         canUpdateWorkspace={canUpdateWorkspace}
       />
@@ -671,34 +683,32 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragStart: () => setIsDraggingIssue(true),
+            handleBoardDragStart: () => { isDraggingIssueRef.current = true; },
             handleBoardDragEnd: (result: any) => {
               if (!canMoveTask) return;
-              flushSync(() => {
-                handleBoardDragEnd({
-                  result,
-                  columns,
-                  issues: filteredIssues,
-                  setColumns,
-                  setIssues,
-                  handleMoveColumn,
-                  onTaskReorder: syncTaskReorder,
-                  onColumnChange: (taskId, columnId) => {
-                    if (workspaceApiId) {
-                      taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
-                        .then(() => {
-                          queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
-                        })
-                        .catch((error) => {
-                          if (isNoopReorderError(error)) return;
-                          queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-                          toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
-                        });
-                    }
-                  },
-                });
+              handleBoardDragEnd({
+                result,
+                columns,
+                issues: filteredIssues,
+                setColumns,
+                setIssues,
+                handleMoveColumn,
+                onTaskReorder: syncTaskReorder,
+                onColumnChange: (taskId, columnId) => {
+                  if (workspaceApiId) {
+                    taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
+                      .then(() => {
+                        queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+                      })
+                      .catch((error) => {
+                        if (isNoopReorderError(error)) return;
+                        queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+                        toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+                      });
+                  }
+                },
               });
-              setIsDraggingIssue(false);
+              isDraggingIssueRef.current = false;
             },
             handleAddColumn,
             handleRenameColumn,
@@ -734,7 +744,7 @@ export default function WorkspaceDetailPage({
             newIssueForm,
           },
           actions: {
-            handleBacklogDragStart: () => setIsDraggingIssue(true),
+            handleBacklogDragStart: () => { isDraggingIssueRef.current = true; },
             handleBacklogDragEnd: handleBacklogDragEndWithSync,
             setIssues,
             setDensity,

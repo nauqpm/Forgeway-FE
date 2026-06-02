@@ -57,6 +57,10 @@ const adminNav = [
   { icon: Shield, label: "Permissions", href: "/dashboard/permissions" },
 ];
 
+const SHOW_RECENT_NAV = false;
+const SHOW_STARRED_NAV = false;
+const SHOW_ADMIN_NAV = false;
+
 const optionFilter = [
   { title: "My tasks", slug: "my-tasks" },
   { title: "Created by me", slug: "created-by-me" },
@@ -403,8 +407,12 @@ export default function Sidebar({
             <div className="px-2 space-y-0.5">
               {/* Dashboard */}
               <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
-              <PopoverNavItem item={mainNav[1]} type="recent" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
-              <PopoverNavItem item={mainNav[2]} type="starred" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
+              {SHOW_RECENT_NAV && (
+                <PopoverNavItem item={mainNav[1]} type="recent" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
+              )}
+              {SHOW_STARRED_NAV && (
+                <PopoverNavItem item={mainNav[2]} type="starred" activePopover={activePopover} setActivePopover={setActivePopover} collapsed={collapsed} mounted={mounted} />
+              )}
 
               {/* Workspaces */}
               <div>
@@ -504,7 +512,7 @@ export default function Sidebar({
           </div>
 
           {/* Admin Section */}
-          {isAdmin && (
+          {SHOW_ADMIN_NAV && isAdmin && (
             <div className="mt-4 px-2">
               <button
                 onClick={() => setAdminOpen(!adminOpen)}
