@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import appleIcon from "../../../../../../app/apple-icon.png";
+import Image from "next/image";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
@@ -479,15 +481,16 @@ export default function Sidebar({
         <div className="app-header flex items-center justify-between border-b border-slate-100 dark:border-gray-800 flex-shrink-0">
           <Link
             href="/"
-            className="flex items-center gap-2.5"
             onClick={onMobileClose}
+            className={`flex items-center rounded-xl py-1.5 ${collapsed ? "justify-center px-0" : "gap-2 px-2.5"}`}
           >
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
+            <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1 shadow-indigo-500/20">
+              <Image src={appleIcon} alt="SDLC Platform" width={38} height={38} className="h-9 w-9 rounded-lg object-contain" />
+            </span>
             {!collapsed && (
-              <span className="font-bold text-slate-900 dark:text-gray-100 text-lg tracking-tight">
-                SDLC Platform
+              <span className="flex flex-col text-base font-bold leading-[0.95] tracking-tight text-blue-600">
+                <span className="text-2xl">SDLC</span>
+                <span>PLATFORM</span>
               </span>
             )}
           </Link>
