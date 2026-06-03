@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, Check, FileText, Loader2, MoreHorizontal, X } from "lucide-react";
 import {
   AppNotification,
@@ -20,6 +21,7 @@ interface NotificationViewModel {
   actor: { name: string; avatar?: string };
   actionText: string;
   target?: { id?: string; key?: string; title?: string; type: string };
+  href?: string;
   createdAt: string;
   isRead: boolean;
   category: NotificationCategory;
@@ -63,6 +65,21 @@ function actionText(type: NotificationType): string {
   }
 }
 
+function buildNotificationHref(notification: AppNotification): string | undefined {
+  const metadata = notification.metadata ?? {};
+  const taskKey = typeof metadata.taskKey === "string" ? metadata.taskKey : undefined;
+  const workspaceRouteKey =
+    (typeof metadata.workspaceKey === "string" ? metadata.workspaceKey : undefined) ||
+    (typeof metadata.workspaceId === "string" ? metadata.workspaceId : undefined) ||
+    notification.workspaceId;
+
+  if (taskKey && workspaceRouteKey) {
+    return `/workspaces/${encodeURIComponent(workspaceRouteKey)}/board/key/${encodeURIComponent(taskKey)}`;
+  }
+
+  return undefined;
+}
+
 function mapNotification(notification: AppNotification): NotificationViewModel {
   const name = actorName(notification);
   const metadata = notification.metadata ?? {};
@@ -88,6 +105,7 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
       : undefined,
     createdAt: notification.createdAt,
     isRead: Boolean(notification.readAt),
+    href: buildNotificationHref(notification),
     category: DIRECT_TYPES.includes(notification.type) ? "DIRECT" : "WATCHING",
     type: notification.type === "WORKSPACE_INVITED" ? "INVITE" : "STANDARD",
     inviteData: notification.type === "WORKSPACE_INVITED"
@@ -122,6 +140,7 @@ export default function NotificationPanel({
   onClose,
   onUnreadCountChange,
 }: NotificationPanelProps) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationViewModel[]>([]);
   const [activeTab, setActiveTab] = useState<NotificationCategory>("DIRECT");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
@@ -206,7 +225,14 @@ export default function NotificationPanel({
       );
     }
   };
+  const handleNotificationClick = async (notification: NotificationViewModel) => {
+    await markAsRead(notification.id);
 
+    if (!notification.href) return;
+
+    onClose();
+    router.push(notification.href);
+  };
   const filteredNotifications = useMemo(() => {
     return notifications.filter((notification) => {
       if (notification.category !== activeTab) return false;
@@ -321,7 +347,7 @@ export default function NotificationPanel({
                     {items.map((notification) => (
                       <button
                         key={notification.id}
-                        onClick={() => markAsRead(notification.id)}
+                        onClick={() => handleNotificationClick(notification)}
                         className={`w-full text-left relative p-3 rounded-xl transition-all group hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-700 ${!notification.isRead ? "bg-indigo-50/40 dark:bg-indigo-900/10" : ""}`}
                       >
                         {!notification.isRead && (
