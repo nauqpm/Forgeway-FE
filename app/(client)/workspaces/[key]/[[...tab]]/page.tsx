@@ -42,6 +42,7 @@ import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
@@ -103,6 +104,11 @@ export default function WorkspaceDetailPage({
   const { setCurrentWorkspace } = useWorkspaceStore();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
+
+  const pageTitle = workspace?.name
+    ? `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} - ${workspace.name}`
+    : activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
+  usePageTitle(pageTitle);
 
   const handleTabChange = (newTab: WorkspaceTab) => {
     setActiveTab(newTab);

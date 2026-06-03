@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, KeyboardEvent, MouseEvent, use, useEffect, useState } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -99,6 +100,7 @@ export default function WorkspaceSettingsPage({
 }: {
   params: Promise<{ key: string }>;
 }) {
+  usePageTitle('Workspace Settings');
   const { key: workspaceKey } = use(params);
   const router = useRouter();
   const { user } = useAuth();

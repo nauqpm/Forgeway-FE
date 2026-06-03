@@ -2,7 +2,7 @@ import VerifyEmailForm from '@/modules/auth/register/components/VerifyEmailForm'
 import { Suspense } from 'react';
 
 export const metadata = {
-  title: 'Verify Email - AL-TASK',
+  title: 'Verify Email',
   description: 'Verify your email account',
 };
 

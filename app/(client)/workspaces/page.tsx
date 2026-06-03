@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -21,6 +22,7 @@ interface Workspace {
 }
 
 export default function WorkspacesPage() {
+  usePageTitle('Workspaces');
   const { currentWorkspace, workspacesLoaded } = useWorkspaceStore();
   const [workspaces, setWorkspacesList] = useState<Workspace[]>([]);
   const [loading, setLoading] = useState(true);

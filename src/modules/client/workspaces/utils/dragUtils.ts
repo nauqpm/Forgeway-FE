@@ -180,7 +180,7 @@ export const handleBoardDragEnd = ({
       (sourceStatus === destStatus
         ? sourceColumnIssues
         : getOrderedColumnIssues(issues, destStatus)
-      ).filter((issue) => issue.id !== draggableId);
+      ).filter((issue) => issue.id !== draggableId && issue.sprintId === draggedIssue.sprintId);
     const insertIndex = Math.min(destination.index, destinationIssuesWithoutDragged.length);
     const movedIssue: Issue = {
       ...draggedIssue,

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
@@ -16,6 +17,7 @@ export default function PageViewPage() {
   const workspaceKey = params.key as string;
   const [page, setPage] = useState<Page | null>(null);
   const [loading, setLoading] = useState(true);
+  usePageTitle(page?.title || 'Page');
 
   useEffect(() => {
     const fetchPage = async () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
@@ -14,6 +15,7 @@ import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDet
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 
 export default function TaskDetailDeepLinkPage() {
+  usePageTitle('Task Detail');
   const params = useParams();
   const router = useRouter();
 

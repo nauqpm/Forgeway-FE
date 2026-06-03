@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import { useParams } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/common/services/api.service";
@@ -17,6 +18,7 @@ const priorityColors: Record<string, string> = { highest: "border-l-red-500", hi
 const typeColors: Record<string, string> = { task: "bg-gray-400", bug: "bg-red-400", story: "bg-green-400", epic: "bg-purple-500" };
 
 export default function ProjectBoardPage() {
+  usePageTitle('Project');
   const params = useParams();
   const projectId = params.id as string;
   const { currentWorkspace } = useWorkspaceStore();

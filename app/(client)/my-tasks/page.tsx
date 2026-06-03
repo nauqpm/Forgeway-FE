@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
@@ -54,6 +55,7 @@ const statusConfig: Record<string, { color: string; bg: string; label: string }>
 type GroupBy = "status" | "project" | "priority" | "none";
 
 export default function MyTasksPage() {
+  usePageTitle('My Tasks');
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);

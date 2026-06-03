@@ -6,8 +6,11 @@ import TokenHandler from "@/common/components/TokenHandler";
 import ToastProvider from "@/common/providers/ToastProvider";
 import { Suspense } from "react";
 
-export const   metadata = {
-    title: "SDLC Platform — Project Management for Modern Teams",
+export const metadata = {
+    title: {
+      template: '%s - SDLC Platform',
+      default: 'SDLC Platform — Project Management for Modern Teams',
+    },
     description: "SDLC Platform is a Jira + Confluence alternative. Manage projects, track tasks, plan sprints, and store team knowledge — all in one place.",
     icons: {
       icon: [
