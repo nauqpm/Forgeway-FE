@@ -7,12 +7,11 @@ import { Issue } from '@/modules/client/workspaces/types/issue.type';
 export default function CalendarEventContent({ eventInfo }: { eventInfo: EventContentArg }) {
   const { extendedProps, start, end } = eventInfo.event;
 
-  // Sprint bar
   if (extendedProps.type === 'sprint') {
     return (
-      <div className="flex items-center gap-1 px-1 w-full overflow-hidden">
-        <span className="text-xs">⚡</span>
-        <span className="text-xs text-white font-medium truncate">
+      <div className="flex h-full w-full items-center overflow-hidden px-1.5">
+        <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-white/80" />
+        <span className="ml-1.5 truncate text-[11px] font-semibold text-white">
           {eventInfo.event.title}
         </span>
       </div>
@@ -26,7 +25,6 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
     isAfter(new Date(), parseISO(issue.endDate)) &&
     !isDone;
 
-  // Multi-day bar: end is set and spans more than 1 day
   const isMultiDay =
     end != null &&
     start != null &&
@@ -34,12 +32,12 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
 
   if (isMultiDay) {
     return (
-      <div className="flex items-center px-1 w-full overflow-hidden">
+      <div className="flex h-full w-full items-center overflow-hidden px-1.5">
         <span
           className={[
-            'text-xs text-white truncate',
+            'truncate text-[11px] font-semibold text-white',
             isDone ? 'line-through opacity-60' : '',
-            isOverdue ? 'text-red-200' : '',
+            isOverdue ? 'text-red-100' : '',
           ].join(' ')}
         >
           {issue.title}
@@ -48,16 +46,15 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
     );
   }
 
-  // Single-day dot style
   return (
-    <div className="flex items-center gap-1 px-0.5 w-full overflow-hidden">
+    <div className="flex h-full w-full items-center gap-1 overflow-hidden px-1">
       <span
-        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+        className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
         style={{ backgroundColor: eventInfo.event.backgroundColor ?? '#6366f1' }}
       />
       <span
         className={[
-          'text-xs truncate',
+          'truncate text-[11px] font-semibold',
           isDone ? 'line-through opacity-60' : '',
           isOverdue
             ? 'text-red-500 dark:text-red-400'

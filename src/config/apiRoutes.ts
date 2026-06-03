@@ -73,6 +73,12 @@ export const apiRoutes = {
         BOARD_TASK_COMMENTS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments`,
         BOARD_TASK_COMMENT: (workspaceId: string, taskId: string, commentId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments/${commentId}`,
         BY_SPRINT: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/board/tasks?sprintId=${sprintId}`,
+        // Calendar & Timeline views
+        CALENDAR: (workspaceId: string) => `/workspaces/${workspaceId}/board/calendar`,
+        TIMELINE: (workspaceId: string) => `/workspaces/${workspaceId}/board/timeline`,
+        WORKSPACE_DEPENDENCIES: (workspaceId: string) => `/workspaces/${workspaceId}/board/dependencies`,
+        TASK_DEPENDENCIES: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/dependencies`,
+        TASK_DEPENDENCY: (workspaceId: string, taskId: string, depId: string) => `/workspaces/${workspaceId}/board/${taskId}/dependencies/${depId}`,
         // Legacy routes — still used by projects/tasks pages, pending migration
         BASE: '/tasks',
         BY_ID: (id: string) => `/tasks/${id}`,

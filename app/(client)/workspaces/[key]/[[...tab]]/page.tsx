@@ -304,6 +304,7 @@ export default function WorkspaceDetailPage({
     handleUpdateIssueDate,
     updateIssueDirectly,
     handleQuickCreateTask,
+    handleQuickCreateCalendarTask,
   } = useTaskHandlers({
     workspaceId: workspaceApiId ?? "",
     issues,
@@ -783,6 +784,7 @@ export default function WorkspaceDetailPage({
           sprints,
           handleUpdateIssueDate,
           setSelectedIssue: openTaskDetail,
+          canMoveTask,
         }}
         listProps={{
           filteredIssues,
@@ -808,6 +810,7 @@ export default function WorkspaceDetailPage({
           sprints,
           handleUpdateIssueDate,
           setSelectedIssue: openTaskDetail,
+          onQuickCreateTask: canCreateTask ? handleQuickCreateCalendarTask : undefined,
         }}
         archiveProps={{
           issues: archivedItems,

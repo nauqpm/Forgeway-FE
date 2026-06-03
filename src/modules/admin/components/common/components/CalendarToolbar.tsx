@@ -17,7 +17,7 @@ interface CalendarToolbarProps {
 }
 
 const SELECT_CLASS =
-  'px-3 py-1.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg ' +
+  'px-2.5 py-1.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-lg ' +
   'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 ' +
   'focus:outline-none focus:ring-2 focus:ring-indigo-500';
 
@@ -35,7 +35,7 @@ export default function CalendarToolbar({
   const api = () => calendarRef.current?.getApi();
 
   return (
-    <div className="flex flex-col gap-2 mb-4">
+    <div className="flex flex-col gap-2 mb-2">
       {/* Row 1: Filters */}
       <div className="flex flex-wrap items-center gap-2">
         <input
@@ -93,7 +93,7 @@ export default function CalendarToolbar({
         <div className="flex items-center gap-2">
           <button
             onClick={() => api()?.today()}
-            className="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="px-3 py-1.5 text-sm font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             Today
           </button>
@@ -112,7 +112,7 @@ export default function CalendarToolbar({
             <ChevronRight className="w-4 h-4" />
           </button>
 
-          <span className="text-sm font-semibold text-gray-800 dark:text-gray-100 min-w-[140px]">
+          <span className="text-base font-bold text-gray-800 dark:text-gray-100 min-w-[150px]">
             {currentDateTitle}
           </span>
         </div>
