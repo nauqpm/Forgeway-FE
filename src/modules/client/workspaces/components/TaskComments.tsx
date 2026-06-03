@@ -78,9 +78,11 @@ const getAuthorInitials = (author: TaskComment["author"]): string => {
     .toUpperCase();
 };
 
+const MENTION_MARKUP_REGEX = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
+
 const renderRichText = (content: string) => {
   // Matches both `[@Name](id)` and `@[Name](id)` syntax in case of legacy data
-  const mentionRegex = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
+  const mentionRegex = new RegExp(MENTION_MARKUP_REGEX.source, "g");
   const parts = [];
   let lastIndex = 0;
   let match;
@@ -105,6 +107,19 @@ const renderRichText = (content: string) => {
   }
 
   return parts.length > 0 ? parts : content;
+};
+
+const extractMentionIds = (content: string): string[] => {
+  const mentionRegex = new RegExp(MENTION_MARKUP_REGEX.source, "g");
+  const ids = new Set<string>();
+  let match;
+
+  while ((match = mentionRegex.exec(content)) !== null) {
+    const id = match[2]?.trim();
+    if (id) ids.add(id);
+  }
+
+  return Array.from(ids);
 };
 
 interface CommentNode extends TaskComment {
@@ -187,9 +202,9 @@ export default function TaskComments({
   );
 
   const createMutation = useMutation({
-    mutationFn: (content: string) =>
-      taskService.createComment(workspaceId, taskId, content, replyingToId),
-    onMutate: async (content) => {
+    mutationFn: ({ content, mentions }: { content: string; mentions: string[] }) =>
+      taskService.createComment(workspaceId, taskId, content, replyingToId, mentions),
+    onMutate: async ({ content, mentions }) => {
       await queryClient.cancelQueries({ queryKey: commentsKey });
       const prev = queryClient.getQueryData<TaskComment[]>(commentsKey) ?? [];
       const optimistic: TaskComment = {
@@ -208,7 +223,7 @@ export default function TaskComments({
         targetType: "task",
         targetId: taskId,
         parentId: replyingToId || null,
-        mentions: [],
+        mentions,
         isDeleted: false,
         editedAt: null,
         createdAt: new Date().toISOString(),
@@ -298,7 +313,10 @@ export default function TaskComments({
   const handleSubmit = useCallback(() => {
     const trimmed = commentInput.trim();
     if (!trimmed || isArchived || createMutation.isPending) return;
-    createMutation.mutate(trimmed);
+    createMutation.mutate({
+      content: trimmed,
+      mentions: extractMentionIds(trimmed),
+    });
     setCommentInput("");
   }, [commentInput, isArchived, createMutation]);
 
