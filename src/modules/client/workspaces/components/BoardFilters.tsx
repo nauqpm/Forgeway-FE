@@ -28,7 +28,7 @@ export default function BoardFilters({
   useEffect(() => {
     const handler = setTimeout(() => {
       if (filters.search !== searchValue) {
-        setFilters((prev) => ({ ...prev, search: searchValue }));
+        setFilters((prev) => ({ ...prev, search: searchValue, taskKey: null }));
       }
     }, 300);
     return () => clearTimeout(handler);
@@ -58,6 +58,7 @@ export default function BoardFilters({
     setFilters((prev) => ({
       ...prev,
       search: "",
+      taskKey: null,
       assigneeId: null,
       reporterId: null,
       priority: null,

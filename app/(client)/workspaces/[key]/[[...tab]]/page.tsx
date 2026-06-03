@@ -164,6 +164,10 @@ export default function WorkspaceDetailPage({
   const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(initialTaskKey);
 
   const { filters, setFilters, taskFilters } = useTaskFilters(workspaceApiId ?? "");
+  const fallbackTaskFilters = useMemo(() => ({
+    ...taskFilters,
+    search: undefined,
+  }), [taskFilters]);
   const [density, setDensity] = useState<"default" | "compact">("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -197,6 +201,19 @@ export default function WorkspaceDetailPage({
     enabled: !!workspaceApiId,
     staleTime: 30_000,
   });
+  const shouldUseFallbackTaskSearch =
+    !!workspaceApiId &&
+    Boolean(filters.search.trim()) &&
+    !isTasksFetching &&
+    Array.isArray(tasksData) &&
+    tasksData.length === 0;
+  const { data: fallbackTasksData, isFetching: isFallbackTasksFetching } = useQuery({
+    queryKey: ["tasks-fallback-search", workspaceApiId, fallbackTaskFilters],
+    queryFn: () => taskService.getBoardTasks(workspaceApiId!, fallbackTaskFilters),
+    enabled: shouldUseFallbackTaskSearch,
+    staleTime: 30_000,
+  });
+  const isTaskBoardFetching = isTasksFetching || isFallbackTasksFetching;
 
   const [archivePage, setArchivePage] = useState(1);
   const [archivedItems, setArchivedItems] = useState<Issue[]>([]);
@@ -267,16 +284,20 @@ export default function WorkspaceDetailPage({
   }, [sprintsData]);
 
   useEffect(() => {
-    if (!tasksData) return;
+    const nextTasksData = shouldUseFallbackTaskSearch && fallbackTasksData
+      ? fallbackTasksData
+      : tasksData;
+
+    if (!nextTasksData) return;
     if (isDraggingIssueRef.current) return;
 
-    setIssues(tasksData);
+    setIssues(nextTasksData);
     if (selectedTaskKey && !selectedIssue) {
-      const matchingIssue = tasksData.find((issue) => issue.key === selectedTaskKey);
+      const matchingIssue = nextTasksData.find((issue) => issue.key === selectedTaskKey);
       if (matchingIssue) setSelectedIssue(matchingIssue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tasksData, selectedTaskKey]); // isDraggingIssue intentionally omitted: firing on drag-end would overwrite optimistic state with stale server data
+  }, [fallbackTasksData, selectedTaskKey, shouldUseFallbackTaskSearch, tasksData]); // isDraggingIssue intentionally omitted: firing on drag-end would overwrite optimistic state with stale server data
 
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
@@ -677,7 +698,7 @@ export default function WorkspaceDetailPage({
             newIssueForm,
             showCreateColumn,
             newColumnName,
-            isFetching: isTasksFetching,
+            isFetching: isTaskBoardFetching,
           },
           actions: {
             setFilters,

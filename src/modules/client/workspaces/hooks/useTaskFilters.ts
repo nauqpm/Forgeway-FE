@@ -108,8 +108,7 @@ export function useTaskFilters(workspaceKey: string) {
   }, [filters, pathname]);
 
   const taskFilters = useMemo<TaskFilters>(() => ({
-    search: filters.taskKey ? undefined : filters.search,
-    taskKey: filters.taskKey ?? undefined,
+    search: filters.search.trim() || undefined,
     status: filters.statuses,
     type: filters.types,
     priority: filters.priorities,
