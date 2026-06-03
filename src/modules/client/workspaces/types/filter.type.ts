@@ -4,6 +4,7 @@ export interface Filters {
   reporterId: string | null;
   taskKey?: string | null;
   workspaceKey?: string | null;
+  workspaceKeys?: string[];
   lastUpdated?: string | null;
   priority: string | null;
   type: string | null;

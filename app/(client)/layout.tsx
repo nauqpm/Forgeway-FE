@@ -11,7 +11,7 @@ import { notificationService } from "@/common/services/notification.service";
 import { LayoutDashboard, Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut, Plus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
-import JiraSearchDropdown from "@/modules/client/workspaces/components/JiraSearchDropdown";
+import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +35,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     reporterId: null,
     taskKey: null,
     workspaceKey,
+    workspaceKeys: [],
     lastUpdated: null,
     priority: null,
     type: null,
@@ -46,14 +47,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     archived: false,
   });
   const [isTaskSearchReady, setIsTaskSearchReady] = useState(false);
+  const taskSearchHydrationPathRef = useRef<string | null>(null);
 
   const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
-    .map((workspace) => ({
-      id: workspace._id,
-      name: workspace.name,
-      key: workspace.key || workspace.slug,
-    }))
-    .filter((workspace) => Boolean(workspace.key));
+    .map((workspace) => {
+      const id = workspace._id || (workspace as { id?: string }).id;
+      const key = workspace.key || workspace.slug;
+      return id && key ? { id, name: workspace.name, key } : null;
+    })
+    .filter((workspace): workspace is { id: string; name: string; key: string } => Boolean(workspace));
+  const defaultSearchWorkspaceKeys = workspaceKey
+    ? [workspaceKey]
+    : searchProjects.map((workspace) => workspace.key);
   const searchAssignees = (currentWorkspace?.members ?? []).map((member) => {
     const memberId =
       typeof member.userId === "string"
@@ -100,11 +105,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
-    if (!workspaceKey || typeof window === "undefined") {
+    if (typeof window === "undefined") {
       setIsTaskSearchReady(false);
-      setTaskSearchFilters((prev) => ({ ...prev, workspaceKey }));
       return;
     }
+    if (!workspaceKey && !workspacesLoaded) return;
+
+    const hydrationPath = pathname || "";
+    if (taskSearchHydrationPathRef.current === hydrationPath) return;
 
     const params = new URLSearchParams(window.location.search);
     const csv = (value: string | null) => value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
@@ -118,6 +126,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setTaskSearchFilters((prev) => ({
       ...prev,
       workspaceKey,
+      workspaceKeys: csv(params.get("workspaceKeys")).length > 0
+        ? csv(params.get("workspaceKeys"))
+        : defaultSearchWorkspaceKeys,
       search: params.get("search") || "",
       taskKey: params.get("taskKey"),
       statuses: csv(params.get("status")).map((item) => {
@@ -133,8 +144,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       backlog: params.get("backlog") === "true",
       archived: params.get("archived") === "true",
     }));
+    taskSearchHydrationPathRef.current = hydrationPath;
     setIsTaskSearchReady(true);
-  }, [workspaceKey]);
+  }, [pathname, workspaceKey, workspacesLoaded, defaultSearchWorkspaceKeys.join(",")]);
 
   useEffect(() => {
     if (!workspaceKey || !isTaskSearchReady || typeof window === "undefined") return;
@@ -148,6 +160,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     setOrDelete("search", taskSearchFilters.search.trim());
     setOrDelete("taskKey", taskSearchFilters.taskKey);
+    setOrDelete("workspaceKeys", taskSearchFilters.workspaceKeys?.join(","));
     setOrDelete("status", taskSearchFilters.statuses.map(normalize).join(","));
     setOrDelete("type", taskSearchFilters.types.map(normalize).join(","));
     setOrDelete("priority", taskSearchFilters.priorities.map(normalize).join(","));
@@ -199,7 +212,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             </button>
             <div className="hidden w-[clamp(520px,44vw,680px)] md:block">
-              <JiraSearchDropdown
+              <SearchDropdown
                 filters={taskSearchFilters}
                 setFilters={setTaskSearchFilters}
                 projects={searchProjects}

@@ -2,14 +2,14 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { CheckSquare, FolderKanban, Kanban, Search, SlidersHorizontal, Sparkles, Users } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { Filters, TaskFilters } from "../types/filter.type";
 import { taskService } from "../services/taskService";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import RecentItem from "./RecentItem";
 import TaskFilterPanel from "./TaskFilterPanel";
 
-type JiraSearchDropdownProps = {
+type SearchDropdownProps = {
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   projects?: { id: string; name: string; key: string }[];
@@ -23,9 +23,31 @@ type JiraSearchDropdownProps = {
 
 const apps = ["Task", "Docs"];
 const goToLinks = ["Boards", "Projects", "Filters", "Plans", "People"];
-const TASK_KEY_PATTERN = /^[A-Z][A-Z0-9]*-\d+$/i;
 
-const toSuggestionTaskFilters = (filters: Filters): TaskFilters => ({
+const useDebouncedValue = <T,>(value: T, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedValue(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [delay, value]);
+
+  return debouncedValue;
+};
+
+const toSuggestionTaskFilters = (filters: Filters, search: string): TaskFilters => ({
+  status: filters.statuses,
+  type: filters.types,
+  priority: filters.priorities,
+  assigneeId: filters.assignees.length > 0 ? filters.assignees : filters.assigneeId ?? undefined,
+  reporterId: filters.reporterId ?? undefined,
+  search: search.trim() || undefined,
+  backlog: filters.backlog,
+  archived: filters.archived,
+  limit: 20,
+});
+
+const toFallbackTaskFilters = (filters: Filters): TaskFilters => ({
   status: filters.statuses,
   type: filters.types,
   priority: filters.priorities,
@@ -36,19 +58,42 @@ const toSuggestionTaskFilters = (filters: Filters): TaskFilters => ({
   limit: 100,
 });
 
-const compactSearchText = (value: string) =>
-  value.toLowerCase().replace(/[^a-z0-9]/g, "");
+const normalizeSearch = (value: string) => value.trim().toLowerCase();
 
-const matchesTaskSearch = (task: { key: string; title: string }, search: string) => {
-  const query = search.trim().toLowerCase();
+const normalizeCompactSearch = (value: string) =>
+  normalizeSearch(value).replace(/[^a-z0-9]/g, "");
+
+const matchesFallbackSearch = (
+  task: { key: string; title: string; description?: string },
+  search: string,
+) => {
+  const query = normalizeSearch(search);
   if (!query) return true;
 
-  const compactQuery = compactSearchText(query);
+  const compactQuery = normalizeCompactSearch(query);
+  const exactKey = /^[a-z][a-z0-9]*-\d+$/i.test(query);
+  const key = normalizeSearch(task.key);
+  const title = normalizeSearch(task.title);
+  const description = normalizeSearch(task.description ?? "");
+
+  if (exactKey) return key === query;
+
+  if (query.length === 1) {
+    return (
+      key.includes(query) ||
+      title.includes(query) ||
+      normalizeCompactSearch(task.key).includes(compactQuery) ||
+      normalizeCompactSearch(task.title).includes(compactQuery)
+    );
+  }
+
   return (
-    task.key.toLowerCase().includes(query) ||
-    task.title.toLowerCase().includes(query) ||
-    compactSearchText(task.key).includes(compactQuery) ||
-    compactSearchText(task.title).includes(compactQuery)
+    key.includes(query) ||
+    title.includes(query) ||
+    description.includes(query) ||
+    normalizeCompactSearch(task.key).includes(compactQuery) ||
+    normalizeCompactSearch(task.title).includes(compactQuery) ||
+    normalizeCompactSearch(task.description ?? "").includes(compactQuery)
   );
 };
 
@@ -87,7 +132,7 @@ const matchesLastUpdated = (updatedAt: string | undefined, lastUpdated?: string 
   return true;
 };
 
-export default function JiraSearchDropdown({
+export default function SearchDropdown({
   filters,
   setFilters,
   projects = [],
@@ -97,28 +142,70 @@ export default function JiraSearchDropdown({
   currentUserName,
   className = "px-[var(--workspace-surface-pad)] pt-[var(--workspace-surface-pad)]",
   inputClassName = "h-12 text-base",
-}: JiraSearchDropdownProps) {
+}: SearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeApp, setActiveApp] = useState("Jira");
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const rootRef = useRef<HTMLDivElement>(null);
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const activeWorkspaceKey = filters.workspaceKey || workspaceKey;
+  const activeWorkspaceKeys =
+    Array.isArray(filters.workspaceKeys)
+      ? filters.workspaceKeys
+      : [activeWorkspaceKey].filter(Boolean);
   const { currentWorkspace } = useWorkspaceStore();
-  const workspaceId = currentWorkspace?._id ?? "";
-  const suggestionTaskFilters = toSuggestionTaskFilters(filters);
+  const workspaceTargets = activeWorkspaceKeys
+    .map((key) => {
+      const project = projects.find((item) => item.key === key);
+      const id =
+        project?.id ||
+        (currentWorkspace?.key === key || currentWorkspace?.slug === key
+          ? currentWorkspace?._id
+          : "");
+      return id ? { id, key } : null;
+    })
+    .filter(Boolean) as { id: string; key: string }[];
+  const debouncedSearch = useDebouncedValue(filters.search, 300);
+  const suggestionTaskFilters = toSuggestionTaskFilters(filters, debouncedSearch);
+  const fallbackTaskFilters = toFallbackTaskFilters(filters);
 
-  const { data: searchTasks = [], isFetching: isFetchingTasks } = useQuery({
-    queryKey: ["jira-search-tasks", workspaceId, suggestionTaskFilters],
-    queryFn: () => taskService.getBoardTasks(workspaceId, suggestionTaskFilters),
-    enabled: isOpen && Boolean(workspaceId),
-    staleTime: 15_000,
+  const searchQueries = useQueries({
+    queries: workspaceTargets.map((target) => ({
+      queryKey: ["search-dropdown-tasks", target.id, suggestionTaskFilters],
+      queryFn: () => taskService.getBoardTasks(target.id, suggestionTaskFilters),
+      enabled: isOpen,
+      staleTime: 15_000,
+    })),
   });
+  const searchTasks = searchQueries.flatMap((query) => query.data ?? []);
+  const isFetchingTasks = searchQueries.some((query) => query.isFetching);
 
-  const visibleTasks = searchTasks
-    .filter((task) => matchesTaskSearch(task, filters.search))
+  const shouldUseFallbackSearch =
+    isOpen &&
+    workspaceTargets.length > 0 &&
+    Boolean(debouncedSearch.trim()) &&
+    !isFetchingTasks &&
+    searchTasks.length === 0;
+
+  const fallbackQueries = useQueries({
+    queries: workspaceTargets.map((target) => ({
+      queryKey: ["search-dropdown-fallback-tasks", target.id, fallbackTaskFilters],
+      queryFn: () => taskService.getBoardTasks(target.id, fallbackTaskFilters),
+      enabled: shouldUseFallbackSearch,
+      staleTime: 15_000,
+    })),
+  });
+  const fallbackTasks = fallbackQueries.flatMap((query) => query.data ?? []);
+  const isFetchingFallbackTasks = fallbackQueries.some((query) => query.isFetching);
+
+  const taskResults = shouldUseFallbackSearch
+    ? fallbackTasks.filter((task) => matchesFallbackSearch(task, debouncedSearch))
+    : searchTasks;
+
+  const visibleTasks = taskResults
     .filter((task) => matchesLastUpdated(task.updatedAt, filters.lastUpdated))
     .slice(0, 8);
+  const isLoadingTasks = isFetchingTasks || isFetchingFallbackTasks;
 
   useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
@@ -159,11 +246,10 @@ export default function JiraSearchDropdown({
   }, [isOpen]);
 
   const handleSearchChange = (value: string) => {
-    const trimmed = value.trim();
     setFilters((prev) => ({
       ...prev,
       search: value,
-      taskKey: TASK_KEY_PATTERN.test(trimmed) ? trimmed.toUpperCase() : null,
+      taskKey: null,
     }));
   };
 
@@ -216,10 +302,13 @@ export default function JiraSearchDropdown({
               <div className="space-y-5">
                 <section>
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Recently viewed</h3>
-                  {isFetchingTasks && (
+                  {isLoadingTasks && (
                     <p className="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">Loading work items...</p>
                   )}
-                  {!isFetchingTasks && visibleTasks.length === 0 && (
+                  {!isLoadingTasks && workspaceTargets.length === 0 && (
+                    <p className="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">Select a workspace to search work items.</p>
+                  )}
+                  {!isLoadingTasks && workspaceTargets.length > 0 && visibleTasks.length === 0 && (
                     <p className="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">No work items match these filters.</p>
                   )}
                   {visibleTasks.map((task) => (
@@ -233,7 +322,7 @@ export default function JiraSearchDropdown({
                         setFilters((prev) => ({
                           ...prev,
                           search: task.key,
-                          taskKey: task.key,
+                          taskKey: null,
                         }));
                         setIsOpen(false);
                       }}
@@ -245,9 +334,9 @@ export default function JiraSearchDropdown({
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Recent boards, projects, filters and plans</h3>
                   {(projects.length > 0 ? projects : [{ id: activeWorkspaceKey, name: `${activeWorkspaceKey} board`, key: activeWorkspaceKey }])
                     .slice(0, 6)
-                    .map((project) => (
+                    .map((project, index) => (
                       <RecentItem
-                        key={project.id}
+                        key={project.id || project.key || `${project.name}-${index}`}
                         icon={project.key === activeWorkspaceKey ? Kanban : FolderKanban}
                         title={project.key === activeWorkspaceKey ? `${project.key} board` : `${project.name} (${project.key})`}
                         meta={project.key === activeWorkspaceKey ? "Board" : "Project"}
@@ -281,11 +370,29 @@ export default function JiraSearchDropdown({
                 assignees={assignees}
                 workspaceKey={workspaceKey}
                 selectedWorkspaceKey={activeWorkspaceKey}
+                selectedWorkspaceKeys={activeWorkspaceKeys}
                 onSelectWorkspace={(nextWorkspaceKey) => {
                   setFilters((prev) => ({
                     ...prev,
                     workspaceKey: nextWorkspaceKey,
+                    workspaceKeys: [nextWorkspaceKey],
                   }));
+                }}
+                onToggleWorkspace={(nextWorkspaceKey) => {
+                  setFilters((prev) => {
+                    const current = Array.isArray(prev.workspaceKeys)
+                      ? prev.workspaceKeys
+                      : [activeWorkspaceKey].filter(Boolean);
+                    const next = current.includes(nextWorkspaceKey)
+                      ? current.filter((key) => key !== nextWorkspaceKey)
+                      : [...current, nextWorkspaceKey];
+
+                    return {
+                      ...prev,
+                      workspaceKey: next[0] ?? null,
+                      workspaceKeys: next,
+                    };
+                  });
                 }}
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}

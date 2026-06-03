@@ -9,7 +9,9 @@ type TaskFilterPanelProps = {
   assignees: { id: string; name: string; avatar?: string }[];
   workspaceKey: string;
   selectedWorkspaceKey?: string | null;
+  selectedWorkspaceKeys?: string[];
   onSelectWorkspace?: (workspaceKey: string) => void;
+  onToggleWorkspace?: (workspaceKey: string) => void;
   currentUserId?: string;
   currentUserName?: string;
 };
@@ -80,7 +82,9 @@ export default function TaskFilterPanel({
   assignees,
   workspaceKey,
   selectedWorkspaceKey,
+  selectedWorkspaceKeys,
   onSelectWorkspace,
+  onToggleWorkspace,
   currentUserId,
   currentUserName,
 }: TaskFilterPanelProps) {
@@ -95,6 +99,10 @@ export default function TaskFilterPanel({
       };
     });
   };
+  const activeWorkspaceKeys =
+    Array.isArray(selectedWorkspaceKeys)
+      ? selectedWorkspaceKeys
+      : [selectedWorkspaceKey || workspaceKey].filter(Boolean);
 
   return (
     <div className="space-y-4">
@@ -110,14 +118,20 @@ export default function TaskFilterPanel({
       </Section>
 
       <Section title="Filter by project" icon={FolderKanban}>
-        {(projects.length > 0 ? projects : [{ id: workspaceKey, name: `${workspaceKey} board`, key: workspaceKey }]).slice(0, 8).map((project) => (
+        {(projects.length > 0 ? projects : [{ id: workspaceKey, name: `${workspaceKey} board`, key: workspaceKey }]).slice(0, 8).map((project, index) => (
           <CheckboxRow
-            key={project.id}
-            checked={project.key === (selectedWorkspaceKey || workspaceKey)}
+            key={project.id || project.key || `${project.name}-${index}`}
+            checked={activeWorkspaceKeys.includes(project.key)}
             label={project.name}
             detail={project.key}
             avatar={project.key.slice(0, 2).toUpperCase()}
-            onChange={() => onSelectWorkspace?.(project.key)}
+            onChange={() => {
+              if (onToggleWorkspace) {
+                onToggleWorkspace(project.key);
+                return;
+              }
+              onSelectWorkspace?.(project.key);
+            }}
           />
         ))}
         <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
