@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback, MouseEvent } from "react";
-import { Users, UserPlus, Search, X, Loader2, ChevronDown, Trash2, ShieldCheck } from "lucide-react";
+import {
+  Users,
+  UserPlus,
+  Search,
+  X,
+  Loader2,
+  ChevronDown,
+  Trash2,
+  ShieldCheck,
+} from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/config/api";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -26,8 +35,10 @@ const ROLES = [
 ];
 
 const ROLE_BADGE: Record<string, string> = {
-  space_admin: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-  workspace_admin: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+  space_admin:
+    "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+  workspace_admin:
+    "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
   super_admin: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
   viewer: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
   member: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -43,8 +54,13 @@ const ROLE_LABEL: Record<string, string> = {
 
 function MemberAvatar({ user }: { user: WorkspaceMember["userId"] }) {
   const initials = user.fullName
-    ? user.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
-    : user.email?.[0]?.toUpperCase() ?? "?";
+    ? user.fullName
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : (user.email?.[0]?.toUpperCase() ?? "?");
 
   if (user.avatar) {
     return (
@@ -69,14 +85,18 @@ type InviteFormProps = {
   onSuccess: () => void;
 };
 
-function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: InviteFormProps) {
+function InviteForm({
+  workspaceId,
+  workspaceMongoId,
+  onClose,
+  onSuccess,
+}: InviteFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [submitting, setSubmitting] = useState(false);
   const [emailError, setEmailError] = useState("");
 
-  const validateEmail = (val: string) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+  const validateEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,13 +107,17 @@ function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: Invit
     setEmailError("");
     setSubmitting(true);
     try {
-      await api.post(apiRoutes.WORKSPACES.INVITES(workspaceMongoId ?? workspaceId), { email, role });
+      await api.post(
+        apiRoutes.WORKSPACES.INVITES(workspaceMongoId ?? workspaceId),
+        { email, role },
+      );
       toast.success(`Invitation sent to ${email}.`);
       onSuccess();
       onClose();
     } catch (err: any) {
       const msg =
-        err?.response?.data?.message ?? "Could not send invitation.";
+        err?.response?.data?.message ??
+        "User is already a member of this workspace.";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -157,9 +181,7 @@ function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: Invit
           disabled={submitting || !email}
           className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 dark:disabled:bg-indigo-900/50 disabled:cursor-not-allowed rounded-lg transition-colors flex-shrink-0"
         >
-          {submitting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : null}
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           {submitting ? "Sending…" : "Send invite"}
         </button>
       </form>
@@ -172,10 +194,15 @@ type WorkspaceMembersPanelProps = {
   workspaceMongoId?: string;
 };
 
-export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }: WorkspaceMembersPanelProps) {
+export default function WorkspaceMembersPanel({
+  workspaceId,
+  workspaceMongoId,
+}: WorkspaceMembersPanelProps) {
   const { user: authUser } = useAuth();
   const { hasPermission } = useWorkspacePermission(workspaceId);
-  const canManageMembers = hasPermission(WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE);
+  const canManageMembers = hasPermission(
+    WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE,
+  );
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -254,7 +281,9 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
 
     setUpdatingMemberId(userId);
     try {
-      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceId, userId), { role });
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceId, userId), {
+        role,
+      });
       setMembers((prev) =>
         prev.map((item) =>
           item.userId?._id === userId ? { ...item, role } : item,
@@ -263,7 +292,9 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
       setContextMenu(null);
       toast.success("Member permissions updated.");
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Could not update member permissions.");
+      toast.error(
+        err?.response?.data?.message ?? "Could not update member permissions.",
+      );
     } finally {
       setUpdatingMemberId(null);
     }
@@ -275,7 +306,12 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
 
     setRemovingMemberId(userId);
     try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceMongoId ?? workspaceId, userId));
+      await api.delete(
+        apiRoutes.WORKSPACES.REMOVE_MEMBER(
+          workspaceMongoId ?? workspaceId,
+          userId,
+        ),
+      );
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setContextMenu(null);
       toast.success("Member removed from workspace.");
@@ -304,7 +340,9 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Members</h3>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Members
+          </h3>
           {!loading && (
             <span className="text-sm text-gray-500 dark:text-gray-400">
               ({members.length})
@@ -410,7 +448,9 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
             <button
               key={role.value}
               type="button"
-              onClick={() => handleUpdateMemberRole(contextMenu.member, role.value)}
+              onClick={() =>
+                handleUpdateMemberRole(contextMenu.member, role.value)
+              }
               disabled={updatingMemberId === contextMenu.member.userId?._id}
               className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 ${
                 contextMenu.member.role === role.value
