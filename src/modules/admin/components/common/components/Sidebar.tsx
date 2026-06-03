@@ -478,11 +478,17 @@ export default function Sidebar({
         }`}
       >
         {/* Logo / Brand */}
-        <div className="app-header flex items-center justify-between border-b border-slate-100 dark:border-gray-800 flex-shrink-0">
+        <div
+          className={`app-header flex items-center border-b border-slate-100 dark:border-gray-800 flex-shrink-0 ${
+            collapsed ? "justify-center" : "justify-between"
+          }`}
+        >
           <Link
             href="/"
             onClick={onMobileClose}
-            className={`flex items-center rounded-xl py-1.5 ${collapsed ? "justify-center px-0" : "gap-2 px-2.5"}`}
+            className={`flex items-center rounded-xl py-1.5 ${
+              collapsed ? "w-full justify-center px-0" : "gap-2 px-2.5"
+            }`}
           >
             <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1 shadow-indigo-500/20">
               <Image src={appleIcon} alt="SDLC Platform" width={38} height={38} className="h-9 w-9 rounded-lg object-contain" />
