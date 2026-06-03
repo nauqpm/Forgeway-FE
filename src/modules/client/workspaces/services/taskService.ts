@@ -47,6 +47,7 @@ type TaskDto = {
   columnId?: string;
   boardColumnId?: string;
   storyPoints?: number;
+  startDate?: string;
   dueDate?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -75,6 +76,8 @@ type CreateTaskInput = {
   sprintId: string | null;
   assigneeId?: string | null;
   columnId?: string | null;
+  startDate?: string;
+  endDate?: string;
 };
 
 export type ReorderTaskInput = {
@@ -257,8 +260,12 @@ const toIssue = (task: TaskDto): Issue => {
     color: "bg-indigo-600",
     sprintId: task.sprintId ?? null,
     storyPoints: task.storyPoints ?? 0,
-    startDate: task.createdAt?.split("T")[0],
-    endDate: task.dueDate?.split("T")[0],
+    startDate: task.startDate
+      ? String(task.startDate).split('T')[0]
+      : undefined,
+    endDate: task.dueDate
+      ? String(task.dueDate).split('T')[0]
+      : undefined,
     isArchived: task.isArchived,
     archivedAt: task.archivedAt ?? null,
     archivedBy: task.archivedBy ?? null,
@@ -311,6 +318,8 @@ const toCreatePayload = (input: CreateTaskInput) => ({
   status: toColumnId(input.status),
   sprintId: input.sprintId || undefined,
   assigneeId: input.assigneeId || undefined,
+  startDate: input.startDate || undefined,
+  dueDate: input.endDate || undefined,
 });
 
 const toTaskComment = (comment: TaskComment): TaskComment => ({
@@ -328,6 +337,7 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     assigneeId,
     columnId,
     description,
+    startDate,
     endDate,
     priority,
     sprintId,
@@ -348,6 +358,7 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
   if (columnId !== undefined) {
     payload.columnId = columnId;
   }
+  if (startDate !== undefined) payload.startDate = startDate || undefined;
   if (endDate !== undefined) payload.dueDate = endDate || undefined;
   if (nextAssigneeId !== undefined) payload.assigneeId = nextAssigneeId;
   if (type !== undefined) payload.type = normalizeValue(type);

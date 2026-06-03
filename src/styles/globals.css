@@ -377,8 +377,9 @@ body {
 }
 .fc .fc-daygrid-day-number {
   color: #374151;
-  font-size: 0.75rem;
-  padding: 4px 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 5px;
 }
 .fc .fc-col-header-cell-cushion {
   color: #6b7280;
@@ -392,6 +393,91 @@ body {
 .fc .fc-daygrid-day-number {
   text-decoration: none;
 }
+.fc .fc-daygrid-day-frame {
+  min-height: 112px;
+}
+.fc .fc-daygrid-day-top {
+  position: relative;
+  z-index: 8;
+  padding: 2px 3px 0;
+}
+.al-calendar-day-head {
+  display: flex;
+  width: 100%;
+  min-height: 24px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+.al-calendar-day-number {
+  display: inline-flex;
+  min-width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.fc .fc-day-today .al-calendar-day-number {
+  background: #0ea5e9;
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.55), 0 0 18px rgba(14, 165, 233, 0.45);
+}
+.al-calendar-create-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  width: 22px;
+  height: 22px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  background: rgba(255, 255, 255, 0.94);
+  color: #0284c7;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 120ms ease, transform 120ms ease, background 120ms ease;
+  z-index: 12;
+}
+.fc .fc-daygrid-day:hover .al-calendar-create-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+.al-calendar-create-btn:hover {
+  background: #e0f2fe;
+}
+.fc .fc-daygrid-day-events {
+  position: relative;
+  z-index: 3;
+  margin-top: 1px;
+}
+.fc .fc-daygrid-event-harness {
+  margin-top: 1px !important;
+}
+.fc .fc-daygrid-more-link {
+  position: relative;
+  z-index: 20;
+  display: inline-flex;
+  margin-top: 2px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(14, 165, 233, 0.1);
+  color: #0369a1;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 18px;
+}
+.fc .fc-daygrid-block-event {
+  z-index: 2;
+  overflow: hidden;
+}
+.fc .fc-daygrid-event {
+  min-height: 20px;
+}
 
 /* Dark mode */
 .dark .fc {
@@ -403,6 +489,25 @@ body {
 }
 .dark .fc .fc-daygrid-day-number {
   color: #d1d5db;
+}
+.dark .al-calendar-day-number {
+  color: #d1d5db;
+}
+.dark .fc .fc-day-today .al-calendar-day-number {
+  background: #38bdf8;
+  color: #082f49;
+}
+.dark .al-calendar-create-btn {
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(15, 23, 42, 0.94);
+  color: #7dd3fc;
+}
+.dark .al-calendar-create-btn:hover {
+  background: #082f49;
+}
+.dark .fc .fc-daygrid-more-link {
+  background: rgba(56, 189, 248, 0.16);
+  color: #7dd3fc;
 }
 .dark .fc .fc-col-header-cell-cushion {
   color: #9ca3af;

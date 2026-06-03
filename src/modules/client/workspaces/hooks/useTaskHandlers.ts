@@ -175,11 +175,34 @@ export const useTaskHandlers = ({
     }
   };
 
+  const handleQuickCreateCalendarTask = async (title: string, date: string) => {
+    if (!title.trim() || isCreatingRef.current) return;
+    isCreatingRef.current = true;
+    try {
+      const issue = await taskService.createBoardTask(workspaceId, {
+        title: title.trim(),
+        type: "Task",
+        priority: "Medium",
+        status: "To Do",
+        sprintId: null,
+        startDate: date,
+        endDate: date,
+      });
+      setIssues((current) => [...current, issue]);
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Could not create work item");
+    } finally {
+      isCreatingRef.current = false;
+    }
+  };
+
   return {
     handleCreateIssue,
     handleUpdateIssue,
     handleUpdateIssueDate,
     updateIssueDirectly,
     handleQuickCreateTask,
+    handleQuickCreateCalendarTask,
   };
 };
