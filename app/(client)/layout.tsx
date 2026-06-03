@@ -7,6 +7,7 @@ import Sidebar from "@/modules/admin/components/common/components/Sidebar";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
+import { notificationService } from "@/common/services/notification.service";
 import { LayoutDashboard, Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut, Plus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
@@ -19,6 +20,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { theme, setTheme } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -74,6 +76,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    notificationService
+      .unreadCount()
+      .then(setUnreadNotificationCount)
+      .catch(() => setUnreadNotificationCount(0));
+  }, [isAuthenticated]);
   useEffect(() => {
     if (isAuthenticated && !workspacesLoaded) {
       api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
@@ -235,7 +246,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                 />
               </svg>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              {unreadNotificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] leading-5 rounded-full text-center font-semibold">
+                  {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+                </span>
+              )}
             </button>
 
             {/* User avatar + dropdown */}
@@ -289,7 +304,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
 
         {showNotifications && (
-          <NotificationPanel onClose={() => setShowNotifications(false)} />
+          <NotificationPanel
+            onClose={() => setShowNotifications(false)}
+            onUnreadCountChange={setUnreadNotificationCount}
+          />
         )}
 
         <main className="app-main">{children}</main>

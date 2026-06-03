@@ -118,7 +118,7 @@ export const apiRoutes = {
     NOTIFICATIONS: {
         BASE: '/notifications',
         BY_ID: (id: string) => `/notifications/${id}`,
-        UNREAD_COUNT: '/notifications/unread/count',
+        UNREAD_COUNT: '/notifications/unread-count',
         READ: (id: string) => `/notifications/${id}/read`,
         READ_ALL: '/notifications/read-all',
     },

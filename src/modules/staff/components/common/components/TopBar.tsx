@@ -4,15 +4,24 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Search, Bell, Settings, LogOut, User } from "lucide-react";
 import NotificationPanel from "./NotificationPanel";
+import { notificationService } from "@/common/services/notification.service";
 
 export default function TopBar() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
+
+  useEffect(() => {
+    notificationService
+      .unreadCount()
+      .then(setUnreadNotificationCount)
+      .catch(() => setUnreadNotificationCount(0));
+  }, []);
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -42,9 +51,18 @@ export default function TopBar() {
         <div className="relative" ref={notifRef}>
           <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg relative">
             <Bell className="w-5 h-5 text-gray-500" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+            {unreadNotificationCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] leading-5 rounded-full text-center font-semibold">
+                {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+              </span>
+            )}
           </button>
-          {showNotifications && <NotificationPanel onClose={() => setShowNotifications(false)} />}
+          {showNotifications && (
+            <NotificationPanel
+              onClose={() => setShowNotifications(false)}
+              onUnreadCountChange={setUnreadNotificationCount}
+            />
+          )}
         </div>
 
         <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-2 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
