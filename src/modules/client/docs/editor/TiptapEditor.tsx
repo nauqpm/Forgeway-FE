@@ -17,7 +17,7 @@ const AUTOSAVE_DELAY = 3000;
 const sanitizeEditorHtml = (html: string) =>
   DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
-    ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan"],
+    ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan", "width", "height", "data-align"],
   });
 
 export default function TiptapEditor() {

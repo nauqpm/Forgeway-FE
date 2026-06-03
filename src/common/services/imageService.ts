@@ -41,7 +41,20 @@ const compressionOptions = {
   fileType: 'image/jpeg',
 };
 
+type ImageApiEnvelope = {
+  data?: ImageResponse;
+};
+
 const imageService = {
+  normalizeImageResponse: (payload: unknown): ImageResponse => {
+    const envelope = payload as ImageApiEnvelope;
+    const image = envelope.data ?? (payload as ImageResponse);
+    return {
+      ...image,
+      imageUrl: image.imageUrl || image.url || image.path || "",
+    };
+  },
+
   /**
    * Compress image before upload
    */
@@ -154,7 +167,7 @@ const imageService = {
 
       formData.append('file', processedFile);
 
-      const response = await api.post('/images/upload', formData, {
+      const response = await api.post('/imagesapi/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -162,7 +175,7 @@ const imageService = {
         timeout: 30000, // 30 seconds timeout
       });
 
-      return response.data;
+      return imageService.normalizeImageResponse(response.data);
     } catch (error: any) {
       console.error("Image upload error:", error.response?.data || error.message);
       throw error;

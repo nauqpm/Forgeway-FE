@@ -105,6 +105,7 @@ export default function DocumentsLibraryPage() {
               Quản lý toàn bộ tài liệu cá nhân theo bố cục dạng lưới.
             </p>
           </div>
+          {/*
           <label className="ml-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
             <Upload className="h-4 w-4" />
             Thêm tài liệu mới 
@@ -126,6 +127,7 @@ export default function DocumentsLibraryPage() {
               }}
             />
           </label>
+          */}
           <Link
             href="/documents/create"
             className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"

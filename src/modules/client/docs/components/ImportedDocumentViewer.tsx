@@ -46,7 +46,7 @@ export default function ImportedDocumentViewer({ doc }: Props) {
         ) : isPdf ? (
           <iframe src={viewUrl} className="w-full h-full min-h-[500px] rounded border border-gray-200 dark:border-gray-700" />
         ) : isOfficePreview || isOnline ? (
-          <iframe sandbox="" src={previewUrl} className="w-full h-full min-h-[500px] rounded border border-gray-200 dark:border-gray-700 bg-white" />
+          <iframe sandbox="allow-same-origin" src={previewUrl} className="w-full h-full min-h-[500px] rounded border border-gray-200 dark:border-gray-700 bg-white" />
         ) : (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
