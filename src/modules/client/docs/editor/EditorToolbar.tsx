@@ -1,8 +1,11 @@
 ﻿"use client";
 
-import { ReactNode, useRef } from "react";
+import { ReactNode, useCallback, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import {
+  ArrowLeft,
+  ArrowUp,
   Bold,
   Italic,
   Strikethrough,
@@ -15,15 +18,18 @@ import {
   AlignCenter,
   AlignRight,
   AlignJustify,
+  ExternalLink,
+  Pencil,
   Table as TableIcon,
   Rows2,
   Columns2,
-  Merge,
-  Split,
   ListTodo,
+  Trash2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import imageService from "@/common/services/imageService";
+import LinkEditorPopover from "./LinkEditorPopover";
+import TableGridPicker from "./TableGridPicker";
 
 const FONT_FAMILIES = ["Arial", "Times New Roman", "Courier New", "Inter", "Georgia"];
 const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "32px"];
@@ -43,26 +49,25 @@ type ToolbarButtonProps = {
   title: string;
 };
 
-const normalizeUrl = (raw: string) => {
-  const input = raw.trim();
-  if (!input) return "";
-  const withProtocol = /^https?:\/\//i.test(input) ? input : `https://${input}`;
-  try {
-    return new URL(withProtocol).toString();
-  } catch {
-    return "";
-  }
-};
-
 const toImageUrl = (url: string) => {
   if (!url) return "";
   if (/^https?:\/\//i.test(url)) return url;
-  const base = process.env.NEXT_PUBLIC_API_URL || "";
+  const base = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SERVER_URL || "";
   return `${base}${url}`;
 };
 
 export default function EditorToolbar({ editor }: Props) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
+  const linkButtonRef = useRef<HTMLButtonElement | null>(null);
+  const tableButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
+  const [tablePickerOpen, setTablePickerOpen] = useState(false);
+  const closeLinkPopover = useCallback(() => {
+    setLinkPopoverOpen(false);
+  }, []);
+  const closeTablePicker = useCallback(() => {
+    setTablePickerOpen(false);
+  }, []);
 
   if (!editor) return null;
 
@@ -86,18 +91,16 @@ export default function EditorToolbar({ editor }: Props) {
     </button>
   );
 
-  const setLink = () => {
-    const current = editor.getAttributes("link").href || "";
-    const raw = window.prompt("Nhập URL liên kết", current);
-    if (raw === null) return;
+  const openLinkPopover = () => {
+    setTablePickerOpen(false);
+    setLinkPopoverOpen(true);
+  };
 
-    const url = normalizeUrl(raw);
-    if (!url) {
-      toast.error("URL không hợp lệ");
-      return;
+  const openActiveLink = () => {
+    const href = editor.getAttributes("link").href;
+    if (href) {
+      window.open(href, "_blank", "noopener,noreferrer");
     }
-
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   };
 
   const uploadLocalImage = async (file: File) => {
@@ -128,20 +131,55 @@ export default function EditorToolbar({ editor }: Props) {
     imageInputRef.current?.click();
   };
 
-  const insertTable = () => {
-    const rows = Number(window.prompt("Số dòng", "3"));
-    const cols = Number(window.prompt("Số cột", "3"));
-    if (!rows || !cols || rows < 1 || cols < 1) {
-      toast.error("Số dòng/cột không hợp lệ");
-      return;
-    }
+  const toggleTablePicker = () => {
+    setTablePickerOpen((current) => !current);
+  };
+
+  const insertTable = (rows: number, cols: number) => {
     editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    closeTablePicker();
   };
 
   const inTable = editor.isActive("table");
 
   return (
-    <div className="flex items-center gap-1 px-6 py-2 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 overflow-x-auto no-scrollbar flex-shrink-0">
+    <>
+      {editor && (
+        <BubbleMenu
+          editor={editor}
+          shouldShow={({ editor: currentEditor }) => currentEditor.isActive("link")}
+          options={{ placement: "top", offset: 8 }}
+        >
+          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-900">
+            <button
+              type="button"
+              onClick={openActiveLink}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Mở
+            </button>
+            <button
+              type="button"
+              onClick={openLinkPopover}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Sửa
+            </button>
+            <button
+              type="button"
+              onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+            >
+              <Unlink className="h-3.5 w-3.5" />
+              Gỡ
+            </button>
+          </div>
+        </BubbleMenu>
+      )}
+
+      <div className="flex items-center gap-1 px-6 py-2 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 overflow-x-auto no-scrollbar flex-shrink-0">
       <input
         ref={imageInputRef}
         type="file"
@@ -241,10 +279,30 @@ export default function EditorToolbar({ editor }: Props) {
 
       <div className="h-4 w-px bg-gray-200 dark:bg-gray-800" />
 
-      <ToolbarButton onClick={setLink} isActive={editor.isActive("link")} title="Thiết lập hoặc chỉnh sửa liên kết">
+      <button
+        ref={linkButtonRef}
+        onClick={openLinkPopover}
+        title="Thiết lập hoặc chỉnh sửa liên kết"
+        className={`
+          p-2 rounded-lg transition-all flex items-center justify-center
+          ${
+            editor.isActive("link") || linkPopoverOpen
+              ? "bg-gray-100 dark:bg-gray-900 text-[#0052CC] dark:text-blue-400 font-bold"
+              : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-700 dark:hover:text-gray-200"
+          }
+        `}
+        type="button"
+      >
         <LinkIcon className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} title="Hủy liên kết">
+      </button>
+      {linkPopoverOpen && (
+        <LinkEditorPopover
+          editor={editor}
+          anchorEl={linkButtonRef.current}
+          onClose={closeLinkPopover}
+        />
+      )}
+      <ToolbarButton onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()} title="Hủy liên kết">
         <Unlink className="h-4 w-4" />
       </ToolbarButton>
 
@@ -256,23 +314,53 @@ export default function EditorToolbar({ editor }: Props) {
         <ListTodo className="h-4 w-4" />
       </ToolbarButton>
 
-      <ToolbarButton onClick={insertTable} title="Chèn bảng">
+      <button
+        ref={tableButtonRef}
+        onClick={toggleTablePicker}
+        title="Chèn bảng"
+        className={`
+          p-2 rounded-lg transition-all flex items-center justify-center
+          ${
+            tablePickerOpen
+              ? "bg-gray-100 dark:bg-gray-900 text-[#0052CC] dark:text-blue-400 font-bold"
+              : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-700 dark:hover:text-gray-200"
+          }
+        `}
+        type="button"
+      >
         <TableIcon className="h-4 w-4" />
-      </ToolbarButton>
+      </button>
+
+      {tablePickerOpen && (
+        <TableGridPicker
+          anchorEl={tableButtonRef.current}
+          onClose={closeTablePicker}
+          onSelect={insertTable}
+        />
+      )}
 
       {inTable && (
         <>
-          <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Thêm hàng">
+          <ToolbarButton onClick={() => editor.chain().focus().addRowBefore().run()} title="Thêm hàng phía trên">
+            <ArrowUp className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Thêm hàng phía dưới">
             <Rows2 className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Thêm cột">
+          <ToolbarButton onClick={() => editor.chain().focus().addColumnBefore().run()} title="Thêm cột bên trái">
+            <ArrowLeft className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Thêm cột bên phải">
             <Columns2 className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().mergeCells().run()} title="Gộp ô">
-            <Merge className="h-4 w-4" />
+          <ToolbarButton onClick={() => editor.chain().focus().deleteRow().run()} title="Xóa hàng">
+            <Trash2 className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().splitCell().run()} title="Tách ô">
-            <Split className="h-4 w-4" />
+          <ToolbarButton onClick={() => editor.chain().focus().deleteColumn().run()} title="Xóa cột">
+            <Trash2 className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Xóa bảng">
+            <Trash2 className="h-4 w-4 text-red-500" />
           </ToolbarButton>
         </>
       )}
@@ -282,7 +370,8 @@ export default function EditorToolbar({ editor }: Props) {
           <Undo className="h-4 w-4" />
         </ToolbarButton>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

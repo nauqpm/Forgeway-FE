@@ -2,7 +2,7 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2, UserRound } from "lucide-react";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
 import { compareIssueRank } from "../../utils/dragUtils";
@@ -85,6 +85,49 @@ const statusSelectClasses = (status: string) => {
 
 const statusOptionClass = "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200";
 
+const getInitials = (value: string) =>
+  value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+type WorkspaceMemberUser =
+  | string
+  | {
+      _id?: string;
+      id?: string;
+      fullName?: string;
+      name?: string;
+      email?: string;
+      avatar?: string;
+      avatarUrl?: string;
+      image?: string;
+    };
+
+type WorkspaceMemberItem = {
+  userId: WorkspaceMemberUser;
+  role?: string;
+};
+
+type AssigneeInfo = {
+  id: string;
+  name: string;
+  email: string;
+  role?: string;
+  avatar?: string;
+  initials: string;
+};
+
+type AssigneeIssue = {
+  assigneeId?: string | null;
+  assignee?: string | null;
+  assigneeDisplayName?: string;
+  color?: string;
+};
+
 export default function BacklogTab({ data, ui, actions, permissions }: BacklogTabProps) {
   const {
     issues,
@@ -125,6 +168,103 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canManageSprint = permissions?.canManageSprint ?? true;
+
+  const workspaceMembers = useMemo(() => {
+    return (workspace.members ?? [])
+      .map((member: WorkspaceMemberItem): AssigneeInfo => {
+        const user = member.userId;
+        const id = typeof user === "string" ? user : user?._id ?? user?.id ?? "";
+        const name = typeof user === "string" ? user : user?.fullName || user?.name || user?.email || id;
+        const email = typeof user === "string" ? "" : user?.email ?? "";
+        const avatar = typeof user === "string" ? undefined : user?.avatar || user?.avatarUrl || user?.image;
+
+        return {
+          id,
+          name: name || "Member",
+          email,
+          role: member.role,
+          avatar,
+          initials: getInitials(name || email || id || "?") || "?",
+        };
+      })
+      .filter((member: AssigneeInfo) => member.id);
+  }, [workspace.members]);
+
+  const getIssueAssignee = (issue: AssigneeIssue): AssigneeInfo | null => {
+    const assigneeId = issue.assigneeId ?? issue.assignee;
+    if (!assigneeId || assigneeId === "U") return null;
+
+    return (
+      workspaceMembers.find((member: any) => member.id === assigneeId) ?? {
+        id: assigneeId,
+        name: issue.assigneeDisplayName || "Unknown member",
+        email: "",
+        avatar: undefined,
+        initials: getInitials(issue.assigneeDisplayName || "") || "",
+      }
+    );
+  };
+
+  const renderAssignee = (issue: AssigneeIssue) => {
+    const assignee = getIssueAssignee(issue);
+
+    if (!assignee) {
+      return (
+        <div
+          className="w-6 h-6 rounded-full border border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-500 text-gray-400 dark:text-gray-500 transition-colors"
+          title="Unassigned"
+        >
+          <Plus className="w-3 h-3" />
+        </div>
+      );
+    }
+
+    return (
+      <div className="group/assignee relative h-6 w-6 shrink-0">
+        <div
+          className={`h-6 w-6 overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 dark:hover:ring-indigo-800 transition-all`}
+          aria-label={`Assignee: ${assignee.name}`}
+        >
+          {assignee.avatar ? (
+            <img
+              src={assignee.avatar}
+              alt={assignee.name}
+              className="h-full w-full rounded-full object-cover"
+            />
+          ) : assignee.initials ? (
+            assignee.initials
+          ) : (
+            <UserRound className="h-3.5 w-3.5" />
+          )}
+        </div>
+        <div className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 hidden w-56 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-xl group-hover/assignee:block dark:border-gray-700 dark:bg-gray-900">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className={`h-9 w-9 shrink-0 overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-white flex items-center justify-center text-xs font-bold`}>
+              {assignee.avatar ? (
+                <img
+                  src={assignee.avatar}
+                  alt=""
+                  className="h-full w-full rounded-full object-cover"
+                />
+              ) : assignee.initials ? (
+                assignee.initials
+              ) : (
+                <UserRound className="h-4 w-4" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                {assignee.name}
+              </div>
+              <div className="truncate text-xs text-gray-500 dark:text-gray-400">
+                {assignee.email || assignee.role || "No email"}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
 
   const issuesBySprintId = useMemo(() => {
@@ -420,17 +560,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 </select>
 
                                 {/* Assignee */}
-                                {issue.assignee && issue.assignee !== "U" ? (
-                                  <div
-                                    className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 dark:hover:ring-indigo-800 transition-all`}
-                                  >
-                                    {issue.assignee}
-                                  </div>
-                                ) : (
-                                  <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 hover:text-indigo-500 text-gray-400 dark:text-gray-500 transition-colors">
-                                    <Plus className="w-3 h-3" />
-                                  </div>
-                                )}
+                                {renderAssignee(issue)}
                               </div>
                             </div>
                           )}
@@ -624,17 +754,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               </select>
 
                               {/* Assignee */}
-                              {issue.assignee && issue.assignee !== "U" ? (
-                                <div
-                                  className={`w-6 h-6 rounded-full ${issue.color} text-white flex items-center justify-center text-[10px] font-bold cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 dark:hover:ring-indigo-800 transition-all`}
-                                >
-                                  {issue.assignee}
-                                </div>
-                              ) : (
-                                <div className="w-6 h-6 rounded-full border border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-indigo-500 hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors cursor-pointer">
-                                  <Plus className="w-3 h-3" />
-                                </div>
-                              )}
+                              {renderAssignee(issue)}
                             </div>
                           </div>
                         )}

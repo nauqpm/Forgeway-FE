@@ -6,7 +6,6 @@ import {TextStyle} from "@tiptap/extension-text-style";
 import FontFamily from "@tiptap/extension-font-family";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
-import Image from "@tiptap/extension-image";
 import {Table} from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
@@ -17,6 +16,7 @@ import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import StarterKit from "@tiptap/starter-kit";
 import { common, createLowlight } from "lowlight";
 import { FontSize } from "./fontSize";
+import { ResizableImage } from "./ResizableImage";
 
 const lowlight = createLowlight(common);
 
@@ -33,7 +33,6 @@ export const getEditorExtensions = (placeholder: string) => [
   Link.configure({
     openOnClick: false,
     HTMLAttributes: {
-      target: "_blank",
       rel: "noopener noreferrer",
     },
   }),
@@ -61,7 +60,7 @@ export const getEditorExtensions = (placeholder: string) => [
   TableRow,
   TableHeader,
   TableCell,
-  Image.configure({
+  ResizableImage.configure({
     inline: false,
     allowBase64: false,
   }),
