@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/admin/components/common/components/Sidebar";
@@ -8,6 +8,7 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
 import { notificationService } from "@/common/services/notification.service";
+import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 import { LayoutDashboard, Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut, Plus } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
@@ -82,7 +83,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
 
-  useEffect(() => {
+  const refreshUnreadNotificationCount = useCallback(() => {
     if (!isAuthenticated) return;
 
     notificationService
@@ -90,6 +91,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       .then(setUnreadNotificationCount)
       .catch(() => setUnreadNotificationCount(0));
   }, [isAuthenticated]);
+
+  useNotificationRealtime({
+    enabled: isAuthenticated,
+    onCreated: refreshUnreadNotificationCount,
+    onRead: refreshUnreadNotificationCount,
+    onReadAll: refreshUnreadNotificationCount,
+  });
+
+  useEffect(() => {
+    refreshUnreadNotificationCount();
+  }, [refreshUnreadNotificationCount]);
   useEffect(() => {
     if (isAuthenticated && !workspacesLoaded) {
       api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
