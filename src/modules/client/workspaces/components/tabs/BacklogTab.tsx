@@ -2,7 +2,7 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-import { FileText, Pencil, Plus, Trash2, UserRound } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2, UserMinus, UserRound } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import FilterMenu from "../FilterMenu";
@@ -246,6 +246,15 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     setOpenAssigneeIssueId(null);
   };
 
+  const handleUnassignIssue = (issue: AssigneeIssue) => {
+    updateIssueDirectly(issue.id, {
+      assigneeId: null,
+      assignee: "U",
+      assigneeDisplayName: "Unassigned",
+    });
+    setOpenAssigneeIssueId(null);
+  };
+
   const toggleAssigneeMenu = (
     issueId: string,
     button: HTMLButtonElement,
@@ -316,8 +325,32 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     </span>
                   </span>
                   {isSelected && (
-                    <span className="shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
-                      Selected
+                    <span className="flex shrink-0 items-center gap-1.5">
+                      <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-300">
+                        Selected
+                      </span>
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        title="Unassign"
+                        aria-label="Unassign"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (!canEditTask) return;
+                          handleUnassignIssue(issue);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key !== "Enter" && e.key !== " ") return;
+                          e.preventDefault();
+                          e.stopPropagation();
+                          if (!canEditTask) return;
+                          handleUnassignIssue(issue);
+                        }}
+                        className="rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300"
+                      >
+                        <UserMinus className="h-3.5 w-3.5" />
+                      </span>
                     </span>
                   )}
                 </button>
