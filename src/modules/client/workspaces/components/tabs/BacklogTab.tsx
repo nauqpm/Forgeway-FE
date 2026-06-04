@@ -2,9 +2,9 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-import { FileText, Pencil, Plus, Trash2, UserMinus, UserRound } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import AssigneePicker from "../../../../../common/components/AssigneePicker";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import FilterMenu from "../FilterMenu";
 import { compareIssueRank } from "../../utils/dragUtils";
 import { Sprint } from "../../types/sprint.type";
@@ -87,7 +87,7 @@ const statusSelectClasses = (status: string) => {
 const statusOptionClass = "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200";
 
 const getInitials = (value: string) =>
-  value
+  (value ?? "")
     .split(/\s+/)
     .filter(Boolean)
     .map((part) => part[0])
@@ -170,21 +170,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canManageSprint = permissions?.canManageSprint ?? true;
-  const [openAssigneeIssueId, setOpenAssigneeIssueId] = useState<string | null>(null);
-  const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<CSSProperties>({});
-  const assigneePopoverRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!openAssigneeIssueId) return;
-
-    const closeAssigneeMenu = (event: MouseEvent) => {
-      if (assigneePopoverRef.current?.contains(event.target as Node)) return;
-      setOpenAssigneeIssueId(null);
-    };
-
-    document.addEventListener("mousedown", closeAssigneeMenu);
-    return () => document.removeEventListener("mousedown", closeAssigneeMenu);
-  }, [openAssigneeIssueId]);
 
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
@@ -207,21 +192,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
       .filter((member: AssigneeInfo) => member.id);
   }, [workspace.members]);
 
-  const getIssueAssignee = (issue: AssigneeIssue): AssigneeInfo | null => {
-    const assigneeId = issue.assigneeId ?? issue.assignee;
-    if (!assigneeId || assigneeId === "U") return null;
-
-    return (
-      workspaceMembers.find((member: any) => member.id === assigneeId) ?? {
-        id: assigneeId,
-        name: issue.assigneeDisplayName || "Unknown member",
-        email: "",
-        avatar: undefined,
-        initials: getInitials(issue.assigneeDisplayName || "") || "",
-      }
-    );
-  };
-
   const filterAssignees = useMemo(() => {
     return uniqueAssignees.map((assignee) => {
       const member = workspaceMembers.find((item: AssigneeInfo) => item.id === assignee.id);
@@ -242,15 +212,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
       assigneeId: assignee.id,
       assignee: assignee.id,
       assigneeDisplayName: assignee.name,
-    });
-    setOpenAssigneeIssueId(null);
-  };
-
-  const handleUnassignIssue = (issue: AssigneeIssue) => {
-    updateIssueDirectly(issue.id, {
-      assigneeId: null,
-      assignee: "U",
-      assigneeDisplayName: "Unassigned",
     });
     setOpenAssigneeIssueId(null);
   };
@@ -325,32 +286,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     </span>
                   </span>
                   {isSelected && (
-                    <span className="flex shrink-0 items-center gap-1.5">
-                      <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-300">
-                        Selected
-                      </span>
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        title="Unassign"
-                        aria-label="Unassign"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (!canEditTask) return;
-                          handleUnassignIssue(issue);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key !== "Enter" && e.key !== " ") return;
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (!canEditTask) return;
-                          handleUnassignIssue(issue);
-                        }}
-                        className="rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300"
-                      >
-                        <UserMinus className="h-3.5 w-3.5" />
-                      </span>
+                    <span className="shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
+                      Selected
                     </span>
                   )}
                 </button>
@@ -744,7 +681,16 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 </select>
 
                                 {/* Assignee */}
-                                {renderAssignee(issue)}
+                                <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                  <AssigneePicker
+                                    users={workspaceMembers}
+                                    value={issue.assigneeId ?? issue.assignee ?? null}
+                                    onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                    placement="top"
+                                    size="sm"
+                                    disabled={!canEditTask}
+                                  />
+                                </div>
                               </div>
                             </div>
                           )}
@@ -938,7 +884,16 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               </select>
 
                               {/* Assignee */}
-                              {renderAssignee(issue)}
+                              <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                <AssigneePicker
+                                  users={workspaceMembers}
+                                  value={issue.assigneeId ?? issue.assignee ?? null}
+                                  onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                  placement="top"
+                                  size="sm"
+                                  disabled={!canEditTask}
+                                />
+                              </div>
                             </div>
                           </div>
                         )}

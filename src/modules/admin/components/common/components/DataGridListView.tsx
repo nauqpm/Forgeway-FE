@@ -12,14 +12,12 @@ import {
   VisibilityState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, Calendar, User, X, Check } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, Calendar, X, Check } from 'lucide-react';
 import BulkActionBar from './BulkActionBar';
 import BulkEditDrawer from './BulkEditDrawer';
+import AssigneePicker, { AssigneePickerMember, getMemberId, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 
-type WorkspaceMember = {
-  userId: string | { _id?: string; id?: string; fullName?: string; name?: string; email?: string };
-  role: string;
-};
+type WorkspaceMember = AssigneePickerMember;
 
 type BoardColumn = {
   id: string;
@@ -29,27 +27,6 @@ type BoardColumn = {
   isDone?: boolean;
 };
 
-function resolveMemberName(members: WorkspaceMember[] | undefined, assigneeId: string | undefined): string | null {
-  if (!assigneeId || assigneeId === 'U' || !members) return null;
-  for (const m of members) {
-    const uid = typeof m.userId === 'string' ? m.userId : (m.userId?._id ?? m.userId?.id ?? '');
-    if (uid === assigneeId) {
-      const u = m.userId as any;
-      return u?.fullName ?? u?.name ?? u?.email ?? null;
-    }
-  }
-  return null;
-}
-
-function getMemberId(m: WorkspaceMember): string {
-  return typeof m.userId === 'string' ? m.userId : (m.userId?._id ?? m.userId?.id ?? '');
-}
-
-function getMemberDisplayName(m: WorkspaceMember): string {
-  if (typeof m.userId === 'string') return m.userId;
-  const u = m.userId as any;
-  return u?.fullName ?? u?.name ?? u?.email ?? 'Unknown';
-}
 
 const PRIORITY_OPTIONS = [ 'High', 'Medium', 'Low'];
 
@@ -153,10 +130,8 @@ export default function DataGridListView({
   const [taskTitle, setTaskTitle] = useState('');
   const [newTaskAssignee, setNewTaskAssignee] = useState('');
   const [newTaskDate, setNewTaskDate] = useState('');
-  const [showCreateAssignee, setShowCreateAssignee] = useState(false);
   const [showCreateDate, setShowCreateDate] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const createAssigneeRef = useRef<HTMLDivElement>(null);
   const createDateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -165,15 +140,13 @@ export default function DataGridListView({
 
   useEffect(() => {
     const handle = (e: MouseEvent) => {
-      if (createAssigneeRef.current && !createAssigneeRef.current.contains(e.target as Node))
-        setShowCreateAssignee(false);
       if (createDateRef.current && !createDateRef.current.contains(e.target as Node))
         setShowCreateDate(false);
     };
-    if (showCreateAssignee || showCreateDate)
+    if (showCreateDate)
       document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
-  }, [showCreateAssignee, showCreateDate]);
+  }, [showCreateDate]);
 
   const handleSubmitInlineCreate = async () => {
     if (!taskTitle.trim() || !onCreateTask) return;
@@ -384,56 +357,15 @@ export default function DataGridListView({
       cell: info => {
         const issue = info.row.original;
         const assigneeId = info.getValue() as string | undefined;
-        const displayName = resolveMemberName(members, assigneeId) ?? (assigneeId && assigneeId !== 'U' ? assigneeId : null);
-        const initials = displayName ? displayName.substring(0, 2).toUpperCase() : null;
-        const isOpen = openDropdown?.rowId === issue.id && openDropdown?.col === 'assigneeId';
         return (
-          <div className="relative" onClick={e => e.stopPropagation()} ref={isOpen ? dropdownRef : undefined}>
-            <button
-              onClick={() => toggleDropdown(issue.id, 'assigneeId')}
-              className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded px-1 py-0.5 transition-colors max-w-full"
-            >
-              {initials ? (
-                <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold shrink-0">{initials}</div>
-              ) : (
-                <div className="w-6 h-6 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center shrink-0">
-                  <User className="w-3 h-3 text-gray-400" />
-                </div>
-              )}
-              <span className={`text-sm truncate ${displayName ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500 italic'}`}>
-                {displayName ?? 'Unassigned'}
-              </span>
-              <ChevronDown className="w-3 h-3 text-gray-400 shrink-0" />
-            </button>
-            {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[180px] max-h-52 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
-                <button
-                  onClick={() => { onUpdateIssue && onUpdateIssue(issue.id, { assigneeId: null }); setOpenDropdown(null); }}
-                  className="w-full text-left px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 border-b border-gray-100 dark:border-gray-700"
-                >
-                  <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center shrink-0">
-                    <X className="w-2.5 h-2.5" />
-                  </div>
-                  Unassigned
-                </button>
-                {(members ?? []).map(m => {
-                  const uid = getMemberId(m);
-                  const name = getMemberDisplayName(m);
-                  const ini = name.substring(0, 2).toUpperCase();
-                  return (
-                    <button
-                      key={uid}
-                      onClick={() => { onUpdateIssue && onUpdateIssue(issue.id, { assigneeId: uid }); setOpenDropdown(null); }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${uid === assigneeId ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-700 dark:text-gray-300'}`}
-                    >
-                      <div className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">{ini}</div>
-                      <span className="truncate">{name}</span>
-                      {uid === assigneeId && <Check className="w-3.5 h-3.5 ml-auto text-indigo-500 shrink-0" />}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+          <div onClick={e => e.stopPropagation()}>
+            <AssigneePicker
+              users={toAssigneePickerUsers(members)}
+              value={assigneeId ?? null}
+              onChange={uid => onUpdateIssue && onUpdateIssue(issue.id, { assigneeId: uid })}
+              placement="bottom"
+              size="md"
+            />
           </div>
         );
       },
@@ -712,7 +644,7 @@ export default function DataGridListView({
               <div className="relative" ref={createDateRef}>
                 <button
                   type="button"
-                  onClick={() => { setShowCreateDate(o => !o); setShowCreateAssignee(false); }}
+                  onClick={() => { setShowCreateDate(o => !o); }}
                   className={`flex items-center gap-1.5 px-2 py-1.5 rounded transition-colors text-sm ${newTaskDate ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'} hover:bg-gray-100 dark:hover:bg-gray-700`}
                   title="Due date"
                 >
@@ -742,63 +674,13 @@ export default function DataGridListView({
               </div>
 
               {/* Assignee */}
-              <div className="relative" ref={createAssigneeRef}>
-                <button
-                  type="button"
-                  onClick={() => { setShowCreateAssignee(o => !o); setShowCreateDate(false); }}
-                  className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  title="Assign to"
-                >
-                  {newTaskAssignee ? (
-                    <>
-                      <div className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">
-                        {(resolveMemberName(members, newTaskAssignee) ?? 'U').substring(0, 2).toUpperCase()}
-                      </div>
-                      <span className="text-xs text-gray-700 dark:text-gray-200 max-w-[72px] truncate">
-                        {resolveMemberName(members, newTaskAssignee) ?? ''}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center shrink-0">
-                        <User className="w-3 h-3 text-gray-400" />
-                      </div>
-                      <span className="text-xs text-gray-400 dark:text-gray-500">Assignee</span>
-                    </>
-                  )}
-                </button>
-                {showCreateAssignee && (
-                  <div className="absolute bottom-full mb-1 right-0 z-50 min-w-[180px] max-h-52 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
-                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 uppercase tracking-wide">Assign to</div>
-                    <button
-                      onClick={() => { setNewTaskAssignee(''); setShowCreateAssignee(false); }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${!newTaskAssignee ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}
-                    >
-                      <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center shrink-0">
-                        <X className="w-2.5 h-2.5" />
-                      </div>
-                      Unassigned
-                      {!newTaskAssignee && <Check className="w-3.5 h-3.5 ml-auto text-indigo-500 shrink-0" />}
-                    </button>
-                    {(members ?? []).map(m => {
-                      const uid = getMemberId(m);
-                      const name = getMemberDisplayName(m);
-                      const ini = name.substring(0, 2).toUpperCase();
-                      return (
-                        <button
-                          key={uid}
-                          onClick={() => { setNewTaskAssignee(uid); setShowCreateAssignee(false); }}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${uid === newTaskAssignee ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-700 dark:text-gray-300'}`}
-                        >
-                          <div className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">{ini}</div>
-                          <span className="truncate">{name}</span>
-                          {uid === newTaskAssignee && <Check className="w-3.5 h-3.5 ml-auto text-indigo-500 shrink-0" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              <AssigneePicker
+                users={toAssigneePickerUsers(members)}
+                value={newTaskAssignee || null}
+                onChange={uid => setNewTaskAssignee(uid ?? '')}
+                placement="top"
+                size="sm"
+              />
 
               <button
                 onClick={handleSubmitInlineCreate}
