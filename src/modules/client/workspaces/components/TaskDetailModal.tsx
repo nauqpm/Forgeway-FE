@@ -27,6 +27,8 @@ import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
+import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
+import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
 
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
@@ -75,6 +77,19 @@ export default function TaskDetailModal({
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+
+  useTaskDetailRealtimeRoom({
+    workspaceId,
+    taskId: issue?.id,
+    enabled: Boolean(issue?.id),
+  });
+
+  useTaskDetailRealtime({
+    workspaceId,
+    taskId: issue?.id,
+    taskKey: issue?.key,
+    enabled: Boolean(issue?.id),
+  });
 
   useEffect(() => {
     if (issue) {
