@@ -2,9 +2,9 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-import { FileText, Pencil, Plus, Trash2, UserRound } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import AssigneePicker from "../../../../../common/components/AssigneePicker";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import FilterMenu from "../FilterMenu";
 import { compareIssueRank } from "../../utils/dragUtils";
 import { Sprint } from "../../types/sprint.type";
@@ -87,7 +87,7 @@ const statusSelectClasses = (status: string) => {
 const statusOptionClass = "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200";
 
 const getInitials = (value: string) =>
-  value
+  (value ?? "")
     .split(/\s+/)
     .filter(Boolean)
     .map((part) => part[0])
@@ -170,21 +170,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canManageSprint = permissions?.canManageSprint ?? true;
-  const [openAssigneeIssueId, setOpenAssigneeIssueId] = useState<string | null>(null);
-  const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<CSSProperties>({});
-  const assigneePopoverRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!openAssigneeIssueId) return;
-
-    const closeAssigneeMenu = (event: MouseEvent) => {
-      if (assigneePopoverRef.current?.contains(event.target as Node)) return;
-      setOpenAssigneeIssueId(null);
-    };
-
-    document.addEventListener("mousedown", closeAssigneeMenu);
-    return () => document.removeEventListener("mousedown", closeAssigneeMenu);
-  }, [openAssigneeIssueId]);
 
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
@@ -207,21 +192,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
       .filter((member: AssigneeInfo) => member.id);
   }, [workspace.members]);
 
-  const getIssueAssignee = (issue: AssigneeIssue): AssigneeInfo | null => {
-    const assigneeId = issue.assigneeId ?? issue.assignee;
-    if (!assigneeId || assigneeId === "U") return null;
-
-    return (
-      workspaceMembers.find((member: any) => member.id === assigneeId) ?? {
-        id: assigneeId,
-        name: issue.assigneeDisplayName || "Unknown member",
-        email: "",
-        avatar: undefined,
-        initials: getInitials(issue.assigneeDisplayName || "") || "",
-      }
-    );
-  };
-
   const filterAssignees = useMemo(() => {
     return uniqueAssignees.map((assignee) => {
       const member = workspaceMembers.find((item: AssigneeInfo) => item.id === assignee.id);
@@ -237,188 +207,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     });
   }, [uniqueAssignees, workspaceMembers]);
 
-  const handleAssignIssue = (issue: AssigneeIssue, assignee: AssigneeInfo) => {
-    updateIssueDirectly(issue.id, {
-      assigneeId: assignee.id,
-      assignee: assignee.id,
-      assigneeDisplayName: assignee.name,
-    });
-    setOpenAssigneeIssueId(null);
-  };
-
-  const toggleAssigneeMenu = (
-    issueId: string,
-    button: HTMLButtonElement,
-  ) => {
-    const rect = button.getBoundingClientRect();
-
-    setOpenAssigneeIssueId((current) => current === issueId ? null : issueId);
-    setAssigneeMenuPosition({
-      position: "fixed",
-      top: rect.bottom + 8,
-      left: Math.max(8, Math.min(rect.right - 256, window.innerWidth - 272)),
-    });
-  };
-
-  const renderAssigneeMenu = (issue: AssigneeIssue, assignee: AssigneeInfo | null) => {
-    const isOpen = openAssigneeIssueId === issue.id;
-
-    if (!isOpen) return null;
-
-    return (
-      <div
-        style={assigneeMenuPosition}
-        className="z-[9999] w-64 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-xl dark:border-gray-700 dark:bg-gray-900"
-        onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold uppercase text-gray-500 dark:border-gray-800 dark:text-gray-400">
-          Assignee
-        </div>
-        <div className="max-h-64 overflow-y-auto p-1">
-          {workspaceMembers.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-              No workspace members
-            </div>
-          ) : (
-            workspaceMembers.map((member: AssigneeInfo) => {
-              const isSelected = assignee?.id === member.id;
-
-              return (
-                <button
-                  key={member.id}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!canEditTask) return;
-                    handleAssignIssue(issue, member);
-                  }}
-                  disabled={!canEditTask}
-                  className="flex w-full min-w-0 items-center gap-3 rounded-md px-2 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-default disabled:bg-indigo-50 disabled:text-indigo-700 dark:text-gray-200 dark:hover:bg-gray-800 dark:disabled:bg-indigo-900/30 dark:disabled:text-indigo-300"
-                >
-                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-[10px] font-bold text-white`}>
-                    {member.avatar ? (
-                      <img
-                        src={member.avatar}
-                        alt=""
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    ) : member.initials ? (
-                      member.initials
-                    ) : (
-                      <UserRound className="h-3.5 w-3.5" />
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{member.name}</span>
-                    <span className="block truncate text-xs text-gray-500 dark:text-gray-400">
-                      {member.email || member.role || "Member"}
-                    </span>
-                  </span>
-                  {isSelected && (
-                    <span className="shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-300">
-                      Selected
-                    </span>
-                  )}
-                </button>
-              );
-            })
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderAssignee = (issue: AssigneeIssue) => {
-    const assignee = getIssueAssignee(issue);
-
-    if (!assignee) {
-      return (
-        <div
-          ref={openAssigneeIssueId === issue.id ? assigneePopoverRef : null}
-          className="relative h-6 w-6 shrink-0"
-        >
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!canEditTask) return;
-              toggleAssigneeMenu(issue.id, e.currentTarget);
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            disabled={!canEditTask}
-            className="flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-400 transition-colors hover:border-indigo-400 hover:text-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:text-gray-500 dark:hover:border-indigo-500"
-            title="Assign member"
-            aria-label="Assign member"
-            aria-expanded={openAssigneeIssueId === issue.id}
-          >
-            <Plus className="w-3 h-3" />
-          </button>
-          {renderAssigneeMenu(issue, assignee)}
-        </div>
-      );
-    }
-
-    return (
-      <div
-        ref={openAssigneeIssueId === issue.id ? assigneePopoverRef : null}
-        className="group/assignee relative h-6 w-6 shrink-0"
-        onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!canEditTask) return;
-            toggleAssigneeMenu(issue.id, e.currentTarget);
-          }}
-          disabled={!canEditTask}
-          className={`h-6 w-6 overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-transparent hover:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:ring-indigo-800 transition-all`}
-          aria-label={`Change assignee: ${assignee.name}`}
-          aria-expanded={openAssigneeIssueId === issue.id}
-        >
-          {assignee.avatar ? (
-            <img
-              src={assignee.avatar}
-              alt={assignee.name}
-              className="h-full w-full rounded-full object-cover"
-            />
-          ) : assignee.initials ? (
-            assignee.initials
-          ) : (
-            <UserRound className="h-3.5 w-3.5" />
-          )}
-        </button>
-        <div className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 hidden w-56 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-xl group-hover/assignee:block dark:border-gray-700 dark:bg-gray-900">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className={`h-9 w-9 shrink-0 overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-white flex items-center justify-center text-xs font-bold`}>
-              {assignee.avatar ? (
-                <img
-                  src={assignee.avatar}
-                  alt=""
-                  className="h-full w-full rounded-full object-cover"
-                />
-              ) : assignee.initials ? (
-                assignee.initials
-              ) : (
-                <UserRound className="h-4 w-4" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                {assignee.name}
-              </div>
-              <div className="truncate text-xs text-gray-500 dark:text-gray-400">
-                {assignee.email || assignee.role || "No email"}
-              </div>
-            </div>
-          </div>
-        </div>
-        {renderAssigneeMenu(issue, assignee)}
-      </div>
-    );
-  };
 
 
   const issuesBySprintId = useMemo(() => {
@@ -711,7 +499,16 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 </select>
 
                                 {/* Assignee */}
-                                {renderAssignee(issue)}
+                                <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                  <AssigneePicker
+                                    users={workspaceMembers}
+                                    value={issue.assigneeId ?? issue.assignee ?? null}
+                                    onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                    placement="top"
+                                    size="sm"
+                                    disabled={!canEditTask}
+                                  />
+                                </div>
                               </div>
                             </div>
                           )}
@@ -905,7 +702,16 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               </select>
 
                               {/* Assignee */}
-                              {renderAssignee(issue)}
+                              <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                <AssigneePicker
+                                  users={workspaceMembers}
+                                  value={issue.assigneeId ?? issue.assignee ?? null}
+                                  onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                  placement="top"
+                                  size="sm"
+                                  disabled={!canEditTask}
+                                />
+                              </div>
                             </div>
                           </div>
                         )}
