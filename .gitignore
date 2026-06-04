@@ -62,8 +62,9 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 .planning
 .claude/settings.local.json
 
-# AI planning docs — internal only, never commit
+# AI planning docs â€” internal only, never commit
 docs/superpowers/
 
 # Local API notes
 /md/
+.plaining/

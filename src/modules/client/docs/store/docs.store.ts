@@ -1,6 +1,18 @@
 import { create } from "zustand";
 import { DocsState, Document } from "../types/docs.type";
 import { pagesService } from "../services/pages.service";
+import { toast } from "react-hot-toast";
+
+// ──────────────────────────────────────────────────────────────
+// Helper: extract error message from Axios / API errors
+// ──────────────────────────────────────────────────────────────
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error && typeof error === "object" && "response" in error) {
+    const res = (error as any).response;
+    return res?.data?.message || res?.data?.error || fallback;
+  }
+  return fallback;
+};
 
 // ──────────────────────────────────────────────────────────────
 // Helper: collect all descendant IDs (for optimistic delete)
@@ -159,6 +171,7 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       return realDoc;
     } catch (error) {
       console.error("Failed to create document:", error);
+      toast.error(getErrorMessage(error, "Không thể tạo trang"));
       // Rollback: remove the temp document
       set((state) => ({
         documents: state.documents.filter(d => d.id !== tempId),
@@ -187,6 +200,7 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       await pagesService.updatePage(id, updates);
     } catch (error) {
       console.error(`Failed to update document ${id}:`, error);
+      toast.error(getErrorMessage(error, "Không thể cập nhật trang"));
       // Rollback
       set((s) => ({
         documents: s.documents.map(doc =>
@@ -222,6 +236,7 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       await pagesService.deletePage(id);
     } catch (error) {
       console.error(`Failed to delete document ${id}:`, error);
+      toast.error(getErrorMessage(error, "Không thể xóa trang"));
       // Rollback
       set({
         documents: snapshotDocs,
@@ -248,6 +263,7 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       await pagesService.updatePage(id, { title: newTitle });
     } catch (error) {
       console.error(`Failed to rename document ${id}:`, error);
+      toast.error(getErrorMessage(error, "Không thể đổi tên trang"));
       // Rollback
       set((s) => ({
         documents: s.documents.map(doc =>

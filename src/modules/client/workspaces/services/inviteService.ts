@@ -20,6 +20,10 @@ export interface PendingInvite {
   role: string;
   type?: InviteType;
   status: string;
+  token?: string;
+  inviteLink?: string;
+  link?: string;
+  url?: string;
   expiresAt: string | null;
   createdAt: string;
   inviteUrl?: string;

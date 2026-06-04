@@ -89,8 +89,7 @@ export const useAuth = () => {
           }
           */
 
-          // Redirect based on role
-          router.push(AUTH_ROUTES.FOR_YOU);
+          router.push(AUTH_ROUTES.HOME);
         } else {
           // Return an error if login succeeds but profile cannot be loaded
           throw new Error('Could not load user information after sign-in.');

@@ -159,6 +159,7 @@ export const apiRoutes = {
         VIEW: (id: string) => `/documents/${id}/view`,
         PREVIEW: (id: string) => `/documents/${id}/preview`,
         DOWNLOAD: (id: string) => `/documents/${id}/download`,
+        WORKSPACES: (id: string) => `/documents/${id}/workspaces`,
     },
     USERS: {
         BASE: '/users',
