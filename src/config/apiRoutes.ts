@@ -21,6 +21,7 @@ export const apiRoutes = {
         REMOVE_MEMBER: (workspaceId: string, userId: string) => `/workspaces/${workspaceId}/members/${userId}`,
         UPDATE_MEMBER: (workspaceId: string, userId: string) => `/workspaces/${workspaceId}/members/${userId}`,
         INVITES: (workspaceId: string) => `/workspaces/${workspaceId}/invites`,
+        INVITE_LINK: (workspaceId: string) => `/workspaces/${workspaceId}/invites/link`,
         INVITE_BY_ID: (workspaceId: string, inviteId: string) => `/workspaces/${workspaceId}/invites/${inviteId}`,
         INVITE_BY_TOKEN: (token: string) => `/workspaces/invites/${token}`,
         ACCEPT_INVITE: (token: string) => `/workspaces/invites/${token}/accept`,

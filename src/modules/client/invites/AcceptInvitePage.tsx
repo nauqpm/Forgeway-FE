@@ -32,7 +32,9 @@ export default function AcceptInvitePage({ token }: Props) {
   useEffect(() => {
     if (
       invite?.status === 'accepted' &&
+      invite.type !== 'link' &&
       isAuthenticated &&
+      invite.invitedEmail &&
       user?.email.toLowerCase() === invite.invitedEmail.toLowerCase()
     ) {
       router.replace(`/workspaces/${invite.workspaceKey}`);
@@ -85,7 +87,15 @@ export default function AcceptInvitePage({ token }: Props) {
   if (!invite) return null;
 
   const isExpiredOrUsed = invite.status !== 'pending';
-  const emailMismatch = isAuthenticated && user?.email.toLowerCase() !== invite.invitedEmail.toLowerCase();
+  const isLinkInvite = invite.type === 'link';
+  const emailMismatch =
+    !isLinkInvite &&
+    isAuthenticated &&
+    !!invite.invitedEmail &&
+    user?.email.toLowerCase() !== invite.invitedEmail.toLowerCase();
+  const expiresText = invite.expiresAt
+    ? new Date(invite.expiresAt).toLocaleString('en-US')
+    : null;
 
   if (done) {
     return (
@@ -117,9 +127,17 @@ export default function AcceptInvitePage({ token }: Props) {
           invited you to join as{' '}
           <span className="font-semibold text-indigo-600 dark:text-indigo-400">{invite.role}</span>.
         </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
-          Sent to: {invite.invitedEmail}{invite.expiresAt ? ` · Expires: ${new Date(invite.expiresAt).toLocaleDateString('en-US')}` : ''}
-        </p>
+        {isLinkInvite ? (
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
+            Anyone with this link can join as {invite.role}
+            {expiresText ? ` until ${expiresText}` : ''}.
+          </p>
+        ) : (
+          <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
+            Sent to: {invite.invitedEmail}
+            {expiresText ? ` · Expires: ${expiresText}` : ''}
+          </p>
+        )}
 
         {isExpiredOrUsed && (
           <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg mb-4">
@@ -143,7 +161,9 @@ export default function AcceptInvitePage({ token }: Props) {
           <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg mb-4">
             <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              Sign in or create an account with {invite.invitedEmail} to accept this invitation.
+              {isLinkInvite
+                ? 'Sign in or create an account to accept this invitation.'
+                : `Sign in or create an account with ${invite.invitedEmail} to accept this invitation.`}
             </p>
           </div>
         )}

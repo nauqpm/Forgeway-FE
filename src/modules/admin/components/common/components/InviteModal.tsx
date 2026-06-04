@@ -11,7 +11,10 @@ import {
 } from "lucide-react";
 import CreatableSelect from "react-select/creatable";
 import { toast } from "react-hot-toast";
-import { inviteService } from "@/modules/client/workspaces/services/inviteService";
+import {
+  inviteService,
+  InviteRole,
+} from "@/modules/client/workspaces/services/inviteService";
 
 // --- MOCK DATA ---
 const EXISTING_USERS = [
@@ -58,9 +61,9 @@ const QUICK_SUGGESTIONS = [
 ];
 
 const ROLES = [
-  { value: "workspace_admin", label: "Admin" },
-  { value: "member", label: "Member" },
-  { value: "viewer", label: "Viewer" },
+  { value: "workspace_admin" as InviteRole, label: "Admin" },
+  { value: "member" as InviteRole, label: "Member" },
+  { value: "viewer" as InviteRole, label: "Viewer" },
 ];
 
 interface InviteModalProps {
@@ -75,9 +78,10 @@ export default function InviteModal({
   projectId,
 }: InviteModalProps) {
   const [selectedOptions, setSelectedOptions] = useState<any[]>([]);
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState<InviteRole>("member");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isCopyingLink, setIsCopyingLink] = useState(false);
   const [suggestions, setSuggestions] = useState(QUICK_SUGGESTIONS);
 
   // Reset state when modal opens/closes
@@ -85,6 +89,8 @@ export default function InviteModal({
     if (!isOpen) {
       setSelectedOptions([]);
       setRole("member");
+      setIsCopied(false);
+      setIsCopyingLink(false);
       setSuggestions(QUICK_SUGGESTIONS);
     }
   }, [isOpen]);
@@ -100,12 +106,30 @@ export default function InviteModal({
   };
 
   const handleCopyLink = async () => {
+    if (!projectId) {
+      toast.error("Could not identify this workspace.");
+      return;
+    }
+
+    setIsCopyingLink(true);
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      const invite = await inviteService.createInviteLink(projectId, { role });
+      if (!invite.inviteUrl) {
+        throw new Error("Invite link was not returned.");
+      }
+
+      await navigator.clipboard.writeText(invite.inviteUrl);
       setIsCopied(true);
+      toast.success("Invite link copied. It expires in 10 minutes.");
       setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy: ", err);
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Could not create or copy the invite link.",
+      );
+    } finally {
+      setIsCopyingLink(false);
     }
   };
 
@@ -133,7 +157,7 @@ export default function InviteModal({
         emails.map((email) =>
           inviteService.sendInvite(projectId, {
             email,
-            role: role as "workspace_admin" | "member" | "viewer",
+            role,
           }),
         ),
       );
@@ -304,7 +328,7 @@ export default function InviteModal({
                 <div className="relative">
                   <select
                     value={role}
-                    onChange={(e) => setRole(e.target.value)}
+                    onChange={(e) => setRole(e.target.value as InviteRole)}
                     className="w-full appearance-none bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 h-[44px]"
                   >
                     {ROLES.map((r) => (
@@ -356,14 +380,19 @@ export default function InviteModal({
           <div className="flex items-center w-full sm:w-auto justify-between sm:justify-start gap-4">
             <button
               onClick={handleCopyLink}
+              disabled={isCopyingLink}
               className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
-              {isCopied ? (
+              {isCopyingLink ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isCopied ? (
                 <Check className="w-4 h-4 text-green-600" />
               ) : (
                 <LinkIcon className="w-4 h-4" />
               )}
-              {isCopied ? (
+              {isCopyingLink ? (
+                "Creating link..."
+              ) : isCopied ? (
                 <span className="text-green-600">Copied</span>
               ) : (
                 "Copy link"
