@@ -31,6 +31,7 @@ import {
   Columns,
   FolderOpen,
   Sparkles,
+  MessageCircle,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -42,6 +43,7 @@ interface SidebarProps {
 
 const mainNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: MessageCircle, label: "Chat", href: "/chat" },
   { icon: Sparkles, label: "For You", href: "/for-you" },
   { icon: Clock7, label: "Recent", href: "/recent" },
   { icon: Star, label: "Starred", href: "/starred" },
@@ -560,6 +562,9 @@ export default function Sidebar({
               {/* Dashboard */}
               <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
 
+              {/* Chat */}
+              <NavItem item={mainNav[1]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+
               {/* Workspaces */}
               <div>
                 <button
@@ -654,7 +659,7 @@ export default function Sidebar({
               </div>
 
               {/* Documents */}
-              <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+              <NavItem item={mainNav[7]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
             </div>
           </div>
 
