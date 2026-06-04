@@ -5,6 +5,7 @@ import { TaskFilters } from "../types/filter.type";
 import { TaskDetailResponse } from "../types/task-detail.type";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskLabel } from "../types/label.type";
+import { toTaskDateKey } from "../utils/taskDateKey";
 
 type TaskUserDto = {
   id?: string;
@@ -77,7 +78,7 @@ type CreateTaskInput = {
   assigneeId?: string | null;
   columnId?: string | null;
   startDate?: string;
-  endDate?: string;
+  dueDate?: string;
 };
 
 export type ReorderTaskInput = {
@@ -260,12 +261,8 @@ const toIssue = (task: TaskDto): Issue => {
     color: "bg-indigo-600",
     sprintId: task.sprintId ?? null,
     storyPoints: task.storyPoints ?? 0,
-    startDate: task.startDate
-      ? String(task.startDate).split('T')[0]
-      : undefined,
-    endDate: task.dueDate
-      ? String(task.dueDate).split('T')[0]
-      : undefined,
+    startDate: toTaskDateKey(task.startDate),
+    dueDate: toTaskDateKey(task.dueDate),
     isArchived: task.isArchived,
     archivedAt: task.archivedAt ?? null,
     archivedBy: task.archivedBy ?? null,
@@ -299,7 +296,7 @@ const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
     sprint: task.sprint ?? undefined,
     boardId: task.boardId,
     board: task.board ?? undefined,
-    dueDate: task.dueDate ?? null,
+    dueDate: toTaskDateKey(task.dueDate) ?? null,
     isArchived: task.isArchived ?? false,
     isDeleted: task.isDeleted ?? false,
     createdAt: task.createdAt ?? "",
@@ -319,7 +316,7 @@ const toCreatePayload = (input: CreateTaskInput) => ({
   sprintId: input.sprintId || undefined,
   assigneeId: input.assigneeId || undefined,
   startDate: input.startDate || undefined,
-  dueDate: input.endDate || undefined,
+  dueDate: input.dueDate || undefined,
 });
 
 const toTaskComment = (comment: TaskComment): TaskComment => ({
@@ -338,7 +335,7 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     columnId,
     description,
     startDate,
-    endDate,
+    dueDate,
     priority,
     sprintId,
     status,
@@ -359,7 +356,7 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     payload.columnId = columnId;
   }
   if (startDate !== undefined) payload.startDate = startDate || undefined;
-  if (endDate !== undefined) payload.dueDate = endDate || undefined;
+  if (dueDate !== undefined) payload.dueDate = dueDate || undefined;
   if (nextAssigneeId !== undefined) payload.assigneeId = nextAssigneeId;
   if (type !== undefined) payload.type = normalizeValue(type);
   if (priority !== undefined) payload.priority = normalizeValue(priority);

@@ -18,7 +18,7 @@ export interface Task {
   sprintId: string | null;
   storyPoints: number;
   startDate?: string;
-  endDate?: string;
+  dueDate?: string;
   epic?: string | null;
   isArchived?: boolean;
   archivedAt?: string | null;

@@ -394,7 +394,7 @@ body {
   text-decoration: none;
 }
 .fc .fc-daygrid-day-frame {
-  min-height: 112px;
+  min-height: 156px;
 }
 .fc .fc-daygrid-day-top {
   position: relative;
@@ -428,7 +428,7 @@ body {
 .al-calendar-create-btn {
   position: absolute;
   top: 4px;
-  right: 4px;
+  left: 4px;
   display: inline-flex;
   width: 22px;
   height: 22px;
@@ -453,10 +453,8 @@ body {
 .fc .fc-daygrid-day-events {
   position: relative;
   z-index: 3;
-  margin-top: 1px;
-}
-.fc .fc-daygrid-event-harness {
-  margin-top: 1px !important;
+  margin-top: 4px;
+  min-height: 104px;
 }
 .fc .fc-daygrid-more-link {
   position: relative;
@@ -472,13 +470,27 @@ body {
   line-height: 18px;
 }
 .fc .fc-daygrid-block-event {
-  z-index: 2;
   overflow: hidden;
 }
 .fc .fc-daygrid-event {
-  min-height: 20px;
+  display: block;
+  min-height: 22px;
+  height: 22px;
+  margin-top: 4px;
+  cursor: grab;
+  user-select: none;
 }
-
+.fc .fc-daygrid-event:active {
+  cursor: grabbing;
+}
+.fc .fc-daygrid-block-event,
+.fc .fc-daygrid-event .fc-event-main,
+.fc .fc-daygrid-event .fc-event-main-frame,
+.fc .fc-daygrid-event .fc-event-title-container,
+.fc .fc-daygrid-event .fc-event-title {
+  width: 100%;
+  height: 100%;
+}
 /* Dark mode */
 .dark .fc {
   --fc-border-color: #374151;
@@ -522,16 +534,15 @@ body {
   border-radius: 4px;
 }
 
-/* Make single-day events transparent background so custom content shows */
 .fc .fc-daygrid-event {
-  background: transparent;
-  border: none;
+  background: var(--fc-event-bg-color, #303236);
+  border: 1px solid rgba(148, 163, 184, 0.14);
   box-shadow: none;
+  border-radius: 3px;
 }
-/* Re-apply background only for multi-day block events */
 .fc .fc-daygrid-block-event {
-  background: var(--fc-event-bg-color, #3b82f6);
-  border-radius: 4px;
+  background: var(--fc-event-bg-color, #303236);
+  border-radius: 3px;
 }
 
 /* Tiptap content tweaks */

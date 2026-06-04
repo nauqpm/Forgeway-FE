@@ -64,7 +64,7 @@ const toIssue = (task: any): Issue | undefined => {
     color: "bg-indigo-600",
     sprintId: task.sprintId ?? null,
     storyPoints: task.storyPoints ?? 0,
-    endDate: task.dueDate?.split?.("T")?.[0],
+    dueDate: task.dueDate?.split?.("T")?.[0],
     isArchived: task.isArchived,
     archivedAt: task.archivedAt ?? null,
     archivedBy: task.archivedBy ?? null,

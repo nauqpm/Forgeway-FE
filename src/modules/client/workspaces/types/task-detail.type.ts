@@ -67,7 +67,6 @@ export interface TaskDetailResponse {
   timeLogged?: number;
   timeEstimated?: string;
   startDate?: string;
-  endDate?: string;
   cover?: TaskCover | null;
   labels?: TaskLabel[];
   labelIds?: string[];

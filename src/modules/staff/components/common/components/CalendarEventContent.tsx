@@ -10,19 +10,27 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
   if (extendedProps.type === 'sprint') {
     return (
       <div className="flex h-full w-full items-center overflow-hidden px-1.5">
-        <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-white/80" />
-        <span className="ml-1.5 truncate text-[11px] font-semibold text-white">
+        <span className="truncate text-[11px] font-medium text-gray-100">
           {eventInfo.event.title}
         </span>
       </div>
     );
   }
 
-  const issue = extendedProps.rawData as Issue;
+  const issue = extendedProps.rawData as Issue | undefined;
+  if (!issue) {
+    return (
+      <div className="flex h-full w-full items-center overflow-hidden px-1.5">
+        <span className="truncate text-[11px] font-medium text-gray-100">
+          {eventInfo.event.title}
+        </span>
+      </div>
+    );
+  }
   const isDone = issue.status === 'Done';
   const isOverdue =
-    issue.endDate &&
-    isAfter(new Date(), parseISO(issue.endDate)) &&
+    issue.dueDate &&
+    isAfter(new Date(), parseISO(issue.dueDate)) &&
     !isDone;
 
   const isMultiDay =
@@ -35,9 +43,9 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
       <div className="flex h-full w-full items-center overflow-hidden px-1.5">
         <span
           className={[
-            'truncate text-[11px] font-semibold text-white',
+            'truncate text-[11px] font-medium text-gray-100',
             isDone ? 'line-through opacity-60' : '',
-            isOverdue ? 'text-red-100' : '',
+            isOverdue ? 'text-red-200' : '',
           ].join(' ')}
         >
           {issue.title}
@@ -47,18 +55,12 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
   }
 
   return (
-    <div className="flex h-full w-full items-center gap-1 overflow-hidden px-1">
-      <span
-        className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
-        style={{ backgroundColor: eventInfo.event.backgroundColor ?? '#6366f1' }}
-      />
+    <div className="flex h-full w-full items-center overflow-hidden px-1.5">
       <span
         className={[
-          'truncate text-[11px] font-semibold',
+          'truncate text-[11px] font-medium text-gray-100',
           isDone ? 'line-through opacity-60' : '',
-          isOverdue
-            ? 'text-red-500 dark:text-red-400'
-            : 'text-gray-800 dark:text-gray-200',
+          isOverdue ? 'text-red-200' : '',
         ].join(' ')}
       >
         {issue.title}

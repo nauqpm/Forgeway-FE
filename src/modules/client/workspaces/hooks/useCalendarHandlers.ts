@@ -131,9 +131,8 @@ export function useCalendarHandlers({
   }, [issues, sprints, onUpdateIssueDate]);
 
   const onEventClick = useCallback((arg: EventClickArg) => {
-    if (arg.event.extendedProps.type === 'issue') {
-      onSelectIssue(arg.event.extendedProps.rawData as Issue);
-    }
+    const rawIssue = arg.event.extendedProps.rawData as Issue | undefined;
+    if (arg.event.extendedProps.type === 'issue' && rawIssue) onSelectIssue(rawIssue);
   }, [onSelectIssue]);
 
   return { onEventDrop, onEventResize, onEventReceive, onEventClick };
