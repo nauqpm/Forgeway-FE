@@ -111,12 +111,17 @@ export default function WorkspaceDetailPage({
     : activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
   usePageTitle(pageTitle);
 
+  const getWorkspaceTabUrl = useCallback(
+    (tabName: WorkspaceTab) => `/workspaces/${workspaceKey}/${tabName}`,
+    [workspaceKey],
+  );
+
   const handleTabChange = (newTab: WorkspaceTab) => {
     setActiveTab(newTab);
     setSelectedIssue(null);
     setSelectedTaskKey(null);
     setListGridDrawerOpen(false);
-    window.history.pushState(null, "", `/workspaces/${workspaceKey}/${newTab}`);
+    window.history.pushState(null, "", getWorkspaceTabUrl(newTab));
   };
 
   useEffect(() => {
@@ -346,9 +351,9 @@ export default function WorkspaceDetailPage({
     setSelectedIssue(issue);
     setSelectedTaskKey(issue.key);
 
-    const detailUrl = `/workspaces/${workspaceKey}/${activeTab}/key/${issue.key}`;
+    const detailUrl = getWorkspaceTabUrl(activeTab);
     window.history.pushState({ ...window.history.state, as: detailUrl }, "", detailUrl);
-  }, [activeTab, workspaceKey]);
+  }, [activeTab, getWorkspaceTabUrl]);
 
   const closeTaskDetail = useCallback(() => {
     const shouldResetUrl = Boolean(selectedTaskKey);
@@ -358,13 +363,13 @@ export default function WorkspaceDetailPage({
     setListGridDrawerOpen(false);
 
     if (shouldResetUrl) {
-      const baseUrl = `/workspaces/${workspaceKey}/${activeTab}`;
+      const baseUrl = getWorkspaceTabUrl(activeTab);
       window.history.pushState({ ...window.history.state, as: baseUrl }, "", baseUrl);
     }
-  }, [activeTab, selectedTaskKey, workspaceKey]);
+  }, [activeTab, getWorkspaceTabUrl, selectedTaskKey]);
 
   const detailUrl = activeIssueDetail?.key
-    ? `/workspaces/${workspaceKey}/${activeTab}/key/${activeIssueDetail.key}`
+    ? getWorkspaceTabUrl(activeTab)
     : undefined;
 
   const isNoopReorderError = (error: any) => {
@@ -623,7 +628,7 @@ export default function WorkspaceDetailPage({
         if (!initialTab) {
           const defaultTab = template === "scrum" ? "backlog" : "board";
           setActiveTab(defaultTab);
-          window.history.replaceState(null, "", `/workspaces/${workspaceKey}/${defaultTab}`);
+          window.history.replaceState(null, "", getWorkspaceTabUrl(defaultTab));
         }
       })
       .catch(() => { })
@@ -634,7 +639,7 @@ export default function WorkspaceDetailPage({
     return () => {
       isActive = false;
     };
-  }, [initialTab, setCurrentWorkspace, workspaceKey]);
+  }, [getWorkspaceTabUrl, initialTab, setCurrentWorkspace, workspaceKey]);
 
   if (loading || isBoardLoading) return <LoadingSpinner />;
 
@@ -814,6 +819,7 @@ export default function WorkspaceDetailPage({
           selectedIssue,
           workspaceKey: workspace.key,
           workspaceId: workspace._id,
+          sprints,
           workspaceTemplate: getWorkspaceTemplate(workspace),
           listViewMode,
           listGridDrawerOpen,
@@ -895,6 +901,8 @@ export default function WorkspaceDetailPage({
           isOpen={!!activeIssueDetail}
           issue={activeIssueDetail}
           workspaceId={workspace._id}
+          workspaceMembers={workspace.members}
+          sprints={sprints}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
@@ -905,6 +913,8 @@ export default function WorkspaceDetailPage({
         <TaskDetailModal
           issue={activeIssueDetail}
           workspaceId={workspace._id}
+          workspaceMembers={workspace.members}
+          sprints={sprints}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}

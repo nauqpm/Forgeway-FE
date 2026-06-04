@@ -23,6 +23,7 @@ import { useAuth } from "@/context/AuthContext";
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  sprints?: SprintOption[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   showBackButton?: boolean;
@@ -57,9 +58,16 @@ const PRIORITY_COLORS: Record<string, string> = {
   Lowest: "text-blue-300",
 };
 
+type SprintOption = {
+  _id?: string;
+  id?: string;
+  name?: string;
+};
+
 export default function TaskDetailList({
   issue,
   workspaceId,
+  sprints = [],
   workspaceTemplate = "kanban",
   onClose,
   showBackButton = true,
@@ -98,8 +106,11 @@ export default function TaskDetailList({
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const dueDateLabel = formatDate(issue.dueDate);
   const startDateLabel = formatDate(issue.startDate);
-  const sprintLabel = issue.sprint?.name || issue.sprintId || "None";
-  const showSprintField = workspaceTemplate !== "scrum";
+  const sprintLabel =
+    issue.sprint?.name ||
+    sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name ||
+    "None";
+  const showSprintField = workspaceTemplate === "scrum";
   const storyPointsLabel =
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"

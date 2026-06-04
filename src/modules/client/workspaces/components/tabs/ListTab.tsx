@@ -12,6 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import { Issue } from "../../types/issue.type";
+import { Sprint } from "../../types/sprint.type";
 import DataGridListView from "@/modules/admin/components/common/components/DataGridListView";
 import TaskDetailList from "../TaskDetailList";
 
@@ -38,6 +39,7 @@ type ListTabProps = {
   filteredIssues: Issue[];
   selectedIssue: Issue | null;
   workspaceId: string;
+  sprints?: Sprint[];
   workspaceTemplate?: "kanban" | "scrum";
   listViewMode: "grid" | "split";
   setSelectedIssue: (issue: Issue | null) => void;
@@ -52,6 +54,7 @@ export default function ListTab({
   filteredIssues,
   selectedIssue,
   workspaceId,
+  sprints = [],
   workspaceTemplate = "kanban",
   listViewMode,
   setSelectedIssue,
@@ -242,6 +245,7 @@ export default function ListTab({
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
+              sprints={sprints}
               workspaceTemplate={workspaceTemplate}
               showBackButton
               onClose={() => {
@@ -417,6 +421,7 @@ export default function ListTab({
               <TaskDetailList
                 issue={selectedIssue}
                 workspaceId={workspaceId}
+                sprints={sprints}
                 workspaceTemplate={workspaceTemplate}
                 showBackButton={false}
                 onClose={() => {

@@ -347,9 +347,6 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     type,
   } = updates;
 
-  const nextAssigneeId =
-    assigneeId ??
-    (typeof assignee === "string" && assignee !== "U" ? assignee : undefined);
   const payload: Record<string, unknown> = {};
 
   if (title !== undefined) payload.title = title;
@@ -360,7 +357,11 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
   }
   if (startDate !== undefined) payload.startDate = startDate || undefined;
   if (dueDate !== undefined) payload.dueDate = dueDate || undefined;
-  if (nextAssigneeId !== undefined) payload.assigneeId = nextAssigneeId;
+  if (assigneeId !== undefined) {
+    payload.assigneeId = assigneeId || null;
+  } else if (typeof assignee === "string" && assignee !== "U") {
+    payload.assigneeId = assignee;
+  }
   if (type !== undefined) payload.type = normalizeValue(type);
   if (priority !== undefined) payload.priority = normalizeValue(priority);
   if (status !== undefined) {

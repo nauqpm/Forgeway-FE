@@ -172,7 +172,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     setOrDelete("search", taskSearchFilters.search.trim());
     setOrDelete("taskKey", taskSearchFilters.taskKey);
-    setOrDelete("workspaceKeys", taskSearchFilters.workspaceKeys?.join(","));
+    params.delete("workspaceKeys");
     setOrDelete("status", taskSearchFilters.statuses.map(normalize).join(","));
     setOrDelete("type", taskSearchFilters.types.map(normalize).join(","));
     setOrDelete("priority", taskSearchFilters.priorities.map(normalize).join(","));

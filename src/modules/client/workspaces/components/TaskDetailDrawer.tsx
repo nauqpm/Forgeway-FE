@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 import {
   X,
   MoreHorizontal, Plus, Link as LinkIcon,
@@ -19,11 +21,15 @@ import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceMembers?: WorkspaceMember[];
+  sprints?: SprintOption[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
@@ -53,10 +59,64 @@ const formatDateTime = (value?: string | null) => {
   }).format(new Date(value));
 };
 
+type WorkspaceMember = {
+  userId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        fullName?: string;
+        name?: string;
+        email?: string;
+        avatar?: string;
+        avatarUrl?: string;
+        image?: string;
+      };
+  role?: string;
+};
+
+type SprintOption = {
+  _id?: string;
+  id?: string;
+  name?: string;
+};
+
+const toDateInputValue = (value?: string | null) => {
+  if (!value) return "";
+  return String(value).slice(0, 10);
+};
+
+const getIssueAssigneeId = (issue: any) => {
+  if (issue?.assigneeId) return String(issue.assigneeId);
+  if (typeof issue?.assignee === "string") return issue.assignee === "U" ? "" : issue.assignee;
+  return issue?.assignee?._id || issue?.assignee?.id || "";
+};
+
+const mapMemberOptions = (members: WorkspaceMember[]) =>
+  members
+    .map((member) => {
+      const user = member.userId;
+      if (!user || typeof user === "string") {
+        return user ? { id: user, label: user } : null;
+      }
+
+      const id = user._id || user.id;
+      if (!id) return null;
+
+      return {
+        id,
+        label: user.fullName || user.name || user.email || id,
+        email: user.email,
+      };
+    })
+    .filter(Boolean) as Array<{ id: string; label: string; email?: string }>;
+
 export default function TaskDetailDrawer({
   isOpen,
   issue,
   workspaceId,
+  workspaceMembers: providedWorkspaceMembers = [],
+  sprints = [],
   workspaceTemplate = "kanban",
   onClose,
   onUpdateIssue,
@@ -72,6 +132,18 @@ export default function TaskDetailDrawer({
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [draftValue, setDraftValue] = useState("");
+
+  const { data: fetchedWorkspaceMembers = [] } = useQuery<WorkspaceMember[]>({
+    queryKey: ["workspaceMembers", workspaceId],
+    queryFn: async () => {
+      const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
+      return response.data?.data ?? response.data ?? [];
+    },
+    enabled: Boolean(workspaceId) && providedWorkspaceMembers.length === 0,
+    staleTime: 60_000,
+  });
 
   // Resize state
   const [drawerWidth, setDrawerWidth] = useState(400);
@@ -109,6 +181,8 @@ export default function TaskDetailDrawer({
       setShowStatusDropdown(false);
       setShowActionMenu(false);
       setLocalCover(issue.cover ?? null);
+      setEditingField(null);
+      setDraftValue("");
     }
   }, [issue]);
 
@@ -122,12 +196,138 @@ export default function TaskDetailDrawer({
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const dueDateLabel = formatDate(issue.dueDate);
   const startDateLabel = formatDate(issue.startDate);
-  const sprintLabel = issue.sprint?.name || issue.sprintId || 'None';
-  const showSprintField = workspaceTemplate !== "scrum";
+  const sprintLabel =
+    issue.sprint?.name ||
+    sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name ||
+    'None';
+  const showSprintField = workspaceTemplate === "scrum";
   const storyPointsLabel =
     issue.storyPoints === null || issue.storyPoints === undefined
       ? 'None'
       : String(issue.storyPoints);
+  const memberOptions = mapMemberOptions(
+    providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers,
+  );
+
+  const startInlineEdit = (field: string, value?: string | number | null) => {
+    if (issue.isArchived) return;
+    setEditingField(field);
+    setDraftValue(value === null || value === undefined ? "" : String(value));
+  };
+
+  const cancelInlineEdit = () => {
+    setEditingField(null);
+    setDraftValue("");
+  };
+
+  const saveInlineEdit = (field: string, nextDraftValue = draftValue) => {
+    if (!onUpdateIssue || issue.isArchived) {
+      cancelInlineEdit();
+      return;
+    }
+
+    const value = nextDraftValue.trim();
+    const updates: Record<string, unknown> = {};
+
+    if (field === "storyPoints") {
+      updates.storyPoints = value === "" ? null : Number(value);
+    } else if (field === "startDate") {
+      const dueDateValue = toDateInputValue(issue.dueDate);
+      if (value && dueDateValue && value > dueDateValue) {
+        toast.error("Start date cannot be after due date.");
+        cancelInlineEdit();
+        return;
+      }
+      updates.startDate = value || null;
+    } else if (field === "dueDate") {
+      const startDateValue = toDateInputValue(issue.startDate);
+      if (value && startDateValue && value < startDateValue) {
+        toast.error("Due date cannot be before start date.");
+        cancelInlineEdit();
+        return;
+      }
+      updates.dueDate = value || null;
+    } else if (field === "assigneeId") {
+      const selectedMember = memberOptions.find((member) => member.id === value);
+      updates.assigneeId = value || null;
+      updates.assignee = value || "U";
+      updates.assigneeDisplayName = selectedMember?.label || (value ? value : "Unassigned");
+    } else if (field === "sprintId") {
+      updates[field] = value || null;
+    } else {
+      updates[field] = value;
+    }
+
+    onUpdateIssue({ ...issue, ...updates });
+    cancelInlineEdit();
+  };
+
+  const handleInlineKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
+    field: string,
+  ) => {
+    if (event.key === "Enter") saveInlineEdit(field);
+    if (event.key === "Escape") cancelInlineEdit();
+  };
+
+  const editableTextClass =
+    "text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors";
+
+  const renderInlineInput = (
+    field: string,
+    displayValue: string,
+    rawValue?: string | number | null,
+    type: "text" | "date" | "number" = "text",
+  ) =>
+    editingField === field ? (
+      <input
+        autoFocus
+        type={type}
+        value={draftValue}
+        onChange={(event) => setDraftValue(event.target.value)}
+        onBlur={() => saveInlineEdit(field)}
+        onKeyDown={(event) => handleInlineKeyDown(event, field)}
+        className="w-full rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
+      />
+    ) : (
+      <div
+        onDoubleClick={() => startInlineEdit(field, rawValue ?? displayValue)}
+        title="Double click to edit"
+        className={editableTextClass}
+      >
+        {displayValue}
+      </div>
+    );
+
+  const renderInlineSelect = (
+    field: string,
+    value: string,
+    options: string[],
+  ) =>
+    editingField === field ? (
+      <select
+        autoFocus
+        value={draftValue}
+        onChange={(event) => setDraftValue(event.target.value)}
+        onBlur={() => saveInlineEdit(field)}
+        onKeyDown={(event) => handleInlineKeyDown(event, field)}
+        className="w-full rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    ) : (
+      <div
+        onDoubleClick={() => startInlineEdit(field, value)}
+        title="Double click to edit"
+        className={editableTextClass}
+      >
+        {value}
+      </div>
+    );
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -345,11 +545,36 @@ export default function TaskDetailDrawer({
                 {/* Assignee */}
                 <div className="flex items-center min-h-[32px]">
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Assignee</div>
-                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                  <div
+                    onDoubleClick={() => startInlineEdit("assigneeId", getIssueAssigneeId(issue))}
+                    title="Double click to edit"
+                    className="flex min-w-0 flex-1 items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors"
+                  >
                     <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
                       <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                     </div>
-                    <span className="truncate">{assigneeName}</span>
+                    {editingField === "assigneeId" ? (
+                      <select
+                        autoFocus
+                        value={draftValue}
+                        onChange={(event) => {
+                          setDraftValue(event.target.value);
+                          saveInlineEdit("assigneeId", event.target.value);
+                        }}
+                        onBlur={cancelInlineEdit}
+                        onKeyDown={(event) => handleInlineKeyDown(event, "assigneeId")}
+                        className="min-w-0 flex-1 rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
+                      >
+                        <option value="">Unassigned</option>
+                        {memberOptions.map((member) => (
+                          <option key={member.id} value={member.id}>
+                            {member.email ? `${member.label} (${member.email})` : member.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="truncate">{assigneeName}</span>
+                    )}
                   </div>
                 </div>
 
@@ -367,16 +592,16 @@ export default function TaskDetailDrawer({
                 {/* Type */}
                 <div className="flex items-center min-h-[32px]">
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Type</div>
-                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
-                    {issue.type}
+                  <div className="min-w-0 flex-1">
+                    {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
                   </div>
                 </div>
 
                 {/* Priority */}
                 <div className="flex items-center min-h-[32px]">
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Priority</div>
-                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
-                    {issue.priority}
+                  <div className="min-w-0 flex-1">
+                    {renderInlineSelect("priority", issue.priority, ["Lowest", "Low", "Medium", "High", "Highest"])}
                   </div>
                 </div>
 
@@ -395,23 +620,23 @@ export default function TaskDetailDrawer({
                 {/* Due date */}
                 <div className="flex items-center min-h-[32px]">
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Start date</div>
-                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
-                    {startDateLabel}
+                  <div className="min-w-0 flex-1">
+                    {renderInlineInput("startDate", startDateLabel, toDateInputValue(issue.startDate), "date")}
                   </div>
                 </div>
 
                 <div className="flex items-center min-h-[32px]">
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Due date</div>
-                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
-                    {dueDateLabel}
+                  <div className="min-w-0 flex-1">
+                    {renderInlineInput("dueDate", dueDateLabel, toDateInputValue(issue.dueDate), "date")}
                   </div>
                 </div>
 
                 {showSprintField && (
                   <div className="flex items-center min-h-[32px]">
                     <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Sprint</div>
-                    <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors truncate">
-                      {sprintLabel}
+                    <div className="min-w-0 flex-1">
+                      {renderInlineInput("sprintId", sprintLabel, issue.sprintId)}
                     </div>
                   </div>
                 )}
@@ -419,8 +644,8 @@ export default function TaskDetailDrawer({
                 {/* Story points */}
                 <div className="flex items-center min-h-[32px]">
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Story points</div>
-                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
-                    {storyPointsLabel}
+                  <div className="min-w-0 flex-1">
+                    {renderInlineInput("storyPoints", storyPointsLabel, issue.storyPoints, "number")}
                   </div>
                 </div>
               </div>

@@ -127,6 +127,7 @@ export default function TaskDetailDeepLinkPage() {
     <TaskDetailModal
       issue={issue}
       workspaceId={workspace._id}
+      workspaceMembers={workspace.members}
       workspaceTemplate={getWorkspaceTemplate(workspace)}
       onClose={backToBoard}
       onUpdateIssue={handleUpdateIssue}
