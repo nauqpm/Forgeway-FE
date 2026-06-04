@@ -33,7 +33,6 @@ export function useTaskDetailRealtimeRoom({
     const unsubscribeStatus = realtimeSocketClient.subscribeStatus((snapshot) => {
       if (snapshot.status === 'connected') joinRoom();
     });
-    const unsubscribeReconnect = realtimeSocketClient.onReconnect(joinRoom);
 
     return () => {
       const socket = realtimeSocketClient.getSocket();
@@ -41,7 +40,6 @@ export function useTaskDetailRealtimeRoom({
         socket.emit(SOCKET_EVENTS.TASK_LEAVE, payload);
       }
       unsubscribeStatus();
-      unsubscribeReconnect();
     };
   }, [enabled, taskId, workspaceId]);
 }

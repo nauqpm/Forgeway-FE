@@ -41,6 +41,7 @@ import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWor
 import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
@@ -272,6 +273,7 @@ export default function WorkspaceDetailPage({
   const [columns, setColumns] = useState<BoardColumn[]>([]);
 
   useWorkspaceSocket(workspaceApiId);
+  useTaskRealtime(workspaceApiId);
 
   useEffect(() => {
     if (boardData?.columns) {
