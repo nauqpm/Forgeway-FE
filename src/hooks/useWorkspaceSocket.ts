@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { io, Socket } from "socket.io-client";
 import { BoardColumn } from "@/modules/client/workspaces/types/board.type";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
+import { realtimeSocketClient } from "@/lib/socket/socket.client";
+import { LEGACY_EVENTS } from "@/lib/socket/socket.events";
 
 type BoardCacheData = {
   boardId: string;
@@ -30,17 +31,6 @@ type BoardDelta = {
   occurredAt: string;
 };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5512";
-
-const getSocketUrl = () => {
-  try {
-    const url = new URL(API_URL);
-    return `${url.origin}/realtime`;
-  } catch {
-    return "http://localhost:5512/realtime";
-  }
-};
-
 const sortColumns = (columns: BoardColumn[]) =>
   [...columns].sort((a, b) => a.order - b.order);
 
@@ -57,6 +47,7 @@ const toIssue = (task: any): Issue | undefined => {
     description: task.description,
     columnId: task.columnId ?? task.status ?? "todo",
     status: task.status ?? task.columnId ?? "todo",
+    rank: task.rank,
     priority: task.priority ?? "Medium",
     type: task.type ?? "Task",
     assignee: task.assigneeId ?? "U",
@@ -71,6 +62,7 @@ const toIssue = (task: any): Issue | undefined => {
     archivedByUser: task.archivedByUser ?? null,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    version: task.version,
   };
 };
 
@@ -93,37 +85,24 @@ export function useWorkspaceSocket(workspaceId?: string) {
   useEffect(() => {
     if (!workspaceId) return;
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    const socket: Socket = io(getSocketUrl(), {
-      transports: ["websocket"],
-      withCredentials: true,
-      auth: token ? { token } : undefined,
-      extraHeaders: token ? { Authorization: `Bearer ${token}` } : undefined,
-      reconnection: true,
-      reconnectionAttempts: Infinity,
-      reconnectionDelay: 500,
-      reconnectionDelayMax: 5_000,
-    });
+    const socket = realtimeSocketClient.connect();
+    if (!socket) return;
 
-    const joinWorkspace = () => {
-      socket.emit("workspace:join", { workspaceId });
-    };
+    realtimeSocketClient.switchWorkspace(workspaceId);
 
     const invalidateWorkspaceQueries = () => {
       queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     };
 
-    const handleReconnect = () => {
-      joinWorkspace();
+    const unsubscribeReconnect = realtimeSocketClient.onReconnect(() => {
+      realtimeSocketClient.switchWorkspace(workspaceId);
       invalidateWorkspaceQueries();
-    };
+    });
 
     const applyDelta = (delta: BoardDelta) => {
       if (delta.workspaceId !== workspaceId) return;
 
-      // Realtime deltas patch TanStack cache in-place, avoiding a refetch storm
-      // when many users are editing the same workspace board.
       queryClient.setQueryData<BoardCacheData>(["board", workspaceId], (current) => {
         if (!current) return current;
 
@@ -179,16 +158,11 @@ export function useWorkspaceSocket(workspaceId?: string) {
       });
     };
 
-    socket.on("connect", joinWorkspace);
-    socket.on("board:delta", applyDelta);
-    socket.io.on("reconnect", handleReconnect);
+    socket.on(LEGACY_EVENTS.BOARD_DELTA, applyDelta);
 
     return () => {
-      socket.emit("workspace:leave", { workspaceId });
-      socket.off("connect", joinWorkspace);
-      socket.off("board:delta", applyDelta);
-      socket.io.off("reconnect", handleReconnect);
-      socket.disconnect();
+      socket.off(LEGACY_EVENTS.BOARD_DELTA, applyDelta);
+      unsubscribeReconnect();
     };
   }, [queryClient, workspaceId]);
 }

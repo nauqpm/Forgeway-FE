@@ -31,6 +31,7 @@ export interface Task {
   } | null;
   createdAt?: string;
   updatedAt?: string;
+  version?: number;
   cover?: TaskCover | null;
   labels?: TaskLabel[];
   labelIds?: string[];

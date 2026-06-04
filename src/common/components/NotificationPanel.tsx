@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Check, FileText, Loader2, MoreHorizontal, X } from "lucide-react";
 import {
@@ -8,6 +8,7 @@ import {
   notificationService,
   NotificationType,
 } from "@/common/services/notification.service";
+import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 
 interface NotificationPanelProps {
   onClose: () => void;
@@ -150,6 +151,37 @@ export default function NotificationPanel({
 
   const menuRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+
+  const handleRealtimeCreated = useCallback((notification?: AppNotification) => {
+    if (!notification) return;
+
+    setNotifications((items) => {
+      const viewModel = mapNotification(notification);
+      const exists = items.some((item) => item.id === viewModel.id);
+      if (exists) {
+        return items.map((item) => item.id === viewModel.id ? viewModel : item);
+      }
+      return [viewModel, ...items];
+    });
+  }, []);
+
+  const handleRealtimeRead = useCallback((notificationId?: string) => {
+    if (!notificationId) return;
+
+    setNotifications((items) =>
+      items.map((item) => item.id === notificationId ? { ...item, isRead: true } : item),
+    );
+  }, []);
+
+  const handleRealtimeReadAll = useCallback(() => {
+    setNotifications((items) => items.map((item) => ({ ...item, isRead: true })));
+  }, []);
+
+  useNotificationRealtime({
+    onCreated: handleRealtimeCreated,
+    onRead: handleRealtimeRead,
+    onReadAll: handleRealtimeReadAll,
+  });
 
   const refreshUnreadCount = async () => {
     if (!onUnreadCountChange) return;
