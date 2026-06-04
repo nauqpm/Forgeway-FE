@@ -13,7 +13,7 @@ export interface Task {
   priority: string;
   type: string;
   assignee: string;
-  assigneeId?: string;
+  assigneeId?: string | null;
   color: string;
   sprintId: string | null;
   storyPoints: number;
