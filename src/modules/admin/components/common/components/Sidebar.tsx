@@ -102,7 +102,7 @@ const NavItem = ({
     <Link
       href={item.href}
       onClick={onMobileClose}
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group relative ${
+      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group relative ${collapsed ? "justify-center" : ""} ${
         isActive
           ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
           : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
@@ -556,7 +556,6 @@ export default function Sidebar({
 
           {/* Main Navigation */}
           <div className="px-2 space-y-0.5">
-              <div className="px-2 space-y-0.5">
               {/* Dashboard */}
               <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
 
@@ -564,7 +563,7 @@ export default function Sidebar({
               <div>
                 <button
                   onClick={() => setWorkspaceOpen(!workspaceOpen)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors ${collapsed ? "justify-center" : ""}`}
                 >
                   <BookOpen className="w-[18px] h-[18px] text-slate-400 dark:text-gray-500" />
 
@@ -615,7 +614,7 @@ export default function Sidebar({
               <div>
                 <button
                   onClick={() => setFilterOpen(!filterOpen)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors ${collapsed ? "justify-center" : ""}`}
                 >
                   <ListFilter className="w-[18px] h-[18px] text-slate-400 dark:text-gray-500" />
 
@@ -655,7 +654,6 @@ export default function Sidebar({
 
               {/* Documents */}
               <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
-            </div>
           </div>
 
           {/* Admin Section */}

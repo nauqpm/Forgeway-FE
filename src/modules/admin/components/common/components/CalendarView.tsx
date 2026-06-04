@@ -81,6 +81,7 @@ export default function CalendarView({
   onQuickCreateTask,
 }: CalendarViewProps) {
   const calendarRef = useRef<FullCalendar>(null);
+  const calendarShellRef = useRef<HTMLDivElement>(null);
   const morePopoverRef = useRef<HTMLDivElement>(null);
   const [currentDateTitle, setCurrentDateTitle] = useState('');
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
@@ -129,6 +130,17 @@ export default function CalendarView({
   useEffect(() => {
     if (unscheduledTasks.length === 0) setIsSidebarOpen(false);
   }, [unscheduledTasks.length]);
+
+  // Reflow calendar when container resizes (e.g. sidebar collapse/expand)
+  useEffect(() => {
+    const el = calendarShellRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      calendarRef.current?.getApi().updateSize();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const assignees = useAssignees(issues);
 
   useLayoutEffect(() => {
@@ -317,7 +329,7 @@ export default function CalendarView({
           assignees={assignees}
         />
 
-        <div className="flex-1 overflow-auto al-calendar-shell">
+        <div ref={calendarShellRef} className="flex-1 overflow-auto al-calendar-shell">
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, interactionPlugin]}

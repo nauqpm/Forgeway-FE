@@ -16,9 +16,14 @@ export const boardService = {
             throw new Error("Board not found for this workspace");
         }
 
+        const columns = (board.columns || []).map((col: any) => ({
+            ...col,
+            id: col._id ?? col.id,
+        }));
+
         return {
             boardId: board._id,
-            columns: board.columns || [],
+            columns,
         };
     },
 
