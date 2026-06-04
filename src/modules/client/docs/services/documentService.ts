@@ -51,6 +51,10 @@ export const documentService = {
     const res = await api.post(apiRoutes.DOCUMENTS.DETACH(id), { workspaceId });
     return normalize<DocumentItem>(res);
   },
+  updateWorkspaces: async (id: string, workspaceIds: string[]): Promise<DocumentItem> => {
+    const res = await api.patch(apiRoutes.DOCUMENTS.WORKSPACES(id), { workspaceIds });
+    return normalize<DocumentItem>(res);
+  },
   viewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.VIEW(id)}`,
   previewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.PREVIEW(id)}`,
   downloadUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.DOWNLOAD(id)}`,

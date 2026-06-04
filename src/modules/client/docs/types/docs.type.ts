@@ -15,19 +15,19 @@ export interface VersionHistoryEntry {
 // The mapping happens inside `pages.service.ts`.
 // ──────────────────────────────────────────────────────────────
 export interface Document {
-  id: string;               // mapped from BE `_id`
+  id: string; // mapped from BE `_id`
   title: string;
-  content: string;           // Raw HTML from TipTap
-  parentId: string | null;   // null = root page
+  content: string; // Raw HTML from TipTap
+  parentId: string | null; // null = root page
   workspaceId: string;
   slug: string;
   authorId: string;
-  lastEditedBy?: string;
+  lastEditedBy?: { _id: string; fullName: string } | null;
   version: number;
-  status: 'draft' | 'published';
+  status: "draft" | "published";
   labels: string[];
   versionHistory: VersionHistoryEntry[];
-  source?: 'docs' | 'upload';
+  source?: "docs" | "upload";
   createdAt: string;
   updatedAt: string;
 }
@@ -43,9 +43,9 @@ export interface PageApiResponse {
   workspaceId: string;
   slug: string;
   authorId: string;
-  lastEditedBy?: string;
+  lastEditedBy?: { _id: string; username: string } | null;
   version: number;
-  status: 'draft' | 'published';
+  status: "draft" | "published";
   labels: string[];
   versionHistory: VersionHistoryEntry[];
   createdAt: string;
@@ -61,7 +61,7 @@ export interface CreatePagePayload {
   workspaceId?: string;
   parentId?: string | null;
   slug?: string;
-  status?: 'draft' | 'published';
+  status?: "draft" | "published";
   labels?: string[];
 }
 
@@ -71,7 +71,7 @@ export interface CreatePagePayload {
 export interface UpdatePagePayload {
   title?: string;
   content?: string;
-  status?: 'draft' | 'published';
+  status?: "draft" | "published";
   labels?: string[];
 }
 
@@ -102,8 +102,14 @@ export interface DocsState {
   // ── Async actions (call API) ───────────────────────────────
   loadRootPages: (workspaceId: string) => Promise<void>;
   loadChildren: (parentId: string) => Promise<void>;
-  createDocument: (workspaceId: string, parentId?: string | null) => Promise<Document | null>;
-  updateDocument: (id: string, updates: Partial<Pick<Document, "title" | "content">>) => Promise<void>;
+  createDocument: (
+    workspaceId: string,
+    parentId?: string | null,
+  ) => Promise<Document | null>;
+  updateDocument: (
+    id: string,
+    updates: Partial<Pick<Document, "title" | "content">>,
+  ) => Promise<void>;
   deleteDocument: (id: string) => Promise<void>;
   renameDocument: (id: string, newTitle: string) => Promise<void>;
 }
