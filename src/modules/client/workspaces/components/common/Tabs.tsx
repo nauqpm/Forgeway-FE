@@ -22,7 +22,7 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
   const template = getWorkspaceTemplate(workspace);
 
   return (
-    <div className="mb-6 w-full overflow-x-auto pb-1">
+    <div className="mb-2 w-full overflow-x-auto pb-1">
       <div className="flex w-max min-w-full items-center gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-900/50 sm:min-w-0 sm:w-fit">
         <button
           onClick={() => setActiveTab("summary")}

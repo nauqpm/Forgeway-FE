@@ -66,7 +66,13 @@ export const useTaskHandlers = ({
     taskService.updateBoardTask(workspaceId, id, updates)
       .then((savedIssue) => {
         setIssues((current) =>
-          current.map((issue) => issue.id === savedIssue.id ? savedIssue : issue)
+          current.map((issue) => {
+            if (issue.id !== savedIssue.id) return issue;
+            const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
+            return isObjectId && updates.status
+              ? { ...savedIssue, status: updates.status as string }
+              : savedIssue;
+          })
         );
         queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
@@ -175,6 +181,33 @@ export const useTaskHandlers = ({
     }
   };
 
+  const handleCreateTaskFromList = async (task: {
+    title: string;
+    type?: string;
+    assigneeId?: string | null;
+    dueDate?: string | null;
+  }) => {
+    if (!task.title.trim() || isCreatingRef.current) return;
+    isCreatingRef.current = true;
+    try {
+      const issue = await taskService.createBoardTask(workspaceId, {
+        title: task.title.trim(),
+        type: task.type || 'Task',
+        priority: 'Medium',
+        status: 'To Do',
+        sprintId: null,
+        assigneeId: task.assigneeId || '',
+        dueDate: task.dueDate || undefined,
+      });
+      setIssues(prev => [...prev, issue]);
+      queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Loi khi tao task');
+    } finally {
+      isCreatingRef.current = false;
+    }
+  };
+
   const handleQuickCreateCalendarTask = async (title: string, date: string) => {
     if (!title.trim() || isCreatingRef.current) return;
     isCreatingRef.current = true;
@@ -203,6 +236,7 @@ export const useTaskHandlers = ({
     handleUpdateIssueDate,
     updateIssueDirectly,
     handleQuickCreateTask,
+    handleCreateTaskFromList,
     handleQuickCreateCalendarTask,
   };
 };

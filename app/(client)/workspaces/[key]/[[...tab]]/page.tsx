@@ -362,6 +362,7 @@ export default function WorkspaceDetailPage({
     updateIssueDirectly,
     handleQuickCreateTask,
     handleQuickCreateCalendarTask,
+    handleCreateTaskFromList,
   } = useTaskHandlers({
     workspaceId: workspaceApiId ?? "",
     issues,
@@ -852,12 +853,18 @@ export default function WorkspaceDetailPage({
           workspaceTemplate: getWorkspaceTemplate(workspace),
           listViewMode,
           listGridDrawerOpen,
+          filters,
+          setFilters,
+          uniqueAssignees,
+          members: workspace.members,
+          boardColumns: columns,
           setSelectedIssue,
           setListViewMode,
           setListGridDrawerOpen,
           updateIssueDirectly,
           handleUpdateIssue,
           onBulkDeleteIds: (ids: string[]) => setIssues(prev => prev.filter(i => !ids.includes(i.id))),
+          onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
         }}
         summaryProps={{
           issues,
