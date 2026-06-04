@@ -5,13 +5,18 @@ import Image from "next/image";
 import { Camera, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
-import type { AppUserProfile, UpdateProfilePayload } from "../types/profile.types";
+import type {
+  AppUserProfile,
+  UpdateProfilePayload,
+} from "../types/profile.types";
 
 interface Props {
   profile: AppUserProfile;
   saving: boolean;
   avatarUploading: boolean;
-  onUpdateInfo: (payload: UpdateProfilePayload) => Promise<boolean>;
+  onUpdateInfo: (
+    payload: UpdateProfilePayload,
+  ) => Promise<{ success: boolean; fieldErrors?: Record<string, string> }>;
   onUploadAvatar: (file: File) => Promise<boolean>;
 }
 
@@ -33,6 +38,8 @@ export function ProfileInfoForm({
     gender: profile.gender ?? "other",
   });
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
   useEffect(() => {
     setForm({
       fullName: profile.fullName ?? "",
@@ -46,22 +53,60 @@ export function ProfileInfoForm({
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
+    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ok = await onUpdateInfo({
+    setFieldErrors({});
+
+    const newFieldErrors: Record<string, string> = {};
+    let hasClientError = false;
+
+    if (form.phone && !/^(\+?[1-9]\d{7,14}|0\d{9,10})$/.test(form.phone)) {
+      newFieldErrors.phone = "Số điện thoại không hợp lệ";
+      hasClientError = true;
+    }
+
+    if (form.birthday) {
+      const bdate = new Date(form.birthday);
+      if (isNaN(bdate.getTime())) {
+        newFieldErrors.birthday = "Ngày sinh không hợp lệ";
+        hasClientError = true;
+      } else if (bdate > new Date()) {
+        newFieldErrors.birthday = "Ngày sinh không thể ở tương lai";
+        hasClientError = true;
+      }
+    }
+
+    if (
+      form.fullName &&
+      (form.fullName.length < 2 || form.fullName.length > 100)
+    ) {
+      newFieldErrors.fullName = "Họ tên phải từ 2 đến 100 ký tự";
+      hasClientError = true;
+    }
+
+    if (hasClientError) {
+      setFieldErrors(newFieldErrors);
+      return;
+    }
+
+    const res = await onUpdateInfo({
       fullName: form.fullName,
       phone: form.phone,
       address: form.address,
       birthday: form.birthday,
       gender: form.gender as "male" | "female" | "other",
     });
-    if (ok) {
+    if (res.success) {
       toast.success("Profile updated successfully");
       await verifyToken();
     } else {
+      if (res.fieldErrors) {
+        setFieldErrors(res.fieldErrors);
+      }
       toast.error("Update failed");
     }
   };
@@ -142,6 +187,11 @@ export function ProfileInfoForm({
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
             JPG, PNG, GIF, WEBP · max 10MB
           </p>
+          {fieldErrors.avatar && (
+            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+              {fieldErrors.avatar}
+            </p>
+          )}
         </div>
       </div>
 
@@ -157,8 +207,17 @@ export function ProfileInfoForm({
             value={form.fullName}
             onChange={handleChange}
             placeholder="Enter full name"
-            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`w-full px-3 py-2.5 border ${
+              fieldErrors.fullName
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
           />
+          {fieldErrors.fullName && (
+            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.fullName}
+            </p>
+          )}
         </div>
 
         <div>
@@ -186,8 +245,17 @@ export function ProfileInfoForm({
             value={form.phone}
             onChange={handleChange}
             placeholder="Enter phone number"
-            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`w-full px-3 py-2.5 border ${
+              fieldErrors.phone
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
           />
+          {fieldErrors.phone && (
+            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.phone}
+            </p>
+          )}
         </div>
 
         <div>
@@ -199,8 +267,17 @@ export function ProfileInfoForm({
             name="birthday"
             value={form.birthday}
             onChange={handleChange}
-            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`w-full px-3 py-2.5 border ${
+              fieldErrors.birthday
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2`}
           />
+          {fieldErrors.birthday && (
+            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.birthday}
+            </p>
+          )}
         </div>
 
         <div>
@@ -211,12 +288,21 @@ export function ProfileInfoForm({
             name="gender"
             value={form.gender}
             onChange={handleChange}
-            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`w-full px-3 py-2.5 border ${
+              fieldErrors.gender
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2`}
           >
             <option value="male">Nam</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
+            <option value="female">Nữ</option>
+            <option value="other">Khác</option>
           </select>
+          {fieldErrors.gender && (
+            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.gender}
+            </p>
+          )}
         </div>
 
         <div className="md:col-span-2">
@@ -229,8 +315,17 @@ export function ProfileInfoForm({
             value={form.address}
             onChange={handleChange}
             placeholder="Enter address"
-            className="w-full px-3 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className={`w-full px-3 py-2.5 border ${
+              fieldErrors.address
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
           />
+          {fieldErrors.address && (
+            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+              {fieldErrors.address}
+            </p>
+          )}
         </div>
       </div>
 

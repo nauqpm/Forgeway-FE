@@ -4,10 +4,17 @@ import { useState } from "react";
 import { Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import type { ChangePasswordPayload } from "../types/profile.types";
+import Link from "next/link";
 
 interface Props {
   saving: boolean;
-  onChangePassword: (payload: ChangePasswordPayload) => Promise<boolean>;
+  onChangePassword: (
+    payload: ChangePasswordPayload,
+  ) => Promise<{
+    success: boolean;
+    fieldErrors?: Record<string, string>;
+    message?: string;
+  }>;
 }
 
 export function ChangePasswordForm({ saving, onChangePassword }: Props) {
@@ -20,10 +27,12 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValidationError(null);
+    setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
     setSuccess(false);
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -31,32 +40,50 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
+    setFieldErrors({});
     setSuccess(false);
 
-    if (!form.currentPassword) {
-      setValidationError("Please enter your current password");
-      return;
+    let hasClientError = false;
+    const newFieldErrors: Record<string, string> = {};
+
+    // if (!form.currentPassword) {
+    //   newFieldErrors.currentPassword = "Please enter your current password";
+    //   hasClientError = true;
+    // }
+
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+    if (!passwordPattern.test(form.newPassword)) {
+      newFieldErrors.newPassword =
+        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+      hasClientError = true;
     }
-    if (form.newPassword.length < 8) {
-      setValidationError("New password must be at least 8 characters");
-      return;
-    }
+
     if (form.newPassword !== form.confirmPassword) {
-      setValidationError("Password confirmation does not match");
+      newFieldErrors.confirmPassword = "Password confirmation does not match";
+      hasClientError = true;
+    }
+
+    if (hasClientError) {
+      setFieldErrors(newFieldErrors);
       return;
     }
 
-    const ok = await onChangePassword({
+    const res = await onChangePassword({
       currentPassword: form.currentPassword,
       password: form.newPassword,
     });
 
-    if (ok) {
+    if (res.success) {
       toast.success("Password changed successfully");
       setSuccess(true);
       setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
     } else {
-      toast.error("Password change failed");
+      if (res.fieldErrors) {
+        setFieldErrors(res.fieldErrors);
+      }
+      if (res.message) {
+        toast.error(res.message);
+      }
     }
   };
 
@@ -76,9 +103,19 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
 
       {/* Current password */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-          Current password
-        </label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Current password
+          </label>
+
+          <Link
+            href="/forgot-password"
+            className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
         <div className="relative">
           <input
             type={showCurrent ? "text" : "password"}
@@ -86,16 +123,36 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
             value={form.currentPassword}
             onChange={handleChange}
             placeholder="Enter your current password"
-            className="w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            autoCapitalize="none"
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
+            lang="en"
+            className={`w-full px-3 py-2.5 pr-10 border ${
+              fieldErrors.currentPassword
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
           />
+
           <button
             type="button"
             onClick={() => setShowCurrent((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
-            {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showCurrent ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
           </button>
         </div>
+
+        {fieldErrors.currentPassword && (
+          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            {fieldErrors.currentPassword}
+          </p>
+        )}
       </div>
 
       {/* New password */}
@@ -110,16 +167,34 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
             value={form.newPassword}
             onChange={handleChange}
             placeholder="At least 8 characters"
-            className="w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            autoCapitalize="none"
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
+            lang="en"
+            className={`w-full px-3 py-2.5 pr-10 border ${
+              fieldErrors.newPassword
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
           />
           <button
             type="button"
             onClick={() => setShowNew((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
-            {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showNew ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
           </button>
         </div>
+        {fieldErrors.newPassword && (
+          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            {fieldErrors.newPassword}
+          </p>
+        )}
       </div>
 
       {/* Confirm password */}
@@ -134,23 +209,41 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
             value={form.confirmPassword}
             onChange={handleChange}
             placeholder="Re-enter your new password"
-            className="w-full px-3 py-2.5 pr-10 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            autoCapitalize="none"
+            autoComplete="new-password"
+            autoCorrect="off"
+            spellCheck="false"
+            lang="en"
+            className={`w-full px-3 py-2.5 pr-10 border ${
+              fieldErrors.confirmPassword
+                ? "border-red-500 focus:ring-red-500"
+                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
+            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
           />
           <button
             type="button"
             onClick={() => setShowConfirm((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
           >
-            {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {showConfirm ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
           </button>
         </div>
+        {fieldErrors.confirmPassword && (
+          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            {fieldErrors.confirmPassword}
+          </p>
+        )}
       </div>
 
-      <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+      {/* <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
         Note: The "Current password" field is currently only validated on the client.
         The backend needs to add validation for <code className="font-mono">currentPassword</code> trong{" "}
         <code className="font-mono">UpdateUserProfileDto</code> to ensure security.
-      </p>
+      </p> */}
 
       <div className="flex justify-end">
         <button
