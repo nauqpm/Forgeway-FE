@@ -459,10 +459,21 @@ export const taskService = {
     taskId: string,
     updates: Partial<Issue>,
   ): Promise<Issue> {
+    const hasContentUpdate =
+      updates.title !== undefined ||
+      updates.description !== undefined ||
+      updates.storyPoints !== undefined ||
+      updates.startDate !== undefined ||
+      updates.dueDate !== undefined ||
+      updates.assigneeId !== undefined ||
+      updates.assignee !== undefined ||
+      updates.type !== undefined ||
+      updates.priority !== undefined;
     const isMoveUpdate =
-      updates.status !== undefined ||
-      updates.columnId !== undefined ||
-      updates.sprintId !== undefined;
+      !hasContentUpdate &&
+      (updates.status !== undefined ||
+        updates.columnId !== undefined ||
+        updates.sprintId !== undefined);
 
     if (isMoveUpdate) {
       const payload: Record<string, any> = {};
