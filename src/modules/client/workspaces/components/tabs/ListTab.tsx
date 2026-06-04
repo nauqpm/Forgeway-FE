@@ -52,6 +52,7 @@ type ListTabProps = {
   updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
   handleUpdateIssue: (updated: Issue) => void;
   onBulkDeleteIds?: (ids: string[]) => void;
+  onCreateTask?: (task: { title: string; type?: string; assigneeId?: string | null; dueDate?: string | null }) => Promise<void>;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -76,6 +77,7 @@ export default function ListTab({
   updateIssueDirectly,
   handleUpdateIssue,
   onBulkDeleteIds,
+  onCreateTask,
 }: ListTabProps) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
     if (typeof window !== "undefined") {
@@ -316,6 +318,8 @@ export default function ListTab({
               setColumnVisibility={setColumnVisibility}
               onClickTask={(issue) => setSelectedIssue(issue)}
               onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
+              onCreateTask={onCreateTask}
+              hideCreate={listViewMode === 'split'}
               onBulkUpdate={async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates))}
               onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
             />

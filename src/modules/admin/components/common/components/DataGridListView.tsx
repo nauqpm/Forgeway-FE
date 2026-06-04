@@ -52,7 +52,6 @@ function getMemberDisplayName(m: WorkspaceMember): string {
 }
 
 const PRIORITY_OPTIONS = [ 'High', 'Medium', 'Low'];
-const TYPE_OPTIONS = ['Task', 'Bug', 'Story', 'Epic'];
 
 const PRIORITY_CLS: Record<string, string> = {
     High:   'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
@@ -82,6 +81,7 @@ interface DataGridListViewProps {
   totalCount?: number;
   onBulkUpdate?: (taskIds: string[], updates: any) => Promise<void>;
   onBulkDelete?: (taskIds: string[]) => Promise<void>;
+  hideCreate?: boolean;
 }
 
 export default function DataGridListView({
@@ -98,6 +98,7 @@ export default function DataGridListView({
   totalCount,
   onBulkUpdate,
   onBulkDelete,
+  hideCreate,
 }: DataGridListViewProps) {
   const [columnSizing, setColumnSizing] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -150,19 +151,37 @@ export default function DataGridListView({
   // Footer Inline Create state
   const [isCreating, setIsCreating] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
-  const [newTaskType, setNewTaskType] = useState('Task');
   const [newTaskAssignee, setNewTaskAssignee] = useState('');
   const [newTaskDate, setNewTaskDate] = useState('');
+  const [showCreateAssignee, setShowCreateAssignee] = useState(false);
+  const [showCreateDate, setShowCreateDate] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const createAssigneeRef = useRef<HTMLDivElement>(null);
+  const createDateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isCreating && inputRef.current) inputRef.current.focus();
   }, [isCreating]);
 
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (createAssigneeRef.current && !createAssigneeRef.current.contains(e.target as Node))
+        setShowCreateAssignee(false);
+      if (createDateRef.current && !createDateRef.current.contains(e.target as Node))
+        setShowCreateDate(false);
+    };
+    if (showCreateAssignee || showCreateDate)
+      document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [showCreateAssignee, showCreateDate]);
+
   const handleSubmitInlineCreate = async () => {
     if (!taskTitle.trim() || !onCreateTask) return;
-    await onCreateTask({ title: taskTitle, type: newTaskType, status: 'To Do', assignee: newTaskAssignee || null, dueDate: newTaskDate || null });
+    await onCreateTask({ title: taskTitle, type: 'Task', assigneeId: newTaskAssignee || null, dueDate: newTaskDate || null });
     setTaskTitle('');
+    setNewTaskAssignee('');
+    setNewTaskDate('');
+    setIsCreating(false);
   };
 
   const handleKeyDownInlineCreate = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -282,7 +301,11 @@ export default function DataGridListView({
       size: 150,
       cell: info => {
         const issue = info.row.original;
-        const status = info.getValue() as string;
+        const rawStatus = info.getValue() as string;
+        const isObjectId = /^[0-9a-f]{24}$/i.test(rawStatus ?? '');
+        const status = isObjectId && boardColumns
+          ? (boardColumns.find(c => c.id === rawStatus)?.name ?? rawStatus)
+          : rawStatus;
         const isOpen = openDropdown?.rowId === issue.id && openDropdown?.col === 'status';
         const colOptions = boardColumns && boardColumns.length > 0
           ? boardColumns
@@ -666,7 +689,7 @@ export default function DataGridListView({
 
       {/* Table Footer */}
       <div className="flex justify-between items-center p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shrink-0 h-14">
-        {!isCreating ? (
+        {!isCreating && !hideCreate ? (
           <button
             onClick={() => setIsCreating(true)}
             className="px-4 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors flex items-center gap-2 shadow-sm"
@@ -674,56 +697,114 @@ export default function DataGridListView({
             + Create
           </button>
         ) : (
-          <div className="flex items-center border border-indigo-500 rounded-md px-2 py-1 flex-1 max-w-[min(100%,var(--app-narrow-content))] shadow-sm bg-white dark:bg-gray-800">
-            <select
-              value={newTaskType}
-              onChange={e => setNewTaskType(e.target.value)}
-              className="outline-none text-sm bg-transparent cursor-pointer text-gray-600 dark:text-gray-300 font-medium pl-1 pr-2"
-              title="Task Type"
-            >
-              {TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+          <div className="flex items-center border border-indigo-500 rounded-md px-2 py-1 flex-1 max-w-[min(100%,var(--app-narrow-content))] shadow-sm bg-white dark:bg-gray-800 gap-1">
             <input
               ref={inputRef}
               value={taskTitle}
               onChange={e => setTaskTitle(e.target.value)}
               onKeyDown={handleKeyDownInlineCreate}
               placeholder="What needs to be done?"
-              className="flex-1 outline-none py-1 px-3 text-sm ml-1 bg-transparent text-gray-900 dark:text-white placeholder-gray-400"
+              className="flex-1 outline-none py-1 px-2 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-400"
             />
-            <div className="flex items-center gap-1 shrink-0 pr-1">
-              <div className="relative flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1.5 rounded cursor-pointer transition-colors" title="Set Date">
-                <Calendar className="w-4 h-4" />
-                <input
-                  type="date"
-                  value={newTaskDate}
-                  onChange={e => setNewTaskDate(e.target.value)}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                />
-                {newTaskDate && <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{newTaskDate}</span>}
-              </div>
-              <div className="relative flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1.5 rounded cursor-pointer transition-colors" title="Assign User">
-                <User className="w-4 h-4" />
-                <select
-                  value={newTaskAssignee}
-                  onChange={e => setNewTaskAssignee(e.target.value)}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            <div className="flex items-center gap-0.5 shrink-0">
+              {/* Due date */}
+              <div className="relative" ref={createDateRef}>
+                <button
+                  type="button"
+                  onClick={() => { setShowCreateDate(o => !o); setShowCreateAssignee(false); }}
+                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded transition-colors text-sm ${newTaskDate ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'} hover:bg-gray-100 dark:hover:bg-gray-700`}
+                  title="Due date"
                 >
-                  <option value="">Unassigned</option>
-                  {(members ?? []).map(m => {
-                    const uid = getMemberId(m);
-                    const name = getMemberDisplayName(m);
-                    return <option key={uid} value={uid}>{name}</option>;
-                  })}
-                </select>
-                {newTaskAssignee && <span className="text-xs font-medium text-gray-700 dark:text-gray-300 max-w-[80px] truncate">{resolveMemberName(members, newTaskAssignee) ?? newTaskAssignee}</span>}
+                  <Calendar className="w-4 h-4 shrink-0" />
+                  <span>{newTaskDate ? newTaskDate.slice(5) : 'Due date'}</span>
+                </button>
+                {showCreateDate && (
+                  <div className="absolute bottom-full mb-1 right-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 min-w-[200px]">
+                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Due date</div>
+                    <input
+                      type="date"
+                      autoFocus
+                      value={newTaskDate}
+                      onChange={e => { setNewTaskDate(e.target.value); setShowCreateDate(false); }}
+                      className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
+                    />
+                    {newTaskDate && (
+                      <button
+                        onClick={() => { setNewTaskDate(''); setShowCreateDate(false); }}
+                        className="mt-2 w-full text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 text-left"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
+
+              {/* Assignee */}
+              <div className="relative" ref={createAssigneeRef}>
+                <button
+                  type="button"
+                  onClick={() => { setShowCreateAssignee(o => !o); setShowCreateDate(false); }}
+                  className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  title="Assign to"
+                >
+                  {newTaskAssignee ? (
+                    <>
+                      <div className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">
+                        {(resolveMemberName(members, newTaskAssignee) ?? 'U').substring(0, 2).toUpperCase()}
+                      </div>
+                      <span className="text-xs text-gray-700 dark:text-gray-200 max-w-[72px] truncate">
+                        {resolveMemberName(members, newTaskAssignee) ?? ''}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center shrink-0">
+                        <User className="w-3 h-3 text-gray-400" />
+                      </div>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">Assignee</span>
+                    </>
+                  )}
+                </button>
+                {showCreateAssignee && (
+                  <div className="absolute bottom-full mb-1 right-0 z-50 min-w-[180px] max-h-52 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl">
+                    <div className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700 uppercase tracking-wide">Assign to</div>
+                    <button
+                      onClick={() => { setNewTaskAssignee(''); setShowCreateAssignee(false); }}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${!newTaskAssignee ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-gray-500 dark:text-gray-400'}`}
+                    >
+                      <div className="w-5 h-5 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center shrink-0">
+                        <X className="w-2.5 h-2.5" />
+                      </div>
+                      Unassigned
+                      {!newTaskAssignee && <Check className="w-3.5 h-3.5 ml-auto text-indigo-500 shrink-0" />}
+                    </button>
+                    {(members ?? []).map(m => {
+                      const uid = getMemberId(m);
+                      const name = getMemberDisplayName(m);
+                      const ini = name.substring(0, 2).toUpperCase();
+                      return (
+                        <button
+                          key={uid}
+                          onClick={() => { setNewTaskAssignee(uid); setShowCreateAssignee(false); }}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${uid === newTaskAssignee ? 'bg-indigo-50 dark:bg-indigo-900/20' : 'text-gray-700 dark:text-gray-300'}`}
+                        >
+                          <div className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shrink-0">{ini}</div>
+                          <span className="truncate">{name}</span>
+                          {uid === newTaskAssignee && <Check className="w-3.5 h-3.5 ml-auto text-indigo-500 shrink-0" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               <button
                 onClick={handleSubmitInlineCreate}
                 className="bg-[#0c66e4] hover:bg-blue-700 text-white text-sm font-medium px-3 py-1.5 rounded flex items-center gap-1 transition-colors shadow-sm ml-1"
               >
                 Create
-                <span className="text-[10px] opacity-80 border border-blue-400 rounded-[2px] px-[2px] py-[1px] ml-0.5 leading-none bg-blue-500/30">↵</span>
+                <span className="text-[10px] opacity-80 border border-blue-400 rounded-[2px] px-[2px] py-[1px] leading-none bg-blue-500/30">↵</span>
               </button>
             </div>
           </div>
