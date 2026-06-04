@@ -13,6 +13,7 @@ import {
   getAffectedTaskQueries,
   removeTask,
   shouldApplyEvent,
+  shouldApplyReorderEvent,
   upsertTask,
 } from './task-realtime-cache.utils';
 
@@ -186,7 +187,7 @@ export function useTaskRealtime(
       }
 
       const existing = findTaskInCache(affectedQueries, eventTaskId);
-      const decision = shouldApplyEvent(
+      const decision = shouldApplyReorderEvent(
         existing,
         incomingVersion,
         actorId,
@@ -229,3 +230,4 @@ export function useTaskRealtime(
     };
   }, [currentUserId, onTaskRemoved, onTaskUpserted, queryClient, workspaceId]);
 }
+

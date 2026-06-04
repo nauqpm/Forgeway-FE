@@ -44,6 +44,29 @@ export const shouldApplyEvent = (
   return { apply: false, refetch: false };
 };
 
+export const shouldApplyReorderEvent = (
+  currentIssue: Issue | undefined,
+  incomingVersion: number | undefined,
+  actorId: string | undefined,
+  currentUserId: string | undefined,
+) => {
+  if (!currentIssue || !incomingVersion || !currentIssue.version) {
+    return { apply: true, refetch: false };
+  }
+
+  const ownEvent = actorId === currentUserId;
+
+  if (incomingVersion > currentIssue.version) {
+    return { apply: true, refetch: false };
+  }
+
+  if (incomingVersion <= currentIssue.version) {
+    if (ownEvent) return { apply: false, refetch: false };
+    return { apply: false, refetch: true };
+  }
+
+  return { apply: false, refetch: false };
+};
 export const upsertTask = (
   current: Issue[] | undefined,
   issue: Issue,
@@ -86,3 +109,4 @@ export const getAffectedTaskQueries = (
     tasks?.some((task) => taskIdOf(task) === taskId),
   );
 };
+
