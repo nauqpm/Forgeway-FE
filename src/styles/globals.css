@@ -27,7 +27,7 @@ body {
   --workspace-surface-pad: clamp(12px, 1.1vw, 20px);
   --workspace-board-gap: clamp(16px, 1.4vw, 24px);
   --workspace-column-w: clamp(280px, 22vw, 340px);
-  --workspace-list-sidebar-w: clamp(260px, 25vw, 360px);
+  --workspace-list-sidebar-w: clamp(195px, 18.75vw, 270px);
   --workspace-chart-size: clamp(220px, 24vw, 288px);
   --workspace-settings-nav-w: clamp(220px, 20vw, 272px);
 }

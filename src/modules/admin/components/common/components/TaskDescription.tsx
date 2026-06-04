@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
@@ -102,6 +102,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
 export default function TaskDescription({ initialContent, onSave }: TaskDescriptionProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [content, setContent] = useState(initialContent || '');
+  const previousInitialContentRef = useRef(initialContent || '');
 
   const editor = useEditor({
     extensions: [
@@ -125,17 +126,19 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] p-4 text-[#172B4D] dark:text-white',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] p-4 text-slate-800 dark:text-white prose-strong:text-slate-950 dark:prose-strong:text-white prose-em:text-slate-800 dark:prose-em:text-white prose-code:text-slate-900 dark:prose-code:text-white prose-blockquote:text-slate-700 dark:prose-blockquote:text-gray-100 [&_*]:text-inherit [&_.is-editor-empty:first-child::before]:text-slate-400 dark:[&_.is-editor-empty:first-child::before]:text-gray-500',
       },
     },
     immediatelyRender: false,
   });
 
   useEffect(() => {
-    if (!isEditing && initialContent !== content) {
-      setContent(initialContent || '');
+    const nextInitialContent = initialContent || '';
+    if (!isEditing && previousInitialContentRef.current !== nextInitialContent) {
+      previousInitialContentRef.current = nextInitialContent;
+      setContent(nextInitialContent);
       if (editor) {
-        editor.commands.setContent(initialContent || '');
+        editor.commands.setContent(nextInitialContent);
       }
     }
   }, [initialContent, isEditing, editor]);
@@ -157,10 +160,13 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
     return (
       <div
         onClick={() => setIsEditing(true)}
-        className="p-4 hover:bg-[#EBECF0] dark:hover:bg-gray-700 rounded border border-transparent hover:border-[#DFE1E6] dark:hover:border-gray-700 cursor-pointer transition-colors min-h-[60px] prose prose-sm max-w-none"
+        className="p-4 hover:bg-[#EBECF0] dark:hover:bg-gray-700 rounded border border-transparent hover:border-[#DFE1E6] dark:hover:border-gray-700 cursor-pointer transition-colors min-h-[60px] prose prose-sm max-w-none text-slate-800 dark:text-white"
       >
         {content && content !== '<p></p>' ? (
-          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
+          <div
+            className="[&_*]:text-inherit [&_p]:my-0 text-slate-800 dark:text-white"
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+          />
         ) : (
           <p className="text-[#5E6C84] dark:text-gray-400 text-sm m-0">Add a description...</p>
         )}

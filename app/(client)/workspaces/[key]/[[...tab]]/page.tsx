@@ -111,12 +111,17 @@ export default function WorkspaceDetailPage({
     : activeTab.charAt(0).toUpperCase() + activeTab.slice(1);
   usePageTitle(pageTitle);
 
+  const getWorkspaceTabUrl = useCallback(
+    (tabName: WorkspaceTab) => `/workspaces/${workspaceKey}/${tabName}`,
+    [workspaceKey],
+  );
+
   const handleTabChange = (newTab: WorkspaceTab) => {
     setActiveTab(newTab);
     setSelectedIssue(null);
     setSelectedTaskKey(null);
     setListGridDrawerOpen(false);
-    window.history.pushState(null, "", `/workspaces/${workspaceKey}/${newTab}`);
+    window.history.pushState(null, "", getWorkspaceTabUrl(newTab));
   };
 
   useEffect(() => {
@@ -271,9 +276,40 @@ export default function WorkspaceDetailPage({
   }, [selectedIssue, selectedTaskDetail, workspace]);
 
   const [columns, setColumns] = useState<BoardColumn[]>([]);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+
+  const handleRealtimeTaskUpserted = useCallback((issue: Issue) => {
+    setIssues((current) =>
+      current.some((item) => item.id === issue.id || item._id === issue.id)
+        ? current.map((item) =>
+            item.id === issue.id || item._id === issue.id
+              ? { ...item, ...issue }
+              : item,
+          )
+        : [...current, issue],
+    );
+    setSelectedIssue((current) =>
+      current && (current.id === issue.id || current._id === issue.id)
+        ? { ...current, ...issue }
+        : current,
+    );
+  }, []);
+
+  const handleRealtimeTaskRemoved = useCallback((taskId: string) => {
+    setIssues((current) =>
+      current.filter((issue) => issue.id !== taskId && issue._id !== taskId),
+    );
+    setSelectedIssue((current) =>
+      current && (current.id === taskId || current._id === taskId) ? null : current,
+    );
+    setSelectedTaskIds((current) => current.filter((id) => id !== taskId));
+  }, []);
 
   useWorkspaceSocket(workspaceApiId);
-  useTaskRealtime(workspaceApiId);
+  useTaskRealtime(workspaceApiId, {
+    onTaskRemoved: handleRealtimeTaskRemoved,
+    onTaskUpserted: handleRealtimeTaskUpserted,
+  });
 
   useEffect(() => {
     if (boardData?.columns) {
@@ -301,8 +337,6 @@ export default function WorkspaceDetailPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fallbackTasksData, selectedTaskKey, shouldUseFallbackTaskSearch, tasksData]); // isDraggingIssue intentionally omitted: firing on drag-end would overwrite optimistic state with stale server data
 
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
-
   const [listViewMode, setListViewMode] = useState<"grid" | "split">("grid");
   const [listGridDrawerOpen, setListGridDrawerOpen] = useState(false);
 
@@ -328,6 +362,7 @@ export default function WorkspaceDetailPage({
     updateIssueDirectly,
     handleQuickCreateTask,
     handleQuickCreateCalendarTask,
+    handleCreateTaskFromList,
   } = useTaskHandlers({
     workspaceId: workspaceApiId ?? "",
     issues,
@@ -346,9 +381,9 @@ export default function WorkspaceDetailPage({
     setSelectedIssue(issue);
     setSelectedTaskKey(issue.key);
 
-    const detailUrl = `/workspaces/${workspaceKey}/${activeTab}/key/${issue.key}`;
+    const detailUrl = getWorkspaceTabUrl(activeTab);
     window.history.pushState({ ...window.history.state, as: detailUrl }, "", detailUrl);
-  }, [activeTab, workspaceKey]);
+  }, [activeTab, getWorkspaceTabUrl]);
 
   const closeTaskDetail = useCallback(() => {
     const shouldResetUrl = Boolean(selectedTaskKey);
@@ -358,13 +393,13 @@ export default function WorkspaceDetailPage({
     setListGridDrawerOpen(false);
 
     if (shouldResetUrl) {
-      const baseUrl = `/workspaces/${workspaceKey}/${activeTab}`;
+      const baseUrl = getWorkspaceTabUrl(activeTab);
       window.history.pushState({ ...window.history.state, as: baseUrl }, "", baseUrl);
     }
-  }, [activeTab, selectedTaskKey, workspaceKey]);
+  }, [activeTab, getWorkspaceTabUrl, selectedTaskKey]);
 
   const detailUrl = activeIssueDetail?.key
-    ? `/workspaces/${workspaceKey}/${activeTab}/key/${activeIssueDetail.key}`
+    ? getWorkspaceTabUrl(activeTab)
     : undefined;
 
   const isNoopReorderError = (error: any) => {
@@ -623,7 +658,7 @@ export default function WorkspaceDetailPage({
         if (!initialTab) {
           const defaultTab = template === "scrum" ? "backlog" : "board";
           setActiveTab(defaultTab);
-          window.history.replaceState(null, "", `/workspaces/${workspaceKey}/${defaultTab}`);
+          window.history.replaceState(null, "", getWorkspaceTabUrl(defaultTab));
         }
       })
       .catch(() => { })
@@ -634,7 +669,7 @@ export default function WorkspaceDetailPage({
     return () => {
       isActive = false;
     };
-  }, [initialTab, setCurrentWorkspace, workspaceKey]);
+  }, [getWorkspaceTabUrl, initialTab, setCurrentWorkspace, workspaceKey]);
 
   if (loading || isBoardLoading) return <LoadingSpinner />;
 
@@ -814,14 +849,22 @@ export default function WorkspaceDetailPage({
           selectedIssue,
           workspaceKey: workspace.key,
           workspaceId: workspace._id,
+          sprints,
+          workspaceTemplate: getWorkspaceTemplate(workspace),
           listViewMode,
           listGridDrawerOpen,
+          filters,
+          setFilters,
+          uniqueAssignees,
+          members: workspace.members,
+          boardColumns: columns,
           setSelectedIssue,
           setListViewMode,
           setListGridDrawerOpen,
           updateIssueDirectly,
           handleUpdateIssue,
           onBulkDeleteIds: (ids: string[]) => setIssues(prev => prev.filter(i => !ids.includes(i.id))),
+          onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
         }}
         summaryProps={{
           issues,
@@ -894,6 +937,9 @@ export default function WorkspaceDetailPage({
           isOpen={!!activeIssueDetail}
           issue={activeIssueDetail}
           workspaceId={workspace._id}
+          workspaceMembers={workspace.members}
+          sprints={sprints}
+          workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
@@ -903,6 +949,9 @@ export default function WorkspaceDetailPage({
         <TaskDetailModal
           issue={activeIssueDetail}
           workspaceId={workspace._id}
+          workspaceMembers={workspace.members}
+          sprints={sprints}
+          workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}

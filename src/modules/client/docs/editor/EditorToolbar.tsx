@@ -1,6 +1,6 @@
-﻿"use client";
+﻿﻿"use client";
 
-import { ReactNode, useCallback, useRef, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import {
@@ -21,10 +21,10 @@ import {
   ExternalLink,
   Pencil,
   Table as TableIcon,
-  Rows2,
-  Columns2,
   ListTodo,
   Trash2,
+  ArrowDown,
+  ArrowRight,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import imageService from "@/common/services/imageService";
@@ -49,6 +49,20 @@ type ToolbarButtonProps = {
   title: string;
 };
 
+const getTextStyleAttributes = (editor: Editor | null) => {
+  const attributes = editor?.getAttributes("textStyle") ?? {};
+
+  return {
+    fontFamily: typeof attributes.fontFamily === "string" ? attributes.fontFamily : "",
+    fontSize: typeof attributes.fontSize === "string" ? attributes.fontSize : "",
+  };
+};
+
+const areTextStyleAttributesEqual = (
+  first: ReturnType<typeof getTextStyleAttributes>,
+  second: ReturnType<typeof getTextStyleAttributes>,
+) => first.fontFamily === second.fontFamily && first.fontSize === second.fontSize;
+
 const toImageUrl = (url: string) => {
   if (!url) return "";
   if (/^https?:\/\//i.test(url)) return url;
@@ -60,6 +74,7 @@ export default function EditorToolbar({ editor }: Props) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const linkButtonRef = useRef<HTMLButtonElement | null>(null);
   const tableButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [activeTextStyle, setActiveTextStyle] = useState(() => getTextStyleAttributes(editor));
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [tablePickerOpen, setTablePickerOpen] = useState(false);
   const closeLinkPopover = useCallback(() => {
@@ -68,6 +83,29 @@ export default function EditorToolbar({ editor }: Props) {
   const closeTablePicker = useCallback(() => {
     setTablePickerOpen(false);
   }, []);
+
+  useEffect(() => {
+    if (!editor) {
+      setActiveTextStyle(getTextStyleAttributes(null));
+      return;
+    }
+
+    const updateActiveTextStyle = () => {
+      const nextTextStyle = getTextStyleAttributes(editor);
+      setActiveTextStyle((currentTextStyle) =>
+        areTextStyleAttributesEqual(currentTextStyle, nextTextStyle) ? currentTextStyle : nextTextStyle,
+      );
+    };
+
+    updateActiveTextStyle();
+    editor.on("selectionUpdate", updateActiveTextStyle);
+    editor.on("transaction", updateActiveTextStyle);
+
+    return () => {
+      editor.off("selectionUpdate", updateActiveTextStyle);
+      editor.off("transaction", updateActiveTextStyle);
+    };
+  }, [editor]);
 
   if (!editor) return null;
 
@@ -157,7 +195,7 @@ export default function EditorToolbar({ editor }: Props) {
               className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Mở
+              Open 
             </button>
             <button
               type="button"
@@ -165,7 +203,7 @@ export default function EditorToolbar({ editor }: Props) {
               className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               <Pencil className="h-3.5 w-3.5" />
-              Sửa
+              Edit 
             </button>
             <button
               type="button"
@@ -173,7 +211,7 @@ export default function EditorToolbar({ editor }: Props) {
               className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
             >
               <Unlink className="h-3.5 w-3.5" />
-              Gỡ
+              Remove
             </button>
           </div>
         </BubbleMenu>
@@ -196,9 +234,10 @@ export default function EditorToolbar({ editor }: Props) {
 
       <select
         className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
-        value={editor.getAttributes("textStyle").fontFamily || ""}
+        value={activeTextStyle.fontFamily}
         onChange={(e) => {
           const value = e.target.value;
+          setActiveTextStyle((current) => ({ ...current, fontFamily: value }));
           if (!value) {
             editor.chain().focus().unsetFontFamily().run();
             return;
@@ -216,9 +255,10 @@ export default function EditorToolbar({ editor }: Props) {
 
       <select
         className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
-        value={editor.getAttributes("textStyle").fontSize || ""}
+        value={activeTextStyle.fontSize}
         onChange={(e) => {
           const value = e.target.value;
+          setActiveTextStyle((current) => ({ ...current, fontSize: value }));
           if (!value) {
             editor.chain().focus().unsetFontSize().run();
             return;
@@ -282,7 +322,7 @@ export default function EditorToolbar({ editor }: Props) {
       <button
         ref={linkButtonRef}
         onClick={openLinkPopover}
-        title="Thiết lập hoặc chỉnh sửa liên kết"
+        title="Set up or edit link"
         className={`
           p-2 rounded-lg transition-all flex items-center justify-center
           ${
@@ -302,11 +342,11 @@ export default function EditorToolbar({ editor }: Props) {
           onClose={closeLinkPopover}
         />
       )}
-      <ToolbarButton onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()} title="Hủy liên kết">
+      <ToolbarButton onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()} title="Remove link">
         <Unlink className="h-4 w-4" />
       </ToolbarButton>
 
-      <ToolbarButton onClick={insertImage} title="Chèn hình ảnh">
+      <ToolbarButton onClick={insertImage} title="Insert image">
         <ImageIcon className="h-4 w-4" />
       </ToolbarButton>
 
@@ -317,7 +357,7 @@ export default function EditorToolbar({ editor }: Props) {
       <button
         ref={tableButtonRef}
         onClick={toggleTablePicker}
-        title="Chèn bảng"
+        title="Insert table"
         className={`
           p-2 rounded-lg transition-all flex items-center justify-center
           ${
@@ -341,25 +381,25 @@ export default function EditorToolbar({ editor }: Props) {
 
       {inTable && (
         <>
-          <ToolbarButton onClick={() => editor.chain().focus().addRowBefore().run()} title="Thêm hàng phía trên">
+          <ToolbarButton onClick={() => editor.chain().focus().addRowBefore().run()} title="Add row above">
             <ArrowUp className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Thêm hàng phía dưới">
-            <Rows2 className="h-4 w-4" />
+          <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Add row below">
+            <ArrowDown className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().addColumnBefore().run()} title="Thêm cột bên trái">
+          <ToolbarButton onClick={() => editor.chain().focus().addColumnBefore().run()} title="Add column to the left">
             <ArrowLeft className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Thêm cột bên phải">
-            <Columns2 className="h-4 w-4" />
+          <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add column to the right">
+            <ArrowRight className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().deleteRow().run()} title="Xóa hàng">
+          <ToolbarButton onClick={() => editor.chain().focus().deleteRow().run()} title="Delete row">
             <Trash2 className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().deleteColumn().run()} title="Xóa cột">
+          <ToolbarButton onClick={() => editor.chain().focus().deleteColumn().run()} title="Delete column">
             <Trash2 className="h-4 w-4" />
           </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Xóa bảng">
+          <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Delete table">
             <Trash2 className="h-4 w-4 text-red-500" />
           </ToolbarButton>
         </>
@@ -374,4 +414,3 @@ export default function EditorToolbar({ editor }: Props) {
     </>
   );
 }
-

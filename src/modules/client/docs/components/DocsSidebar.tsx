@@ -75,7 +75,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                 }`}
               >
                 <Layout className={`w-4 h-4 ${!selectedDocumentId ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`} />
-                Tất cả tài liệu
+                All Documents
               </button>
 
               <div className="h-px bg-gray-100 dark:bg-gray-800 mx-1" />
@@ -87,7 +87,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
               {searchQuery ? (
                 <div className="px-2">
                   <h3 className="px-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3">
-                    Kết quả tìm kiếm
+                    Search Results
                   </h3>
                   <ul className="space-y-1">
                     {filteredDocs.map(doc => (
@@ -106,7 +106,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                       </li>
                     ))}
                     {filteredDocs.length === 0 && (
-                      <p className="px-3 text-xs text-gray-400 dark:text-gray-500 italic py-2">Không tìm thấy kết quả</p>
+                      <p className="px-3 text-xs text-gray-400 dark:text-gray-500 italic py-2">No results found</p>
                     )}
                   </ul>
                 </div>
@@ -116,7 +116,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
                       <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                        Tài liệu của workspace 
+                        Documents in Workspace
                       </h3>
                       <button 
                         onClick={handleCreateRoot}
@@ -131,7 +131,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
                       <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-                        Tài liệu được nhập 
+                        Imported Documents
                       </h3>
                     </div>
                     <ul className="space-y-1 px-1">
@@ -150,18 +150,18 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                             <button
                               onClick={async (e) => {
                                 e.preventDefault();
-                                if (!window.confirm("Gỡ tài liệu này khỏi workspace?")) return;
+                                if (!window.confirm("Remove this document from the workspace?")) return;
                                 try {
                                   await documentService.detach(doc._id, workspaceId);
                                   setUploadedDocs((curr) => curr.filter((d) => d._id !== doc._id));
                                   window.dispatchEvent(new Event("docs_uploads_changed"));
-                                  toast.success("Đã gỡ khỏi workspace");
+                                  toast.success("Removed from workspace");
                                 } catch {
-                                  toast.error("Không thể gỡ tài liệu");
+                                  toast.error("Failed to remove document");
                                 }
                               }}
                               className="opacity-0 group-hover:opacity-100 p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-                              title="Gỡ khỏi workspace"
+                              title="Remove from workspace"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -169,7 +169,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                         </li>
                       ))}
                       {uploadedDocs.length === 0 && (
-                        <li className="px-3 py-1.5 text-xs text-gray-400 italic">Không có tệp được nhập</li>
+                        <li className="px-3 py-1.5 text-xs text-gray-400 italic">No imported files</li>
                       )}
                     </ul>
                   </div>

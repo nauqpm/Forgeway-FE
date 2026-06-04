@@ -38,7 +38,7 @@ type TaskDto = {
   priority?: string;
   rank?: string;
   version?: number;
-  assigneeId?: string;
+  assigneeId?: string | null;
   assignee?: TaskUserDto;
   reporterId?: string;
   reporter?: TaskUserDto;
@@ -347,9 +347,6 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     type,
   } = updates;
 
-  const nextAssigneeId =
-    assigneeId ??
-    (typeof assignee === "string" && assignee !== "U" ? assignee : undefined);
   const payload: Record<string, unknown> = {};
 
   if (title !== undefined) payload.title = title;
@@ -360,7 +357,11 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
   }
   if (startDate !== undefined) payload.startDate = startDate || undefined;
   if (dueDate !== undefined) payload.dueDate = dueDate || undefined;
-  if (nextAssigneeId !== undefined) payload.assigneeId = nextAssigneeId;
+  if (assigneeId !== undefined) {
+    payload.assigneeId = assigneeId || null;
+  } else if (typeof assignee === "string" && assignee !== "U") {
+    payload.assigneeId = assignee;
+  }
   if (type !== undefined) payload.type = normalizeValue(type);
   if (priority !== undefined) payload.priority = normalizeValue(priority);
   if (status !== undefined) {
@@ -459,18 +460,30 @@ export const taskService = {
     taskId: string,
     updates: Partial<Issue>,
   ): Promise<Issue> {
+    const hasContentUpdate =
+      updates.title !== undefined ||
+      updates.description !== undefined ||
+      updates.storyPoints !== undefined ||
+      updates.startDate !== undefined ||
+      updates.dueDate !== undefined ||
+      updates.assigneeId !== undefined ||
+      updates.assignee !== undefined ||
+      updates.type !== undefined ||
+      updates.priority !== undefined;
     const isMoveUpdate =
-      updates.status !== undefined ||
-      updates.columnId !== undefined ||
-      updates.sprintId !== undefined;
+      !hasContentUpdate &&
+      (updates.status !== undefined ||
+        updates.columnId !== undefined ||
+        updates.sprintId !== undefined);
 
     if (isMoveUpdate) {
       const payload: Record<string, any> = {};
-      if (updates.status !== undefined) {
+      if (updates.columnId !== undefined) {
+        payload.columnId = updates.columnId;
+        if (updates.status !== undefined) payload.status = toColumnId(updates.status) ?? updates.status;
+      } else if (updates.status !== undefined) {
         payload.status = toColumnId(updates.status);
         payload.columnId = toColumnId(updates.status);
-      } else if (updates.columnId !== undefined) {
-        payload.columnId = updates.columnId;
       }
       if (updates.sprintId !== undefined) {
         payload.sprintId = updates.sprintId;

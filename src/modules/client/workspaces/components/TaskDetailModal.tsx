@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 import {
   X,
   MoreHorizontal,
@@ -27,12 +29,17 @@ import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
 
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceMembers?: WorkspaceMember[];
+  sprints?: SprintOption[];
+  workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
@@ -59,17 +66,70 @@ const formatDateTime = (value?: string | null) => {
   }).format(new Date(value));
 };
 
+type WorkspaceMember = {
+  userId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        fullName?: string;
+        name?: string;
+        email?: string;
+        avatar?: string;
+        avatarUrl?: string;
+        image?: string;
+      };
+  role?: string;
+};
+
+type SprintOption = {
+  _id?: string;
+  id?: string;
+  name?: string;
+};
+
+const toDateInputValue = (value?: string | null) => {
+  if (!value) return "";
+  return String(value).slice(0, 10);
+};
+
+const getIssueAssigneeId = (issue: any) => {
+  if (issue?.assigneeId) return String(issue.assigneeId);
+  if (typeof issue?.assignee === "string") return issue.assignee === "U" ? "" : issue.assignee;
+  return issue?.assignee?._id || issue?.assignee?.id || "";
+};
+
+const mapMemberOptions = (members: WorkspaceMember[]) =>
+  members
+    .map((member) => {
+      const user = member.userId;
+      if (!user || typeof user === "string") {
+        return user ? { id: user, label: user } : null;
+      }
+
+      const id = user._id || user.id;
+      if (!id) return null;
+
+      return {
+        id,
+        label: user.fullName || user.name || user.email || id,
+        email: user.email,
+      };
+    })
+    .filter(Boolean) as Array<{ id: string; label: string; email?: string }>;
+
 export default function TaskDetailModal({
   issue,
   workspaceId,
+  workspaceMembers: providedWorkspaceMembers = [],
+  sprints = [],
+  workspaceTemplate = "kanban",
   onClose,
   onUpdateIssue,
   onArchiveIssue,
 }: TaskDetailModalProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<
-    "comments" | "history" | "worklog"
-  >("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [subtasks, setSubtasks] = useState<any[]>([]);
@@ -77,6 +137,18 @@ export default function TaskDetailModal({
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [draftValue, setDraftValue] = useState("");
+
+  const { data: fetchedWorkspaceMembers = [] } = useQuery<WorkspaceMember[]>({
+    queryKey: ["workspaceMembers", workspaceId],
+    queryFn: async () => {
+      const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
+      return response.data?.data ?? response.data ?? [];
+    },
+    enabled: Boolean(workspaceId) && providedWorkspaceMembers.length === 0,
+    staleTime: 60_000,
+  });
 
   useTaskDetailRealtimeRoom({
     workspaceId,
@@ -100,6 +172,8 @@ export default function TaskDetailModal({
       setShowStatusDropdown(false);
       setShowActionMenu(false);
       setLocalCover(issue.cover ?? null);
+      setEditingField(null);
+      setDraftValue("");
     }
   }, [issue]);
 
@@ -112,12 +186,141 @@ export default function TaskDetailModal({
     getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const dueDateLabel = formatDate(issue.dueDate);
-  const sprintLabel = issue.sprint?.name || issue.sprintId || "None";
+  const startDateLabel = formatDate(issue.startDate);
+  const sprintLabel =
+    issue.sprint?.name ||
+    sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name ||
+    "None";
   const boardLabel = issue.board?.name || issue.boardId || "None";
+  const showSprintField = workspaceTemplate === "scrum";
+  const showBoardField = false;
   const storyPointsLabel =
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
       : String(issue.storyPoints);
+  const memberOptions = mapMemberOptions(
+    providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers,
+  );
+
+  const startInlineEdit = (field: string, value?: string | number | null) => {
+    if (issue.isArchived) return;
+    setEditingField(field);
+    setDraftValue(value === null || value === undefined ? "" : String(value));
+  };
+
+  const cancelInlineEdit = () => {
+    setEditingField(null);
+    setDraftValue("");
+  };
+
+  const saveInlineEdit = (field: string, nextDraftValue = draftValue) => {
+    if (!onUpdateIssue || issue.isArchived) {
+      cancelInlineEdit();
+      return;
+    }
+
+    const value = nextDraftValue.trim();
+    const updates: Record<string, unknown> = {};
+
+    if (field === "storyPoints") {
+      updates.storyPoints = value === "" ? null : Number(value);
+    } else if (field === "startDate") {
+      const dueDateValue = toDateInputValue(issue.dueDate);
+      if (value && dueDateValue && value > dueDateValue) {
+        toast.error("Start date cannot be after due date.");
+        cancelInlineEdit();
+        return;
+      }
+      updates.startDate = value || null;
+    } else if (field === "dueDate") {
+      const startDateValue = toDateInputValue(issue.startDate);
+      if (value && startDateValue && value < startDateValue) {
+        toast.error("Due date cannot be before start date.");
+        cancelInlineEdit();
+        return;
+      }
+      updates.dueDate = value || null;
+    } else if (field === "assigneeId") {
+      const selectedMember = memberOptions.find((member) => member.id === value);
+      updates.assigneeId = value || null;
+      updates.assignee = value || "U";
+      updates.assigneeDisplayName = selectedMember?.label || (value ? value : "Unassigned");
+    } else if (field === "sprintId") {
+      updates[field] = value || null;
+    } else {
+      updates[field] = value;
+    }
+
+    onUpdateIssue({ ...issue, ...updates });
+    cancelInlineEdit();
+  };
+
+  const handleInlineKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
+    field: string,
+  ) => {
+    if (event.key === "Enter") saveInlineEdit(field);
+    if (event.key === "Escape") cancelInlineEdit();
+  };
+
+  const editableTextClass =
+    "text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors";
+
+  const renderInlineInput = (
+    field: string,
+    displayValue: string,
+    rawValue?: string | number | null,
+    type: "text" | "date" | "number" = "text",
+  ) =>
+    editingField === field ? (
+      <input
+        autoFocus
+        type={type}
+        value={draftValue}
+        onChange={(event) => setDraftValue(event.target.value)}
+        onBlur={() => saveInlineEdit(field)}
+        onKeyDown={(event) => handleInlineKeyDown(event, field)}
+        className="w-full rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
+      />
+    ) : (
+      <div
+        onDoubleClick={() => startInlineEdit(field, rawValue ?? displayValue)}
+        title="Double click to edit"
+        className={editableTextClass}
+      >
+        {displayValue}
+      </div>
+    );
+
+  const renderInlineSelect = (
+    field: string,
+    value: string,
+    options: string[],
+  ) =>
+    editingField === field ? (
+      <select
+        autoFocus
+        value={draftValue}
+        onChange={(event) => setDraftValue(event.target.value)}
+        onBlur={() => saveInlineEdit(field)}
+        onKeyDown={(event) => handleInlineKeyDown(event, field)}
+        className="w-full rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    ) : (
+      <div
+        onDoubleClick={() => startInlineEdit(field, value)}
+        title="Double click to edit"
+        className={editableTextClass}
+      >
+        {value}
+      </div>
+    );
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -285,7 +488,7 @@ export default function TaskDetailModal({
             </div>
 
             {/* Description */}
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 Description
               </h3>
@@ -297,7 +500,7 @@ export default function TaskDetailModal({
                   }
                 }}
               />
-            </div> */}
+            </div>
 
             <TaskAttachmentsPanel
               workspaceId={workspaceId}
@@ -334,12 +537,6 @@ export default function TaskDetailModal({
                   >
                     History
                   </button>
-                  <button
-                    onClick={() => setActiveTab("worklog")}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === "worklog" ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
-                  >
-                    Work log
-                  </button>
                 </div>
               </div>
               {activeTab === "comments" && (
@@ -352,11 +549,6 @@ export default function TaskDetailModal({
               )}
               {activeTab === "history" && (
                 <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
-              )}
-              {activeTab === "worklog" && (
-                <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                  No work log entries yet.
-                </div>
               )}
             </div>
           </div>
@@ -398,11 +590,36 @@ export default function TaskDetailModal({
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-sm text-gray-500 dark:text-gray-400 pt-1">Assignee</div>
                     <div className="col-span-2 space-y-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                      <div
+                        onDoubleClick={() => startInlineEdit("assigneeId", getIssueAssigneeId(issue))}
+                        title="Double click to edit"
+                        className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors"
+                      >
                         <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-700 flex items-center justify-center border border-gray-200 dark:border-gray-700">
                           <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                         </div>
-                        {assigneeName}
+                        {editingField === "assigneeId" ? (
+                          <select
+                            autoFocus
+                            value={draftValue}
+                            onChange={(event) => {
+                              setDraftValue(event.target.value);
+                              saveInlineEdit("assigneeId", event.target.value);
+                            }}
+                            onBlur={cancelInlineEdit}
+                            onKeyDown={(event) => handleInlineKeyDown(event, "assigneeId")}
+                            className="min-w-0 flex-1 rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
+                          >
+                            <option value="">Unassigned</option>
+                            {memberOptions.map((member) => (
+                              <option key={member.id} value={member.id}>
+                                {member.email ? `${member.label} (${member.email})` : member.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          assigneeName
+                        )}
                       </div>
                       <a
                         href="#"
@@ -417,9 +634,7 @@ export default function TaskDetailModal({
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">Type</div>
                     <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {issue.type}
-                      </div>
+                      {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
                     </div>
                   </div>
 
@@ -436,12 +651,21 @@ export default function TaskDetailModal({
                   {/* Due date */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
-                      Due date
+                      Start date
                     </div>
                     <div className="col-span-2">
                       <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {dueDateLabel}
+                        {renderInlineInput("startDate", startDateLabel, toDateInputValue(issue.startDate), "date")}
                       </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                      Due date
+                    </div>
+                    <div className="col-span-2">
+                      {renderInlineInput("dueDate", dueDateLabel, toDateInputValue(issue.dueDate), "date")}
                     </div>
                   </div>
 
@@ -451,9 +675,7 @@ export default function TaskDetailModal({
                       Story points
                     </div>
                     <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {storyPointsLabel}
-                      </div>
+                      {renderInlineInput("storyPoints", storyPointsLabel, issue.storyPoints, "number")}
                     </div>
                   </div>
 
@@ -471,29 +693,29 @@ export default function TaskDetailModal({
                     </div>
                   </div>
 
-                  {/* Sprint */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
-                      Sprint
-                    </div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {sprintLabel}
+                  {showSprintField && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                        Sprint
+                      </div>
+                      <div className="col-span-2">
+                        {renderInlineInput("sprintId", sprintLabel, issue.sprintId)}
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Board */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
-                      Board
-                    </div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {boardLabel}
+                  {showBoardField && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                        Board
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                          {boardLabel}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Priority */}
                   <div className="grid grid-cols-3 gap-2">
@@ -501,9 +723,7 @@ export default function TaskDetailModal({
                       Priority
                     </div>
                     <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer flex items-center gap-2 transition-colors">
-                        {issue.priority}
-                      </div>
+                      {renderInlineSelect("priority", issue.priority, ["Lowest", "Low", "Medium", "High", "Highest"])}
                     </div>
                   </div>
                 </div>

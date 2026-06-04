@@ -47,10 +47,10 @@ export default function CreateOnlineDocumentPage() {
         title.trim(),
         content,
       );
-      toast.success("Da tao tai lieu online");
+      toast.success("Document created successfully");
       router.push("/documents");
     } catch {
-      toast.error("Tao tai lieu that bai");
+      toast.error("Failed to create document");
     } finally {
       setLoading(false);
     }
