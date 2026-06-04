@@ -18,7 +18,7 @@ export interface Task {
   sprintId: string | null;
   storyPoints: number;
   startDate?: string;
-  endDate?: string;
+  dueDate?: string;
   epic?: string | null;
   isArchived?: boolean;
   archivedAt?: string | null;
@@ -31,6 +31,7 @@ export interface Task {
   } | null;
   createdAt?: string;
   updatedAt?: string;
+  version?: number;
   cover?: TaskCover | null;
   labels?: TaskLabel[];
   labelIds?: string[];

@@ -60,6 +60,7 @@ export interface TaskDetailResponse {
   
   createdAt: string;
   updatedAt: string;
+  version?: number;
 
   // Frontend-specific fields currently expected by the UI Drawer
   comments?: any[];
@@ -67,7 +68,6 @@ export interface TaskDetailResponse {
   timeLogged?: number;
   timeEstimated?: string;
   startDate?: string;
-  endDate?: string;
   cover?: TaskCover | null;
   labels?: TaskLabel[];
   labelIds?: string[];

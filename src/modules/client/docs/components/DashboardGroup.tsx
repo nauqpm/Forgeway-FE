@@ -39,7 +39,7 @@ export default function DashboardGroup({
             <thead>
               <tr className="bg-gray-50/40 dark:bg-gray-800/40 border-b border-gray-100 dark:border-gray-800">
                 <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider w-[45%]">Document Title</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider">Contributor</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider">Last Edited By</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider">Activity</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-[#6B778C] dark:text-gray-400 uppercase tracking-wider text-right">Options</th>
               </tr>

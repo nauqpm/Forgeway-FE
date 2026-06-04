@@ -22,6 +22,7 @@ export const apiRoutes = {
         UPDATE_MEMBER: (workspaceId: string, userId: string) => `/workspaces/${workspaceId}/members/${userId}`,
         INVITES: (workspaceId: string) => `/workspaces/${workspaceId}/invites`,
         INVITE_BY_ID: (workspaceId: string, inviteId: string) => `/workspaces/${workspaceId}/invites/${inviteId}`,
+        INVITE_LINK: (workspaceId: string) => `/workspaces/${workspaceId}/invites/link`,
         INVITE_BY_TOKEN: (token: string) => `/workspaces/invites/${token}`,
         ACCEPT_INVITE: (token: string) => `/workspaces/invites/${token}/accept`,
         BOARD: (workspaceId: string) => `/workspaces/${workspaceId}/board`,
@@ -158,6 +159,7 @@ export const apiRoutes = {
         VIEW: (id: string) => `/documents/${id}/view`,
         PREVIEW: (id: string) => `/documents/${id}/preview`,
         DOWNLOAD: (id: string) => `/documents/${id}/download`,
+        WORKSPACES: (id: string) => `/documents/${id}/workspaces`,
     },
     USERS: {
         BASE: '/users',

@@ -41,6 +41,7 @@ import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWor
 import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
@@ -272,6 +273,7 @@ export default function WorkspaceDetailPage({
   const [columns, setColumns] = useState<BoardColumn[]>([]);
 
   useWorkspaceSocket(workspaceApiId);
+  useTaskRealtime(workspaceApiId);
 
   useEffect(() => {
     if (boardData?.columns) {
@@ -812,6 +814,7 @@ export default function WorkspaceDetailPage({
           selectedIssue,
           workspaceKey: workspace.key,
           workspaceId: workspace._id,
+          workspaceTemplate: getWorkspaceTemplate(workspace),
           listViewMode,
           listGridDrawerOpen,
           setSelectedIssue,
@@ -892,6 +895,7 @@ export default function WorkspaceDetailPage({
           isOpen={!!activeIssueDetail}
           issue={activeIssueDetail}
           workspaceId={workspace._id}
+          workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
@@ -901,6 +905,7 @@ export default function WorkspaceDetailPage({
         <TaskDetailModal
           issue={activeIssueDetail}
           workspaceId={workspace._id}
+          workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}

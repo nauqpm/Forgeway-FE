@@ -77,35 +77,12 @@ export default function InviteModal({
   };
 
   const handleCopyLink = async () => {
-    const emails = parseEmails();
-    const firstEmail = emails[0];
-
-    if (!firstEmail) {
-      toast.error("Enter an email first to generate an invite link.");
-      return;
-    }
-
-    if (!validateEmail(firstEmail)) {
-      toast.error("Enter a valid email to generate an invite link.");
-      return;
-    }
-
     setIsGeneratingLink(true);
     try {
-      const invite = await inviteService.sendInvite(projectId, {
-        email: firstEmail,
-        role: role as "workspace_admin" | "member" | "viewer",
-      });
-      const inviteLink = buildInviteLink(invite);
-
-      if (!inviteLink) {
-        toast.error("Invite created, but the API did not return a link token.");
-        return;
-      }
-
-      await navigator.clipboard.writeText(inviteLink);
+      const { inviteUrl } = await inviteService.createInviteLink(projectId, role);
+      await navigator.clipboard.writeText(inviteUrl);
       setIsCopied(true);
-      toast.success("Invite link generated and copied.");
+      toast.success("Invite link copied.");
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err: any) {
       toast.error(

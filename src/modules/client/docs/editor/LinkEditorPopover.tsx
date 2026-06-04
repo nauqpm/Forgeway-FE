@@ -164,7 +164,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-200">
           <LinkIcon className="h-3.5 w-3.5" />
-          Liên kết
+          Link
         </div>
         <button type="button" onClick={onClose} className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
           <X className="h-3.5 w-3.5" />
@@ -173,7 +173,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
 
       <form onSubmit={submitLink} className="space-y-3">
         <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400">
-          Text hiển thị
+          Display Text
           <input
             type="text"
             value={displayText}
@@ -202,7 +202,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
             onChange={(event) => setOpenNewTab(event.target.checked)}
             className="h-3.5 w-3.5 rounded border-gray-300"
           />
-          Mở trong tab mới
+          Open in new tab
         </label>
 
         <div className="flex items-center justify-between gap-2 pt-1">
@@ -213,7 +213,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
               className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              Gỡ link
+              Remove Link
             </button>
           ) : (
             <span />
@@ -223,7 +223,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
             className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700"
           >
             <ExternalLink className="h-3.5 w-3.5" />
-            Áp dụng
+            Apply
           </button>
         </div>
       </form>

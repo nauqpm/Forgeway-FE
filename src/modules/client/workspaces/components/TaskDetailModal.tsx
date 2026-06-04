@@ -27,10 +27,13 @@ import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
+import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
+import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
 
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
@@ -60,14 +63,13 @@ const formatDateTime = (value?: string | null) => {
 export default function TaskDetailModal({
   issue,
   workspaceId,
+  workspaceTemplate = "kanban",
   onClose,
   onUpdateIssue,
   onArchiveIssue,
 }: TaskDetailModalProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<
-    "comments" | "history" | "worklog"
-  >("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [subtasks, setSubtasks] = useState<any[]>([]);
@@ -75,6 +77,19 @@ export default function TaskDetailModal({
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+
+  useTaskDetailRealtimeRoom({
+    workspaceId,
+    taskId: issue?.id,
+    enabled: Boolean(issue?.id),
+  });
+
+  useTaskDetailRealtime({
+    workspaceId,
+    taskId: issue?.id,
+    taskKey: issue?.key,
+    enabled: Boolean(issue?.id),
+  });
 
   useEffect(() => {
     if (issue) {
@@ -96,9 +111,12 @@ export default function TaskDetailModal({
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
-  const dueDateLabel = formatDate(issue.dueDate ?? issue.endDate);
+  const dueDateLabel = formatDate(issue.dueDate);
+  const startDateLabel = formatDate(issue.startDate);
   const sprintLabel = issue.sprint?.name || issue.sprintId || "None";
   const boardLabel = issue.board?.name || issue.boardId || "None";
+  const showSprintField = workspaceTemplate !== "scrum";
+  const showBoardField = workspaceTemplate !== "kanban";
   const storyPointsLabel =
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
@@ -293,36 +311,11 @@ export default function TaskDetailModal({
             />
 
             {/* Subtasks */}
-            <TaskSubtasks
+            {/* <TaskSubtasks
               subtasks={subtasks}
               onAdd={handleAddSubtask}
               onUpdateStatus={handleUpdateSubtaskStatus}
-            />
-
-            {/* Linked Work Items */}
-            <div className="space-y-3">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">
-                Linked work items
-              </h3>
-              <div className="workspace-panel bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
-                    No linked items yet
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Link
-                    href={`/docs/create?issueId=${issue.id}`}
-                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-bold rounded transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
-                  >
-                    <Plus className="w-4 h-4" /> Create new Document
-                  </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
-                    <LinkIcon className="w-4 h-4" /> Link existing item
-                  </button>
-                </div>
-              </div>
-            </div>
+            /> */}
 
             {/* Activity */}
             <div className="space-y-4 pt-4">
@@ -344,12 +337,6 @@ export default function TaskDetailModal({
                   >
                     History
                   </button>
-                  <button
-                    onClick={() => setActiveTab("worklog")}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === "worklog" ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
-                  >
-                    Work log
-                  </button>
                 </div>
               </div>
               {activeTab === "comments" && (
@@ -362,11 +349,6 @@ export default function TaskDetailModal({
               )}
               {activeTab === "history" && (
                 <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
-              )}
-              {activeTab === "worklog" && (
-                <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                  No work log entries yet.
-                </div>
               )}
             </div>
           </div>
@@ -396,12 +378,6 @@ export default function TaskDetailModal({
                   </div>
                 )}
               </div>
-              <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 rounded transition-colors">
-                <Zap className="w-4 h-4" />
-              </button>
-              <button className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
-                <Settings className="w-4 h-4" /> Improve Task
-              </button>
             </div>
 
             <div className="space-y-6">
@@ -452,6 +428,17 @@ export default function TaskDetailModal({
                   {/* Due date */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                      Start date
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                        {startDateLabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
                       Due date
                     </div>
                     <div className="col-span-2">
@@ -487,29 +474,31 @@ export default function TaskDetailModal({
                     </div>
                   </div>
 
-                  {/* Sprint */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
-                      Sprint
-                    </div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {sprintLabel}
+                  {showSprintField && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                        Sprint
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                          {sprintLabel}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Board */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
-                      Board
-                    </div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {boardLabel}
+                  {showBoardField && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                        Board
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                          {boardLabel}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Priority */}
                   <div className="grid grid-cols-3 gap-2">
@@ -526,11 +515,11 @@ export default function TaskDetailModal({
               </div>
 
               {/* Time Tracking */}
-              <TimeTrackingSidebar
+              {/* <TimeTrackingSidebar
                 timeEstimated={timeEstimated}
                 timeLogged={timeLogged}
                 onLogWork={handleLogWork}
-              />
+              /> */}
 
               {/* Meta information */}
               <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1">

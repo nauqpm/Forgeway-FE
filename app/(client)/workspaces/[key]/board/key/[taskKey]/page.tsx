@@ -10,7 +10,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
 import { TaskDetailResponse } from "@/modules/client/workspaces/types/task-detail.type";
-import { Workspace } from "@/modules/client/workspaces/types/workspace.type";
+import { getWorkspaceTemplate, Workspace } from "@/modules/client/workspaces/types/workspace.type";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 
@@ -85,7 +85,7 @@ export default function TaskDetailDeepLinkPage() {
       columnId: updatedIssue.columnId,
       sprintId: updatedIssue.sprintId ?? null,
       storyPoints: updatedIssue.storyPoints ?? undefined,
-      endDate: updatedIssue.dueDate ?? undefined,
+      dueDate: updatedIssue.dueDate ?? undefined,
       assigneeId: updatedIssue.assigneeId ?? undefined,
     };
 
@@ -127,6 +127,7 @@ export default function TaskDetailDeepLinkPage() {
     <TaskDetailModal
       issue={issue}
       workspaceId={workspace._id}
+      workspaceTemplate={getWorkspaceTemplate(workspace)}
       onClose={backToBoard}
       onUpdateIssue={handleUpdateIssue}
     />

@@ -28,16 +28,27 @@ export default function AcceptInvitePage({ token }: Props) {
       .finally(() => setLoadingInvite(false));
   }, [token]);
 
-  // Auto-redirect when invite was already accepted (e.g. register flow — processPostRegisterInvites accepted it before user lands here)
+  const isLinkInvite = invite?.type === 'link';
+
+  // Auto-redirect when already a member (email invite accepted via register flow)
   useEffect(() => {
     if (
       invite?.status === 'accepted' &&
       isAuthenticated &&
-      user?.email.toLowerCase() === invite.invitedEmail.toLowerCase()
+      !isLinkInvite &&
+      user?.email.toLowerCase() === (invite.invitedEmail ?? '').toLowerCase()
     ) {
       router.replace(`/workspaces/${invite.workspaceKey}`);
     }
-  }, [invite, isAuthenticated, user, router]);
+  }, [invite, isAuthenticated, user, router, isLinkInvite]);
+
+  // Auto-accept link invites when authenticated
+  useEffect(() => {
+    if (isLinkInvite && isAuthenticated && invite?.status === 'pending' && !accepting && !done) {
+      handleAccept();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLinkInvite, isAuthenticated, invite?.status]);
 
   const handleAccept = async () => {
     setAccepting(true);
@@ -53,6 +64,14 @@ export default function AcceptInvitePage({ token }: Props) {
       toast.success('You have joined the workspace successfully!');
       setTimeout(() => router.push(`/workspaces/${workspaceKey}`), 1500);
     } catch (e: any) {
+      const status = e?.response?.status;
+      const workspaceKey = invite?.workspaceKey;
+      if (status === 409 && workspaceKey) {
+        toast.success('You are already a member of this workspace.');
+        setTimeout(() => router.push(`/workspaces/${workspaceKey}`), 1500);
+        setDone(true);
+        return;
+      }
       toast.error(e?.response?.data?.message || 'Could not accept the invitation.');
     } finally {
       setAccepting(false);
@@ -85,7 +104,8 @@ export default function AcceptInvitePage({ token }: Props) {
   if (!invite) return null;
 
   const isExpiredOrUsed = invite.status !== 'pending';
-  const emailMismatch = isAuthenticated && user?.email.toLowerCase() !== invite.invitedEmail.toLowerCase();
+  const emailMismatch = !isLinkInvite && isAuthenticated && !!invite.invitedEmail &&
+    user?.email.toLowerCase() !== invite.invitedEmail.toLowerCase();
 
   if (done) {
     return (
@@ -118,7 +138,8 @@ export default function AcceptInvitePage({ token }: Props) {
           <span className="font-semibold text-indigo-600 dark:text-indigo-400">{invite.role}</span>.
         </p>
         <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
-          Sent to: {invite.invitedEmail}{invite.expiresAt ? ` · Expires: ${new Date(invite.expiresAt).toLocaleDateString('en-US')}` : ''}
+          {invite.invitedEmail ? `Sent to: ${invite.invitedEmail}` : 'Open invite link'}
+          {invite.expiresAt ? ` · Expires: ${new Date(invite.expiresAt).toLocaleDateString('en-US')}` : ''}
         </p>
 
         {isExpiredOrUsed && (
@@ -143,7 +164,9 @@ export default function AcceptInvitePage({ token }: Props) {
           <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg mb-4">
             <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              Sign in or create an account with {invite.invitedEmail} to accept this invitation.
+              {isLinkInvite
+                ? 'Sign in or create an account to join this workspace.'
+                : `Sign in or create an account with ${invite.invitedEmail} to accept this invitation.`}
             </p>
           </div>
         )}

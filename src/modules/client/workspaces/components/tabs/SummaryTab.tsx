@@ -86,9 +86,9 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
         ? issue.createdAt && new Date(issue.createdAt) >= sevenDaysAgo
         : true;
       const matchesDueDate = selectedSummaryFields.includes("dueDate")
-        ? issue.endDate &&
-          new Date(issue.endDate) >= now &&
-          new Date(issue.endDate) <= sevenDaysLater
+        ? issue.dueDate &&
+          new Date(issue.dueDate) >= now &&
+          new Date(issue.dueDate) <= sevenDaysLater
         : true;
       const matchesParent = selectedSummaryFields.includes("parent")
         ? Boolean(issue.epic)

@@ -77,7 +77,7 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
       style={{ left: position.left, top: position.top }}
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">Chèn bảng</span>
+        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">Insert Table</span>
         <span className="text-xs text-indigo-600 dark:text-indigo-300">
           {hovered.rows} x {hovered.cols}
         </span>
@@ -107,7 +107,7 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
       </div>
 
       <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-800">
-        <div className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-200">Tùy chỉnh</div>
+        <div className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-200">Customize</div>
         <div className="grid grid-cols-2 gap-2">
           <label className="text-[11px] text-gray-500 dark:text-gray-400">
             Rows

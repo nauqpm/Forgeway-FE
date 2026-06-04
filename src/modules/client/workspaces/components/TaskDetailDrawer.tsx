@@ -24,6 +24,7 @@ interface TaskDetailDrawerProps {
   isOpen: boolean;
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
@@ -56,13 +57,14 @@ export default function TaskDetailDrawer({
   isOpen,
   issue,
   workspaceId,
+  workspaceTemplate = "kanban",
   onClose,
   onUpdateIssue,
   onArchiveIssue,
   embedded = false,
 }: TaskDetailDrawerProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'worklog'>('comments');
+  const [activeTab, setActiveTab] = useState<'comments' | 'history'>('comments');
   const [localTitle, setLocalTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [subtasks, setSubtasks] = useState<any[]>([]);
@@ -118,9 +120,10 @@ export default function TaskDetailDrawer({
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
-  const dueDateLabel = formatDate(issue.dueDate ?? issue.endDate);
+  const dueDateLabel = formatDate(issue.dueDate);
+  const startDateLabel = formatDate(issue.startDate);
   const sprintLabel = issue.sprint?.name || issue.sprintId || 'None';
-  const boardLabel = issue.board?.name || issue.boardId || 'None';
+  const showSprintField = workspaceTemplate !== "scrum";
   const storyPointsLabel =
     issue.storyPoints === null || issue.storyPoints === undefined
       ? 'None'
@@ -391,19 +394,27 @@ export default function TaskDetailDrawer({
 
                 {/* Due date */}
                 <div className="flex items-center min-h-[32px]">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Start date</div>
+                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
+                    {startDateLabel}
+                  </div>
+                </div>
+
+                <div className="flex items-center min-h-[32px]">
                   <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Due date</div>
                   <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
                     {dueDateLabel}
                   </div>
                 </div>
 
-                {/* Sprint */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Sprint</div>
-                  <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors truncate">
-                    {sprintLabel}
+                {showSprintField && (
+                  <div className="flex items-center min-h-[32px]">
+                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Sprint</div>
+                    <div className="flex items-center text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors truncate">
+                      {sprintLabel}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Story points */}
                 <div className="flex items-center min-h-[32px]">
@@ -477,7 +488,7 @@ export default function TaskDetailDrawer({
               </div>
             </div>
 
-            {/* Activity (Comments, History, Worklog) */}
+            {/* Activity */}
             <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h3 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h3>
@@ -490,10 +501,6 @@ export default function TaskDetailDrawer({
                     onClick={() => setActiveTab('history')}
                     className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'history' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
                   >History</button>
-                  <button
-                    onClick={() => setActiveTab('worklog')}
-                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'worklog' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
-                  >Worklog</button>
                 </div>
               </div>
 
@@ -508,11 +515,6 @@ export default function TaskDetailDrawer({
                 )}
                 {activeTab === 'history' && (
                   <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
-                )}
-                {activeTab === 'worklog' && (
-                  <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400 text-center">
-                    No work log entries yet.
-                  </div>
                 )}
               </div>
             </div>

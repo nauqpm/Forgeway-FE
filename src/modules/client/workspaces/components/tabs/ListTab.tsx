@@ -38,6 +38,7 @@ type ListTabProps = {
   filteredIssues: Issue[];
   selectedIssue: Issue | null;
   workspaceId: string;
+  workspaceTemplate?: "kanban" | "scrum";
   listViewMode: "grid" | "split";
   setSelectedIssue: (issue: Issue | null) => void;
   setListViewMode: (mode: "grid" | "split") => void;
@@ -51,6 +52,7 @@ export default function ListTab({
   filteredIssues,
   selectedIssue,
   workspaceId,
+  workspaceTemplate = "kanban",
   listViewMode,
   setSelectedIssue,
   setListViewMode,
@@ -240,6 +242,7 @@ export default function ListTab({
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
+              workspaceTemplate={workspaceTemplate}
               showBackButton
               onClose={() => {
                 setSelectedIssue(null);
@@ -414,6 +417,7 @@ export default function ListTab({
               <TaskDetailList
                 issue={selectedIssue}
                 workspaceId={workspaceId}
+                workspaceTemplate={workspaceTemplate}
                 showBackButton={false}
                 onClose={() => {
                   setSelectedIssue(null);
