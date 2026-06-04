@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { notifyManager, useQueryClient } from '@tanstack/react-query';
 
 import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { TASK_EVENTS } from '@/lib/socket/socket.events';
@@ -11,33 +11,16 @@ import type { Issue } from '@/modules/client/workspaces/types/issue.type';
 import {
   findTaskInCache,
   getAffectedTaskQueries,
+  mergeReorderedTask,
   removeTask,
   shouldApplyEvent,
   shouldApplyReorderEvent,
   upsertTask,
 } from './task-realtime-cache.utils';
-
-type TaskSummaryPayload = {
-  id: string;
-  _id?: string;
-  key: string;
-  title: string;
-  description?: string;
-  type?: string;
-  priority?: string;
-  status?: string;
-  columnId?: string;
-  sprintId?: string | null;
-  rank?: string;
-  version?: number;
-  assigneeId?: string | null;
-  reporterId?: string;
-  storyPoints?: number;
-  isArchived?: boolean;
-  isDeleted?: boolean;
-  updatedAt?: string;
-  createdAt?: string;
-};
+import {
+  mapTaskSummaryToIssue,
+  type TaskSummaryPayload,
+} from './task-realtime.mapper';
 
 type TaskEventContext = {
   workspaceId: string;
@@ -56,50 +39,6 @@ type TaskRealtimeEnvelope = RealtimeEnvelope<TaskEventData>;
 type UseTaskRealtimeOptions = {
   onTaskUpserted?: (issue: Issue) => void;
   onTaskRemoved?: (taskId: string) => void;
-};
-
-const normalizeLabel = (value?: string, fallback = '') => {
-  if (!value) return fallback;
-  return value.charAt(0).toUpperCase() + value.slice(1);
-};
-
-const normalizeStatus = (value?: string) => {
-  const normalized = value?.trim().toLowerCase().replace(/\s+/g, '');
-  const labels: Record<string, string> = {
-    todo: 'To Do',
-    inprogress: 'In Progress',
-    'in-progress': 'In Progress',
-    testing: 'Testing',
-    done: 'Done',
-  };
-
-  return labels[normalized ?? ''] ?? value ?? 'To Do';
-};
-
-const toIssue = (task?: TaskSummaryPayload): Issue | undefined => {
-  if (!task?.id || !task.key) return undefined;
-
-  return {
-    id: task.id,
-    _id: task._id,
-    key: task.key,
-    title: task.title,
-    description: task.description ?? '',
-    columnId: task.columnId ?? task.status ?? 'todo',
-    status: normalizeStatus(task.status ?? task.columnId),
-    rank: task.rank,
-    priority: normalizeLabel(task.priority, 'Medium'),
-    type: normalizeLabel(task.type, 'Task'),
-    assignee: task.assigneeId ?? 'U',
-    assigneeId: task.assigneeId ?? undefined,
-    color: 'bg-indigo-600',
-    sprintId: task.sprintId ?? null,
-    storyPoints: task.storyPoints ?? 0,
-    isArchived: task.isArchived,
-    createdAt: task.createdAt,
-    updatedAt: task.updatedAt,
-    version: task.version,
-  };
 };
 
 export function useTaskRealtime(
@@ -138,7 +77,7 @@ export function useTaskRealtime(
         return;
       }
 
-      const issue = toIssue(envelope.data.task);
+      const issue = mapTaskSummaryToIssue(envelope.data.task);
       if (!issue) return;
 
       const cachedTasks = queryClient.getQueriesData<Issue[]>({
@@ -171,7 +110,7 @@ export function useTaskRealtime(
         return;
       }
 
-      const issue = toIssue(envelope.data.task);
+      const issue = mapTaskSummaryToIssue(envelope.data.task);
       if (!issue) return;
 
       const eventTaskId = envelope.data.taskId ?? envelope.data.task?.id ?? issue.id;
@@ -203,12 +142,20 @@ export function useTaskRealtime(
 
       if (!decision.apply) return;
 
-      affectedQueries.forEach(([queryKey]) => {
-        queryClient.setQueryData<Issue[]>(queryKey, (current) =>
-          upsertTask(current, issue),
-        );
-      });
-      onTaskUpserted?.(issue);
+      try {
+        notifyManager.batch(() => {
+          affectedQueries.forEach(([queryKey]) => {
+            queryClient.setQueryData<Issue[]>(queryKey, (current) =>
+              mergeReorderedTask(current, issue),
+            );
+          });
+          onTaskUpserted?.(issue);
+        });
+      } catch {
+        affectedQueries.forEach(([queryKey]) => {
+          queryClient.invalidateQueries({ queryKey, exact: true });
+        });
+      }
     };
 
     socket.on(TASK_EVENTS.CREATED, applyTaskEnvelope);

@@ -67,6 +67,7 @@ export const shouldApplyReorderEvent = (
 
   return { apply: false, refetch: false };
 };
+
 export const upsertTask = (
   current: Issue[] | undefined,
   issue: Issue,
@@ -78,6 +79,19 @@ export const upsertTask = (
     : [issue, ...list];
 
   return sortIssuesByRank(next);
+};
+
+export const mergeReorderedTask = (
+  current: Issue[] | undefined,
+  issue: Issue,
+) => {
+  const taskId = taskIdOf(issue);
+  const list = current ?? [];
+  const existing = list.find((item) => taskIdOf(item) === taskId);
+  const merged = existing ? { ...existing, ...issue } : issue;
+  const withoutMovedTask = list.filter((item) => taskIdOf(item) !== taskId);
+
+  return sortIssuesByRank([merged, ...withoutMovedTask]);
 };
 
 export const removeTask = (
