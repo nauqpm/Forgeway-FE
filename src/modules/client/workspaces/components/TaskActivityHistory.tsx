@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Loader2 } from "lucide-react";
 
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import { taskService, TaskActivity } from "../services/taskService";
 
 type TaskActivityHistoryProps = {
@@ -44,9 +46,62 @@ const TYPE_MESSAGES: Record<string, string> = {
 
 const PAGE_LIMIT = 20;
 
+type WorkspaceMember = {
+  userId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        fullName?: string;
+        email?: string;
+      };
+};
+
 const formatValue = (value: unknown) => {
   if (value === null || value === undefined || value === "") return "None";
   return String(value);
+};
+
+const isAssigneeActivity = (activity: TaskActivity) =>
+  activity.type === "ASSIGNEE_CHANGED" ||
+  activity.metadata?.field === "assigneeId" ||
+  activity.metadata?.field === "assignee";
+
+const getMemberDisplayName = (member: WorkspaceMember) => {
+  if (!member.userId || typeof member.userId === "string") return null;
+  return member.userId.fullName || member.userId.email || null;
+};
+
+const getMemberIds = (member: WorkspaceMember) => {
+  if (!member.userId) return [];
+  if (typeof member.userId === "string") return [member.userId];
+  return [member.userId._id, member.userId.id].filter(Boolean) as string[];
+};
+
+const buildMemberNameMap = (members: WorkspaceMember[] = []) => {
+  const map = new Map<string, string>();
+
+  members.forEach((member) => {
+    const displayName = getMemberDisplayName(member);
+    if (!displayName) return;
+
+    getMemberIds(member).forEach((id) => {
+      map.set(id, displayName);
+    });
+  });
+
+  return map;
+};
+
+const formatActivityValue = (
+  activity: TaskActivity,
+  value: unknown,
+  memberNameMap: Map<string, string>,
+) => {
+  const fallback = formatValue(value);
+  if (!isAssigneeActivity(activity) || fallback === "None") return fallback;
+
+  return memberNameMap.get(String(value)) ?? fallback;
 };
 
 const formatDateTime = (value?: string) => {
@@ -113,6 +168,18 @@ export default function TaskActivityHistory({
     enabled: Boolean(workspaceId && taskId),
     staleTime: 30_000,
   });
+
+  const { data: members = [] } = useQuery({
+    queryKey: ["workspaceMembers", workspaceId],
+    queryFn: async () => {
+      const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
+      return (response.data?.data ?? response.data ?? []) as WorkspaceMember[];
+    },
+    enabled: Boolean(workspaceId),
+    staleTime: 60_000,
+  });
+
+  const memberNameMap = buildMemberNameMap(members);
 
   // Accumulate pages — replace on page 1 (initial or task change), append on subsequent pages
   useEffect(() => {
@@ -195,11 +262,11 @@ export default function TaskActivityHistory({
               {hasChange && (
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                   <span className="rounded bg-gray-100 px-2 py-1 font-mono text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                    {formatValue(activity.metadata?.from)}
+                    {formatActivityValue(activity, activity.metadata?.from, memberNameMap)}
                   </span>
                   <span className="text-gray-400">-&gt;</span>
                   <span className="rounded bg-indigo-50 px-2 py-1 font-mono font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
-                    {formatValue(activity.metadata?.to)}
+                    {formatActivityValue(activity, activity.metadata?.to, memberNameMap)}
                   </span>
                 </div>
               )}

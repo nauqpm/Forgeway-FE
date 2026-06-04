@@ -814,6 +814,7 @@ export default function WorkspaceDetailPage({
           selectedIssue,
           workspaceKey: workspace.key,
           workspaceId: workspace._id,
+          workspaceTemplate: getWorkspaceTemplate(workspace),
           listViewMode,
           listGridDrawerOpen,
           setSelectedIssue,
@@ -894,6 +895,7 @@ export default function WorkspaceDetailPage({
           isOpen={!!activeIssueDetail}
           issue={activeIssueDetail}
           workspaceId={workspace._id}
+          workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
@@ -903,6 +905,7 @@ export default function WorkspaceDetailPage({
         <TaskDetailModal
           issue={activeIssueDetail}
           workspaceId={workspace._id}
+          workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={handleUpdateIssue}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}

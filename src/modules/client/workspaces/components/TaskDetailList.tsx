@@ -23,6 +23,7 @@ import { useAuth } from "@/context/AuthContext";
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   showBackButton?: boolean;
   onUpdateIssue?: (updatedIssue: any) => void;
@@ -59,13 +60,14 @@ const PRIORITY_COLORS: Record<string, string> = {
 export default function TaskDetailList({
   issue,
   workspaceId,
+  workspaceTemplate = "kanban",
   onClose,
   showBackButton = true,
   onUpdateIssue,
   onArchiveIssue,
 }: TaskDetailListProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<"comments" | "history" | "worklog">("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [subtasks, setSubtasks] = useState<any[]>([]);
@@ -95,8 +97,9 @@ export default function TaskDetailList({
     issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const dueDateLabel = formatDate(issue.dueDate);
+  const startDateLabel = formatDate(issue.startDate);
   const sprintLabel = issue.sprint?.name || issue.sprintId || "None";
-  const boardLabel = issue.board?.name || issue.boardId || "None";
+  const showSprintField = workspaceTemplate !== "scrum";
   const storyPointsLabel =
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
@@ -311,7 +314,7 @@ export default function TaskDetailList({
               <h2 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h2>
               <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                 <span>Show:</span>
-                {(["comments", "history", "worklog"] as const).map((tab) => (
+                {(["comments", "history"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -320,7 +323,7 @@ export default function TaskDetailList({
                         : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
                       }`}
                   >
-                    {tab === "worklog" ? "Work log" : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </button>
                 ))}
               </div>
@@ -336,11 +339,6 @@ export default function TaskDetailList({
             )}
             {activeTab === "history" && (
               <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
-            )}
-            {activeTab === "worklog" && (
-              <div className="rounded-lg border border-dashed border-gray-200 dark:border-gray-700 px-4 py-6 text-sm text-gray-500 dark:text-gray-400 text-center">
-                No work log entries yet.
-              </div>
             )}
           </div>
         </div>
@@ -427,6 +425,10 @@ export default function TaskDetailList({
                 </DetailRow>
 
                 {/* Due date */}
+                <DetailRow label="Start date">
+                  <div className="text-sm text-gray-900 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">{startDateLabel}</div>
+                </DetailRow>
+
                 <DetailRow label="Due date">
                   <div className="text-sm text-gray-900 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">{dueDateLabel}</div>
                 </DetailRow>
@@ -441,10 +443,11 @@ export default function TaskDetailList({
                   />
                 </DetailRow>
 
-                {/* Sprint */}
-                <DetailRow label="Sprint">
-                  <div className="text-sm text-gray-900 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">{sprintLabel}</div>
-                </DetailRow>
+                {showSprintField && (
+                  <DetailRow label="Sprint">
+                    <div className="text-sm text-gray-900 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">{sprintLabel}</div>
+                  </DetailRow>
+                )}
 
                 {/* Story point estimate */}
                 <DetailRow label="Story point estimate">

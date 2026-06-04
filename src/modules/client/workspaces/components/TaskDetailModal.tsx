@@ -33,6 +33,7 @@ import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-real
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
@@ -62,14 +63,13 @@ const formatDateTime = (value?: string | null) => {
 export default function TaskDetailModal({
   issue,
   workspaceId,
+  workspaceTemplate = "kanban",
   onClose,
   onUpdateIssue,
   onArchiveIssue,
 }: TaskDetailModalProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<
-    "comments" | "history" | "worklog"
-  >("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [subtasks, setSubtasks] = useState<any[]>([]);
@@ -112,8 +112,11 @@ export default function TaskDetailModal({
     getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const dueDateLabel = formatDate(issue.dueDate);
+  const startDateLabel = formatDate(issue.startDate);
   const sprintLabel = issue.sprint?.name || issue.sprintId || "None";
   const boardLabel = issue.board?.name || issue.boardId || "None";
+  const showSprintField = workspaceTemplate !== "scrum";
+  const showBoardField = workspaceTemplate !== "kanban";
   const storyPointsLabel =
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
@@ -334,12 +337,6 @@ export default function TaskDetailModal({
                   >
                     History
                   </button>
-                  <button
-                    onClick={() => setActiveTab("worklog")}
-                    className={`px-3 py-1 rounded transition-colors ${activeTab === "worklog" ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
-                  >
-                    Work log
-                  </button>
                 </div>
               </div>
               {activeTab === "comments" && (
@@ -352,11 +349,6 @@ export default function TaskDetailModal({
               )}
               {activeTab === "history" && (
                 <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
-              )}
-              {activeTab === "worklog" && (
-                <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                  No work log entries yet.
-                </div>
               )}
             </div>
           </div>
@@ -436,6 +428,17 @@ export default function TaskDetailModal({
                   {/* Due date */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                      Start date
+                    </div>
+                    <div className="col-span-2">
+                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                        {startDateLabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
                       Due date
                     </div>
                     <div className="col-span-2">
@@ -471,29 +474,31 @@ export default function TaskDetailModal({
                     </div>
                   </div>
 
-                  {/* Sprint */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
-                      Sprint
-                    </div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {sprintLabel}
+                  {showSprintField && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                        Sprint
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                          {sprintLabel}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Board */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
-                      Board
-                    </div>
-                    <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {boardLabel}
+                  {showBoardField && (
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 pt-1.5">
+                        Board
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
+                          {boardLabel}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Priority */}
                   <div className="grid grid-cols-3 gap-2">
