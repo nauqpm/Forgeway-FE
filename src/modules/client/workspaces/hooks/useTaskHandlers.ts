@@ -66,7 +66,13 @@ export const useTaskHandlers = ({
     taskService.updateBoardTask(workspaceId, id, updates)
       .then((savedIssue) => {
         setIssues((current) =>
-          current.map((issue) => issue.id === savedIssue.id ? savedIssue : issue)
+          current.map((issue) => {
+            if (issue.id !== savedIssue.id) return issue;
+            const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
+            return isObjectId && updates.status
+              ? { ...savedIssue, status: updates.status as string }
+              : savedIssue;
+          })
         );
         queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });

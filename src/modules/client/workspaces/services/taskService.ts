@@ -477,11 +477,12 @@ export const taskService = {
 
     if (isMoveUpdate) {
       const payload: Record<string, any> = {};
-      if (updates.status !== undefined) {
+      if (updates.columnId !== undefined) {
+        payload.columnId = updates.columnId;
+        if (updates.status !== undefined) payload.status = toColumnId(updates.status) ?? updates.status;
+      } else if (updates.status !== undefined) {
         payload.status = toColumnId(updates.status);
         payload.columnId = toColumnId(updates.status);
-      } else if (updates.columnId !== undefined) {
-        payload.columnId = updates.columnId;
       }
       if (updates.sprintId !== undefined) {
         payload.sprintId = updates.sprintId;

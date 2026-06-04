@@ -6,12 +6,14 @@ type BoardFiltersProps = {
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   uniqueAssignees: any[];
+  extraActions?: React.ReactNode;
 };
 
 export default function BoardFilters({
   filters,
   setFilters,
   uniqueAssignees,
+  extraActions,
 }: BoardFiltersProps) {
   const [searchValue, setSearchValue] = useState(filters.search || "");
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -102,7 +104,7 @@ export default function BoardFilters({
   const filteredPriorities = allPriorities.filter(p => p.toLowerCase().includes(prioritySearch.toLowerCase()));
 
   return (
-    <div className="flex flex-col gap-3 px-[var(--workspace-surface-pad)] pt-[var(--workspace-surface-pad)] mb-2 relative" ref={popoverRef}>
+    <div className="flex flex-col gap-3 px-[var(--workspace-surface-pad)] pt-0 mb-2 relative" ref={popoverRef}>
       <div className="flex items-center gap-3">
         {/* Global Search */}
         <div className="relative">
@@ -139,6 +141,7 @@ export default function BoardFilters({
             <X className="w-4 h-4" /> Clear filters
           </button>
         )}
+        {extraActions}
       </div>
 
       {isPopoverOpen && (
