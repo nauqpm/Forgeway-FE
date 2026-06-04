@@ -127,14 +127,8 @@ export default function DocumentsLibraryPage() {
               Management your documents, create online documents or upload files to keep all your important information in one place.
             </p>
           </div>
-<<<<<<< Updated upstream
-
-
-         {/*<label className="ml-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
-=======
           {/*
           <label className="ml-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
->>>>>>> Stashed changes
             <Upload className="h-4 w-4" />
             Add new document
             <input
@@ -154,13 +148,8 @@ export default function DocumentsLibraryPage() {
                 }
               }}
             />
-<<<<<<< Updated upstream
-          </label>*/}
-
-=======
           </label>
           */}
->>>>>>> Stashed changes
           <Link
             href="/documents/create"
             className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
