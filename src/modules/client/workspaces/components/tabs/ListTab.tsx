@@ -319,7 +319,6 @@ export default function ListTab({
               onClickTask={(issue) => setSelectedIssue(issue)}
               onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
               onCreateTask={onCreateTask}
-              hideCreate={listViewMode === 'split'}
               onBulkUpdate={async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates))}
               onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
             />
@@ -411,6 +410,8 @@ export default function ListTab({
                     {splitSortedIssues.map((issue) => {
                       const active = selectedIssue?.id === issue.id;
                       const issueKey = issue.key;
+                      const resolvedCol = boardColumns?.find(c => c.id === issue.status || c.name === issue.status);
+                      const statusName = resolvedCol?.name ?? issue.status;
                       return (
                         <li key={issue.id}>
                           <button
@@ -442,14 +443,14 @@ export default function ListTab({
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               <span
                                 className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
-                                  issue.status === "Done"
+                                  resolvedCol?.isDone || statusName.toLowerCase().includes("done")
                                     ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
-                                    : issue.status === "In Progress"
+                                    : statusName.toLowerCase().includes("progress")
                                       ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                                       : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                                 }`}
                               >
-                                {issue.status}
+                                {statusName}
                               </span>
                               {issue.priority && (
                                 <span className="rounded bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-400">

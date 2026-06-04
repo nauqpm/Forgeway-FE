@@ -14,8 +14,11 @@ import { CheckSquare, Columns, FileText, MoreHorizontal, Search } from "lucide-r
 
 import { Issue } from "../../../types/issue.type";
 
+type BoardColumn = { id: string; name: string; order: number; mappedStatuses?: string[]; isDone?: boolean };
+
 type DataGridListViewProps = {
   issues: Issue[];
+  boardColumns?: BoardColumn[];
   onClickTask: (issue: Issue) => void;
   onUpdateIssue: (issueId: string, updates: Partial<Issue>) => void;
   onBulkUpdate?: (issueIds: string[], updates: Partial<Issue>) => Promise<void>;
@@ -47,6 +50,7 @@ const readJsonSetting = <T,>(key: string, fallback: T): T => {
 
 export default function DataGridListView({
   issues,
+  boardColumns = [],
   onClickTask,
   onUpdateIssue,
 }: DataGridListViewProps) {
@@ -159,21 +163,31 @@ export default function DataGridListView({
         size: 150,
         cell: (info) => {
           const issue = info.row.original;
-          const status = info.getValue() as string;
+          const rawStatus = info.getValue() as string;
+          const resolvedCol = boardColumns.find((c) => c.id === rawStatus || c.name === rawStatus);
+          const displayName = resolvedCol?.name ?? rawStatus;
+
+          if (boardColumns.length > 0) {
+            return (
+              <select
+                value={resolvedCol?.id ?? rawStatus}
+                onChange={(event) =>
+                  onUpdateIssue(issue.id, { status: event.target.value })
+                }
+                className="rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {boardColumns.map((col) => (
+                  <option key={col.id} value={col.id}>{col.name}</option>
+                ))}
+              </select>
+            );
+          }
 
           return (
-            <select
-              value={status}
-              onChange={(event) =>
-                onUpdateIssue(issue.id, { status: event.target.value })
-              }
-              className="rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <option value="To Do">To Do</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Done">Done</option>
-            </select>
+            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              {displayName}
+            </span>
           );
         },
       },

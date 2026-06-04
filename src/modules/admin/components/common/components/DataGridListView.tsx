@@ -302,10 +302,8 @@ export default function DataGridListView({
       cell: info => {
         const issue = info.row.original;
         const rawStatus = info.getValue() as string;
-        const isObjectId = /^[0-9a-f]{24}$/i.test(rawStatus ?? '');
-        const status = isObjectId && boardColumns
-          ? (boardColumns.find(c => c.id === rawStatus)?.name ?? rawStatus)
-          : rawStatus;
+        const resolvedCol = boardColumns?.find(c => c.id === rawStatus);
+        const status = resolvedCol?.name ?? rawStatus;
         const isOpen = openDropdown?.rowId === issue.id && openDropdown?.col === 'status';
         const colOptions = boardColumns && boardColumns.length > 0
           ? boardColumns
@@ -321,19 +319,22 @@ export default function DataGridListView({
             </button>
             {isOpen && (
               <div className="absolute left-0 top-full mt-1 z-50 min-w-[150px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden">
-                {colOptions.map(col => (
-                  <button
-                    key={col.id}
-                    onClick={() => {
-                      onUpdateIssue && onUpdateIssue(issue.id, { columnId: col.id, status: col.name });
-                      setOpenDropdown(null);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${col.name === status ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'}`}
-                  >
-                    {col.name === status && <Check className="w-3.5 h-3.5 shrink-0" />}
-                    <span className={col.name === status ? '' : 'ml-5'}>{col.name}</span>
-                  </button>
-                ))}
+                {colOptions.map(col => {
+                  const isSelected = col.id === rawStatus || col.name === rawStatus;
+                  return (
+                    <button
+                      key={col.id}
+                      onClick={() => {
+                        onUpdateIssue && onUpdateIssue(issue.id, { columnId: col.id, status: col.name });
+                        setOpenDropdown(null);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${isSelected ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'}`}
+                    >
+                      {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
+                      <span className={isSelected ? '' : 'ml-5'}>{col.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
