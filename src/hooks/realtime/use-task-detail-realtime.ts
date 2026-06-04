@@ -12,6 +12,7 @@ import type {
   TaskComment,
 } from '@/modules/client/workspaces/services/taskService';
 import type { TaskAttachment } from '@/modules/client/workspaces/types/attachment.type';
+import type { Issue } from '@/modules/client/workspaces/types/issue.type';
 import type { TaskCover } from '@/modules/client/workspaces/types/task-cover.type';
 import type { TaskDetailResponse } from '@/modules/client/workspaces/types/task-detail.type';
 import {
@@ -60,8 +61,8 @@ export function useTaskDetailRealtime({
 
   useEffect(() => {
     if (!enabled || !workspaceId || !taskId) return;
-
-    const socket = realtimeSocketClient.connect();
+    
+    const socket = realtimeSocketClient.getSocket();
     if (!socket) return;
 
     const isCurrentTaskEvent = (envelope: TaskDetailEnvelope) => {
@@ -82,15 +83,7 @@ export function useTaskDetailRealtime({
       );
     };
 
-    const handleCommentCreated = (envelope: TaskDetailEnvelope) => {
-      if (!isCurrentTaskEvent(envelope) || !envelope.data.comment) return;
-      queryClient.setQueryData<TaskComment[]>(
-        ['taskComments', workspaceId, taskId],
-        (current) => upsertComment(current, envelope.data.comment as TaskComment),
-      );
-    };
-
-    const handleCommentUpdated = (envelope: TaskDetailEnvelope) => {
+    const handleCommentUpserted = (envelope: TaskDetailEnvelope) => {
       if (!isCurrentTaskEvent(envelope) || !envelope.data.comment) return;
       queryClient.setQueryData<TaskComment[]>(
         ['taskComments', workspaceId, taskId],
@@ -126,13 +119,27 @@ export function useTaskDetailRealtime({
       if (!isCurrentTaskEvent(envelope)) return;
       const labelIds = envelope.data.labelIds ?? [];
       updateTaskDetail((current) => updateTaskLabels(current, labelIds, envelope.data.task));
-      queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: ['tasks', workspaceId] },
+        (current) =>
+          current?.map((issue) =>
+            (issue.id || issue._id) === taskId ? { ...issue, labelIds } : issue,
+          ),
+      );
     };
 
     const handleCoverUpdated = (envelope: TaskDetailEnvelope) => {
       if (!isCurrentTaskEvent(envelope)) return;
       updateTaskDetail((current) => updateTaskCover(current, envelope.data.cover ?? null));
-      queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: ['tasks', workspaceId] },
+        (current) =>
+          current?.map((issue) =>
+            (issue.id || issue._id) === taskId
+              ? { ...issue, cover: envelope.data.cover ?? null }
+              : issue,
+          ),
+      );
     };
 
     const handleActivityCreated = (envelope: TaskDetailEnvelope) => {
@@ -143,8 +150,8 @@ export function useTaskDetailRealtime({
       );
     };
 
-    socket.on(TASK_DETAIL_EVENTS.COMMENT_CREATED, handleCommentCreated);
-    socket.on(TASK_DETAIL_EVENTS.COMMENT_UPDATED, handleCommentUpdated);
+    socket.on(TASK_DETAIL_EVENTS.COMMENT_CREATED, handleCommentUpserted);
+    socket.on(TASK_DETAIL_EVENTS.COMMENT_UPDATED, handleCommentUpserted);
     socket.on(TASK_DETAIL_EVENTS.COMMENT_DELETED, handleCommentDeleted);
     socket.on(TASK_DETAIL_EVENTS.ATTACHMENT_ADDED, handleAttachmentAdded);
     socket.on(TASK_DETAIL_EVENTS.ATTACHMENT_DELETED, handleAttachmentDeleted);
@@ -153,8 +160,8 @@ export function useTaskDetailRealtime({
     socket.on(TASK_DETAIL_EVENTS.ACTIVITY_CREATED, handleActivityCreated);
 
     return () => {
-      socket.off(TASK_DETAIL_EVENTS.COMMENT_CREATED, handleCommentCreated);
-      socket.off(TASK_DETAIL_EVENTS.COMMENT_UPDATED, handleCommentUpdated);
+      socket.off(TASK_DETAIL_EVENTS.COMMENT_CREATED, handleCommentUpserted);
+      socket.off(TASK_DETAIL_EVENTS.COMMENT_UPDATED, handleCommentUpserted);
       socket.off(TASK_DETAIL_EVENTS.COMMENT_DELETED, handleCommentDeleted);
       socket.off(TASK_DETAIL_EVENTS.ATTACHMENT_ADDED, handleAttachmentAdded);
       socket.off(TASK_DETAIL_EVENTS.ATTACHMENT_DELETED, handleAttachmentDeleted);
