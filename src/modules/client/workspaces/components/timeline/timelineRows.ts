@@ -30,8 +30,6 @@ export interface BuildTimelineRowsInput {
 
 const DATE_FORMAT = "yyyy-MM-dd";
 
-type IssueWithDueDate = Issue & { dueDate?: string | null };
-
 function normalizeDate(value?: string | null): string | undefined {
   return value ? value.split("T")[0] : undefined;
 }
@@ -53,7 +51,7 @@ function getEpicId(issue: Issue): string | undefined {
 }
 
 function getIssueEndDate(issue: Issue): string | undefined {
-  return normalizeDate(issue.endDate ?? (issue as IssueWithDueDate).dueDate);
+  return normalizeDate(issue.dueDate);
 }
 
 function getSprintId(issue: Issue): string | undefined {

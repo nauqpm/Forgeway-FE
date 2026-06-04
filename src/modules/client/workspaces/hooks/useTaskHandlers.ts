@@ -76,7 +76,7 @@ export const useTaskHandlers = ({
       })
       .catch((error) => {
         setIssues(issues);
-        toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
+        toast.error(error?.response?.data?.message || "Khong cap nhat duoc task");
       });
   };
 
@@ -104,7 +104,7 @@ export const useTaskHandlers = ({
       });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong tao duoc issue");
+      toast.error(error?.response?.data?.message || "Khong tao duoc task");
     } finally {
       isCreatingRef.current = false;
     }
@@ -140,7 +140,7 @@ export const useTaskHandlers = ({
         queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong cap nhat duoc issue");
+      toast.error(error?.response?.data?.message || "Khong cap nhat duoc task");
     }
   };
 
@@ -151,7 +151,7 @@ export const useTaskHandlers = ({
   ) => {
     updateIssueDirectly(id, {
       startDate: start,
-      endDate: end,
+      dueDate: end,
     });
   };
 
@@ -186,7 +186,7 @@ export const useTaskHandlers = ({
         status: "To Do",
         sprintId: null,
         startDate: date,
-        endDate: date,
+        dueDate: date,
       });
       setIssues((current) => [...current, issue]);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
