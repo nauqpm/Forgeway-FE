@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo, useEffect, useLayoutEffect, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import type { DayCellContentArg } from '@fullcalendar/core';
+import type { DayCellContentArg, EventApi, EventSegment, MoreLinkArg } from '@fullcalendar/core';
 import { Plus, X } from 'lucide-react';
+import { format } from 'date-fns';
 
 import CalendarToolbar from './CalendarToolbar';
 import UnscheduledSidebar from './UnscheduledSidebar';
@@ -18,6 +19,51 @@ import { useCalendarData } from '@/modules/client/workspaces/hooks/useCalendarDa
 import { useCalendarHandlers } from '@/modules/client/workspaces/hooks/useCalendarHandlers';
 import { useAssignees } from '@/modules/client/workspaces/hooks/useAssignees';
 import { toCalendarDateKey } from '@/modules/client/workspaces/utils/calendarDateKey';
+
+// Minimal event shape used by the popover — works for both EventApi and OverflowEntry
+type MorePopoverState = {
+  date: Date;
+  dateTitle: string;
+  events: EventApi[];
+  anchorEl: HTMLElement;
+};
+
+type PopoverPosition = {
+  left: number;
+  top: number;
+};
+
+function getIssueDisplay(issue: Issue) {
+  const anyIssue = issue as Issue & {
+    assigneeDisplayName?: string;
+    assignee?: unknown;
+  };
+  const rawAssignee = anyIssue.assignee;
+  const assignee =
+    typeof rawAssignee === 'object' && rawAssignee
+      ? (rawAssignee as { fullName?: string; email?: string; avatar?: string })
+      : null;
+  const assigneeName =
+    anyIssue.assigneeDisplayName ||
+    assignee?.fullName ||
+    assignee?.email ||
+    issue.assigneeId ||
+    issue.assignee ||
+    'U';
+  const initials = assigneeName
+    .split(/\s+/)
+    .map((part: string) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
+  return {
+    key: issue.key || issue.id,
+    assigneeName,
+    assigneeAvatar: assignee?.avatar,
+    initials,
+  };
+}
 
 interface CalendarViewProps {
   issues: Issue[];
@@ -35,10 +81,13 @@ export default function CalendarView({
   onQuickCreateTask,
 }: CalendarViewProps) {
   const calendarRef = useRef<FullCalendar>(null);
+  const morePopoverRef = useRef<HTMLDivElement>(null);
   const [currentDateTitle, setCurrentDateTitle] = useState('');
   const [currentView, setCurrentView] = useState<CalendarViewType>('dayGridMonth');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [quickCreate, setQuickCreate] = useState<{ date: string; title: string } | null>(null);
+  const [morePopover, setMorePopover] = useState<MorePopoverState | null>(null);
+  const [morePopoverPosition, setMorePopoverPosition] = useState<PopoverPosition | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [filters, setFilters] = useState<CalendarFilters>({
     search: '',
@@ -68,6 +117,7 @@ export default function CalendarView({
   );
 
   const { events, unscheduledTasks } = useCalendarData(filteredIssues, sprints);
+
   const handlers = useCalendarHandlers({
     issues: filteredIssues,
     sprints,
@@ -80,6 +130,52 @@ export default function CalendarView({
     if (unscheduledTasks.length === 0) setIsSidebarOpen(false);
   }, [unscheduledTasks.length]);
   const assignees = useAssignees(issues);
+
+  useLayoutEffect(() => {
+    if (!morePopover) {
+      setMorePopoverPosition(null);
+      return;
+    }
+
+    const anchorRect = morePopover.anchorEl.getBoundingClientRect();
+    const popoverRect = morePopoverRef.current?.getBoundingClientRect();
+    const width = popoverRect?.width ?? 360;
+    const height = popoverRect?.height ?? 320;
+    const margin = 12;
+    const preferredLeft = anchorRect.right + 8;
+    const preferredTop = anchorRect.top;
+    const left = Math.min(
+      Math.max(margin, preferredLeft),
+      window.innerWidth - width - margin,
+    );
+    const top = Math.min(
+      Math.max(margin, preferredTop),
+      window.innerHeight - height - margin,
+    );
+
+    setMorePopoverPosition({ left, top });
+  }, [morePopover]);
+
+  useEffect(() => {
+    if (!morePopover) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (morePopoverRef.current?.contains(target)) return;
+      if (morePopover.anchorEl.contains(target)) return;
+      setMorePopover(null);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMorePopover(null);
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [morePopover]);
 
   const handleViewChange = (view: CalendarViewType) => {
     setCurrentView(view);
@@ -125,6 +221,86 @@ export default function CalendarView({
     }
   };
 
+  const handleMoreLinkClick = useCallback((arg: MoreLinkArg): string => {
+    arg.jsEvent.preventDefault();
+    arg.jsEvent.stopPropagation();
+    const anchorEl = arg.jsEvent.currentTarget as HTMLElement | null;
+    if (!anchorEl) return arg.view.type;
+
+    setMorePopover({
+      date: arg.date,
+      dateTitle: format(arg.date, 'MMMM d'),
+      events: arg.allSegs.map((seg: EventSegment) => seg.event),
+      anchorEl,
+    });
+
+    return arg.view.type;
+  }, []);
+
+  const renderPopoverEvent = (event: EventApi) => {
+    const type = event.extendedProps.type;
+
+    if (type === 'sprint') {
+      const sprint = event.extendedProps.rawData as Sprint;
+      return (
+        <div
+          key={event.id}
+          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
+        >
+          <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+          <span className="w-16 shrink-0 truncate text-[11px] font-bold uppercase text-indigo-500">
+            Sprint
+          </span>
+          <span className="min-w-0 flex-1 truncate font-semibold text-gray-900 dark:text-gray-100">
+            {sprint.name}
+          </span>
+          <span className="shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">
+            {sprint.status}
+          </span>
+        </div>
+      );
+    }
+
+    const issue = event.extendedProps.rawData as Issue;
+    const display = getIssueDisplay(issue);
+    return (
+      <button
+        key={event.id}
+        type="button"
+        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-900"
+        onClick={(clickEvent) => {
+          clickEvent.preventDefault();
+          clickEvent.stopPropagation();
+          onSelectIssue(issue);
+        }}
+      >
+        <span
+          className="h-2 w-2 shrink-0 rounded-full"
+          style={{ backgroundColor: event.backgroundColor || '#6366f1' }}
+        />
+        <span className="w-20 shrink-0 truncate text-[11px] font-bold uppercase text-gray-500 dark:text-gray-400">
+          {display.key}
+        </span>
+        <span className="min-w-0 flex-1 truncate font-semibold text-gray-900 dark:text-gray-100">
+          {issue.title}
+        </span>
+        <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          {issue.status}
+        </span>
+        <span
+          className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-200"
+          title={display.assigneeName}
+        >
+          {display.assigneeAvatar ? (
+            <img src={display.assigneeAvatar} alt={display.assigneeName} className="h-full w-full object-cover" />
+          ) : (
+            display.initials
+          )}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <div className="relative flex h-full overflow-hidden gap-3">
       {/* Main calendar area */}
@@ -154,8 +330,9 @@ export default function CalendarView({
             eventLongPressDelay={2500}
             longPressDelay={2500}
             dayMaxEventRows={4}
-            moreLinkContent={(arg) => `${arg.num} more`}
+            moreLinkContent={(arg) => `+ ${arg.num} more`}
             moreLinkClassNames="al-calendar-more-link"
+            moreLinkClick={handleMoreLinkClick}
             dayCellContent={renderDayCellContent}
             eventContent={(arg) => <CalendarEventContent eventInfo={arg} />}
             eventDrop={handlers.onEventDrop}
@@ -216,6 +393,32 @@ export default function CalendarView({
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {morePopover && (
+        <div
+          ref={morePopoverRef}
+          className="fixed z-[70] w-[360px] max-w-[calc(100vw-24px)] rounded-lg border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-950"
+          style={{
+            left: morePopoverPosition?.left ?? -9999,
+            top: morePopoverPosition?.top ?? -9999,
+          }}
+        >
+          <div className="mb-2 flex items-center gap-3 border-b border-gray-100 pb-2 dark:border-gray-800">
+            <p className="text-sm font-bold text-gray-900 dark:text-white">{morePopover.dateTitle}</p>
+            <button
+              type="button"
+              className="ml-auto rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              onClick={() => setMorePopover(null)}
+              aria-label="Close"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="max-h-[340px] overflow-y-auto pr-1">
+            {morePopover.events.map(renderPopoverEvent)}
+          </div>
         </div>
       )}
     </div>

@@ -8,15 +8,8 @@ function shiftDate(dateStr: string, days: number): string {
   return format(addDays(parseISO(dateStr), days), 'yyyy-MM-dd');
 }
 
-function priorityColor(priority: string): string {
-  const map: Record<string, string> = {
-    Critical: '#ef4444',
-    High:     '#f97316',
-    Medium:   '#3b82f6',
-    Low:      '#22c55e',
-  };
-  return map[priority] ?? '#6366f1';
-}
+const CALENDAR_EVENT_BG = '#303236';
+const CALENDAR_EVENT_BORDER = '#3b3f46';
 
 export function useCalendarData(issues: Issue[], sprints: Sprint[]) {
   return useMemo(() => {
@@ -24,39 +17,40 @@ export function useCalendarData(issues: Issue[], sprints: Sprint[]) {
     const unscheduledTasks: Issue[] = [];
 
     for (const issue of issues) {
-      if (!issue.startDate && !issue.endDate) {
+      if (!issue.startDate && !issue.dueDate) {
         unscheduledTasks.push(issue);
         continue;
       }
-      const start = issue.startDate ?? issue.endDate!;
-      // FC uses exclusive end — add 1 day so the event renders on endDate
-      const end = issue.endDate ? shiftDate(issue.endDate, 1) : undefined;
-      const color = priorityColor(issue.priority);
-
+      const start = issue.startDate ?? issue.dueDate!;
+      // FC uses exclusive end — add 1 day so the event renders on dueDate
+      const end = shiftDate(issue.dueDate ?? start, 1);
       events.push({
         id: issue.id,
         title: issue.title,
         start,
         end,
         allDay: true,
-        backgroundColor: color,
-        borderColor: color,
+        display: 'block',
+        backgroundColor: CALENDAR_EVENT_BG,
+        borderColor: CALENDAR_EVENT_BORDER,
         extendedProps: { type: 'issue', rawData: issue },
       });
     }
 
     for (const sprint of sprints) {
       if (!sprint.startDate) continue;
+      const sprintEnd = shiftDate(sprint.endDate ?? sprint.startDate, 1);
       events.push({
         id: `sprint-${sprint.id}`,
         title: sprint.name,
         start: sprint.startDate,
-        end: sprint.endDate ? shiftDate(sprint.endDate, 1) : undefined,
+        end: sprintEnd,
         allDay: true,
+        display: 'block',
         editable: false,
         classNames: ['sprint-event'],
-        backgroundColor: '#4f46e5',
-        borderColor: '#4338ca',
+        backgroundColor: CALENDAR_EVENT_BG,
+        borderColor: CALENDAR_EVENT_BORDER,
         extendedProps: { type: 'sprint', rawData: sprint },
       });
     }

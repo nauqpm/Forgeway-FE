@@ -118,7 +118,7 @@ export default function TaskDetailDrawer({
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
-  const dueDateLabel = formatDate(issue.dueDate ?? issue.endDate);
+  const dueDateLabel = formatDate(issue.dueDate);
   const sprintLabel = issue.sprint?.name || issue.sprintId || 'None';
   const boardLabel = issue.board?.name || issue.boardId || 'None';
   const storyPointsLabel =

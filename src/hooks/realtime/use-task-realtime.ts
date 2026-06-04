@@ -169,7 +169,7 @@ export function useTaskRealtime(workspaceId?: string) {
   useEffect(() => {
     if (!workspaceId) return;
 
-    const socket = realtimeSocketClient.connect();
+    const socket = realtimeSocketClient.getSocket();
     if (!socket) return;
 
     const applyTaskEnvelope = (envelope: TaskRealtimeEnvelope) => {

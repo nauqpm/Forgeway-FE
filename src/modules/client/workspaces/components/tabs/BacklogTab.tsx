@@ -316,10 +316,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors"
               >
-                Advanced filters{" "}
-                <span className="bg-white dark:bg-gray-900 px-1.5 py-0.5 rounded text-xs text-gray-500 dark:text-gray-400 shadow-sm border border-gray-200 dark:border-gray-700">
-                  Shift+F
-                </span>
+                User is already a member of this workspacefilters{" "}
               </button>
               <FilterMenu
                 isOpen={isFilterOpen}
