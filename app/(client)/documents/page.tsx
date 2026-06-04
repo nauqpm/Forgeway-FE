@@ -122,8 +122,8 @@ export default function DocumentsLibraryPage() {
                   await documentService.upload(file);
                   await load();
                   toast.success("Tải lên thành công");
-                } catch {
-                  toast.error("Tải lên thất bại");
+                } catch (e: any) {
+                  toast.error(e.response?.data?.message || "Tải lên thất bại");
                 } finally {
                   e.target.value = "";
                 }

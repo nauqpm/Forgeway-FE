@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import DOMPurify from "dompurify";
@@ -11,8 +11,10 @@ import EditorHeader from "./EditorHeader";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
 import { getEditorExtensions } from "./editorExtensions";
+import { realtimeSocketClient } from "@/lib/socket/socket.client";
+import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
 
-const AUTOSAVE_DELAY = 3000;
+const EMIT_DELAY = 300;
 
 const sanitizeEditorHtml = (html: string) =>
   DOMPurify.sanitize(html, {
@@ -28,36 +30,23 @@ export default function TiptapEditor() {
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const latestContentRef = useRef<string>("");
+  const draftContentRef = useRef<string | null>(null);
 
-  const saveContent = useCallback(
-    async (content: string) => {
+  const emitUpdate = useCallback(
+    (content: string) => {
       if (!selectedDocumentId) return;
-      setIsSaving(true);
-      try {
-        await updateDocument(selectedDocumentId, { content: sanitizeEditorHtml(content) });
-      } finally {
-        setIsSaving(false);
+      const socket = realtimeSocketClient.getSocket();
+      if (socket && socket.connected) {
+        setIsSaving(true);
+        realtimeSocketClient.pageManager.update(socket, sanitizeEditorHtml(content), () => {
+          setIsSaving(false);
+        });
       }
     },
-    [selectedDocumentId, updateDocument, setIsSaving],
+    [selectedDocumentId, setIsSaving],
   );
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
-        e.preventDefault();
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current);
-          saveTimeoutRef.current = null;
-        }
-        if (latestContentRef.current && selectedDocumentId) {
-          saveContent(latestContentRef.current);
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedDocumentId, saveContent]);
+
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -75,27 +64,59 @@ export default function TiptapEditor() {
 
       const html = editor.getHTML();
       latestContentRef.current = html;
-      setIsSaving(true);
 
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
 
       saveTimeoutRef.current = setTimeout(() => {
-        saveContent(html);
-      }, AUTOSAVE_DELAY);
+        emitUpdate(html);
+      }, EMIT_DELAY);
     },
   });
 
   useEffect(() => {
+    if (!selectedDocumentId) return;
+    
+    const socket = realtimeSocketClient.connect();
+    if (!socket) return;
+
+    realtimeSocketClient.pageManager.join(socket, selectedDocumentId, (draft) => {
+      if (draft !== undefined) {
+        draftContentRef.current = draft;
+        if (editor && latestContentRef.current !== draft) {
+          latestContentRef.current = draft;
+          editor.commands.setContent(draft, { emitUpdate: false });
+        }
+      }
+    });
+
+    const handlePageUpdated = (data: { pageId: string; content: string; editedBy: string }) => {
+      if (data.pageId === selectedDocumentId && editor) {
+        latestContentRef.current = data.content;
+        // Tiptap setContent signature might expect options object
+        editor.commands.setContent(data.content, { emitUpdate: false });
+      }
+    };
+
+    socket.on(SOCKET_EVENTS.PAGE_UPDATED, handlePageUpdated);
+
+    return () => {
+      socket.off(SOCKET_EVENTS.PAGE_UPDATED, handlePageUpdated);
+      realtimeSocketClient.pageManager.leave(socket);
+      draftContentRef.current = null;
+    };
+  }, [selectedDocumentId, editor]);
+
+  useEffect(() => {
     if (editor && document) {
-      const currentContent = editor.getHTML();
-      if (currentContent !== document.content) {
-        editor.commands.setContent(document.content);
-        latestContentRef.current = document.content;
+      const contentToSet = draftContentRef.current ?? document.content;
+      if (latestContentRef.current !== contentToSet) {
+        editor.commands.setContent(contentToSet);
+        latestContentRef.current = contentToSet;
       }
     }
-  }, [selectedDocumentId, editor, document]);
+  }, [selectedDocumentId, editor]);
 
   useEffect(() => {
     return () => {

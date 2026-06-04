@@ -11,6 +11,7 @@ import type {
   RealtimeStatusSnapshot,
 } from './socket.types';
 import { WorkspaceRoomManager } from './socket.workspace';
+import { PageRoomManager } from './socket.page';
 
 const getSocketUrl = (): string => {
   const base =
@@ -31,6 +32,7 @@ class RealtimeSocketClient {
   private lastError?: string;
   private hasConnectedBefore = false;
   private readonly workspaceManager = new WorkspaceRoomManager();
+  public readonly pageManager = new PageRoomManager();
   private readonly statusListeners = new Set<
     (snapshot: RealtimeStatusSnapshot) => void
   >();
@@ -74,6 +76,7 @@ class RealtimeSocketClient {
     if (!this.socket) return;
 
     this.workspaceManager.reset();
+    this.pageManager.reset();
     this.socket.disconnect();
     this.socket.removeAllListeners();
     this.socket.io.removeAllListeners();
@@ -125,6 +128,7 @@ class RealtimeSocketClient {
       this.lastError = undefined;
       this.setStatus('connected');
       this.workspaceManager.rejoin(socket);
+      this.pageManager.rejoin(socket);
 
       if (this.hasConnectedBefore) {
         this.reconnectCallbacks.forEach((callback) => callback());

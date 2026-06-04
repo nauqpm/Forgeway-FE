@@ -12,6 +12,9 @@ export const SOCKET_COMMANDS = {
   WORKSPACE_LEAVE: 'workspace:leave',
   TASK_JOIN: 'task:join',
   TASK_LEAVE: 'task:leave',
+  PAGE_JOIN: 'page:join',
+  PAGE_LEAVE: 'page:leave',
+  PAGE_UPDATE: 'page:update',
 } as const;
 
 export const TASK_EVENTS = {
@@ -47,6 +50,7 @@ export const SOCKET_EVENTS = {
   NOTIFICATION_CREATED: NOTIFICATION_EVENTS.CREATED,
   NOTIFICATION_READ: NOTIFICATION_EVENTS.READ,
   NOTIFICATION_READ_ALL: NOTIFICATION_EVENTS.READ_ALL,
+  PAGE_UPDATED: 'page.updated',
 } as const;
 
 export type SocketEventName =
