@@ -8,6 +8,13 @@ import { TASK_EVENTS } from '@/lib/socket/socket.events';
 import type { RealtimeEnvelope } from '@/lib/socket/socket.types';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import type { Issue } from '@/modules/client/workspaces/types/issue.type';
+import {
+  findTaskInCache,
+  getAffectedTaskQueries,
+  removeTask,
+  shouldApplyEvent,
+  upsertTask,
+} from './task-realtime-cache.utils';
 
 type TaskSummaryPayload = {
   id: string;
@@ -68,24 +75,6 @@ const normalizeStatus = (value?: string) => {
   return labels[normalized ?? ''] ?? value ?? 'To Do';
 };
 
-const taskIdOf = (issue: Issue) => issue.id || issue._id;
-
-const compareRank = (a?: string, b?: string) => {
-  if (!a && !b) return 0;
-  if (!a) return 1;
-  if (!b) return -1;
-  return a.localeCompare(b);
-};
-
-const sortIssuesByRank = (issues: Issue[]) => {
-  return [...issues].sort((a, b) => {
-    if (a.columnId !== b.columnId) return 0;
-    const rankCompare = compareRank(a.rank, b.rank);
-    if (rankCompare !== 0) return rankCompare;
-    return a.key.localeCompare(b.key);
-  });
-};
-
 const toIssue = (task?: TaskSummaryPayload): Issue | undefined => {
   if (!task?.id || !task.key) return undefined;
 
@@ -110,61 +99,6 @@ const toIssue = (task?: TaskSummaryPayload): Issue | undefined => {
     updatedAt: task.updatedAt,
     version: task.version,
   };
-};
-
-const shouldApplyEvent = (
-  currentIssue: Issue | undefined,
-  incomingVersion: number | undefined,
-  actorId: string | undefined,
-  currentUserId: string | undefined,
-) => {
-  if (!currentIssue || !incomingVersion || !currentIssue.version) {
-    return { apply: true, refetch: false };
-  }
-
-  if (incomingVersion > currentIssue.version) {
-    return { apply: true, refetch: false };
-  }
-
-  if (incomingVersion === currentIssue.version) {
-    const ownEvent = actorId === currentUserId;
-    if (ownEvent) return { apply: false, refetch: false };
-    return { apply: false, refetch: true };
-  }
-
-  return { apply: false, refetch: false };
-};
-
-const upsertTask = (
-  current: Issue[] | undefined,
-  issue: Issue,
-) => {
-  const list = current ?? [];
-  const existing = list.find((item) => taskIdOf(item) === issue.id);
-  const next = existing
-    ? list.map((item) => (taskIdOf(item) === issue.id ? { ...item, ...issue } : item))
-    : [issue, ...list];
-
-  return sortIssuesByRank(next);
-};
-
-const removeTask = (
-  current: Issue[] | undefined,
-  taskId: string | undefined,
-) => {
-  if (!taskId) return current;
-  return (current ?? []).filter((issue) => taskIdOf(issue) !== taskId);
-};
-
-const findTaskInCache = (
-  cachedQueries: Array<[unknown, Issue[] | undefined]>,
-  taskId?: string,
-) => {
-  if (!taskId) return undefined;
-
-  return cachedQueries
-    .flatMap(([, data]) => data ?? [])
-    .find((issue) => taskIdOf(issue) === taskId);
 };
 
 export function useTaskRealtime(
@@ -232,7 +166,48 @@ export function useTaskRealtime(
     };
 
     const handleTaskReordered = (envelope: TaskRealtimeEnvelope) => {
-      applyTaskEnvelope(envelope);
+      if (envelope.workspaceId !== workspaceId && envelope.data.workspaceId !== workspaceId) {
+        return;
+      }
+
+      const issue = toIssue(envelope.data.task);
+      if (!issue) return;
+
+      const eventTaskId = envelope.data.taskId ?? envelope.data.task?.id ?? issue.id;
+      const incomingVersion = envelope.version ?? envelope.data.version ?? envelope.data.task?.version;
+      const actorId = envelope.actorId ?? envelope.data.actorId;
+      const cachedTasks = queryClient.getQueriesData<Issue[]>({
+        queryKey: ['tasks', workspaceId],
+      });
+      const affectedQueries = getAffectedTaskQueries(cachedTasks, eventTaskId);
+
+      if (affectedQueries.length === 0) {
+        return;
+      }
+
+      const existing = findTaskInCache(affectedQueries, eventTaskId);
+      const decision = shouldApplyEvent(
+        existing,
+        incomingVersion,
+        actorId,
+        currentUserId,
+      );
+
+      if (decision.refetch) {
+        affectedQueries.forEach(([queryKey]) => {
+          queryClient.invalidateQueries({ queryKey, exact: true });
+        });
+        return;
+      }
+
+      if (!decision.apply) return;
+
+      affectedQueries.forEach(([queryKey]) => {
+        queryClient.setQueryData<Issue[]>(queryKey, (current) =>
+          upsertTask(current, issue),
+        );
+      });
+      onTaskUpserted?.(issue);
     };
 
     socket.on(TASK_EVENTS.CREATED, applyTaskEnvelope);
@@ -254,4 +229,3 @@ export function useTaskRealtime(
     };
   }, [currentUserId, onTaskRemoved, onTaskUpserted, queryClient, workspaceId]);
 }
-
