@@ -23,6 +23,20 @@ export interface Workspace {
   visibility: "private" | "public";
   template?: "kanban" | "scrum";
   type?: "kanban" | "scrum";
+  status?: "active" | "archived" | string;
+  isArchived?: boolean;
+  archivedAt?: string | null;
+  taskCount?: number;
+  tasksCount?: number;
+  docsCount?: number;
+  issueCount?: number;
+  issuesCount?: number;
+  _count?: {
+    pages?: number;
+    docs?: number;
+    tasks?: number;
+    issues?: number;
+  };
 }
 
 export type WorkspaceTab =

@@ -435,7 +435,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                             <AssigneePicker
                                               users={workspaceMembers}
                                               value={issue.assigneeId ?? issue.assignee ?? null}
-                                              onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid })}
+                                              onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
                                               placement="top"
                                               size="sm"
                                               disabled={!!(filters.archived || !canEditTask)}

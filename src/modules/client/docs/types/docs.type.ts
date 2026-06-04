@@ -43,7 +43,7 @@ export interface PageApiResponse {
   workspaceId: string;
   slug: string;
   authorId: string;
-  lastEditedBy?: { _id: string; username: string } | null;
+  lastEditedBy?: { _id: string; fullName?: string; username?: string } | null;
   version: number;
   status: "draft" | "published";
   labels: string[];
