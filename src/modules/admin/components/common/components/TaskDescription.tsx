@@ -126,7 +126,7 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] p-4 text-[#172B4D] dark:text-white',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] p-4 text-slate-800 dark:text-white prose-strong:text-slate-950 dark:prose-strong:text-white prose-em:text-slate-800 dark:prose-em:text-white prose-code:text-slate-900 dark:prose-code:text-white prose-blockquote:text-slate-700 dark:prose-blockquote:text-gray-100 [&_*]:text-inherit [&_.is-editor-empty:first-child::before]:text-slate-400 dark:[&_.is-editor-empty:first-child::before]:text-gray-500',
       },
     },
     immediatelyRender: false,
