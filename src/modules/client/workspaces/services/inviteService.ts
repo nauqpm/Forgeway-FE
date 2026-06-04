@@ -24,9 +24,10 @@ export interface InviteDetails {
   workspaceId: string;
   workspaceName: string;
   workspaceKey: string;
-  invitedEmail: string;
+  invitedEmail: string | null;
   invitedBy: { _id: string; email: string; fullName: string };
   role: string;
+  type: 'email' | 'link';
   status: string;
   expiresAt: string | null;
 }
@@ -34,6 +35,11 @@ export interface InviteDetails {
 export const inviteService = {
   sendInvite: async (workspaceId: string, dto: InviteDto): Promise<PendingInvite> => {
     const res = await api.post(apiRoutes.WORKSPACES.INVITES(workspaceId), dto);
+    return res.data.data;
+  },
+
+  createInviteLink: async (workspaceId: string, role: string): Promise<{ token: string; inviteUrl: string }> => {
+    const res = await api.post(apiRoutes.WORKSPACES.INVITE_LINK(workspaceId), { role });
     return res.data.data;
   },
 
