@@ -271,9 +271,40 @@ export default function WorkspaceDetailPage({
   }, [selectedIssue, selectedTaskDetail, workspace]);
 
   const [columns, setColumns] = useState<BoardColumn[]>([]);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+
+  const handleRealtimeTaskUpserted = useCallback((issue: Issue) => {
+    setIssues((current) =>
+      current.some((item) => item.id === issue.id || item._id === issue.id)
+        ? current.map((item) =>
+            item.id === issue.id || item._id === issue.id
+              ? { ...item, ...issue }
+              : item,
+          )
+        : [...current, issue],
+    );
+    setSelectedIssue((current) =>
+      current && (current.id === issue.id || current._id === issue.id)
+        ? { ...current, ...issue }
+        : current,
+    );
+  }, []);
+
+  const handleRealtimeTaskRemoved = useCallback((taskId: string) => {
+    setIssues((current) =>
+      current.filter((issue) => issue.id !== taskId && issue._id !== taskId),
+    );
+    setSelectedIssue((current) =>
+      current && (current.id === taskId || current._id === taskId) ? null : current,
+    );
+    setSelectedTaskIds((current) => current.filter((id) => id !== taskId));
+  }, []);
 
   useWorkspaceSocket(workspaceApiId);
-  useTaskRealtime(workspaceApiId);
+  useTaskRealtime(workspaceApiId, {
+    onTaskRemoved: handleRealtimeTaskRemoved,
+    onTaskUpserted: handleRealtimeTaskUpserted,
+  });
 
   useEffect(() => {
     if (boardData?.columns) {
@@ -300,8 +331,6 @@ export default function WorkspaceDetailPage({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fallbackTasksData, selectedTaskKey, shouldUseFallbackTaskSearch, tasksData]); // isDraggingIssue intentionally omitted: firing on drag-end would overwrite optimistic state with stale server data
-
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
   const [listViewMode, setListViewMode] = useState<"grid" | "split">("grid");
   const [listGridDrawerOpen, setListGridDrawerOpen] = useState(false);
