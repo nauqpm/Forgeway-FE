@@ -285,7 +285,7 @@ export default function TaskDetailModal({
             </div>
 
             {/* Description */}
-            {/* <div className="space-y-2">
+            <div className="space-y-2">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white">
                 Description
               </h3>
@@ -297,7 +297,7 @@ export default function TaskDetailModal({
                   }
                 }}
               />
-            </div> */}
+            </div>
 
             <TaskAttachmentsPanel
               workspaceId={workspaceId}
