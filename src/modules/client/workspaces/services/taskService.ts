@@ -38,7 +38,7 @@ type TaskDto = {
   priority?: string;
   rank?: string;
   version?: number;
-  assigneeId?: string;
+  assigneeId?: string | null;
   assignee?: TaskUserDto;
   reporterId?: string;
   reporter?: TaskUserDto;
