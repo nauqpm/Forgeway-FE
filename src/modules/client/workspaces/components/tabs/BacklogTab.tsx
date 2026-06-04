@@ -3,7 +3,8 @@
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Plus, Trash2, UserRound } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import FilterMenu from "../FilterMenu";
 import { compareIssueRank } from "../../utils/dragUtils";
 import { Sprint } from "../../types/sprint.type";
@@ -170,14 +171,19 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canManageSprint = permissions?.canManageSprint ?? true;
   const [openAssigneeIssueId, setOpenAssigneeIssueId] = useState<string | null>(null);
+  const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<CSSProperties>({});
+  const assigneePopoverRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!openAssigneeIssueId) return;
 
-    const closeAssigneeMenu = () => setOpenAssigneeIssueId(null);
+    const closeAssigneeMenu = (event: MouseEvent) => {
+      if (assigneePopoverRef.current?.contains(event.target as Node)) return;
+      setOpenAssigneeIssueId(null);
+    };
 
-    document.addEventListener("pointerdown", closeAssigneeMenu);
-    return () => document.removeEventListener("pointerdown", closeAssigneeMenu);
+    document.addEventListener("mousedown", closeAssigneeMenu);
+    return () => document.removeEventListener("mousedown", closeAssigneeMenu);
   }, [openAssigneeIssueId]);
 
   const workspaceMembers = useMemo(() => {
@@ -240,6 +246,20 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     setOpenAssigneeIssueId(null);
   };
 
+  const toggleAssigneeMenu = (
+    issueId: string,
+    button: HTMLButtonElement,
+  ) => {
+    const rect = button.getBoundingClientRect();
+
+    setOpenAssigneeIssueId((current) => current === issueId ? null : issueId);
+    setAssigneeMenuPosition({
+      position: "fixed",
+      top: rect.bottom + 8,
+      left: Math.max(8, Math.min(rect.right - 256, window.innerWidth - 272)),
+    });
+  };
+
   const renderAssigneeMenu = (issue: AssigneeIssue, assignee: AssigneeInfo | null) => {
     const isOpen = openAssigneeIssueId === issue.id;
 
@@ -247,7 +267,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
     return (
       <div
-        className="absolute right-0 top-full z-50 mt-2 w-64 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-xl dark:border-gray-700 dark:bg-gray-900"
+        style={assigneeMenuPosition}
+        className="z-[9999] w-64 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-xl dark:border-gray-700 dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
@@ -267,8 +288,12 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <button
                   key={member.id}
                   type="button"
-                  onClick={() => handleAssignIssue(issue, member)}
-                  disabled={!canEditTask || isSelected}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!canEditTask) return;
+                    handleAssignIssue(issue, member);
+                  }}
+                  disabled={!canEditTask}
                   className="flex w-full min-w-0 items-center gap-3 rounded-md px-2 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-default disabled:bg-indigo-50 disabled:text-indigo-700 dark:text-gray-200 dark:hover:bg-gray-800 dark:disabled:bg-indigo-900/30 dark:disabled:text-indigo-300"
                 >
                   <span className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-[10px] font-bold text-white`}>
@@ -309,13 +334,16 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
     if (!assignee) {
       return (
-        <div className="relative h-6 w-6 shrink-0">
+        <div
+          ref={openAssigneeIssueId === issue.id ? assigneePopoverRef : null}
+          className="relative h-6 w-6 shrink-0"
+        >
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               if (!canEditTask) return;
-              setOpenAssigneeIssueId((current) => current === issue.id ? null : issue.id);
+              toggleAssigneeMenu(issue.id, e.currentTarget);
             }}
             onMouseDown={(e) => e.stopPropagation()}
             disabled={!canEditTask}
@@ -333,15 +361,17 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
     return (
       <div
+        ref={openAssigneeIssueId === issue.id ? assigneePopoverRef : null}
         className="group/assignee relative h-6 w-6 shrink-0"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
         <button
           type="button"
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             if (!canEditTask) return;
-            setOpenAssigneeIssueId((current) => current === issue.id ? null : issue.id);
+            toggleAssigneeMenu(issue.id, e.currentTarget);
           }}
           disabled={!canEditTask}
           className={`h-6 w-6 overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-transparent hover:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:ring-indigo-800 transition-all`}

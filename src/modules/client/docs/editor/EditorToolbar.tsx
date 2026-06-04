@@ -1,4 +1,4 @@
-﻿"use client";
+﻿﻿"use client";
 
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
@@ -414,4 +414,3 @@ export default function EditorToolbar({ editor }: Props) {
     </>
   );
 }
-
