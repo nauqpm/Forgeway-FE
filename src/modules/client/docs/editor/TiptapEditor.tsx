@@ -50,7 +50,7 @@ export default function TiptapEditor() {
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: getEditorExtensions("Nhập nội dung vào dây..."),
+    extensions: getEditorExtensions("Enter content here..."),
     content: document?.content || "",
     editable: canEditPage,
     editorProps: {
@@ -138,7 +138,7 @@ export default function TiptapEditor() {
         <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
           <div className="mb-10">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Tiêu đề tài liệu
+              Document Title
             </p>
             <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
               <input
@@ -147,14 +147,14 @@ export default function TiptapEditor() {
                 onChange={(e) => updateDocument(document.id, { title: e.target.value })}
                 readOnly={!canEditPage}
                 className="w-full text-4xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight"
-                placeholder="Nhập tiêu đề tài liệu..."
+                placeholder="Enter document title..."
               />
             </div>
           </div>
 
           <div className="pb-40">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Nội dung tài liệu
+              Document Content
             </p>
             <div className="min-h-[600px] rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
               <div className="dark:prose-invert">

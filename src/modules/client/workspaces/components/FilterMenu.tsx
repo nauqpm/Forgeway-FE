@@ -1,5 +1,15 @@
 import React, { useEffect } from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, UserRound } from 'lucide-react';
+
+type FilterAssignee = {
+  id: string;
+  color?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+  avatar?: string;
+  initials?: string;
+};
 
 interface FilterMenuProps {
   isOpen: boolean;
@@ -8,7 +18,7 @@ interface FilterMenuProps {
   setFilters: (filters: any) => void;
   density: 'default' | 'compact';
   setDensity: (val: 'default' | 'compact') => void;
-  assignees: { id: string, color: string }[];
+  assignees: FilterAssignee[];
 }
 
 export default function FilterMenu({ isOpen, onClose, filters, setFilters, density, setDensity, assignees }: FilterMenuProps) {
@@ -28,6 +38,19 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
   }, [isOpen, onClose, setFilters]);
 
   if (!isOpen) return null;
+
+  const getAssigneeLabel = (user: FilterAssignee) =>
+    user.name || (user.id === 'U' ? 'Unassigned' : user.id);
+
+  const getAssigneeInitials = (user: FilterAssignee) =>
+    user.initials ||
+    getAssigneeLabel(user)
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
 
   const toggleArrayFilter = (key: string, value: string) => {
     setFilters((prev: any) => {
@@ -65,14 +88,32 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
           <div className="flex flex-wrap gap-2">
             {assignees.map(user => {
               const isSelected = filters.assignees?.includes(user.id);
+              const label = getAssigneeLabel(user);
+              const detail = user.email || user.role;
+              const initials = getAssigneeInitials(user);
+
               return (
                 <button
                   key={user.id}
                   onClick={() => toggleArrayFilter('assignees', user.id)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                  className={`flex min-w-0 items-center gap-2 rounded-full border py-1 pl-1 pr-2.5 text-xs font-medium transition-colors ${isSelected ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-400' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                  title={detail ? `${label} - ${detail}` : label}
                 >
-                  <div className={`w-4 h-4 rounded-full ${user.color} flex items-center justify-center text-[8px] text-white`}>{user.id}</div>
-                  {user.id}
+                  <span className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full ${user.color || 'bg-indigo-600'} text-[9px] font-bold text-white`}>
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt=""
+                        className="h-full w-full rounded-full object-cover"
+                      />
+                    ) : initials ? (
+                      initials
+                    ) : (
+                      <UserRound className="h-3 w-3" />
+                    )}
+                  </span>
+                  <span className="max-w-32 truncate">{label}</span>
+                  {isSelected && <Check className="h-3 w-3 shrink-0" />}
                 </button>
               );
             })}

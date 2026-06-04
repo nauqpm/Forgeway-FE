@@ -117,7 +117,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
           <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
             <span>Workspace</span>
             <span>{">"}</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{title || "Tài liệu chưa có tiêu đề"}</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">{title || "Untitled Document"}</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
@@ -129,7 +129,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
             >
               <Save className="h-3.5 w-3.5" />
-              Lưu 
+              Save
             </button>
             <button onClick={onClose} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
               <X className="h-4 w-4" />
@@ -143,13 +143,13 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
           {loading ? (
             <div className="flex h-full items-center justify-center text-sm text-gray-500">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Đang tải nội dung...
+              Loading content...
             </div>
           ) : (
             <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
               <div className="mb-10">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Tiêu đề tài liệu
+                  Document Title
                 </p>
                 <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
                   <input
@@ -160,14 +160,14 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
                       setStatus("idle");
                     }}
                     className="w-full bg-transparent text-4xl font-extrabold leading-tight tracking-tight text-[#172B4D] outline-none placeholder:text-slate-400 dark:text-gray-100 dark:placeholder:text-slate-500"
-                    placeholder="Nhập tiêu đề tài liệu..."
+                    placeholder="Enter document title..."
                   />
                 </div>
               </div>
 
               <div className="pb-40">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                  Nội dung tài liệu
+                  Document Content
                 </p>
                 <div className="min-h-[600px] rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
                   <div className="dark:prose-invert">

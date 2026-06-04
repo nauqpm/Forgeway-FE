@@ -36,7 +36,7 @@ export default function ImportedDocumentViewer({ doc }: Props) {
             onClick={() => setOpenEditor(true)}
             className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
           >
-            Sửa trực tuyến
+            Edit Document
           </button>
         </div>
       )}
@@ -50,8 +50,8 @@ export default function ImportedDocumentViewer({ doc }: Props) {
         ) : (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Định dạng này chưa hỗ trợ preview trực tiếp.</p>
-              <a href={downloadUrl} className="text-sm text-indigo-600 hover:text-indigo-800">Tải xuống để xem</a>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">This format is not supported for direct preview.</p>
+              <a href={downloadUrl} className="text-sm text-indigo-600 hover:text-indigo-800">Download to view</a>
             </div>
           </div>
         )}
