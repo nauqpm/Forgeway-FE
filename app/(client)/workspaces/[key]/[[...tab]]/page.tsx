@@ -89,6 +89,12 @@ const getRouteStateFromPath = (pathname: string) => {
   return { tabSegment, taskKey };
 };
 
+const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
+  getWorkspaceTemplate(workspace) === "scrum" ? "backlog" : "board";
+
+const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) =>
+  tabName === "summary";
+
 export default function WorkspaceDetailPage({
   params,
 }: {
@@ -97,7 +103,8 @@ export default function WorkspaceDetailPage({
   const { key: workspaceKey, tab } = use(params);
   const queryClient = useQueryClient();
   const tabFromUrl = tab?.[0];
-  const initialTab = (tabFromUrl as WorkspaceTab) || null;
+  const routeInitialTab = (tabFromUrl as WorkspaceTab) || null;
+  const initialTab = isHiddenWorkspaceTab(routeInitialTab) ? null : routeInitialTab;
   const initialTaskKey = tabFromUrl && tab?.[1] === "key" ? tab?.[2] ?? null : null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
@@ -127,11 +134,14 @@ export default function WorkspaceDetailPage({
   useEffect(() => {
     const handlePopState = () => {
       const { tabSegment, taskKey } = getRouteStateFromPath(window.location.pathname);
-      if (tabSegment) {
+      if (isHiddenWorkspaceTab(tabSegment)) {
+        const defaultTab = workspace ? getDefaultWorkspaceTab(workspace) : "board";
+        setActiveTab(defaultTab);
+        window.history.replaceState(null, "", getWorkspaceTabUrl(defaultTab));
+      } else if (tabSegment) {
         setActiveTab(tabSegment as WorkspaceTab);
       } else if (workspace) {
-        const template = getWorkspaceTemplate(workspace);
-        setActiveTab(template === "scrum" ? "backlog" : "board");
+        setActiveTab(getDefaultWorkspaceTab(workspace));
       }
       setSelectedTaskKey(taskKey);
       if (!taskKey) {
@@ -649,14 +659,12 @@ export default function WorkspaceDetailPage({
           ...nextWorkspace,
           members: workspaceMembers,
         };
-        const template = getWorkspaceTemplate(nextWorkspace);
-
         if (!isActive) return;
 
         setWorkspace(workspaceWithMembers);
         setCurrentWorkspace(workspaceWithMembers as any);
         if (!initialTab) {
-          const defaultTab = template === "scrum" ? "backlog" : "board";
+          const defaultTab = getDefaultWorkspaceTab(nextWorkspace);
           setActiveTab(defaultTab);
           window.history.replaceState(null, "", getWorkspaceTabUrl(defaultTab));
         }

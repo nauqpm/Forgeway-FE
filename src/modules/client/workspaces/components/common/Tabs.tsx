@@ -25,12 +25,6 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
     <div className="mb-2 w-full overflow-x-auto pb-1">
       <div className="flex w-max min-w-full items-center gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-900/50 sm:min-w-0 sm:w-fit">
         <button
-          onClick={() => setActiveTab("summary")}
-          className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "summary" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
-        >
-          Summary
-        </button>
-        <button
           onClick={() => setActiveTab("board")}
           className={`whitespace-nowrap px-3 py-2 text-sm font-medium transition-all sm:px-5 rounded-lg ${activeTab === "board" ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
         >
