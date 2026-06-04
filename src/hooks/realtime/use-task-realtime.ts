@@ -45,6 +45,11 @@ type TaskEventData = TaskEventContext & {
 
 type TaskRealtimeEnvelope = RealtimeEnvelope<TaskEventData>;
 
+type UseTaskRealtimeOptions = {
+  onTaskUpserted?: (issue: Issue) => void;
+  onTaskRemoved?: (taskId: string) => void;
+};
+
 const normalizeLabel = (value?: string, fallback = '') => {
   if (!value) return fallback;
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -162,9 +167,13 @@ const findTaskInCache = (
     .find((issue) => taskIdOf(issue) === taskId);
 };
 
-export function useTaskRealtime(workspaceId?: string) {
+export function useTaskRealtime(
+  workspaceId?: string,
+  options: UseTaskRealtimeOptions = {},
+) {
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((state) => state.user?.id);
+  const { onTaskRemoved, onTaskUpserted } = options;
 
   useEffect(() => {
     if (!workspaceId) return;
@@ -186,6 +195,7 @@ export function useTaskRealtime(workspaceId?: string) {
           { queryKey: ['tasks', workspaceId] },
           (current) => removeTask(current, eventTaskId),
         );
+        if (eventTaskId) onTaskRemoved?.(eventTaskId);
         queryClient.removeQueries({
           queryKey: ['taskDetail', workspaceId, envelope.data.taskKey],
           exact: true,
@@ -218,6 +228,7 @@ export function useTaskRealtime(workspaceId?: string) {
         { queryKey: ['tasks', workspaceId] },
         (current) => upsertTask(current, issue),
       );
+      onTaskUpserted?.(issue);
     };
 
     socket.on(TASK_EVENTS.CREATED, applyTaskEnvelope);
@@ -237,5 +248,5 @@ export function useTaskRealtime(workspaceId?: string) {
       socket.off(TASK_EVENTS.RESTORED, applyTaskEnvelope);
       socket.off(TASK_EVENTS.DELETED, applyTaskEnvelope);
     };
-  }, [currentUserId, queryClient, workspaceId]);
+  }, [currentUserId, onTaskRemoved, onTaskUpserted, queryClient, workspaceId]);
 }
