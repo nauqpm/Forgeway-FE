@@ -36,6 +36,7 @@ type TaskDto = {
   status?: string;
   priority?: string;
   rank?: string;
+  version?: number;
   assigneeId?: string;
   assignee?: TaskUserDto;
   reporterId?: string;
@@ -272,6 +273,7 @@ const toIssue = (task: TaskDto): Issue => {
     archivedByUser: task.archivedByUser ?? null,
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
+    version: task.version,
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
@@ -304,6 +306,7 @@ const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
     isDeleted: task.isDeleted ?? false,
     createdAt: task.createdAt ?? "",
     updatedAt: task.updatedAt ?? "",
+    version: task.version,
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),

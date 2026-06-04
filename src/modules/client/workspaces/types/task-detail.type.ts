@@ -60,6 +60,7 @@ export interface TaskDetailResponse {
   
   createdAt: string;
   updatedAt: string;
+  version?: number;
 
   // Frontend-specific fields currently expected by the UI Drawer
   comments?: any[];

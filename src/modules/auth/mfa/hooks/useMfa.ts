@@ -51,7 +51,7 @@ export const useMfa = () => {
         // MFA verified — set user and redirect
         setUser(response.user);
         clearMfa();
-        router.push(AUTH_ROUTES.DASHBOARD);
+        router.push(AUTH_ROUTES.HOME);
         return response;
       } catch (err: unknown) {
         const error = err as { response?: { data?: { message?: string } } };

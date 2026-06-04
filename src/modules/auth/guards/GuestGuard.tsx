@@ -19,12 +19,12 @@ const isSafeCallbackUrl = (url: string) =>
  * Purpose:
  * - Used on pages such as /login, /register, and /forgot-password.
  * - If signed-in users intentionally revisit these pages, the system automatically 
- *   redirects them to the main dashboard to avoid logic errors.
+ *   redirects them to the home page to avoid logic errors.
  * 
  * How it works:
  * 1. Read sign-in state from `useAuthStore`.
  * 2. Use `useEffect` to check whether initialization is complete and users are authenticated.
- *    Then immediately redirect to the dashboard.
+ *    Then immediately redirect to the home page.
  * 3. Show a spinner while the app is initializing.
  * 4. Return null if already signed in.
  * 5. Render `children` only for actual guests.
@@ -38,7 +38,7 @@ const GuestGuard: React.FC<GuestGuardProps> = ({ children }) => {
     if (isInitialized && isAuthenticated) {
       const params = new URLSearchParams(window.location.search);
       const callbackUrl = params.get('callbackUrl');
-      const destination = callbackUrl && isSafeCallbackUrl(callbackUrl) ? callbackUrl : AUTH_ROUTES.DASHBOARD;
+      const destination = callbackUrl && isSafeCallbackUrl(callbackUrl) ? callbackUrl : AUTH_ROUTES.HOME;
       router.replace(destination);
     }
   }, [isInitialized, isAuthenticated, router]);
