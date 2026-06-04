@@ -120,7 +120,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
       {showLibraryModal && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="w-full max-w-2xl bg-white dark:bg-gray-900 rounded-xl p-4">
-            <h3 className="text-lg font-semibold mb-3">Thêm từ thư viện</h3>
+            <h3 className="text-lg font-semibold mb-3">Import from library</h3>
             <div className="max-h-80 overflow-auto border rounded-lg">
               {importableLibraryDocs.map((doc) => (
                 <label key={doc._id} className="flex items-center gap-2 p-2 border-b last:border-b-0">
@@ -137,7 +137,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
                 </label>
               ))}
               {importableLibraryDocs.length === 0 && (
-                <p className="p-3 text-sm text-gray-500">Không có file nào để khả dụng để thêm vào</p>
+                <p className="p-3 text-sm text-gray-500">No files available to import.</p>
               )}
             </div>
             <div className="flex justify-end gap-2 mt-4">
@@ -145,7 +145,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
                 className="px-3 py-2 rounded-lg border"
                 onClick={() => setShowLibraryModal(false)}
               >
-                Hủy
+                Cancel
               </button>
               <button
                 className="px-3 py-2 rounded-lg bg-indigo-600 text-white disabled:opacity-50"
@@ -157,7 +157,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
                   await loadUploadedDocs();
                   window.dispatchEvent(new Event("docs_uploads_changed"));
                   setShowLibraryModal(false);
-                  toast.success("Thêm từ thư viện");
+                  toast.success("Imported from library");
                 }}
               >
                 Import
@@ -185,7 +185,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
             <div className="flex items-center gap-2 mb-5 px-1">
               <div className="w-1.5 h-4 bg-amber-500 rounded-full" />
               <h3 className="text-[12px] font-bold text-[#42526E] dark:text-gray-300 uppercase tracking-[0.1em]">
-                File được tải lên từ bên ngoài 
+                Uploaded Files
               </h3>
               <span className="ml-2 px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px] font-bold text-gray-500 dark:text-gray-400">
                 {filteredUploads.length}
@@ -211,29 +211,29 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
                         href={documentService.downloadUrl(doc._id)}
                         className="px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
                       >
-                        Tải về máy
+                        Download
                       </a>
                       <button
                         className="px-3 py-1.5 text-xs rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/20"
                         onClick={async () => {
-                          if (!window.confirm("Gỡ tài liệu này khỏi workspace?")) return;
+                          if (!window.confirm("Remove this document from the workspace?")) return;
                           try {
                             await documentService.detach(doc._id, workspaceId);
                             await loadUploadedDocs();
                             window.dispatchEvent(new Event("docs_uploads_changed"));
-                            toast.success("Đã gỡ khỏi workspace");
+                            toast.success("Document removed from workspace");
                           } catch {
-                            toast.error("Không thể gỡ tài liệu");
+                            toast.error("Failed to remove document");
                           }
                         }}
                       >
-                        Gỡ khỏi workspace
+                        Remove from Workspace
                       </button>
                     </div>
                   </div>
                 ))}
                 {filteredUploads.length === 0 && (
-                  <p className="px-6 py-5 text-sm text-gray-500">Không có file nào được tải lên. </p>
+                  <p className="px-6 py-5 text-sm text-gray-500">No files uploaded.</p>
                 )}
               </div>
             </div>

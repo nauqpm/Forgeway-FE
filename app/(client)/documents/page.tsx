@@ -35,6 +35,8 @@ export default function DocumentsLibraryPage() {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingDoc, setEditingDoc] = useState<DocumentItem | null>(null);
   const [viewingDoc, setViewingDoc] = useState<DocumentItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<DocumentItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [linkingDoc, setLinkingDoc] = useState<DocumentItem | null>(null);
 
   const load = async () => {
@@ -96,22 +98,40 @@ export default function DocumentsLibraryPage() {
     return FileText;
   };
 
+  const handleDeleteDocument = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    try {
+      await documentService.delete(deleteTarget._id);
+      setViewingDoc((current) => (current?._id === deleteTarget._id ? null : current));
+      setDeleteTarget(null);
+      toast.success("Document deleted");
+      await load();
+    } catch {
+      toast.error("Delete document failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-              THƯ VIỆN TÀI LIỆU CỦA TÔI
+              LIBRARY OF DOCUMENTS
             </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Quản lý toàn bộ tài liệu cá nhân theo bố cục dạng lưới.
+              Management your documents, create online documents or upload files to keep all your important information in one place.
             </p>
           </div>
 
-          <label className="ml-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
+
+         {/*<label className="ml-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
             <Upload className="h-4 w-4" />
-            Thêm tài liệu mới
+            Add new document
             <input
               type="file"
               className="hidden"
@@ -121,21 +141,21 @@ export default function DocumentsLibraryPage() {
                 try {
                   await documentService.upload(file);
                   await load();
-                  toast.success("Tải lên thành công");
-                } catch (e: any) {
-                  toast.error(e.response?.data?.message || "Tải lên thất bại");
+                  toast.success("Document uploaded successfully");
+                } catch {
+                  toast.error("Failed to upload document");
                 } finally {
                   e.target.value = "";
                 }
               }}
             />
-          </label>
+          </label>*/}
 
           <Link
             href="/documents/create"
             className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
           >
-            Tạo tài liệu mới
+            Create new document
           </Link>
         </div>
       </div>
@@ -147,7 +167,7 @@ export default function DocumentsLibraryPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tìm tài liệu..."
+              placeholder="Search documents..."
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-indigo-300 focus:bg-white dark:border-gray-700 dark:bg-gray-800"
             />
           </div>
@@ -158,20 +178,20 @@ export default function DocumentsLibraryPage() {
             }
             className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-300 focus:bg-white dark:border-gray-700 dark:bg-gray-800"
           >
-            <option value="newest">Mới cập nhật</option>
-            <option value="name">Tên từ A-Z</option>
-            <option value="size">Dung lượng lớn</option>
+            <option value="newest">Newest</option>
+            <option value="name">Name (A-Z)</option>
+            <option value="size">Size (Largest)</option>
           </select>
         </div>
       </div>
 
       {loading ? (
         <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 dark:border-gray-800 dark:bg-gray-900">
-          Đang tải tài liệu...
+          Loading documents...
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500 dark:border-gray-700 dark:bg-gray-900">
-          Không có tài liệu phù hợp.
+          No matching documents found.
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -218,40 +238,26 @@ export default function DocumentsLibraryPage() {
                       className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
                     >
                       <Download className="h-3.5 w-3.5" />
-                      Tải về máy
+                      Download
                     </a>
-                    {doc.documentType === "online" &&
-                      user?.id === doc.uploadedBy && (
-                        <button
-                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuId(null);
-                            setEditingDoc(doc);
-                          }}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          Chỉnh sửa
-                        </button>
-                      )}
-                    <button
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(null);
-                        setLinkingDoc(doc);
-                      }}
-                    >
-                      <Link2 className="h-3.5 w-3.5" />
-                      Liên kết workspace
-                    </button>
+                    {doc.documentType === "online" && user?.id === doc.uploadedBy && (
+                      <button
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(null);
+                          setEditingDoc(doc);
+                        }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        Edit 
+                      </button>
+                    )}
                     <button
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
                       onClick={async (e) => {
                         e.stopPropagation();
-                        const nextName = window
-                          .prompt("Tên mới", doc.name)
-                          ?.trim();
+                        const nextName = window.prompt("New name", doc.name)?.trim();
                         if (!nextName) return;
                         await documentService.rename(doc._id, nextName);
                         setOpenMenuId(null);
@@ -259,28 +265,18 @@ export default function DocumentsLibraryPage() {
                       }}
                     >
                       <Pencil className="h-3.5 w-3.5" />
-                      Đổi tên
+                      Rename 
                     </button>
                     <button
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                      onClick={async (e) => {
+                      onClick={(e) => {
                         e.stopPropagation();
-                        if (
-                          !window.confirm(
-                            "Bạn chắc chắn muốn xóa tài liệu này? Hành động không thể hoàn tác.",
-                          )
-                        )
-                          return;
-                        await documentService.delete(doc._id);
                         setOpenMenuId(null);
-                        setViewingDoc((current) =>
-                          current?._id === doc._id ? null : current,
-                        );
-                        await load();
+                        setDeleteTarget(doc);
                       }}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
-                      Xóa
+                      Delete
                     </button>
                   </div>
                 )}
@@ -292,7 +288,7 @@ export default function DocumentsLibraryPage() {
                   {doc.extension.toUpperCase()} · {formatSize(doc.size)}
                 </p>
                 <p className="mt-1 text-xs text-slate-400">
-                  Ngày tải lên: {formatDate(doc.updatedAt || doc.createdAt)}
+                  Date uploaded: {formatDate(doc.updatedAt || doc.createdAt)}
                 </p>
               </div>
             );
@@ -308,6 +304,59 @@ export default function DocumentsLibraryPage() {
             await load();
           }}
         />
+      )}
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onClick={() => {
+            if (!deleting) setDeleteTarget(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-document-title"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="delete-document-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Delete document?
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  This will permanently delete{" "}
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                    {deleteTarget.name}
+                  </span>
+                  . This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={() => setDeleteTarget(null)}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeleteDocument}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {viewingDoc && (
         <div
@@ -332,7 +381,7 @@ export default function DocumentsLibraryPage() {
                 <a
                   href={documentService.downloadUrl(viewingDoc._id)}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-gray-800"
-                  aria-label="Tải xuống"
+                  aria-label="Download"
                 >
                   <Download className="h-4 w-4" />
                 </a>
@@ -340,7 +389,7 @@ export default function DocumentsLibraryPage() {
                   type="button"
                   onClick={() => setViewingDoc(null)}
                   className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-gray-800"
-                  aria-label="Đóng"
+                  aria-label="Close"
                 >
                   <X className="h-4 w-4" />
                 </button>

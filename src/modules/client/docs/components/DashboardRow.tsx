@@ -38,7 +38,7 @@ export default function DashboardRow({
               </span>
             </div>
             <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 block">
-              Đã tạo {new Date(doc.createdAt).toLocaleDateString()}
+              Created {new Date(doc.createdAt).toLocaleDateString()}
             </span>
           </div>
         </div>

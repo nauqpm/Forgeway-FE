@@ -52,7 +52,7 @@ export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-500">
               <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-sm font-medium">Đang tải trang...</span>
+              <span className="text-sm font-medium">Loading...</span>
             </div>
           </div>
         ) : (
