@@ -6,7 +6,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { inviteService } from "@/modules/client/workspaces/services/inviteService";
+import {
+  inviteService,
+  InviteRole,
+} from "@/modules/client/workspaces/services/inviteService";
 
 const ROLES = [
   { value: "workspace_admin" as InviteRole, label: "Admin" },
@@ -28,7 +31,7 @@ export default function InviteModal({
   projectId,
 }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState<InviteRole>("member");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -62,7 +65,7 @@ export default function InviteModal({
     emails.filter((email) => !validateEmail(email));
 
   const buildInviteLink = (invite: any) => {
-    const rawLink = invite?.inviteLink ?? invite?.link ?? invite?.url;
+    const rawLink = invite?.inviteUrl ?? invite?.inviteLink ?? invite?.link ?? invite?.url;
     if (rawLink) {
       return rawLink.startsWith("http")
         ? rawLink
@@ -77,39 +80,28 @@ export default function InviteModal({
   };
 
   const handleCopyLink = async () => {
-    const emails = parseEmails();
-    const firstEmail = emails[0];
-
-    if (!firstEmail) {
-      toast.error("Enter an email first to generate an invite link.");
-      return;
-    }
-
-    if (!validateEmail(firstEmail)) {
-      toast.error("Enter a valid email to generate an invite link.");
+    if (!projectId) {
+      toast.error("Could not identify this workspace.");
       return;
     }
 
     setIsGeneratingLink(true);
     try {
-      const invite = await inviteService.sendInvite(projectId, {
-        email: firstEmail,
-        role: role as "workspace_admin" | "member" | "viewer",
-      });
+      const invite = await inviteService.createInviteLink(projectId, { role });
       const inviteLink = buildInviteLink(invite);
 
       if (!inviteLink) {
-        toast.error("Invite created, but the API did not return a link token.");
+        toast.error("Invite link was not returned.");
         return;
       }
 
       await navigator.clipboard.writeText(inviteLink);
       setIsCopied(true);
-      toast.success("Invite link generated and copied.");
+      toast.success("Invite link copied. It expires in 10 minutes.");
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message ?? "Could not generate invite link.",
+        err?.response?.data?.message ?? "Could not create or copy the invite link.",
       );
     } finally {
       setIsGeneratingLink(false);
