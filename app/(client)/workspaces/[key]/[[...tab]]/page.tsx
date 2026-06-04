@@ -42,6 +42,7 @@ import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
+import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
 
@@ -289,17 +290,19 @@ export default function WorkspaceDetailPage({
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
   const handleRealtimeTaskUpserted = useCallback((issue: Issue) => {
-    setIssues((current) =>
-      current.some((item) => item.id === issue.id || item._id === issue.id)
+    const nextIssueId = taskIdOf(issue);
+
+    setIssues((current) => {
+      const next = current.some((item) => taskIdOf(item) === nextIssueId)
         ? current.map((item) =>
-            item.id === issue.id || item._id === issue.id
-              ? { ...item, ...issue }
-              : item,
+            taskIdOf(item) === nextIssueId ? { ...item, ...issue } : item,
           )
-        : [...current, issue],
-    );
+        : [...current, issue];
+
+      return sortIssuesByRank(next);
+    });
     setSelectedIssue((current) =>
-      current && (current.id === issue.id || current._id === issue.id)
+      current && taskIdOf(current) === nextIssueId
         ? { ...current, ...issue }
         : current,
     );
