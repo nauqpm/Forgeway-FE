@@ -231,10 +231,14 @@ export function useTaskRealtime(
       onTaskUpserted?.(issue);
     };
 
+    const handleTaskReordered = (envelope: TaskRealtimeEnvelope) => {
+      applyTaskEnvelope(envelope);
+    };
+
     socket.on(TASK_EVENTS.CREATED, applyTaskEnvelope);
     socket.on(TASK_EVENTS.UPDATED, applyTaskEnvelope);
     socket.on(TASK_EVENTS.MOVED, applyTaskEnvelope);
-    socket.on(TASK_EVENTS.REORDERED, applyTaskEnvelope);
+    socket.on(TASK_EVENTS.REORDERED, handleTaskReordered);
     socket.on(TASK_EVENTS.ARCHIVED, applyTaskEnvelope);
     socket.on(TASK_EVENTS.RESTORED, applyTaskEnvelope);
     socket.on(TASK_EVENTS.DELETED, applyTaskEnvelope);
@@ -243,10 +247,11 @@ export function useTaskRealtime(
       socket.off(TASK_EVENTS.CREATED, applyTaskEnvelope);
       socket.off(TASK_EVENTS.UPDATED, applyTaskEnvelope);
       socket.off(TASK_EVENTS.MOVED, applyTaskEnvelope);
-      socket.off(TASK_EVENTS.REORDERED, applyTaskEnvelope);
+      socket.off(TASK_EVENTS.REORDERED, handleTaskReordered);
       socket.off(TASK_EVENTS.ARCHIVED, applyTaskEnvelope);
       socket.off(TASK_EVENTS.RESTORED, applyTaskEnvelope);
       socket.off(TASK_EVENTS.DELETED, applyTaskEnvelope);
     };
   }, [currentUserId, onTaskRemoved, onTaskUpserted, queryClient, workspaceId]);
 }
+
