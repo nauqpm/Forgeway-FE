@@ -68,6 +68,21 @@ export const shouldApplyReorderEvent = (
   return { apply: false, refetch: false };
 };
 
+export const hasReorderStateChanged = (
+  currentIssue: Issue | undefined,
+  nextIssue: Issue,
+) => {
+  if (!currentIssue) return true;
+
+  return (
+    currentIssue.columnId !== nextIssue.columnId ||
+    currentIssue.status !== nextIssue.status ||
+    currentIssue.sprintId !== nextIssue.sprintId ||
+    currentIssue.rank !== nextIssue.rank ||
+    currentIssue.version !== nextIssue.version
+  );
+};
+
 export const upsertTask = (
   current: Issue[] | undefined,
   issue: Issue,

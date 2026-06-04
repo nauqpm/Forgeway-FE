@@ -11,6 +11,7 @@ import type { Issue } from '@/modules/client/workspaces/types/issue.type';
 import {
   findTaskInCache,
   getAffectedTaskQueries,
+  hasReorderStateChanged,
   mergeReorderedTask,
   removeTask,
   shouldApplyEvent,
@@ -133,14 +134,21 @@ export function useTaskRealtime(
         currentUserId,
       );
 
+      const hasStateChange = hasReorderStateChanged(existing, issue);
+      let shouldApply = decision.apply;
+
       if (decision.refetch) {
-        affectedQueries.forEach(([queryKey]) => {
-          queryClient.invalidateQueries({ queryKey, exact: true });
-        });
-        return;
+        if (incomingVersion === existing?.version && hasStateChange) {
+          shouldApply = true;
+        } else {
+          affectedQueries.forEach(([queryKey]) => {
+            queryClient.invalidateQueries({ queryKey, exact: true });
+          });
+          return;
+        }
       }
 
-      if (!decision.apply) return;
+      if (!shouldApply) return;
 
       try {
         notifyManager.batch(() => {
