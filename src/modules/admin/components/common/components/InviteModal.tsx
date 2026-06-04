@@ -3,65 +3,18 @@ import {
   X,
   Link as LinkIcon,
   Check,
-  Mail,
-  Briefcase,
-  MessageSquare,
-  AlertCircle,
   Loader2,
 } from "lucide-react";
-import CreatableSelect from "react-select/creatable";
 import { toast } from "react-hot-toast";
 import { inviteService } from "@/modules/client/workspaces/services/inviteService";
-
-// --- MOCK DATA ---
-const EXISTING_USERS = [
-  {
-    id: "1",
-    name: "Alex Nguyen",
-    email: "nva@company.com",
-    avatar: "N",
-    color: "bg-indigo-500",
-  },
-  {
-    id: "2",
-    name: "Taylor Tran",
-    email: "ttb@company.com",
-    avatar: "T",
-    color: "bg-emerald-500",
-  },
-  {
-    id: "3",
-    name: "Chris Le",
-    email: "lvc@company.com",
-    avatar: "L",
-    color: "bg-blue-500",
-  },
-  {
-    id: "4",
-    name: "Maria Garcia",
-    email: "maria@company.com",
-    avatar: "M",
-    color: "bg-pink-500",
-  },
-  {
-    id: "5",
-    name: "John Doe",
-    email: "john@company.com",
-    avatar: "J",
-    color: "bg-amber-500",
-  },
-];
-
-const QUICK_SUGGESTIONS = [
-  { id: "6", name: "DL Do Thanh Loc", email: "loc@company.com" },
-  { id: "7", name: "HN Hoang Nam", email: "nam@company.com" },
-];
 
 const ROLES = [
   { value: "workspace_admin", label: "Admin" },
   { value: "member", label: "Member" },
   { value: "viewer", label: "Viewer" },
 ];
+
+const EMAIL_SPLIT_REGEX = /[\s,;]+/;
 
 interface InviteModalProps {
   isOpen: boolean;
@@ -74,18 +27,18 @@ export default function InviteModal({
   onClose,
   projectId,
 }: InviteModalProps) {
-  const [selectedOptions, setSelectedOptions] = useState<any[]>([]);
+  const [emailInput, setEmailInput] = useState("");
   const [role, setRole] = useState("member");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
-  const [suggestions, setSuggestions] = useState(QUICK_SUGGESTIONS);
 
   // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
-      setSelectedOptions([]);
+      setEmailInput("");
       setRole("member");
-      setSuggestions(QUICK_SUGGESTIONS);
+      setIsCopied(false);
     }
   }, [isOpen]);
 
@@ -99,36 +52,83 @@ export default function InviteModal({
       );
   };
 
-  const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy: ", err);
+  const parseEmails = () =>
+    emailInput
+      .split(EMAIL_SPLIT_REGEX)
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean);
+
+  const getInvalidEmails = (emails: string[]) =>
+    emails.filter((email) => !validateEmail(email));
+
+  const buildInviteLink = (invite: any) => {
+    const rawLink = invite?.inviteLink ?? invite?.link ?? invite?.url;
+    if (rawLink) {
+      return rawLink.startsWith("http")
+        ? rawLink
+        : `${window.location.origin}${rawLink.startsWith("/") ? "" : "/"}${rawLink}`;
     }
+
+    if (invite?.token) {
+      return `${window.location.origin}/invites/accept/${invite.token}`;
+    }
+
+    return "";
   };
 
-  const handleQuickAdd = (user: (typeof QUICK_SUGGESTIONS)[0]) => {
-    const newOption = {
-      value: user.id,
-      label: `${user.name} (${user.email})`,
-      isFixed: false,
-      user,
-    };
-    if (!selectedOptions.find((o) => o.value === user.id)) {
-      setSelectedOptions([...selectedOptions, newOption]);
+  const handleCopyLink = async () => {
+    const emails = parseEmails();
+    const firstEmail = emails[0];
+
+    if (!firstEmail) {
+      toast.error("Enter an email first to generate an invite link.");
+      return;
     }
-    // Remove from suggestions
-    setSuggestions(suggestions.filter((s) => s.id !== user.id));
+
+    if (!validateEmail(firstEmail)) {
+      toast.error("Enter a valid email to generate an invite link.");
+      return;
+    }
+
+    setIsGeneratingLink(true);
+    try {
+      const invite = await inviteService.sendInvite(projectId, {
+        email: firstEmail,
+        role: role as "workspace_admin" | "member" | "viewer",
+      });
+      const inviteLink = buildInviteLink(invite);
+
+      if (!inviteLink) {
+        toast.error("Invite created, but the API did not return a link token.");
+        return;
+      }
+
+      await navigator.clipboard.writeText(inviteLink);
+      setIsCopied(true);
+      toast.success("Invite link generated and copied.");
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err: any) {
+      toast.error(
+        err?.response?.data?.message ?? "Could not generate invite link.",
+      );
+    } finally {
+      setIsGeneratingLink(false);
+    }
   };
 
   const handleSubmit = async () => {
-    if (selectedOptions.length === 0) return;
+    const emails = parseEmails();
+    if (emails.length === 0) return;
+
+    const invalidEmails = getInvalidEmails(emails);
+    if (invalidEmails.length > 0) {
+      toast.error(`Invalid email: ${invalidEmails[0]}`);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const emails = selectedOptions.map((opt) => String(opt.value));
       const results = await Promise.allSettled(
         emails.map((email) =>
           inviteService.sendInvite(projectId, {
@@ -164,99 +164,8 @@ export default function InviteModal({
     }
   };
 
-  // Convert existing users to react-select options format
-  const selectOptions = EXISTING_USERS.map((u) => ({
-    value: u.email, // using email as ID for simplcity if they are new
-    label: `${u.name} (${u.email})`,
-    user: u,
-  }));
-
-  const isDark =
-    typeof document !== "undefined" &&
-    document.documentElement.classList.contains("dark");
-
-  const customStyles = {
-    control: (base: any, state: any) => ({
-      ...base,
-      backgroundColor: isDark ? "#111827" : "#ffffff",
-      minHeight: "44px",
-      borderColor: state.isFocused ? "#6366f1" : isDark ? "#374151" : "#d1d5db",
-      boxShadow: state.isFocused ? "0 0 0 1px #6366f1" : "none",
-      "&:hover": {
-        borderColor: state.isFocused
-          ? "#6366f1"
-          : isDark
-            ? "#4b5563"
-            : "#9ca3af",
-      },
-      borderRadius: "0.5rem",
-    }),
-    menu: (base: any) => ({
-      ...base,
-      backgroundColor: isDark ? "#111827" : "#ffffff",
-      border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
-      boxShadow: isDark
-        ? "0 20px 25px -5px rgb(0 0 0 / 0.45)"
-        : "0 20px 25px -5px rgb(0 0 0 / 0.1)",
-      zIndex: 60,
-    }),
-    option: (base: any, state: any) => ({
-      ...base,
-      backgroundColor: state.isFocused
-        ? isDark
-          ? "#1f2937"
-          : "#eef2ff"
-        : isDark
-          ? "#111827"
-          : "#ffffff",
-      color: isDark ? "#f9fafb" : "#111827",
-      ":active": {
-        backgroundColor: isDark ? "#374151" : "#e0e7ff",
-      },
-    }),
-    input: (base: any) => ({
-      ...base,
-      color: isDark ? "#ffffff" : "#111827",
-    }),
-    placeholder: (base: any) => ({
-      ...base,
-      color: isDark ? "#9ca3af" : "#6b7280",
-    }),
-    singleValue: (base: any) => ({
-      ...base,
-      color: isDark ? "#ffffff" : "#111827",
-    }),
-    multiValue: (base: any) => ({
-      ...base,
-      backgroundColor: isDark ? "#312e81" : "#f3f4f6",
-      borderRadius: "0.375rem",
-    }),
-    multiValueLabel: (base: any) => ({
-      ...base,
-      color: isDark ? "#e0e7ff" : "#374151",
-      fontSize: "0.875rem",
-      fontWeight: 500,
-      padding: "2px 6px",
-    }),
-    multiValueRemove: (base: any) => ({
-      ...base,
-      color: isDark ? "#c7d2fe" : "#6b7280",
-      ":hover": {
-        backgroundColor: isDark ? "#4338ca" : "#e5e7eb",
-        color: isDark ? "#fecaca" : "#ef4444",
-      },
-    }),
-    clearIndicator: (base: any) => ({
-      ...base,
-      color: isDark ? "#9ca3af" : "#6b7280",
-      ":hover": { color: isDark ? "#e5e7eb" : "#374151" },
-    }),
-    dropdownIndicator: (base: any) => ({
-      ...base,
-      color: isDark ? "#9ca3af" : "#6b7280",
-      ":hover": { color: isDark ? "#e5e7eb" : "#374151" },
-    }),
-  };
+  const emails = parseEmails();
+  const canSubmit = emails.length > 0 && !isSubmitting && !isGeneratingLink;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -282,18 +191,17 @@ export default function InviteModal({
             <div className="flex flex-col sm:flex-row gap-3 items-start">
               <div className="flex-1 w-full">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Names or emails <span className="text-red-500">*</span>
+                  Emails <span className="text-red-500">*</span>
                 </label>
-                <CreatableSelect
-                  isMulti
-                  options={selectOptions}
-                  value={selectedOptions}
-                  onChange={(val: any) => setSelectedOptions(val || [])}
-                  styles={customStyles}
-                  placeholder="e.g. maria@company.com"
-                  isValidNewOption={(inputValue) => !!validateEmail(inputValue)}
-                  formatCreateLabel={(inputValue) => `Invite "${inputValue}"`}
-                  noOptionsMessage={() => "Type a valid email to invite"}
+                <textarea
+                  value={emailInput}
+                  onChange={(event) => {
+                    setEmailInput(event.target.value);
+                    if (isCopied) setIsCopied(false);
+                  }}
+                  rows={3}
+                  placeholder="maria@company.com, alex@company.com"
+                  className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                 />
               </div>
 
@@ -326,28 +234,6 @@ export default function InviteModal({
               </div>
             </div>
 
-            {/* Quick Suggestions */}
-            {suggestions.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
-                  Quick Suggestions
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {suggestions.map((user) => (
-                    <button
-                      key={user.id}
-                      onClick={() => handleQuickAdd(user)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-medium transition-colors border border-indigo-100 dark:border-indigo-800"
-                    >
-                      <span className="text-indigo-600 dark:text-indigo-300">
-                        +
-                      </span>{" "}
-                      {user.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
@@ -356,14 +242,19 @@ export default function InviteModal({
           <div className="flex items-center w-full sm:w-auto justify-between sm:justify-start gap-4">
             <button
               onClick={handleCopyLink}
+              disabled={isGeneratingLink || isSubmitting}
               className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
             >
-              {isCopied ? (
+              {isGeneratingLink ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isCopied ? (
                 <Check className="w-4 h-4 text-green-600" />
               ) : (
                 <LinkIcon className="w-4 h-4" />
               )}
-              {isCopied ? (
+              {isGeneratingLink ? (
+                "Generating..."
+              ) : isCopied ? (
                 <span className="text-green-600">Copied</span>
               ) : (
                 "Copy link"
@@ -374,14 +265,14 @@ export default function InviteModal({
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
             <button
               onClick={onClose}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isGeneratingLink}
               className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-800 border border-transparent dark:border-gray-700 rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              disabled={selectedOptions.length === 0 || isSubmitting}
+              disabled={!canSubmit}
               className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}

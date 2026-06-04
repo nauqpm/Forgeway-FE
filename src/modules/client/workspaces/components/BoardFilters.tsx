@@ -87,7 +87,7 @@ export default function BoardFilters({
     filters.backlog ||
     filters.archived;
 
-  const tabs = ["Status", "Assignee", "Task type", "Priority", "Other"];
+  const tabs = ["Status", "Assignee", "Task type", "Priority"];
 
   // Filtered lists
   const allStatuses = ["To Do", "In Progress", "Testing", "Done"];
@@ -286,31 +286,6 @@ export default function BoardFilters({
               </>
             )}
 
-            {activeTab === "Other" && (
-              <div className="flex flex-col gap-2">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Additional attributes</h4>
-                
-                <label className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={!!filters.backlog}
-                    onChange={(e) => setFilters(prev => ({ ...prev, backlog: e.target.checked }))}
-                    className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Backlog (not in sprint)</span>
-                </label>
-
-                <label className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded cursor-pointer transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={!!filters.archived}
-                    onChange={(e) => setFilters(prev => ({ ...prev, archived: e.target.checked }))}
-                    className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Archived</span>
-                </label>
-              </div>
-            )}
           </div>
         </div>
       )}
