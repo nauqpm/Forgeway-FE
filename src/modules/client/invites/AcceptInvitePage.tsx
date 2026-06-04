@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
@@ -20,6 +20,7 @@ export default function AcceptInvitePage({ token }: Props) {
   const [accepting, setAccepting] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const autoAcceptStarted = useRef(false);
 
   useEffect(() => {
     inviteService.getInviteByToken(token)
@@ -43,8 +44,8 @@ export default function AcceptInvitePage({ token }: Props) {
 
   const handleAccept = async () => {
     setAccepting(true);
+    const workspaceKey = invite?.workspaceKey;
     try {
-      const workspaceKey = invite?.workspaceKey;
       if (!workspaceKey) {
         toast.error('Could not identify the invitation workspace.');
         return;
@@ -55,11 +56,35 @@ export default function AcceptInvitePage({ token }: Props) {
       toast.success('You have joined the workspace successfully!');
       setTimeout(() => router.push(`/workspaces/${workspaceKey}`), 1500);
     } catch (e: any) {
+      if (e?.response?.status === 409 && workspaceKey) {
+        toast.success('You are already a member of this workspace.');
+        router.push(`/workspaces/${workspaceKey}`);
+        return;
+      }
+
       toast.error(e?.response?.data?.message || 'Could not accept the invitation.');
     } finally {
       setAccepting(false);
     }
   };
+
+  useEffect(() => {
+    if (
+      !invite ||
+      invite.type !== 'link' ||
+      invite.status !== 'pending' ||
+      !isAuthenticated ||
+      authLoading ||
+      done ||
+      accepting ||
+      autoAcceptStarted.current
+    ) {
+      return;
+    }
+
+    autoAcceptStarted.current = true;
+    void handleAccept();
+  }, [invite, isAuthenticated, authLoading, done, accepting]);
 
   if (loadingInvite || authLoading) {
     return (
@@ -170,7 +195,12 @@ export default function AcceptInvitePage({ token }: Props) {
 
         {!isExpiredOrUsed && !emailMismatch && (
           <div className="space-y-3">
-            {isAuthenticated ? (
+            {isAuthenticated && isLinkInvite ? (
+              <div className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Joining workspace...
+              </div>
+            ) : isAuthenticated ? (
               <button
                 onClick={handleAccept}
                 disabled={accepting}
