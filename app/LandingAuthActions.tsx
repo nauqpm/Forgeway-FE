@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  Bell,
   ChevronDown,
   LayoutDashboard,
   Loader2,
@@ -13,12 +14,36 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import NotificationPanel from "@/common/components/NotificationPanel";
+import { notificationService } from "@/common/services/notification.service";
+import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 
 export function NavAuthActions() {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  const refreshUnreadNotificationCount = useCallback(() => {
+    if (!isAuthenticated) return;
+
+    notificationService
+      .unreadCount()
+      .then(setUnreadNotificationCount)
+      .catch(() => setUnreadNotificationCount(0));
+  }, [isAuthenticated]);
+
+  useNotificationRealtime({
+    enabled: isAuthenticated,
+    onCreated: refreshUnreadNotificationCount,
+    onRead: refreshUnreadNotificationCount,
+    onReadAll: refreshUnreadNotificationCount,
+  });
+
+  useEffect(() => {
+    refreshUnreadNotificationCount();
+  }, [refreshUnreadNotificationCount]);
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -36,7 +61,21 @@ export function NavAuthActions() {
 
   if (isAuthenticated) {
     return (
-      <div className="relative" ref={dropdownRef}>
+      <div className="relative flex items-center gap-2" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => setShowNotifications((open) => !open)}
+          className="relative rounded-lg p-2 text-gray-300 transition hover:bg-white/10 hover:text-white"
+          aria-label="Open notifications"
+        >
+          <Bell className="h-5 w-5" />
+          {unreadNotificationCount > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+              {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+            </span>
+          )}
+        </button>
+
         <button
           type="button"
           onClick={() => setDropdownOpen((open) => !open)}
@@ -57,8 +96,14 @@ export function NavAuthActions() {
           <ChevronDown className="h-4 w-4 text-gray-400" />
         </button>
 
+        {showNotifications && (
+          <NotificationPanel
+            onClose={() => setShowNotifications(false)}
+            onUnreadCountChange={setUnreadNotificationCount}
+          />
+        )}
         {dropdownOpen && (
-          <div className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border border-gray-700 bg-gray-900 py-2 shadow-xl shadow-black/30">
+          <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-gray-700 bg-gray-900 py-2 shadow-xl shadow-black/30">
             <div className="border-b border-gray-800 px-4 py-2">
               <p className="truncate text-sm font-semibold text-white">
                 {user?.fullName ?? "User"}
