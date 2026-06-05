@@ -4,22 +4,17 @@ import { useDocsStore } from "../store/docs.store";
 import DocsSearch from "./DocsSearch";
 import DocsTree from "./DocsTree";
 import RecentDocs from "./RecentDocs";
-import { Plus, ChevronLeft, ChevronRight, Download, FileText, Layout, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, Download, FileText, Layout, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { toast } from "react-hot-toast";
 
 export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
-  const { documents, createDocument, selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
+  const { documents, selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
-  
-  const handleCreateRoot = async () => {
-    const newDoc = await createDocument(workspaceId, null);
-    if (newDoc) selectDocument(newDoc.id);
-  };
 
   const rootDocs = documents.filter((doc) => doc.parentId === null);
   const { searchQuery } = useDocsStore();
@@ -39,9 +34,28 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
     return () => window.removeEventListener("docs_uploads_changed", onChanged);
   }, [workspaceId]);
   
-  const filteredDocs = searchQuery 
-    ? documents.filter(doc => doc.title.toLowerCase().includes(searchQuery.toLowerCase()))
-    : [];
+  const filteredDocs = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+
+    const workspaceDocs = documents
+      .filter((doc) => doc.title.toLowerCase().includes(query))
+      .map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        source: "page" as const,
+      }));
+
+    const importedDocs = uploadedDocs
+      .filter((doc) => doc.name.toLowerCase().includes(query))
+      .map((doc) => ({
+        id: doc._id,
+        title: doc.name,
+        source: "import" as const,
+      }));
+
+    return [...workspaceDocs, ...importedDocs];
+  }, [documents, searchQuery, uploadedDocs]);
 
   return (
     <motion.aside 
@@ -72,12 +86,12 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
               <button
                 onClick={() => selectDocument(null)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  !selectedDocumentId 
+                  !selectedDocumentId && !selectedImportedDocumentId
                     ? "bg-[#E6EFFC] dark:bg-blue-900/30 text-[#0052CC] dark:text-blue-400" 
                     : "text-[#42526E] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
                 }`}
               >
-                <Layout className={`w-4 h-4 ${!selectedDocumentId ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`} />
+                <Layout className={`w-4 h-4 ${!selectedDocumentId && !selectedImportedDocumentId ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`} />
                 All Documents
               </button>
 
@@ -96,14 +110,18 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                     {filteredDocs.map(doc => (
                       <li key={doc.id}>
                         <button
-                          onClick={() => selectDocument(doc.id)}
+                          onClick={() =>
+                            doc.source === "import"
+                              ? selectImportedDocument(doc.id)
+                              : selectDocument(doc.id)
+                          }
                           className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] transition-all ${
-                            selectedDocumentId === doc.id 
+                            selectedDocumentId === doc.id || selectedImportedDocumentId === doc.id
                               ? "bg-[#E6EFFC] dark:bg-blue-900/30 text-[#0052CC] dark:text-blue-400 font-medium" 
                               : "text-[#42526E] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
                           }`}
                         >
-                          <FileText className={`w-3.5 h-3.5 ${selectedDocumentId === doc.id ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`} />
+                          <FileText className={`w-3.5 h-3.5 ${doc.source === "import" ? "text-amber-500" : selectedDocumentId === doc.id ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-500"}`} />
                           <span className="truncate">{doc.title}</span>
                         </button>
                       </li>
