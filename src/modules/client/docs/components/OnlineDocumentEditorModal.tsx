@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import DOMPurify from "dompurify";
-import { CheckCircle2, Loader2, Save, X } from "lucide-react";
+import { CheckCircle2, Loader2, Save, X, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
@@ -25,18 +25,18 @@ type Props = {
 
 export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved }: Props) {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved">("saved");
   const [title, setTitle] = useState(doc.name);
   const activeDocIdRef = useRef<string | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
-    extensions: getEditorExtensions("Start typing..."),
+    extensions: getEditorExtensions(" "),
     content: "",
     editorProps: {
       attributes: {
         class:
-          "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
+          "tiptap-content prose m-5 max-w-none px-2 pb-32 text-slate-900 focus:outline-none dark:prose-invert dark:text-slate-100 prose-strong:text-slate-900 dark:prose-strong:text-slate-100",
       },
     },
     onUpdate: () => setStatus("idle"),
@@ -53,10 +53,10 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
     setLoading(true);
     try {
       const res = await documentService.getContent(doc._id);
-      editor.commands.setContent(res.content || "");
-      setStatus("idle");
+      editor.commands.setContent(res.content || "", { emitUpdate: false });
+      setStatus("saved");
     } catch {
-      toast.error("Không thể tải nội dung tài liệu");
+      toast.error("Can not load document content");
       onClose();
     } finally {
       setLoading(false);
@@ -78,10 +78,10 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
       updatedDoc = await documentService.updateContent(doc._id, sanitized);
       setStatus("saved");
       onSaved?.(updatedDoc);
-      toast.success("Lưu tài liệu thành công");
+      toast.success("Document saved successfully");
     } catch {
       setStatus("idle");
-      toast.error("Lưu tài liệu thất bại");
+      toast.error("Failed to save document");
     }
   }, [doc, editor, onSaved, title]);
 
@@ -120,10 +120,22 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
             <span className="font-semibold text-gray-900 dark:text-gray-100">{title || "Untitled Document"}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              {statusLabel}
-            </span>
+            {status === "saving" ? (
+              <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {statusLabel}
+              </span>
+            ) : status === "saved" ? (
+              <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                {statusLabel}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
+                <XCircle className="h-3.5 w-3.5" />
+                {statusLabel}
+              </span>
+            )}
             <button
               onClick={saveContent}
               className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"

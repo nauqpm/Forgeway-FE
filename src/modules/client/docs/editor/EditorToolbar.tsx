@@ -31,8 +31,10 @@ import imageService from "@/common/services/imageService";
 import LinkEditorPopover from "./LinkEditorPopover";
 import TableGridPicker from "./TableGridPicker";
 
-const FONT_FAMILIES = ["Arial", "Times New Roman", "Courier New", "Inter", "Georgia"];
-const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "32px"];
+const DEFAULT_FONT_FAMILY = "Arial";
+const FONT_FAMILIES = [DEFAULT_FONT_FAMILY, "Times New Roman", "Courier New", "Inter", "Georgia"];
+const DEFAULT_FONT_SIZE = "16";
+const FONT_SIZES = ["12", "14", DEFAULT_FONT_SIZE, "18", "20", "24", "32"];
 const COLORS = ["#111827", "#EF4444", "#2563EB", "#059669", "#D97706", "#7C3AED"];
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -143,11 +145,11 @@ export default function EditorToolbar({ editor }: Props) {
 
   const uploadLocalImage = async (file: File) => {
     if (file.size > MAX_IMAGE_SIZE) {
-      toast.error("Kích thước ảnh quá 5MB");
+      toast.error("Max image size not over 5MB");
       return;
     }
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      toast.error("Định dạng ảnh không hợp lệ");
+      toast.error("Invalid image format");
       return;
     }
 
@@ -155,13 +157,13 @@ export default function EditorToolbar({ editor }: Props) {
       const result = await imageService.uploadImage(file, true);
       const imageUrl = toImageUrl(result.imageUrl || result.url || "");
       if (!imageUrl) {
-        toast.error("Không lấy được URL ảnh sau khi upload");
+        toast.error("Failed to get image URL after upload");
         return;
       }
       editor.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
-      toast.success("Đã chèn ảnh");
+      toast.success("Image inserted successfully");
     } catch {
-      toast.error("Upload ảnh thất bại");
+      toast.error("Failed to upload image");
     }
   };
 
@@ -179,6 +181,8 @@ export default function EditorToolbar({ editor }: Props) {
   };
 
   const inTable = editor.isActive("table");
+  const selectedFontFamily = activeTextStyle.fontFamily || DEFAULT_FONT_FAMILY;
+  const selectedFontSize = activeTextStyle.fontSize || DEFAULT_FONT_SIZE;
 
   return (
     <>
@@ -234,20 +238,16 @@ export default function EditorToolbar({ editor }: Props) {
 
       <select
         className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
-        value={activeTextStyle.fontFamily}
+        style={{ fontFamily: selectedFontFamily }}
+        value={selectedFontFamily}
         onChange={(e) => {
           const value = e.target.value;
           setActiveTextStyle((current) => ({ ...current, fontFamily: value }));
-          if (!value) {
-            editor.chain().focus().unsetFontFamily().run();
-            return;
-          }
           editor.chain().focus().setFontFamily(value).run();
         }}
       >
-        <option value="">Font</option>
         {FONT_FAMILIES.map((font) => (
-          <option key={font} value={font}>
+          <option key={font} value={font} style={{ fontFamily: font }}>
             {font}
           </option>
         ))}
@@ -255,18 +255,13 @@ export default function EditorToolbar({ editor }: Props) {
 
       <select
         className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
-        value={activeTextStyle.fontSize}
+        value={selectedFontSize}
         onChange={(e) => {
           const value = e.target.value;
           setActiveTextStyle((current) => ({ ...current, fontSize: value }));
-          if (!value) {
-            editor.chain().focus().unsetFontSize().run();
-            return;
-          }
           editor.chain().focus().setFontSize(value).run();
         }}
       >
-        <option value="">Size</option>
         {FONT_SIZES.map((size) => (
           <option key={size} value={size}>
             {size}
@@ -291,7 +286,7 @@ export default function EditorToolbar({ editor }: Props) {
         <button
           key={color}
           type="button"
-          title={`Màu ${color}`}
+          title={`Color ${color}`}
           onClick={() => editor.chain().focus().setColor(color).run()}
           className="h-5 w-5 rounded border border-gray-200"
           style={{ backgroundColor: color }}

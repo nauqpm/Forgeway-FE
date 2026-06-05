@@ -44,6 +44,8 @@ export default function DocsTreeItem({
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [isLoadingChildren, setIsLoadingChildren] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -102,12 +104,26 @@ export default function DocsTreeItem({
     setShowMenu(false);
   };
 
-  const handleDelete = async (e: React.MouseEvent) => {
+  const handleOpenDeleteDialog = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Delete this document and all sub-pages?")) {
-      await deleteDocument(doc.id);
-    }
+    setDeleteTarget(doc);
     setShowMenu(false);
+  };
+
+  const closeDeleteDialog = () => {
+    if (!deleting) setDeleteTarget(null);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    try {
+      await deleteDocument(deleteTarget.id);
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleRenameSubmit = () => {
@@ -197,7 +213,7 @@ export default function DocsTreeItem({
           <button
             onClick={handleAddChild}
             className="p-1 text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 hover:bg-white dark:hover:bg-gray-800 rounded-md transition-all shadow-none hover:shadow-sm"
-            title="Thêm trang con"
+            title="Add sub-page"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -232,14 +248,14 @@ export default function DocsTreeItem({
                   className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] dark:text-gray-300 hover:bg-[#F4F5F7] dark:hover:bg-gray-800 flex items-center gap-2.5 transition-colors"
                 >
                   <Edit2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />{" "}
-                  Đổi tên
+                  Rename
                 </button>
                 <div className="my-1 border-t border-gray-50 dark:border-gray-800" />
                 <button
-                  onClick={handleDelete}
+                  onClick={handleOpenDeleteDialog}
                   className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2.5 transition-colors"
                 >
-                  <Trash className="w-3.5 h-3.5" /> Xóa
+                  <Trash className="w-3.5 h-3.5" /> Delete 
                 </button>
               </motion.div>
             )}
@@ -264,6 +280,58 @@ export default function DocsTreeItem({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onClick={closeDeleteDialog}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-page-title"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+                <Trash className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="delete-page-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Delete document?
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  This will permanently delete{" "}
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                    {deleteTarget.title || "Untitled Document"}
+                  </span>
+                  {" "}and all sub-pages. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={closeDeleteDialog}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDelete}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </li>
   );
 }

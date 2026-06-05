@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, History, MoreHorizontal, Trash2 } from "lucide-react";
+import { FileText, History, Trash2 } from "lucide-react";
 import { Document } from "../types/docs.type";
 
 interface DashboardRowProps {
@@ -32,9 +32,9 @@ export default function DashboardRow({
                 {doc.title}
               </span>
               <span
-                className={`px-2 py-0.5 text-[10px] rounded-full font-semibold ${doc.source === "upload" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"}`}
+                className={`px-2 py-0.5 text-[10px] rounded-full font-semibold ${doc.source === "import" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"}`}
               >
-                {doc.source === "upload" ? "UPLOAD" : "DOCS"}
+                {doc.source === "import" ? "IMPORT" : "DOCS"}
               </span>
             </div>
             <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 block">
@@ -67,7 +67,7 @@ export default function DashboardRow({
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-          {doc.source !== "upload" && (
+          {doc.source !== "import" && (
             <>
               <button
                 onClick={(e) => {
