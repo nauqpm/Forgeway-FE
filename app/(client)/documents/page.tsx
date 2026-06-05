@@ -11,12 +11,10 @@ import {
   FileSpreadsheet,
   FileText,
   FileType2,
-  Link2,
   MoreHorizontal,
   Pencil,
   Search,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 import { documentService } from "@/modules/client/docs/services/documentService";
@@ -24,6 +22,14 @@ import { DocumentItem } from "@/modules/client/docs/types/document.type";
 import ImportedDocumentViewer from "@/modules/client/docs/components/ImportedDocumentViewer";
 import OnlineDocumentEditorModal from "@/modules/client/docs/components/OnlineDocumentEditorModal";
 import DocumentWorkspaceLinkModal from "@/modules/client/docs/components/DocumentWorkspaceLinkModal";
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error && typeof error === "object" && "response" in error) {
+    const res = (error as { response?: { data?: { message?: string; error?: string } } }).response;
+    return res?.data?.message || res?.data?.error || fallback;
+  }
+  return fallback;
+};
 
 export default function DocumentsLibraryPage() {
   usePageTitle("Documents");
@@ -154,8 +160,8 @@ export default function DocumentsLibraryPage() {
       setRenameName("");
       toast.success("Document renamed");
       await load();
-    } catch {
-      toast.error("Rename document failed");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Rename document failed"));
     } finally {
       setRenaming(false);
     }
