@@ -271,7 +271,7 @@ export function ProfileInfoForm({
           <CustomDatePicker
             value={form.birthday}
             onChange={handleBirthdayChange}
-            placeholder="MM/DD/YYYY"
+            placeholder="DD/MM/YYYY"
             inputClassName={`h-[46px] rounded-lg ${
               fieldErrors.birthday
                 ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
