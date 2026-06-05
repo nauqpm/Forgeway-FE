@@ -125,7 +125,7 @@ export function useAppProfile() {
         // Phase 1: upload file
         const form = new FormData();
         form.append("file", file);
-        const uploadRes = await api.post("/imagesapi/upload", form, {
+        const uploadRes = await api.post("/imagesapi/upload/avatar", form, {
           transformRequest: [
             (data, headers) => {
               delete headers["Content-Type"];
