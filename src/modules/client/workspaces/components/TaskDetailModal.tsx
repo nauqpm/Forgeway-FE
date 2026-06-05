@@ -454,16 +454,16 @@ export default function TaskDetailModal({
             
             {/* Archived Banner */}
             {issue.isArchived && (
-              <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+              <div className="flex items-center justify-between bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] border-l-4 border-[#956400]/40 dark:border-[#F59E0B]/40 p-4 rounded-[6px]">
                 <div className="flex items-center">
-                  <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-                  <span className="text-yellow-700 text-sm font-medium">
+                  <AlertTriangle className="h-5 w-5 text-[#956400] dark:text-[#F59E0B] mr-2" />
+                  <span className="text-[#956400] dark:text-[#F59E0B] text-sm font-medium">
                     This task was archived by {issue.archivedByUser?.fullName || 'Unknown'} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : 'Unknown Date'}. It is currently read-only.
                   </span>
                 </div>
                 <button 
                   onClick={() => { console.log("Restore triggered") }}
-                  className="flex items-center px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-sm font-semibold rounded transition-colors"
+                  className="flex items-center px-3 py-1.5 bg-[#FBF3DB] hover:bg-[#F7F6F3] dark:bg-[rgba(149,100,0,0.12)] dark:hover:bg-white/8 text-[#956400] dark:text-[#F59E0B] text-sm font-semibold rounded-[6px] transition-colors"
                 >
                   <ArchiveRestore className="w-4 h-4 mr-1.5" />
                   Restore

@@ -66,7 +66,7 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
 
   return (
     <div
-      className="app-drawer fixed inset-y-0 right-0 bg-white dark:bg-[#191919] border-l border-[#EAEAEA] dark:border-white/8 z-50 flex flex-col transition-transform duration-300"
+      className="app-drawer fixed inset-y-0 right-0 bg-white dark:bg-[#202020] border-l border-[#EAEAEA] dark:border-white/8 z-50 flex flex-col transition-transform duration-300"
       style={{ boxShadow: "-8px 0 24px rgba(0,0,0,0.08), -1px 0 3px rgba(0,0,0,0.04)" }}
     >
       <div className="flex items-center justify-between p-4 border-b border-[#EAEAEA] dark:border-white/8">

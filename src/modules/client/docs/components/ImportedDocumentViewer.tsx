@@ -31,7 +31,7 @@ export default function ImportedDocumentViewer({ doc }: Props) {
   return (
     <div className="h-full flex flex-col">
       {isOnline && isOwner && (
-        <div className="border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-4 py-3">
+        <div className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-3">
           <button
             onClick={() => setOpenEditor(true)}
             className="rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 py-2 text-xs font-semibold text-white hover:bg-[#1D4ED8]"
@@ -44,9 +44,9 @@ export default function ImportedDocumentViewer({ doc }: Props) {
         {isImage ? (
           <img src={viewUrl} alt={currentDoc.name} className="max-w-full h-auto mx-auto rounded-[6px]" />
         ) : isPdf ? (
-          <iframe src={viewUrl} className="w-full h-full min-h-[500px] rounded-[6px] border border-[#EAEAEA] dark:border-white/8" />
+          <iframe src={viewUrl} className="w-full h-full min-h-[500px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06]" />
         ) : isOfficePreview || isOnline ? (
-          <iframe sandbox="allow-same-origin" src={previewUrl} className="w-full h-full min-h-[500px] rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white" />
+          <iframe sandbox="allow-same-origin" src={previewUrl} className="w-full h-full min-h-[500px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white" />
         ) : (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">

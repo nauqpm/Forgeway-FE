@@ -93,7 +93,7 @@ export default function DeleteColumnModal({
             <button
               type="submit"
               disabled={hasTasks && !migrateTo}
-              className="px-4 py-2 bg-[#9F2F2D] text-white rounded-[6px] text-[13px] font-medium hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-[#9F2F2D] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#8F2927] dark:hover:bg-[#F87171]/80 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Confirm delete
             </button>

@@ -12,10 +12,10 @@ interface UnscheduledSidebarProps {
 }
 
 const PRIORITY_STYLES: Record<string, string> = {
-  Critical: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-  High:     'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800',
-  Medium:   'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
-  Low:      'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800',
+  Critical: 'bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] border-[#FDEBEC] dark:border-[rgba(159,47,45,0.24)]',
+  High:     'bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] border-[#FDEBEC] dark:border-[rgba(159,47,45,0.24)]',
+  Medium:   'bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] border-[#FBF3DB] dark:border-[rgba(149,100,0,0.24)]',
+  Low:      'bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] border-[#EDF3EC] dark:border-[rgba(52,101,56,0.24)]',
 };
 
 export default function UnscheduledSidebar({ tasks, isOpen, onClose }: UnscheduledSidebarProps) {
@@ -39,20 +39,23 @@ export default function UnscheduledSidebar({ tasks, isOpen, onClose }: Unschedul
   if (!isOpen) return null;
 
   return (
-    <div className="w-[var(--workspace-list-sidebar-w)] flex-shrink-0 border border-gray-200 dark:border-gray-700 rounded-xl shadow-md bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
+    <div
+      className="w-[var(--workspace-list-sidebar-w)] flex-shrink-0 border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] bg-white dark:bg-[#202020] flex flex-col overflow-hidden"
+      style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+          <h3 className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Unscheduled work
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-[#787774] dark:text-[#9B9A97] mt-0.5">
             {tasks.length} task{tasks.length !== 1 ? 's' : ''} — drag to schedule
           </p>
         </div>
         <button
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1 rounded"
+          className="text-[#ABABAB] hover:text-[#787774] dark:text-[#6B6B6B] dark:hover:text-[#9B9A97] transition-colors p-1 rounded-[6px]"
         >
           <X className="w-4 h-4" />
         </button>
@@ -62,7 +65,7 @@ export default function UnscheduledSidebar({ tasks, isOpen, onClose }: Unschedul
       {tasks.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-2 p-6 text-center">
           <span className="text-2xl">🎉</span>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-[#787774] dark:text-[#9B9A97]">
             All tasks are scheduled
           </p>
         </div>
@@ -73,18 +76,18 @@ export default function UnscheduledSidebar({ tasks, isOpen, onClose }: Unschedul
               key={task.id}
               className={[
                 'draggable-task cursor-grab active:cursor-grabbing',
-                'px-3 py-2.5 rounded-lg border text-sm select-none',
-                'transition-shadow hover:shadow-md',
+                'px-3 py-2.5 rounded-[8px] border text-sm select-none',
+                'transition-colors',
                 PRIORITY_STYLES[task.priority] ??
-                  'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700',
+                  'bg-[#F9F9F8] dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.06]',
               ].join(' ')}
               data-id={task.id}
               data-title={task.title}
             >
-              <p className="font-medium text-gray-800 dark:text-gray-200 truncate">
+              <p className="font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
                 {task.title}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="text-xs text-[#787774] dark:text-[#9B9A97] mt-0.5">
                 {task.type} · {task.priority}
               </p>
             </div>

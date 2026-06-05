@@ -20,7 +20,7 @@ export default function DashboardHeader({
   onImportFromLibrary,
 }: DashboardHeaderProps) {
   return (
-    <div className="bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/8 px-10 py-8">
+    <div className="bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/[0.06] px-10 py-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">

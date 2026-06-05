@@ -23,7 +23,7 @@ function issue(overrides: Partial<Issue>): Issue {
     priority: "Medium",
     type: "Task",
     assignee: "U",
-    color: "bg-indigo-600",
+    color: "bg-[#2563EB]",
     sprintId: "sprint-1",
     storyPoints: 0,
     startDate: "2026-06-03",

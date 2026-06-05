@@ -100,12 +100,12 @@ export default function DocumentWorkspaceLinkModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] animate-in fade-in zoom-in duration-200"
+        className="w-full max-w-md overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] animate-in fade-in zoom-in duration-200"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-[#EAEAEA] dark:border-white/8 p-5">
+        <div className="flex items-center justify-between border-b border-[#EAEAEA] dark:border-white/[0.06] p-5">
           <div className="flex items-center gap-2">
             <Link2 className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
             <h3 className="text-[15px] font-bold text-[#111111] dark:text-[#E8E8E7]">
@@ -135,7 +135,7 @@ export default function DocumentWorkspaceLinkModal({
               Đang tải danh sách workspace...
             </div>
           ) : workspaces.length === 0 ? (
-            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/10 py-6 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] py-6 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
               Bạn chưa có workspace nào.
             </div>
           ) : (
@@ -154,7 +154,7 @@ export default function DocumentWorkspaceLinkModal({
                       className={`inline-flex items-center gap-1.5 rounded-[4px] border px-3 py-1.5 text-[13px] font-medium transition-all ${
                         isActive
                           ? "border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]"
-                          : "border-[#EAEAEA] dark:border-white/8 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/20 hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)]"
+                          : "border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/20 hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)]"
                       }`}
                     >
                       {isActive && <Check className="h-3.5 w-3.5" />}
@@ -186,11 +186,11 @@ export default function DocumentWorkspaceLinkModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] px-5 py-4">
+        <div className="flex items-center justify-end gap-3 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] px-5 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] border border-[#EAEAEA] dark:border-white/10 px-5 py-2.5 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+            className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-5 py-2.5 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
           >
             Huỷ
           </button>

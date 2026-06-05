@@ -140,7 +140,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   }, [personalDocs, uploadedDocs]);
 
   return (
-    <div className="flex-1 flex flex-col bg-[#FBFBFA] dark:bg-[#1A1A1A] overflow-hidden h-full">
+    <div className="flex-1 flex flex-col bg-[#FBFBFA] dark:bg-[#202020] overflow-hidden h-full">
       <DashboardHeader
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -156,13 +156,13 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
       {showLibraryModal && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div
-            className="w-full max-w-2xl bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 p-5"
+            className="w-full max-w-2xl bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] p-5"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
           >
             <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-4">Import from library</h3>
-            <div className="max-h-80 overflow-auto rounded-[6px] border border-[#EAEAEA] dark:border-white/8">
+            <div className="max-h-80 overflow-auto rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06]">
               {importableLibraryDocs.map((doc) => (
-                <label key={doc._id} className="flex items-center gap-2 p-2.5 border-b border-[#EAEAEA] dark:border-white/8 last:border-b-0 hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer">
+                <label key={doc._id} className="flex items-center gap-2 p-2.5 border-b border-[#EAEAEA] dark:border-white/[0.06] last:border-b-0 hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer">
                   <input
                     type="checkbox"
                     className="accent-[#2563EB]"
@@ -184,7 +184,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <button
-                className="px-3 py-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+                className="px-3 py-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
                 onClick={() => setShowLibraryModal(false)}
               >
                 Cancel

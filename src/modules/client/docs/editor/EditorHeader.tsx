@@ -35,7 +35,7 @@ export default function EditorHeader({ doc, canSave, canCancel, hasUnsavedChange
 
   return (
     <div className="flex flex-col bg-white dark:bg-[#202020] shrink-0">
-      <div className="flex items-center justify-between px-6 py-2 border-b border-[#EAEAEA] dark:border-white/8">
+      <div className="flex items-center justify-between px-6 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06]">
         <div className="flex items-center text-[11px] text-[#787774] dark:text-[#9B9A97] overflow-hidden flex-1">
           <Globe className="w-3.5 h-3.5 mr-2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <span className="hover:underline cursor-pointer">Workspace</span>

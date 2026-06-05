@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -111,9 +111,9 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-[#1A1A1A]">
+    <div className="fixed inset-0 z-50 bg-white dark:bg-[#202020]">
       <div className="flex h-full flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-[#EAEAEA] bg-white px-5 py-3 dark:border-white/8 dark:bg-[#202020]">
+        <div className="flex items-center justify-between border-b border-[#EAEAEA] bg-white px-5 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
           <div className="flex items-center gap-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
             <span>Workspace</span>
             <span>{">"}</span>
@@ -121,7 +121,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
           </div>
           <div className="flex items-center gap-2">
             {status === "saving" ? (
-              <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#787774] dark:text-[#9B9A97]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 {statusLabel}
               </span>
@@ -151,7 +151,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
 
         <EditorToolbar editor={editor} />
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#1A1A1A]">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
           {loading ? (
             <div className="flex h-full items-center justify-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -163,7 +163,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                   Document Title
                 </p>
-                <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-5 py-4 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
+                <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-5 py-4 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
                   <input
                     type="text"
                     value={title}
@@ -181,7 +181,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                   Document Content
                 </p>
-                <div className="min-h-[600px] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
+                <div className="min-h-[600px] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
                   <div className="dark:prose-invert">
                     <EditorContent editor={editor} />
                   </div>

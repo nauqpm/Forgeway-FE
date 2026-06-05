@@ -42,11 +42,11 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
     <motion.aside
       initial={false}
       animate={{ width: isCollapsed ? 0 : 260 }}
-      className="relative flex-shrink-0 flex flex-col bg-white dark:bg-[#202020] border-r border-[#EAEAEA] dark:border-white/8 h-full overflow-visible group"
+      className="relative flex-shrink-0 flex flex-col bg-white dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] h-full overflow-visible group"
     >
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute -right-3 top-10 z-[80] flex h-6 w-6 items-center justify-center rounded-full border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-opacity ${
+        className={`absolute -right-3 top-10 z-[80] flex h-6 w-6 items-center justify-center rounded-full border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-opacity ${
           isCollapsed ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         }`}
         aria-label={isCollapsed ? "Expand docs sidebar" : "Collapse docs sidebar"}

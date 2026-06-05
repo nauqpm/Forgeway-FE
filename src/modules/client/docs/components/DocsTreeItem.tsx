@@ -232,7 +232,7 @@ export default function DocsTreeItem({
                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                className="fixed w-44 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 py-1.5 z-[100]"
+                className="fixed w-44 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] py-1.5 z-[100]"
                 style={{
                   top: menuPos.top,
                   left: menuPos.left,
@@ -250,7 +250,7 @@ export default function DocsTreeItem({
                   <Edit2 className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />{" "}
                   Rename
                 </button>
-                <div className="my-1 border-t border-[#EAEAEA] dark:border-white/8" />
+                <div className="my-1 border-t border-[#EAEAEA] dark:border-white/[0.06]" />
                 <button
                   onClick={handleOpenDeleteDialog}
                   className="w-full text-left px-3 py-2 text-[12px] font-medium text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] flex items-center gap-2.5 transition-colors"
@@ -290,7 +290,7 @@ export default function DocsTreeItem({
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-page-title"
-            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-5"
+            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-5"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -317,7 +317,7 @@ export default function DocsTreeItem({
                 type="button"
                 disabled={deleting}
                 onClick={closeDeleteDialog}
-                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/10 px-4 py-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -325,7 +325,7 @@ export default function DocsTreeItem({
                 type="button"
                 disabled={deleting}
                 onClick={handleDelete}
-                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[13px] font-medium text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[13px] font-medium text-white hover:bg-[#8F2927] dark:hover:bg-[#F87171]/80 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>

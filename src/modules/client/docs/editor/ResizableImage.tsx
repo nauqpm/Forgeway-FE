@@ -104,7 +104,7 @@ function ResizableImageView({ node, selected, updateAttributes, deleteNode, edit
         }`}
       >
         {isEditable && selected && (
-          <div className="absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-1" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}>
+          <div className="absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] p-1" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}>
             <button type="button" onClick={() => setAlign("left")} title="Align left" className="rounded-[4px] p-1.5 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5">
               <AlignLeft className="h-3.5 w-3.5" />
             </button>

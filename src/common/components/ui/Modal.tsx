@@ -70,7 +70,7 @@ function Modal({
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/25 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/25"
         onClick={closeOnBackdrop ? onClose : undefined}
         aria-hidden="true"
       />

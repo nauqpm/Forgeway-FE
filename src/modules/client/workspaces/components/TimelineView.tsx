@@ -323,7 +323,7 @@ export default function TimelineView({
 
   const renderSprintOverlay = () => (
     <div
-      className="relative h-[42px] shrink-0 border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#191919]"
+      className="relative h-[42px] shrink-0 border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]"
       style={{ width: totalWidth, minWidth: totalWidth }}
     >
       {renderWeeklyBoundaryGrid(SPRINT_TRACK_H)}
@@ -443,10 +443,10 @@ export default function TimelineView({
               }
               if (row.meta) onClickTask?.(row.meta);
             }}
-            className={`group rounded-md flex items-center px-2.5 text-white text-[12px] font-semibold overflow-visible select-none hover:brightness-110 transition-[filter] relative shadow-sm ${
+            className={`group rounded-[6px] flex items-center px-2.5 text-white text-[12px] font-semibold overflow-visible select-none hover:brightness-110 transition-[filter] relative ${
               isInteractiveTask ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
             }`}
-            style={{ background: row.barColor }}
+            style={{ background: row.barColor, boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
           >
             {width >= TASK_LABEL_MIN_W ? (
               <span className="truncate">{row.title}</span>
@@ -473,7 +473,7 @@ export default function TimelineView({
           <div
             className={`absolute pointer-events-none ${
               row.kind === 'sprint'
-                ? 'rounded-md px-3 py-1 text-[11px] font-semibold text-white shadow-sm'
+                ? 'rounded-[6px] px-3 py-1 text-[11px] font-semibold text-white'
                 : 'rounded opacity-20'
             }`}
             style={{
@@ -482,6 +482,7 @@ export default function TimelineView({
               top: row.kind === 'sprint' ? 9 : 12,
               height: row.kind === 'sprint' ? 30 : 24,
               background: row.barColor,
+              boxShadow: row.kind === 'sprint' ? "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" : undefined,
             }}
           >
             {row.kind === 'sprint' && (
@@ -515,7 +516,7 @@ export default function TimelineView({
           </div>
           {hasSprintTrack && (
           <div
-            className="flex shrink-0 items-center border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#191919] px-3 text-[10px] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#3B82F6]"
+            className="flex shrink-0 items-center border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-3 text-[10px] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#3B82F6]"
             style={{ height: SPRINT_TRACK_H }}
           >
             Sprints

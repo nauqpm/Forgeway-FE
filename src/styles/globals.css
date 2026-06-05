@@ -5,11 +5,11 @@
 
 /* ── Dark mode token overrides ── */
 .dark {
-  --color-canvas:        #191919;
-  --color-surface:       #202020;
-  --color-surface-2:     #252525;
-  --color-border:        rgba(255, 255, 255, 0.08);
-  --color-border-subtle: rgba(255, 255, 255, 0.04);
+  --color-canvas:        #202020;
+  --color-surface:       #252525;
+  --color-surface-2:     #2A2A2A;
+  --color-border:        rgba(255, 255, 255, 0.06);
+  --color-border-subtle: rgba(255, 255, 255, 0.035);
   --color-ink:           #E8E8E7;
   --color-ink-2:         #9B9A97;
   --color-ink-3:         #6B6B6B;
@@ -449,6 +449,20 @@ body {
   display: none; /* Use custom CalendarToolbar instead */
 }
 
+/* Calendar shell container — prevent transparent fallback to canvas */
+.al-calendar-shell {
+  background-color: #FBFBFA;
+  border-radius: 8px;
+}
+.dark .al-calendar-shell {
+  background-color: #252525;
+}
+
+/* fc-view-harness also needs explicit bg */
+.dark .fc .fc-view-harness {
+  background-color: #252525;
+}
+
 /* Light mode */
 .fc {
   --fc-border-color: #EAEAEA;
@@ -457,13 +471,13 @@ body {
   --fc-today-bg-color: rgba(17, 17, 17, 0.03);
 }
 .fc .fc-daygrid-day-number {
-  color: #374151;
+  color: #111111;
   font-size: 0.78rem;
   font-weight: 700;
   padding: 3px 5px;
 }
 .fc .fc-col-header-cell-cushion {
-  color: #6b7280;
+  color: #787774;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -497,14 +511,14 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  color: #374151;
+  color: #111111;
   font-size: 0.78rem;
   font-weight: 800;
 }
 .fc .fc-day-today .al-calendar-day-number {
-  background: #0ea5e9;
+  background: #2563EB;
   color: #fff;
-  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.55), 0 0 18px rgba(14, 165, 233, 0.45);
+  box-shadow: none;
 }
 .al-calendar-create-btn {
   position: absolute;
@@ -574,39 +588,53 @@ body {
 }
 /* Dark mode */
 .dark .fc {
-  --fc-border-color: #374151;
-  --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: #1f2937;
-  --fc-today-bg-color: rgba(59, 130, 246, 0.1);
-  color: #f3f4f6;
+  --fc-border-color: rgba(255, 255, 255, 0.06);
+  --fc-page-bg-color: #252525;
+  --fc-neutral-bg-color: #2A2A2A;
+  --fc-today-bg-color: rgba(37, 99, 235, 0.12);
+  color: #E8E8E7;
+}
+/* Explicit cell backgrounds in dark mode so they are not transparent over #1A1A1A canvas */
+.dark .fc .fc-daygrid-day {
+  background-color: #252525;
+}
+.dark .fc .fc-daygrid-day.fc-day-other {
+  background-color: #202020;
+}
+.dark .fc .fc-day-today {
+  background-color: rgba(37, 99, 235, 0.07) !important;
+}
+.dark .fc .fc-col-header-cell {
+  background-color: #2A2A2A;
 }
 .dark .fc .fc-daygrid-day-number {
-  color: #d1d5db;
+  color: #9B9A97;
 }
 .dark .al-calendar-day-number {
-  color: #d1d5db;
+  color: #9B9A97;
 }
 .dark .fc .fc-day-today .al-calendar-day-number {
-  background: #38bdf8;
-  color: #082f49;
+  background: #3B82F6;
+  color: #FFFFFF;
 }
 .dark .al-calendar-create-btn {
-  border-color: rgba(56, 189, 248, 0.35);
-  background: rgba(15, 23, 42, 0.94);
-  color: #7dd3fc;
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(37, 99, 235, 0.12);
+  color: #93C5FD;
 }
 .dark .al-calendar-create-btn:hover {
-  background: #082f49;
+  background: rgba(37, 99, 235, 0.2);
 }
 .dark .fc .fc-daygrid-more-link {
-  background: rgba(56, 189, 248, 0.16);
-  color: #7dd3fc;
+  background: rgba(37, 99, 235, 0.12);
+  color: #93C5FD;
 }
 .dark .fc .fc-col-header-cell-cushion {
-  color: #9ca3af;
+  color: #9B9A97;
 }
 .dark .fc .fc-scrollgrid {
-  border-color: #374151;
+  border-color: rgba(255, 255, 255, 0.06);
+  background-color: #252525;
 }
 
 /* Sprint event bar style */
@@ -615,26 +643,35 @@ body {
   border-radius: 4px;
 }
 
+/* Light mode event bars */
 .fc .fc-daygrid-event {
-  background: var(--fc-event-bg-color, #303236);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: var(--fc-event-bg-color, #2563EB);
+  border: 1px solid rgba(37, 99, 235, 0.18);
   box-shadow: none;
   border-radius: 3px;
 }
 .fc .fc-daygrid-block-event {
-  background: var(--fc-event-bg-color, #303236);
+  background: var(--fc-event-bg-color, #2563EB);
   border-radius: 3px;
+}
+/* Dark mode event bars */
+.dark .fc .fc-daygrid-event {
+  background: var(--fc-event-bg-color, #1E3A5F);
+  border: 1px solid rgba(147, 197, 253, 0.16);
+}
+.dark .fc .fc-daygrid-block-event {
+  background: var(--fc-event-bg-color, #1E3A5F);
 }
 
 /* Tiptap content tweaks */
 .tiptap-content {
-  color: #0f172a;
+  color: #111111;
   font-family: Arial, sans-serif;
   font-size: 16px;
 }
 
 .dark .tiptap-content {
-  color: #e5e7eb;
+  color: #E8E8E7;
 }
 
 .tiptap-content a {
@@ -676,7 +713,7 @@ body {
 
 .dark .tiptap-content th,
 .dark .tiptap-content td {
-  border-color: #4b5563;
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 .tiptap-content ul[data-type="taskList"] {

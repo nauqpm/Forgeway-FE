@@ -65,12 +65,12 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
 
   if (!mounted) return null;
 
-  const inputCls = "mt-1 h-8 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
+  const inputCls = "mt-1 h-8 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
 
   return createPortal(
     <div
       ref={pickerRef}
-      className="fixed z-[80] w-[250px] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-3"
+      className="fixed z-[80] w-[250px] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3"
       style={{ left: position.left, top: position.top, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
       <div className="mb-2 flex items-center justify-between">
@@ -95,14 +95,14 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
               className={`h-5 w-5 rounded-sm border transition-colors ${
                 active
                   ? "border-[#2563EB] bg-[#EFF6FF] dark:border-[#3B82F6] dark:bg-[rgba(37,99,235,0.15)]"
-                  : "border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] hover:border-[#2563EB]/50"
+                  : "border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] hover:border-[#2563EB]/50"
               }`}
             />
           );
         })}
       </div>
 
-      <div className="mt-3 border-t border-[#EAEAEA] dark:border-white/8 pt-3">
+      <div className="mt-3 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-3">
         <div className="mb-2 text-[11px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Customize</div>
         <div className="grid grid-cols-2 gap-2">
           <label className="text-[11px] text-[#787774] dark:text-[#9B9A97]">

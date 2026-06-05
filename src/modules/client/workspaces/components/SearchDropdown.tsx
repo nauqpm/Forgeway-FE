@@ -263,7 +263,7 @@ export default function SearchDropdown({
             onClick={() => setIsOpen(true)}
             onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Search"
-            className={`${inputClassName} w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] pl-10 pr-11 font-medium text-[#111111] dark:text-[#E8E8E7] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]`}
+            className={`${inputClassName} w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#2A2A2A] pl-10 pr-11 font-medium text-[#111111] dark:text-[#E8E8E7] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]`}
           />
           <button
             type="button"
@@ -278,10 +278,10 @@ export default function SearchDropdown({
       {isOpen && (
         <div
           style={{ ...dropdownStyle, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
-          className="overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]"
+          className="overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525]"
         >
           <div className="grid h-[min(76vh,640px)] grid-cols-1 overflow-hidden lg:grid-cols-[minmax(320px,0.95fr)_minmax(340px,1.05fr)]">
-            <div className="min-h-0 overflow-y-auto border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-4 lg:border-b-0 lg:border-r">
+            <div className="min-h-0 overflow-y-auto border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] p-4 lg:border-b-0 lg:border-r">
               <div className="mb-4 flex rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] p-1">
                 {apps.map((app) => (
                   <button
@@ -290,7 +290,7 @@ export default function SearchDropdown({
                     onClick={() => setActiveApp(app)}
                     className={`flex-1 rounded-[4px] px-3 py-2 text-[13px] font-medium transition-colors ${
                       activeApp === app
-                        ? "bg-white dark:bg-[#202020] text-[#2563EB] dark:text-[#3B82F6]"
+                        ? "bg-white dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6]"
                         : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
                     }`}
                   >
@@ -397,7 +397,7 @@ export default function SearchDropdown({
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}
               />
-              <div className="mt-4 flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#202020] px-3 py-2 text-[11px] text-[#787774] dark:text-[#9B9A97]">
+              <div className="mt-4 flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-3 py-2 text-[11px] text-[#787774] dark:text-[#9B9A97]">
                 <Users className="h-4 w-4 text-[#2563EB] dark:text-[#3B82F6]" />
                 Filters apply to workspace tasks when you are inside a workspace.
               </div>

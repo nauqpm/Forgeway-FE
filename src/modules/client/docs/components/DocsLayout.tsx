@@ -41,10 +41,10 @@ export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
   if (!mounted) return null;
 
   return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[600px] w-full bg-white dark:bg-[#202020] rounded-[8px] overflow-hidden border border-[#EAEAEA] dark:border-white/8">
+    <div className="flex h-[calc(100vh-200px)] min-h-[600px] w-full bg-white dark:bg-[#252525] rounded-[8px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06]">
       <DocsSidebar workspaceId={workspaceId} />
 
-      <main className="flex-1 flex flex-col bg-white dark:bg-[#202020] overflow-hidden relative">
+      <main className="flex-1 flex flex-col bg-white dark:bg-[#252525] overflow-hidden relative">
         {isLoading && documents.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-[#ABABAB] dark:text-[#6B6B6B]">

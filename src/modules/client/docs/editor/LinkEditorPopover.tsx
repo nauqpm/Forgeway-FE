@@ -127,12 +127,12 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
 
   if (!mounted) return null;
 
-  const inputCls = "mt-1 h-9 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
+  const inputCls = "mt-1 h-9 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
 
   return createPortal(
     <div
       ref={popoverRef}
-      className="fixed z-[90] w-[320px] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-3"
+      className="fixed z-[90] w-[320px] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3"
       style={{ left: position.left, top: position.top, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
       <div className="mb-3 flex items-center justify-between">

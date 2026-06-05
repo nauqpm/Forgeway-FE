@@ -48,11 +48,11 @@ const formatDateTime = (value?: string | null) => {
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  High: "text-red-500",
-  Medium: "text-orange-400",
-  Low: "text-blue-400",
-  Highest: "text-red-600",
-  Lowest: "text-blue-300",
+  High: "text-[#9F2F2D] dark:text-[#F87171]",
+  Medium: "text-[#956400] dark:text-[#F59E0B]",
+  Low: "text-[#1F6C9F] dark:text-[#93C5FD]",
+  Highest: "text-[#9F2F2D] dark:text-[#F87171]",
+  Lowest: "text-[#1F6C9F] dark:text-[#93C5FD]",
 };
 
 type SprintOption = {
@@ -110,7 +110,7 @@ export default function TaskDetailList({
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
       : String(issue.storyPoints);
-  const priorityColor = PRIORITY_COLORS[issue.priority] || "text-gray-500";
+  const priorityColor = PRIORITY_COLORS[issue.priority] || "text-[#787774] dark:text-[#9B9A97]";
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -224,14 +224,14 @@ export default function TaskDetailList({
 
           {/* Archived Banner */}
           {issue.isArchived && (
-            <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-md">
+            <div className="flex items-center justify-between bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] border-l-4 border-[#956400]/40 dark:border-[#F59E0B]/40 p-3 rounded-[6px]">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                <span className="text-yellow-700 text-sm">
+                <AlertTriangle className="h-4 w-4 text-[#956400] dark:text-[#F59E0B]" />
+                <span className="text-[#956400] dark:text-[#F59E0B] text-sm">
                   Archived by {issue.archivedByUser?.fullName || "Unknown"} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : "Unknown Date"}. Read-only.
                 </span>
               </div>
-              <button className="flex items-center gap-1 px-2.5 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-xs font-semibold rounded transition-colors">
+              <button className="flex items-center gap-1 px-2.5 py-1 bg-[#FBF3DB] hover:bg-[#F7F6F3] dark:bg-[rgba(149,100,0,0.12)] dark:hover:bg-white/8 text-[#956400] dark:text-[#F59E0B] text-xs font-semibold rounded-[6px] transition-colors">
                 <ArchiveRestore className="w-3 h-3" /> Restore
               </button>
             </div>
@@ -280,7 +280,7 @@ export default function TaskDetailList({
 
           {/* Subtasks */}
           <div>
-            {/*<h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Subtasks</h2>*/}
+            {/*<h2 className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Subtasks</h2>*/}
             <TaskSubtasks
               subtasks={subtasks}
               onAdd={handleAddSubtask}

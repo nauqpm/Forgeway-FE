@@ -154,7 +154,7 @@ export default function EditorToolbar({ editor }: Props) {
   const selectedFontFamily = activeTextStyle.fontFamily || DEFAULT_FONT_FAMILY;
   const selectedFontSize = activeTextStyle.fontSize || DEFAULT_FONT_SIZE;
 
-  const selectCls = "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none";
+  const selectCls = "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none";
 
   return (
     <>
@@ -165,7 +165,7 @@ export default function EditorToolbar({ editor }: Props) {
           options={{ placement: "top", offset: 8 }}
         >
           <div
-            className="flex items-center gap-1 rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-1"
+            className="flex items-center gap-1 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-1"
             style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)" }}
           >
             <button
@@ -196,7 +196,7 @@ export default function EditorToolbar({ editor }: Props) {
         </BubbleMenu>
       )}
 
-      <div className="flex items-center gap-1 px-6 py-2 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/8 overflow-x-auto no-scrollbar flex-shrink-0">
+      <div className="flex items-center gap-1 px-6 py-2 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/[0.06] overflow-x-auto no-scrollbar flex-shrink-0">
         <input
           ref={imageInputRef}
           type="file"
@@ -257,7 +257,7 @@ export default function EditorToolbar({ editor }: Props) {
             type="button"
             title={`Color ${color}`}
             onClick={() => editor.chain().focus().setColor(color).run()}
-            className="h-5 w-5 rounded-[3px] border border-[#EAEAEA] dark:border-white/8 transition-opacity hover:opacity-80"
+            className="h-5 w-5 rounded-[3px] border border-[#EAEAEA] dark:border-white/[0.06] transition-opacity hover:opacity-80"
             style={{ backgroundColor: color }}
           />
         ))}

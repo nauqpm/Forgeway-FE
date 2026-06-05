@@ -30,7 +30,7 @@ export default function Header() {
 
   if (isLoading) {
     return (
-      <header className="border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] sticky top-0 z-50">
+      <header className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center">
@@ -45,7 +45,7 @@ export default function Header() {
   }
 
   return (
-    <header className="border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] sticky top-0 z-50">
+    <header className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
@@ -79,10 +79,10 @@ export default function Header() {
 
             {dropdownOpen && (
               <div
-                className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] py-2 z-50"
+                className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] py-2 z-50"
                 style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)" }}
               >
-                <div className="px-4 py-2 border-b border-[#EAEAEA] dark:border-white/8">
+                <div className="px-4 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06]">
                   <p className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] truncate">
                     {user?.fullName ?? "User"}
                   </p>
@@ -118,7 +118,7 @@ export default function Header() {
                   Settings
                 </Link>
 
-                <div className="border-t border-[#EAEAEA] dark:border-white/8 mt-2 pt-2">
+                <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] mt-2 pt-2">
                   <button
                     onClick={() => {
                       setDropdownOpen(false);

@@ -245,16 +245,16 @@ export default function CalendarView({
       return (
         <div
           key={event.id}
-          className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
+          className="flex items-center gap-2 rounded-[6px] px-2 py-1.5 text-sm"
         >
-          <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
-          <span className="w-16 shrink-0 truncate text-[11px] font-bold uppercase text-indigo-500">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-[#2563EB] dark:bg-[#3B82F6]" />
+          <span className="w-16 shrink-0 truncate text-[11px] font-bold uppercase text-[#2563EB] dark:text-[#3B82F6]">
             Sprint
           </span>
-          <span className="min-w-0 flex-1 truncate font-semibold text-gray-900 dark:text-gray-100">
+          <span className="min-w-0 flex-1 truncate font-semibold text-[#111111] dark:text-[#E8E8E7]">
             {sprint.name}
           </span>
-          <span className="shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-600 dark:bg-indigo-950 dark:text-indigo-300">
+          <span className="shrink-0 rounded-[4px] bg-[#EFF6FF] px-1.5 py-0.5 text-[10px] font-bold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
             {sprint.status}
           </span>
         </div>
@@ -267,7 +267,7 @@ export default function CalendarView({
       <button
         key={event.id}
         type="button"
-        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-900"
+        className="flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-left text-sm hover:bg-[#F7F6F3] dark:hover:bg-white/5"
         onClick={(clickEvent) => {
           clickEvent.preventDefault();
           clickEvent.stopPropagation();
@@ -278,17 +278,17 @@ export default function CalendarView({
           className="h-2 w-2 shrink-0 rounded-full"
           style={{ backgroundColor: event.backgroundColor || '#6366f1' }}
         />
-        <span className="w-20 shrink-0 truncate text-[11px] font-bold uppercase text-gray-500 dark:text-gray-400">
+        <span className="w-20 shrink-0 truncate text-[11px] font-bold uppercase text-[#787774] dark:text-[#9B9A97]">
           {display.key}
         </span>
-        <span className="min-w-0 flex-1 truncate font-semibold text-gray-900 dark:text-gray-100">
+        <span className="min-w-0 flex-1 truncate font-semibold text-[#111111] dark:text-[#E8E8E7]">
           {issue.title}
         </span>
-        <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+        <span className="shrink-0 rounded-[4px] bg-[#F7F6F3] px-1.5 py-0.5 text-[10px] font-bold text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]">
           {issue.status}
         </span>
         <span
-          className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-200"
+          className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EFF6FF] text-[10px] font-bold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
           title={display.assigneeName}
         >
           {display.assigneeAvatar ? (
@@ -354,15 +354,18 @@ export default function CalendarView({
       />
 
       {quickCreate && (
-        <div className="absolute right-4 top-20 z-50 w-80 rounded-lg border border-gray-200 bg-white p-4 shadow-2xl dark:border-gray-700 dark:bg-gray-950">
+        <div
+          className="absolute right-4 top-20 z-50 w-80 rounded-[10px] border border-[#EAEAEA] bg-white p-4 dark:border-white/[0.06] dark:bg-[#202020]"
+          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+        >
           <div className="mb-3 flex items-center gap-3">
             <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">Create work item</p>
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">{quickCreate.date}</p>
+              <p className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">Create work item</p>
+              <p className="text-xs font-medium text-[#787774] dark:text-[#9B9A97]">{quickCreate.date}</p>
             </div>
             <button
               type="button"
-              className="ml-auto rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              className="ml-auto rounded-[6px] p-1 text-[#ABABAB] hover:bg-[#F7F6F3] hover:text-[#787774] dark:text-[#6B6B6B] dark:hover:bg-white/5 dark:hover:text-[#9B9A97]"
               onClick={() => setQuickCreate(null)}
             >
               <X className="h-4 w-4" />
@@ -374,20 +377,20 @@ export default function CalendarView({
               value={quickCreate.title}
               onChange={(event) => setQuickCreate((current) => current ? { ...current, title: event.target.value } : current)}
               placeholder="Work item title"
-              className="w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="w-full rounded-[6px] border border-[#EAEAEA] bg-white px-3 py-2 text-sm font-medium text-[#111111] outline-none focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#E8E8E7]"
             />
             <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setQuickCreate(null)}
-                className="rounded-md px-3 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="rounded-[6px] px-3 py-2 text-sm font-semibold text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-white/5"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={!quickCreate.title.trim() || isCreating}
-                className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-[6px] bg-[#2563EB] px-3 py-2 text-sm font-semibold text-white hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Create
               </button>
@@ -399,17 +402,18 @@ export default function CalendarView({
       {morePopover && (
         <div
           ref={morePopoverRef}
-          className="fixed z-[70] w-[360px] max-w-[calc(100vw-24px)] rounded-lg border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-950"
+          className="fixed z-[70] w-[360px] max-w-[calc(100vw-24px)] rounded-[10px] border border-[#EAEAEA] bg-white p-3 dark:border-white/[0.06] dark:bg-[#202020]"
           style={{
             left: morePopoverPosition?.left ?? -9999,
             top: morePopoverPosition?.top ?? -9999,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
           }}
         >
-          <div className="mb-2 flex items-center gap-3 border-b border-gray-100 pb-2 dark:border-gray-800">
-            <p className="text-sm font-bold text-gray-900 dark:text-white">{morePopover.dateTitle}</p>
+          <div className="mb-2 flex items-center gap-3 border-b border-[#EAEAEA] pb-2 dark:border-white/[0.06]">
+            <p className="text-sm font-bold text-[#111111] dark:text-[#E8E8E7]">{morePopover.dateTitle}</p>
             <button
               type="button"
-              className="ml-auto rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              className="ml-auto rounded-[6px] p-1 text-[#ABABAB] hover:bg-[#F7F6F3] hover:text-[#787774] dark:text-[#6B6B6B] dark:hover:bg-white/5 dark:hover:text-[#9B9A97]"
               onClick={() => setMorePopover(null)}
               aria-label="Close"
             >

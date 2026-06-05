@@ -367,8 +367,8 @@ export default function TaskDetailDrawer({
   };
 
   const panelClasses = embedded
-    ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-[#191919] text-[#787774] dark:text-[#9B9A97] shadow-none border-0 rounded-none overflow-hidden"
-    : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-[#191919] text-[#787774] dark:text-[#9B9A97] flex flex-col border-l border-[#EAEAEA] dark:border-white/8 transform ${isResizing ? '' : 'transition-transform duration-300 ease-in-out'} ${
+    ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] shadow-none border-0 rounded-none overflow-hidden"
+    : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] flex flex-col border-l border-[#EAEAEA] dark:border-white/8 transform ${isResizing ? '' : 'transition-transform duration-300 ease-in-out'} ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`;
 
@@ -458,7 +458,7 @@ export default function TaskDetailDrawer({
         />
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#191919]">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
           <div className="p-4 md:p-6 space-y-8">
 
             {/* Archived Banner */}

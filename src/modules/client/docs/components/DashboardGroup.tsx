@@ -33,11 +33,11 @@ export default function DashboardGroup({
         <span className="ml-2 px-2 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] rounded-[4px] text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">{docs.length}</span>
       </div>
 
-      <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] overflow-hidden">
+      <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/8">
+              <tr className="bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
                 <th className="px-6 py-4 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider w-[45%]">Document Title</th>
                 <th className="px-6 py-4 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider">Last Edited By</th>
                 <th className="px-6 py-4 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider">Activity</th>

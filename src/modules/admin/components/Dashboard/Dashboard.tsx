@@ -55,7 +55,7 @@ const SHOW_STARRED_DASHBOARD_TAB = false;
 
 const toWorkspaceCard = (workspace: ForYouWorkspace, index: number) => {
   const icons = [LayoutDashboard, Database, BookOpen, CheckCircle2];
-  const colors = ["bg-blue-500", "bg-green-500", "bg-indigo-500", "bg-cyan-600"];
+  const colors = ["bg-[#2563EB]", "bg-[#346538]", "bg-[#1F6C9F]", "bg-[#3B82F6]"];
 
   return {
     ...workspace,
@@ -201,13 +201,13 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   return (
     <div className={`app-page-medium ${className}`}>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="px-2 text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="px-2 text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">
           Recommended workspaces
         </h1>
 
         <Link
           href="/workspaces"
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]"
         >
               View all
         </Link>
@@ -215,7 +215,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {displayWorkspaces.length === 0 ? (
-          <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+          <div className="col-span-full rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] p-8 text-center text-sm text-[#787774] dark:border-white/8 dark:bg-[#252525] dark:text-[#9B9A97]">
             No recommended workspaces yet.
           </div>
         ) : (
@@ -223,20 +223,21 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             <Link
               key={workspace.id}
               href={`/workspaces/${workspace.routeKey}`}
-              className="workspace-panel group rounded-xl border border-gray-200 bg-white transition-all hover:border-indigo-200 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-indigo-500"
+              className="workspace-panel group rounded-[8px] border border-[#EAEAEA] bg-white transition-all hover:border-[#2563EB]/20 dark:border-white/8 dark:bg-[#202020] dark:hover:border-[#3B82F6]"
+              style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
             >
               <div className="flex items-start gap-4">
                 <div
-                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl ${workspace.color}`}
+                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[8px] ${workspace.color}`}
                 >
                   <workspace.icon className="h-6 w-6 text-white" />
                 </div>
 
                 <div className="min-w-0">
-                  <h3 className="truncate font-semibold text-gray-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                  <h3 className="truncate font-semibold text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#3B82F6]">
                     {workspace.name}
                   </h3>
-                  <p className="mt-1 truncate text-sm text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 truncate text-sm text-[#787774] dark:text-[#9B9A97]">
                     {workspace.description}
                   </p>
                 </div>
@@ -248,31 +249,31 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
 
       <div className="mt-10">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">For you</h2>
+          <h2 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">For you</h2>
           <Link
             href="/for-you"
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+            className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]"
           >
             View all for you items
           </Link>
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Assigned tasks</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+            <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Assigned tasks</p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
               {assignedTasks.length}
             </p>
           </div>
-          <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Recently completed</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+            <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recently completed</p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
               {workedTasks.length}
             </p>
           </div>
-          <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-            <p className="text-xs text-gray-500 dark:text-gray-400">Recommended workspaces</p>
-            <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+            <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recommended workspaces</p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
               {workspaces.length}
             </p>
           </div>
@@ -283,10 +284,10 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`rounded-md px-3 py-1.5 text-sm transition ${
+              className={`rounded-[6px] px-3 py-1.5 text-sm transition ${
                 activeTab === tab.key
-                  ? "bg-indigo-100 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
-                  : "text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+                  ? "bg-[#EFF6FF] font-medium text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
+                  : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-white/8"
               }`}
             >
               {tab.label}
@@ -294,11 +295,11 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
           ))}
         </div>
 
-        <div className="mb-2 text-sm text-gray-500 dark:text-gray-400">Summary</div>
+        <div className="mb-2 text-sm text-[#787774] dark:text-[#9B9A97]">Summary</div>
 
         <div className="space-y-2">
           {filteredTasks.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-8 text-center text-sm text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] px-4 py-8 text-center text-sm text-[#787774] dark:border-white/8 dark:bg-[#252525] dark:text-[#9B9A97]">
               {emptyMessage}
             </div>
           ) : (
@@ -306,28 +307,28 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
               <Link
                 key={task.id}
                 href={`/workspaces/${task.workspaceKey}/board/key/${task.key}`}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 transition hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:hover:bg-gray-800"
+                className="flex items-center justify-between rounded-[8px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 transition hover:bg-[#F7F6F3] dark:border-white/8 dark:bg-[#202020] dark:hover:bg-white/8"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-green-100 dark:bg-green-900/30">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[4px] bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)]">
                     {task.type === "worked" ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      <CheckCircle2 className="h-4 w-4 text-[#346538] dark:text-[#4ADE80]" />
                     ) : (
-                      <BookOpen className="h-4 w-4 text-green-600" />
+                      <BookOpen className="h-4 w-4 text-[#346538] dark:text-[#4ADE80]" />
                     )}
                   </div>
 
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-gray-900 dark:text-white">
+                    <p className="truncate font-medium text-[#111111] dark:text-[#E8E8E7]">
                       {task.title}
                     </p>
-                    <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                    <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">
                       {task.meta}
                     </p>
                   </div>
                 </div>
 
-                <span className="ml-3 rounded bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                <span className="ml-3 rounded-[4px] bg-[#EFF6FF] px-3 py-1 text-xs font-medium text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
                   Open
                 </span>
               </Link>

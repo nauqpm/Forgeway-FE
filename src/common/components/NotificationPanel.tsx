@@ -289,7 +289,7 @@ export default function NotificationPanel({
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-12 w-[min(calc(100vw-32px),420px)] bg-white dark:bg-[#191919] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 z-50 flex flex-col max-h-[85vh]"
+      className="absolute right-0 top-12 w-[min(calc(100vw-32px),420px)] bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 z-50 flex flex-col max-h-[85vh]"
       style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
       <div className="px-4 pt-4 border-b border-[#EAEAEA] dark:border-white/8 flex flex-col gap-3">

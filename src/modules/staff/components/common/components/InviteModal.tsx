@@ -4,11 +4,11 @@ import CreatableSelect from 'react-select/creatable';
 import { toast } from 'react-hot-toast';
 
 const EXISTING_USERS = [
-  { id: '1', name: 'Alex Nguyen', email: 'nva@company.com', avatar: 'N', color: 'bg-indigo-500' },
-  { id: '2', name: 'Taylor Tran', email: 'ttb@company.com', avatar: 'T', color: 'bg-emerald-500' },
-  { id: '3', name: 'Chris Le', email: 'lvc@company.com', avatar: 'L', color: 'bg-blue-500' },
-  { id: '4', name: 'Maria Garcia', email: 'maria@company.com', avatar: 'M', color: 'bg-pink-500' },
-  { id: '5', name: 'John Doe', email: 'john@company.com', avatar: 'J', color: 'bg-amber-500' },
+  { id: '1', name: 'Alex Nguyen', email: 'nva@company.com', avatar: 'N', color: 'bg-[#2563EB]' },
+  { id: '2', name: 'Taylor Tran', email: 'ttb@company.com', avatar: 'T', color: 'bg-[#4ADE80]' },
+  { id: '3', name: 'Chris Le', email: 'lvc@company.com', avatar: 'L', color: 'bg-[#3B82F6]' },
+  { id: '4', name: 'Maria Garcia', email: 'maria@company.com', avatar: 'M', color: 'bg-[#F472B6]' },
+  { id: '5', name: 'John Doe', email: 'john@company.com', avatar: 'J', color: 'bg-[#F59E0B]' },
 ];
 
 const QUICK_SUGGESTIONS = [
@@ -213,10 +213,10 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
               <p className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-3">Or invite from integrations</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
-                  <Mail className="w-3.5 h-3.5 text-red-500" /> Google
+                  <Mail className="w-3.5 h-3.5 text-[#F87171]" /> Google
                 </button>
                 <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
-                  <MessageSquare className="w-3.5 h-3.5 text-purple-500" /> Slack
+                  <MessageSquare className="w-3.5 h-3.5 text-[#A855F7]" /> Slack
                 </button>
                 <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
                   <Briefcase className="w-3.5 h-3.5 text-[#2563EB]" /> Microsoft

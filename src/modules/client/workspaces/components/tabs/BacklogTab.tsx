@@ -406,7 +406,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...(canMoveTask ? provided.dragHandleProps : {})}
-                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] shadow-md rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/5 hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-all group`}
+                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/5 hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-all group`}
+                              style={{
+                                ...provided.draggableProps.style,
+                                ...(snapshot.isDragging
+                                  ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }
+                                  : {}),
+                              }}
                             >
                               <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <input
@@ -618,7 +624,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...(canMoveTask ? provided.dragHandleProps : {})}
-                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] shadow-md rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/5 hover:bg-[#F9F9F8] dark:hover:bg-white/3"} transition-all group`}
+                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/5 hover:bg-[#F9F9F8] dark:hover:bg-white/3"} transition-all group`}
+                            style={{
+                              ...provided.draggableProps.style,
+                              ...(snapshot.isDragging
+                                ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }
+                                : {}),
+                            }}
                           >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                               <input

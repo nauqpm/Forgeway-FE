@@ -9,7 +9,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
 import { notificationService } from "@/common/services/notification.service";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
-import { LayoutDashboard, Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut, Plus } from "lucide-react";
+import { LayoutDashboard, Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
 import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
@@ -191,10 +191,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFA] dark:bg-[#202020]">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-          <p className="text-sm text-gray-500 dark:text-gray-400">Authenticating...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
+          <p className="text-sm text-[#787774] dark:text-[#9B9A97]">Authenticating...</p>
         </div>
       </div>
     );
@@ -203,7 +203,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-200">
+    <div className="min-h-screen bg-[#FBFBFA] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">
       <Sidebar
         collapsed={sidebarCollapsed}
         onCollapse={setSidebarCollapsed}
@@ -215,13 +215,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"}
         className="app-shell-offset transition-all duration-300"
       >
-        <header className="app-header bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
+        <header className="app-header bg-white dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
           <div className="flex items-center gap-3 flex-1">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="lg:hidden p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
             >
-              <Menu className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              <Menu className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
             </button>
             <div className="hidden w-[clamp(520px,44vw,680px)] md:block">
               <SearchDropdown
@@ -241,25 +241,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Theme toggle */}
             <button
               onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
               title={`Theme: ${theme}`}
             >
               {theme === 'dark' ? (
-                <Moon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <Moon className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
               ) : theme === 'system' ? (
-                <Monitor className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <Monitor className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
               ) : (
-                <Sun className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                <Sun className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
               )}
             </button>
 
             {/* Notification */}
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              className="relative p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
             >
               <svg
-                className="w-5 h-5 text-gray-500 dark:text-gray-400"
+                className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -272,7 +272,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 />
               </svg>
               {unreadNotificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] leading-5 rounded-full text-center font-semibold">
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[#9F2F2D] text-white text-[10px] leading-5 rounded-full text-center font-semibold">
                   {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
                 </span>
               )}
@@ -282,7 +282,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu((v) => !v)}
-                className="w-9 h-9 rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 hover:ring-2 hover:ring-indigo-500 transition flex items-center justify-center bg-indigo-600 text-white text-sm font-medium"
+                className="w-9 h-9 rounded-full overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] hover:ring-2 hover:ring-[#2563EB]/25 transition flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white text-sm font-medium"
               >
                 {user?.avatar ? (
                   <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
@@ -292,33 +292,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-                  <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.fullName ?? "User"}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] py-1 z-50">
+                  <div className="px-4 py-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+                    <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] truncate">{user?.fullName ?? "User"}</p>
+                    <p className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">{user?.email}</p>
                   </div>
                   <button
                     onClick={() => { router.push("/dashboard"); setShowUserMenu(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </button>
                   <button
                     onClick={() => { router.push("/account"); setShowUserMenu(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
                     <User className="w-4 h-4" /> Profile
                   </button>
                   <button
                     onClick={() => { router.push("/settings"); setShowUserMenu(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
                     <Settings className="w-4 h-4" /> Settings
                   </button>
-                  <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
+                  <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] my-1" />
                   <button
                     onClick={() => { logout(); setShowUserMenu(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#9F2F2D] dark:text-[#F87171] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
                   >
                     <LogOut className="w-4 h-4" /> Log out
                   </button>

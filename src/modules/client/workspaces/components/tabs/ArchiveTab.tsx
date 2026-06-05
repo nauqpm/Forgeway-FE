@@ -113,10 +113,10 @@ export default function ArchiveTab({
                     <FileText
                       className={`h-4 w-4 shrink-0 ${
                         issue.type === "Bug"
-                          ? "text-red-500"
+                          ? "text-[#9F2F2D] dark:text-[#F87171]"
                           : issue.type === "Story"
-                            ? "text-emerald-500"
-                            : "text-blue-500"
+                            ? "text-[#346538] dark:text-[#4ADE80]"
+                            : "text-[#1F6C9F] dark:text-[#93C5FD]"
                       }`}
                     />
                     <div className="min-w-0">

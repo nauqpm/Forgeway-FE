@@ -233,7 +233,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       )}
 
       {isFetching && (
-        <div className="pointer-events-none absolute inset-0 bg-white/60 dark:bg-[#191919]/60 z-40 flex items-center justify-center backdrop-blur-[1px]">
+        <div className="pointer-events-none absolute inset-0 bg-white/60 dark:bg-[#202020]/60 z-40 flex items-center justify-center">
           <div className="w-8 h-8 border-4 border-[#2563EB] border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
@@ -356,7 +356,17 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         if (filters.archived) return;
                                         setSelectedIssue(issue);
                                       }}
-                                      className={`relative overflow-visible rounded-[8px] border bg-white dark:bg-[#1E1E1E] ${snapshot.isDragging ? "border-[#2563EB] shadow-lg rotate-1 z-50 relative" : "border-[#EAEAEA] dark:border-white/8 hover:border-[#2563EB]/50 dark:hover:border-[#3B82F6]/40"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      className={`relative overflow-visible rounded-[8px] border bg-white dark:bg-[#202020] ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#EAEAEA] dark:border-white/8 hover:border-[#2563EB]/50 dark:hover:border-[#3B82F6]/40"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      style={
+                                        filters.archived
+                                          ? undefined
+                                          : {
+                                              ...provided.draggableProps.style,
+                                              ...(snapshot.isDragging
+                                                ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }
+                                                : {}),
+                                            }
+                                      }
                                     >
                                       {issue.cover?.type === "image" && (
                                         <div className="h-28 w-full overflow-hidden rounded-t-[8px] bg-[#F7F6F3] dark:bg-[#252525]">
@@ -387,7 +397,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                               setActionMenuIssueId((current) => current === issue.id ? null : issue.id);
                                             }}
                                             onMouseDown={(event) => event.stopPropagation()}
-                                            className={`rounded-[6px] bg-white/90 dark:bg-[#1E1E1E]/90 p-1 text-[#787774] dark:text-[#9B9A97] opacity-0 transition-all hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] hover:text-[#111111] dark:hover:text-[#E8E8E7] group-hover:opacity-100 ${
+                                            className={`rounded-[6px] bg-white/90 dark:bg-[#202020]/80 p-1 text-[#787774] dark:text-[#9B9A97] opacity-0 transition-all hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] hover:text-[#111111] dark:hover:text-[#E8E8E7] group-hover:opacity-100 ${
                                               actionMenuIssueId === issue.id ? "opacity-100" : ""
                                             }`}
                                             aria-label="Task actions"
@@ -571,7 +581,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       )}
 
       {issueToDelete && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/30 p-4 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/30 p-4">
           <div
             className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] bg-white dark:border-white/8 dark:bg-[#202020]"
             style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
@@ -606,7 +616,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                   if (event.key === "Enter") confirmDeleteIssue();
                   if (event.key === "Escape") closeDeleteIssueModal();
                 }}
-                className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#1A1A1A] px-3 py-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D] transition-colors"
+                className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#202020] px-3 py-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D] transition-colors"
                 placeholder="delete"
               />
             </div>

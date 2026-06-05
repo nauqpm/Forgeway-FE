@@ -70,7 +70,7 @@ export default function WorkspaceContent({
 }: WorkspaceContentProps) {
   return (
     <div
-      className={`rounded-2xl ${
+      className={`rounded-[10px] ${
         activeTab === "pages"
           ? ""
           : ""

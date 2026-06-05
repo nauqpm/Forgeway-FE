@@ -32,10 +32,10 @@ export interface AdminUsersProps {
 }
 
 const roleColors: Record<string, string> = {
-  owner: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300",
-  admin: "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300",
-  member: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
-  viewer: "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400",
+  owner: "bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] text-[#956400] dark:text-[#F59E0B]",
+  admin: "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]",
+  member: "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] text-[#346538] dark:text-[#4ADE80]",
+  viewer: "bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97]",
 };
 
 const roleLabels: Record<string, string> = {
@@ -138,47 +138,47 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
     <div className={`app-page-wide ${className}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">Manage members and access permissions</p>
+          <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">User Management</h1>
+          <p className="text-[#787774] dark:text-[#9B9A97] text-sm mt-0.5">Manage members and access permissions</p>
         </div>
-        <button onClick={() => setShowInvite(true)} disabled={!currentWorkspace} className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors disabled:opacity-50">
+        <button onClick={() => setShowInvite(true)} disabled={!currentWorkspace} className="inline-flex items-center gap-2 bg-[#2563EB] text-white px-4 py-2 rounded-[6px] hover:bg-[#1D4ED8] font-medium text-sm transition-colors disabled:opacity-50">
           <Plus className="w-4 h-4" /> Invite Member
         </button>
       </div>
 
       {showInvite && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-[var(--app-page-pad)]">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-[min(100%,var(--app-popover-w))]">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-              <h3 className="font-semibold text-gray-900 dark:text-white">Invite Member</h3>
-              <button onClick={() => setShowInvite(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><MoreHorizontal className="w-5 h-5 text-gray-400" /></button>
+        <div className="fixed inset-0 bg-[#111111]/40 z-50 flex items-center justify-center p-[var(--app-page-pad)]">
+          <div className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-[min(100%,var(--app-popover-w))]" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/8">
+              <h3 className="font-semibold text-[#111111] dark:text-[#E8E8E7]">Invite Member</h3>
+              <button onClick={() => setShowInvite(false)} className="p-1 hover:bg-[#F7F6F3] dark:hover:bg-white/8 rounded-[6px]"><MoreHorizontal className="w-5 h-5 text-[#ABABAB] dark:text-[#6B6B6B]" /></button>
             </div>
             <form onSubmit={handleInvite} className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email Address</label>
+                <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                   <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required
                     placeholder="colleague@company.com"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    className="w-full pl-10 pr-4 py-2.5 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-sm bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role</label>
+                <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Role</label>
                 <div className="relative">
-                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                   <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none">
+                    className="w-full pl-10 pr-4 py-2.5 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-sm bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] appearance-none">
                     <option value="viewer">Viewer - View only</option>
                     <option value="member">Member - Can create and edit</option>
                     <option value="admin">Administrator - Full access</option>
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B] pointer-events-none" />
                 </div>
               </div>
               <div className="flex items-center gap-3 pt-2">
-                <button type="button" onClick={() => setShowInvite(false)} className="flex-1 px-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
-                <button type="submit" disabled={inviting} className="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50">
+                <button type="button" onClick={() => setShowInvite(false)} className="flex-1 px-4 py-2.5 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-sm font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/8 transition-colors">Cancel</button>
+                <button type="submit" disabled={inviting} className="flex-1 px-4 py-2.5 bg-[#2563EB] text-white rounded-[6px] text-sm font-medium hover:bg-[#1D4ED8] transition-colors disabled:opacity-50">
                   {inviting ? "Sending..." : "Send invitation"}
                 </button>
               </div>
@@ -187,48 +187,48 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
         </div>
       )}
 
-      <div className="flex w-full flex-wrap items-center gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg sm:w-fit">
-        <button onClick={() => setTab("workspace")} className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "workspace" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}>
+      <div className="flex w-full flex-wrap items-center gap-1 mb-6 bg-[#F7F6F3] dark:bg-[#252525] p-1 rounded-[8px] sm:w-fit">
+        <button onClick={() => setTab("workspace")} className={`px-4 py-2 rounded-[6px] text-sm font-medium transition-colors ${tab === "workspace" ? "bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] " : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}>
           Member Workspace ({members.length})
         </button>
-        <button onClick={() => setTab("all")} className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${tab === "all" ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}>
+        <button onClick={() => setTab("all")} className={`px-4 py-2 rounded-[6px] text-sm font-medium transition-colors ${tab === "all" ? "bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] " : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}>
           All Users ({users.length})
         </button>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden">
+        <div className="p-4 border-b border-[#EAEAEA] dark:border-white/8">
           <div className="relative max-w-[min(100%,28rem)]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder={`Search ${tab === "workspace" ? "members" : "users"}...`}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+              className="w-full pl-10 pr-4 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-sm bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB] dark:placeholder-[#6B6B6B] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]" />
           </div>
         </div>
 
         <div className="overflow-x-auto">
         <table className="w-full app-table-min">
-          <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+          <thead className="bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/8">
             <tr>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Member</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Role</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Status</th>
-              <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Joined date</th>
-              <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Actions</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wide">Member</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wide">Role</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wide">Status</th>
+              <th className="text-left px-5 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wide">Joined date</th>
+              <th className="text-right px-5 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wide">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+          <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/8">
             {displayItems.length === 0 ? (
-              <tr><td colSpan={5} className="px-5 py-12 text-center text-gray-400 dark:text-gray-500 text-sm">No {tab === "workspace" ? "members" : "users"} found</td></tr>
+              <tr><td colSpan={5} className="px-5 py-12 text-center text-[#ABABAB] dark:text-[#6B6B6B] text-sm">No {tab === "workspace" ? "members" : "users"} found</td></tr>
             ) : displayItems.map((item: any) => (
-              <tr key={item._id || item.email} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <tr key={item._id || item.email} className="hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] flex items-center justify-center text-sm font-bold flex-shrink-0">
                       {item.avatar ? <img src={item.avatar} className="w-full h-full rounded-full object-cover" alt="" /> : (item.fullName || item.email).charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{item.fullName || "—"}</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{item.email}</p>
+                      <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] truncate">{item.fullName || "—"}</p>
+                      <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] truncate">{item.email}</p>
                     </div>
                   </div>
                 </td>
@@ -236,15 +236,15 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                   {tab === "workspace" ? (
                     <div className="relative">
                       <button onClick={() => setOpenMenu(openMenu === item.userId ? null : item.userId)}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${roleColors[item.role] || roleColors.member} hover:opacity-80 transition-opacity`}>
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] text-xs font-medium ${roleColors[item.role] || roleColors.member} hover:opacity-80 transition-opacity`}>
                         {roleLabels[item.role] || item.role}
                         <ChevronDown className="w-3 h-3" />
                       </button>
                       {openMenu === item.userId && item.role !== "owner" && (
-                        <div className="absolute top-full left-0 mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 py-1 min-w-[160px]">
+                        <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-[8px] z-10 py-1 min-w-[160px]" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}>
                           {["admin", "member", "viewer"].map((r) => (
                             <button key={r} onClick={() => handleChangeRole(item.userId, r)}
-                              className={`w-full text-left px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 ${item.role === r ? "text-indigo-600 dark:text-indigo-400 font-medium" : "text-gray-700 dark:text-gray-300"}`}>
+                              className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[#F7F6F3] dark:hover:bg-white/8 ${item.role === r ? "text-[#2563EB] dark:text-[#3B82F6] font-medium" : "text-[#787774] dark:text-[#9B9A97]"}`}>
                               {roleLabels[r]}
                             </button>
                           ))}
@@ -252,19 +252,19 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                       )}
                     </div>
                   ) : (
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium ${roleColors[item.role] || roleColors.member}`}>{roleLabels[item.role] || item.role}</span>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-[4px] text-xs font-medium ${roleColors[item.role] || roleColors.member}`}>{roleLabels[item.role] || item.role}</span>
                   )}
                 </td>
                 <td className="px-5 py-3.5">
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${item.status === "active" ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"}`}>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-[4px] text-xs font-medium ${item.status === "active" ? "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] text-[#346538] dark:text-[#4ADE80]" : "bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97]"}`}>
                     {item.status === "active" ? "Active" : "Inactive"}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-sm text-gray-500 dark:text-gray-400">{new Date(item.createdAt || item.joinedAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</td>
+                <td className="px-5 py-3.5 text-sm text-[#787774] dark:text-[#9B9A97]">{new Date(item.createdAt || item.joinedAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}</td>
                 <td className="px-5 py-3.5 text-right">
                   {tab === "workspace" && item.role !== "owner" && (
                     <button onClick={() => handleRemoveMember(item.userId)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors" title="Remove from workspace">
+                      className="p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] dark:hover:text-[#F87171] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] rounded-[6px] transition-colors" title="Remove from workspace">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}

@@ -8,7 +8,7 @@ interface DashboardEmptyProps {
 
 export default function DashboardEmpty({ onClearFilters }: DashboardEmptyProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-32 text-center bg-white dark:bg-[#202020] rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/8">
+    <div className="flex flex-col items-center justify-center py-32 text-center bg-white dark:bg-[#202020] rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06]">
       <div className="w-20 h-20 bg-[#F7F6F3] dark:bg-[#252525] rounded-[8px] flex items-center justify-center mb-6 text-[#ABABAB] dark:text-[#6B6B6B]">
         <Search className="w-10 h-10" />
       </div>
