@@ -427,7 +427,7 @@ export default function WorkspaceDetailPage({
   const syncTaskReorder = useCallback(
     (input: TaskReorderSyncInput) => {
       if (!workspaceApiId) return;
-      const { taskId, columnId, status, sprintId, beforeTaskId, afterTaskId } = input;
+      const { taskId, columnId, status, sprintId, rankScope, beforeTaskId, afterTaskId } = input;
 
       if (reorderInFlightRef.current.has(taskId)) {
         pendingReorderRef.current.set(taskId, input);
@@ -441,6 +441,7 @@ export default function WorkspaceDetailPage({
           columnId,
           status,
           sprintId,
+          rankScope,
           beforeTaskId,
           afterTaskId,
         })
