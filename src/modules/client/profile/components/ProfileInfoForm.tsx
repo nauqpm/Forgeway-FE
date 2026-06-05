@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Camera, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import CustomDatePicker from "@/common/components/CustomDatePicker";
 import type {
   AppUserProfile,
   UpdateProfilePayload,
@@ -55,6 +56,11 @@ export function ProfileInfoForm({
   ) => {
     setFieldErrors((prev) => ({ ...prev, [e.target.name]: "" }));
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleBirthdayChange = (value: string | null) => {
+    setFieldErrors((prev) => ({ ...prev, birthday: "" }));
+    setForm((prev) => ({ ...prev, birthday: value ?? "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -262,16 +268,16 @@ export function ProfileInfoForm({
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
             Date of birth
           </label>
-          <input
-            type="date"
-            name="birthday"
+          <CustomDatePicker
             value={form.birthday}
-            onChange={handleChange}
-            className={`w-full px-3 py-2.5 border ${
+            onChange={handleBirthdayChange}
+            placeholder="MM/DD/YYYY"
+            inputClassName={`h-[46px] rounded-lg ${
               fieldErrors.birthday
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
-            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2`}
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                : "border-gray-300 dark:border-gray-700 focus:border-indigo-500"
+            } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
+            ariaLabel="Date of birth"
           />
           {fieldErrors.birthday && (
             <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">

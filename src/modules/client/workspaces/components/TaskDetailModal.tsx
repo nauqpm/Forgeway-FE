@@ -33,6 +33,7 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
+import CustomDatePicker from "@/common/components/CustomDatePicker";
 
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
@@ -49,13 +50,6 @@ interface TaskDetailModalProps {
 const getUserDisplayName = (user: any, fallback?: string | null) => {
   if (typeof user === "string") return user;
   return user?.fullName || user?.email || fallback || "Unassigned";
-};
-
-const formatDate = (value?: string | null) => {
-  if (!value) return "None";
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-  }).format(new Date(value));
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -185,8 +179,6 @@ export default function TaskDetailModal({
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
-  const dueDateLabel = formatDate(issue.dueDate);
-  const startDateLabel = formatDate(issue.startDate);
   const sprintLabel =
     issue.sprint?.name ||
     sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name ||
@@ -265,6 +257,16 @@ export default function TaskDetailModal({
 
   const editableTextClass =
     "text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors";
+
+  const renderDateInput = (field: "startDate" | "dueDate", rawValue?: string | null) => (
+    <CustomDatePicker
+      value={rawValue}
+      onChange={(nextValue) => saveInlineEdit(field, nextValue ?? "")}
+      disabled={issue.isArchived}
+      inputClassName="h-8 bg-transparent dark:bg-transparent"
+      ariaLabel={field === "startDate" ? "Task start date" : "Task due date"}
+    />
+  );
 
   const renderInlineInput = (
     field: string,
@@ -654,9 +656,7 @@ export default function TaskDetailModal({
                       Start date
                     </div>
                     <div className="col-span-2">
-                      <div className="text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 p-1.5 -ml-1.5 rounded cursor-pointer transition-colors">
-                        {renderInlineInput("startDate", startDateLabel, toDateInputValue(issue.startDate), "date")}
-                      </div>
+                      {renderDateInput("startDate", toDateInputValue(issue.startDate))}
                     </div>
                   </div>
 
@@ -665,7 +665,7 @@ export default function TaskDetailModal({
                       Due date
                     </div>
                     <div className="col-span-2">
-                      {renderInlineInput("dueDate", dueDateLabel, toDateInputValue(issue.dueDate), "date")}
+                      {renderDateInput("dueDate", toDateInputValue(issue.dueDate))}
                     </div>
                   </div>
 

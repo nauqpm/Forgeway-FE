@@ -13,6 +13,7 @@ import {
 import { CheckSquare, Columns, FileText, MoreHorizontal, Search } from "lucide-react";
 
 import { Issue } from "../../../types/issue.type";
+import CustomDatePicker from "@/common/components/CustomDatePicker";
 
 type BoardColumn = { id: string; name: string; order: number; mappedStatuses?: string[]; isDone?: boolean };
 
@@ -34,7 +35,7 @@ const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
   sprintId: true,
   storyPoints: true,
   startDate: true,
-  endDate: true,
+  dueDate: true,
 };
 
 const readJsonSetting = <T,>(key: string, fallback: T): T => {
@@ -246,21 +247,41 @@ export default function DataGridListView({
         accessorKey: "startDate",
         header: "Start Date",
         size: 140,
-        cell: (info) => (
-          <span className="text-sm text-gray-600">
-            {(info.getValue() as string | undefined) || "-"}
-          </span>
-        ),
+        cell: (info) => {
+          const issue = info.row.original;
+          const value = info.getValue() as string | undefined;
+
+          return (
+            <div onClick={(event) => event.stopPropagation()}>
+              <CustomDatePicker
+                value={value}
+                onChange={(nextValue) => onUpdateIssue(issue.id, { startDate: nextValue ?? undefined })}
+                inputClassName="h-8 border-transparent bg-transparent px-2 pl-8"
+                ariaLabel="Task start date"
+              />
+            </div>
+          );
+        },
       },
       {
-        accessorKey: "endDate",
-        header: "End Date",
+        accessorKey: "dueDate",
+        header: "Due Date",
         size: 140,
-        cell: (info) => (
-          <span className="text-sm text-gray-600">
-            {(info.getValue() as string | undefined) || "-"}
-          </span>
-        ),
+        cell: (info) => {
+          const issue = info.row.original;
+          const value = info.getValue() as string | undefined;
+
+          return (
+            <div onClick={(event) => event.stopPropagation()}>
+              <CustomDatePicker
+                value={value}
+                onChange={(nextValue) => onUpdateIssue(issue.id, { dueDate: nextValue ?? undefined })}
+                inputClassName="h-8 border-transparent bg-transparent px-2 pl-8"
+                ariaLabel="Task due date"
+              />
+            </div>
+          );
+        },
       },
       {
         id: "actions",

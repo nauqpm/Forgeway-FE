@@ -12,10 +12,11 @@ import {
   VisibilityState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, Calendar, X, Check } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, X, Check } from 'lucide-react';
 import BulkActionBar from './BulkActionBar';
 import BulkEditDrawer from './BulkEditDrawer';
 import AssigneePicker, { AssigneePickerMember, getMemberId, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
+import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
 
 type WorkspaceMember = AssigneePickerMember;
 
@@ -130,23 +131,11 @@ export default function DataGridListView({
   const [taskTitle, setTaskTitle] = useState('');
   const [newTaskAssignee, setNewTaskAssignee] = useState('');
   const [newTaskDate, setNewTaskDate] = useState('');
-  const [showCreateDate, setShowCreateDate] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const createDateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isCreating && inputRef.current) inputRef.current.focus();
   }, [isCreating]);
-
-  useEffect(() => {
-    const handle = (e: MouseEvent) => {
-      if (createDateRef.current && !createDateRef.current.contains(e.target as Node))
-        setShowCreateDate(false);
-    };
-    if (showCreateDate)
-      document.addEventListener('mousedown', handle);
-    return () => document.removeEventListener('mousedown', handle);
-  }, [showCreateDate]);
 
   const handleSubmitInlineCreate = async () => {
     if (!taskTitle.trim() || !onCreateTask) return;
@@ -415,17 +404,13 @@ export default function DataGridListView({
         const issue = info.row.original;
         const v = info.getValue() as string | undefined;
         return (
-          <div className="relative flex items-center gap-1.5 cursor-pointer group/date" onClick={e => e.stopPropagation()}>
-            <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-            <span className={`text-sm ${v ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500 italic'}`}>
-              {v ? v.slice(0, 10) : 'Set date'}
-            </span>
-            <input
-              type="date"
-              value={v ? v.slice(0, 10) : ''}
-              onChange={e => onUpdateIssue && onUpdateIssue(issue.id, { startDate: e.target.value || null })}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full"
-              title="Start date"
+          <div onClick={e => e.stopPropagation()}>
+            <CustomDatePicker
+              value={v}
+              onChange={nextValue => onUpdateIssue && onUpdateIssue(issue.id, { startDate: nextValue })}
+              inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent px-2 pl-8"
+              popoverPlacement="bottom-start"
+              ariaLabel="Task start date"
             />
           </div>
         );
@@ -440,17 +425,13 @@ export default function DataGridListView({
         const v = info.getValue() as string | undefined;
         const isOverdue = v && new Date(v) < new Date() && !issue.status?.toLowerCase().includes('done');
         return (
-          <div className="relative flex items-center gap-1.5 cursor-pointer" onClick={e => e.stopPropagation()}>
-            <Calendar className={`w-3.5 h-3.5 shrink-0 ${isOverdue ? 'text-red-500' : 'text-gray-400'}`} />
-            <span className={`text-sm ${isOverdue ? 'text-red-600 dark:text-red-400 font-medium' : v ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500 italic'}`}>
-              {v ? v.slice(0, 10) : 'Set date'}
-            </span>
-            <input
-              type="date"
-              value={v ? v.slice(0, 10) : ''}
-              onChange={e => onUpdateIssue && onUpdateIssue(issue.id, { dueDate: e.target.value || null })}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full"
-              title="Due date"
+          <div className={isOverdue ? "text-red-600 dark:text-red-400" : ""} onClick={e => e.stopPropagation()}>
+            <CustomDatePicker
+              value={v}
+              onChange={nextValue => onUpdateIssue && onUpdateIssue(issue.id, { dueDate: nextValue })}
+              inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent px-2 pl-8"
+              popoverPlacement="bottom-start"
+              ariaLabel="Task due date"
             />
           </div>
         );
@@ -641,36 +622,15 @@ export default function DataGridListView({
             />
             <div className="flex items-center gap-0.5 shrink-0">
               {/* Due date */}
-              <div className="relative" ref={createDateRef}>
-                <button
-                  type="button"
-                  onClick={() => { setShowCreateDate(o => !o); }}
-                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded transition-colors text-sm ${newTaskDate ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'} hover:bg-gray-100 dark:hover:bg-gray-700`}
-                  title="Due date"
-                >
-                  <Calendar className="w-4 h-4 shrink-0" />
-                  <span>{newTaskDate ? newTaskDate.slice(5) : 'Due date'}</span>
-                </button>
-                {showCreateDate && (
-                  <div className="absolute bottom-full mb-1 right-0 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-3 min-w-[200px]">
-                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">Due date</div>
-                    <input
-                      type="date"
-                      autoFocus
-                      value={newTaskDate}
-                      onChange={e => { setNewTaskDate(e.target.value); setShowCreateDate(false); }}
-                      className="w-full text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
-                    />
-                    {newTaskDate && (
-                      <button
-                        onClick={() => { setNewTaskDate(''); setShowCreateDate(false); }}
-                        className="mt-2 w-full text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 text-left"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                )}
+              <div className="w-36">
+                <CustomDatePicker
+                  value={newTaskDate}
+                  onChange={nextValue => setNewTaskDate(nextValue ?? '')}
+                  placeholder="Due date"
+                  inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent text-sm"
+                  popoverPlacement="top-end"
+                  ariaLabel="New task due date"
+                />
               </div>
 
               {/* Assignee */}
