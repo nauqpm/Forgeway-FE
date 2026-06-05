@@ -65,16 +65,23 @@ export const useTaskHandlers = ({
     );
     taskService.updateBoardTask(workspaceId, id, updates)
       .then((savedIssue) => {
+        const nextIssue = (() => {
+          const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
+          return isObjectId && updates.status
+            ? { ...savedIssue, status: updates.status as string }
+            : savedIssue;
+        })();
+
         setIssues((current) =>
-          current.map((issue) => {
-            if (issue.id !== savedIssue.id) return issue;
-            const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
-            return isObjectId && updates.status
-              ? { ...savedIssue, status: updates.status as string }
-              : savedIssue;
-          })
+          current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
         );
-        queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+        queryClient.setQueriesData<Issue[]>(
+          { queryKey: ["tasks", workspaceId] },
+          (current) =>
+            Array.isArray(current)
+              ? current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
+              : current,
+        );
         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
         if (savedIssue.key) {
           queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
