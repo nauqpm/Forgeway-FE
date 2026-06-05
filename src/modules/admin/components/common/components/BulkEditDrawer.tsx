@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
 
 export const KEEP_AS_IS = 'KEEP_AS_IS';
 
@@ -130,17 +131,13 @@ export default function BulkEditDrawer({ isOpen, onClose, selectedCount, uniqueA
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
           <div className="flex gap-2">
-            <input
-              type={formData.dueDate === KEEP_AS_IS ? "text" : "date"}
-              value={formData.dueDate === KEEP_AS_IS ? "-- Keep unchanged --" : formData.dueDate}
-              onChange={e => handleChange('dueDate', e.target.value)}
-              onFocus={(e) => {
-                if (formData.dueDate === KEEP_AS_IS) {
-                  e.target.type = 'date';
-                  e.target.showPicker && e.target.showPicker();
-                }
-              }}
-              className="flex-1 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-indigo-500"
+            <CustomDatePicker
+              value={formData.dueDate === KEEP_AS_IS ? null : formData.dueDate}
+              onChange={nextValue => handleChange('dueDate', nextValue ?? KEEP_AS_IS)}
+              placeholder="Keep unchanged"
+              className="flex-1"
+              inputClassName="h-10 rounded-lg dark:bg-gray-800"
+              ariaLabel="Bulk edit due date"
             />
             {formData.dueDate !== KEEP_AS_IS && (
               <button onClick={() => handleClear('dueDate')} className="px-2 text-sm text-red-500 hover:underline">Clear</button>

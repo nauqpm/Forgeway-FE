@@ -26,6 +26,7 @@ export interface TaskReorderSyncInput {
   columnId?: string;
   status?: string;
   sprintId?: string | null;
+  rankScope?: "board" | "sprint";
   beforeTaskId?: string;
   afterTaskId?: string;
 }
@@ -300,6 +301,7 @@ export const handleBacklogDragEnd = ({
       columnId: optimisticMovedTask.columnId,
       status: optimisticMovedTask.columnId,
       sprintId: optimisticMovedTask.sprintId ?? null,
+      rankScope: "sprint",
       ...neighbors,
     });
   }

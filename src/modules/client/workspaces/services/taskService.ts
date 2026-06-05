@@ -86,6 +86,7 @@ export type ReorderTaskInput = {
   columnId?: string;
   status?: string;
   sprintId?: string | null;
+  rankScope?: "board" | "sprint";
   beforeTaskId?: string;
   afterTaskId?: string;
 };

@@ -19,6 +19,7 @@ import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
 import { useAuth } from "@/context/AuthContext";
+import CustomDatePicker from "@/common/components/CustomDatePicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
@@ -35,11 +36,6 @@ interface TaskDetailListProps {
 const getUserDisplayName = (user: any, fallback?: string | null) => {
   if (typeof user === "string") return user;
   return user?.fullName || user?.email || fallback || "Unassigned";
-};
-
-const formatDate = (value?: string | null) => {
-  if (!value) return "None";
-  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(new Date(value));
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -104,8 +100,6 @@ export default function TaskDetailList({
   const assigneeName =
     issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
-  const dueDateLabel = formatDate(issue.dueDate);
-  const startDateLabel = formatDate(issue.startDate);
   const sprintLabel =
     issue.sprint?.name ||
     sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name ||
@@ -129,6 +123,11 @@ export default function TaskDetailList({
     if (newStatus !== issue.status && onUpdateIssue) {
       onUpdateIssue({ ...issue, status: newStatus });
     }
+  };
+
+  const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
+    if (!onUpdateIssue || issue.isArchived) return;
+    onUpdateIssue({ ...issue, [field]: nextValue });
   };
 
   const handleAddSubtask = (title: string) => {
@@ -437,11 +436,23 @@ export default function TaskDetailList({
 
                 {/* Due date */}
                 <DetailRow label="Start date">
-                  <div className="text-sm text-gray-900 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">{startDateLabel}</div>
+                  <CustomDatePicker
+                    value={issue.startDate}
+                    onChange={(nextValue) => handleDateChange("startDate", nextValue)}
+                    disabled={issue.isArchived}
+                    inputClassName="h-8 bg-transparent dark:bg-transparent"
+                    ariaLabel="Task start date"
+                  />
                 </DetailRow>
 
                 <DetailRow label="Due date">
-                  <div className="text-sm text-gray-900 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">{dueDateLabel}</div>
+                  <CustomDatePicker
+                    value={issue.dueDate}
+                    onChange={(nextValue) => handleDateChange("dueDate", nextValue)}
+                    disabled={issue.isArchived}
+                    inputClassName="h-8 bg-transparent dark:bg-transparent"
+                    ariaLabel="Task due date"
+                  />
                 </DetailRow>
 
                 {/* Labels */}
