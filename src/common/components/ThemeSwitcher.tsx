@@ -29,7 +29,7 @@ export default function ThemeSwitcher() {
   ];
 
   return (
-    <div className="p-6 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 w-full max-w-2xl">
+    <div className="p-6 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] w-full">
       <div className="mb-6">
         <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Appearance</h2>
         <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mt-1">
@@ -45,7 +45,7 @@ export default function ThemeSwitcher() {
             className={`flex flex-col items-center justify-center p-4 rounded-[8px] border-2 transition-all duration-200 ${
               theme === option.id
                 ? "border-[#2563EB] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
-                : "border-[#EAEAEA] dark:border-white/8 text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/30 hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                : "border-[#EAEAEA] dark:border-white/[0.06] text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/30 hover:bg-[#F7F6F3] dark:hover:bg-white/5"
             }`}
           >
             {option.icon}

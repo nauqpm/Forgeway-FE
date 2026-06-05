@@ -289,10 +289,10 @@ export default function NotificationPanel({
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-12 w-[min(calc(100vw-32px),420px)] bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 z-50 flex flex-col max-h-[85vh]"
+      className="absolute right-0 top-12 w-[min(calc(100vw-32px),420px)] bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] z-50 flex flex-col max-h-[85vh]"
       style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
-      <div className="px-4 pt-4 border-b border-[#EAEAEA] dark:border-white/8 flex flex-col gap-3">
+      <div className="px-4 pt-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Notifications</h2>
           <div className="flex items-center gap-2">
@@ -313,7 +313,7 @@ export default function NotificationPanel({
               </button>
               {showMenu && (
                 <div
-                  className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] py-1 z-50"
+                  className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] py-1 z-50"
                   style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
                 >
                   <button
@@ -406,7 +406,7 @@ export default function NotificationPanel({
                             </p>
 
                             {notification.type === "STANDARD" && notification.target && (
-                              <div className="mt-1.5 flex items-center gap-1.5 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[4px] p-1.5 w-fit max-w-full hover:border-[#2563EB]/40 transition-colors">
+                              <div className="mt-1.5 flex items-center gap-1.5 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] p-1.5 w-fit max-w-full hover:border-[#2563EB]/40 transition-colors">
                                 <FileText className="w-3.5 h-3.5 text-[#2563EB] dark:text-[#3B82F6] flex-shrink-0" />
                                 <span className="text-[11px] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
                                   {notification.target.key ? `${notification.target.key}: ` : ""}{notification.target.title}
@@ -415,7 +415,7 @@ export default function NotificationPanel({
                             )}
 
                             {notification.type === "INVITE" && notification.inviteData && (
-                              <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[6px] p-3">
+                              <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] p-3">
                                 <p className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.inviteData.workspaceName}</p>
                                 <p className="text-[11px] text-[#787774] dark:text-[#9B9A97] mt-1">{notification.inviteData.message}</p>
                               </div>

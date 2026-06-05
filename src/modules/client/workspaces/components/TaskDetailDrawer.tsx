@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { TaskDetailResponse } from '../types/task-detail.type';
-import TaskSubtasks from "@/modules/admin/components/common/components/TaskSubtasks";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -123,7 +122,6 @@ export default function TaskDetailDrawer({
   const [activeTab, setActiveTab] = useState<'comments' | 'history'>('comments');
   const [localTitle, setLocalTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
@@ -166,7 +164,6 @@ export default function TaskDetailDrawer({
   useEffect(() => {
     if (issue) {
       setLocalTitle(issue.title);
-      setSubtasks(issue.subtasks || []);
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
@@ -342,29 +339,6 @@ export default function TaskDetailDrawer({
     }
   };
 
-  const handleAddSubtask = (title: string) => {
-    if (issue.isArchived) return;
-    const newSubtask = {
-      id: `sub-${Date.now()}`,
-      title,
-      status: "To Do",
-      priority: "Medium"
-    };
-    const updatedSubtasks = [...subtasks, newSubtask];
-    setSubtasks(updatedSubtasks);
-    if (onUpdateIssue) {
-      onUpdateIssue({ ...issue, subtasks: updatedSubtasks });
-    }
-  };
-
-  const handleUpdateSubtaskStatus = (id: string, newStatus: string) => {
-    if (issue.isArchived) return;
-    const updatedSubtasks = subtasks.map(t => t.id === id ? { ...t, status: newStatus } : t);
-    setSubtasks(updatedSubtasks);
-    if (onUpdateIssue) {
-      onUpdateIssue({ ...issue, subtasks: updatedSubtasks });
-    }
-  };
 
   const panelClasses = embedded
     ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] shadow-none border-0 rounded-none overflow-hidden"
@@ -670,14 +644,7 @@ export default function TaskDetailDrawer({
               accessToken={token}
             />
 
-            {/* Subtasks */}
-            <div className="pt-2">
-              <TaskSubtasks
-                subtasks={subtasks}
-                onAdd={handleAddSubtask}
-                onUpdateStatus={handleUpdateSubtaskStatus}
-              />
-            </div>
+            {/* Subtasks — hidden until backend supports */}
 
             {/* Linked Work Items */}
             <div className="space-y-3 pt-2">

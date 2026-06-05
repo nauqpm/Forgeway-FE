@@ -286,66 +286,47 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
 
       {renameTarget && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
           onClick={closeRenameDialog}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="rename-dashboard-document-title"
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-5"
+            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-                <Pencil className="h-5 w-5" />
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]">
+                <Pencil className="h-4 w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2
-                  id="rename-dashboard-document-title"
-                  className="text-base font-semibold text-slate-900 dark:text-slate-100"
-                >
+                <h2 id="rename-dashboard-document-title" className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Rename document
                 </h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                  Enter a new name for this document.
-                </p>
+                <p className="mt-0.5 text-[13px] text-[#787774] dark:text-[#9B9A97]">Enter a new name for this document.</p>
               </div>
             </div>
-
             <input
               autoFocus
               value={renameName}
               disabled={renaming}
               onChange={(e) => setRenameName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleRenameDocument();
-                }
-                if (e.key === "Escape") {
-                  closeRenameDialog();
-                }
+                if (e.key === "Enter") { e.preventDefault(); handleRenameDocument(); }
+                if (e.key === "Escape") closeRenameDialog();
               }}
-              className="mt-5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:bg-gray-900"
+              className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-[#F7F6F3] dark:bg-[#252525] px-3 py-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none transition focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#252525] disabled:cursor-not-allowed disabled:opacity-60 placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]"
               placeholder="Document name"
             />
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                disabled={renaming}
-                onClick={closeRenameDialog}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
-              >
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" disabled={renaming} onClick={closeRenameDialog}
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/8 px-4 py-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] transition hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60">
                 Cancel
               </button>
-              <button
-                type="button"
-                disabled={renaming}
-                onClick={handleRenameDocument}
-                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
+              <button type="button" disabled={renaming} onClick={handleRenameDocument}
+                className="rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60">
                 {renaming ? "Renaming..." : "Rename"}
               </button>
             </div>
@@ -355,79 +336,50 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
 
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
           onClick={closeDeleteDialog}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-dashboard-document-title"
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-5"
+            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
-                <Trash2 className="h-5 w-5" />
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] text-[#9F2F2D] dark:text-[#F87171]">
+                <Trash2 className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <h2
-                  id="delete-dashboard-document-title"
-                  className="text-base font-semibold text-slate-900 dark:text-slate-100"
-                >
+                <h2 id="delete-dashboard-document-title" className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   {deleteTarget.source === "import" ? "Remove from workspace?" : "Delete document?"}
                 </h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <p className="mt-0.5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
                   {deleteTarget.source === "import" ? (
-                    <>
-                      This will remove{" "}
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">
-                        {deleteTarget.title}
-                      </span>{" "}
-                      from this workspace only. The document will remain in your library.
-                    </>
+                    <>This will remove <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{deleteTarget.title}</span> from this workspace only. The document will remain in your library.</>
                   ) : (
-                    <>
-                      This will permanently delete{" "}
-                      <span className="font-semibold text-slate-700 dark:text-slate-200">
-                        {deleteTarget.title}
-                      </span>
-                      . This action cannot be undone.
-                    </>
+                    <>This will permanently delete <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{deleteTarget.title}</span>. This action cannot be undone.</>
                   )}
                 </p>
               </div>
             </div>
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={closeDeleteDialog}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
-              >
+            <div className="flex justify-end gap-2">
+              <button type="button" disabled={deleting} onClick={closeDeleteDialog}
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/8 px-4 py-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] transition hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60">
                 Cancel
               </button>
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={handleDeleteDocument}
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {deleting
-                  ? deleteTarget.source === "import"
-                    ? "Removing..."
-                    : "Deleting..."
-                  : deleteTarget.source === "import"
-                    ? "Remove"
-                    : "Delete"}
+              <button type="button" disabled={deleting} onClick={handleDeleteDocument}
+                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#7F2422] disabled:cursor-not-allowed disabled:opacity-60">
+                {deleting ? (deleteTarget.source === "import" ? "Removing..." : "Deleting...") : (deleteTarget.source === "import" ? "Remove" : "Delete")}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-10 py-10 custom-scrollbar">
-        <div className="max-w-6xl mx-auto space-y-12">
+      <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar">
+        <div className="space-y-6">
           {groups.map((group, idx) => (
             <DashboardGroup
               key={group.name}

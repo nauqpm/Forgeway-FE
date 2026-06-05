@@ -72,6 +72,14 @@ const toWorkspaceCard = (workspace: ForYouWorkspace, index: number) => {
   };
 };
 
+const isObjectId = (s?: string) => /^[0-9a-f]{24}$/i.test(s ?? "");
+
+const resolveStatusLabel = (issue: Issue): string => {
+  if (!isObjectId(issue.status)) return issue.status || "No status";
+  if (!isObjectId(issue.columnId)) return issue.columnId || "In Progress";
+  return "In Progress";
+};
+
 const toDashboardTask = (
   issue: Issue,
   workspace: ForYouWorkspace,
@@ -79,6 +87,8 @@ const toDashboardTask = (
 ): DashboardTask => {
   const workspaceId = workspaceIdOf(workspace);
   const workspaceKey = workspaceRouteKeyOf(workspace);
+  const wsName = (workspace as any).name ?? (workspace as any).title ?? (workspace as any).label ?? "Workspace";
+  const statusLabel = resolveStatusLabel(issue);
 
   return {
     id: `${workspaceId}-${issue.id}`,
@@ -86,7 +96,7 @@ const toDashboardTask = (
     title: issue.title,
     type,
     workspaceKey,
-    meta: `${issue.key} - ${workspace.name} - ${issue.status}`,
+    meta: `${issue.key} - ${wsName} - ${statusLabel}`,
   };
 };
 
@@ -215,7 +225,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {displayWorkspaces.length === 0 ? (
-          <div className="col-span-full rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] p-8 text-center text-sm text-[#787774] dark:border-white/8 dark:bg-[#252525] dark:text-[#9B9A97]">
+          <div className="col-span-full rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] p-8 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
             No recommended workspaces yet.
           </div>
         ) : (
@@ -223,7 +233,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             <Link
               key={workspace.id}
               href={`/workspaces/${workspace.routeKey}`}
-              className="workspace-panel group rounded-[8px] border border-[#EAEAEA] bg-white transition-all hover:border-[#2563EB]/20 dark:border-white/8 dark:bg-[#202020] dark:hover:border-[#3B82F6]"
+              className="workspace-panel group rounded-[8px] border border-[#EAEAEA] bg-white transition-all hover:border-[#2563EB]/20 dark:border-white/[0.06] dark:bg-[#202020] dark:hover:border-[#3B82F6]"
               style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
             >
               <div className="flex items-start gap-4">
@@ -259,19 +269,19 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         </div>
 
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
             <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Assigned tasks</p>
             <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
               {assignedTasks.length}
             </p>
           </div>
-          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
             <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recently completed</p>
             <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
               {workedTasks.length}
             </p>
           </div>
-          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
             <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recommended workspaces</p>
             <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
               {workspaces.length}
@@ -299,7 +309,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
 
         <div className="space-y-2">
           {filteredTasks.length === 0 ? (
-            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] px-4 py-8 text-center text-sm text-[#787774] dark:border-white/8 dark:bg-[#252525] dark:text-[#9B9A97]">
+            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] px-4 py-8 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
               {emptyMessage}
             </div>
           ) : (
@@ -307,7 +317,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
               <Link
                 key={task.id}
                 href={`/workspaces/${task.workspaceKey}/board/key/${task.key}`}
-                className="flex items-center justify-between rounded-[8px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 transition hover:bg-[#F7F6F3] dark:border-white/8 dark:bg-[#202020] dark:hover:bg-white/8"
+                className="flex items-center justify-between rounded-[8px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 transition hover:bg-[#F7F6F3] dark:border-white/[0.06] dark:bg-[#202020] dark:hover:bg-white/8"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[4px] bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)]">
