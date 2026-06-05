@@ -81,7 +81,7 @@ const statusSelectClasses = (status: string) => {
     return `${base} bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.15)] dark:text-[#F0C040]`;
   }
 
-  return `${base} bg-[#F7F6F3] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97]`;
+  return `${base} bg-[#F7F6F3] text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]`;
 };
 
 const statusOptionClass = "bg-white text-[#111111] dark:bg-[#202020] dark:text-[#E8E8E7]";
@@ -238,14 +238,14 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
       >
         <div className="workspace-surface max-w-[min(100%,72rem)] space-y-6 py-[var(--workspace-surface-pad)]">
           {/* Backlog Top Bar with Filter */}
-          <div className="flex flex-col gap-3 rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
               Showing {filteredIssues.length} results
             </div>
             <div className="relative">
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-[#F7F6F3] dark:bg-white/8 hover:bg-[#F0F0EE] dark:hover:bg-white/12 text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium transition-colors"
               >
                 Advanced filters{" "}
               </button>
@@ -283,9 +283,9 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
             return (
               <div
                 key={sprint.id}
-                className="bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden group/sprint"
+                className="bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden group/sprint"
               >
-                <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-4 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <input
                       type="checkbox"
@@ -324,7 +324,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                   </div>
                   <div className="flex flex-wrap items-center gap-3 xl:justify-end">
                     <div className="flex gap-2 items-center group relative cursor-help">
-                      <span className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-white/8 text-[#787774] dark:text-[#9B9A97] text-[11px] font-bold flex items-center justify-center">
+                      <span className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] text-[11px] font-bold flex items-center justify-center">
                         {
                           sprintIssues.filter((i) => i.status === "To Do")
                             .length
@@ -372,7 +372,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                           : handleStartSprint(sprint._id)
                       }
                       disabled={isStarting || isCompleting || sprint.status === "completed" || sprint._id.startsWith("temp-")}
-                      className="px-3 py-1.5 bg-[#F7F6F3] dark:bg-white/8 text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F0F0EE] dark:hover:bg-white/12 transition-colors disabled:opacity-40"
+                      className="px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F0F0EE] dark:hover:bg-[#333333] transition-colors disabled:opacity-40"
                     >
                       {sprint.status === "active"
                         ? "Complete Sprint"
@@ -406,7 +406,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...(canMoveTask ? provided.dragHandleProps : {})}
-                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/5 hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-all group`}
+                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-all group`}
                               style={{
                                 ...provided.draggableProps.style,
                                 ...(snapshot.isDragging
@@ -457,7 +457,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     }
                                     disabled={!canEditTask}
                                     placeholder="-"
-                                    className="w-8 h-6 text-center text-[11px] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-white/8 hover:bg-[#F0F0EE] dark:hover:bg-white/12 rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
+                                    className="w-8 h-6 text-center text-[11px] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
                                     title="Story Points"
                                   />
                                 </div>
@@ -512,7 +512,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       {provided.placeholder}
                       {sprintIssues.length === 0 &&
                         !snapshot.isDraggingOver && (
-                          <div className="p-4 text-center text-[13px] text-[#ABABAB] dark:text-[#6B6B6B] border-2 border-dashed border-[#EAEAEA] dark:border-white/10 rounded-[6px] mx-2 my-1">
+                          <div className="p-4 text-center text-[13px] text-[#ABABAB] dark:text-[#6B6B6B] border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] mx-2 my-1">
                             Plan your sprint by dragging issues here
                           </div>
                         )}
@@ -524,7 +524,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     <input
                       type="text"
                       placeholder="Quick-create task... (Enter to save)"
-                      className="w-full py-1.5 px-3 text-[13px] bg-transparent border border-dashed border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[#787774] dark:text-[#9B9A97] placeholder:text-[#ABABAB] focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-all"
+                      className="w-full py-1.5 px-3 text-[13px] bg-transparent border border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[#787774] dark:text-[#9B9A97] placeholder:text-[#ABABAB] focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-all"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && e.currentTarget.value.trim()) {
                           const title = e.currentTarget.value.trim();
@@ -553,8 +553,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
           })}
 
           {/* Backlog Section */}
-          <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden">
-            <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-white/3 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden">
+            <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -609,7 +609,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? "bg-[#F9F9F8] dark:bg-white/3" : ""}`}
+                  className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? "bg-[#F9F9F8] dark:bg-[#252525]" : ""}`}
                 >
                   {backlogIssues
                     .map((issue, index) => (
@@ -624,7 +624,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...(canMoveTask ? provided.dragHandleProps : {})}
-                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/5 hover:bg-[#F9F9F8] dark:hover:bg-white/3"} transition-all group`}
+                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-all group`}
                             style={{
                               ...provided.draggableProps.style,
                               ...(snapshot.isDragging
@@ -675,7 +675,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   }
                                   disabled={!canEditTask}
                                   placeholder="-"
-                                  className="w-8 h-6 text-center text-[11px] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-white/8 hover:bg-[#F0F0EE] dark:hover:bg-white/12 rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
+                                  className="w-8 h-6 text-center text-[11px] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
                                   title="Story Points"
                                 />
                               </div>
@@ -722,11 +722,11 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 </div>
               )}
             </Droppable>
-            <div className="relative flex flex-col gap-2 border-t border-[#F0F0EE] dark:border-white/5 bg-[#F9F9F8]/50 dark:bg-white/2 p-3 sm:flex-row sm:items-center">
+            <div className="relative flex flex-col gap-2 border-t border-[#F0F0EE] dark:border-white/[0.04] bg-[#F9F9F8]/50 dark:bg-[#252525] p-3 sm:flex-row sm:items-center">
               <input
                 type="text"
                 placeholder="What do you need to do next?"
-                className="flex-1 py-1.5 px-3 bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] focus:border-[#2563EB] outline-none transition-colors"
+                className="flex-1 py-1.5 px-3 bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[13px] focus:border-[#2563EB] outline-none transition-colors"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.currentTarget.value.trim()) {
                     const title = e.currentTarget.value.trim();
@@ -741,7 +741,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                   setShowCreateIssue(true);
                 }}
                 disabled={!canCreateTask}
-                className="text-[13px] font-medium bg-[#F7F6F3] dark:bg-white/8 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F0F0EE] dark:hover:bg-white/12 hover:text-[#111111] dark:hover:text-[#E8E8E7] disabled:opacity-40 px-3 py-1.5 rounded-[6px] transition-colors whitespace-nowrap"
+                className="text-[13px] font-medium bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] hover:text-[#111111] dark:hover:text-[#E8E8E7] disabled:opacity-40 px-3 py-1.5 rounded-[6px] transition-colors whitespace-nowrap"
               >
                 Open modal...
               </button>

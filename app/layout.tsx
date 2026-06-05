@@ -45,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="vi" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico?v=5" sizes="any" />
         <link rel="icon" type="image/png" href="/icon.png?v=5" sizes="512x512" />

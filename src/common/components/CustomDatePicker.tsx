@@ -33,7 +33,7 @@ export type CustomDatePickerProps = {
   ariaLabel?: string;
 };
 
-const DISPLAY_FORMAT = "MM/dd/yyyy";
+const DISPLAY_FORMAT = "dd/MM/yyyy";
 const VALUE_FORMAT = "yyyy-MM-dd";
 const WEEK_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
@@ -85,7 +85,7 @@ export default function CustomDatePicker({
   value,
   onChange,
   disabled = false,
-  placeholder = "MM/DD/YYYY",
+  placeholder = "DD/MM/YYYY",
   theme,
   className = "",
   inputClassName = "",

@@ -399,7 +399,7 @@ export default function TaskComments({
                   </button>
                   <button
                     onClick={handleEditCancel}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] text-[11px] font-medium rounded-[4px] transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] text-[11px] font-medium rounded-[4px] transition-colors"
                   >
                     <X className="h-3 w-3" />
                     Cancel
@@ -483,7 +483,7 @@ export default function TaskComments({
             <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
               {user ? getAuthorInitials(user as any) : "U"}
             </div>
-            <div className="flex-1 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
+            <div className="flex-1 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
             <div className="mb-4 text-[13px] relative z-50">
               <style
                 dangerouslySetInnerHTML={{
@@ -570,17 +570,17 @@ export default function TaskComments({
                 </button>
                 <button
                   onClick={() => setCommentInput("")}
-                  className="px-3 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#111111] dark:text-[#E8E8E7] text-[11px] font-medium rounded-[4px] transition-colors"
+                  className="px-3 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[11px] font-medium rounded-[4px] transition-colors"
                 >
                   Cancel
                 </button>
               </div>
             )}
 
-            <div className="mt-5 flex items-center justify-between border-t border-[#EAEAEA] dark:border-white/8 pt-3">
+            <div className="mt-5 flex items-center justify-between border-t border-[#EAEAEA] dark:border-white/[0.06] pt-3">
               <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
                 Pro tip: press{" "}
-                <span className="font-bold bg-[#F9F9F8] dark:bg-[#252525] px-1.5 py-0.5 rounded-[4px] border border-[#EAEAEA] dark:border-white/10">
+                <span className="font-bold bg-[#F9F9F8] dark:bg-[#252525] px-1.5 py-0.5 rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08]">
                   Enter
                 </span>{" "}
                 to comment
@@ -597,7 +597,7 @@ export default function TaskComments({
         </div>
       ) : (
         !isLoadingComments && (
-          <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/10 px-4 py-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+          <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] px-4 py-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
             No comments yet.
           </div>
         )

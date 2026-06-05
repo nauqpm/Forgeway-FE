@@ -17,7 +17,7 @@ interface InviteModalProps {
   projectId: string;
 }
 
-const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] text-[13px] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6]";
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] text-[13px] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6]";
 
 export default function InviteModal({ isOpen, onClose, projectId }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState("");
@@ -120,14 +120,14 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div
-        className="w-full max-w-lg bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-lg bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col max-h-[90vh]"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#EAEAEA] dark:border-white/8">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#EAEAEA] dark:border-white/[0.06]">
           <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Add people to this Workspace</h2>
           <button
             onClick={onClose}
-            className="p-1.5 text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+            className="p-1.5 text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -173,7 +173,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
           </div>
         </div>
 
-        <div className="px-5 py-4 border-t border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="px-5 py-4 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex flex-col sm:flex-row items-center justify-between gap-3">
           <button
             onClick={handleCopyLink}
             disabled={isGeneratingLink || isSubmitting}
@@ -193,7 +193,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
             <button
               onClick={onClose}
               disabled={isSubmitting || isGeneratingLink}
-              className="px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/10 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors disabled:opacity-40"
+              className="px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors disabled:opacity-40"
             >
               Cancel
             </button>

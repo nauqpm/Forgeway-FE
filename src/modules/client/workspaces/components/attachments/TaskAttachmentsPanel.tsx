@@ -82,13 +82,13 @@ export default function TaskAttachmentsPanel({
   return (
     <section
       {...getDropzoneProps()}
-      className={`relative space-y-3 rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] p-4 ${className}`}
+      className={`relative space-y-3 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-4 ${className}`}
     >
       <AttachmentDropOverlay visible={isDraggingFiles} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="rounded-[4px] bg-white dark:bg-[#202020] p-2 text-[#787774] dark:text-[#9B9A97] border border-[#EAEAEA] dark:border-white/8">
+          <div className="rounded-[4px] bg-white dark:bg-[#202020] p-2 text-[#787774] dark:text-[#9B9A97] border border-[#EAEAEA] dark:border-white/[0.06]">
             <Paperclip className="h-4 w-4" />
           </div>
           <div className="min-w-0">
@@ -138,7 +138,7 @@ export default function TaskAttachmentsPanel({
       <AttachmentUploadQueue items={uploadingFiles} onClear={clearQueueItem} />
 
       {!hasContent && !isLoading && (
-        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-4 py-6 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-6 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
           No attachments yet.
         </div>
       )}

@@ -100,7 +100,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
     event.preventDefault();
     const href = normalizeLinkUrl(url);
     if (!href) {
-      toast.error("URL không hợp lệ");
+      toast.error("Invalid URL");
       return;
     }
     const attrs: LinkAttrs = {

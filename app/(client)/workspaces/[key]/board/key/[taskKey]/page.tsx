@@ -68,8 +68,8 @@ export default function TaskDetailDeepLinkPage() {
 
         const status = err?.response?.status;
         if (status === 404) setError("Task not found");
-        else if (status === 403) setError("Ban khong co quyen truy cap task nay");
-        else setError("Khong tai duoc chi tiet task");
+        else if (status === 403) setError("You do not have permission to access this task");
+        else setError("Could not load task details");
       })
       .finally(() => {
         if (isActive) setLoading(false);
@@ -113,10 +113,10 @@ export default function TaskDetailDeepLinkPage() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center dark:bg-gray-950">
         <h1 className="mb-3 text-2xl font-semibold text-gray-900 dark:text-white">
-          {error ?? "Khong tim thay task"}
+          {error ?? "Task not found"}
         </h1>
         <p className="mb-6 max-w-md text-sm text-gray-500 dark:text-gray-400">
-          Task co the da bi xoa, bi archive, hoac workspace khong con kha dung.
+          The task may have been deleted, archived, or the workspace is no longer available.
         </p>
         <button
           type="button"
@@ -124,7 +124,7 @@ export default function TaskDetailDeepLinkPage() {
           className="inline-flex items-center gap-2 rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0065FF]"
         >
           <ArrowLeft className="h-4 w-4" />
-          Quay lai board
+          Back to board
         </button>
       </div>
     );

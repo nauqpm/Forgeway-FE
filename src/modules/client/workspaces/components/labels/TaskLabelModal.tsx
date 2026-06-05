@@ -16,7 +16,7 @@ type TaskLabelModalProps = {
   onSaved: (issue: Issue) => void;
 };
 
-const inputCls = "h-10 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-3 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]";
+const inputCls = "h-10 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-3 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]";
 
 export default function TaskLabelModal({
   isOpen,
@@ -46,7 +46,9 @@ export default function TaskLabelModal({
     labelService
       .listLabels(workspaceId)
       .then(setLabels)
-      .catch((error) => toast.error(error?.response?.data?.message || "Khong tai duoc labels"))
+      .catch((error) => {
+        toast.error(error?.response?.data?.message || "Could not load labels");
+      })
       .finally(() => setLoading(false));
   }, [isOpen, issue, workspaceId]);
 
@@ -77,9 +79,9 @@ export default function TaskLabelModal({
       setLabels((current) => [...current, createdLabel]);
       setSelectedIds((current) => [...current, createdLabel.id]);
       setNewLabelName("");
-      toast.success("Da tao label");
+      toast.success("Label created");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong tao duoc label");
+      toast.error(error?.response?.data?.message || "Could not create label");
     } finally {
       setCreating(false);
     }
@@ -98,9 +100,9 @@ export default function TaskLabelModal({
       setSelectedIds(nextSelectedIds);
       onSaved({ ...issue, labels: nextIssueLabels, labelIds: nextSelectedIds });
       setLabelToDelete(null);
-      toast.success("Da xoa label");
+      toast.success("Label deleted");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong xoa duoc label");
+      toast.error(error?.response?.data?.message || "Could not delete label");
     } finally {
       setDeletingIds((current) => current.filter((id) => id !== label.id));
     }
@@ -111,11 +113,15 @@ export default function TaskLabelModal({
     try {
       const updatedIssue = await taskService.replaceTaskLabels(workspaceId, issue.id, selectedIds);
       const selectedLabels = labels.filter((label) => selectedIds.includes(label.id));
-      onSaved({ ...updatedIssue, labels: selectedLabels, labelIds: selectedIds });
-      toast.success("Da cap nhat label");
+      onSaved({
+        ...updatedIssue,
+        labels: selectedLabels,
+        labelIds: selectedIds,
+      });
+      toast.success("Label updated");
       onClose();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong cap nhat duoc label");
+      toast.error(error?.response?.data?.message || "Could not update label");
     } finally {
       setSaving(false);
     }
@@ -123,7 +129,7 @@ export default function TaskLabelModal({
 
   if (!isOpen) return null;
 
-  const cancelBtnCls = "rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50";
+  const cancelBtnCls = "rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <div
@@ -131,11 +137,11 @@ export default function TaskLabelModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]"
+        className="relative w-full max-w-lg overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-[#EAEAEA] dark:border-white/8 p-5">
+        <div className="flex items-start justify-between gap-4 border-b border-[#EAEAEA] dark:border-white/[0.06] p-5">
           <div className="min-w-0">
             <h3 className="flex items-center gap-2 text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
               <Tag className="h-4 w-4 text-[#2563EB] dark:text-[#3B82F6]" />
@@ -148,7 +154,7 @@ export default function TaskLabelModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+            className="rounded-[6px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#111111] dark:hover:text-[#E8E8E7]"
             aria-label="Close labels"
           >
             <X className="h-4 w-4" />
@@ -189,7 +195,7 @@ export default function TaskLabelModal({
             />
           </div>
 
-          <div className="max-h-72 overflow-y-auto rounded-[6px] border border-[#EAEAEA] dark:border-white/8 p-1">
+          <div className="max-h-72 overflow-y-auto rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] p-1">
             {loading ? (
               <div className="flex h-28 items-center justify-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -208,7 +214,7 @@ export default function TaskLabelModal({
                     className={`flex w-full items-center justify-between gap-3 rounded-[6px] px-3 py-2 text-left text-[13px] transition-colors ${
                       active
                         ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]"
-                        : "text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                        : "text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                     }`}
                   >
                     <button
@@ -243,10 +249,10 @@ export default function TaskLabelModal({
         {labelToDelete && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 p-4">
             <div
-              className="w-full max-w-sm overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]"
+              className="w-full max-w-sm overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]"
               style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
             >
-              <div className="border-b border-[#EAEAEA] dark:border-white/8 p-5">
+              <div className="border-b border-[#EAEAEA] dark:border-white/[0.06] p-5">
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] text-[#9F2F2D] dark:text-[#F87171]">
                     <Trash2 className="h-5 w-5" />
@@ -284,7 +290,7 @@ export default function TaskLabelModal({
           </div>
         )}
 
-        <div className="flex justify-end gap-2 border-t border-[#EAEAEA] dark:border-white/8 p-4">
+        <div className="flex justify-end gap-2 border-t border-[#EAEAEA] dark:border-white/[0.06] p-4">
           <button type="button" onClick={onClose} className={cancelBtnCls}>
             Cancel
           </button>

@@ -10,7 +10,7 @@ interface DashboardGroupProps {
   idx: number;
   onSelect: (id: string) => void;
   onRename: (id: string, currentTitle: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (doc: Document) => void;
 }
 
 export default function DashboardGroup({

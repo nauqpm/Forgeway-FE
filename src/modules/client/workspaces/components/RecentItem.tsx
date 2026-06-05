@@ -13,7 +13,7 @@ export default function RecentItem({ icon: Icon, title, meta, tone = "gray", onC
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full min-w-0 items-center gap-3 rounded-[6px] px-2 py-2 text-left transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+      className="flex w-full min-w-0 items-center gap-3 rounded-[6px] px-2 py-2 text-left transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
     >
       <span
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] ${

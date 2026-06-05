@@ -314,7 +314,7 @@ export default function TimelineView({
       {weeklyBoundaries.map((boundary) => (
         <div
           key={boundary.dateKey}
-          className="absolute top-0 w-px bg-[#EAEAEA] dark:bg-white/8"
+          className="absolute top-0 w-px bg-[#EAEAEA] dark:bg-[#2A2A2A]"
           style={{ left: boundary.left, height }}
         />
       ))}
@@ -323,7 +323,7 @@ export default function TimelineView({
 
   const renderSprintOverlay = () => (
     <div
-      className="relative h-[42px] shrink-0 border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]"
+      className="relative h-[42px] shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]"
       style={{ width: totalWidth, minWidth: totalWidth }}
     >
       {renderWeeklyBoundaryGrid(SPRINT_TRACK_H)}
@@ -454,7 +454,7 @@ export default function TimelineView({
               <span className="sr-only">{row.title}</span>
             )}
             {width < TASK_LABEL_MIN_W && (
-              <span className="pointer-events-none absolute right-full top-1/2 z-30 mr-2 hidden max-w-[260px] -translate-y-1/2 whitespace-nowrap rounded-[4px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-2 py-1 text-[12px] font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:block" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+              <span className="pointer-events-none absolute right-full top-1/2 z-30 mr-2 hidden max-w-[260px] -translate-y-1/2 whitespace-nowrap rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-2 py-1 text-[12px] font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:block" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
                 {row.title}
               </span>
             )}
@@ -498,17 +498,17 @@ export default function TimelineView({
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden flex flex-col font-sans text-[#111111] dark:text-[#E8E8E7] relative">
+    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col font-sans text-[#111111] dark:text-[#E8E8E7] relative">
       <div className="flex flex-1 min-h-0 overflow-hidden">
 
         {/* ────────── LEFT PANEL ────────── */}
         <div
           style={{ width: LABEL_W, flexShrink: 0 }}
-          className="border-r border-[#EAEAEA] dark:border-white/8 flex flex-col bg-white dark:bg-[#202020] z-10"
+          className="border-r border-[#EAEAEA] dark:border-white/[0.06] flex flex-col bg-white dark:bg-[#202020] z-10"
         >
           {/* Header */}
           <div
-            className="border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] flex items-center px-3 shrink-0 gap-2"
+            className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex items-center px-3 shrink-0 gap-2"
             style={{ height: TIMELINE_HEADER_H }}
           >
             <span className="font-semibold text-[13px] text-[#787774] dark:text-[#9B9A97]">Work Items</span>
@@ -516,7 +516,7 @@ export default function TimelineView({
           </div>
           {hasSprintTrack && (
           <div
-            className="flex shrink-0 items-center border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-3 text-[10px] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#3B82F6]"
+            className="flex shrink-0 items-center border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-3 text-[10px] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#3B82F6]"
             style={{ height: SPRINT_TRACK_H }}
           >
             Sprints
@@ -541,7 +541,7 @@ export default function TimelineView({
 
           {/* Date header */}
           <div
-            className="shrink-0 border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] flex"
+            className="shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex"
             style={{ width: totalWidth, minWidth: totalWidth, height: TIMELINE_HEADER_H }}
           >
             {daysArray.map((day, i) => (
@@ -551,7 +551,7 @@ export default function TimelineView({
                 style={{ width: pixelsPerDay }}
               >
                 {weeklyBoundaryKeys.has(format(day, 'yyyy-MM-dd')) && (
-                  <span className="absolute left-0 top-0 h-full w-px bg-[#EAEAEA] dark:bg-white/8" />
+                  <span className="absolute left-0 top-0 h-full w-px bg-[#EAEAEA] dark:bg-[#2A2A2A]" />
                 )}
                 {(day.getDate() === 1 || i === 0) && (
                   <span className="absolute top-1.5 left-1.5 text-[9px] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider whitespace-nowrap">
@@ -624,10 +624,10 @@ export default function TimelineView({
       </div>
 
       {/* Zoom controls */}
-      <div className="absolute bottom-5 right-5 z-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[6px] flex items-center p-1 gap-0.5" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+      <div className="absolute bottom-5 right-5 z-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] flex items-center p-1 gap-0.5" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
         <button
           onClick={() => setPixelsPerDay(p => Math.max(10, p - 10))}
-          className="p-1.5 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[4px] transition-colors"
+          className="p-1.5 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors"
           title="Zoom Out"
         >
           <ZoomOut className="w-4 h-4" />
@@ -637,7 +637,7 @@ export default function TimelineView({
         </span>
         <button
           onClick={() => setPixelsPerDay(p => Math.min(100, p + 10))}
-          className="p-1.5 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[4px] transition-colors"
+          className="p-1.5 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors"
           title="Zoom In"
         >
           <ZoomIn className="w-4 h-4" />

@@ -24,7 +24,7 @@ export default function AttachmentActions({
         <button
           type="button"
           onClick={() => onPreview(attachment)}
-          className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+          className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#111111] dark:hover:text-[#E8E8E7]"
           aria-label="Preview attachment"
           title="Preview"
         >
@@ -34,7 +34,7 @@ export default function AttachmentActions({
       <button
         type="button"
         onClick={() => onDownload(attachment)}
-        className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+        className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#111111] dark:hover:text-[#E8E8E7]"
         aria-label="Download attachment"
         title="Download"
       >

@@ -38,14 +38,14 @@ const SortableTreeItem = ({ item, isExpanded, onToggle, workspaceId }: SortableT
   const hasChildren = item.children && item.children.length > 0;
 
   return (
-    <div ref={setNodeRef} style={style} className={`flex items-center gap-1.5 py-1.5 pr-2 rounded-[6px] group ${isDragging ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] z-50 relative' : 'hover:bg-[#F7F6F3] dark:hover:bg-white/5 bg-white dark:bg-transparent'}`}>
+    <div ref={setNodeRef} style={style} className={`flex items-center gap-1.5 py-1.5 pr-2 rounded-[6px] group ${isDragging ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] z-50 relative' : 'hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] bg-white dark:bg-transparent'}`}>
       <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#787774] dark:hover:text-[#9B9A97]">
         <svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor">
           <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"></path>
         </svg>
       </div>
 
-      <button onClick={() => onToggle(item.id)} className={`p-0.5 rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] hover:bg-[#F7F6F3] dark:hover:bg-white/8 transition-colors ${!hasChildren ? 'invisible' : ''}`}>
+      <button onClick={() => onToggle(item.id)} className={`p-0.5 rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors ${!hasChildren ? 'invisible' : ''}`}>
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
       </button>
 
@@ -125,10 +125,10 @@ export default function PageTreeSidebar({ initialData, workspaceId }: { initialD
   };
 
   return (
-    <div className="w-[var(--workspace-list-sidebar-w)] border-r border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] flex flex-col rounded-l-[8px] overflow-hidden shrink-0">
-      <div className="p-[var(--workspace-surface-pad)] border-b border-[#EAEAEA] dark:border-white/8 flex items-center justify-between">
+    <div className="w-[var(--workspace-list-sidebar-w)] border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex flex-col rounded-l-[8px] overflow-hidden shrink-0">
+      <div className="p-[var(--workspace-surface-pad)] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between">
         <h3 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Docs</h3>
-        <Link href={`/workspaces/${workspaceId}/pages/create`} className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[4px] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/10">
+        <Link href={`/workspaces/${workspaceId}/pages/create`} className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08]">
           <Plus className="w-4 h-4" />
         </Link>
       </div>

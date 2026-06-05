@@ -74,10 +74,10 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
 
   return (
     <div
-      className="absolute top-16 right-0 w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] z-40 animate-in slide-in-from-top-2 duration-200"
+      className="absolute top-16 right-0 w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-40 animate-in slide-in-from-top-2 duration-200"
       style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
-      <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/8">
+      <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
         <h4 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Filters</h4>
         <button onClick={onClose} className="p-1 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] rounded-[4px] transition-colors">
           <X className="w-4 h-4" />
@@ -102,7 +102,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
                   className={`flex min-w-0 items-center gap-2 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-medium transition-colors ${
                     isSelected
                       ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] border-[#2563EB]/20 dark:border-[#2563EB]/20 text-[#1F6C9F] dark:text-[#93C5FD]'
-                      : 'bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/10 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5'
+                      : 'bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]'
                   }`}
                   title={detail ? `${label} - ${detail}` : label}
                 >
@@ -156,7 +156,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         </div>
 
         {/* Density */}
-        <div className="space-y-2 pt-4 border-t border-[#EAEAEA] dark:border-white/8">
+        <div className="space-y-2 pt-4 border-t border-[#EAEAEA] dark:border-white/[0.06]">
           <h5 className="text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wide">List density</h5>
           <div className="flex gap-2">
             <button
@@ -164,7 +164,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
               className={`flex-1 py-1.5 text-[13px] font-medium rounded-[6px] border transition-colors ${
                 density === 'default'
                   ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] border-[#2563EB]/20 text-[#1F6C9F] dark:text-[#93C5FD]'
-                  : 'bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/10 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5'
+                  : 'bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]'
               }`}
             >
               Default
@@ -174,7 +174,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
               className={`flex-1 py-1.5 text-[13px] font-medium rounded-[6px] border transition-colors ${
                 density === 'compact'
                   ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] border-[#2563EB]/20 text-[#1F6C9F] dark:text-[#93C5FD]'
-                  : 'bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/10 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5'
+                  : 'bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]'
               }`}
             >
               Compact
@@ -183,12 +183,12 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         </div>
 
       </div>
-      <div className="p-3 border-t border-[#EAEAEA] dark:border-white/8 flex justify-between items-center bg-[#F9F9F8] dark:bg-[#252525] rounded-b-[8px]">
+      <div className="p-3 border-t border-[#EAEAEA] dark:border-white/[0.06] flex justify-between items-center bg-[#F9F9F8] dark:bg-[#252525] rounded-b-[8px]">
         <span className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
           Shortcut:{' '}
-          <kbd className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/10 rounded-[4px] px-1 font-mono">Shift</kbd>
+          <kbd className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[4px] px-1 font-mono">Shift</kbd>
           {' '}+{' '}
-          <kbd className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/10 rounded-[4px] px-1 font-mono">F</kbd>
+          <kbd className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[4px] px-1 font-mono">F</kbd>
         </span>
         <button onClick={clearFilters} className="text-[13px] font-medium text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#3B82F6] dark:hover:text-[#2563EB] transition-colors">
           Clear filters

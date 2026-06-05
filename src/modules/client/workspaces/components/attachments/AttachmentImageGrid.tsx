@@ -25,7 +25,7 @@ export default function AttachmentImageGrid({
       {attachments.map((attachment) => (
         <div
           key={attachment.id}
-          className="group overflow-hidden rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]"
+          className="group overflow-hidden rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]"
         >
           <button
             type="button"

@@ -76,17 +76,17 @@ export function ProfileInfoForm({
     let hasClientError = false;
 
     if (form.phone && !/^(\+?[1-9]\d{7,14}|0\d{9,10})$/.test(form.phone)) {
-      newFieldErrors.phone = "Số điện thoại không hợp lệ";
+      newFieldErrors.phone = "Invalid phone number";
       hasClientError = true;
     }
 
     if (form.birthday) {
       const bdate = new Date(form.birthday);
       if (isNaN(bdate.getTime())) {
-        newFieldErrors.birthday = "Ngày sinh không hợp lệ";
+        newFieldErrors.birthday = "Invalid date of birth";
         hasClientError = true;
       } else if (bdate > new Date()) {
-        newFieldErrors.birthday = "Ngày sinh không thể ở tương lai";
+        newFieldErrors.birthday = "Date of birth cannot be in the future";
         hasClientError = true;
       }
     }
@@ -95,7 +95,7 @@ export function ProfileInfoForm({
       form.fullName &&
       (form.fullName.length < 2 || form.fullName.length > 100)
     ) {
-      newFieldErrors.fullName = "Họ tên phải từ 2 đến 100 ký tự";
+      newFieldErrors.fullName = "Full name must be between 2 and 100 characters";
       hasClientError = true;
     }
 
@@ -193,7 +193,7 @@ export function ProfileInfoForm({
             {profile.email}
           </p>
           <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] mt-0.5">
-            JPG, PNG, GIF, WEBP · max 10MB
+            JPG, PNG, GIF, WEBP - max 10MB
           </p>
           {fieldErrors.avatar && (
             <p className="text-[13px] text-[#9F2F2D] mt-1">
@@ -256,7 +256,7 @@ export function ProfileInfoForm({
           <CustomDatePicker
             value={form.birthday}
             onChange={handleBirthdayChange}
-            placeholder="MM/DD/YYYY"
+            placeholder="DD/MM/YYYY"
             inputClassName={`h-9 rounded-[6px] ${
               fieldErrors.birthday
                 ? "border-[#9F2F2D] focus:border-[#9F2F2D]"
@@ -279,9 +279,9 @@ export function ProfileInfoForm({
             onChange={handleChange}
             className={fieldErrors.gender ? inputErrorCls : inputNormalCls}
           >
-            <option value="male">Nam</option>
-            <option value="female">Nữ</option>
-            <option value="other">Khác</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
           </select>
           {fieldErrors.gender && (
             <p className="mt-1.5 text-[13px] text-[#9F2F2D]">

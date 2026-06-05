@@ -31,7 +31,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-b border-[#EAEAEA] dark:border-white/8 pb-4 last:border-0 last:pb-0">
+    <section className="border-b border-[#EAEAEA] dark:border-white/[0.06] pb-4 last:border-0 last:pb-0">
       <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
         <Icon className="h-4 w-4 text-[#2563EB] dark:text-[#3B82F6]" />
         {title}
@@ -55,7 +55,7 @@ function CheckboxRow({
   onChange: () => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-[6px] px-2 py-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5">
+    <label className="flex cursor-pointer items-center gap-3 rounded-[6px] px-2 py-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]">
       <input
         type="checkbox"
         checked={checked}

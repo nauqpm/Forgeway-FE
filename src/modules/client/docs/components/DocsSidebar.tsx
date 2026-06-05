@@ -5,16 +5,18 @@ import DocsSearch from "./DocsSearch";
 import DocsTree from "./DocsTree";
 import RecentDocs from "./RecentDocs";
 import { ChevronLeft, ChevronRight, Download, FileText, Layout, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { toast } from "react-hot-toast";
 
 export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
-  const { documents, createDocument, selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
+  const { documents, selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
+  const [removeTarget, setRemoveTarget] = useState<DocumentItem | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const rootDocs = documents.filter((doc) => doc.parentId === null);
   const { searchQuery } = useDocsStore();
@@ -34,9 +36,45 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
     return () => window.removeEventListener("docs_uploads_changed", onChanged);
   }, [workspaceId]);
 
-  const filteredDocs = searchQuery
-    ? documents.filter(doc => doc.title.toLowerCase().includes(searchQuery.toLowerCase()))
-    : [];
+  const filteredDocs = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+
+    const workspaceDocs = documents
+      .filter((doc) => doc.title.toLowerCase().includes(query))
+      .map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+        source: "page" as const,
+      }));
+
+    const importedDocs = uploadedDocs
+      .filter((doc) => doc.name.toLowerCase().includes(query))
+      .map((doc) => ({
+        id: doc._id,
+        title: doc.name,
+        source: "import" as const,
+      }));
+
+    return [...workspaceDocs, ...importedDocs];
+  }, [documents, searchQuery, uploadedDocs]);
+
+  const handleRemoveImportedDocument = async () => {
+    if (!removeTarget) return;
+
+    setRemoving(true);
+    try {
+      await documentService.detach(removeTarget._id, workspaceId);
+      setUploadedDocs((curr) => curr.filter((doc) => doc._id !== removeTarget._id));
+      window.dispatchEvent(new Event("docs_uploads_changed"));
+      setRemoveTarget(null);
+      toast.success("Removed from workspace");
+    } catch {
+      toast.error("Failed to remove document");
+    } finally {
+      setRemoving(false);
+    }
+  };
 
   return (
     <motion.aside
@@ -66,12 +104,12 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
               <button
                 onClick={() => selectDocument(null)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-[6px] text-[13px] font-medium transition-all ${
-                  !selectedDocumentId
+                  !selectedDocumentId && !selectedImportedDocumentId
                     ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
                     : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
                 }`}
               >
-                <Layout className={`w-4 h-4 ${!selectedDocumentId ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#ABABAB] dark:text-[#6B6B6B]"}`} />
+                <Layout className={`w-4 h-4 ${!selectedDocumentId && !selectedImportedDocumentId ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#ABABAB] dark:text-[#6B6B6B]"}`} />
                 All Documents
               </button>
 
@@ -90,14 +128,18 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                     {filteredDocs.map(doc => (
                       <li key={doc.id}>
                         <button
-                          onClick={() => selectDocument(doc.id)}
+                          onClick={() =>
+                            doc.source === "import"
+                              ? selectImportedDocument(doc.id)
+                              : selectDocument(doc.id)
+                          }
                           className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[13px] transition-all ${
-                            selectedDocumentId === doc.id
+                            selectedDocumentId === doc.id || selectedImportedDocumentId === doc.id
                               ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium"
                               : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
                           }`}
                         >
-                          <FileText className={`w-3.5 h-3.5 ${selectedDocumentId === doc.id ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#ABABAB] dark:text-[#6B6B6B]"}`} />
+                          <FileText className={`w-3.5 h-3.5 ${doc.source === "import" ? "text-amber-500" : selectedDocumentId === doc.id ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#ABABAB] dark:text-[#6B6B6B]"}`} />
                           <span className="truncate">{doc.title}</span>
                         </button>
                       </li>
@@ -138,17 +180,9 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                               </span>
                             </button>
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.preventDefault();
-                                if (!window.confirm("Remove this document from the workspace?")) return;
-                                try {
-                                  await documentService.detach(doc._id, workspaceId);
-                                  setUploadedDocs((curr) => curr.filter((d) => d._id !== doc._id));
-                                  window.dispatchEvent(new Event("docs_uploads_changed"));
-                                  toast.success("Removed from workspace");
-                                } catch {
-                                  toast.error("Failed to remove document");
-                                }
+                                setRemoveTarget(doc);
                               }}
                               className="opacity-0 group-hover:opacity-100 p-1 rounded-[4px] text-[#ABABAB] hover:text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
                               title="Remove from workspace"
@@ -176,6 +210,61 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {removeTarget && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4"
+          onClick={() => {
+            if (!removing) setRemoveTarget(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-imported-document-title"
+            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-5"
+            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] text-[#9F2F2D] dark:text-[#F87171]">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="remove-imported-document-title" className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                  Remove from workspace?
+                </h2>
+                <p className="mt-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                  This will remove{" "}
+                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                    {removeTarget.name}
+                  </span>{" "}
+                  from this workspace only. The document will remain in your library.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={removing}
+                onClick={() => setRemoveTarget(null)}
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={removing}
+                onClick={handleRemoveImportedDocument}
+                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#8F2927] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {removing ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.aside>
   );
 }

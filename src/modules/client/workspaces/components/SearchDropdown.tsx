@@ -268,7 +268,7 @@ export default function SearchDropdown({
           <button
             type="button"
             onClick={() => setIsOpen((open) => !open)}
-            className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-[#ABABAB] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
+            className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-[#ABABAB] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
             aria-label="Open task filters"
           >
             <SlidersHorizontal className="h-4 w-4" />
@@ -291,7 +291,7 @@ export default function SearchDropdown({
                     className={`flex-1 rounded-[4px] px-3 py-2 text-[13px] font-medium transition-colors ${
                       activeApp === app
                         ? "bg-white dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6]"
-                        : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                        : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                     }`}
                   >
                     {app}
@@ -347,11 +347,11 @@ export default function SearchDropdown({
                 </section>
               </div>
 
-              <div className="mt-5 border-t border-[#EAEAEA] dark:border-white/8 pt-4">
+              <div className="mt-5 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-4">
                 <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Go to all</div>
                 <div className="flex flex-wrap gap-2">
                   {goToLinks.map((item) => (
-                    <button key={item} type="button" className="rounded-[4px] border border-[#EAEAEA] dark:border-white/10 px-2.5 py-1.5 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/30 hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)] hover:text-[#1F6C9F] dark:hover:text-[#93C5FD] transition-colors">
+                    <button key={item} type="button" className="rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08] px-2.5 py-1.5 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/30 hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)] hover:text-[#1F6C9F] dark:hover:text-[#93C5FD] transition-colors">
                       {item}
                     </button>
                   ))}

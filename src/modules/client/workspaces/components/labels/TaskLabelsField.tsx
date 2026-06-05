@@ -78,7 +78,7 @@ export default function TaskLabelsField({
         className={`group flex min-h-[32px] w-full min-w-0 items-center gap-2 rounded p-1 text-left transition-colors ${
           disabled
             ? "cursor-default"
-            : "hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+            : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         }`}
       >
         {labels.length === 0 ? (

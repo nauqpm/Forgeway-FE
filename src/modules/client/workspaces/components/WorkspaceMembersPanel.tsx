@@ -136,7 +136,7 @@ function InviteForm({
         <button
           type="button"
           onClick={onClose}
-          className="p-1 rounded-[4px] text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+          className="p-1 rounded-[4px] text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -156,7 +156,7 @@ function InviteForm({
             className={`w-full px-3 py-2 text-[13px] rounded-[6px] border bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:outline-none transition-colors ${
               emailError
                 ? "border-[#9F2F2D] focus:border-[#9F2F2D]"
-                : "border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
+                : "border-[#EAEAEA] dark:border-white/[0.08] focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
             }`}
           />
           {emailError && (
@@ -168,7 +168,7 @@ function InviteForm({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="appearance-none w-full sm:w-32 px-3 py-2 pr-7 text-[13px] rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:border-[#2563EB] transition-colors"
+            className="appearance-none w-full sm:w-32 px-3 py-2 pr-7 text-[13px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:border-[#2563EB] transition-colors"
           >
             {ROLES.map((r) => (
               <option key={r.value} value={r.value}>
@@ -338,7 +338,7 @@ export default function WorkspaceMembersPanel({
   });
 
   return (
-    <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] p-5">
+    <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
@@ -377,7 +377,7 @@ export default function WorkspaceMembersPanel({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search members..."
-          className="w-full pl-9 pr-3 py-2 text-[13px] rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-[#F9F9F8] dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors"
+          className="w-full pl-9 pr-3 py-2 text-[13px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors"
         />
         {search && (
           <button
@@ -395,7 +395,7 @@ export default function WorkspaceMembersPanel({
           Loading members...
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/10 p-5 text-[13px] text-[#787774] dark:text-[#9B9A97] text-center">
+        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] p-5 text-[13px] text-[#787774] dark:text-[#9B9A97] text-center">
           {search ? "No members match your search." : "No members yet."}
         </div>
       ) : (
@@ -410,7 +410,7 @@ export default function WorkspaceMembersPanel({
                 key={user._id}
                 onClick={(event) => handleOpenMemberMenu(event, m)}
                 onContextMenu={(event) => handleOpenContextMenu(event, m)}
-                className={`flex items-center gap-3 p-3 rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] hover:bg-[#F7F6F3] dark:hover:bg-white/4 transition-colors ${canManageMembers && user._id !== authUser?.id ? "cursor-pointer" : ""}`}
+                className={`flex items-center gap-3 p-3 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] hover:bg-[#F7F6F3] dark:hover:bg-white/4 transition-colors ${canManageMembers && user._id !== authUser?.id ? "cursor-pointer" : ""}`}
               >
                 <MemberAvatar user={user} />
                 <div className="min-w-0 flex-1">
@@ -434,7 +434,7 @@ export default function WorkspaceMembersPanel({
 
       {contextMenu && (
         <div
-          className="fixed z-50 w-52 rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] py-1"
+          className="fixed z-50 w-52 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
           style={{
             left: contextMenu.x,
             top: contextMenu.y,
@@ -442,7 +442,7 @@ export default function WorkspaceMembersPanel({
           }}
           onClick={(event) => event.stopPropagation()}
         >
-          <div className="border-b border-[#EAEAEA] dark:border-white/8 px-3 py-2">
+          <div className="border-b border-[#EAEAEA] dark:border-white/[0.06] px-3 py-2">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">
               Grant permission
             </p>
@@ -455,7 +455,7 @@ export default function WorkspaceMembersPanel({
                 handleUpdateMemberRole(contextMenu.member, role.value)
               }
               disabled={updatingMemberId === contextMenu.member.userId?._id}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:opacity-50 transition-colors ${
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50 transition-colors ${
                 contextMenu.member.role === role.value
                   ? "text-[#2563EB] dark:text-[#3B82F6] font-semibold"
                   : "text-[#787774] dark:text-[#9B9A97]"
@@ -469,7 +469,7 @@ export default function WorkspaceMembersPanel({
               {role.label}
             </button>
           ))}
-          <div className="my-1 border-t border-[#EAEAEA] dark:border-white/8" />
+          <div className="my-1 border-t border-[#EAEAEA] dark:border-white/[0.06]" />
           <button
             type="button"
             onClick={() => handleRemoveMember(contextMenu.member)}

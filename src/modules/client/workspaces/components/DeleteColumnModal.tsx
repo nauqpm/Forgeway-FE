@@ -37,17 +37,17 @@ export default function DeleteColumnModal({
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div
-        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-md border border-[#EAEAEA] dark:border-white/8 overflow-hidden"
+        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-md border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
-        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/8">
+        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
           <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-[#9F2F2D]" />
             Delete column {column.name}
           </h3>
           <button
             onClick={onClose}
-            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -67,7 +67,7 @@ export default function DeleteColumnModal({
                   required
                   value={migrateTo}
                   onChange={(e) => setMigrateTo(e.target.value)}
-                  className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#9F2F2D] text-[13px] outline-none transition-colors"
+                  className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#9F2F2D] text-[13px] outline-none transition-colors"
                 >
                   <option value="" disabled>Select column</option>
                   {otherColumns.map((col) => (
@@ -86,7 +86,7 @@ export default function DeleteColumnModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-[#EAEAEA] dark:border-white/10 text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+              className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
             >
               Cancel
             </button>

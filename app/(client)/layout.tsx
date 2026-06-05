@@ -51,6 +51,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const taskSearchHydrationPathRef = useRef<string | null>(null);
 
   const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
+    .filter(Boolean)
     .map((workspace) => {
       const id = workspace._id || (workspace as { id?: string }).id;
       const key = workspace.key || workspace.slug;
@@ -60,17 +61,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const defaultSearchWorkspaceKeys = workspaceKey
     ? [workspaceKey]
     : searchProjects.map((workspace) => workspace.key);
-  const searchAssignees = (currentWorkspace?.members ?? []).map((member) => {
-    const memberId =
-      typeof member.userId === "string"
-        ? member.userId
-        : member.userId._id || member.userId.id || "member";
+  const searchAssignees = (currentWorkspace?.members ?? [])
+    .filter((member) => member && member.userId)
+    .map((member) => {
+      const memberId =
+        typeof member.userId === "string"
+          ? member.userId
+          : member.userId?._id || member.userId?.id || "member";
 
-    return {
-      id: memberId,
-      name: memberId === user?.id ? user?.fullName || user?.email || "You" : memberId,
-    };
-  });
+      return {
+        id: memberId,
+        name: memberId === user?.id ? user?.fullName || user?.email || "You" : memberId,
+      };
+    });
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

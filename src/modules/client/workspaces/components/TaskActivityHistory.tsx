@@ -215,7 +215,7 @@ export default function TaskActivityHistory({
 
   if (allActivities.length === 0 && !isFetching) {
     return (
-      <div className="flex items-center gap-2 rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/8 px-4 py-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+      <div className="flex items-center gap-2 rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] px-4 py-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
         <Clock className="h-4 w-4" />
         No history recorded yet.
       </div>

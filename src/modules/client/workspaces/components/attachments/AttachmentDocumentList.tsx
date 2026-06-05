@@ -21,7 +21,7 @@ export default function AttachmentDocumentList({
   if (attachments.length === 0) return null;
 
   return (
-    <div className="divide-y divide-[#EAEAEA] dark:divide-white/8 overflow-hidden rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]">
+    <div className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06] overflow-hidden rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
       {attachments.map((attachment) => (
         <div key={attachment.id} className="flex items-center gap-3 p-3">
           <div className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] p-2 text-[#787774] dark:text-[#9B9A97]">

@@ -22,7 +22,7 @@ interface PreviewData {
   incompleteTaskList: any[];
 }
 
-const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[13px] outline-none transition-colors";
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[13px] outline-none transition-colors";
 
 export default function CompleteSprintModal({
   isOpen,
@@ -72,16 +72,16 @@ export default function CompleteSprintModal({
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div
-        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-lg border border-[#EAEAEA] dark:border-white/8 overflow-hidden"
+        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-lg border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
-        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/8">
+        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
           <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Complete Sprint: {sprint.name}
           </h3>
           <button
             onClick={onClose}
-            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -96,7 +96,7 @@ export default function CompleteSprintModal({
           <form onSubmit={handleSubmit} className="p-5 space-y-4">
             {preview && (
               <>
-                <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] p-4 space-y-2.5">
+                <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4 space-y-2.5">
                   <div className="flex items-center justify-between text-[13px]">
                     <span className="text-[#787774] dark:text-[#9B9A97]">Total tasks:</span>
                     <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{preview.totalTasks}</span>
@@ -157,7 +157,7 @@ export default function CompleteSprintModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 border border-[#EAEAEA] dark:border-white/10 text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+                    className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
                   >
                     Cancel
                   </button>

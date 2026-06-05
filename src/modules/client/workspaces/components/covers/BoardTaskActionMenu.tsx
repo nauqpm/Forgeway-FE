@@ -141,7 +141,7 @@ export default function BoardTaskActionMenu({
     <>
       <div
         ref={menuRef}
-        className="fixed z-[999999] overflow-visible rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] py-1 text-[#111111] dark:text-[#E8E8E7]"
+        className="fixed z-[999999] overflow-visible rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1 text-[#111111] dark:text-[#E8E8E7]"
         style={{ left: menuPosition.left, top: menuPosition.top, width: MENU_WIDTH, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         onClick={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
@@ -150,7 +150,7 @@ export default function BoardTaskActionMenu({
           <button
             type="button"
             onClick={() => setStatusOpen((open) => !open)}
-            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
           >
             <span className="flex items-center gap-2">
               <CircleDot className="h-4 w-4" />
@@ -160,7 +160,7 @@ export default function BoardTaskActionMenu({
           </button>
           {statusOpen && (
             <div
-              className="absolute left-full top-0 ml-2 w-48 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] py-1"
+              className="absolute left-full top-0 ml-2 w-48 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
               style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
             >
               {columns.map((column) => {
@@ -173,7 +173,7 @@ export default function BoardTaskActionMenu({
                     className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] transition-colors ${
                       active
                         ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
-                        : "text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                        : "text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                     }`}
                   >
                     {statusLabel(column)}
@@ -188,7 +188,7 @@ export default function BoardTaskActionMenu({
         <button
           type="button"
           onClick={() => copyText(taskLink, "Task link copied")}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         >
           <Copy className="h-4 w-4" />
           Copy link
@@ -196,7 +196,7 @@ export default function BoardTaskActionMenu({
         <button
           type="button"
           onClick={() => copyText(issue.key, "Task key copied")}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         >
           <Copy className="h-4 w-4" />
           Copy key
@@ -207,7 +207,7 @@ export default function BoardTaskActionMenu({
             // TODO: Wire to flag API when task flags are available.
             onClose();
           }}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         >
           <Flag className="h-4 w-4" />
           Add flag
@@ -219,18 +219,18 @@ export default function BoardTaskActionMenu({
             onOpenLabels?.(issue);
           }}
           disabled={!onOpenLabels || !canEditTask}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         >
           <Tag className="h-4 w-4" />
           Add label
         </button>
-        <div className="my-1 border-t border-[#EAEAEA] dark:border-white/8" />
+        <div className="my-1 border-t border-[#EAEAEA] dark:border-white/[0.06]" />
         {canEditTask && (
           <button
             ref={coverRowRef}
             type="button"
             onMouseEnter={() => setCoverAnchorRect(coverRowRef.current?.getBoundingClientRect() ?? null)}
-            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
           >
             <span>Select cover</span>
             <ChevronRight className="h-4 w-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
@@ -243,7 +243,7 @@ export default function BoardTaskActionMenu({
             onArchiveIssue?.(issue);
           }}
           disabled={!onArchiveIssue || !canArchiveTask}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Archive className="h-4 w-4" />
           Archive

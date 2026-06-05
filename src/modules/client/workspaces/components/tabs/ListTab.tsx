@@ -111,16 +111,16 @@ export default function ListTab({
       <button
         type="button"
         onClick={() => setShowColumnMenu(o => !o)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border text-[13px] bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/10 text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border text-[13px] bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
       >
         <Columns className="w-4 h-4" />
         Columns
       </button>
       {showColumnMenu && (
-        <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] z-50 p-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+        <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 p-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
           <div className="text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-2 px-2 uppercase tracking-wider">Show / Hide</div>
           {Object.keys(COLUMN_LABELS).map(id => (
-            <label key={id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[4px] cursor-pointer">
+            <label key={id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] cursor-pointer">
               <input
                 type="checkbox"
                 className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
@@ -257,7 +257,7 @@ export default function ListTab({
   };
 
   const viewToggle = (
-    <div className="ml-auto inline-flex items-center rounded-[6px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden shrink-0">
+    <div className="ml-auto inline-flex items-center rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden shrink-0">
       <button
         type="button"
         onClick={() => setListViewModePersisted("grid")}
@@ -265,7 +265,7 @@ export default function ListTab({
         className={`p-1.5 transition-colors ${
           listViewMode === "grid"
             ? "bg-[#2563EB] dark:bg-[#3B82F6] text-white"
-            : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+            : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         }`}
       >
         <LayoutGrid className="w-4 h-4" />
@@ -278,10 +278,10 @@ export default function ListTab({
           setListViewModePersisted("split");
         }}
         title="Split view"
-        className={`p-1.5 transition-colors border-l border-[#EAEAEA] dark:border-white/8 ${
+        className={`p-1.5 transition-colors border-l border-[#EAEAEA] dark:border-white/[0.06] ${
           listViewMode === "split"
             ? "bg-[#2563EB] dark:bg-[#3B82F6] text-white"
-            : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+            : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         }`}
       >
         <PanelRight className="w-4 h-4" />
@@ -290,7 +290,7 @@ export default function ListTab({
   );
 
   return (
-    <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 transition-all duration-200">
+    <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
       <BoardFilters
         filters={filters}
         setFilters={setFilters}
@@ -300,7 +300,7 @@ export default function ListTab({
 
       {listViewMode === "grid" ? (
         selectedIssue ? (
-          <div className="workspace-list-height overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/8 transition-all duration-200">
+          <div className="workspace-list-height overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
@@ -334,21 +334,21 @@ export default function ListTab({
           </div>
         )
       ) : (
-        <div className="workspace-list-height flex flex-col lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] overflow-hidden">
-          <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
+        <div className="workspace-list-height flex flex-col lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
+          <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
             <div
               ref={listSplitToolbarRef}
-              className="flex items-center gap-1.5 px-2 py-2 border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] shrink-0"
+              className="flex items-center gap-1.5 px-2 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] shrink-0"
             >
               <div className="relative flex-1 min-w-0">
                 <button
                   type="button"
                   onClick={() => setListSplitOrderOpen((o) => !o)}
                   title={`Order work items by: ${LIST_SPLIT_SORT_OPTIONS.find((o) => o.id === listSplitSortBy)?.label ?? listSplitSortBy} (${listSplitSortDir})`}
-                  className={`flex w-full items-center justify-between gap-2 rounded-[6px] border bg-white dark:bg-[#202020] px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 ${
+                  className={`flex w-full items-center justify-between gap-2 rounded-[6px] border bg-white dark:bg-[#202020] px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] ${
                     listSplitOrderOpen
                       ? "border-[#2563EB] dark:border-[#3B82F6] text-[#2563EB] dark:text-[#3B82F6]"
-                      : "border-[#EAEAEA] dark:border-white/10 text-[#111111] dark:text-[#E8E8E7]"
+                      : "border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7]"
                   }`}
                 >
                   <span className="truncate">Custom field</span>
@@ -357,14 +357,14 @@ export default function ListTab({
                   />
                 </button>
                 {listSplitOrderOpen && (
-                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
                     <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                       Order work items by
                     </div>
                     {LIST_SPLIT_SORT_OPTIONS.map((opt) => (
                       <label
                         key={opt.id}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[13px] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[13px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                       >
                         <input
                           type="radio"
@@ -388,7 +388,7 @@ export default function ListTab({
                 onClick={() =>
                   setListSplitSortDir((d) => (d === "asc" ? "desc" : "asc"))
                 }
-                className="shrink-0 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-[#F9F9F8] dark:bg-[#252525] p-2 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                className="shrink-0 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] p-2 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
               >
                 <ArrowDownWideNarrow
                   className={`h-4 w-4 ${listSplitSortDir === "asc" ? "rotate-180" : ""}`}
@@ -401,7 +401,7 @@ export default function ListTab({
                   setListSplitSortBy("key");
                   setListSplitSortDir("asc");
                 }}
-                className="shrink-0 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#202020] p-2 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                className="shrink-0 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#202020] p-2 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
               >
                 <RotateCw className="h-4 w-4" />
               </button>
@@ -428,7 +428,7 @@ export default function ListTab({
                             className={`w-full rounded-[6px] border px-3 py-2.5 text-left transition-colors ${
                               active
                                 ? "border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)]"
-                                : "border-transparent bg-white dark:bg-[#202020] hover:border-[#EAEAEA] dark:hover:border-white/8 hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                                : "border-transparent bg-white dark:bg-[#202020] hover:border-[#EAEAEA] dark:hover:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -471,7 +471,7 @@ export default function ListTab({
                       );
                     })}
                   </ul>
-                  <div className="shrink-0 border-t border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] px-3 py-2 text-center text-[11px] text-[#787774] dark:text-[#9B9A97]">
+                  <div className="shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] px-3 py-2 text-center text-[11px] text-[#787774] dark:text-[#9B9A97]">
                     {splitSortedIssues.length} of {splitSortedIssues.length}
                   </div>
                 </>

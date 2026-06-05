@@ -1,13 +1,14 @@
 "use client";
 
-import { FileText, History, Trash2 } from "lucide-react";
+import { Download, FileText, History, Trash2 } from "lucide-react";
+import { documentService } from "../services/documentService";
 import { Document } from "../types/docs.type";
 
 interface DashboardRowProps {
   doc: Document;
   onSelect: (id: string) => void;
   onRename: (id: string, currentTitle: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (doc: Document) => void;
 }
 
 export default function DashboardRow({
@@ -65,7 +66,28 @@ export default function DashboardRow({
       </td>
       <td className="px-6 py-4 text-right">
         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-          {doc.source !== "import" && (
+          {doc.source === "import" ? (
+            <>
+              <a
+                href={documentService.downloadUrl(doc.id)}
+                onClick={(e) => e.stopPropagation()}
+                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 transition-all hover:shadow-sm border border-transparent hover:border-gray-100 dark:hover:border-gray-600"
+                title="Download"
+              >
+                <Download className="w-4 h-4" />
+              </a>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(doc);
+                }}
+                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-all hover:shadow-sm border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+                title="Delete"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); onRename(doc.id, doc.title); }}
@@ -75,7 +97,10 @@ export default function DashboardRow({
                 <FileText className="w-4 h-4" />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(doc);
+                }}
                 className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] transition-all border border-transparent hover:border-[#F5C6C7]"
                 title="Delete"
               >

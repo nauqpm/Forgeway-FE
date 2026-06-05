@@ -9,7 +9,7 @@ type BoardFiltersProps = {
   extraActions?: React.ReactNode;
 };
 
-const searchInputCls = "w-full pl-9 pr-4 py-1.5 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#2563EB] dark:focus:border-[#3B82F6] outline-none transition-colors";
+const searchInputCls = "w-full pl-9 pr-4 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[13px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#2563EB] dark:focus:border-[#3B82F6] outline-none transition-colors";
 
 export default function BoardFilters({
   filters,
@@ -120,7 +120,7 @@ export default function BoardFilters({
           className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-[6px] text-[13px] transition-colors ${
             isPopoverOpen || hasActiveFilters
               ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] border-[#2563EB]/30 dark:border-[#2563EB]/30 text-[#1F6C9F] dark:text-[#93C5FD]"
-              : "bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/10 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+              : "bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
           }`}
         >
           <Filter className="w-3.5 h-3.5" />
@@ -143,10 +143,10 @@ export default function BoardFilters({
 
       {isPopoverOpen && (
         <div
-          className="absolute top-[calc(100%+6px)] left-[var(--workspace-surface-pad)] w-[480px] h-[320px] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] z-50 flex overflow-hidden"
+          className="absolute top-[calc(100%+6px)] left-[var(--workspace-surface-pad)] w-[480px] h-[320px] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 flex overflow-hidden"
           style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.05)" }}
         >
-          <div className="w-1/3 border-r border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] flex flex-col">
+          <div className="w-1/3 border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex flex-col">
             {tabs.map(tab => (
               <button
                 key={tab}
@@ -154,7 +154,7 @@ export default function BoardFilters({
                 className={`px-4 py-3 text-left text-[13px] font-medium transition-colors border-l-2 ${
                   activeTab === tab
                     ? "bg-white dark:bg-[#202020] text-[#2563EB] border-l-[#2563EB]"
-                    : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-transparent"
+                    : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] border-l-transparent"
                 }`}
               >
                 {tab}
@@ -171,7 +171,7 @@ export default function BoardFilters({
                 </div>
                 <div className="flex flex-col gap-0.5">
                   {filteredStatuses.map((status) => (
-                    <label key={status} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] cursor-pointer transition-colors">
+                    <label key={status} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
                       <input type="checkbox" checked={filters.statuses.includes(status)} onChange={() => toggleArrayFilter("statuses", status)} className="rounded accent-[#2563EB] w-3.5 h-3.5" />
                       <span className="text-[13px] text-[#111111] dark:text-[#E8E8E7]">{status}</span>
                     </label>
@@ -189,7 +189,7 @@ export default function BoardFilters({
                 </div>
                 <div className="flex flex-col gap-0.5">
                   {filteredAssignees.map((user) => (
-                    <label key={user.id} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] cursor-pointer transition-colors">
+                    <label key={user.id} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
                       <input type="checkbox" checked={filters.assignees.includes(user.id)} onChange={() => toggleArrayFilter("assignees", user.id)} className="rounded accent-[#2563EB] w-3.5 h-3.5" />
                       <span className="text-[13px] text-[#111111] dark:text-[#E8E8E7]">{user.id}</span>
                     </label>
@@ -207,7 +207,7 @@ export default function BoardFilters({
                 </div>
                 <div className="flex flex-col gap-0.5">
                   {filteredTypes.map((type) => (
-                    <label key={type} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] cursor-pointer transition-colors">
+                    <label key={type} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
                       <input type="checkbox" checked={filters.types.includes(type)} onChange={() => toggleArrayFilter("types", type)} className="rounded accent-[#2563EB] w-3.5 h-3.5" />
                       <span className="text-[13px] text-[#111111] dark:text-[#E8E8E7]">{type}</span>
                     </label>
@@ -225,7 +225,7 @@ export default function BoardFilters({
                 </div>
                 <div className="flex flex-col gap-0.5">
                   {filteredPriorities.map((priority) => (
-                    <label key={priority} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] cursor-pointer transition-colors">
+                    <label key={priority} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
                       <input type="checkbox" checked={filters.priorities.includes(priority)} onChange={() => toggleArrayFilter("priorities", priority)} className="rounded accent-[#2563EB] w-3.5 h-3.5" />
                       <span className="text-[13px] text-[#111111] dark:text-[#E8E8E7]">{priority}</span>
                     </label>

@@ -143,7 +143,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
           className={`inline-flex items-center gap-2 border px-3 py-2 rounded-[6px] text-[13px] font-medium transition-colors ${
             isSummaryFilterOpen
               ? "border-[#2563EB] text-[#2563EB] dark:text-[#93C5FD] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)]"
-              : "border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+              : "border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
           }`}
         >
           <SlidersHorizontal className="w-4 h-4" />
@@ -157,10 +157,10 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
 
         {isSummaryFilterOpen && (
           <div
-            className="absolute top-12 left-0 w-[min(calc(100vw-48px),460px)] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] z-30 overflow-hidden"
+            className="absolute top-12 left-0 w-[min(calc(100vw-48px),460px)] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-30 overflow-hidden"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
           >
-            <div className="p-4 border-b border-[#EAEAEA] dark:border-white/8">
+            <div className="p-4 border-b border-[#EAEAEA] dark:border-white/[0.06]">
               <input
                 autoFocus
                 value={summaryFilterSearch}
@@ -181,7 +181,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
                       className={`flex items-center gap-3 px-4 py-2.5 text-[13px] cursor-pointer border-l-2 ${
                         checked
                           ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] border-[#2563EB] text-[#111111] dark:text-[#E8E8E7]"
-                          : "border-transparent hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#111111] dark:text-[#E8E8E7]"
+                          : "border-transparent hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7]"
                       }`}
                     >
                       <input
@@ -202,7 +202,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
                 })
               )}
             </div>
-            <div className="px-4 py-3 border-t border-[#EAEAEA] dark:border-white/8 text-right text-[11px] text-[#787774] dark:text-[#9B9A97] font-medium">
+            <div className="px-4 py-3 border-t border-[#EAEAEA] dark:border-white/[0.06] text-right text-[11px] text-[#787774] dark:text-[#9B9A97] font-medium">
               {visibleSummaryFilterFields.length} of {SUMMARY_FILTER_FIELDS.length}
             </div>
           </div>
@@ -252,7 +252,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
         ].map((item) => (
           <div
             key={item.label}
-            className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] px-5 py-4 flex items-center gap-4"
+            className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] px-5 py-4 flex items-center gap-4"
           >
             <div className="w-11 h-11 rounded-[6px] bg-[#F7F6F3] dark:bg-[#252525] flex items-center justify-center">
               <item.icon className={`w-5 h-5 ${item.iconTone}`} />
@@ -268,7 +268,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
         ))}
       </div>
 
-      <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] p-5">
+      <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
         <div className="flex items-start justify-between gap-3 mb-5">
           <div>
             <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Status overview</h3>
@@ -332,7 +332,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] p-5">
+        <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
           <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Priority breakdown</h3>
           <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
             Get a holistic view of how work is being prioritized.{" "}
@@ -340,7 +340,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
               How to manage priorities for Workspaces
             </button>
           </p>
-          <div className="h-60 border-l border-b border-[#EAEAEA] dark:border-white/8 px-3 pb-2">
+          <div className="h-60 border-l border-b border-[#EAEAEA] dark:border-white/[0.06] px-3 pb-2">
             <div className="h-full flex items-end justify-between gap-1.5">
               {dashboardData.priorities.map((priority) => (
                 <div
@@ -367,7 +367,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] p-5">
+        <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
           <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Types of work</h3>
           <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
             Get a breakdown of work items by their types.{" "}
@@ -394,7 +394,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] p-5">
+        <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
           <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Team workload</h3>
           <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
             Monitor the capacity of your team.{" "}
@@ -429,7 +429,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] p-5">
+        <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
           <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Epic progress</h3>
           <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
             See how your epics are progressing at a glance.{" "}
@@ -452,7 +452,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
             </span>
           </div>
           {dashboardData.epicProgress.length === 0 ? (
-            <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/10 p-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] p-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
               No epics yet.
             </div>
           ) : (

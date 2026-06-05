@@ -175,7 +175,7 @@ export default function DataGridListView({
                 onChange={(event) =>
                   onUpdateIssue(issue.id, { status: event.target.value })
                 }
-                className="rounded-[4px] border border-[#EAEAEA] dark:border-white/10 bg-[#F9F9F8] dark:bg-[#252525] px-2 py-1 text-[11px] font-semibold text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB]"
+                className="rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] px-2 py-1 text-[11px] font-semibold text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB]"
                 onClick={(event) => event.stopPropagation()}
               >
                 {boardColumns.map((col) => (
@@ -186,7 +186,7 @@ export default function DataGridListView({
           }
 
           return (
-            <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-white/8 px-1.5 py-0.5 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97]">
+            <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#2A2A2A] px-1.5 py-0.5 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97]">
               {displayName}
             </span>
           );
@@ -238,7 +238,7 @@ export default function DataGridListView({
         header: "Points",
         size: 90,
         cell: (info) => (
-          <span className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-[#F7F6F3] dark:bg-white/8 text-[11px] font-bold text-[#787774] dark:text-[#9B9A97]">
+          <span className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[11px] font-bold text-[#787774] dark:text-[#9B9A97]">
             {(info.getValue() as number) || "-"}
           </span>
         ),
@@ -291,7 +291,7 @@ export default function DataGridListView({
         cell: () => (
           <button
             type="button"
-            className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#787774] dark:hover:text-[#9B9A97]"
+            className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#787774] dark:hover:text-[#9B9A97]"
             aria-label="Task actions"
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -318,8 +318,8 @@ export default function DataGridListView({
   });
 
   return (
-    <div className="workspace-list-height flex flex-col overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] p-3">
+    <div className="workspace-list-height flex flex-col overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-3">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <input
@@ -327,7 +327,7 @@ export default function DataGridListView({
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search in list..."
-            className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#2A2A2A] py-1.5 pl-9 pr-3 text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors sm:w-[clamp(240px,20vw,320px)]"
+            className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] py-1.5 pl-9 pr-3 text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors sm:w-[clamp(240px,20vw,320px)]"
           />
         </div>
 
@@ -335,7 +335,7 @@ export default function DataGridListView({
           <button
             type="button"
             onClick={() => setShowColumnMenu((value) => !value)}
-            className="inline-flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-3 py-1.5 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+            className="inline-flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-3 py-1.5 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
           >
             <Columns className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
             Columns
@@ -343,7 +343,7 @@ export default function DataGridListView({
 
           {showColumnMenu && (
             <div
-              className="absolute right-0 z-50 mt-2 w-52 rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-2"
+              className="absolute right-0 z-50 mt-2 w-52 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-2"
               style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div className="mb-2 px-2 text-[11px] font-semibold uppercase text-[#787774] dark:text-[#9B9A97]">
@@ -355,7 +355,7 @@ export default function DataGridListView({
                 return (
                   <label
                     key={column.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-[4px] px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                    className="flex cursor-pointer items-center gap-2 rounded-[4px] px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                   >
                     <input
                       type="checkbox"
@@ -379,7 +379,7 @@ export default function DataGridListView({
           className="w-full border-collapse text-left"
           style={{ width: table.getCenterTotalSize() }}
         >
-          <thead className="sticky top-0 z-10 border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525]">
+          <thead className="sticky top-0 z-10 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525]">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -407,7 +407,7 @@ export default function DataGridListView({
           </thead>
           <tbody className="divide-y divide-[#F0F0EE] dark:divide-white/5 bg-white dark:bg-[#202020]">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="group transition-colors hover:bg-[#F9F9F8] dark:hover:bg-white/3">
+              <tr key={row.id} className="group transition-colors hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]">
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}

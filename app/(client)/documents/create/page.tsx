@@ -18,6 +18,14 @@ const sanitizeEditorHtml = (html: string) =>
     ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan"],
   });
 
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error && typeof error === "object" && "response" in error) {
+    const res = (error as { response?: { data?: { message?: string; error?: string } } }).response;
+    return res?.data?.message || res?.data?.error || fallback;
+  }
+  return fallback;
+};
+
 export default function CreateOnlineDocumentPage() {
   usePageTitle('New Document');
   const router = useRouter();
@@ -49,8 +57,8 @@ export default function CreateOnlineDocumentPage() {
       );
       toast.success("Document created successfully");
       router.push("/documents");
-    } catch {
-      toast.error("Failed to create document");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to create document"));
     } finally {
       setLoading(false);
     }

@@ -39,7 +39,7 @@ export default function DocumentWorkspaceLinkModal({
       setWorkspaces(list);
       setSelected(new Set(doc.workspaceIds ?? []));
     } catch {
-      toast.error("Không thể tải danh sách workspace");
+      toast.error("Could not load workspace list");
       onClose();
     } finally {
       setLoading(false);
@@ -82,11 +82,11 @@ export default function DocumentWorkspaceLinkModal({
     setSaving(true);
     try {
       await documentService.updateWorkspaces(doc._id, Array.from(selected));
-      toast.success("Cập nhật liên kết workspace thành công");
+      toast.success("Workspace links updated successfully");
       onSaved?.();
       onClose();
     } catch {
-      toast.error("Cập nhật liên kết workspace thất bại");
+      toast.error("Could not update workspace links");
     } finally {
       setSaving(false);
     }
@@ -104,12 +104,11 @@ export default function DocumentWorkspaceLinkModal({
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-[#EAEAEA] dark:border-white/[0.06] p-5">
           <div className="flex items-center gap-2">
             <Link2 className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
             <h3 className="text-[15px] font-bold text-[#111111] dark:text-[#E8E8E7]">
-              Liên kết workspace
+              Linked workspaces
             </h3>
           </div>
           <button
@@ -120,10 +119,9 @@ export default function DocumentWorkspaceLinkModal({
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-5">
           <p className="mb-1 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
-            Tài liệu:
+            Document:
           </p>
           <p className="mb-4 truncate text-[13px] text-[#787774] dark:text-[#9B9A97]">
             {doc.name}
@@ -132,16 +130,16 @@ export default function DocumentWorkspaceLinkModal({
           {loading ? (
             <div className="flex items-center justify-center py-8 text-[13px] text-[#787774] dark:text-[#9B9A97]">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Đang tải danh sách workspace...
+              Loading workspace list...
             </div>
           ) : workspaces.length === 0 ? (
             <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] py-6 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
-              Bạn chưa có workspace nào.
+              You do not have any workspaces yet.
             </div>
           ) : (
             <>
               <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
-                Chọn workspace
+                Select workspaces
               </p>
               <div className="flex flex-wrap gap-2">
                 {workspaces.map((ws) => {
@@ -166,18 +164,17 @@ export default function DocumentWorkspaceLinkModal({
             </>
           )}
 
-          {/* Inline confirm summary */}
           {showConfirm && hasChanges && (
             <div className="mt-4 rounded-[8px] border border-[#2563EB]/20 dark:border-[rgba(37,99,235,0.2)] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] p-3 text-[13px]">
               {added.length > 0 && (
                 <p className="text-emerald-700 dark:text-emerald-400">
-                  <span className="font-semibold">+ Thêm:</span>{" "}
+                  <span className="font-semibold">+ Add:</span>{" "}
                   {added.map((ws) => ws.name).join(", ")}
                 </p>
               )}
               {removed.length > 0 && (
                 <p className="text-red-600 dark:text-red-400">
-                  <span className="font-semibold">− Bỏ:</span>{" "}
+                  <span className="font-semibold">- Remove:</span>{" "}
                   {removed.map((ws) => ws.name).join(", ")}
                 </p>
               )}
@@ -185,14 +182,13 @@ export default function DocumentWorkspaceLinkModal({
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] px-5 py-4">
           <button
             type="button"
             onClick={onClose}
             className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-5 py-2.5 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
           >
-            Huỷ
+            Cancel
           </button>
           {showConfirm && hasChanges ? (
             <button
@@ -202,7 +198,7 @@ export default function DocumentWorkspaceLinkModal({
               className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-50"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Xác nhận lưu
+              Confirm save
             </button>
           ) : (
             <button
@@ -211,7 +207,7 @@ export default function DocumentWorkspaceLinkModal({
               onClick={() => setShowConfirm(true)}
               className="rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Lưu thay đổi
+              Save changes
             </button>
           )}
         </div>
