@@ -10,7 +10,6 @@ import {
 import Link from "next/link";
 import { TaskDetailResponse } from "../types/task-detail.type";
 import TaskSubtasks from "@/modules/admin/components/common/components/TaskSubtasks";
-import TimeTrackingSidebar from "@/modules/admin/components/common/components/TimeTrackingSidebar";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -18,6 +17,7 @@ import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
+import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
 
@@ -25,6 +25,7 @@ interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
   sprints?: SprintOption[];
+  boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   showBackButton?: boolean;
@@ -65,6 +66,7 @@ export default function TaskDetailList({
   workspaceId,
   sprints = [],
   workspaceTemplate = "kanban",
+  boardColumns = [],
   onClose,
   showBackButton = true,
   onUpdateIssue,
@@ -77,7 +79,6 @@ export default function TaskDetailList({
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
-  const [timeLogged, setTimeLogged] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
 
@@ -85,7 +86,6 @@ export default function TaskDetailList({
     if (issue) {
       setLocalTitle(issue.title);
       setSubtasks(issue.subtasks || []);
-      setTimeLogged(issue.timeLogged || 0);
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
@@ -96,7 +96,8 @@ export default function TaskDetailList({
   if (!issue) return null;
 
   const issueKey = issue.key;
-  const timeEstimated = issue.timeEstimated || "1d 4h";
+  const { statusColumns, currentColumn, displayName: statusDisplayName } =
+    resolveTaskStatusColumn(boardColumns, issue);
   const assigneeName =
     issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
@@ -118,10 +119,10 @@ export default function TaskDetailList({
     }
   };
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = (column: TaskStatusColumn) => {
     setShowStatusDropdown(false);
-    if (newStatus !== issue.status && onUpdateIssue) {
-      onUpdateIssue({ ...issue, status: newStatus });
+    if ((column.id !== issue.columnId || column.name !== issue.status) && onUpdateIssue) {
+      onUpdateIssue({ ...issue, columnId: column.id, status: column.name });
     }
   };
 
@@ -143,13 +144,6 @@ export default function TaskDetailList({
     const updated = subtasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t));
     setSubtasks(updated);
     onUpdateIssue?.({ ...issue, subtasks: updated });
-  };
-
-  const handleLogWork = (minutes: number, _description: string) => {
-    if (issue.isArchived) return;
-    const newLogged = timeLogged + minutes;
-    setTimeLogged(newLogged);
-    onUpdateIssue?.({ ...issue, timeLogged: newLogged });
   };
 
   // Helper: each detail row in the sidebar — label on left (fixed), value on right
@@ -364,32 +358,26 @@ export default function TaskDetailList({
                 disabled={issue.isArchived}
                 className={`flex items-center gap-1.5 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors ${issue.isArchived ? "opacity-70 cursor-not-allowed" : "hover:bg-gray-300 dark:hover:bg-gray-600"}`}
               >
-                {issue.status}
+                {statusDisplayName}
                 {!issue.isArchived && <ChevronDown className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />}
               </button>
               {showStatusDropdown && (
                 <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
-                  {["To Do", "In Progress", "Done"].map((s) => (
+                  {statusColumns.map((column) => (
                     <button
-                      key={s}
-                      onClick={() => handleStatusChange(s)}
-                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status
+                      key={column.id}
+                      onClick={() => handleStatusChange(column)}
+                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${column.id === currentColumn?.id
                           ? "bg-gray-100 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]"
                           : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                     >
-                      {s}
+                      {column.name}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <button className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 rounded transition-colors">
-              <Zap className="w-4 h-4" />
-            </button>
-            <button className="flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded transition-colors">
-              <Settings className="w-3.5 h-3.5" /> Improve Task
-            </button>
           </div>
 
           {/* Details collapsible */}
@@ -488,15 +476,6 @@ export default function TaskDetailList({
 
               </div>
             )}
-          </div>
-
-          {/* Time Tracking */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-            <TimeTrackingSidebar
-              timeEstimated={timeEstimated}
-              timeLogged={timeLogged}
-              onLogWork={handleLogWork}
-            />
           </div>
 
           {/* Meta */}

@@ -305,6 +305,7 @@ export default function ListTab({
               issue={selectedIssue}
               workspaceId={workspaceId}
               sprints={sprints}
+              boardColumns={boardColumns}
               workspaceTemplate={workspaceTemplate}
               showBackButton
               onClose={() => {
@@ -488,6 +489,7 @@ export default function ListTab({
                 issue={selectedIssue}
                 workspaceId={workspaceId}
                 sprints={sprints}
+                boardColumns={boardColumns}
                 workspaceTemplate={workspaceTemplate}
                 showBackButton={false}
                 onClose={() => {
