@@ -18,7 +18,7 @@ export default function DashboardEmpty({ onClearFilters }: DashboardEmptyProps) 
         onClick={onClearFilters}
         className="mt-6 text-[#0052CC] dark:text-blue-400 text-sm font-bold hover:underline"
       >
-        Clear all filters
+        Clear Search 
       </button>
     </div>
   );
