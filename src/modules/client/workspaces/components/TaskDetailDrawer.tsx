@@ -12,7 +12,6 @@ import {
 import Link from 'next/link';
 import { TaskDetailResponse } from '../types/task-detail.type';
 import TaskSubtasks from "@/modules/admin/components/common/components/TaskSubtasks";
-import TimeTrackingSidebar from "@/modules/admin/components/common/components/TimeTrackingSidebar";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -20,6 +19,7 @@ import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
+import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -31,6 +31,7 @@ interface TaskDetailDrawerProps {
   workspaceId: string;
   workspaceMembers?: WorkspaceMember[];
   sprints?: SprintOption[];
+  boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
@@ -111,6 +112,7 @@ export default function TaskDetailDrawer({
   workspaceId,
   workspaceMembers: providedWorkspaceMembers = [],
   sprints = [],
+  boardColumns = [],
   workspaceTemplate = "kanban",
   onClose,
   onUpdateIssue,
@@ -124,7 +126,6 @@ export default function TaskDetailDrawer({
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
-  const [timeLogged, setTimeLogged] = useState(0);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [draftValue, setDraftValue] = useState("");
@@ -170,7 +171,6 @@ export default function TaskDetailDrawer({
     if (issue) {
       setLocalTitle(issue.title);
       setSubtasks(issue.subtasks || []);
-      setTimeLogged(issue.timeLogged || 0);
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
@@ -183,7 +183,8 @@ export default function TaskDetailDrawer({
   if (!issue) return null;
 
   const issueKey = issue.key;
-  const timeEstimated = issue.timeEstimated || "1d 4h"; 
+  const { statusColumns, currentColumn, displayName: statusDisplayName } =
+    resolveTaskStatusColumn(boardColumns, issue);
   const assigneeName =
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
@@ -338,10 +339,10 @@ export default function TaskDetailDrawer({
     }
   };
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = (column: TaskStatusColumn) => {
     setShowStatusDropdown(false);
-    if (newStatus !== issue.status && onUpdateIssue) {
-      onUpdateIssue({ ...issue, status: newStatus });
+    if ((column.id !== issue.columnId || column.name !== issue.status) && onUpdateIssue) {
+      onUpdateIssue({ ...issue, columnId: column.id, status: column.name });
     }
   };
 
@@ -366,15 +367,6 @@ export default function TaskDetailDrawer({
     setSubtasks(updatedSubtasks);
     if (onUpdateIssue) {
       onUpdateIssue({ ...issue, subtasks: updatedSubtasks });
-    }
-  };
-
-  const handleLogWork = (minutes: number, description: string) => {
-    if (issue.isArchived) return;
-    const newLogged = timeLogged + minutes;
-    setTimeLogged(newLogged);
-    if (onUpdateIssue) {
-      onUpdateIssue({ ...issue, timeLogged: newLogged });
     }
   };
 
@@ -514,28 +506,23 @@ export default function TaskDetailDrawer({
                   disabled={issue.isArchived}
                   className={`flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-semibold rounded-md transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                 >
-                  {issue.status} {!issue.isArchived && <ChevronDown className="w-4 h-4 text-gray-500" />}
+                  {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4 text-gray-500" />}
                 </button>
                 {showStatusDropdown && (
                   <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
-                    {["To Do", "In Progress", "Done"].map((s) => (
+                    {statusColumns.map((column) => (
                       <button
-                        key={s}
-                        onClick={() => handleStatusChange(s)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? 'bg-gray-100 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        key={column.id}
+                        onClick={() => handleStatusChange(column)}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${column.id === currentColumn?.id ? 'bg-gray-100 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                       >
-                        {s}
+                        {column.name}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
-              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md transition-colors border border-gray-200 dark:border-gray-700">
-                <Zap className="w-4 h-4" /> Automations
-              </button>
-              <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-md transition-colors border border-gray-200 dark:border-gray-700">
-                <Settings className="w-4 h-4" /> Config
-              </button>
+              
             </div>
 
             {/* Details List (Assignee, Reporter, Priority, etc) */}
@@ -682,15 +669,6 @@ export default function TaskDetailDrawer({
                 subtasks={subtasks}
                 onAdd={handleAddSubtask}
                 onUpdateStatus={handleUpdateSubtaskStatus}
-              />
-            </div>
-
-            {/* Time Tracking */}
-            <div className="pt-2">
-              <TimeTrackingSidebar 
-                timeEstimated={timeEstimated} 
-                timeLogged={timeLogged} 
-                onLogWork={handleLogWork} 
               />
             </div>
 

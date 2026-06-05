@@ -28,6 +28,7 @@ import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import type { TaskCover } from "../types/task-cover.type";
+import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -40,6 +41,7 @@ interface TaskDetailModalProps {
   workspaceId: string;
   workspaceMembers?: WorkspaceMember[];
   sprints?: SprintOption[];
+  boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
@@ -117,6 +119,7 @@ export default function TaskDetailModal({
   workspaceId,
   workspaceMembers: providedWorkspaceMembers = [],
   sprints = [],
+  boardColumns = [],
   workspaceTemplate = "kanban",
   onClose,
   onUpdateIssue,
@@ -175,6 +178,8 @@ export default function TaskDetailModal({
 
   const issueKey = issue.key;
   const timeEstimated = issue.timeEstimated || "1d 4h"; // Mock default
+  const { statusColumns, currentColumn, displayName: statusDisplayName } =
+    resolveTaskStatusColumn(boardColumns, issue);
   const assigneeName =
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
@@ -331,10 +336,10 @@ export default function TaskDetailModal({
     }
   };
 
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = (column: TaskStatusColumn) => {
     setShowStatusDropdown(false);
-    if (newStatus !== issue.status && onUpdateIssue) {
-      onUpdateIssue({ ...issue, status: newStatus });
+    if ((column.id !== issue.columnId || column.name !== issue.status) && onUpdateIssue) {
+      onUpdateIssue({ ...issue, columnId: column.id, status: column.name });
     }
   };
 
@@ -564,17 +569,17 @@ export default function TaskDetailModal({
                   disabled={issue.isArchived}
                   className={`flex items-center gap-2 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                 >
-                  {issue.status} {!issue.isArchived && <ChevronDown className="w-4 h-4" />}
+                  {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4" />}
                 </button>
                 {showStatusDropdown && (
                   <div className="absolute top-full mt-1 left-0 w-40 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
-                    {["To Do", "In Progress", "Done"].map((s) => (
+                    {statusColumns.map((column) => (
                       <button
-                        key={s}
-                        onClick={() => handleStatusChange(s)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${s === issue.status ? "bg-gray-200 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`}
+                        key={column.id}
+                        onClick={() => handleStatusChange(column)}
+                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${column.id === currentColumn?.id ? "bg-gray-200 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"}`}
                       >
-                        {s}
+                        {column.name}
                       </button>
                     ))}
                   </div>
