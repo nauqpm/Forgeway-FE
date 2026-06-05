@@ -69,17 +69,6 @@ const SHOW_ADMIN_NAV = false;
 const SIDEBAR_WORKSPACE_LIMIT = 3;
 const MORE_WORKSPACE_LIMIT = 3;
 
-const optionFilter = [
-  { title: "My tasks", slug: "my-tasks" },
-  { title: "Created by me", slug: "created-by-me" },
-  { title: "My incomplete tasks", slug: "my-incomplete" },
-  { title: "Incomplete", slug: "incomplete" },
-  { title: "Recently created", slug: "recently-created" },
-  { title: "Recently viewed", slug: "recently-viewed" },
-  { title: "Recently updated", slug: "recently-updated" },
-  { title: "Recently completed", slug: "recently-completed" },
-];
-
 type SidebarPopoverType = "for_you" | "recent" | "starred" | "more_workspaces";
 
 const NavItem = ({
@@ -416,7 +405,6 @@ export default function Sidebar({
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
-  const [filterOpen, setFilterOpen] = useState(false);
   const [sidebarWorkspaces, setsidebarWorkspaces] = useState<any[]>([]);
   const [forYouWorkspaces, setForYouWorkspaces] = useState<any[]>([]);
   const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
@@ -610,48 +598,6 @@ export default function Sidebar({
                   </div>
                 )}
               </div>
-              {/* Filters */}
-              <div>
-                <button
-                  onClick={() => setFilterOpen(!filterOpen)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors ${collapsed ? "justify-center" : ""}`}
-                >
-                  <ListFilter className="w-[18px] h-[18px] text-slate-400 dark:text-gray-500" />
-
-                  {!collapsed && (
-                    <>
-                      <span className="text-sm font-medium flex-1 text-left">
-                        Filters
-                      </span>
-                      {filterOpen ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </>
-                  )}
-                </button>
-
-                {/* SUB NAV */}
-                {filterOpen && !collapsed && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    {optionFilter.map((filter) => (
-                      <Link
-                        key={filter.slug}
-                        href={`/filter/${filter.slug}`}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition ${
-                          pathname.includes(filter.slug)
-                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-                            : "text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800"
-                        }`}
-                      >
-                        <span className="truncate">{filter.title}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Documents */}
               <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
           </div>
