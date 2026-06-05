@@ -72,3 +72,6 @@ docs/superpowers/
 # Headroom local-only artifacts
 .headroom/
 node_modules/headroom-ai/
+
+# CodeGraph local index
+.codegraph/
