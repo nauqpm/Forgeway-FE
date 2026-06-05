@@ -4,18 +4,13 @@ import { toast } from 'react-hot-toast';
 // Create axios instance with base URL
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
+  withCredentials: true,
 });
 
 // Add request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Get token from localStorage if we're in the browser
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
+    config.withCredentials = true;
     return config;
   },
   (error) => {
@@ -34,22 +29,13 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Try to refresh token
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
-          { refreshToken }
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+          {},
+          { withCredentials: true }
         );
 
-        const { token } = response.data;
-        localStorage.setItem('token', token);
-
-        // Retry original request with new token
-        originalRequest.headers.Authorization = `Bearer ${token}`;
+        originalRequest.withCredentials = true;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         // If refresh token fails, redirect to login
@@ -64,11 +50,11 @@ axiosInstance.interceptors.response.use(
 
     // Handle other errors
     if (error.response?.status === 403) {
-      toast.error('Bạn không có quyền thực hiện thao tác này');
+      toast.error('You do not have permission to perform this action');
     } else if (error.response?.status === 404) {
-      toast.error('Không tìm thấy dữ liệu');
+      toast.error('Data not found');
     } else if (error.response?.status === 500) {
-      toast.error('Lỗi hệ thống, vui lòng thử lại sau');
+      toast.error('System error. Please try again later');
     }
 
     return Promise.reject(error);

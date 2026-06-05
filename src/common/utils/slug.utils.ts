@@ -1,15 +1,15 @@
 /**
- * Hàm xóa dấu tiếng Việt và chuyển chuỗi thành dạng slug-friendly (thân thiện URL)
- * @param str Chuỗi cần xử lý
- * @returns Chuỗi đã loại bỏ dấu và chuẩn hóa
+ * Remove Vietnamese diacritics and convert a string into a slug-friendly URL form
+ * @param str String to process
+ * @returns Normalized string with diacritics removed
  */
 export function removeVietnameseTones(str: string): string {
     return str
-        .normalize('NFD')                          // Tách dấu ra khỏi ký tự (VD: "á" → "a + ´")
-        .replace(/[\u0300-\u036f]/g, '')           // Xóa các dấu thanh (dấu sắc, huyền, hỏi, ngã, nặng)
-        .replace(/[đĐ]/g, 'd')                     // Chuyển đ và Đ thành d
-        .replace(/[^a-zA-Z0-9\s-]/g, '')           // Loại bỏ ký tự đặc biệt (ngoài chữ, số, khoảng trắng, "-")
-        .trim()                                    // Xóa khoảng trắng đầu và cuối chuỗi
-        .replace(/\s+/g, '-')                      // Thay thế khoảng trắng giữa các từ bằng dấu gạch ngang "-"
-        .toLowerCase();                            // Chuyển toàn bộ chuỗi về chữ thường
+        .normalize('NFD')                          // Separate diacritics from characters (VD: "á" → "a + ´")
+        .replace(/[\u0300-\u036f]/g, '')           // Remove tone marks
+        .replace(/[đĐ]/g, 'd')                     // Convert đ and Đ to d
+        .replace(/[^a-zA-Z0-9\s-]/g, '')           // Remove special characters except letters, numbers, spaces, and hyphens
+        .trim()                                    // Trim leading and trailing spaces
+        .replace(/\s+/g, '-')                      // Replace spaces between words with hyphens
+        .toLowerCase();                            // Convert the whole string to lowercase
 }

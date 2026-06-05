@@ -1,0 +1,77 @@
+"use client";
+
+import { User, Key, AlertCircle, Loader2 } from "lucide-react";
+import { useAppProfile } from "../hooks/useAppProfile";
+import { ProfileInfoForm } from "./ProfileInfoForm";
+import { ChangePasswordForm } from "./ChangePasswordForm";
+
+export function ProfilePage() {
+  const {
+    profile,
+    loading,
+    saving,
+    avatarUploading,
+    error,
+    updateInfo,
+    uploadAvatar,
+    changePassword,
+  } = useAppProfile();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center gap-3 p-4 rounded-[6px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] text-[#9F2F2D] dark:text-[#F87171]">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <span className="text-[13px]">
+            {error ?? "Could not load profile. Please try again."}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h1 className="text-[20px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+        Personal profile
+      </h1>
+
+      {error && (
+        <div className="flex items-center gap-3 p-3 rounded-[6px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] text-[13px] text-[#9F2F2D] dark:text-[#F87171]">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          {error}
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 p-6">
+        <h2 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
+          <User className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
+          Personal information
+        </h2>
+        <ProfileInfoForm
+          profile={profile}
+          saving={saving}
+          avatarUploading={avatarUploading}
+          onUpdateInfo={updateInfo}
+          onUploadAvatar={uploadAvatar}
+        />
+      </div>
+
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 p-6">
+        <h2 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
+          <Key className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
+          Privacy
+        </h2>
+        <ChangePasswordForm saving={saving} onChangePassword={changePassword} />
+      </div>
+    </div>
+  );
+}

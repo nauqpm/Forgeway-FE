@@ -1,3 +1,5 @@
+const path = require("path");
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -19,12 +21,13 @@ const nextConfig = {
       },
     ],
   },
+  outputFileTracingRoot: path.join(__dirname),
 };
 
 const serverUrl = process.env.NEXT_PUBLIC_SERVER_URL;
 
-if (!serverUrl?.startsWith("http://") && !serverUrl?.startsWith("https://")) {
-  throw new Error("NEXT_PUBLIC_SERVER_URL must start with http:// or https://");
+if (!serverUrl?.startsWith("http")) {
+  throw new Error("NEXT_PUBLIC_API_URL must start with http:// or https://");
 }
 
 // Add rewrites dynamically

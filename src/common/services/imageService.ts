@@ -17,11 +17,11 @@ export interface ImageResponse {
   caption?: string;
 }
 
-// Biến trạng thái hỗ trợ nén ảnh
+// Image compression support state
 let imageCompressionSupported: boolean | null = null;
 
 const isImageCompressionSupported = (): boolean => {
-  // Đánh giá lại mỗi lần gọi để đảm bảo trạng thái mới nhất
+  // Re-evaluate on each call to ensure the latest state
   imageCompressionSupported =
     typeof window.File !== "undefined" &&
     typeof window.Blob !== "undefined" &&
@@ -30,72 +30,85 @@ const isImageCompressionSupported = (): boolean => {
   return imageCompressionSupported;
 };
 
-// Cấu hình mặc định cho việc nén ảnh
+// Default image compression configuration
 const compressionOptions = {
-  maxSizeMB: 1, // Luôn giới hạn ở 1MB
+  maxSizeMB: 1, // Always limit to 1MB
   maxWidthOrHeight: 1920,
   useWebWorker: true,
   preserveExif: true,
-  initialQuality: 0.9, // Bắt đầu với chất lượng 90%
+  initialQuality: 0.9, // Start with 90% quality
   alwaysKeepResolution: true,
   fileType: 'image/jpeg',
 };
 
+type ImageApiEnvelope = {
+  data?: ImageResponse;
+};
+
 const imageService = {
+  normalizeImageResponse: (payload: unknown): ImageResponse => {
+    const envelope = payload as ImageApiEnvelope;
+    const image = envelope.data ?? (payload as ImageResponse);
+    return {
+      ...image,
+      imageUrl: image.imageUrl || image.url || image.path || "",
+    };
+  },
+
   /**
-   * Nén ảnh trước khi upload
+   * Compress image before upload
    */
   compressImage: async (file: File, customOptions?: any): Promise<File> => {
-    // Cập nhật trạng thái hỗ trợ nén ảnh mỗi lần chạy
+    // Update image compression support state on each run
     const supported = isImageCompressionSupported();
     if (!supported) {
-      console.warn("Thiết bị hoặc trình duyệt không hỗ trợ nén ảnh. Trả về file gốc.");
+      console.warn("Device or browser does not support image compression. Returning original file.");
       return file;
     }
 
     try {
-      // Kiểm tra kích thước và loại file
+      // Check file size and type
       const isImage = file.type.startsWith('image/');
       if (!isImage) {
-        console.warn('File không phải là ảnh:', file.type);
+        console.warn('File is not an image:', file.type);
         return file;
       }
 
-      // Chỉ nén khi ảnh > 1MB
+      // Only compress images larger than 1MB
       if (file.size <= 1024 * 1024) {
-        console.log('Ảnh đã nhỏ hơn 1MB, không cần nén:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+        console.log('Image is already under 1MB; compression is not needed:', (file.size / 1024 / 1024).toFixed(2), 'MB');
         return file;
       }
 
-      console.log('Bắt đầu nén ảnh:', file.name, 'Kích thước gốc:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      console.log('Starting image compression:', file.name, 'Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
 
       const options = {
         ...compressionOptions,
         ...customOptions,
-        maxSizeMB: customOptions?.maxSizeMB || 1, // Cho phép điều chỉnh kích thước tối đa
-        initialQuality: customOptions?.initialQuality || 0.9 // Cho phép điều chỉnh chất lượng ban đầu
+        maxSizeMB: customOptions?.maxSizeMB || 1, // Allow maximum size adjustment
+        initialQuality: customOptions?.initialQuality || 0.9 // Allow initial quality adjustment
       };
 
       let compressedFile;
       try {
         compressedFile = await imageCompression(file, options);
       } catch (compressError) {
-        console.error('Lỗi khi nén ảnh lần đầu, thử lại với chất lượng thấp hơn:', compressError);
-        // Thử lại với chất lượng thấp hơn nếu lần đầu thất bại
+        console.error('First image compression attempt failed. Retrying with lower quality:', compressError);
+        // Retry with lower quality if the first attempt fails
         options.initialQuality = 0.7;
         compressedFile = await imageCompression(file, options);
       }
 
-      // Kiểm tra kích thước sau khi nén
+      // Check size after compression
       if (compressedFile.size > options.maxSizeMB * 1024 * 1024) {
-        console.warn('Ảnh vẫn lớn sau khi nén lần đầu, thử nén lần hai với chất lượng thấp hơn');
-        // Thử nén lần thứ hai với cài đặt chất lượng thấp hơn
+        console.warn('Image is still large after the first compression attempt. Trying a second attempt with lower quality');
+        // Try a second compression attempt with lower quality settings
         options.initialQuality = 0.5;
-        options.maxWidthOrHeight = 1280; // Giảm kích thước ảnh
+        options.maxWidthOrHeight = 1280; // Reduce image dimensions
         compressedFile = await imageCompression(compressedFile, options);
       }
 
-      // Tạo file mới với tên gốc
+      // Create a new file with the original name
       const newFile = new File(
         [compressedFile],
         file.name,
@@ -103,19 +116,19 @@ const imageService = {
       );
 
       console.log(
-        'Nén ảnh hoàn tất:',
-        '\nKích thước gốc:', (file.size / 1024 / 1024).toFixed(2), 'MB',
-        '\nKích thước sau nén:', (newFile.size / 1024 / 1024).toFixed(2), 'MB',
-        '\nTỷ lệ nén:', Math.round((1 - newFile.size / file.size) * 100) + '%',
-        '\nLoại file:', newFile.type
+        'Image compression complete:',
+        '\nOriginal size:', (file.size / 1024 / 1024).toFixed(2), 'MB',
+        '\nCompressed size:', (newFile.size / 1024 / 1024).toFixed(2), 'MB',
+        '\nCompression ratio:', Math.round((1 - newFile.size / file.size) * 100) + '%',
+        '\nFile type:', newFile.type
       );
 
       return newFile;
     } catch (error) {
-      console.error('Lỗi khi nén ảnh:', error);
-      // Nếu có lỗi khi nén, trả về file gốc với kích thước giảm nếu có thể
+      console.error('Error compressing image:', error);
+      // If compression fails, return the original file with reduced size when possible
       try {
-        // Thử nén với cài đặt khẩn cấp (chất lượng thấp, kích thước nhỏ)
+        // Try emergency compression with low quality and small dimensions
         const emergencyOptions = {
           maxSizeMB: 0.8,
           maxWidthOrHeight: 1024,
@@ -126,10 +139,10 @@ const imageService = {
         const emergencyCompressed = await imageCompression(file, emergencyOptions);
         const emergencyFile = new File([emergencyCompressed], file.name, { type: 'image/jpeg' });
 
-        console.log('Nén khẩn cấp thành công, kích thước mới:', (emergencyFile.size / 1024 / 1024).toFixed(2), 'MB');
+        console.log('Emergency compression succeeded, new size:', (emergencyFile.size / 1024 / 1024).toFixed(2), 'MB');
         return emergencyFile;
       } catch (emergencyError) {
-        console.error('Không thể nén ảnh trong chế độ khẩn cấp:', emergencyError);
+        console.error('Could not compress image in emergency mode:', emergencyError);
         return file;
       }
     }
@@ -147,14 +160,14 @@ const imageService = {
         processedFile = await imageService.compressImage(file);
       }
 
-      // Kiểm tra kích thước file sau khi xử lý
+      // Check file size after processing
       if (processedFile.size > 10 * 1024 * 1024) { // 10MB
-        throw new Error('Kích thước file quá lớn (tối đa 10MB)');
+        throw new Error('File size is too large (maximum 10MB)');
       }
 
       formData.append('file', processedFile);
 
-      const response = await api.post('/images/upload', formData, {
+      const response = await api.post('/imagesapi/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -162,9 +175,9 @@ const imageService = {
         timeout: 30000, // 30 seconds timeout
       });
 
-      return response.data;
+      return imageService.normalizeImageResponse(response.data);
     } catch (error: any) {
-      console.error("Lỗi upload ảnh:", error.response?.data || error.message);
+      console.error("Image upload error:", error.response?.data || error.message);
       throw error;
     }
   },
@@ -178,18 +191,18 @@ const imageService = {
     }
 
     if (files.length > 10) {
-      throw new Error('Chỉ có thể upload tối đa 10 ảnh một lần');
+      throw new Error('You can upload up to 10 images at a time');
     }
 
     try {
-      console.log(`Đang xử lý ${files.length} ảnh...`);
+      console.log(`Processing ${files.length} images...`);
 
-      // Xử lý từng file một thay vì song song
+      // Process files one at a time instead of in parallel
       const processedFiles = [];
       for (const file of files) {
         let processedFile = file;
         if (compress) {
-          // Điều chỉnh thông số nén ảnh dựa trên số lượng ảnh để tránh quá tải
+          // Adjust compression settings based on image count to avoid overload
           const compressionLevel = files.length > 5 ? 0.7 : 0.9;
           const maxSizeMB = files.length > 5 ? 0.8 : 1;
 
@@ -200,23 +213,23 @@ const imageService = {
           });
         }
 
-        // Kiểm tra kích thước
+        // Check size
         if (processedFile.size > 10 * 1024 * 1024) {
-          throw new Error(`File ${file.name} quá lớn (tối đa 10MB)`);
+          throw new Error(`File ${file.name} is too large (maximum 10MB)`);
         }
 
         processedFiles.push(processedFile);
       }
 
-      console.log(`Đã xử lý ${processedFiles.length} ảnh, bắt đầu tải lên...`);
+      console.log(`Processed ${processedFiles.length} images, starting upload...`);
 
-      // Chia thành các nhóm nhỏ nếu có nhiều ảnh
+      // Split into small batches when there are many images
       const uploadResults = [];
-      const chunkSize = 3; // Tải lên tối đa 3 ảnh mỗi lần
+      const chunkSize = 3; // Upload up to 3 images at a time
 
       for (let i = 0; i < processedFiles.length; i += chunkSize) {
         const chunk = processedFiles.slice(i, i + chunkSize);
-        console.log(`Đang tải lên nhóm ảnh ${i / chunkSize + 1}/${Math.ceil(processedFiles.length / chunkSize)}...`);
+        console.log(`Uploading image batch ${i / chunkSize + 1}/${Math.ceil(processedFiles.length / chunkSize)}...`);
 
         const formData = new FormData();
         chunk.forEach(file => {
@@ -231,7 +244,7 @@ const imageService = {
           timeout: 60000, // 60 seconds
         });
 
-        // Xử lý kết quả từ server
+        // Process server results
         let chunkResults;
         if (typeof response.data === 'string') {
           try {
@@ -244,7 +257,7 @@ const imageService = {
           chunkResults = response.data;
         }
 
-        // Đảm bảo chúng ta có một mảng
+        // Ensure we have an array
         if (!Array.isArray(chunkResults)) {
           if (chunkResults && typeof chunkResults === 'object' && Array.isArray(chunkResults.data)) {
             chunkResults = chunkResults.data;
@@ -254,9 +267,9 @@ const imageService = {
           }
         }
 
-        // Xử lý từng kết quả
+        // Process each result
         const processedChunkResults = chunkResults.map((img: any, index: number) => {
-          // Nếu img là chuỗi, giả định đó là URL
+          // If img is a string, assume it is a URL
           if (typeof img === 'string') {
             const pathOnly = img.replace(/^https?:\/\/[^\/]+/i, '');
             return {
@@ -272,13 +285,13 @@ const imageService = {
             };
           }
 
-          // Nếu img là null hoặc không phải đối tượng, xử lý lỗi
+          // If img is null or not an object, handle it as an error
           if (!img || typeof img !== 'object') {
             console.error(`Image response ${index} is invalid:`, img);
             throw new Error(`Invalid image response at index ${index}`);
           }
 
-          // Trích xuất URL
+          // Extract URL
           let url = null;
           if (img.url) url = img.url;
           else if (img.path) url = img.path;
@@ -291,11 +304,11 @@ const imageService = {
             throw new Error(`Missing URL in image response at index ${index}`);
           }
 
-          // Đảm bảo URL là chuỗi và loại bỏ phần domain
+          // Ensure URL is a string and remove the domain part
           const urlString = String(url);
           const pathOnly = urlString.replace(/^https?:\/\/[^\/]+/i, '');
 
-          // Trả về đối tượng chuẩn hóa
+          // Return normalized object
           return {
             ...img,
             url: pathOnly,
@@ -313,13 +326,13 @@ const imageService = {
         uploadResults.push(...processedChunkResults);
       }
 
-      console.log("Tất cả ảnh đã được tải lên thành công:", uploadResults.length);
+      console.log("All images uploaded successfully:", uploadResults.length);
       return uploadResults;
     } catch (error: any) {
-      console.error('Lỗi upload ảnh:', error);
+      console.error('Image upload error:', error);
 
       if (error.response) {
-        console.error('Chi tiết lỗi:', {
+        console.error('Error details:', {
           status: error.response.status,
           data: error.response.data,
           headers: error.response.headers
@@ -327,7 +340,7 @@ const imageService = {
       }
 
       error.imageData = {
-        message: "Lỗi khi xử lý upload ảnh",
+        message: "Error processing image upload",
         error: error.message
       };
 
@@ -342,7 +355,7 @@ const imageService = {
     const formData = new FormData();
 
     try {
-      // Nén ảnh nếu được yêu cầu
+      // Compress image when requested
       const processedFile = compress ? await imageService.compressImage(file) : file;
       formData.append('file', processedFile);
 
@@ -377,11 +390,11 @@ const imageService = {
   },
 };
 
-// In ra trạng thái hỗ trợ nén ảnh khi khởi tạo module
+// Log image compression support state when initializing module
 if (!isImageCompressionSupported()) {
-  console.log("Thiết bị hoặc trình duyệt không hỗ trợ nén ảnh. Hãy cập nhật trình duyệt.");
+  console.log("Device or browser does not support image compression. Please update your browser.");
 } else {
-  console.log("Thiết bị hoặc trình duyệt hỗ trợ nén ảnh.");
+  console.log("Device or browser supports image compression.");
 }
 
 export default imageService;

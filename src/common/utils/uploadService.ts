@@ -2,18 +2,18 @@ const IMG_BB_API_KEY = "be2171867ff7acbda2a0ce0d2dde34e3"; // 🔑 API key ImgBB
 const IMG_BB_UPLOAD_URL = "https://api.imgbb.com/1/upload";
 
 /**
- * 🖼️ Upload một hoặc nhiều ảnh lên ImgBB
- * @param files Danh sách ảnh (FileList hoặc File[])
- * @returns Danh sách URLs ảnh sau khi tải lên thành công
+ * 🖼️ Upload one or more images to ImgBB
+ * @param files Image list (FileList or File[])
+ * @returns Image URLs after successful upload
  */
 export const uploadImagesToImgBB = async (files: FileList | File[]): Promise<string[]> => {
     const uploadedUrls: string[] = [];
 
     for (const file of files) {
-        // ✅ Kiểm tra định dạng file
+        // ✅ Check file format
         if (!file.type.startsWith("image/")) {
-            console.error(`❌ File không hợp lệ: ${file.name}`);
-            continue; // Bỏ qua file không phải ảnh
+            console.error(`❌ Invalid file: ${file.name}`);
+            continue; // Skip non-image files
         }
 
         const formData = new FormData();
@@ -28,15 +28,15 @@ export const uploadImagesToImgBB = async (files: FileList | File[]): Promise<str
             const data = await response.json();
 
             if (data.success) {
-                uploadedUrls.push(data.data.url); // ✅ Lưu URL ảnh tải lên thành công
-                console.log(`✅ Ảnh ${file.name} đã tải lên thành công: ${data.data.url}`);
+                uploadedUrls.push(data.data.url); // ✅ Save successfully uploaded image URL
+                console.log(`✅ Image ${file.name} uploaded successfully: ${data.data.url}`);
             } else {
-                console.error(`❌ Lỗi tải ảnh ${file.name}:`, data.error.message);
+                console.error(`❌ Image upload error ${file.name}:`, data.error.message);
             }
         } catch (error) {
-            console.error(`❌ Lỗi kết nối khi tải ảnh ${file.name}:`, error);
+            console.error(`❌ Connection error while uploading image ${file.name}:`, error);
         }
     }
 
-    return uploadedUrls; // ✅ Trả về danh sách URLs ảnh
+    return uploadedUrls; // ✅ Return image URL list
 };

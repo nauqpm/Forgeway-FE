@@ -1,6 +1,6 @@
 export type Permission = {
-  resource: string;  // Tên resource (e.g., 'posts', 'users', 'categories')
-  actions: string[]; // Các hành động được phép (e.g., ['read', 'create', 'update', 'delete'])
+  resource: string;  // Resource name (e.g., 'posts', 'users', 'categories')
+  actions: string[]; // Allowed actions (e.g., ['read', 'create', 'update', 'delete'])
 };
 
 export type UserPermissions = {
@@ -14,26 +14,26 @@ export type Resource = {
   availableActions: string[];
 };
 
-// Định nghĩa các resource có trong hệ thống
+// Define the resources available in the system
 export const AVAILABLE_RESOURCES: Resource[] = [
   {
     name: 'posts',
-    displayName: 'Bài viết',
+    displayName: 'Posts',
     availableActions: ['read', 'create', 'update', 'delete']
   },
   {
     name: 'users',
-    displayName: 'Người dùng',
+    displayName: 'Users',
     availableActions: ['read', 'create', 'update', 'delete']
   },
   {
     name: 'categories',
-    displayName: 'Danh mục',
+    displayName: 'Categories',
     availableActions: ['read', 'create', 'update', 'delete']
   },
   {
     name: 'statistical',
-    displayName: 'Thống kê',
+    displayName: 'Statistics',
     availableActions: ['read']
   }
 ];

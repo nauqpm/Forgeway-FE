@@ -1,0 +1,341 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { BookOpen, CheckCircle2, Database, LayoutDashboard } from "lucide-react";
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
+import { useAuth } from "@/context/AuthContext";
+import { taskService } from "@/modules/client/workspaces/services/taskService";
+import type { Issue } from "@/modules/client/workspaces/types/issue.type";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+
+export interface AdminDashboardProps {
+  className?: string;
+}
+
+type ForYouWorkspace = {
+  id?: string;
+  _id?: string;
+  name: string;
+  slug?: string;
+  key?: string;
+  type?: string;
+  role?: string;
+  relationship?: string;
+  ownershipLabel?: string;
+  updatedAt?: string;
+};
+
+type UserDashboardStats = {
+  tasksAssigned?: number;
+  tasksByStatus?: Record<string, number>;
+  tasksByPriority?: Record<string, number>;
+  recentlyCompleted?: Issue[];
+  recentActivity?: unknown[];
+};
+
+type DashboardTask = {
+  id: string;
+  key: string;
+  title: string;
+  type: "assigned" | "worked";
+  workspaceKey: string;
+  meta: string;
+};
+
+const normalizePayload = <T,>(payload: any): T => payload?.data?.data ?? payload?.data ?? payload;
+
+const workspaceIdOf = (workspace: ForYouWorkspace) => workspace.id || workspace._id || "";
+
+const workspaceRouteKeyOf = (workspace: ForYouWorkspace) =>
+  workspace.key || workspace.slug || workspaceIdOf(workspace);
+
+const SHOW_STARRED_DASHBOARD_TAB = false;
+
+const toWorkspaceCard = (workspace: ForYouWorkspace, index: number) => {
+  const icons = [LayoutDashboard, Database, BookOpen, CheckCircle2];
+  const colors = ["bg-[#2563EB]", "bg-[#346538]", "bg-[#1F6C9F]", "bg-[#3B82F6]"];
+
+  return {
+    ...workspace,
+    id: workspaceIdOf(workspace),
+    routeKey: workspaceRouteKeyOf(workspace),
+    description:
+      workspace.ownershipLabel ||
+      workspace.relationship ||
+      workspace.role ||
+      workspace.type ||
+      "Workspace",
+    icon: icons[index % icons.length],
+    color: colors[index % colors.length],
+  };
+};
+
+const toDashboardTask = (
+  issue: Issue,
+  workspace: ForYouWorkspace,
+  type: "assigned" | "worked",
+): DashboardTask => {
+  const workspaceId = workspaceIdOf(workspace);
+  const workspaceKey = workspaceRouteKeyOf(workspace);
+
+  return {
+    id: `${workspaceId}-${issue.id}`,
+    key: issue.key,
+    title: issue.title,
+    type,
+    workspaceKey,
+    meta: `${issue.key} - ${workspace.name} - ${issue.status}`,
+  };
+};
+
+export default function AdminDashboard({ className = "" }: AdminDashboardProps) {
+  const { setWorkspaces } = useWorkspaceStore();
+  const { user } = useAuth();
+  const [workspaces, setDashboardWorkspaces] = useState<ForYouWorkspace[]>([]);
+  const [assignedTasks, setAssignedTasks] = useState<DashboardTask[]>([]);
+  const [workedTasks, setWorkedTasks] = useState<DashboardTask[]>([]);
+  const [userStats, setUserStats] = useState<UserDashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("assigned");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDashboard = async () => {
+      setLoading(true);
+
+      try {
+        const [forYouResponse, userDashboardResponse] = await Promise.all([
+          api.get(apiRoutes.FOR_YOU).catch(() => ({ data: { workspaces: [] } })),
+          api.get(apiRoutes.DASHBOARD.USER).catch(() => ({ data: {} })),
+        ]);
+
+        if (cancelled) return;
+
+        const forYouPayload = normalizePayload<any>(forYouResponse);
+        const nextWorkspaces: ForYouWorkspace[] = Array.isArray(forYouPayload)
+          ? forYouPayload
+          : forYouPayload?.workspaces ?? [];
+        const nextUserStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
+
+        setDashboardWorkspaces(nextWorkspaces);
+        setWorkspaces(nextWorkspaces as any);
+        setUserStats(nextUserStats);
+
+        if (!user?.id || nextWorkspaces.length === 0) {
+          setAssignedTasks([]);
+          setWorkedTasks([]);
+          return;
+        }
+
+        const assignedGroups = await Promise.all(
+          nextWorkspaces.slice(0, 6).map(async (workspace) => {
+            const workspaceId = workspaceIdOf(workspace);
+            if (!workspaceId) return [];
+
+            const tasks = await taskService
+              .getBoardTasks(workspaceId, {
+                assigneeId: user.id,
+                page: 1,
+                limit: 5,
+                sortBy: "updatedAt",
+                sortOrder: "desc",
+              })
+              .catch(() => []);
+
+            return tasks.map((task) => toDashboardTask(task, workspace, "assigned"));
+          }),
+        );
+
+        if (cancelled) return;
+
+        const completedTasks = Array.isArray(nextUserStats?.recentlyCompleted)
+          ? nextUserStats.recentlyCompleted
+              .map((task) => {
+                const workspace =
+                  nextWorkspaces.find((item) => workspaceIdOf(item) === (task as any).workspaceId) ||
+                  nextWorkspaces[0];
+                return workspace ? toDashboardTask(task, workspace, "worked") : null;
+              })
+              .filter(Boolean) as DashboardTask[]
+          : [];
+
+        setAssignedTasks(assignedGroups.flat().slice(0, 10));
+        setWorkedTasks(completedTasks.slice(0, 10));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadDashboard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [setWorkspaces, user?.id]);
+
+  const tabs = [
+    { label: "Assigned to me", key: "assigned" },
+    { label: "Starred", key: "starred" },
+    { label: "Worked on", key: "worked" },
+    { label: "Viewed", key: "viewed" },
+  ].filter((tab) => SHOW_STARRED_DASHBOARD_TAB || tab.key !== "starred");
+
+  const displayWorkspaces = useMemo(
+    () => workspaces.slice(0, 4).map(toWorkspaceCard),
+    [workspaces],
+  );
+  const filteredTasks =
+    activeTab === "assigned" ? assignedTasks : activeTab === "worked" ? workedTasks : [];
+  const emptyMessage =
+    activeTab === "starred"
+      ? "The backend does not have an API for starred items yet."
+      : activeTab === "viewed"
+        ? "The backend records task view audit events but does not have a viewed-items API yet."
+        : "No matching tasks.";
+
+  if (loading) return null;
+
+  return (
+    <div className={`app-page-medium ${className}`}>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="px-2 text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">
+          Recommended workspaces
+        </h1>
+
+        <Link
+          href="/workspaces"
+          className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]"
+        >
+              View all
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {displayWorkspaces.length === 0 ? (
+          <div className="col-span-full rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] p-8 text-center text-sm text-[#787774] dark:border-white/8 dark:bg-[#252525] dark:text-[#9B9A97]">
+            No recommended workspaces yet.
+          </div>
+        ) : (
+          displayWorkspaces.map((workspace) => (
+            <Link
+              key={workspace.id}
+              href={`/workspaces/${workspace.routeKey}`}
+              className="workspace-panel group rounded-[8px] border border-[#EAEAEA] bg-white transition-all hover:border-[#2563EB]/20 dark:border-white/8 dark:bg-[#202020] dark:hover:border-[#3B82F6]"
+              style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[8px] ${workspace.color}`}
+                >
+                  <workspace.icon className="h-6 w-6 text-white" />
+                </div>
+
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#3B82F6]">
+                    {workspace.name}
+                  </h3>
+                  <p className="mt-1 truncate text-sm text-[#787774] dark:text-[#9B9A97]">
+                    {workspace.description}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+
+      <div className="mt-10">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">For you</h2>
+          <Link
+            href="/for-you"
+            className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]"
+          >
+            View all for you items
+          </Link>
+        </div>
+
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+            <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Assigned tasks</p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
+              {assignedTasks.length}
+            </p>
+          </div>
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+            <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recently completed</p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
+              {workedTasks.length}
+            </p>
+          </div>
+          <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/8 dark:bg-[#202020]">
+            <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recommended workspaces</p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
+              {workspaces.length}
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`rounded-[6px] px-3 py-1.5 text-sm transition ${
+                activeTab === tab.key
+                  ? "bg-[#EFF6FF] font-medium text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
+                  : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-white/8"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mb-2 text-sm text-[#787774] dark:text-[#9B9A97]">Summary</div>
+
+        <div className="space-y-2">
+          {filteredTasks.length === 0 ? (
+            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] px-4 py-8 text-center text-sm text-[#787774] dark:border-white/8 dark:bg-[#252525] dark:text-[#9B9A97]">
+              {emptyMessage}
+            </div>
+          ) : (
+            filteredTasks.map((task) => (
+              <Link
+                key={task.id}
+                href={`/workspaces/${task.workspaceKey}/board/key/${task.key}`}
+                className="flex items-center justify-between rounded-[8px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 transition hover:bg-[#F7F6F3] dark:border-white/8 dark:bg-[#202020] dark:hover:bg-white/8"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[4px] bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)]">
+                    {task.type === "worked" ? (
+                      <CheckCircle2 className="h-4 w-4 text-[#346538] dark:text-[#4ADE80]" />
+                    ) : (
+                      <BookOpen className="h-4 w-4 text-[#346538] dark:text-[#4ADE80]" />
+                    )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-[#111111] dark:text-[#E8E8E7]">
+                      {task.title}
+                    </p>
+                    <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">
+                      {task.meta}
+                    </p>
+                  </div>
+                </div>
+
+                <span className="ml-3 rounded-[4px] bg-[#EFF6FF] px-3 py-1 text-xs font-medium text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
+                  Open
+                </span>
+              </Link>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

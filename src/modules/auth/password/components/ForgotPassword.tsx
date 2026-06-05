@@ -1,0 +1,97 @@
+'use client';
+
+import { useState } from 'react';
+import { usePasswordReset } from '../hooks/usePasswordReset';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import toast from 'react-hot-toast';
+import { Zap, Mail, Loader2 } from 'lucide-react';
+
+const ForgotPassword = () => {
+  const router = useRouter();
+  const { loading, error, requestPasswordReset, clearError } = usePasswordReset();
+  const [email, setEmail] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await requestPasswordReset(email);
+      toast.success('OTP has been sent to your email');
+      router.push(`/reset-password?email=${encodeURIComponent(email)}`);
+    } catch {
+      // Error handled by hook
+    }
+  };
+
+  return (
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden">
+      <video autoPlay loop muted playsInline className="absolute top-0 left-0 w-full h-full object-cover z-0">
+        <source src="/videos/mixkit-clouds-and-blue-sky-background-2408-full-hd.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+
+      <div className="absolute top-0 left-0 w-full h-full bg-slate-900/10 z-10" />
+
+      <div className="w-full max-w-md relative z-20">
+        <div className="bg-white/30 backdrop-blur-2xl rounded-[12px] border border-white/30 p-8 md:p-10 transition-all duration-300 hover:border-white/55">
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2 mb-3 group">
+              <div className="w-12 h-12 bg-[#2563EB] rounded-[8px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                <Zap className="w-7 h-7 text-white" />
+              </div>
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Forgot password</h1>
+            <p className="text-gray-600 text-[13px] mt-1.5 font-semibold">
+              Enter your email to receive a password reset OTP
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">Email</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    clearError();
+                  }}
+                  required
+                  placeholder="ten@company.com"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner"
+                />
+              </div>
+            </div>
+
+            {error && <p className="text-red-600 text-[13px] text-center font-medium bg-red-500/10 py-2 rounded-[6px] border border-red-500/20">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Send OTP'
+              )}
+            </button>
+          </form>
+
+          <p className="text-center text-[13px] text-gray-600 mt-6 font-medium">
+            <Link href="/login" className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">
+              Back to sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ForgotPassword;

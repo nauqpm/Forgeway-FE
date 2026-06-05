@@ -1,11 +1,11 @@
 /**
- * 🎨 Hàm xử lý đường dẫn ảnh đại diện cho bài viết.
- * - Nếu là URL tuyệt đối thì dùng luôn.
- * - Nếu là đường dẫn bắt đầu bằng `/uploads` thì thêm domain từ biến môi trường.
- * - Nếu không có thì trả về placeholder.
+ * Function for resolving a post thumbnail path.
+ * - Use absolute URLs as-is.
+ * - If the path starts with `/uploads`, prepend the domain from environment variables.
+ * - Return a placeholder when no image exists.
  */
 export const getThumbnailPath = (thumbnail?: string | string[]): string => {
-  // Nếu không có ảnh thì dùng ảnh mặc định
+  // Use the default image when no image exists
   if (!thumbnail) return "/placeholder.svg?height=400&width=600";
 
   const path = Array.isArray(thumbnail) ? thumbnail[0] : thumbnail;

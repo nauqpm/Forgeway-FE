@@ -55,3 +55,23 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+.claude
+.agents
+.agent
+.planning
+.claude/settings.local.json
+
+# AI planning docs â€” internal only, never commit
+docs/superpowers/
+
+# Local API notes
+/md/
+.plaining/
+
+# Headroom local-only artifacts
+.headroom/
+node_modules/headroom-ai/
+
+# CodeGraph local index
+.codegraph/

@@ -46,7 +46,7 @@ export const withPermission = (
           }
 
           // Admin has all permissions
-          if (user.role === "admin") {
+          if ((user.role as string) === "super_admin" || (user.role as string) === "admin") {
             console.log("✅ User is admin, granting access");
             setHasAccess(true);
             setIsLoading(false);
@@ -107,7 +107,7 @@ export const withPermission = (
 
     // Show loading while checking
     if (isLoading || isLoadingPermissions) {
-      return <div>Đang kiểm tra quyền truy cập...</div>;
+      return <div>Checking access permissions...</div>;
     }
 
     // Render component if access is granted

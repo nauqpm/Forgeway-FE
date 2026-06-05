@@ -1,25 +1,18 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
   useCallback,
+  useContext,
+  ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { jwtDecode } from "jwt-decode";
-import axios from "axios";
-import { apiRoutes } from "@/config/apiRoutes";
-
-type UserRole = "user" | "admin" | "staff" | "manager" | "technical";
-
-interface Permission {
-  id: string;
-  resource: string;
-  action: string;
-}
+import type { AuthUser, Permission, UserRole } from "@/modules/auth/shared/types/auth.types";
+import { useAuth as useModuleAuth } from "@/modules/auth/shared/hooks/useAuth";
+import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
+import { usePermissionStore } from "@/modules/auth/permission/stores/permissionStore";
+import { getMyPermissionsAPI } from "@/modules/auth/permission/services/permissionService";
+import { handleSsoCallbackAPI } from "@/modules/auth/sso/services/ssoService";
 
 interface User {
   id: string;
@@ -34,126 +27,125 @@ interface AuthContextType {
   token: string | null;
   user: User | null;
   isAuthenticated: boolean;
-  login: (token: string) => void;
-  logout: () => void;
+  isLoading: boolean;
+  login: (token?: string) => Promise<void>;
+  logout: () => Promise<void>;
   hasAdminAccess: () => boolean;
   hasPermission: (resource: string, action: string) => boolean;
   fetchUserPermissions: () => Promise<Permission[]>;
   isLoadingPermissions: boolean;
-  verifyToken: (token?: string) => Promise<void>;
+  verifyToken: () => Promise<void>;
 }
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const normalizeUser = (
+  user: AuthUser | (Partial<AuthUser> & { id?: string; _id?: string }),
+  permissions: Permission[] = [],
+): User => ({
+  id: user.id || ("_id" in user ? user._id || "" : ""),
+  email: user.email || "",
+  role: (user.role || "user") as UserRole,
+  fullName: user.fullName,
+  avatar: user.avatar,
+  permissions: permissions.length ? permissions : user.permissions || [],
+});
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
   const router = useRouter();
+  const moduleAuth = useModuleAuth();
+  const { setUser } = useAuthStore();
+  const {
+    globalPermissions,
+    setGlobalPermissions,
+  } = usePermissionStore();
 
   const fetchUserPermissions = useCallback(async (): Promise<Permission[]> => {
-    const currentToken = token || localStorage.getItem("token");
-    if (!currentToken) return [];
-
-    setIsLoadingPermissions(true);
     try {
-      const response = await axios.get(
-        `${BASE_URL}${apiRoutes.AUTH.MY_PERMISSIONS}`,
-        { headers: { Authorization: `Bearer ${currentToken}` } }
-      );
-      const { permissions } = response.data;
-      if (permissions && Array.isArray(permissions)) {
-        setUser((prev) => {
-          if (!prev) {
-            const decoded = jwtDecode<{ userId: string; email: string; role: UserRole }>(currentToken);
-            setIsAuthenticated(true);
-            return { id: decoded.userId, email: decoded.email, role: decoded.role, permissions: permissions || [] };
-          }
-          return { ...prev, permissions: permissions || [] };
-        });
-        return permissions;
+      const { permissions } = await getMyPermissionsAPI();
+      setGlobalPermissions(permissions);
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser) {
+        setUser({ ...currentUser, permissions });
       }
-      return [];
+      return permissions;
     } catch {
+      setGlobalPermissions([]);
       return [];
-    } finally {
-      setIsLoadingPermissions(false);
     }
-  }, [token]);
+  }, [setGlobalPermissions, setUser]);
 
-  useEffect(() => {
-    const initAuth = async () => {
-      const storedToken = localStorage.getItem("token");
-      if (storedToken) {
-        setToken(storedToken);
-        try {
-          const decodedToken = jwtDecode<{ userId: string; email: string; role: UserRole; fullName?: string; avatar?: string; exp: number }>(storedToken);
-          const currentTime = Math.floor(Date.now() / 1000);
-          if (decodedToken.exp && decodedToken.exp < currentTime) {
-            logout();
-            return;
-          }
-          setUser({ id: decodedToken.userId, email: decodedToken.email, role: decodedToken.role, fullName: decodedToken.fullName, avatar: decodedToken.avatar, permissions: [] });
-          setIsAuthenticated(true);
+  const login = useCallback(
+    async (token?: string) => {
+      if (token) {
+        const response = await handleSsoCallbackAPI(token);
+        if (response.user) {
+          setUser(response.user);
           await fetchUserPermissions();
-        } catch {
-          logout();
         }
+        router.replace("/");
+        return;
       }
-    };
-    initAuth();
-  }, []);
 
-  const verifyToken = async (storedToken?: string): Promise<void> => {
-    const tokenToVerify = storedToken || token || localStorage.getItem("token");
-    if (!tokenToVerify) { logout(); return; }
-    try {
-      const decodedToken = jwtDecode<{ userId: string; email: string; role: UserRole; exp: number }>(tokenToVerify);
-      const currentTime = Math.floor(Date.now() / 1000);
-      if (decodedToken.exp && decodedToken.exp < currentTime) { logout(); return; }
-      setToken(tokenToVerify);
-      localStorage.setItem("token", tokenToVerify);
-      setUser({ id: decodedToken.userId, email: decodedToken.email, role: decodedToken.role, permissions: [] });
-      setIsAuthenticated(true);
+      await moduleAuth.refreshUser();
       await fetchUserPermissions();
-    } catch { logout(); }
-  };
+      router.replace("/");
+    },
+    [fetchUserPermissions, moduleAuth, router, setUser],
+  );
 
-  const login = async (newToken: string) => {
-    localStorage.setItem("token", newToken);
-    setToken(newToken);
-    const decodedToken = jwtDecode<{ userId: string; email: string; role: UserRole; fullName?: string; avatar?: string }>(newToken);
-    setUser({ id: decodedToken.userId, email: decodedToken.email, role: decodedToken.role, fullName: decodedToken.fullName, avatar: decodedToken.avatar, permissions: [] });
-    setIsAuthenticated(true);
-    await fetchUserPermissions();
-    router.replace("/");
-  };
+  const logout = useCallback(async () => {
+    await moduleAuth.logout();
+  }, [moduleAuth]);
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("token");
-    localStorage.removeItem("workspace-storage");
-    router.replace("/login");
-  };
+  const verifyToken = useCallback(async (): Promise<void> => {
+    const user = await moduleAuth.refreshUser();
+    if (!user) {
+      await moduleAuth.logout();
+    }
+  }, [moduleAuth]);
+
+  const effectivePermissions =
+    globalPermissions.length > 0 ? globalPermissions : moduleAuth.user?.permissions || [];
+  const user = moduleAuth.user
+    ? normalizeUser(moduleAuth.user, effectivePermissions)
+    : null;
 
   const hasAdminAccess = (): boolean => {
     if (!user) return false;
-    return user.role === "admin" || ["staff", "manager", "technical"].includes(user.role) || user.permissions.length > 0;
+    return (
+      (user.role as string) === "super_admin" ||
+      (user.role as string) === "admin" ||
+      effectivePermissions.length > 0
+    );
   };
 
   const hasPermission = (resource: string, action: string): boolean => {
     if (!user) return false;
-    if (user.role === "admin") return true;
-    return user.permissions.some((p) => p.resource === resource && p.action === action);
+    if ((user.role as string) === "super_admin" || (user.role as string) === "admin") return true;
+    return effectivePermissions.some(
+      (p) =>
+        (p.resource === resource || p.resource === "*") &&
+        (p.action === action || p.action === "*"),
+    );
   };
 
   return (
-    <AuthContext.Provider value={{ token, user, isAuthenticated, login, logout, hasAdminAccess, hasPermission, fetchUserPermissions, isLoadingPermissions, verifyToken }}>
+    <AuthContext.Provider
+      value={{
+        token: null,
+        user,
+        isAuthenticated: moduleAuth.isAuthenticated,
+        isLoading: moduleAuth.isLoading || !moduleAuth.isInitialized,
+        login,
+        logout,
+        hasAdminAccess,
+        hasPermission,
+        fetchUserPermissions,
+        isLoadingPermissions: moduleAuth.isLoading || !moduleAuth.isInitialized,
+        verifyToken,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -164,3 +156,4 @@ export const useAuth = (): AuthContextType => {
   if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
+
