@@ -53,8 +53,7 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
 
     const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
     if (!passwordPattern.test(form.newPassword)) {
-      newFieldErrors.newPassword =
-        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+      newFieldErrors.newPassword = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
       hasClientError = true;
     }
 

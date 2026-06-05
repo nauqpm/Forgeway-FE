@@ -47,7 +47,7 @@ export default function TaskLabelModal({
       .listLabels(workspaceId)
       .then(setLabels)
       .catch((error) => {
-        toast.error(error?.response?.data?.message || "Khong tai duoc labels");
+        toast.error(error?.response?.data?.message || "Could not load labels");
       })
       .finally(() => setLoading(false));
   }, [isOpen, issue, workspaceId]);
@@ -83,9 +83,9 @@ export default function TaskLabelModal({
       setLabels((current) => [...current, createdLabel]);
       setSelectedIds((current) => [...current, createdLabel.id]);
       setNewLabelName("");
-      toast.success("Da tao label");
+      toast.success("Label created");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong tao duoc label");
+      toast.error(error?.response?.data?.message || "Could not create label");
     } finally {
       setCreating(false);
     }
@@ -110,9 +110,9 @@ export default function TaskLabelModal({
         labelIds: nextSelectedIds,
       });
       setLabelToDelete(null);
-      toast.success("Da xoa label");
+      toast.success("Label deleted");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong xoa duoc label");
+      toast.error(error?.response?.data?.message || "Could not delete label");
     } finally {
       setDeletingIds((current) => current.filter((id) => id !== label.id));
     }
@@ -128,10 +128,10 @@ export default function TaskLabelModal({
         labels: selectedLabels,
         labelIds: selectedIds,
       });
-      toast.success("Da cap nhat label");
+      toast.success("Label updated");
       onClose();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong cap nhat duoc label");
+      toast.error(error?.response?.data?.message || "Could not update label");
     } finally {
       setSaving(false);
     }

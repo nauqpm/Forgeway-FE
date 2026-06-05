@@ -1094,8 +1094,7 @@ function MemberSettings({
         <section>
           {loadingMembers ? (
             <div className="flex items-center gap-2 py-8 text-sm text-gray-400">
-              <Loader2 className="h-4 w-4 animate-spin" /> Dang tai thanh
-              vien...
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading members...
             </div>
           ) : members.length === 0 ? (
             <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">

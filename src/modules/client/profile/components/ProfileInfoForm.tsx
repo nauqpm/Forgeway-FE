@@ -71,17 +71,17 @@ export function ProfileInfoForm({
     let hasClientError = false;
 
     if (form.phone && !/^(\+?[1-9]\d{7,14}|0\d{9,10})$/.test(form.phone)) {
-      newFieldErrors.phone = "Số điện thoại không hợp lệ";
+      newFieldErrors.phone = "Invalid phone number";
       hasClientError = true;
     }
 
     if (form.birthday) {
       const bdate = new Date(form.birthday);
       if (isNaN(bdate.getTime())) {
-        newFieldErrors.birthday = "Ngày sinh không hợp lệ";
+        newFieldErrors.birthday = "Invalid date of birth";
         hasClientError = true;
       } else if (bdate > new Date()) {
-        newFieldErrors.birthday = "Ngày sinh không thể ở tương lai";
+        newFieldErrors.birthday = "Date of birth cannot be in the future";
         hasClientError = true;
       }
     }
@@ -90,7 +90,7 @@ export function ProfileInfoForm({
       form.fullName &&
       (form.fullName.length < 2 || form.fullName.length > 100)
     ) {
-      newFieldErrors.fullName = "Họ tên phải từ 2 đến 100 ký tự";
+      newFieldErrors.fullName = "Full name must be between 2 and 100 characters";
       hasClientError = true;
     }
 
@@ -191,7 +191,7 @@ export function ProfileInfoForm({
             {profile.email}
           </p>
           <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-            JPG, PNG, GIF, WEBP · max 10MB
+            JPG, PNG, GIF, WEBP - max 10MB
           </p>
           {fieldErrors.avatar && (
             <p className="text-sm text-red-600 dark:text-red-400 mt-1">
@@ -300,9 +300,9 @@ export function ProfileInfoForm({
                 : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
             } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2`}
           >
-            <option value="male">Nam</option>
-            <option value="female">Nữ</option>
-            <option value="other">Khác</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
           </select>
           {fieldErrors.gender && (
             <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">

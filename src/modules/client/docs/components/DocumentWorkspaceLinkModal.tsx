@@ -39,7 +39,7 @@ export default function DocumentWorkspaceLinkModal({
       setWorkspaces(list);
       setSelected(new Set(doc.workspaceIds ?? []));
     } catch {
-      toast.error("Không thể tải danh sách workspace");
+      toast.error("Could not load workspace list");
       onClose();
     } finally {
       setLoading(false);
@@ -82,11 +82,11 @@ export default function DocumentWorkspaceLinkModal({
     setSaving(true);
     try {
       await documentService.updateWorkspaces(doc._id, Array.from(selected));
-      toast.success("Cập nhật liên kết workspace thành công");
+      toast.success("Workspace links updated successfully");
       onSaved?.();
       onClose();
     } catch {
-      toast.error("Cập nhật liên kết workspace thất bại");
+      toast.error("Could not update workspace links");
     } finally {
       setSaving(false);
     }
@@ -103,12 +103,11 @@ export default function DocumentWorkspaceLinkModal({
         className="w-full max-w-md overflow-hidden rounded-2xl border border-transparent bg-white shadow-2xl animate-in fade-in zoom-in duration-200 dark:border-gray-800 dark:bg-gray-900"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 p-5 dark:border-gray-800">
           <div className="flex items-center gap-2">
             <Link2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              Liên kết workspace
+              Linked workspaces
             </h3>
           </div>
           <button
@@ -119,10 +118,9 @@ export default function DocumentWorkspaceLinkModal({
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-5">
           <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
-            Tài liệu:
+            Document:
           </p>
           <p className="mb-4 truncate text-sm text-gray-500 dark:text-gray-400">
             {doc.name}
@@ -131,16 +129,16 @@ export default function DocumentWorkspaceLinkModal({
           {loading ? (
             <div className="flex items-center justify-center py-8 text-sm text-gray-500">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Đang tải danh sách workspace...
+              Loading workspace list...
             </div>
           ) : workspaces.length === 0 ? (
             <div className="rounded-xl border border-dashed border-gray-300 py-6 text-center text-sm text-gray-500 dark:border-gray-700">
-              Bạn chưa có workspace nào.
+              You do not have any workspaces yet.
             </div>
           ) : (
             <>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                Chọn workspace
+                Select workspaces
               </p>
               <div className="flex flex-wrap gap-2">
                 {workspaces.map((ws) => {
@@ -165,18 +163,17 @@ export default function DocumentWorkspaceLinkModal({
             </>
           )}
 
-          {/* Inline confirm summary */}
           {showConfirm && hasChanges && (
             <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-sm dark:border-indigo-800 dark:bg-indigo-900/20">
               {added.length > 0 && (
                 <p className="text-emerald-700 dark:text-emerald-400">
-                  <span className="font-semibold">+ Thêm:</span>{" "}
+                  <span className="font-semibold">+ Add:</span>{" "}
                   {added.map((ws) => ws.name).join(", ")}
                 </p>
               )}
               {removed.length > 0 && (
                 <p className="text-red-600 dark:text-red-400">
-                  <span className="font-semibold">− Bỏ:</span>{" "}
+                  <span className="font-semibold">- Remove:</span>{" "}
                   {removed.map((ws) => ws.name).join(", ")}
                 </p>
               )}
@@ -184,14 +181,13 @@ export default function DocumentWorkspaceLinkModal({
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50/30 px-5 py-4 dark:border-gray-800 dark:bg-gray-900">
           <button
             type="button"
             onClick={onClose}
             className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
           >
-            Huỷ
+            Cancel
           </button>
           {showConfirm && hasChanges ? (
             <button
@@ -201,7 +197,7 @@ export default function DocumentWorkspaceLinkModal({
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
-              Xác nhận lưu
+              Confirm save
             </button>
           ) : (
             <button
@@ -210,7 +206,7 @@ export default function DocumentWorkspaceLinkModal({
               onClick={() => setShowConfirm(true)}
               className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Lưu thay đổi
+              Save changes
             </button>
           )}
         </div>

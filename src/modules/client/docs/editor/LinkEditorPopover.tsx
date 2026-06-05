@@ -108,7 +108,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
 
     const href = normalizeLinkUrl(url);
     if (!href) {
-      toast.error("URL không hợp lệ");
+      toast.error("Invalid URL");
       return;
     }
 
@@ -178,7 +178,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
             type="text"
             value={displayText}
             onChange={(event) => setDisplayText(event.target.value)}
-            placeholder="Nhập text hiển thị"
+            placeholder="Enter display text"
             className="mt-1 h-9 w-full rounded border border-gray-200 bg-white px-2 text-sm text-gray-900 outline-none focus:border-indigo-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
           />
         </label>

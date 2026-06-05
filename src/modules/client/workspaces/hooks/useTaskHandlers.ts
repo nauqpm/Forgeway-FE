@@ -82,7 +82,7 @@ export const useTaskHandlers = ({
       })
       .catch((error) => {
         setIssues(issues);
-        toast.error(error?.response?.data?.message || "Khong cap nhat duoc task");
+        toast.error(error?.response?.data?.message || "Could not update task");
       });
   };
 
@@ -110,7 +110,7 @@ export const useTaskHandlers = ({
       });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong tao duoc task");
+      toast.error(error?.response?.data?.message || "Could not create task");
     } finally {
       isCreatingRef.current = false;
     }
@@ -120,7 +120,7 @@ export const useTaskHandlers = ({
     updatedIssue: Issue
   ) => {
     if (!updatedIssue.id) {
-      toast.error("Khong tim thay task id");
+      toast.error("Task ID not found");
       return;
     }
 
@@ -146,7 +146,7 @@ export const useTaskHandlers = ({
         queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong cap nhat duoc task");
+      toast.error(error?.response?.data?.message || "Could not update task");
     }
   };
 
@@ -175,7 +175,7 @@ export const useTaskHandlers = ({
       setIssues(prev => [...prev, issue]);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Loi khi tao task");
+      toast.error(error?.response?.data?.message || "Could not create task");
     } finally {
       isCreatingRef.current = false;
     }
@@ -202,7 +202,7 @@ export const useTaskHandlers = ({
       setIssues(prev => [...prev, issue]);
       queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Loi khi tao task');
+      toast.error(error?.response?.data?.message || 'Could not create task');
     } finally {
       isCreatingRef.current = false;
     }

@@ -186,7 +186,7 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       return savedDoc;
     } catch (error) {
       console.error(`Failed to save document ${id}:`, error);
-      toast.error(getErrorMessage(error, "Khong the luu trang"));
+      toast.error(getErrorMessage(error, "Could not save page"));
       set({ isSaving: false });
       return null;
     }
@@ -215,7 +215,7 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       await pagesService.deletePage(id);
     } catch (error) {
       console.error(`Failed to delete document ${id}:`, error);
-      toast.error(getErrorMessage(error, "Khong the xoa trang"));
+      toast.error(getErrorMessage(error, "Could not delete page"));
       set({
         documents: snapshotDocs,
         selectedDocumentId: snapshotSelected,
@@ -241,7 +241,7 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       await pagesService.updatePage(id, { title: newTitle });
     } catch (error) {
       console.error(`Failed to rename document ${id}:`, error);
-      toast.error(getErrorMessage(error, "Khong the doi ten trang"));
+      toast.error(getErrorMessage(error, "Could not rename page"));
       set((current) => ({
         documents: current.documents.map((doc) => (doc.id === id ? oldDoc : doc)),
       }));
