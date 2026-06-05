@@ -4,17 +4,13 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import DOMPurify from "dompurify";
 import "highlight.js/styles/github.css";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDocsStore } from "../store/docs.store";
 import EditorToolbar from "./EditorToolbar";
 import EditorHeader from "./EditorHeader";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
 import { getEditorExtensions } from "./editorExtensions";
-import { realtimeSocketClient } from "@/lib/socket/socket.client";
-import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
-
-const EMIT_DELAY = 300;
 
 const sanitizeEditorHtml = (html: string) =>
   DOMPurify.sanitize(html, {
@@ -23,30 +19,15 @@ const sanitizeEditorHtml = (html: string) =>
   });
 
 export default function TiptapEditor() {
-  const { documents, selectedDocumentId, updateDocument, setIsSaving } = useDocsStore();
+  const { documents, selectedDocumentId, updateDocument, saveDocument, deleteDocument } = useDocsStore();
   const document = documents.find((d) => d.id === selectedDocumentId);
+  const documentContent = document?.content ?? "";
+  const isTemporaryDocument = Boolean(document?.id.startsWith("temp-"));
   const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
   const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
 
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const latestContentRef = useRef<string>("");
-  const draftContentRef = useRef<string | null>(null);
-
-  const emitUpdate = useCallback(
-    (content: string) => {
-      if (!selectedDocumentId) return;
-      const socket = realtimeSocketClient.getSocket();
-      if (socket && socket.connected) {
-        setIsSaving(true);
-        realtimeSocketClient.pageManager.update(socket, sanitizeEditorHtml(content), () => {
-          setIsSaving(false);
-        });
-      }
-    },
-    [selectedDocumentId, setIsSaving],
-  );
-
-
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -56,81 +37,70 @@ export default function TiptapEditor() {
     editorProps: {
       attributes: {
         class:
-          "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
+          "tiptap-content prose m-5 max-w-none px-2 pb-32 text-slate-900 focus:outline-none dark:prose-invert dark:text-slate-100 prose-strong:text-slate-900 dark:prose-strong:text-slate-100",
       },
     },
     onUpdate: ({ editor }) => {
       if (!selectedDocumentId || !canEditPage) return;
 
-      const html = editor.getHTML();
+      const html = sanitizeEditorHtml(editor.getHTML());
       latestContentRef.current = html;
-
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-
-      saveTimeoutRef.current = setTimeout(() => {
-        emitUpdate(html);
-      }, EMIT_DELAY);
+      updateDocument(selectedDocumentId, { content: html });
+      setHasUnsavedChanges(true);
     },
   });
 
   useEffect(() => {
-    if (!selectedDocumentId) return;
-    
-    const socket = realtimeSocketClient.connect();
-    if (!socket) return;
+    if (!editor || !selectedDocumentId) return;
 
-    realtimeSocketClient.pageManager.join(socket, selectedDocumentId, (draft) => {
-      if (draft !== undefined) {
-        draftContentRef.current = draft;
-        if (editor && latestContentRef.current !== draft) {
-          latestContentRef.current = draft;
-          editor.commands.setContent(draft, { emitUpdate: false });
-        }
-      }
-    });
-
-    const handlePageUpdated = (data: { pageId: string; content: string; editedBy: string }) => {
-      if (data.pageId === selectedDocumentId && editor) {
-        latestContentRef.current = data.content;
-        // Tiptap setContent signature might expect options object
-        editor.commands.setContent(data.content, { emitUpdate: false });
-      }
-    };
-
-    socket.on(SOCKET_EVENTS.PAGE_UPDATED, handlePageUpdated);
-
-    return () => {
-      socket.off(SOCKET_EVENTS.PAGE_UPDATED, handlePageUpdated);
-      realtimeSocketClient.pageManager.leave(socket);
-      draftContentRef.current = null;
-    };
-  }, [selectedDocumentId, editor]);
-
-  useEffect(() => {
-    if (editor && document) {
-      const contentToSet = draftContentRef.current ?? document.content;
-      if (latestContentRef.current !== contentToSet) {
-        editor.commands.setContent(contentToSet);
-        latestContentRef.current = contentToSet;
-      }
+    if (latestContentRef.current !== documentContent) {
+      editor.commands.setContent(documentContent, { emitUpdate: false });
+      latestContentRef.current = documentContent;
     }
-  }, [selectedDocumentId, editor]);
+  }, [selectedDocumentId, editor, documentContent]);
 
   useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
+    setHasUnsavedChanges(Boolean(selectedDocumentId?.startsWith("temp-")));
+  }, [selectedDocumentId]);
+
+  const handleSave = useCallback(async () => {
+    if (!document) return;
+    const savedDoc = await saveDocument(document.id);
+    if (savedDoc) {
+      latestContentRef.current = savedDoc.content;
+      setHasUnsavedChanges(false);
+    }
+  }, [document, saveDocument]);
+
+  const handleCancel = useCallback(() => {
+    if (!document || !document.id.startsWith("temp-")) return;
+    deleteDocument(document.id);
+  }, [deleteDocument, document]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        handleSave();
       }
     };
-  }, []);
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleSave]);
 
   if (!document) return null;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden">
-      <EditorHeader doc={document} />
+      <EditorHeader
+        doc={document}
+        canSave={canEditPage}
+        canCancel={isTemporaryDocument}
+        hasUnsavedChanges={hasUnsavedChanges}
+        onCancel={handleCancel}
+        onSave={handleSave}
+      />
 
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
         <div className="sticky top-0 z-20">{canEditPage && <EditorToolbar editor={editor} />}</div>
@@ -144,7 +114,10 @@ export default function TiptapEditor() {
               <input
                 type="text"
                 value={document.title}
-                onChange={(e) => updateDocument(document.id, { title: e.target.value })}
+                onChange={(e) => {
+                  updateDocument(document.id, { title: e.target.value });
+                  setHasUnsavedChanges(true);
+                }}
                 readOnly={!canEditPage}
                 className="w-full text-4xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight"
                 placeholder="Enter document title..."
