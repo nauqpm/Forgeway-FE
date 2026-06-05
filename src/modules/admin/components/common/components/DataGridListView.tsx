@@ -12,11 +12,12 @@ import {
   VisibilityState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, X, Check } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, Check } from 'lucide-react';
 import BulkActionBar from './BulkActionBar';
 import BulkEditDrawer from './BulkEditDrawer';
 import AssigneePicker, { AssigneePickerMember, getMemberId, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
+import TaskLabelsField from '../../../../client/workspaces/components/labels/TaskLabelsField';
 
 type WorkspaceMember = AssigneePickerMember;
 
@@ -47,6 +48,7 @@ function statusCls(name: string): string {
 
 interface DataGridListViewProps {
   issues: any[];
+  workspaceId?: string;
   members?: WorkspaceMember[];
   boardColumns?: BoardColumn[];
   columnVisibility?: VisibilityState;
@@ -64,6 +66,7 @@ interface DataGridListViewProps {
 
 export default function DataGridListView({
   issues,
+  workspaceId,
   members,
   boardColumns,
   columnVisibility: columnVisibilityProp,
@@ -452,10 +455,20 @@ export default function DataGridListView({
       size: 200,
       cell: info => {
         const issue = info.row.original;
-        const isAdding = editingCell?.rowId === issue.id && editingCell?.col === 'labels';
+        if (workspaceId && issue.id && issue.key) {
+          return (
+            <div onClick={e => e.stopPropagation()}>
+              <TaskLabelsField
+                workspaceId={workspaceId}
+                issue={issue}
+                compact
+              />
+            </div>
+          );
+        }
         const labels = (info.getValue() as { id?: string; name: string; color?: string }[]) ?? [];
         return (
-          <div className="flex flex-wrap gap-1 items-center min-h-[24px]" onClick={e => e.stopPropagation()}>
+          <div className="flex flex-wrap gap-1 items-center min-h-[24px] px-1">
             {labels.map((l, i) => (
               <span
                 key={i}
@@ -463,44 +476,8 @@ export default function DataGridListView({
                 style={{ backgroundColor: l.color ?? '#6366f1' }}
               >
                 {l.name}
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    const next = labels.filter((_, idx) => idx !== i);
-                    onUpdateIssue && onUpdateIssue(issue.id, { labelIds: next.map(x => x.id ?? x.name) });
-                  }}
-                  className="hover:opacity-75 p-0.5 rounded"
-                >
-                  <X className="w-2.5 h-2.5" />
-                </button>
               </span>
             ))}
-            {isAdding ? (
-              <input
-                autoFocus
-                value={editValue}
-                onChange={e => setEditValue(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && editValue.trim()) {
-                    const newLabel = { id: editValue.trim(), name: editValue.trim() };
-                    onUpdateIssue && onUpdateIssue(issue.id, { labelIds: [...labels.map(x => x.id ?? x.name), newLabel.id] });
-                    setEditValue('');
-                    setEditingCell(null);
-                  }
-                  if (e.key === 'Escape') { setEditingCell(null); setEditValue(''); }
-                }}
-                onBlur={() => { setEditingCell(null); setEditValue(''); }}
-                placeholder="Label name + Enter"
-                className="text-xs border border-[#2563EB] rounded-[6px] px-1.5 py-0.5 w-32 outline-none bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB]"
-              />
-            ) : (
-              <button
-                onClick={e => { e.stopPropagation(); setEditingCell({ rowId: issue.id, col: 'labels' }); setEditValue(''); }}
-                className="text-xs text-[#ABABAB] hover:text-[#2563EB] dark:hover:text-[#3B82F6] px-1 py-0.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
-              >
-                + Add
-              </button>
-            )}
           </div>
         );
       },

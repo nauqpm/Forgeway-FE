@@ -453,7 +453,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                               users={workspaceMembers}
                                               value={issue.assigneeId ?? issue.assignee ?? null}
                                               onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
-                                              placement="top"
+                                              placement="auto"
                                               size="sm"
                                               disabled={!!(filters.archived || !canEditTask)}
                                             />

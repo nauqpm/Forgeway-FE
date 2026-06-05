@@ -93,7 +93,7 @@ export default function TaskDetailDeepLinkPage() {
       sprintId: updatedIssue.sprintId ?? null,
       storyPoints: updatedIssue.storyPoints ?? undefined,
       dueDate: updatedIssue.dueDate ?? undefined,
-      assigneeId: updatedIssue.assigneeId ?? undefined,
+      assigneeId: updatedIssue.assigneeId ?? null,
     };
 
     await taskService.updateBoardTask(workspace._id, updatedIssue.id, updates);

@@ -35,6 +35,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
@@ -595,46 +596,16 @@ export default function TaskDetailModal({
                 </button>
                 <div className="p-4 border-t border-[#EAEAEA] dark:border-white/[0.06] space-y-4">
                   {/* Assignee */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1">Assignee</div>
-                    <div className="col-span-2 space-y-2">
-                      <div
-                        onDoubleClick={() => startInlineEdit("assigneeId", getIssueAssigneeId(issue))}
-                        title="Double click to edit"
-                        className="flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors"
-                      >
-                        <div className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-[#252525] flex items-center justify-center border border-[#EAEAEA] dark:border-white/[0.08]">
-                          <User className="w-3 h-3 text-[#787774] dark:text-[#9B9A97]" />
-                        </div>
-                        {editingField === "assigneeId" ? (
-                          <select
-                            autoFocus
-                            value={draftValue}
-                            onChange={(event) => {
-                              setDraftValue(event.target.value);
-                              saveInlineEdit("assigneeId", event.target.value);
-                            }}
-                            onBlur={cancelInlineEdit}
-                            onKeyDown={(event) => handleInlineKeyDown(event, "assigneeId")}
-                            className="min-w-0 flex-1 rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
-                          >
-                            <option value="">Unassigned</option>
-                            {memberOptions.map((member) => (
-                              <option key={member.id} value={member.id}>
-                                {member.email ? `${member.label} (${member.email})` : member.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          assigneeName
-                        )}
-                      </div>
-                      <a
-                        href="#"
-                        className="text-[13px] text-[#2563EB] dark:text-[#3B82F6] hover:underline font-medium block"
-                      >
-                        Assign to me
-                      </a>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97]">Assignee</div>
+                    <div className="col-span-2">
+                      <AssigneePicker
+                        users={toAssigneePickerUsers((providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers) as any[])}
+                        value={getIssueAssigneeId(issue) || null}
+                        onChange={(uid) => saveInlineEdit("assigneeId", uid ?? "")}
+                        placement="auto"
+                        size="md"
+                      />
                     </div>
                   </div>
 

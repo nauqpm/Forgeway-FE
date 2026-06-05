@@ -304,6 +304,7 @@ export default function ListTab({
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
+              workspaceMembers={members}
               sprints={sprints}
               boardColumns={boardColumns}
               workspaceTemplate={workspaceTemplate}
@@ -320,6 +321,7 @@ export default function ListTab({
             <div className="flex-1 overflow-x-auto min-w-0">
             <DataGridListView
               issues={filteredIssues}
+              workspaceId={workspaceId}
               members={members}
               boardColumns={boardColumns}
               columnVisibility={columnVisibility}

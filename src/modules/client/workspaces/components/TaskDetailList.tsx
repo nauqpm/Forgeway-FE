@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import {
   MoreHorizontal, Plus, Link as LinkIcon,
   ChevronDown, ChevronRight, Settings,
-  Zap, User, Archive, AlertTriangle, ArchiveRestore,
+  Zap, Archive, AlertTriangle, ArchiveRestore,
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
@@ -19,10 +19,12 @@ import type { TaskCover } from "../types/task-cover.type";
 import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceMembers?: any[];
   sprints?: SprintOption[];
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
@@ -63,6 +65,7 @@ type SprintOption = {
 export default function TaskDetailList({
   issue,
   workspaceId,
+  workspaceMembers = [],
   sprints = [],
   workspaceTemplate = "kanban",
   boardColumns = [],
@@ -95,8 +98,6 @@ export default function TaskDetailList({
   const issueKey = issue.key;
   const { statusColumns, currentColumn, displayName: statusDisplayName } =
     resolveTaskStatusColumn(boardColumns, issue);
-  const assigneeName =
-    issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const sprintLabel =
     issue.sprint?.name ||
@@ -373,15 +374,14 @@ export default function TaskDetailList({
 
                 {/* Assignee */}
                 <DetailRow label="Assignee">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">
-                      <div className="w-5 h-5 rounded-full bg-[#F7F6F3] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.08] flex items-center justify-center shrink-0">
-                        <User className="w-3 h-3 text-[#787774] dark:text-[#9B9A97]" />
-                      </div>
-                      <span className="truncate">{assigneeName}</span>
-                    </div>
-                    <a href="#" className="text-[11px] text-[#2563EB] dark:text-[#3B82F6] hover:underline block px-1">Assign to me</a>
-                  </div>
+                  <AssigneePicker
+                    users={toAssigneePickerUsers(workspaceMembers)}
+                    value={issue.assigneeId || (typeof issue.assignee === "string" && issue.assignee !== "U" ? issue.assignee : null)}
+                    onChange={(uid) => onUpdateIssue?.({ ...issue, assigneeId: uid, assignee: uid ?? "U" })}
+                    placement="auto"
+                    size="md"
+                    disabled={issue.isArchived}
+                  />
                 </DetailRow>
 
                 {/* Priority */}

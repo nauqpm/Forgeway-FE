@@ -23,6 +23,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
@@ -514,36 +515,14 @@ export default function TaskDetailDrawer({
                 {/* Assignee */}
                 <div className="flex items-center min-h-[32px]">
                   <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Assignee</div>
-                  <div
-                    onDoubleClick={() => startInlineEdit("assigneeId", getIssueAssigneeId(issue))}
-                    title="Double click to edit"
-                    className="flex min-w-0 flex-1 items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors"
-                  >
-                    <div className="w-5 h-5 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] flex items-center justify-center">
-                      <User className="w-3 h-3 text-[#787774] dark:text-[#9B9A97]" />
-                    </div>
-                    {editingField === "assigneeId" ? (
-                      <select
-                        autoFocus
-                        value={draftValue}
-                        onChange={(event) => {
-                          setDraftValue(event.target.value);
-                          saveInlineEdit("assigneeId", event.target.value);
-                        }}
-                        onBlur={cancelInlineEdit}
-                        onKeyDown={(event) => handleInlineKeyDown(event, "assigneeId")}
-                        className="min-w-0 flex-1 rounded-[4px] border border-[#2563EB] bg-white dark:bg-[#2A2A2A] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
-                      >
-                        <option value="">Unassigned</option>
-                        {memberOptions.map((member) => (
-                          <option key={member.id} value={member.id}>
-                            {member.email ? `${member.label} (${member.email})` : member.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="truncate">{assigneeName}</span>
-                    )}
+                  <div className="min-w-0 flex-1 -ml-1">
+                    <AssigneePicker
+                      users={toAssigneePickerUsers(providedWorkspaceMembers as any[])}
+                      value={getIssueAssigneeId(issue) || null}
+                      onChange={(uid) => saveInlineEdit("assigneeId", uid ?? "")}
+                      placement="auto"
+                      size="md"
+                    />
                   </div>
                 </div>
 
