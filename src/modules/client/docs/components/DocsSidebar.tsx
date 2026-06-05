@@ -15,6 +15,8 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
   const { documents, selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
+  const [removeTarget, setRemoveTarget] = useState<DocumentItem | null>(null);
+  const [removing, setRemoving] = useState(false);
 
   const rootDocs = documents.filter((doc) => doc.parentId === null);
   const { searchQuery } = useDocsStore();
@@ -56,6 +58,23 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
 
     return [...workspaceDocs, ...importedDocs];
   }, [documents, searchQuery, uploadedDocs]);
+
+  const handleRemoveImportedDocument = async () => {
+    if (!removeTarget) return;
+
+    setRemoving(true);
+    try {
+      await documentService.detach(removeTarget._id, workspaceId);
+      setUploadedDocs((curr) => curr.filter((doc) => doc._id !== removeTarget._id));
+      window.dispatchEvent(new Event("docs_uploads_changed"));
+      setRemoveTarget(null);
+      toast.success("Removed from workspace");
+    } catch {
+      toast.error("Failed to remove document");
+    } finally {
+      setRemoving(false);
+    }
+  };
 
   return (
     <motion.aside 
@@ -169,17 +188,9 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                               </span>
                             </button>
                             <button
-                              onClick={async (e) => {
+                              onClick={(e) => {
                                 e.preventDefault();
-                                if (!window.confirm("Remove this document from the workspace?")) return;
-                                try {
-                                  await documentService.detach(doc._id, workspaceId);
-                                  setUploadedDocs((curr) => curr.filter((d) => d._id !== doc._id));
-                                  window.dispatchEvent(new Event("docs_uploads_changed"));
-                                  toast.success("Removed from workspace");
-                                } catch {
-                                  toast.error("Failed to remove document");
-                                }
+                                setRemoveTarget(doc);
                               }}
                               className="opacity-0 group-hover:opacity-100 p-1 rounded text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                               title="Remove from workspace"
@@ -207,6 +218,60 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {removeTarget && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onClick={() => {
+            if (!removing) setRemoveTarget(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-imported-document-title"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2 id="remove-imported-document-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Remove from workspace?
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  This will remove{" "}
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                    {removeTarget.name}
+                  </span>{" "}
+                  from this workspace only. The document will remain in your library.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={removing}
+                onClick={() => setRemoveTarget(null)}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={removing}
+                onClick={handleRemoveImportedDocument}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {removing ? "Removing..." : "Remove"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.aside>
   );
 }
