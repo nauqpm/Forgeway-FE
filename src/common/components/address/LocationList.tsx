@@ -21,12 +21,12 @@ const LocationList = ({
   });
 
   if (loading) {
-    return <div className="p-3 text-center text-gray-500">Loading...</div>;
+    return <div className="p-3 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">Loading...</div>;
   }
 
   if (filteredItems.length === 0) {
     return (
-      <div className="p-3 text-center text-gray-500">
+      <div className="p-3 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
         No results
       </div>
     );

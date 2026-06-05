@@ -34,35 +34,34 @@ export default function EditorHeader({ doc, canSave, canCancel, hasUnsavedChange
   const breadcrumbs = getBreadcrumbs(doc);
 
   return (
-    <div className="flex flex-col bg-white dark:bg-gray-950 shrink-0">
-      {/* Breadcrumbs Row */}
-      <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 dark:border-gray-800">
-        <div className="flex items-center text-[12px] text-gray-500 dark:text-gray-400 overflow-hidden flex-1">
-          <Globe className="w-3.5 h-3.5 mr-2 text-gray-400 dark:text-gray-500" />
+    <div className="flex flex-col bg-white dark:bg-[#202020] shrink-0">
+      <div className="flex items-center justify-between px-6 py-2 border-b border-[#EAEAEA] dark:border-white/8">
+        <div className="flex items-center text-[11px] text-[#787774] dark:text-[#9B9A97] overflow-hidden flex-1">
+          <Globe className="w-3.5 h-3.5 mr-2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <span className="hover:underline cursor-pointer">Workspace</span>
           {breadcrumbs.map((b, index) => (
             <span key={b.id} className="flex items-center shrink-0">
-              <ChevronRight className="w-3.5 h-3.5 mx-0.5 text-gray-400 dark:text-gray-600" />
-              <span className={`truncate max-w-[150px] ${index === breadcrumbs.length - 1 ? "text-gray-900 dark:text-gray-200 font-medium" : "hover:underline cursor-pointer"}`}>
+              <ChevronRight className="w-3.5 h-3.5 mx-0.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+              <span className={`truncate max-w-[150px] ${index === breadcrumbs.length - 1 ? "text-[#111111] dark:text-[#E8E8E7] font-medium" : "hover:underline cursor-pointer"}`}>
                 {b.title}
               </span>
             </span>
           ))}
         </div>
-        
+
         <div className="flex items-center gap-3 text-[11px] font-medium ml-4">
           {isSaving ? (
-            <span className="flex items-center text-gray-400 dark:text-gray-500">
+            <span className="flex items-center text-[#ABABAB] dark:text-[#6B6B6B]">
               <Loader2 className="w-3 h-3 mr-1 animate-spin" />
               Saving...
             </span>
           ) : hasUnsavedChanges ? (
-            <span className="flex items-center text-red-600 dark:text-red-400">
+            <span className="flex items-center text-[#9F2F2D] dark:text-[#F87171]">
               <XCircle className="w-3 h-3 mr-1" />
               Unsaved
             </span>
           ) : (
-            <span className="flex items-center text-emerald-600 dark:text-emerald-400">
+            <span className="flex items-center text-[#346538] dark:text-[#4ADE80]">
               <CheckCircle2 className="w-3 h-3 mr-1" />
               Saved
             </span>
@@ -71,7 +70,7 @@ export default function EditorHeader({ doc, canSave, canCancel, hasUnsavedChange
             type="button"
             onClick={onSave}
             disabled={!canSave || isSaving || !hasUnsavedChanges}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 py-1.5 text-[11px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save className="h-3.5 w-3.5" />
             Save
@@ -81,7 +80,7 @@ export default function EditorHeader({ doc, canSave, canCancel, hasUnsavedChange
               type="button"
               onClick={onCancel}
               disabled={isSaving}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-900/20"
+              className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] px-3 py-1.5 text-[11px] font-semibold text-[#9F2F2D] dark:text-[#F87171] transition-colors hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>

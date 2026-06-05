@@ -96,24 +96,25 @@ export default function DocumentWorkspaceLinkModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4 backdrop-blur-sm dark:bg-black/70"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md overflow-hidden rounded-2xl border border-transparent bg-white shadow-2xl animate-in fade-in zoom-in duration-200 dark:border-gray-800 dark:bg-gray-900"
+        className="w-full max-w-md overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] animate-in fade-in zoom-in duration-200"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 p-5 dark:border-gray-800">
+        <div className="flex items-center justify-between border-b border-[#EAEAEA] dark:border-white/8 p-5">
           <div className="flex items-center gap-2">
-            <Link2 className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <Link2 className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
+            <h3 className="text-[15px] font-bold text-[#111111] dark:text-[#E8E8E7]">
               Liên kết workspace
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+            className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
           >
             <X className="h-5 w-5" />
           </button>
@@ -121,25 +122,25 @@ export default function DocumentWorkspaceLinkModal({
 
         {/* Body */}
         <div className="p-5">
-          <p className="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          <p className="mb-1 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
             Tài liệu:
           </p>
-          <p className="mb-4 truncate text-sm text-gray-500 dark:text-gray-400">
+          <p className="mb-4 truncate text-[13px] text-[#787774] dark:text-[#9B9A97]">
             {doc.name}
           </p>
 
           {loading ? (
-            <div className="flex items-center justify-center py-8 text-sm text-gray-500">
+            <div className="flex items-center justify-center py-8 text-[13px] text-[#787774] dark:text-[#9B9A97]">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Đang tải danh sách workspace...
             </div>
           ) : workspaces.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 py-6 text-center text-sm text-gray-500 dark:border-gray-700">
+            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/10 py-6 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
               Bạn chưa có workspace nào.
             </div>
           ) : (
             <>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                 Chọn workspace
               </p>
               <div className="flex flex-wrap gap-2">
@@ -150,10 +151,10 @@ export default function DocumentWorkspaceLinkModal({
                       key={ws._id}
                       type="button"
                       onClick={() => toggle(ws._id)}
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-all ${
+                      className={`inline-flex items-center gap-1.5 rounded-[4px] border px-3 py-1.5 text-[13px] font-medium transition-all ${
                         isActive
-                          ? "border-indigo-200 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300"
-                          : "border-gray-200 bg-gray-50 text-gray-600 hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:bg-gray-700"
+                          ? "border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]"
+                          : "border-[#EAEAEA] dark:border-white/8 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/20 hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)]"
                       }`}
                     >
                       {isActive && <Check className="h-3.5 w-3.5" />}
@@ -167,7 +168,7 @@ export default function DocumentWorkspaceLinkModal({
 
           {/* Inline confirm summary */}
           {showConfirm && hasChanges && (
-            <div className="mt-4 rounded-xl border border-indigo-100 bg-indigo-50/50 p-3 text-sm dark:border-indigo-800 dark:bg-indigo-900/20">
+            <div className="mt-4 rounded-[8px] border border-[#2563EB]/20 dark:border-[rgba(37,99,235,0.2)] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] p-3 text-[13px]">
               {added.length > 0 && (
                 <p className="text-emerald-700 dark:text-emerald-400">
                   <span className="font-semibold">+ Thêm:</span>{" "}
@@ -185,11 +186,11 @@ export default function DocumentWorkspaceLinkModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50/30 px-5 py-4 dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex items-center justify-end gap-3 border-t border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] px-5 py-4">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+            className="rounded-[6px] border border-[#EAEAEA] dark:border-white/10 px-5 py-2.5 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
           >
             Huỷ
           </button>
@@ -198,7 +199,7 @@ export default function DocumentWorkspaceLinkModal({
               type="button"
               disabled={saving}
               onClick={handleSave}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-50"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Xác nhận lưu
@@ -208,7 +209,7 @@ export default function DocumentWorkspaceLinkModal({
               type="button"
               disabled={!hasChanges}
               onClick={() => setShowConfirm(true)}
-              className="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Lưu thay đổi
             </button>

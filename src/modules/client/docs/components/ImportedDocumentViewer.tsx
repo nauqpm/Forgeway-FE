@@ -31,27 +31,27 @@ export default function ImportedDocumentViewer({ doc }: Props) {
   return (
     <div className="h-full flex flex-col">
       {isOnline && isOwner && (
-        <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
+        <div className="border-b border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-4 py-3">
           <button
             onClick={() => setOpenEditor(true)}
-            className="rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+            className="rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 py-2 text-xs font-semibold text-white hover:bg-[#1D4ED8]"
           >
             Edit Document
           </button>
         </div>
       )}
-      <div className="flex-1 bg-gray-50 dark:bg-gray-900 p-4 overflow-auto">
+      <div className="flex-1 bg-[#F9F9F8] dark:bg-[#252525] p-4 overflow-auto">
         {isImage ? (
-          <img src={viewUrl} alt={currentDoc.name} className="max-w-full h-auto mx-auto rounded shadow" />
+          <img src={viewUrl} alt={currentDoc.name} className="max-w-full h-auto mx-auto rounded-[6px]" />
         ) : isPdf ? (
-          <iframe src={viewUrl} className="w-full h-full min-h-[500px] rounded border border-gray-200 dark:border-gray-700" />
+          <iframe src={viewUrl} className="w-full h-full min-h-[500px] rounded-[6px] border border-[#EAEAEA] dark:border-white/8" />
         ) : isOfficePreview || isOnline ? (
-          <iframe sandbox="allow-same-origin" src={previewUrl} className="w-full h-full min-h-[500px] rounded border border-gray-200 dark:border-gray-700 bg-white" />
+          <iframe sandbox="allow-same-origin" src={previewUrl} className="w-full h-full min-h-[500px] rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white" />
         ) : (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">This format is not supported for direct preview.</p>
-              <a href={downloadUrl} className="text-sm text-indigo-600 hover:text-indigo-800">Download to view</a>
+              <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-2">This format is not supported for direct preview.</p>
+              <a href={downloadUrl} className="text-[13px] text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8]">Download to view</a>
             </div>
           </div>
         )}

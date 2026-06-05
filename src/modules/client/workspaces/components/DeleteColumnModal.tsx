@@ -35,66 +35,65 @@ export default function DeleteColumnModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-900/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 border border-transparent dark:border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-          <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div
+        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-md border border-[#EAEAEA] dark:border-white/8 overflow-hidden"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/8">
+          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-[#9F2F2D]" />
             Delete column {column.name}
           </h3>
-
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleConfirm} className="p-6 space-y-5 bg-gray-50/30 dark:bg-gray-900">
+        <form onSubmit={handleConfirm} className="p-5 space-y-4">
           {hasTasks ? (
             <>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
                 This column contains work items. Choose another column to move these work items to before deleting it.
               </p>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Move work items to column: <span className="text-red-500">*</span>
+                <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
+                  Move work items to column: <span className="text-[#9F2F2D]">*</span>
                 </label>
                 <select
                   required
                   value={migrateTo}
                   onChange={(e) => setMigrateTo(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-sm shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#9F2F2D] text-[13px] outline-none transition-colors"
                 >
                   <option value="" disabled>Select column</option>
                   {otherColumns.map((col) => (
-                    <option key={col.id} value={col.id}>
-                      {col.name}
-                    </option>
+                    <option key={col.id} value={col.id}>{col.name}</option>
                   ))}
                 </select>
               </div>
             </>
           ) : (
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
               Are you sure you want to delete this column? This action cannot be undone.
             </p>
           )}
 
-          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="px-4 py-2 border border-[#EAEAEA] dark:border-white/10 text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
             >
               Cancel
             </button>
-
             <button
               type="submit"
               disabled={hasTasks && !migrateTo}
-              className="px-5 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
+              className="px-4 py-2 bg-[#9F2F2D] text-white rounded-[6px] text-[13px] font-medium hover:bg-red-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               Confirm delete
             </button>

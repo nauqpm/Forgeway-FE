@@ -24,7 +24,7 @@ export default function AttachmentActions({
         <button
           type="button"
           onClick={() => onPreview(attachment)}
-          className="rounded p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+          className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
           aria-label="Preview attachment"
           title="Preview"
         >
@@ -34,7 +34,7 @@ export default function AttachmentActions({
       <button
         type="button"
         onClick={() => onDownload(attachment)}
-        className="rounded p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+        className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
         aria-label="Download attachment"
         title="Download"
       >
@@ -44,7 +44,7 @@ export default function AttachmentActions({
         <button
           type="button"
           onClick={() => onDelete(attachment)}
-          className="rounded p-1.5 text-red-500 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+          className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] hover:text-[#9F2F2D] dark:hover:text-[#F87171]"
           aria-label="Delete attachment"
           title="Delete"
         >

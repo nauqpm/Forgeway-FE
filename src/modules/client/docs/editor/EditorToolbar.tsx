@@ -1,4 +1,4 @@
-﻿﻿"use client";
+"use client";
 
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { Editor } from "@tiptap/react";
@@ -53,7 +53,6 @@ type ToolbarButtonProps = {
 
 const getTextStyleAttributes = (editor: Editor | null) => {
   const attributes = editor?.getAttributes("textStyle") ?? {};
-
   return {
     fontFamily: typeof attributes.fontFamily === "string" ? attributes.fontFamily : "",
     fontSize: typeof attributes.fontSize === "string" ? attributes.fontSize : "",
@@ -79,30 +78,23 @@ export default function EditorToolbar({ editor }: Props) {
   const [activeTextStyle, setActiveTextStyle] = useState(() => getTextStyleAttributes(editor));
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [tablePickerOpen, setTablePickerOpen] = useState(false);
-  const closeLinkPopover = useCallback(() => {
-    setLinkPopoverOpen(false);
-  }, []);
-  const closeTablePicker = useCallback(() => {
-    setTablePickerOpen(false);
-  }, []);
+  const closeLinkPopover = useCallback(() => setLinkPopoverOpen(false), []);
+  const closeTablePicker = useCallback(() => setTablePickerOpen(false), []);
 
   useEffect(() => {
     if (!editor) {
       setActiveTextStyle(getTextStyleAttributes(null));
       return;
     }
-
     const updateActiveTextStyle = () => {
       const nextTextStyle = getTextStyleAttributes(editor);
       setActiveTextStyle((currentTextStyle) =>
         areTextStyleAttributesEqual(currentTextStyle, nextTextStyle) ? currentTextStyle : nextTextStyle,
       );
     };
-
     updateActiveTextStyle();
     editor.on("selectionUpdate", updateActiveTextStyle);
     editor.on("transaction", updateActiveTextStyle);
-
     return () => {
       editor.off("selectionUpdate", updateActiveTextStyle);
       editor.off("transaction", updateActiveTextStyle);
@@ -116,15 +108,11 @@ export default function EditorToolbar({ editor }: Props) {
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={`
-        p-2 rounded-lg transition-all flex items-center justify-center
-        ${
-          isActive
-            ? "bg-gray-100 dark:bg-gray-900 text-[#0052CC] dark:text-blue-400 font-bold"
-            : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-700 dark:hover:text-gray-200"
-        }
-        ${disabled ? "opacity-20 cursor-not-allowed" : "cursor-pointer"}
-      `}
+      className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+        isActive
+          ? "bg-[#F7F6F3] dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6] font-bold"
+          : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+      } ${disabled ? "opacity-20 cursor-not-allowed" : "cursor-pointer"}`}
       type="button"
     >
       {children}
@@ -138,28 +126,16 @@ export default function EditorToolbar({ editor }: Props) {
 
   const openActiveLink = () => {
     const href = editor.getAttributes("link").href;
-    if (href) {
-      window.open(href, "_blank", "noopener,noreferrer");
-    }
+    if (href) window.open(href, "_blank", "noopener,noreferrer");
   };
 
   const uploadLocalImage = async (file: File) => {
-    if (file.size > MAX_IMAGE_SIZE) {
-      toast.error("Max image size not over 5MB");
-      return;
-    }
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      toast.error("Invalid image format");
-      return;
-    }
-
+    if (file.size > MAX_IMAGE_SIZE) { toast.error("Max image size not over 5MB"); return; }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) { toast.error("Invalid image format"); return; }
     try {
       const result = await imageService.uploadImage(file, true);
       const imageUrl = toImageUrl(result.imageUrl || result.url || "");
-      if (!imageUrl) {
-        toast.error("Failed to get image URL after upload");
-        return;
-      }
+      if (!imageUrl) { toast.error("Failed to get image URL after upload"); return; }
       editor.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
       toast.success("Image inserted successfully");
     } catch {
@@ -167,14 +143,8 @@ export default function EditorToolbar({ editor }: Props) {
     }
   };
 
-  const insertImage = () => {
-    imageInputRef.current?.click();
-  };
-
-  const toggleTablePicker = () => {
-    setTablePickerOpen((current) => !current);
-  };
-
+  const insertImage = () => imageInputRef.current?.click();
+  const toggleTablePicker = () => setTablePickerOpen((c) => !c);
   const insertTable = (rows: number, cols: number) => {
     editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
     closeTablePicker();
@@ -184,35 +154,40 @@ export default function EditorToolbar({ editor }: Props) {
   const selectedFontFamily = activeTextStyle.fontFamily || DEFAULT_FONT_FAMILY;
   const selectedFontSize = activeTextStyle.fontSize || DEFAULT_FONT_SIZE;
 
+  const selectCls = "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none";
+
   return (
     <>
       {editor && (
         <BubbleMenu
           editor={editor}
-          shouldShow={({ editor: currentEditor }) => currentEditor.isActive("link")}
+          shouldShow={({ editor: e }) => e.isActive("link")}
           options={{ placement: "top", offset: 8 }}
         >
-          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-900">
+          <div
+            className="flex items-center gap-1 rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-1"
+            style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)" }}
+          >
             <button
               type="button"
               onClick={openActiveLink}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Open 
+              Open
             </button>
             <button
               type="button"
               onClick={openLinkPopover}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
             >
               <Pencil className="h-3.5 w-3.5" />
-              Edit 
+              Edit
             </button>
             <button
               type="button"
               onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
-              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[11px] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
             >
               <Unlink className="h-3.5 w-3.5" />
               Remove
@@ -221,190 +196,169 @@ export default function EditorToolbar({ editor }: Props) {
         </BubbleMenu>
       )}
 
-      <div className="flex items-center gap-1 px-6 py-2 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 overflow-x-auto no-scrollbar flex-shrink-0">
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept={ALLOWED_IMAGE_TYPES.join(",")}
-        className="hidden"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (file) {
-            await uploadLocalImage(file);
-          }
-          e.target.value = "";
-        }}
-      />
-
-      <select
-        className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
-        style={{ fontFamily: selectedFontFamily }}
-        value={selectedFontFamily}
-        onChange={(e) => {
-          const value = e.target.value;
-          setActiveTextStyle((current) => ({ ...current, fontFamily: value }));
-          editor.chain().focus().setFontFamily(value).run();
-        }}
-      >
-        {FONT_FAMILIES.map((font) => (
-          <option key={font} value={font} style={{ fontFamily: font }}>
-            {font}
-          </option>
-        ))}
-      </select>
-
-      <select
-        className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
-        value={selectedFontSize}
-        onChange={(e) => {
-          const value = e.target.value;
-          setActiveTextStyle((current) => ({ ...current, fontSize: value }));
-          editor.chain().focus().setFontSize(value).run();
-        }}
-      >
-        {FONT_SIZES.map((size) => (
-          <option key={size} value={size}>
-            {size}
-          </option>
-        ))}
-      </select>
-
-      <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive("bold")} title="Bold">
-        <Bold className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive("italic")} title="Italic">
-        <Italic className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive("underline")} title="Underline">
-        <Underline className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive("strike")} title="Strikethrough">
-        <Strikethrough className="h-4 w-4" />
-      </ToolbarButton>
-
-      {COLORS.map((color) => (
-        <button
-          key={color}
-          type="button"
-          title={`Color ${color}`}
-          onClick={() => editor.chain().focus().setColor(color).run()}
-          className="h-5 w-5 rounded border border-gray-200"
-          style={{ backgroundColor: color }}
+      <div className="flex items-center gap-1 px-6 py-2 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/8 overflow-x-auto no-scrollbar flex-shrink-0">
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept={ALLOWED_IMAGE_TYPES.join(",")}
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (file) await uploadLocalImage(file);
+            e.target.value = "";
+          }}
         />
-      ))}
 
-      <ToolbarButton onClick={() => editor.chain().focus().unsetColor().run()} title="Reset text color">
-        <span className="text-xs">A</span>
-      </ToolbarButton>
+        <select
+          className={selectCls}
+          style={{ fontFamily: selectedFontFamily }}
+          value={selectedFontFamily}
+          onChange={(e) => {
+            const value = e.target.value;
+            setActiveTextStyle((c) => ({ ...c, fontFamily: value }));
+            editor.chain().focus().setFontFamily(value).run();
+          }}
+        >
+          {FONT_FAMILIES.map((font) => (
+            <option key={font} value={font} style={{ fontFamily: font }}>{font}</option>
+          ))}
+        </select>
 
-      <div className="h-4 w-px bg-gray-200 dark:bg-gray-800" />
+        <select
+          className={selectCls}
+          value={selectedFontSize}
+          onChange={(e) => {
+            const value = e.target.value;
+            setActiveTextStyle((c) => ({ ...c, fontSize: value }));
+            editor.chain().focus().setFontSize(value).run();
+          }}
+        >
+          {FONT_SIZES.map((size) => (
+            <option key={size} value={size}>{size}</option>
+          ))}
+        </select>
 
-      <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("left").run()} isActive={editor.isActive({ textAlign: "left" })} title="Align left">
-        <AlignLeft className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("center").run()} isActive={editor.isActive({ textAlign: "center" })} title="Align center">
-        <AlignCenter className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("right").run()} isActive={editor.isActive({ textAlign: "right" })} title="Align right">
-        <AlignRight className="h-4 w-4" />
-      </ToolbarButton>
-      <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("justify").run()} isActive={editor.isActive({ textAlign: "justify" })} title="Justify">
-        <AlignJustify className="h-4 w-4" />
-      </ToolbarButton>
-
-      <div className="h-4 w-px bg-gray-200 dark:bg-gray-800" />
-
-      <button
-        ref={linkButtonRef}
-        onClick={openLinkPopover}
-        title="Set up or edit link"
-        className={`
-          p-2 rounded-lg transition-all flex items-center justify-center
-          ${
-            editor.isActive("link") || linkPopoverOpen
-              ? "bg-gray-100 dark:bg-gray-900 text-[#0052CC] dark:text-blue-400 font-bold"
-              : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-700 dark:hover:text-gray-200"
-          }
-        `}
-        type="button"
-      >
-        <LinkIcon className="h-4 w-4" />
-      </button>
-      {linkPopoverOpen && (
-        <LinkEditorPopover
-          editor={editor}
-          anchorEl={linkButtonRef.current}
-          onClose={closeLinkPopover}
-        />
-      )}
-      <ToolbarButton onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()} title="Remove link">
-        <Unlink className="h-4 w-4" />
-      </ToolbarButton>
-
-      <ToolbarButton onClick={insertImage} title="Insert image">
-        <ImageIcon className="h-4 w-4" />
-      </ToolbarButton>
-
-      <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editor.isActive("taskList")} title="Checklist">
-        <ListTodo className="h-4 w-4" />
-      </ToolbarButton>
-
-      <button
-        ref={tableButtonRef}
-        onClick={toggleTablePicker}
-        title="Insert table"
-        className={`
-          p-2 rounded-lg transition-all flex items-center justify-center
-          ${
-            tablePickerOpen
-              ? "bg-gray-100 dark:bg-gray-900 text-[#0052CC] dark:text-blue-400 font-bold"
-              : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-700 dark:hover:text-gray-200"
-          }
-        `}
-        type="button"
-      >
-        <TableIcon className="h-4 w-4" />
-      </button>
-
-      {tablePickerOpen && (
-        <TableGridPicker
-          anchorEl={tableButtonRef.current}
-          onClose={closeTablePicker}
-          onSelect={insertTable}
-        />
-      )}
-
-      {inTable && (
-        <>
-          <ToolbarButton onClick={() => editor.chain().focus().addRowBefore().run()} title="Add row above">
-            <ArrowUp className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Add row below">
-            <ArrowDown className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().addColumnBefore().run()} title="Add column to the left">
-            <ArrowLeft className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add column to the right">
-            <ArrowRight className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().deleteRow().run()} title="Delete row">
-            <Trash2 className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().deleteColumn().run()} title="Delete column">
-            <Trash2 className="h-4 w-4" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Delete table">
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </ToolbarButton>
-        </>
-      )}
-
-      <div className="ml-auto flex items-center gap-1">
-        <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
-          <Undo className="h-4 w-4" />
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive("bold")} title="Bold">
+          <Bold className="h-4 w-4" />
         </ToolbarButton>
-      </div>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive("italic")} title="Italic">
+          <Italic className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive("underline")} title="Underline">
+          <Underline className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive("strike")} title="Strikethrough">
+          <Strikethrough className="h-4 w-4" />
+        </ToolbarButton>
+
+        {COLORS.map((color) => (
+          <button
+            key={color}
+            type="button"
+            title={`Color ${color}`}
+            onClick={() => editor.chain().focus().setColor(color).run()}
+            className="h-5 w-5 rounded-[3px] border border-[#EAEAEA] dark:border-white/8 transition-opacity hover:opacity-80"
+            style={{ backgroundColor: color }}
+          />
+        ))}
+
+        <ToolbarButton onClick={() => editor.chain().focus().unsetColor().run()} title="Reset text color">
+          <span className="text-[11px] font-bold">A</span>
+        </ToolbarButton>
+
+        <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
+
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("left").run()} isActive={editor.isActive({ textAlign: "left" })} title="Align left">
+          <AlignLeft className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("center").run()} isActive={editor.isActive({ textAlign: "center" })} title="Align center">
+          <AlignCenter className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("right").run()} isActive={editor.isActive({ textAlign: "right" })} title="Align right">
+          <AlignRight className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("justify").run()} isActive={editor.isActive({ textAlign: "justify" })} title="Justify">
+          <AlignJustify className="h-4 w-4" />
+        </ToolbarButton>
+
+        <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
+
+        <button
+          ref={linkButtonRef}
+          onClick={openLinkPopover}
+          title="Set up or edit link"
+          className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+            editor.isActive("link") || linkPopoverOpen
+              ? "bg-[#F7F6F3] dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6] font-bold"
+              : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+          }`}
+          type="button"
+        >
+          <LinkIcon className="h-4 w-4" />
+        </button>
+        {linkPopoverOpen && (
+          <LinkEditorPopover editor={editor} anchorEl={linkButtonRef.current} onClose={closeLinkPopover} />
+        )}
+        <ToolbarButton onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()} title="Remove link">
+          <Unlink className="h-4 w-4" />
+        </ToolbarButton>
+
+        <ToolbarButton onClick={insertImage} title="Insert image">
+          <ImageIcon className="h-4 w-4" />
+        </ToolbarButton>
+
+        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editor.isActive("taskList")} title="Checklist">
+          <ListTodo className="h-4 w-4" />
+        </ToolbarButton>
+
+        <button
+          ref={tableButtonRef}
+          onClick={toggleTablePicker}
+          title="Insert table"
+          className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+            tablePickerOpen
+              ? "bg-[#F7F6F3] dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6] font-bold"
+              : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+          }`}
+          type="button"
+        >
+          <TableIcon className="h-4 w-4" />
+        </button>
+        {tablePickerOpen && (
+          <TableGridPicker anchorEl={tableButtonRef.current} onClose={closeTablePicker} onSelect={insertTable} />
+        )}
+
+        {inTable && (
+          <>
+            <ToolbarButton onClick={() => editor.chain().focus().addRowBefore().run()} title="Add row above">
+              <ArrowUp className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Add row below">
+              <ArrowDown className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().addColumnBefore().run()} title="Add column to the left">
+              <ArrowLeft className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add column to the right">
+              <ArrowRight className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().deleteRow().run()} title="Delete row">
+              <Trash2 className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().deleteColumn().run()} title="Delete column">
+              <Trash2 className="h-4 w-4" />
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Delete table">
+              <Trash2 className="h-4 w-4 text-[#9F2F2D]" />
+            </ToolbarButton>
+          </>
+        )}
+
+        <div className="ml-auto flex items-center gap-1">
+          <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
+            <Undo className="h-4 w-4" />
+          </ToolbarButton>
+        </div>
       </div>
     </>
   );

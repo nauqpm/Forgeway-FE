@@ -64,7 +64,7 @@ export default function AttachmentPreviewLightbox({
 
     if (error || !objectUrl) {
       return (
-        <div className="flex h-full items-center justify-center px-6 text-center text-sm text-gray-300">
+        <div className="flex h-full items-center justify-center px-6 text-center text-[13px] text-white/60">
           {error || "Preview is not available."}
         </div>
       );

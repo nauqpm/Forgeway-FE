@@ -60,39 +60,39 @@ export default function ArchiveTab({
   }, [issues, searchTerm]);
 
   return (
-    <div className="workspace-panel bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-gray-200 bg-gray-50 p-3 dark:border-gray-800 dark:bg-gray-800/50 sm:flex-row sm:items-center sm:justify-between">
+    <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8">
+      <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] p-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Archived work items
           </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
             {total !== undefined
               ? `Showing ${issues.length} of ${total}`
               : `${issues.length} item archived`}
           </p>
         </div>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <input
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search archived items..."
-            className="w-full min-w-[220px] rounded-lg border border-gray-300 bg-white py-1.5 pl-9 pr-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white sm:w-80"
+            className="w-full min-w-[220px] rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] py-1.5 pl-9 pr-3 text-[13px] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[#111111] dark:text-[#E8E8E7] transition-colors sm:w-80 placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]"
           />
         </div>
       </div>
 
       <div className="relative min-h-[320px] overflow-auto">
         {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-[1px] dark:bg-gray-900/70">
-            <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-[#202020]/70">
+            <Loader2 className="h-6 w-6 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
           </div>
         )}
 
         <table className="w-full min-w-[820px] border-collapse text-left">
-          <thead className="sticky top-0 z-0 border-b border-gray-200 bg-gray-50 text-xs font-semibold uppercase text-gray-500 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400">
+          <thead className="sticky top-0 z-0 border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] text-[11px] font-semibold uppercase text-[#ABABAB] dark:text-[#6B6B6B]">
             <tr>
               <th className="px-4 py-3">Key</th>
               <th className="px-4 py-3">Work item</th>
@@ -102,10 +102,10 @@ export default function ArchiveTab({
               <th className="px-4 py-3 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 bg-white dark:divide-gray-800 dark:bg-gray-900">
+          <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/8 bg-white dark:bg-[#202020]">
             {visibleIssues.map((issue) => (
-              <tr key={issue.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/60">
-                <td className="px-4 py-3 font-mono text-xs font-semibold text-gray-500 dark:text-gray-400">
+              <tr key={issue.id} className="hover:bg-[#F7F6F3] dark:hover:bg-white/3">
+                <td className="px-4 py-3 font-mono text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97]">
                   {issue.key}
                 </td>
                 <td className="px-4 py-3">
@@ -120,27 +120,27 @@ export default function ArchiveTab({
                       }`}
                     />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                      <p className="truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
                         {issue.title}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
                         {issue.type} - {issue.priority}
                       </p>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                  <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-1 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97]">
                     {issue.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                <td className="px-4 py-3 text-[13px] text-[#787774] dark:text-[#9B9A97]">
                   {issue.archivedByUser?.fullName ||
                     issue.archivedByUser?.email ||
                     issue.archivedBy ||
                     "-"}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                <td className="px-4 py-3 text-[13px] text-[#787774] dark:text-[#9B9A97]">
                   {formatDateTime(issue.archivedAt)}
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -148,7 +148,7 @@ export default function ArchiveTab({
                     type="button"
                     onClick={() => onRestore(issue)}
                     disabled={isRestoring}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                    className="inline-flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-3 py-1.5 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isRestoring ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -164,20 +164,20 @@ export default function ArchiveTab({
         </table>
 
         {!isLoading && visibleIssues.length === 0 && (
-          <div className="flex h-56 flex-col items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-            <CheckSquare className="h-6 w-6 text-gray-300 dark:text-gray-600" />
+          <div className="flex h-56 flex-col items-center justify-center gap-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <CheckSquare className="h-6 w-6 text-[#ABABAB] dark:text-[#6B6B6B]" />
             No archived work items match this list.
           </div>
         )}
       </div>
 
       {onLoadMore && total !== undefined && issues.length < total && (
-        <div className="flex justify-center border-t border-gray-200 p-3 dark:border-gray-800">
+        <div className="flex justify-center border-t border-[#EAEAEA] dark:border-white/8 p-3">
           <button
             type="button"
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+            className="flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/10 bg-white dark:bg-[#252525] px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoadingMore ? (
               <Loader2 className="h-4 w-4 animate-spin" />

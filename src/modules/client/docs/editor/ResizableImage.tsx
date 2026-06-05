@@ -100,21 +100,21 @@ function ResizableImageView({ node, selected, updateAttributes, deleteNode, edit
     >
       <div
         className={`relative inline-block max-w-full rounded-sm ${
-          selected || isResizing ? "ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-950" : ""
+          selected || isResizing ? "ring-2 ring-[#2563EB] dark:ring-[#3B82F6] ring-offset-2 dark:ring-offset-[#1A1A1A]" : ""
         }`}
       >
         {isEditable && selected && (
-          <div className="absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-md border border-gray-200 bg-white p-1 shadow-lg dark:border-gray-700 dark:bg-gray-900">
-            <button type="button" onClick={() => setAlign("left")} title="Align left" className="rounded p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+          <div className="absolute -top-10 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-1" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}>
+            <button type="button" onClick={() => setAlign("left")} title="Align left" className="rounded-[4px] p-1.5 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5">
               <AlignLeft className="h-3.5 w-3.5" />
             </button>
-            <button type="button" onClick={() => setAlign("center")} title="Align center" className="rounded p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+            <button type="button" onClick={() => setAlign("center")} title="Align center" className="rounded-[4px] p-1.5 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5">
               <AlignCenter className="h-3.5 w-3.5" />
             </button>
-            <button type="button" onClick={() => setAlign("right")} title="Align right" className="rounded p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+            <button type="button" onClick={() => setAlign("right")} title="Align right" className="rounded-[4px] p-1.5 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5">
               <AlignRight className="h-3.5 w-3.5" />
             </button>
-            <button type="button" onClick={resetSize} title="Reset size" className="rounded p-1.5 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+            <button type="button" onClick={resetSize} title="Reset size" className="rounded-[4px] p-1.5 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5">
               <RotateCcw className="h-3.5 w-3.5" />
             </button>
             <button type="button" onClick={deleteNode} title="Delete image" className="rounded p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40">
@@ -138,7 +138,7 @@ function ResizableImageView({ node, selected, updateAttributes, deleteNode, edit
             type="button"
             aria-label="Resize image"
             onPointerDown={startResize}
-            className="absolute -bottom-2 -right-2 h-4 w-4 cursor-nwse-resize touch-none rounded-full border-2 border-white bg-indigo-600 shadow"
+            className="absolute -bottom-2 -right-2 h-4 w-4 cursor-nwse-resize touch-none rounded-full border-2 border-white bg-[#2563EB] dark:bg-[#3B82F6]"
           />
         )}
       </div>

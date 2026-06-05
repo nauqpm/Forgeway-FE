@@ -9,6 +9,9 @@ interface StartSprintModalProps {
   sprint: any;
 }
 
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[13px] outline-none transition-colors";
+const labelCls = "block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
+
 export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }: StartSprintModalProps) {
   const [formData, setFormData] = useState({
     duration: '2 weeks',
@@ -24,7 +27,7 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
         end = sprint.endDate.split('T')[0];
       } else {
         const endDateObj = new Date(start);
-        endDateObj.setDate(endDateObj.getDate() + 14); // default 2 weeks
+        endDateObj.setDate(endDateObj.getDate() + 14);
         end = endDateObj.toISOString().split('T')[0];
       }
 
@@ -39,10 +42,7 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
   const handleDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const dur = e.target.value;
     if (dur === 'custom') {
-      setFormData({
-        ...formData,
-        duration: dur,
-      });
+      setFormData({ ...formData, duration: dur });
       return;
     }
 
@@ -54,9 +54,7 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
 
     const start = formData.startDate ? new Date(formData.startDate) : new Date();
     const end = new Date(start);
-    if (days > 0) {
-      end.setDate(start.getDate() + days);
-    }
+    if (days > 0) end.setDate(start.getDate() + days);
 
     setFormData({
       ...formData,
@@ -70,7 +68,7 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
     const startStr = e.target.value;
     if (!startStr) return;
     const start = new Date(startStr);
-    
+
     let days = 0;
     if (formData.duration === '1 week') days = 7;
     if (formData.duration === '2 weeks') days = 14;
@@ -78,9 +76,7 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
     if (formData.duration === '4 weeks') days = 28;
 
     const end = new Date(start);
-    if (days > 0) {
-      end.setDate(start.getDate() + days);
-    }
+    if (days > 0) end.setDate(start.getDate() + days);
 
     setFormData({
       ...formData,
@@ -111,29 +107,26 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
   if (!isOpen || !sprint) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-          <h3 className="font-bold text-gray-900 dark:text-white text-lg">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div
+        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-lg border border-[#EAEAEA] dark:border-white/8 overflow-hidden"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/8">
+          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Start Sprint: {sprint.name}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            Confirm the sprint schedule before starting it.
+          </p>
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              Confirm the sprint schedule before starting it.
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Duration</label>
-            <select
-              value={formData.duration}
-              onChange={handleDurationChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
-            >
+            <label className={labelCls}>Duration</label>
+            <select value={formData.duration} onChange={handleDurationChange} className={inputCls}>
               <option value="1 week">1 week</option>
               <option value="2 weeks">2 weeks</option>
               <option value="3 weeks">3 weeks</option>
@@ -143,31 +136,31 @@ export default function StartSprintModal({ isOpen, onClose, onConfirm, sprint }:
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Start date <span className="text-red-500">*</span></label>
+              <label className={labelCls}>Start date <span className="text-[#9F2F2D]">*</span></label>
               <input
                 type="date"
                 required
                 value={formData.startDate}
                 onChange={handleStartDateChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                className={inputCls}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">End date <span className="text-red-500">*</span></label>
+              <label className={labelCls}>End date <span className="text-[#9F2F2D]">*</span></label>
               <input
                 type="date"
                 required
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value, duration: 'custom' })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                className={inputCls}
               />
             </div>
           </div>
-          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-[#EAEAEA] dark:border-white/10 text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
+            <button type="submit" className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors">
               Start sprint
             </button>
           </div>

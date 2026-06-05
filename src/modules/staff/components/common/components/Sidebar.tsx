@@ -72,6 +72,11 @@ const optionFilter = [
   { title: "Recently completed", slug: "recently-completed" },
 ];
 
+const navActiveClass = "bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]";
+const navInactiveClass = "text-[#787774] hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:bg-white/5 dark:hover:text-[#E8E8E7]";
+const iconActiveClass = "text-[#2563EB] dark:text-[#93C5FD]";
+const iconInactiveClass = "text-[#ABABAB] group-hover:text-[#787774] dark:text-[#6B6B6B] dark:group-hover:text-[#9B9A97]";
+
 const NavItem = ({
   item,
   showBadge,
@@ -92,27 +97,25 @@ const NavItem = ({
     <Link
       href={item.href}
       onClick={onMobileClose}
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group relative ${
-        isActive
-          ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+      className={`flex items-center gap-3 px-3 py-2 rounded-[6px] transition-all group relative ${
+        isActive ? navActiveClass : navInactiveClass
       }`}
     >
       <item.icon
-        className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 group-hover:text-slate-600 dark:text-gray-500 dark:group-hover:text-gray-300"}`}
+        className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`}
       />
       {!collapsed && (
         <>
-          <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+          <span className="text-[13px] font-medium flex-1 text-left">{item.label}</span>
           {showBadge && item.badge && (
-            <span className="text-[10px] bg-slate-200 text-slate-500 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded font-medium">
+            <span className="text-[10px] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
               {item.badge}
             </span>
           )}
         </>
       )}
       {isActive && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-indigo-600 rounded-r-full" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-r-full" />
       )}
     </Link>
   );
@@ -155,16 +158,14 @@ const PopoverNavItem = ({
       <button
         ref={btnRef}
         onClick={handleToggle}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all group ${
-          isActive
-            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-            : "text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+        className={`w-full flex items-center gap-3 px-3 py-2 rounded-[6px] transition-all group ${
+          isActive ? navActiveClass : navInactiveClass
         }`}
       >
-        <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-slate-400 group-hover:text-slate-600 dark:text-gray-500 dark:group-hover:text-gray-300"}`} />
+        <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`} />
         {!collapsed && (
           <>
-            <span className="text-sm font-medium flex-1 text-left">{item.label}</span>
+            <span className="text-[13px] font-medium flex-1 text-left">{item.label}</span>
             <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
           </>
         )}
@@ -174,77 +175,84 @@ const PopoverNavItem = ({
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
-            className="fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
-            style={{ top: `${pos.top}px`, left: `${pos.left}px` }}
+            className="fixed bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[10px] z-[9999] flex flex-col w-[320px]"
+            style={{
+              top: `${pos.top}px`,
+              left: `${pos.left}px`,
+              boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+            }}
           >
-            <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-gray-800">
-              <span className="font-semibold text-slate-900 dark:text-gray-100">{item.label}</span>
-              <button onClick={() => setActivePopover(null)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-md text-slate-500 dark:text-gray-400 transition-colors">
+            <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/8">
+              <span className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">{item.label}</span>
+              <button
+                onClick={() => setActivePopover(null)}
+                className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {type === "recent" && (
               <div className="flex flex-col max-h-[60vh]">
-                <div className="p-3 border-b border-slate-100 dark:border-gray-800">
+                <div className="p-3 border-b border-[#EAEAEA] dark:border-white/8">
                   <div className="relative">
-                    <Search className="w-4 h-4 text-slate-400 dark:text-gray-500 absolute left-3 top-2.5" />
+                    <Search className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B] absolute left-3 top-2.5" />
                     <input
                       type="text"
                       placeholder="Search recent items"
-                      className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-750 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-white/30 outline-none transition-colors"
                     />
                   </div>
                 </div>
                 <div className="overflow-y-auto flex-1 p-2 space-y-4">
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">Today</h4>
+                    <h4 className="text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">Today</h4>
                     <div className="space-y-0.5">
-                      <Link href="/spaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 group-hover:border-slate-300 dark:group-hover:border-gray-600"><Columns className="w-4 h-4" /></div>
+                      <Link href="/spaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
+                        <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/10 flex items-center justify-center text-[#787774] dark:text-[#9B9A97]"><Columns className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">QUAN board</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">6 seconds ago</p>
+                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">QUAN board</p>
+                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">6 seconds ago</p>
                         </div>
                       </Link>
-                      <Link href="/spaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">Q</div>
+                      <Link href="/spaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
+                        <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs">Q</div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">quan</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">7 seconds ago</p>
+                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">quan</p>
+                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
                         </div>
                       </Link>
-                      <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded flex items-center justify-center text-slate-400 dark:text-gray-500 group-hover:text-slate-600 dark:group-hover:text-gray-300"><ListFilter className="w-4 h-4" /></div>
+                      <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
+                        <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B]"><ListFilter className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">Reported by me</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">14 seconds ago</p>
+                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">Reported by me</p>
+                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-500 dark:text-gray-500 mb-1 px-2 uppercase tracking-wider">More than 1 month ago</h4>
+                    <h4 className="text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">More than 1 month ago</h4>
                     <div className="space-y-0.5">
-                      <Link href="/spaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded bg-slate-100 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 flex items-center justify-center text-slate-500 dark:text-gray-400 group-hover:border-slate-300 dark:group-hover:border-gray-600"><Columns className="w-4 h-4" /></div>
+                      <Link href="/spaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
+                        <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/10 flex items-center justify-center text-[#787774] dark:text-[#9B9A97]"><Columns className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">SCRUM board</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">5 days ago</p>
+                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">SCRUM board</p>
+                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
                         </div>
                       </Link>
-                      <Link href="/spaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-sm"><Zap className="w-3.5 h-3.5" /></div>
+                      <Link href="/spaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
+                        <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs"><Zap className="w-3.5 h-3.5" /></div>
                         <div>
-                          <p className="text-sm font-medium text-slate-900 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">My Software Team</p>
-                          <p className="text-[11px] text-slate-500 dark:text-gray-500">5 days ago</p>
+                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">My Software Team</p>
+                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                 </div>
-                <div className="p-2 border-t border-slate-100 dark:border-gray-800">
-                  <button className="w-full text-left p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                <div className="p-2 border-t border-[#EAEAEA] dark:border-white/8">
+                  <button className="w-full text-left p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
                     View all recent items
                   </button>
                 </div>
@@ -255,17 +263,17 @@ const PopoverNavItem = ({
               <div className="flex flex-col">
                 <div className="p-8 text-center flex flex-col items-center">
                   <div className="w-20 h-20 mb-4 relative flex items-center justify-center">
-                    <div className="absolute inset-0 bg-indigo-50 dark:bg-indigo-900/20 rounded-full scale-150 opacity-50" />
-                    <Star className="w-10 h-10 text-indigo-300 dark:text-indigo-500 relative z-10 fill-indigo-100/50 dark:fill-indigo-900/50" />
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center z-20 text-white shadow-sm border-2 border-white dark:border-gray-900">
+                    <div className="absolute inset-0 bg-[#F0F0EE] dark:bg-white/5 rounded-full scale-150 opacity-50" />
+                    <Star className="w-10 h-10 text-[#ABABAB] dark:text-[#6B6B6B] relative z-10" />
+                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#2563EB] dark:bg-[#3B82F6] rounded-full flex items-center justify-center z-20 text-white dark:text-[#111111] shadow-sm border-2 border-white dark:border-[#1A1A1A]">
                       <Plus className="w-3.5 h-3.5" />
                     </div>
                   </div>
-                  <h4 className="text-[15px] font-bold text-slate-900 dark:text-gray-100 mb-2 mt-4">You have not starred any items.</h4>
-                  <p className="text-[13px] text-slate-500 dark:text-gray-400 leading-relaxed">Star important items for quick access. They will appear here.</p>
+                  <h4 className="text-[14px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2 mt-4">You have not starred any items.</h4>
+                  <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] leading-relaxed">Star important items for quick access. They will appear here.</p>
                 </div>
-                <div className="p-2 border-t border-slate-100 dark:border-gray-800">
-                  <button className="w-full text-left p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                <div className="p-2 border-t border-[#EAEAEA] dark:border-white/8">
+                  <button className="w-full text-left p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
                     View all starred items
                   </button>
                 </div>
@@ -341,38 +349,38 @@ export default function Sidebar({
       {/* Mobile Overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/30 z-30 lg:hidden"
           onClick={onMobileClose}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-white dark:bg-gray-900 border-r border-slate-200 dark:border-gray-800 z-40 transition-all duration-200 flex flex-col ${
+        className={`fixed top-0 left-0 h-full bg-[#FBFBFA] dark:bg-[#1A1A1A] border-r border-[#EAEAEA] dark:border-white/8 z-40 transition-all duration-200 flex flex-col ${
           collapsed ? "w-[68px]" : "w-[240px]"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Logo / Brand */}
-        <div className="h-14 flex items-center justify-between px-4 border-b border-slate-100 dark:border-gray-800 flex-shrink-0">
+        <div className="h-14 flex items-center justify-between px-4 border-b border-[#EAEAEA] dark:border-white/8 flex-shrink-0">
           <Link
             href="/"
             className="flex items-center gap-2.5"
             onClick={onMobileClose}
           >
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[8px] flex items-center justify-center flex-shrink-0">
               <Zap className="w-4 h-4 text-white" />
             </div>
             {!collapsed && (
-              <span className="font-bold text-slate-900 dark:text-gray-100 text-lg tracking-tight">
+              <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-lg tracking-tight">
                 AL-TASK
               </span>
             )}
           </Link>
           <button
             onClick={onMobileClose}
-            className="lg:hidden p-1.5 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="lg:hidden p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
           >
-            <X className="w-4 h-4 text-slate-400 dark:text-gray-500" />
+            <X className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
           </button>
         </div>
 
@@ -387,7 +395,7 @@ export default function Sidebar({
                   setShowCreateMenu(false);
                   onMobileClose();
                 }}
-                className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-2 px-3 rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+                className="w-full flex items-center justify-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white py-2 px-3 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors text-[13px] font-medium"
               >
                 <Plus className="w-4 h-4" />
                 Create new workspace
@@ -398,7 +406,7 @@ export default function Sidebar({
             <div className="px-3 mb-3 flex justify-center">
               <button
                 onClick={() => setShowCreateMenu(!showCreateMenu)}
-                className="w-9 h-9 bg-indigo-600 text-white rounded-lg flex items-center justify-center hover:bg-indigo-700 transition-colors"
+                className="w-9 h-9 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] flex items-center justify-center hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -407,7 +415,7 @@ export default function Sidebar({
 
           {/* Main Navigation */}
           <div className="px-2 space-y-0.5">
-            <div className="px-2 space-y-0.5">
+            <div className="px-0 space-y-0.5">
               {/* Dashboard */}
               <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
               {SHOW_RECENT_NAV && (
@@ -421,13 +429,13 @@ export default function Sidebar({
               <div>
                 <button
                   onClick={() => setSpaceOpen(!spaceOpen)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                 >
-                  <BookOpen className="w-[18px] h-[18px] text-slate-400 dark:text-gray-500" />
+                  <BookOpen className="w-[18px] h-[18px] text-[#ABABAB] dark:text-[#6B6B6B]" />
 
                   {!collapsed && (
                     <>
-                      <span className="text-sm font-medium flex-1 text-left">
+                      <span className="text-[13px] font-medium flex-1 text-left">
                         Workspaces
                       </span>
                       {spaceOpen ? (
@@ -441,14 +449,14 @@ export default function Sidebar({
 
                 {/* SUB NAV */}
                 {spaceOpen && !collapsed && (
-                  <div className="ml-6 mt-1 space-y-1">
+                  <div className="ml-6 mt-1 space-y-0.5">
                     {sidebarSpaces.slice(0, 5).map((space) => (
                       <Link
                         key={space._id}
                         href={`/spaces/${space._id}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                       >
-                        <div className="w-4 h-4 rounded bg-indigo-500 text-white flex items-center justify-center text-[10px]">
+                        <div className="w-4 h-4 rounded-[3px] bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
                           {space.name?.charAt(0)}
                         </div>
                         <span className="truncate">{space.name}</span>
@@ -459,7 +467,7 @@ export default function Sidebar({
                     <button
                       ref={moreSpacesBtnRef}
                       onClick={handleToggleMoreSpaces}
-                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-sm text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg group transition-colors"
+                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] group transition-colors"
                     >
                       <span>More spaces</span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -471,13 +479,13 @@ export default function Sidebar({
               <div>
                 <button
                   onClick={() => setFilterOpen(!filterOpen)}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                 >
-                  <ListFilter className="w-[18px] h-[18px] text-slate-400 dark:text-gray-500" />
+                  <ListFilter className="w-[18px] h-[18px] text-[#ABABAB] dark:text-[#6B6B6B]" />
 
                   {!collapsed && (
                     <>
-                      <span className="text-sm font-medium flex-1 text-left">
+                      <span className="text-[13px] font-medium flex-1 text-left">
                         Filters
                       </span>
                       {filterOpen ? (
@@ -491,15 +499,15 @@ export default function Sidebar({
 
                 {/* SUB NAV */}
                 {filterOpen && !collapsed && (
-                  <div className="ml-6 mt-1 space-y-1">
+                  <div className="ml-6 mt-1 space-y-0.5">
                     {optionFilter.map((filter) => (
                       <Link
                         key={filter.slug}
                         href={`/filter/${filter.slug}`}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition ${
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] transition-colors ${
                           pathname.includes(filter.slug)
-                            ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
-                            : "text-slate-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800"
+                            ? "bg-[#F0F0EE] text-[#111111] dark:bg-white/6 dark:text-[#E8E8E7]"
+                            : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
                         }`}
                       >
                         <span className="truncate">{filter.title}</span>
@@ -510,7 +518,7 @@ export default function Sidebar({
               </div>
 
               <NavItem item={mainNav[5]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
-              {/* Báo cáo */}
+              {/* Reports */}
               <NavItem item={mainNav[6]} showBadge pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
             </div>
           </div>
@@ -520,7 +528,7 @@ export default function Sidebar({
             <div className="mt-4 px-2">
               <button
                 onClick={() => setAdminOpen(!adminOpen)}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-400 dark:text-gray-500 uppercase tracking-wider hover:text-slate-600 dark:hover:text-gray-300 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
               >
                 {!collapsed && (
                   <>
@@ -548,7 +556,7 @@ export default function Sidebar({
                       key={item.href}
                       href={item.href}
                       onClick={onMobileClose}
-                      className={`flex justify-center p-2 rounded-lg transition-colors ${pathname.startsWith(item.href) ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400" : "text-slate-400 dark:text-gray-500 hover:bg-slate-50 dark:hover:bg-gray-800"}`}
+                      className={`flex justify-center p-2 rounded-[6px] transition-colors ${pathname.startsWith(item.href) ? navActiveClass : navInactiveClass}`}
                     >
                       <item.icon className="w-[18px] h-[18px]" />
                     </Link>
@@ -560,13 +568,13 @@ export default function Sidebar({
         </div>
 
         {/* Bottom: Workspace + Settings */}
-        <div className="flex-shrink-0 border-t border-slate-100 dark:border-gray-800 p-3 space-y-1">
+        <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/8 p-3 space-y-1">
           {!collapsed && currentWorkspace && (
-            <div className="px-3 py-2 bg-slate-50 dark:bg-gray-800 rounded-lg mb-2">
-              <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-wider font-semibold">
+            <div className="px-3 py-2 bg-[#F9F9F8] dark:bg-white/5 rounded-[6px] mb-2">
+              <p className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] font-semibold">
                 Workspaces
               </p>
-              <p className="text-sm font-medium text-slate-800 dark:text-gray-200 truncate">
+              <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
                 {currentWorkspace.name}
               </p>
             </div>
@@ -574,22 +582,22 @@ export default function Sidebar({
           <Link
             href="/settings"
             onClick={onMobileClose}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${pathname === "/settings" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" : "text-slate-500 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-gray-800 hover:text-slate-800 dark:hover:text-gray-100"}`}
+            className={`flex items-center gap-3 px-3 py-2 rounded-[6px] transition-colors ${pathname === "/settings" ? navActiveClass : navInactiveClass}`}
           >
-            <Settings className="w-[18px] h-[18px] flex-shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">Settings</span>}
+            <Settings className={`w-[18px] h-[18px] flex-shrink-0 ${pathname === "/settings" ? iconActiveClass : iconInactiveClass}`} />
+            {!collapsed && <span className="text-[13px] font-medium">Settings</span>}
           </Link>
         </div>
 
         {/* Collapse toggle */}
         <button
           onClick={() => onCollapse(!collapsed)}
-          className="absolute -right-3 top-[52px] w-6 h-6 bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-full flex items-center justify-center hover:bg-slate-50 dark:hover:bg-gray-800 lg:flex shadow-sm transition-colors"
+          className="absolute -right-3 top-[52px] w-6 h-6 bg-[#FBFBFA] dark:bg-[#1A1A1A] border border-[#EAEAEA] dark:border-white/10 rounded-full flex items-center justify-center hover:bg-[#F0F0EE] dark:hover:bg-white/8 lg:flex transition-colors"
         >
           {collapsed ? (
-            <ChevronRight className="w-3 h-3 text-slate-400 dark:text-gray-500" />
+            <ChevronRight className="w-3 h-3 text-[#ABABAB] dark:text-[#6B6B6B]" />
           ) : (
-            <ChevronDown className="w-3 h-3 text-slate-400 dark:text-gray-500 rotate-90" />
+            <ChevronDown className="w-3 h-3 text-[#ABABAB] dark:text-[#6B6B6B] rotate-90" />
           )}
         </button>
       </aside>
@@ -599,34 +607,41 @@ export default function Sidebar({
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
-            className="fixed bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-xl shadow-xl z-[9999] flex flex-col w-[320px]"
-            style={{ top: `${moreSpacesPos.top}px`, left: `${moreSpacesPos.left}px` }}
+            className="fixed bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[10px] z-[9999] flex flex-col w-[320px]"
+            style={{
+              top: `${moreSpacesPos.top}px`,
+              left: `${moreSpacesPos.left}px`,
+              boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)",
+            }}
           >
-            <div className="flex items-center justify-between p-3 border-b border-slate-100 dark:border-gray-800">
-              <span className="font-semibold text-slate-900 dark:text-gray-100">Spaces</span>
-              <button onClick={() => setActivePopover(null)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-gray-800 rounded-md text-slate-500 dark:text-gray-400 transition-colors">
+            <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/8">
+              <span className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Spaces</span>
+              <button
+                onClick={() => setActivePopover(null)}
+                className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
+              >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3 border-b border-slate-100 dark:border-gray-800">
+            <div className="p-3 border-b border-[#EAEAEA] dark:border-white/8">
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 dark:text-gray-500 absolute left-3 top-2.5" />
+                <Search className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B] absolute left-3 top-2.5" />
                 <input
                   type="text"
                   placeholder="Search all spaces"
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-gray-100 placeholder-slate-400 dark:placeholder-gray-500 focus:bg-white dark:focus:bg-gray-750 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                  className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-white/30 outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div className="p-2">
-              <Link href="/spaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                <ListFilter className="w-4 h-4 text-slate-400 dark:text-gray-500" />
+              <Link href="/spaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+                <ListFilter className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 View all spaces
               </Link>
-              <Link href="/spaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-sm font-medium text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-gray-100 hover:bg-slate-50 dark:hover:bg-gray-800 rounded-lg transition-colors">
-                <Plus className="w-4 h-4 text-slate-400 dark:text-gray-500" />
+              <Link href="/spaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+                <Plus className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 Create space
               </Link>
             </div>

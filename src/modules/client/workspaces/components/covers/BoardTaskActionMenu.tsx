@@ -141,8 +141,8 @@ export default function BoardTaskActionMenu({
     <>
       <div
         ref={menuRef}
-        className="fixed z-[999999] w-58 overflow-visible rounded-lg border border-gray-700 bg-gray-900 py-1 text-gray-100 shadow-2xl"
-        style={{ left: menuPosition.left, top: menuPosition.top, width: MENU_WIDTH }}
+        className="fixed z-[999999] overflow-visible rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] py-1 text-[#111111] dark:text-[#E8E8E7]"
+        style={{ left: menuPosition.left, top: menuPosition.top, width: MENU_WIDTH, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         onClick={(event) => event.stopPropagation()}
         onMouseDown={(event) => event.stopPropagation()}
       >
@@ -150,16 +150,19 @@ export default function BoardTaskActionMenu({
           <button
             type="button"
             onClick={() => setStatusOpen((open) => !open)}
-            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
+            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
           >
             <span className="flex items-center gap-2">
               <CircleDot className="h-4 w-4" />
               Change status
             </span>
-            <ChevronRight className="h-4 w-4 text-gray-400" />
+            <ChevronRight className="h-4 w-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
           </button>
           {statusOpen && (
-            <div className="absolute left-full top-0 ml-2 w-48 overflow-hidden rounded-lg border border-gray-700 bg-gray-900 py-1 shadow-2xl">
+            <div
+              className="absolute left-full top-0 ml-2 w-48 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] py-1"
+              style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+            >
               {columns.map((column) => {
                 const active = issue.columnId === column.id || issue.status === statusLabel(column);
                 return (
@@ -167,8 +170,10 @@ export default function BoardTaskActionMenu({
                     key={column.id}
                     type="button"
                     onClick={() => handleStatusChange(column)}
-                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                      active ? "bg-gray-800 text-blue-300" : "text-gray-200 hover:bg-gray-800"
+                    className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[13px] transition-colors ${
+                      active
+                        ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
+                        : "text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
                     }`}
                   >
                     {statusLabel(column)}
@@ -183,7 +188,7 @@ export default function BoardTaskActionMenu({
         <button
           type="button"
           onClick={() => copyText(taskLink, "Task link copied")}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
         >
           <Copy className="h-4 w-4" />
           Copy link
@@ -191,7 +196,7 @@ export default function BoardTaskActionMenu({
         <button
           type="button"
           onClick={() => copyText(issue.key, "Task key copied")}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
         >
           <Copy className="h-4 w-4" />
           Copy key
@@ -202,7 +207,7 @@ export default function BoardTaskActionMenu({
             // TODO: Wire to flag API when task flags are available.
             onClose();
           }}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
         >
           <Flag className="h-4 w-4" />
           Add flag
@@ -214,21 +219,21 @@ export default function BoardTaskActionMenu({
             onOpenLabels?.(issue);
           }}
           disabled={!onOpenLabels || !canEditTask}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
         >
           <Tag className="h-4 w-4" />
           Add label
         </button>
-        <div className="my-1 border-t border-gray-800" />
+        <div className="my-1 border-t border-[#EAEAEA] dark:border-white/8" />
         {canEditTask && (
           <button
             ref={coverRowRef}
             type="button"
             onMouseEnter={() => setCoverAnchorRect(coverRowRef.current?.getBoundingClientRect() ?? null)}
-            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
+            className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
           >
             <span>Select cover</span>
-            <ChevronRight className="h-4 w-4 text-gray-400" />
+            <ChevronRight className="h-4 w-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
           </button>
         )}
         <button
@@ -238,7 +243,7 @@ export default function BoardTaskActionMenu({
             onArchiveIssue?.(issue);
           }}
           disabled={!onArchiveIssue || !canArchiveTask}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Archive className="h-4 w-4" />
           Archive
@@ -250,7 +255,7 @@ export default function BoardTaskActionMenu({
               onClose();
               onDeleteIssue(issue);
             }}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-300 transition-colors hover:bg-red-950/40"
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#9F2F2D] dark:text-[#F87171] transition-colors hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)]"
           >
             <Trash2 className="h-4 w-4" />
             Delete

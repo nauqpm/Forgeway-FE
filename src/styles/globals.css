@@ -3,10 +3,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Dark mode token overrides ── */
+.dark {
+  --color-canvas:        #191919;
+  --color-surface:       #202020;
+  --color-surface-2:     #252525;
+  --color-border:        rgba(255, 255, 255, 0.08);
+  --color-border-subtle: rgba(255, 255, 255, 0.04);
+  --color-ink:           #E8E8E7;
+  --color-ink-2:         #9B9A97;
+  --color-ink-3:         #6B6B6B;
+  --color-accent:        #3B82F6;
+  --color-accent-hover:  #2563EB;
+  --color-accent-surface:rgba(37, 99, 235, 0.15);
+  --color-accent-text:   #93C5FD;
+  --color-cta-bg:        #3B82F6;
+  --color-cta-text:      #FFFFFF;
+  --color-cta-hover:     #2563EB;
+
+  --status-todo-bg:          rgba(31, 108, 159, 0.15);
+  --status-todo-text:        #7BB8E0;
+  --status-inprogress-bg:    rgba(149, 100, 0, 0.15);
+  --status-inprogress-text:  #D4A855;
+  --status-done-bg:          rgba(52, 101, 56, 0.15);
+  --status-done-text:        #6DB374;
+  --status-cancelled-bg:     rgba(120, 119, 116, 0.15);
+  --status-cancelled-text:   #9B9A97;
+  --status-blocked-bg:       rgba(159, 47, 45, 0.15);
+  --status-blocked-text:     #E07B79;
+
+  --priority-urgent-bg:    rgba(159, 47, 45, 0.15);
+  --priority-urgent-text:  #E07B79;
+  --priority-high-bg:      rgba(149, 100, 0, 0.15);
+  --priority-high-text:    #D4A855;
+  --priority-medium-bg:    rgba(31, 108, 159, 0.15);
+  --priority-medium-text:  #7BB8E0;
+  --priority-low-bg:       rgba(52, 101, 56, 0.15);
+  --priority-low-text:     #6DB374;
+}
+
 body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: var(--font-geist-sans), 'Helvetica Neue', system-ui, sans-serif;
+    color: var(--color-ink);
+    background-color: var(--color-canvas);
 }
 
 :root {
@@ -30,6 +72,45 @@ body {
   --workspace-list-sidebar-w: clamp(195px, 18.75vw, 270px);
   --workspace-chart-size: clamp(220px, 24vw, 288px);
   --workspace-settings-nav-w: clamp(220px, 20vw, 272px);
+
+  /* ── Design tokens: Color ── */
+  --color-canvas:        #FBFBFA;
+  --color-surface:       #FFFFFF;
+  --color-surface-2:     #F9F9F8;
+  --color-border:        #EAEAEA;
+  --color-border-subtle: rgba(0, 0, 0, 0.05);
+  --color-ink:           #111111;
+  --color-ink-2:         #787774;
+  --color-ink-3:         #ABABAB;
+  --color-accent:        #2563EB;
+  --color-accent-hover:  #1D4ED8;
+  --color-accent-surface:#EFF6FF;
+  --color-accent-text:   #1E40AF;
+  --color-cta-bg:        #2563EB;
+  --color-cta-text:      #FFFFFF;
+  --color-cta-hover:     #1D4ED8;
+
+  /* ── Design tokens: Status ── */
+  --status-todo-bg:          #EFF6FF;
+  --status-todo-text:        #1F6C9F;
+  --status-inprogress-bg:    #FBF3DB;
+  --status-inprogress-text:  #956400;
+  --status-done-bg:          #EDF3EC;
+  --status-done-text:        #346538;
+  --status-cancelled-bg:     #F7F6F3;
+  --status-cancelled-text:   #787774;
+  --status-blocked-bg:       #FDEBEC;
+  --status-blocked-text:     #9F2F2D;
+
+  /* ── Design tokens: Priority ── */
+  --priority-urgent-bg:    #FDEBEC;
+  --priority-urgent-text:  #9F2F2D;
+  --priority-high-bg:      #FBF3DB;
+  --priority-high-text:    #956400;
+  --priority-medium-bg:    #EFF6FF;
+  --priority-medium-text:  #1F6C9F;
+  --priority-low-bg:       #EDF3EC;
+  --priority-low-text:     #346538;
 }
 
 *,
@@ -191,25 +272,25 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #EAEAEA;
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #ABABAB;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: rgba(255, 255, 255, 0.10);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: rgba(255, 255, 255, 0.18);
 }
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: #EAEAEA transparent;
 }
 .dark * {
-  scrollbar-color: #374151 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.10) transparent;
 }
 
 /* SunEditor Content Styles */
@@ -370,10 +451,10 @@ body {
 
 /* Light mode */
 .fc {
-  --fc-border-color: #e5e7eb;
+  --fc-border-color: #EAEAEA;
   --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: #f9fafb;
-  --fc-today-bg-color: rgba(99, 102, 241, 0.05);
+  --fc-neutral-bg-color: #F9F9F8;
+  --fc-today-bg-color: rgba(17, 17, 17, 0.03);
 }
 .fc .fc-daygrid-day-number {
   color: #374151;

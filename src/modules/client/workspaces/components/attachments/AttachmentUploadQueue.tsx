@@ -19,54 +19,56 @@ export default function AttachmentUploadQueue({
       {items.map((item) => (
         <div
           key={item.id}
-          className="rounded border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900"
+          className="rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-3"
         >
           <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded bg-gray-100 p-2 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            <div className="mt-0.5 rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] p-2 text-[#787774] dark:text-[#9B9A97]">
               <AttachmentFileIcon mimeType={item.mimeType} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                  <p className="truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
                     {item.fileName}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
                     {formatAttachmentSize(item.fileSize)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {item.status === "success" && (
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                    <CheckCircle2 className="h-4 w-4 text-[#346538] dark:text-[#4ADE80]" />
                   )}
-                  {item.status === "error" && <XCircle className="h-4 w-4 text-red-500" />}
+                  {item.status === "error" && (
+                    <XCircle className="h-4 w-4 text-[#9F2F2D] dark:text-[#F87171]" />
+                  )}
                   <button
                     type="button"
                     onClick={() => onClear(item.id)}
-                    className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                    className="rounded-[4px] p-1 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
                     aria-label="Clear upload row"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#EAEAEA] dark:bg-white/8">
                 <div
                   className={`h-full rounded-full transition-all ${
                     item.status === "error"
-                      ? "bg-red-500"
+                      ? "bg-[#9F2F2D]"
                       : item.status === "success"
-                        ? "bg-emerald-500"
-                        : "bg-[#0052CC]"
+                        ? "bg-[#346538]"
+                        : "bg-[#2563EB] dark:bg-[#3B82F6]"
                   }`}
                   style={{ width: `${item.progress}%` }}
                 />
               </div>
               <p
-                className={`mt-1 text-xs ${
+                className={`mt-1 text-[11px] ${
                   item.status === "error"
-                    ? "text-red-600 dark:text-red-400"
-                    : "text-gray-500 dark:text-gray-400"
+                    ? "text-[#9F2F2D] dark:text-[#F87171]"
+                    : "text-[#ABABAB] dark:text-[#6B6B6B]"
                 }`}
               >
                 {item.status === "error"

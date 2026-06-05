@@ -31,9 +31,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-b border-gray-100 pb-4 last:border-0 last:pb-0 dark:border-gray-800">
-      <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        <Icon className="h-4 w-4 text-indigo-500" />
+    <section className="border-b border-[#EAEAEA] dark:border-white/8 pb-4 last:border-0 last:pb-0">
+      <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+        <Icon className="h-4 w-4 text-[#2563EB] dark:text-[#3B82F6]" />
         {title}
       </div>
       <div className="space-y-1">{children}</div>
@@ -55,21 +55,21 @@ function CheckboxRow({
   onChange: () => void;
 }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 hover:bg-gray-50 dark:hover:bg-gray-800">
+    <label className="flex cursor-pointer items-center gap-3 rounded-[6px] px-2 py-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5">
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900"
+        className="h-4 w-4 rounded accent-[#2563EB]"
       />
       {avatar && (
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-[10px] font-bold text-white">
           {avatar}
         </span>
       )}
-      <span className="min-w-0 text-sm text-gray-800 dark:text-gray-200">
+      <span className="min-w-0 text-[13px] text-[#111111] dark:text-[#E8E8E7]">
         <span className="block truncate">{label}</span>
-        {detail && <span className="block truncate text-xs text-gray-500 dark:text-gray-400">{detail}</span>}
+        {detail && <span className="block truncate text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">{detail}</span>}
       </span>
     </label>
   );
@@ -134,7 +134,7 @@ export default function TaskFilterPanel({
             }}
           />
         ))}
-        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-[13px] font-medium text-[#2563EB] dark:text-[#3B82F6]">
           Show more <ChevronDown className="h-4 w-4" />
         </button>
       </Section>
@@ -150,7 +150,7 @@ export default function TaskFilterPanel({
             onChange={() => toggleArray("assignees", user.id)}
           />
         ))}
-        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-[13px] font-medium text-[#2563EB] dark:text-[#3B82F6]">
           Show more <ChevronDown className="h-4 w-4" />
         </button>
       </Section>
@@ -174,7 +174,7 @@ export default function TaskFilterPanel({
       <Section title="Filter by task fields" icon={Flag}>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
-            <p className="mb-1 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Status</p>
+            <p className="mb-1 px-2 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Status</p>
             {statuses.map((status) => (
               <CheckboxRow
                 key={status}
@@ -185,7 +185,7 @@ export default function TaskFilterPanel({
             ))}
           </div>
           <div>
-            <p className="mb-1 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Type</p>
+            <p className="mb-1 px-2 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Type</p>
             {types.map((type) => (
               <CheckboxRow
                 key={type}
@@ -196,7 +196,7 @@ export default function TaskFilterPanel({
             ))}
           </div>
           <div>
-            <p className="mb-1 px-2 text-xs font-semibold text-gray-500 dark:text-gray-400">Priority</p>
+            <p className="mb-1 px-2 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Priority</p>
             {priorities.map((priority) => (
               <CheckboxRow
                 key={priority}

@@ -37,7 +37,7 @@ export default function TiptapEditor() {
     editorProps: {
       attributes: {
         class:
-          "tiptap-content prose m-5 max-w-none px-2 pb-32 text-slate-900 focus:outline-none dark:prose-invert dark:text-slate-100 prose-strong:text-slate-900 dark:prose-strong:text-slate-100",
+          "tiptap-content prose m-5 max-w-none px-2 pb-32 text-[#111111] focus:outline-none dark:prose-invert dark:text-[#E8E8E7] prose-strong:text-[#111111] dark:prose-strong:text-[#E8E8E7]",
       },
     },
     onUpdate: ({ editor }) => {
@@ -92,7 +92,7 @@ export default function TiptapEditor() {
   if (!document) return null;
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden">
+    <div className="flex flex-col h-full bg-white dark:bg-[#1A1A1A] overflow-hidden">
       <EditorHeader
         doc={document}
         canSave={canEditPage}
@@ -102,15 +102,15 @@ export default function TiptapEditor() {
         onSave={handleSave}
       />
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#1A1A1A]">
         <div className="sticky top-0 z-20">{canEditPage && <EditorToolbar editor={editor} />}</div>
 
         <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
           <div className="mb-10">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
               Document Title
             </p>
-            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
+            <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-5 py-4 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
               <input
                 type="text"
                 value={document.title}
@@ -119,17 +119,17 @@ export default function TiptapEditor() {
                   setHasUnsavedChanges(true);
                 }}
                 readOnly={!canEditPage}
-                className="w-full text-4xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight"
+                className="w-full text-4xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] transition-all tracking-tight leading-tight"
                 placeholder="Enter document title..."
               />
             </div>
           </div>
 
           <div className="pb-40">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
               Document Content
             </p>
-            <div className="min-h-[600px] rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
+            <div className="min-h-[600px] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
               <div className="dark:prose-invert">
                 <EditorContent editor={editor} />
               </div>
