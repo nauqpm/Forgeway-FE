@@ -8,11 +8,13 @@ import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailMo
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
+import { boardService } from "@/modules/client/workspaces/services/boardService";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
 import { TaskDetailResponse } from "@/modules/client/workspaces/types/task-detail.type";
 import { getWorkspaceTemplate, Workspace } from "@/modules/client/workspaces/types/workspace.type";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
+import type { BoardColumn } from "@/modules/client/workspaces/types/board.type";
 
 export default function TaskDetailDeepLinkPage() {
   usePageTitle('Task Detail');
@@ -24,6 +26,7 @@ export default function TaskDetailDeepLinkPage() {
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [issue, setIssue] = useState<TaskDetailResponse | null>(null);
+  const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,11 +53,15 @@ export default function TaskDetailDeepLinkPage() {
         }
 
         const workspaceWithMembers = { ...nextWorkspace, members };
-        const taskDetail = await taskService.getBoardTaskDetail(nextWorkspace._id, taskKey);
+        const [taskDetail, boardData] = await Promise.all([
+          taskService.getBoardTaskDetail(nextWorkspace._id, taskKey),
+          boardService.getBoardByWorkspace(nextWorkspace._id).catch(() => ({ columns: [] })),
+        ]);
         if (!isActive) return;
 
         setWorkspace(workspaceWithMembers);
         setIssue(enrichTaskDetailUsers(taskDetail, members));
+        setColumns(boardData.columns);
       })
       .catch((err) => {
         if (!isActive) return;
@@ -128,6 +135,7 @@ export default function TaskDetailDeepLinkPage() {
       issue={issue}
       workspaceId={workspace._id}
       workspaceMembers={workspace.members}
+      boardColumns={columns}
       workspaceTemplate={getWorkspaceTemplate(workspace)}
       onClose={backToBoard}
       onUpdateIssue={handleUpdateIssue}
