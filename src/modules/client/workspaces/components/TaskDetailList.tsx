@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { TaskDetailResponse } from "../types/task-detail.type";
-import TaskSubtasks from "@/modules/admin/components/common/components/TaskSubtasks";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -76,7 +75,6 @@ export default function TaskDetailList({
   const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(true);
@@ -85,7 +83,6 @@ export default function TaskDetailList({
   useEffect(() => {
     if (issue) {
       setLocalTitle(issue.title);
-      setSubtasks(issue.subtasks || []);
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
@@ -131,20 +128,6 @@ export default function TaskDetailList({
     onUpdateIssue({ ...issue, [field]: nextValue });
   };
 
-  const handleAddSubtask = (title: string) => {
-    if (issue.isArchived) return;
-    const newSubtask = { id: `sub-${Date.now()}`, title, status: "To Do", priority: "Medium" };
-    const updated = [...subtasks, newSubtask];
-    setSubtasks(updated);
-    onUpdateIssue?.({ ...issue, subtasks: updated });
-  };
-
-  const handleUpdateSubtaskStatus = (id: string, newStatus: string) => {
-    if (issue.isArchived) return;
-    const updated = subtasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t));
-    setSubtasks(updated);
-    onUpdateIssue?.({ ...issue, subtasks: updated });
-  };
 
   // Helper: each detail row in the sidebar — label on left (fixed), value on right
   const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -278,15 +261,7 @@ export default function TaskDetailList({
             accessToken={token}
           />
 
-          {/* Subtasks */}
-          <div>
-            {/*<h2 className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Subtasks</h2>*/}
-            <TaskSubtasks
-              subtasks={subtasks}
-              onAdd={handleAddSubtask}
-              onUpdateStatus={handleUpdateSubtaskStatus}
-            />
-          </div>
+          {/* Subtasks — hidden until backend supports */}
 
           {/* Linked Work Items */}
           <div>

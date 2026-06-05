@@ -8,7 +8,7 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
 import Link from "next/link";
-import { ArrowLeft, User, Tag, Calendar, Flag, MessageSquare, Paperclip, Send, Edit3 } from "lucide-react";
+import { AlertCircle, ArrowLeft, User, Tag, Calendar, Flag, MessageSquare, Paperclip, Send, Edit3 } from "lucide-react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 interface Task {
@@ -91,7 +91,15 @@ export default function TaskDetailPage() {
   };
 
   if (loading) return <LoadingSpinner />;
-  if (!task) return <div className="app-main text-center text-gray-500">Task not found</div>;
+  if (!task) return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
+      <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)]">
+        <AlertCircle className="h-5 w-5 text-[#9F2F2D] dark:text-[#F87171]" />
+      </div>
+      <p className="text-[14px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Task not found</p>
+      <p className="mt-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">The task may have been deleted or is no longer available.</p>
+    </div>
+  );
 
   const priority = priorityOptions.find(p => p.value === task.priority) || priorityOptions[2];
 

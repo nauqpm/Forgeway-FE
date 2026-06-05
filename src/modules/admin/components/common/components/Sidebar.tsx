@@ -18,6 +18,7 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
   Plus,
   Zap,
   X,
@@ -490,32 +491,52 @@ export default function Sidebar({
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        {/* Logo / Brand */}
+        {/* Logo / Brand + Toggle — all inside sidebar, never floating outside */}
         <div
           className={`app-header flex items-center border-b border-[#EAEAEA] dark:border-white/[0.06] flex-shrink-0 ${
-            collapsed ? "justify-center" : "justify-between"
+            collapsed ? "justify-between lg:justify-center" : "justify-between"
           }`}
         >
-          <Link
-            href="/"
-            onClick={onMobileClose}
-            className={`flex items-center rounded-[8px] py-1.5 ${
-              collapsed ? "w-full justify-center px-0" : "gap-2 px-2.5"
+          {/* Logo wrapper: smooth slide-out when collapsed on desktop; always visible on mobile */}
+          <div
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              collapsed
+                ? "max-w-[240px] opacity-100 lg:max-w-0 lg:opacity-0 lg:pointer-events-none"
+                : "max-w-[240px] opacity-100"
             }`}
           >
-            <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1">
-              <Image src={appleIcon} alt="SDLC Platform" width={38} height={38} className="h-9 w-9 rounded-[8px] object-contain" />
-            </span>
-            {!collapsed && (
+            <Link
+              href="/"
+              onClick={onMobileClose}
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded-[8px] whitespace-nowrap"
+            >
+              <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1">
+                <Image src={appleIcon} alt="SDLC Platform" width={38} height={38} className="h-9 w-9 rounded-[8px] object-contain" />
+              </span>
               <span className="flex flex-col text-base font-bold leading-[0.95] tracking-tight text-[#2563EB] dark:text-[#60A5FA]">
                 <span className="text-2xl">SDLC</span>
                 <span>PLATFORM</span>
               </span>
+            </Link>
+          </div>
+
+          {/* Desktop collapse/expand toggle — stays inside sidebar at all times */}
+          <button
+            onClick={() => onCollapse(!collapsed)}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="hidden lg:flex p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors flex-shrink-0"
+          >
+            {collapsed ? (
+              <ChevronRight className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
+            ) : (
+              <ChevronLeft className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
             )}
-          </Link>
+          </button>
+
+          {/* Mobile: close overlay button */}
           <button
             onClick={onMobileClose}
-            className="lg:hidden p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+            className="lg:hidden p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors flex-shrink-0"
           >
             <X className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
           </button>
@@ -676,17 +697,6 @@ export default function Sidebar({
           </Link>
         </div>
 
-        {/* Collapse toggle */}
-        <button
-          onClick={() => onCollapse(!collapsed)}
-          className="absolute -right-3 top-[52px] w-6 h-6 bg-[#FBFBFA] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-full flex items-center justify-center hover:bg-[#F0F0EE] dark:hover:bg-white/8 lg:flex transition-colors"
-        >
-          {collapsed ? (
-            <ChevronRight className="w-3 h-3 text-[#ABABAB] dark:text-[#6B6B6B]" />
-          ) : (
-            <ChevronDown className="w-3 h-3 text-[#ABABAB] dark:text-[#6B6B6B] rotate-90" />
-          )}
-        </button>
       </aside>
 
       {/* More Workspaces Popover */}

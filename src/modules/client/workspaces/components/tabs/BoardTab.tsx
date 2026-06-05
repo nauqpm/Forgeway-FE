@@ -234,7 +234,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     : null;
 
   return (
-    <div className="flex flex-col gap-4 relative">
+    <div className="flex flex-col gap-1.5 relative">
       {filters.archived && (
         <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[11px] font-bold z-10">
           Archived View - Read Only

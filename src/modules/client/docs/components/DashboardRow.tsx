@@ -20,11 +20,11 @@ export default function DashboardRow({
   return (
     <tr
       onClick={() => onSelect(doc.id)}
-      className="group border-b border-[#EAEAEA] dark:border-white/6 last:border-0 hover:bg-[#F7F6F3] dark:hover:bg-white/3 cursor-pointer transition-all duration-150"
+      className="group border-b border-[#EAEAEA] dark:border-white/[0.04] last:border-0 hover:bg-[#F7F6F3] dark:hover:bg-white/[0.025] cursor-pointer transition-all duration-150"
     >
       <td className="px-6 py-4">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-[#F7F6F3] dark:bg-[#252525] rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B] group-hover:bg-white dark:group-hover:bg-[#2A2A2A] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-all border border-transparent group-hover:border-[#EAEAEA]">
+          <div className="w-10 h-10 bg-[#F7F6F3] dark:bg-[#252525] rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B] group-hover:bg-white dark:group-hover:bg-[#2A2A2A] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-all border border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/8">
             <FileText className="w-5 h-5" />
           </div>
           <div>
@@ -71,7 +71,7 @@ export default function DashboardRow({
               <a
                 href={documentService.downloadUrl(doc.id)}
                 onClick={(e) => e.stopPropagation()}
-                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 transition-all hover:shadow-sm border border-transparent hover:border-gray-100 dark:hover:border-gray-600"
+                className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-all border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/10"
                 title="Download"
               >
                 <Download className="w-4 h-4" />
@@ -81,7 +81,7 @@ export default function DashboardRow({
                   e.stopPropagation();
                   onDelete(doc);
                 }}
-                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-all hover:shadow-sm border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+                className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] dark:hover:text-[#F87171] transition-all border border-transparent hover:border-[#F5C6C7] dark:hover:border-red-900/20"
                 title="Delete"
               >
                 <Trash2 className="w-4 h-4" />
@@ -91,7 +91,7 @@ export default function DashboardRow({
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); onRename(doc.id, doc.title); }}
-                className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-all border border-transparent hover:border-[#EAEAEA]"
+                className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-all border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8"
                 title="Rename"
               >
                 <FileText className="w-4 h-4" />
@@ -101,7 +101,7 @@ export default function DashboardRow({
                   e.stopPropagation();
                   onDelete(doc);
                 }}
-                className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] transition-all border border-transparent hover:border-[#F5C6C7]"
+                className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] dark:hover:text-[#F87171] transition-all border border-transparent hover:border-[#F5C6C7] dark:hover:border-red-900/20"
                 title="Delete"
               >
                 <Trash2 className="w-4 h-4" />

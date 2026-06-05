@@ -51,7 +51,7 @@ export function ProfilePage() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 p-6">
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
         <h2 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
           <User className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
           Personal information
@@ -65,7 +65,7 @@ export function ProfilePage() {
         />
       </div>
 
-      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 p-6">
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
         <h2 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
           <Key className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
           Privacy
