@@ -8,6 +8,8 @@ import DashboardGroup from "./DashboardGroup";
 import DashboardEmpty from "./DashboardEmpty";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
+import { Document } from "../types/docs.type";
+import { Pencil, Trash2 } from "lucide-react";
 
 export default function DocsDashboard({ workspaceId }: { workspaceId: string }) {
   const {
@@ -25,6 +27,11 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   const [personalDocs, setPersonalDocs] = useState<DocumentItem[]>([]);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
+  const [renameTarget, setRenameTarget] = useState<Document | null>(null);
+  const [renameName, setRenameName] = useState("");
+  const [renaming, setRenaming] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const loadUploadedDocs = useCallback(async () => {
     try {
@@ -117,12 +124,80 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   };
 
   const handleRename = (id: string, currentTitle: string) => {
-    const newTitle = prompt("Rename to:", currentTitle);
-    if (newTitle) renameDocument(id, newTitle);
+    const target = dashboardDocs.find((doc) => doc.id === id);
+    if (!target) return;
+    setRenameTarget(target);
+    setRenameName(currentTitle);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm("Delete this page?")) deleteDocument(id);
+  const closeRenameDialog = () => {
+    if (renaming) return;
+    setRenameTarget(null);
+    setRenameName("");
+  };
+
+  const handleRenameDocument = async () => {
+    if (!renameTarget) return;
+
+    const nextName = renameName.trim();
+    if (!nextName) {
+      toast.error("Document name is required");
+      return;
+    }
+
+    if (nextName === renameTarget.title) {
+      setRenameTarget(null);
+      setRenameName("");
+      return;
+    }
+
+    setRenaming(true);
+    try {
+      await renameDocument(renameTarget.id, nextName);
+      setRenameTarget(null);
+      setRenameName("");
+    } finally {
+      setRenaming(false);
+    }
+  };
+
+  const handleDelete = (doc: Document) => {
+    setDeleteTarget(doc);
+  };
+
+  const closeDeleteDialog = () => {
+    if (deleting) return;
+    setDeleteTarget(null);
+  };
+
+  const handleDeleteDocument = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    const doc = deleteTarget;
+
+    if (doc.source === "import") {
+      try {
+        await documentService.detach(doc.id, workspaceId);
+        setUploadedDocs((current) => current.filter((item) => item._id !== doc.id));
+        selectImportedDocument(null);
+        setDeleteTarget(null);
+        window.dispatchEvent(new Event("docs_uploads_changed"));
+        toast.success("Removed from workspace");
+      } catch {
+        toast.error("Failed to remove document");
+      } finally {
+        setDeleting(false);
+      }
+      return;
+    }
+
+    try {
+      await deleteDocument(doc.id);
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleSelect = (id: string) => {
@@ -199,6 +274,148 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
                 }}
               >
                 Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {renameTarget && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onClick={closeRenameDialog}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rename-dashboard-document-title"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+                <Pencil className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2
+                  id="rename-dashboard-document-title"
+                  className="text-base font-semibold text-slate-900 dark:text-slate-100"
+                >
+                  Rename document
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Enter a new name for this document.
+                </p>
+              </div>
+            </div>
+
+            <input
+              autoFocus
+              value={renameName}
+              disabled={renaming}
+              onChange={(e) => setRenameName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleRenameDocument();
+                }
+                if (e.key === "Escape") {
+                  closeRenameDialog();
+                }
+              }}
+              className="mt-5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:bg-gray-900"
+              placeholder="Document name"
+            />
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={renaming}
+                onClick={closeRenameDialog}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={renaming}
+                onClick={handleRenameDocument}
+                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {renaming ? "Renaming..." : "Rename"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onClick={closeDeleteDialog}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dashboard-document-title"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <h2
+                  id="delete-dashboard-document-title"
+                  className="text-base font-semibold text-slate-900 dark:text-slate-100"
+                >
+                  {deleteTarget.source === "import" ? "Remove from workspace?" : "Delete document?"}
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  {deleteTarget.source === "import" ? (
+                    <>
+                      This will remove{" "}
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">
+                        {deleteTarget.title}
+                      </span>{" "}
+                      from this workspace only. The document will remain in your library.
+                    </>
+                  ) : (
+                    <>
+                      This will permanently delete{" "}
+                      <span className="font-semibold text-slate-700 dark:text-slate-200">
+                        {deleteTarget.title}
+                      </span>
+                      . This action cannot be undone.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={closeDeleteDialog}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeleteDocument}
+                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleting
+                  ? deleteTarget.source === "import"
+                    ? "Removing..."
+                    : "Deleting..."
+                  : deleteTarget.source === "import"
+                    ? "Remove"
+                    : "Delete"}
               </button>
             </div>
           </div>
