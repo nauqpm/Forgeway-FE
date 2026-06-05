@@ -509,7 +509,7 @@ export default function DocumentsLibraryPage() {
               </div>
             </div>
             <div className="min-h-0 flex-1">
-              <ImportedDocumentViewer doc={viewingDoc} />
+              <ImportedDocumentViewer doc={viewingDoc} showBackButton={false} />
             </div>
           </div>
         </div>
