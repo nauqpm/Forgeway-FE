@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // =============================================================================
 // useAuth HOOK - Main auth orchestration hook
@@ -88,6 +88,14 @@ export const useAuth = () => {
             return response;
           }
           */
+
+          // Step 5b: redirect based on role
+          const isSuperAdmin = currentUser.role === 'super_admin';
+          if (isSuperAdmin) {
+            // SUPER_ADMIN goes to admin dashboard (separate admin portal)
+            window.location.href = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001';
+            return response;
+          }
 
           router.push(AUTH_ROUTES.HOME);
         } else {
