@@ -10,9 +10,10 @@ import { useDocsStore } from "../store/docs.store";
 
 type Props = {
   doc: DocumentItem;
+  showBackButton?: boolean;
 };
 
-export default function ImportedDocumentViewer({ doc }: Props) {
+export default function ImportedDocumentViewer({ doc, showBackButton = true }: Props) {
   const { user } = useAuth();
   const { selectDocument } = useDocsStore();
   const [openEditor, setOpenEditor] = useState(false);
@@ -35,14 +36,16 @@ export default function ImportedDocumentViewer({ doc }: Props) {
     <div className="h-full flex flex-col">
       <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => selectDocument(null)}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back
-          </button>
+          {showBackButton && (
+            <button
+              type="button"
+              onClick={() => selectDocument(null)}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back
+            </button>
+          )}
           {isOnline && isOwner && (
           <button
             onClick={() => setOpenEditor(true)}
