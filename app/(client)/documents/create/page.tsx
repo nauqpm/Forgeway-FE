@@ -104,12 +104,12 @@ export default function CreateOnlineDocumentPage() {
           </div>
         </div>
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50 px-[var(--workspace-surface-pad)] py-4 dark:border-gray-700 dark:bg-gray-800">
-          <Link
+          {/* <Link
             href="/documents"
             className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             Cancel
-          </Link>
+          </Link> */}
           <button
             type="submit"
             disabled={loading || !title.trim()}

@@ -13,7 +13,7 @@ export type DocumentItem = {
   mimeType: string;
   extension: string;
   size: number;
-  documentType?: "upload" | "online";
+  documentType?: "import" | "online";
   uploadedBy: string;
   workspaceIds: string[];
   createdAt?: string;

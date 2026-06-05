@@ -4,7 +4,7 @@ import { useDocsStore } from "../store/docs.store";
 import DocsSearch from "./DocsSearch";
 import DocsTree from "./DocsTree";
 import RecentDocs from "./RecentDocs";
-import { Plus, ChevronLeft, ChevronRight, FileText, Layout, Trash2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, Download, FileText, Layout, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { documentService } from "../services/documentService";
@@ -52,7 +52,10 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
       {/* Collapse Toggle Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="absolute -right-3 top-10 z-20 flex h-6 w-6 items-center justify-center rounded-full border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-[#0052CC] shadow-sm"
+        className={`absolute -right-3 top-10 z-[80] flex h-6 w-6 items-center justify-center rounded-full border border-gray-100 bg-white text-gray-400 shadow-sm transition-opacity hover:text-[#0052CC] dark:border-gray-800 dark:bg-gray-900 ${
+          isCollapsed ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        aria-label={isCollapsed ? "Expand docs sidebar" : "Collapse docs sidebar"}
       >
         {isCollapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
       </button>
@@ -118,13 +121,13 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                       <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                         Documents in Workspace
                       </h3>
-                      <button 
+                      {/* <button 
                         onClick={handleCreateRoot}
                         className="p-1 hover:bg-gray-100 dark:hover:bg-gray-900 rounded text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 transition-colors"
                         title="New root page"
                       >
                         <Plus className="w-3.5 h-3.5" />
-                      </button>
+                      </button> */}
                     </div>
                     <DocsTree docs={rootDocs} workspaceId={workspaceId} level={0} />
                   </div>
@@ -165,6 +168,13 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
+                            <a
+                              href={documentService.downloadUrl(doc._id)}
+                              className="opacity-0 group-hover:opacity-100 p-1 rounded text-gray-400 hover:text-[#0052CC] hover:bg-blue-50 dark:hover:text-blue-400 dark:hover:bg-blue-900/20 transition"
+                              title="Download document"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </a>
                           </div>
                         </li>
                       ))}

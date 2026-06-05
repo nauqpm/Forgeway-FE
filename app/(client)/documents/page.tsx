@@ -37,6 +37,9 @@ export default function DocumentsLibraryPage() {
   const [viewingDoc, setViewingDoc] = useState<DocumentItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DocumentItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<DocumentItem | null>(null);
+  const [renameName, setRenameName] = useState("");
+  const [renaming, setRenaming] = useState(false);
   const [linkingDoc, setLinkingDoc] = useState<DocumentItem | null>(null);
 
   const load = async () => {
@@ -112,6 +115,49 @@ export default function DocumentsLibraryPage() {
       toast.error("Delete document failed");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const openRenameDialog = (doc: DocumentItem) => {
+    setRenameTarget(doc);
+    setRenameName(doc.name);
+  };
+
+  const closeRenameDialog = () => {
+    if (renaming) return;
+    setRenameTarget(null);
+    setRenameName("");
+  };
+
+  const handleRenameDocument = async () => {
+    if (!renameTarget) return;
+
+    const nextName = renameName.trim();
+    if (!nextName) {
+      toast.error("Document name is required");
+      return;
+    }
+
+    if (nextName === renameTarget.name) {
+      setRenameTarget(null);
+      setRenameName("");
+      return;
+    }
+
+    setRenaming(true);
+    try {
+      await documentService.rename(renameTarget._id, nextName);
+      setViewingDoc((current) =>
+        current?._id === renameTarget._id ? { ...current, name: nextName } : current,
+      );
+      setRenameTarget(null);
+      setRenameName("");
+      toast.success("Document renamed");
+      await load();
+    } catch {
+      toast.error("Rename document failed");
+    } finally {
+      setRenaming(false);
     }
   };
 
@@ -254,13 +300,10 @@ export default function DocumentsLibraryPage() {
                     )}
                     <button
                       className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                      onClick={async (e) => {
+                      onClick={(e) => {
                         e.stopPropagation();
-                        const nextName = window.prompt("New name", doc.name)?.trim();
-                        if (!nextName) return;
-                        await documentService.rename(doc._id, nextName);
                         setOpenMenuId(null);
-                        await load();
+                        openRenameDialog(doc);
                       }}
                     >
                       <Pencil className="h-3.5 w-3.5" />
@@ -303,6 +346,71 @@ export default function DocumentsLibraryPage() {
             await load();
           }}
         />
+      )}
+      {renameTarget && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onClick={closeRenameDialog}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rename-document-title"
+            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+                <Pencil className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 id="rename-document-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                  Rename document
+                </h2>
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                  Enter a new name for this document.
+                </p>
+              </div>
+            </div>
+
+            <input
+              autoFocus
+              value={renameName}
+              disabled={renaming}
+              onChange={(e) => setRenameName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleRenameDocument();
+                }
+                if (e.key === "Escape") {
+                  closeRenameDialog();
+                }
+              }}
+              className="mt-5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:bg-gray-900"
+              placeholder="Document name"
+            />
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={renaming}
+                onClick={closeRenameDialog}
+                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={renaming}
+                onClick={handleRenameDocument}
+                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {renaming ? "Renaming..." : "Rename"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
       {deleteTarget && (
         <div
