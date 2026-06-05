@@ -1,6 +1,7 @@
 "use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Filters } from "../../types/filter.type";
 import { Issue } from "../../types/issue.type";
@@ -21,6 +22,7 @@ import {
   Trash2,
   X,
   PlayCircle,
+  ArrowRight,
 } from "lucide-react";
 import AssigneePicker from "../../../../../common/components/AssigneePicker";
 
@@ -216,6 +218,13 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Start a sprint from the Backlog tab to view the board
         </p>
+        <Link
+          href={`/workspaces/${workspace.key}/backlog`}
+          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+        >
+          Go to backlog
+       
+        </Link>
       </div>
     );
   }
