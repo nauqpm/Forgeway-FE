@@ -42,10 +42,14 @@ export function NavAuthActions() {
           onClick={() => setDropdownOpen((open) => !open)}
           className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-gray-200 transition hover:bg-white/10"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white">
-            {user?.fullName?.charAt(0)?.toUpperCase() ??
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 overflow-hidden text-sm font-semibold text-white">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
+            ) : (
+              user?.fullName?.charAt(0)?.toUpperCase() ??
               user?.email?.charAt(0)?.toUpperCase() ??
-              "U"}
+              "U"
+            )}
           </div>
           <span className="hidden max-w-36 truncate text-sm font-medium sm:block">
             {user?.fullName ?? user?.email}
