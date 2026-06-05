@@ -360,7 +360,7 @@ export default function TimelineView({
       <div
         key={row.id}
         style={{ position: 'absolute', top: globalIdx * ROW_H, left: 0, right: 0, height: ROW_H }}
-        className={`flex items-center border-b border-[#EAEAEA] dark:border-white/8 px-3 gap-2 select-none
+        className={`flex items-center border-b border-[#EAEAEA] dark:border-white/[0.04] px-3 gap-2 select-none
           ${isSection
             ? 'bg-[#F9F9F8]/60 dark:bg-[rgba(255,255,255,0.02)]'
             : 'hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer'}`}
@@ -407,7 +407,7 @@ export default function TimelineView({
       <div
         key={row.id}
         style={{ position: 'absolute', top: globalIdx * ROW_H, left: 0, width: totalWidth, height: ROW_H }}
-        className="border-b border-[#EAEAEA] dark:border-white/8"
+        className="border-b border-[#EAEAEA] dark:border-white/[0.04]"
         onMouseMove={(event) => handleHoverMove(event, row.title, row.startDate, row.endDate)}
         onMouseLeave={clearHoverTooltip}
       >

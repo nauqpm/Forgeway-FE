@@ -234,7 +234,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     : null;
 
   return (
-    <div className="flex flex-col gap-1.5 relative">
+    <div className="flex flex-col gap-0.5 relative">
       {filters.archived && (
         <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[11px] font-bold z-10">
           Archived View - Read Only
@@ -262,7 +262,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         >
           {(provided) => (
             <div
-              className="workspace-board-height flex overflow-x-auto pb-[var(--workspace-surface-pad)] p-[var(--workspace-surface-pad)]"
+              className="workspace-board-height flex overflow-x-auto pt-2 px-[var(--workspace-surface-pad)] pb-[var(--workspace-surface-pad)]"
               style={{ gap: "var(--workspace-board-gap)" }}
               ref={provided.innerRef}
               {...provided.droppableProps}

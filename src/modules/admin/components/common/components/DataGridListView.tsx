@@ -321,7 +321,7 @@ export default function DataGridListView({
               <ChevronDown className="w-3 h-3" />
             </button>
             {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]  overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
                 {PRIORITY_OPTIONS.map(p => (
                   <button
                     key={p}
@@ -544,12 +544,12 @@ export default function DataGridListView({
   });
 
   return (
-    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8  overflow-hidden flex flex-col font-sans">
+    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col font-sans">
 
       {/* Data Grid Table */}
       <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table className="w-full text-left border-collapse" style={{ width: table.getCenterTotalSize() }}>
-          <thead className="sticky top-0 z-10 bg-[#F9F9F8] dark:bg-[#252525]  border-b border-[#EAEAEA] dark:border-white/8">
+          <thead className="sticky top-0 z-10 bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
@@ -573,7 +573,7 @@ export default function DataGridListView({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/8 bg-white dark:bg-[#202020]">
+          <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06] bg-white dark:bg-[#202020]">
             {table.getRowModel().rows.map(row => (
               <tr
                 key={row.id}
@@ -583,7 +583,7 @@ export default function DataGridListView({
                   <td
                     key={cell.id}
                     style={{ width: cell.column.getSize() }}
-                    className="px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/8 last:border-r-0 overflow-visible"
+                    className="px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/[0.06] last:border-r-0 overflow-visible"
                   >
                     {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
