@@ -4,6 +4,7 @@
 /build
 /uploads
 /.next
+tsconfig.tsbuildinfo
 # Logs
 logs
 *.log
