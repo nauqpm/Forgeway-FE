@@ -19,7 +19,12 @@ function mapPage(raw: PageApiResponse): Document {
     workspaceId: raw.workspaceId,
     slug: raw.slug,
     authorId: raw.authorId,
-    lastEditedBy: raw.lastEditedBy,
+    lastEditedBy: raw.lastEditedBy
+      ? {
+          _id: raw.lastEditedBy._id,
+          fullName: raw.lastEditedBy.fullName ?? raw.lastEditedBy.username ?? "Unknown",
+        }
+      : null,
     version: raw.version,
     status: raw.status,
     labels: raw.labels ?? [],

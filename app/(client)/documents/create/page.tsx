@@ -18,6 +18,14 @@ const sanitizeEditorHtml = (html: string) =>
     ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan"],
   });
 
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error && typeof error === "object" && "response" in error) {
+    const res = (error as { response?: { data?: { message?: string; error?: string } } }).response;
+    return res?.data?.message || res?.data?.error || fallback;
+  }
+  return fallback;
+};
+
 export default function CreateOnlineDocumentPage() {
   usePageTitle('New Document');
   const router = useRouter();
@@ -47,10 +55,10 @@ export default function CreateOnlineDocumentPage() {
         title.trim(),
         content,
       );
-      toast.success("Da tao tai lieu online");
+      toast.success("Document created successfully");
       router.push("/documents");
-    } catch {
-      toast.error("Tao tai lieu that bai");
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Failed to create document"));
     } finally {
       setLoading(false);
     }
@@ -104,12 +112,12 @@ export default function CreateOnlineDocumentPage() {
           </div>
         </div>
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50 px-[var(--workspace-surface-pad)] py-4 dark:border-gray-700 dark:bg-gray-800">
-          <Link
+          {/* <Link
             href="/documents"
             className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             Cancel
-          </Link>
+          </Link> */}
           <button
             type="submit"
             disabled={loading || !title.trim()}

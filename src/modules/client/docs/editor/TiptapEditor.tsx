@@ -43,6 +43,8 @@ export type EditorMode = "read" | "edit";
 export default function TiptapEditor() {
   const { documents, selectedDocumentId, updateDocument } = useDocsStore();
   const document = documents.find((d) => d.id === selectedDocumentId);
+  const documentContent = document?.content ?? "";
+  const isTemporaryDocument = Boolean(document?.id.startsWith("temp-"));
   const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
   const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
 
@@ -72,7 +74,7 @@ export default function TiptapEditor() {
     editorProps: {
       attributes: {
         class:
-          "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
+          "tiptap-content prose m-5 max-w-none px-2 pb-32 text-[#111111] focus:outline-none dark:prose-invert dark:text-[#E8E8E7] prose-strong:text-[#111111] dark:prose-strong:text-[#E8E8E7]",
       },
     },
   });
@@ -180,7 +182,10 @@ export default function TiptapEditor() {
     };
     // Remove old listener if exists
     if (remoteUpdateListenerRef.current) {
-      socket.off(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, remoteUpdateListenerRef.current);
+      socket.off(
+        SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED,
+        remoteUpdateListenerRef.current,
+      );
     }
     remoteUpdateListenerRef.current = handleRemoteYjsUpdate;
     socket.on(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, handleRemoteYjsUpdate);
@@ -249,7 +254,10 @@ export default function TiptapEditor() {
     const socket = realtimeSocketClient.getSocket();
     if (socket) {
       if (remoteUpdateListenerRef.current) {
-        socket.off(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, remoteUpdateListenerRef.current);
+        socket.off(
+          SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED,
+          remoteUpdateListenerRef.current,
+        );
         remoteUpdateListenerRef.current = null;
       }
       realtimeSocketClient.pageManager.leave(socket);
@@ -418,10 +426,10 @@ export default function TiptapEditor() {
         <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
           {/* Title */}
           <div className="mb-10">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Tiêu đề tài liệu
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+              Document Title
             </p>
-            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
+            <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-5 py-4 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
               <input
                 type="text"
                 value={mode === "edit" ? editTitle : document.title}
@@ -435,10 +443,10 @@ export default function TiptapEditor() {
 
           {/* Content */}
           <div className="pb-40">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Nội dung tài liệu
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+              Document Content
             </p>
-            <div className="min-h-[600px] rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
+            <div className="min-h-[600px] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
               <div className="dark:prose-invert">
                 <EditorContent editor={activeEditor} />
               </div>

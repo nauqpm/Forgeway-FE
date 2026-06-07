@@ -2,7 +2,14 @@
 
 import { useDocsStore } from "../store/docs.store";
 import { Document } from "../types/docs.type";
-import { ChevronRight, Globe, Loader2, Upload, Eye, Pencil } from "lucide-react";
+import {
+  ChevronRight,
+  Globe,
+  Loader2,
+  Upload,
+  Eye,
+  Pencil,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import type { EditorMode } from "./TiptapEditor";
 import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
@@ -18,7 +25,11 @@ interface EditorHeaderProps {
 }
 
 // ── Connection status indicator ──────────────────────────────
-function ConnectionIndicator({ status }: { status: RealtimeStatusSnapshot["status"] }) {
+function ConnectionIndicator({
+  status,
+}: {
+  status: RealtimeStatusSnapshot["status"];
+}) {
   if (status === "connected") {
     return (
       <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
@@ -120,11 +131,13 @@ export default function EditorHeader({
           {mode === "edit" && <ConnectionIndicator status={connectionStatus} />}
 
           {/* Disconnected warning banner (Edit mode only) */}
-          {mode === "edit" && (connectionStatus === "disconnected" || connectionStatus === "error") && (
-            <span className="hidden sm:inline-flex items-center text-[10px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
-              Thay đổi được lưu cục bộ. Đang kết nối lại...
-            </span>
-          )}
+          {mode === "edit" &&
+            (connectionStatus === "disconnected" ||
+              connectionStatus === "error") && (
+              <span className="hidden sm:inline-flex items-center text-[10px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
+                Thay đổi được lưu cục bộ. Đang kết nối lại...
+              </span>
+            )}
 
           {/* Mode toggle button */}
           {canEdit && (

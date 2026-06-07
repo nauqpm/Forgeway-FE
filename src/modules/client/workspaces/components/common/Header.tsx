@@ -35,12 +35,16 @@ const Header = ({
       <div className="flex min-w-0 items-start gap-3 sm:gap-4">
         <Link
           href="/workspaces"
-          className="shrink-0 p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="shrink-0 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
         >
-          <ArrowRight className="w-5 h-5 text-gray-500 dark:text-gray-400 rotate-180" />
+          <ArrowRight className="w-5 h-5 text-[#787774] dark:text-[#9B9A97] rotate-180" />
         </Link>
         <div
-          className={`hidden h-14 w-14 shrink-0 rounded-2xl sm:flex items-center justify-center shadow-inner ${template === "scrum" ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-emerald-500 to-teal-600"}`}
+          className={`hidden h-14 w-14 shrink-0 rounded-[10px] sm:flex items-center justify-center ${
+            template === "scrum"
+              ? "bg-[#2563EB] dark:bg-[#3B82F6]"
+              : "bg-[#2563EB] dark:bg-[#3B82F6]"
+          }`}
         >
           {template === "scrum" ? (
             <Repeat className="w-7 h-7 text-white" />
@@ -50,14 +54,14 @@ const Header = ({
         </div>
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded text-xs font-mono font-bold">
+            <span className="px-2 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[11px] font-mono font-bold">
               {workspace.key}
             </span>
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium ${
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[10px] font-medium ${
                 workspace.visibility === "private"
-                  ? "bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-500"
-                  : "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-500"
+                  ? "bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] text-[#956400] dark:text-[#F59E0B]"
+                  : "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] text-[#346538] dark:text-[#4ADE80]"
               }`}
             >
               {workspace.visibility === "private" ? (
@@ -71,11 +75,11 @@ const Header = ({
               )}
             </span>
           </div>
-          <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+          <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             <span className="min-w-0 break-words">{workspace.name}</span>
             <Link
               href={`/workspaces/${workspaceId}/settings`}
-              className="shrink-0 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              className="shrink-0 p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]"
             >
               <Settings className="w-5 h-5" />
             </Link>
@@ -86,7 +90,7 @@ const Header = ({
         {canUpdateWorkspace && (
           <button
             onClick={() => setIsInviteModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] text-[#111111] dark:text-[#E8E8E7] px-4 py-2 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] font-medium text-[13px] transition-colors"
           >
             Invite members
           </button>
@@ -94,7 +98,7 @@ const Header = ({
         {canCreateTask && (
           <button
             onClick={() => setShowCreateIssue(true)}
-            className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors shadow-sm"
+            className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-4 py-2 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-[13px] transition-colors"
           >
             <Plus className="w-4 h-4" /> Create Task
           </button>

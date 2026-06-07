@@ -10,6 +10,9 @@ interface SprintModalProps {
   sprintCount?: number;
 }
 
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[13px] outline-none transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
+const labelCls = "block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
+
 export default function SprintModal({ isOpen, onClose, onSave, initialData, sprintCount = 0 }: SprintModalProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -32,8 +35,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
       } else {
         const start = new Date();
         const end = new Date();
-        end.setDate(start.getDate() + 14); // 2 weeks
-        
+        end.setDate(start.getDate() + 14);
         setFormData({
           name: `Sprint ${sprintCount + 1}`,
           duration: '2 weeks',
@@ -48,10 +50,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
   const handleDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const dur = e.target.value;
     if (dur === 'custom') {
-      setFormData({
-        ...formData,
-        duration: dur,
-      });
+      setFormData({ ...formData, duration: dur });
       return;
     }
 
@@ -63,9 +62,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
 
     const start = formData.startDate ? new Date(formData.startDate) : new Date();
     const end = new Date(start);
-    if (days > 0) {
-      end.setDate(start.getDate() + days);
-    }
+    if (days > 0) end.setDate(start.getDate() + days);
 
     setFormData({
       ...formData,
@@ -78,7 +75,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const startStr = e.target.value;
     const start = new Date(startStr);
-    
+
     let days = 0;
     if (formData.duration === '1 week') days = 7;
     if (formData.duration === '2 weeks') days = 14;
@@ -86,9 +83,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
     if (formData.duration === '4 weeks') days = 28;
 
     const end = new Date(start);
-    if (days > 0) {
-      end.setDate(start.getDate() + days);
-    }
+    if (days > 0) end.setDate(start.getDate() + days);
 
     setFormData({
       ...formData,
@@ -109,14 +104,13 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
       toast.error("The end date must be after the start date");
       return;
     }
-    
+
     const cleanData = {
       ...formData,
       startDate: formData.startDate || undefined,
       endDate: formData.endDate || undefined,
     };
-    
-    // Only active sprints restrict date changes
+
     const isRestricted = initialData?.status === 'active';
 
     if (isRestricted) {
@@ -132,41 +126,40 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
   const isRestricted = initialData?.status === 'active';
 
   return (
-    <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-          <h3 className="font-bold text-gray-900 dark:text-white text-lg">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div
+        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-lg border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             {initialData ? 'Edit Sprint' : 'Create Sprint'}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
-            <X className="w-5 h-5" />
+          <button onClick={onClose} className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors">
+            <X className="w-4 h-4" />
           </button>
         </div>
         {initialData?.status === 'active' && (
-          <div className="px-6 pt-4 pb-0">
-            <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
+          <div className="px-5 pt-4 pb-0">
+            <p className="text-[11px] text-[#956400] dark:text-[#F59E0B] bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] border border-[#F0D88A] dark:border-[rgba(245,158,11,0.2)] rounded-[6px] px-3 py-2">
               Running sprints can only have their name and goal edited.
             </p>
           </div>
         )}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sprint name <span className="text-red-500">*</span></label>
+            <label className={labelCls}>Sprint name <span className="text-[#9F2F2D]">*</span></label>
             <input
               type="text"
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+              className={inputCls}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Duration</label>
-            <select
-              value={formData.duration}
-              onChange={handleDurationChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
-            >
+            <label className={labelCls}>Duration</label>
+            <select value={formData.duration} onChange={handleDurationChange} className={inputCls}>
               <option value="1 week">1 week</option>
               <option value="2 weeks">2 weeks</option>
               <option value="3 weeks">3 weeks</option>
@@ -176,41 +169,41 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Start date</label>
+              <label className={labelCls}>Start date</label>
               <input
                 type="date"
                 disabled={isRestricted}
                 value={formData.startDate}
                 onChange={handleStartDateChange}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className={inputCls}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">End date</label>
+              <label className={labelCls}>End date</label>
               <input
                 type="date"
                 disabled={isRestricted}
                 value={formData.endDate}
                 onChange={(e) => setFormData({ ...formData, endDate: e.target.value, duration: 'custom' })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className={inputCls}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sprint goal</label>
+            <label className={labelCls}>Sprint goal</label>
             <textarea
               value={formData.goal}
               onChange={(e) => setFormData({ ...formData, goal: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
+              className={`${inputCls} resize-none`}
               placeholder="Example: Complete payment feature..."
             />
           </div>
-          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors">
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm">
+            <button type="submit" className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors">
               {initialData ? 'Update' : 'Create Sprint'}
             </button>
           </div>

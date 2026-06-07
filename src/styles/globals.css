@@ -3,10 +3,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Dark mode token overrides ── */
+.dark {
+  --color-canvas:        #202020;
+  --color-surface:       #252525;
+  --color-surface-2:     #2A2A2A;
+  --color-border:        rgba(255, 255, 255, 0.06);
+  --color-border-subtle: rgba(255, 255, 255, 0.035);
+  --color-ink:           #E8E8E7;
+  --color-ink-2:         #9B9A97;
+  --color-ink-3:         #6B6B6B;
+  --color-accent:        #3B82F6;
+  --color-accent-hover:  #2563EB;
+  --color-accent-surface:rgba(37, 99, 235, 0.15);
+  --color-accent-text:   #93C5FD;
+  --color-cta-bg:        #3B82F6;
+  --color-cta-text:      #FFFFFF;
+  --color-cta-hover:     #2563EB;
+
+  --status-todo-bg:          rgba(31, 108, 159, 0.15);
+  --status-todo-text:        #7BB8E0;
+  --status-inprogress-bg:    rgba(149, 100, 0, 0.15);
+  --status-inprogress-text:  #D4A855;
+  --status-done-bg:          rgba(52, 101, 56, 0.15);
+  --status-done-text:        #6DB374;
+  --status-cancelled-bg:     rgba(120, 119, 116, 0.15);
+  --status-cancelled-text:   #9B9A97;
+  --status-blocked-bg:       rgba(159, 47, 45, 0.15);
+  --status-blocked-text:     #E07B79;
+
+  --priority-urgent-bg:    rgba(159, 47, 45, 0.15);
+  --priority-urgent-text:  #E07B79;
+  --priority-high-bg:      rgba(149, 100, 0, 0.15);
+  --priority-high-text:    #D4A855;
+  --priority-medium-bg:    rgba(31, 108, 159, 0.15);
+  --priority-medium-text:  #7BB8E0;
+  --priority-low-bg:       rgba(52, 101, 56, 0.15);
+  --priority-low-text:     #6DB374;
+}
+
 body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: var(--font-geist-sans), 'Helvetica Neue', system-ui, sans-serif;
+    color: var(--color-ink);
+    background-color: var(--color-canvas);
 }
 
 :root {
@@ -27,9 +69,48 @@ body {
   --workspace-surface-pad: clamp(12px, 1.1vw, 20px);
   --workspace-board-gap: clamp(16px, 1.4vw, 24px);
   --workspace-column-w: clamp(280px, 22vw, 340px);
-  --workspace-list-sidebar-w: clamp(260px, 25vw, 360px);
+  --workspace-list-sidebar-w: clamp(195px, 18.75vw, 270px);
   --workspace-chart-size: clamp(220px, 24vw, 288px);
   --workspace-settings-nav-w: clamp(220px, 20vw, 272px);
+
+  /* ── Design tokens: Color ── */
+  --color-canvas:        #FBFBFA;
+  --color-surface:       #FFFFFF;
+  --color-surface-2:     #F9F9F8;
+  --color-border:        #EAEAEA;
+  --color-border-subtle: rgba(0, 0, 0, 0.05);
+  --color-ink:           #111111;
+  --color-ink-2:         #787774;
+  --color-ink-3:         #ABABAB;
+  --color-accent:        #2563EB;
+  --color-accent-hover:  #1D4ED8;
+  --color-accent-surface:#EFF6FF;
+  --color-accent-text:   #1E40AF;
+  --color-cta-bg:        #2563EB;
+  --color-cta-text:      #FFFFFF;
+  --color-cta-hover:     #1D4ED8;
+
+  /* ── Design tokens: Status ── */
+  --status-todo-bg:          #EFF6FF;
+  --status-todo-text:        #1F6C9F;
+  --status-inprogress-bg:    #FBF3DB;
+  --status-inprogress-text:  #956400;
+  --status-done-bg:          #EDF3EC;
+  --status-done-text:        #346538;
+  --status-cancelled-bg:     #F7F6F3;
+  --status-cancelled-text:   #787774;
+  --status-blocked-bg:       #FDEBEC;
+  --status-blocked-text:     #9F2F2D;
+
+  /* ── Design tokens: Priority ── */
+  --priority-urgent-bg:    #FDEBEC;
+  --priority-urgent-text:  #9F2F2D;
+  --priority-high-bg:      #FBF3DB;
+  --priority-high-text:    #956400;
+  --priority-medium-bg:    #EFF6FF;
+  --priority-medium-text:  #1F6C9F;
+  --priority-low-bg:       #EDF3EC;
+  --priority-low-text:     #346538;
 }
 
 *,
@@ -191,25 +272,25 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #EAEAEA;
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #ABABAB;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: rgba(255, 255, 255, 0.10);
 }
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: rgba(255, 255, 255, 0.18);
 }
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: #EAEAEA transparent;
 }
 .dark * {
-  scrollbar-color: #374151 transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.10) transparent;
 }
 
 /* SunEditor Content Styles */
@@ -368,21 +449,35 @@ body {
   display: none; /* Use custom CalendarToolbar instead */
 }
 
+/* Calendar shell container — prevent transparent fallback to canvas */
+.al-calendar-shell {
+  background-color: #FBFBFA;
+  border-radius: 8px;
+}
+.dark .al-calendar-shell {
+  background-color: #252525;
+}
+
+/* fc-view-harness also needs explicit bg */
+.dark .fc .fc-view-harness {
+  background-color: #252525;
+}
+
 /* Light mode */
 .fc {
-  --fc-border-color: #e5e7eb;
+  --fc-border-color: #EAEAEA;
   --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: #f9fafb;
-  --fc-today-bg-color: rgba(99, 102, 241, 0.05);
+  --fc-neutral-bg-color: #F9F9F8;
+  --fc-today-bg-color: rgba(17, 17, 17, 0.03);
 }
 .fc .fc-daygrid-day-number {
-  color: #374151;
+  color: #111111;
   font-size: 0.78rem;
   font-weight: 700;
   padding: 3px 5px;
 }
 .fc .fc-col-header-cell-cushion {
-  color: #6b7280;
+  color: #787774;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -416,14 +511,14 @@ body {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  color: #374151;
+  color: #111111;
   font-size: 0.78rem;
   font-weight: 800;
 }
 .fc .fc-day-today .al-calendar-day-number {
-  background: #0ea5e9;
+  background: #2563EB;
   color: #fff;
-  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.55), 0 0 18px rgba(14, 165, 233, 0.45);
+  box-shadow: none;
 }
 .al-calendar-create-btn {
   position: absolute;
@@ -493,39 +588,53 @@ body {
 }
 /* Dark mode */
 .dark .fc {
-  --fc-border-color: #374151;
-  --fc-page-bg-color: transparent;
-  --fc-neutral-bg-color: #1f2937;
-  --fc-today-bg-color: rgba(59, 130, 246, 0.1);
-  color: #f3f4f6;
+  --fc-border-color: rgba(255, 255, 255, 0.06);
+  --fc-page-bg-color: #252525;
+  --fc-neutral-bg-color: #2A2A2A;
+  --fc-today-bg-color: rgba(37, 99, 235, 0.12);
+  color: #E8E8E7;
+}
+/* Explicit cell backgrounds in dark mode so they are not transparent over #1A1A1A canvas */
+.dark .fc .fc-daygrid-day {
+  background-color: #252525;
+}
+.dark .fc .fc-daygrid-day.fc-day-other {
+  background-color: #202020;
+}
+.dark .fc .fc-day-today {
+  background-color: rgba(37, 99, 235, 0.07) !important;
+}
+.dark .fc .fc-col-header-cell {
+  background-color: #2A2A2A;
 }
 .dark .fc .fc-daygrid-day-number {
-  color: #d1d5db;
+  color: #9B9A97;
 }
 .dark .al-calendar-day-number {
-  color: #d1d5db;
+  color: #9B9A97;
 }
 .dark .fc .fc-day-today .al-calendar-day-number {
-  background: #38bdf8;
-  color: #082f49;
+  background: #3B82F6;
+  color: #FFFFFF;
 }
 .dark .al-calendar-create-btn {
-  border-color: rgba(56, 189, 248, 0.35);
-  background: rgba(15, 23, 42, 0.94);
-  color: #7dd3fc;
+  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(37, 99, 235, 0.12);
+  color: #93C5FD;
 }
 .dark .al-calendar-create-btn:hover {
-  background: #082f49;
+  background: rgba(37, 99, 235, 0.2);
 }
 .dark .fc .fc-daygrid-more-link {
-  background: rgba(56, 189, 248, 0.16);
-  color: #7dd3fc;
+  background: rgba(37, 99, 235, 0.12);
+  color: #93C5FD;
 }
 .dark .fc .fc-col-header-cell-cushion {
-  color: #9ca3af;
+  color: #9B9A97;
 }
 .dark .fc .fc-scrollgrid {
-  border-color: #374151;
+  border-color: rgba(255, 255, 255, 0.06);
+  background-color: #252525;
 }
 
 /* Sprint event bar style */
@@ -534,24 +643,35 @@ body {
   border-radius: 4px;
 }
 
+/* Light mode event bars */
 .fc .fc-daygrid-event {
-  background: var(--fc-event-bg-color, #303236);
-  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: var(--fc-event-bg-color, #2563EB);
+  border: 1px solid rgba(37, 99, 235, 0.18);
   box-shadow: none;
   border-radius: 3px;
 }
 .fc .fc-daygrid-block-event {
-  background: var(--fc-event-bg-color, #303236);
+  background: var(--fc-event-bg-color, #2563EB);
   border-radius: 3px;
+}
+/* Dark mode event bars */
+.dark .fc .fc-daygrid-event {
+  background: var(--fc-event-bg-color, #1E3A5F);
+  border: 1px solid rgba(147, 197, 253, 0.16);
+}
+.dark .fc .fc-daygrid-block-event {
+  background: var(--fc-event-bg-color, #1E3A5F);
 }
 
 /* Tiptap content tweaks */
 .tiptap-content {
-  color: #0f172a;
+  color: #111111;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
 }
 
 .dark .tiptap-content {
-  color: #e5e7eb;
+  color: #E8E8E7;
 }
 
 .tiptap-content a {
@@ -593,7 +713,7 @@ body {
 
 .dark .tiptap-content th,
 .dark .tiptap-content td {
-  border-color: #4b5563;
+  border-color: rgba(255, 255, 255, 0.10);
 }
 
 .tiptap-content ul[data-type="taskList"] {

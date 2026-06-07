@@ -25,17 +25,17 @@ export default function AttachmentImageGrid({
       {attachments.map((attachment) => (
         <div
           key={attachment.id}
-          className="group overflow-hidden rounded border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"
+          className="group overflow-hidden rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]"
         >
           <button
             type="button"
             onClick={() => onPreview(attachment)}
-            className="block aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-800"
+            className="block aspect-video w-full overflow-hidden bg-[#F7F6F3] dark:bg-[#252525]"
             aria-label={`Preview ${attachment.originalName}`}
           >
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#F7F6F3] dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B]">
               <AttachmentFileIcon mimeType={attachment.mimeType} className="h-8 w-8" />
-              <span className="max-w-[80%] truncate text-xs font-medium">
+              <span className="max-w-[80%] truncate text-[11px] font-medium">
                 {attachment.originalName}
               </span>
             </div>
@@ -43,10 +43,10 @@ export default function AttachmentImageGrid({
           <div className="p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                <p className="truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
                   {attachment.originalName}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
                   {formatAttachmentSize(attachment.size)} - {formatAttachmentDate(attachment.createdAt)}
                 </p>
               </div>

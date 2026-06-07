@@ -67,56 +67,56 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
   };
 
   const roleIcons: Record<string, any> = { owner: Crown, admin: Shield, member: User, viewer: User };
-  const roleColors: Record<string, string> = { owner: "text-amber-500", admin: "text-purple-500", member: "text-blue-500", viewer: "text-gray-400 dark:text-gray-500" };
+  const roleColors: Record<string, string> = { owner: "text-[#956400] dark:text-[#F59E0B]", admin: "text-[#1F6C9F] dark:text-[#93C5FD]", member: "text-[#2563EB] dark:text-[#3B82F6]", viewer: "text-[#ABABAB] dark:text-[#6B6B6B]" };
   const roleLabels: Record<string, string> = { owner: "Owner", admin: "Administrator", member: "Member", viewer: "Viewer" };
 
   if (loading) return <LoadingSpinner />;
 
   if (!currentWorkspace) return (
-    <div className={`p-6 text-center text-gray-500 dark:text-gray-400 ${className}`}>No workspace found. Please create a workspace first.</div>
+    <div className={`p-6 text-center text-[#787774] dark:text-[#9B9A97] ${className}`}>No workspace found. Please create a workspace first.</div>
   );
 
-  if (!workspace) return <div className={`p-6 text-center text-gray-500 dark:text-gray-400 ${className}`}>No workspace</div>;
+  if (!workspace) return <div className={`p-6 text-center text-[#787774] dark:text-[#9B9A97] ${className}`}>No workspace</div>;
 
   return (
     <div className={`max-w-3xl mx-auto ${className}`}>
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Workspace Settings</h1>
+      <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-6">Workspace Settings</h1>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mb-6">
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-indigo-500" /> Workspace Information</h2>
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 p-6 mb-6">
+        <h2 className="font-semibold text-[#111111] dark:text-[#E8E8E7] mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" /> Workspace Information</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-2">Name</label>
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500" />
+              className="w-full px-4 py-2.5 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-2">Description</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none" rows={3} />
+              className="w-full px-4 py-2.5 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] resize-none" rows={3} />
           </div>
           <div className="flex justify-end">
-            <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50">
+            <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-[#2563EB] text-white rounded-[6px] hover:bg-[#1D4ED8] font-medium disabled:opacity-50">
               {saving ? "Saving..." : "Save changes"}
             </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> Member ({members.length})</h2>
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 p-6">
+        <h2 className="font-semibold text-[#111111] dark:text-[#E8E8E7] mb-4 flex items-center gap-2"><Users className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" /> Member ({members.length})</h2>
         <div className="space-y-2">
           {members.map((member) => {
             const RoleIcon = roleIcons[member.role] || User;
             return (
-              <div key={member.userId._id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div key={member.userId._id} className="flex items-center justify-between p-3 bg-[#F9F9F8] dark:bg-[#252525] rounded-[6px]">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-sm font-bold">
+                  <div className="w-8 h-8 rounded-full bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] flex items-center justify-center text-sm font-bold">
                     {member.userId.fullName?.charAt(0) || member.userId.email.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{member.userId.fullName || "Users"}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">{member.userId.email}</p>
+                    <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">{member.userId.fullName || "Users"}</p>
+                    <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B]">{member.userId.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -124,7 +124,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
                     <RoleIcon className="w-3.5 h-3.5" /> {roleLabels[member.role] || member.role}
                   </span>
                   {member.role !== "owner" && (
-                    <button onClick={() => handleRemoveMember(member.userId._id)} className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-500" title="Remove from workspace">
+                    <button onClick={() => handleRemoveMember(member.userId._id)} className="p-1 hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] rounded text-[#9F2F2D] dark:text-[#F87171]" title="Remove from workspace">
                       <X className="w-4 h-4" />
                     </button>
                   )}

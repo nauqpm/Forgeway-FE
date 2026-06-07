@@ -50,37 +50,28 @@ const ResetPassword = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden">
-      {/* Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute top-0 left-0 w-full h-full object-cover z-0"
-      >
+      <video autoPlay loop muted playsInline className="absolute top-0 left-0 w-full h-full object-cover z-0">
         <source src="/videos/mixkit-clouds-and-blue-sky-background-2408-full-hd.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
-      {/* Overlay to tone down the video contrast and ensure the text/form is readable */}
       <div className="absolute top-0 left-0 w-full h-full bg-slate-900/10 z-10" />
 
-      {/* Glassmorphism Card */}
       <div className="w-full max-w-md relative z-20">
-        <div className="bg-white/30 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10 transition-all duration-300 hover:shadow-indigo-500/10 hover:border-white/55">
+        <div className="bg-white/30 backdrop-blur-2xl rounded-[12px] border border-white/30 p-8 md:p-10 transition-all duration-300 hover:border-white/55">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-3 group">
-              <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105">
+              <div className="w-12 h-12 bg-[#2563EB] rounded-[8px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                 <Zap className="w-7 h-7 text-white" />
               </div>
             </Link>
             <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Reset password</h1>
-            <p className="text-gray-600 text-sm mt-1.5 font-semibold">Enter your email, OTP, and new password</p>
+            <p className="text-gray-600 text-[13px] mt-1.5 font-semibold">Enter your email, OTP, and new password</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email</label>
+              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
@@ -89,13 +80,13 @@ const ResetPassword = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="ten@company.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">OTP</label>
+              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">OTP</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
@@ -106,13 +97,13 @@ const ResetPassword = () => {
                   placeholder="Enter the 6-digit code"
                   pattern="[0-9]{6}"
                   maxLength={6}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">New password</label>
+              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">New password</label>
               <div className="relative">
                 <input
                   type="password"
@@ -120,30 +111,30 @@ const ResetPassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Enter new password"
-                  className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
+                  className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
                 />
                 <PasswordPolicyChecklist password={password} />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Confirm password</label>
+              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">Confirm password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 placeholder="Re-enter new password"
-                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 outline-none transition-all shadow-inner"
+                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
               />
             </div>
 
-            {error && <p className="text-red-600 text-sm text-center font-medium bg-red-500/10 py-2 rounded-lg border border-red-500/20">{error}</p>}
+            {error && <p className="text-red-600 text-[13px] text-center font-medium bg-red-500/10 py-2 rounded-[6px] border border-red-500/20">{error}</p>}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-[0.99] transition-all shadow-md hover:shadow-indigo-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -156,8 +147,8 @@ const ResetPassword = () => {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-600 mt-6 font-medium">
-            <Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors">
+          <p className="text-center text-[13px] text-gray-600 mt-6 font-medium">
+            <Link href="/login" className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">
               Back to sign in
             </Link>
           </p>

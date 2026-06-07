@@ -81,7 +81,6 @@ const getAuthorInitials = (author: TaskComment["author"]): string => {
 const MENTION_MARKUP_REGEX = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
 
 const renderRichText = (content: string) => {
-  // Matches both `[@Name](id)` and `@[Name](id)` syntax in case of legacy data
   const mentionRegex = new RegExp(MENTION_MARKUP_REGEX.source, "g");
   const parts = [];
   let lastIndex = 0;
@@ -94,7 +93,7 @@ const renderRichText = (content: string) => {
     parts.push(
       <span
         key={match.index}
-        className="text-[#0052CC] dark:text-[#4C9AFF] bg-[#E9F2FF] dark:bg-[#0052CC]/20 px-1 py-0.5 rounded font-medium"
+        className="text-[#2563EB] dark:text-[#3B82F6] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] px-1 py-0.5 rounded-[3px] font-medium"
       >
         @{match[1]}
       </span>
@@ -359,7 +358,7 @@ export default function TaskComments({
     return (
       <div key={node.id} className="mt-4">
         <div className="flex gap-4" style={{ marginLeft: `${visualDepth * 1.5}rem` }}>
-          <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden">
+          <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[11px] font-bold shrink-0 overflow-hidden">
             {node.author?.avatar ? (
               <img src={node.author.avatar} alt={authorName} className="w-full h-full object-cover" />
             ) : (
@@ -368,9 +367,9 @@ export default function TaskComments({
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-gray-900 dark:text-white text-sm font-semibold">{authorName}</span>
-              <span className="text-gray-500 dark:text-gray-400 text-xs">{formatDateTime(node.createdAt)}</span>
-              {node.editedAt && <span className="text-gray-400 dark:text-gray-500 text-xs">(edited)</span>}
+              <span className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">{authorName}</span>
+              <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">{formatDateTime(node.createdAt)}</span>
+              {node.editedAt && <span className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">(edited)</span>}
             </div>
 
             {isEditing ? (
@@ -387,20 +386,20 @@ export default function TaskComments({
                     }
                     if (e.key === "Escape") handleEditCancel();
                   }}
-                  className="w-full border border-[#0052CC] rounded px-2 py-1.5 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none resize-none"
+                  className="w-full border border-[#2563EB] rounded-[6px] px-2 py-1.5 text-[13px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] outline-none resize-none"
                 />
                 <div className="flex gap-2">
                   <button
                     onClick={handleEditSave}
                     disabled={editMutation.isPending}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#0052CC] text-white text-xs font-medium rounded transition-colors disabled:opacity-60"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[11px] font-medium rounded-[4px] transition-colors disabled:opacity-60"
                   >
                     <Check className="h-3 w-3" />
                     {editMutation.isPending ? "Saving..." : "Save"}
                   </button>
                   <button
                     onClick={handleEditCancel}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-medium rounded transition-colors"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] text-[11px] font-medium rounded-[4px] transition-colors"
                   >
                     <X className="h-3 w-3" />
                     Cancel
@@ -409,13 +408,13 @@ export default function TaskComments({
               </div>
             ) : (
               <>
-                <p className="text-gray-900 dark:text-white text-sm whitespace-pre-wrap leading-relaxed">
+                <p className="text-[13px] text-[#111111] dark:text-[#E8E8E7] whitespace-pre-wrap leading-relaxed">
                   {renderRichText(node.content)}
                 </p>
-                <div className="flex gap-3 mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                <div className="flex gap-3 mt-2 text-[11px] font-medium text-[#787774] dark:text-[#9B9A97]">
                   {!isArchived && (
                     <button
-                      className="inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+                      className="inline-flex items-center gap-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                       onClick={() => handleReplyStart(node)}
                     >
                       Reply
@@ -425,7 +424,7 @@ export default function TaskComments({
                     <>
                       <button
                         onClick={() => handleEditStart(node)}
-                        className="inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        className="inline-flex items-center gap-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                       >
                         <Pencil className="h-3 w-3" />
                         Edit
@@ -433,7 +432,7 @@ export default function TaskComments({
                       <button
                         onClick={() => deleteMutation.mutate(node.id)}
                         disabled={deleteMutation.isPending}
-                        className="inline-flex items-center gap-1 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-60"
+                        className="inline-flex items-center gap-1 hover:text-[#9F2F2D] dark:hover:text-[#F87171] transition-colors disabled:opacity-60"
                       >
                         <Trash2 className="h-3 w-3" />
                         Delete
@@ -454,12 +453,11 @@ export default function TaskComments({
     );
   };
 
-  // Safe early return after all hooks — no API calls made when isDeleted
   if (isDeleted) return null;
 
   if (isLoadingComments && sortedComments.length === 0) {
     return (
-      <div className="flex items-center gap-2 pt-2 text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-2 pt-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading comments...
       </div>
@@ -468,38 +466,37 @@ export default function TaskComments({
 
   return (
     <div className="space-y-4">
-      {/* Input — hidden when archived */}
       {!isArchived && (
         <>
           {replyingToId && (
-            <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-md text-xs text-blue-700 dark:text-blue-300 font-medium mb-2">
+            <div className="flex items-center justify-between bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] px-3 py-1.5 rounded-[4px] text-[11px] text-[#1F6C9F] dark:text-[#93C5FD] font-medium mb-2">
               <span>Replying to comment...</span>
               <button
                 onClick={() => setReplyingToId(null)}
-                className="hover:bg-blue-100 dark:hover:bg-blue-900/40 p-0.5 rounded transition-colors"
+                className="hover:bg-[#DBEAFE] dark:hover:bg-[rgba(37,99,235,0.15)] p-0.5 rounded transition-colors"
               >
                 <X className="w-3 h-3" />
               </button>
             </div>
           )}
           <div className="flex gap-4 pt-2">
-            <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
               {user ? getAuthorInitials(user as any) : "U"}
             </div>
-            <div className="flex-1 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus-within:bg-white dark:focus-within:bg-gray-900 focus-within:border-[#0052CC] transition-colors p-4 cursor-text relative">
-            <div className="mb-4 text-sm relative z-50">
+            <div className="flex-1 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
+            <div className="mb-4 text-[13px] relative z-50">
               <style
                 dangerouslySetInnerHTML={{
                   __html: `
                     .tc-m__control{min-height:36px}
                     .tc-m__input{width:100%;outline:none;border:none;background:transparent;color:inherit;font-family:inherit;font-size:inherit}
-                    .tc-m__suggestions__list{background:#F4F5F7;border:1px solid #DFE1E6;border-radius:8px;box-shadow:0 4px 6px -1px rgba(0,0,0,.1);overflow:hidden;z-index:100;position:absolute;min-width:200px;margin-top:4px}
-                    .tc-m__suggestions__item{padding:8px 12px;cursor:pointer;color:#172B4D}
-                    .tc-m__suggestions__item--focused{background:#EBECF0}
+                    .tc-m__suggestions__list{background:#F9F9F8;border:1px solid #EAEAEA;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);overflow:hidden;z-index:100;position:absolute;min-width:200px;margin-top:4px}
+                    .tc-m__suggestions__item{padding:8px 12px;cursor:pointer;color:#111111;font-size:13px}
+                    .tc-m__suggestions__item--focused{background:#F0F0EE}
 
-                    .dark .tc-m__suggestions__list{background:#1F2937;border-color:#374151}
-                    .dark .tc-m__suggestions__item{color:#F3F4F6}
-                    .dark .tc-m__suggestions__item--focused{background:#374151}
+                    .dark .tc-m__suggestions__list{background:#252525;border-color:rgba(255,255,255,0.1)}
+                    .dark .tc-m__suggestions__item{color:#E8E8E7}
+                    .dark .tc-m__suggestions__item--focused{background:#2A2A2A}
                   `,
                 }}
               />
@@ -513,7 +510,7 @@ export default function TaskComments({
                   }
                 }}
                 placeholder="Add a comment... (@ to mention)"
-                className="tc-m w-full bg-transparent text-gray-900 dark:text-white text-sm"
+                className="tc-m w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[13px]"
                 a11ySuggestionsListLabel="Suggested mentions"
               >
                 <Mention
@@ -526,15 +523,15 @@ export default function TaskComments({
                     highlightedDisplay,
                   ) => (
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                      <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[11px] font-bold shrink-0">
                         {suggestion.display?.toString().charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-sm text-gray-900 dark:text-white">
+                      <span className="text-[13px] text-[#111111] dark:text-[#E8E8E7]">
                         {highlightedDisplay}
                       </span>
                     </div>
                   )}
-                  className="text-[#0052CC] bg-[#E9F2FF] dark:text-[#4C9AFF] dark:bg-[#0052CC]/20"
+                  className="text-[#2563EB] bg-[#EFF6FF] dark:text-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)]"
                   displayTransform={(id, display) => `@${display}`}
                 />
               </MentionsInput>
@@ -546,13 +543,13 @@ export default function TaskComments({
                   onClick={() =>
                     setCommentInput("Who is working on this...?")
                   }
-                  className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors"
+                  className="text-[11px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer bg-[#F9F9F8] dark:bg-[#252525] px-3 py-1.5 rounded-[4px] transition-colors"
                 >
                   Who is working on this...?
                 </span>
                 <span
                   onClick={() => setCommentInput("Status update...")}
-                  className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white cursor-pointer font-medium bg-white dark:bg-gray-700 px-3 py-1.5 rounded transition-colors"
+                  className="text-[11px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer bg-[#F9F9F8] dark:bg-[#252525] px-3 py-1.5 rounded-[4px] transition-colors"
                 >
                   Status update...
                 </span>
@@ -564,7 +561,7 @@ export default function TaskComments({
                 <button
                   onClick={handleSubmit}
                   disabled={createMutation.isPending}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-[#0052CC] hover:bg-[#0065FF] text-white text-xs font-medium rounded transition-colors disabled:opacity-60"
+                  className="flex items-center gap-1 px-3 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[11px] font-medium rounded-[4px] transition-colors disabled:opacity-60"
                 >
                   {createMutation.isPending && (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -573,17 +570,17 @@ export default function TaskComments({
                 </button>
                 <button
                   onClick={() => setCommentInput("")}
-                  className="px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-xs font-medium rounded transition-colors"
+                  className="px-3 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[11px] font-medium rounded-[4px] transition-colors"
                 >
                   Cancel
                 </button>
               </div>
             )}
 
-            <div className="mt-5 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-3">
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+            <div className="mt-5 flex items-center justify-between border-t border-[#EAEAEA] dark:border-white/[0.06] pt-3">
+              <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
                 Pro tip: press{" "}
-                <span className="font-bold bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded border border-gray-200 dark:border-gray-700">
+                <span className="font-bold bg-[#F9F9F8] dark:bg-[#252525] px-1.5 py-0.5 rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08]">
                   Enter
                 </span>{" "}
                 to comment
@@ -594,14 +591,13 @@ export default function TaskComments({
         </>
       )}
 
-      {/* Comment list */}
       {commentTree.length > 0 ? (
         <div className="space-y-2 mt-2">
           {commentTree.map((node) => renderCommentNode(node, 0))}
         </div>
       ) : (
         !isLoadingComments && (
-          <div className="rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] px-4 py-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
             No comments yet.
           </div>
         )

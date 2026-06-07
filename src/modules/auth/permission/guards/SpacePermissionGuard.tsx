@@ -33,9 +33,9 @@ const SpacePermissionGuard: React.FC<SpacePermissionGuardProps> = ({
     return (
       <>
         {fallback ?? (
-          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+          <div className="flex flex-col items-center justify-center py-16 text-[#ABABAB] dark:text-[#6B6B6B]">
             <ShieldX className="w-12 h-12 mb-3" />
-            <p className="text-sm font-medium">You do not have permission to access this content</p>
+            <p className="text-[13px] font-medium">You do not have permission to access this content</p>
           </div>
         )}
       </>

@@ -42,7 +42,7 @@ const LockoutAlert: React.FC<LockoutAlertProps> = ({ lockoutInfo, className = ''
 
   return (
     <div
-      className={`rounded-xl border p-4 ${
+      className={`rounded-[8px] border p-4 ${
         lockoutInfo.isLocked
           ? 'bg-red-50 border-red-200 text-red-700'
           : 'bg-amber-50 border-amber-200 text-amber-700'

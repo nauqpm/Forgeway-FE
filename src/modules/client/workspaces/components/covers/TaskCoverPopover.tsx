@@ -148,20 +148,20 @@ export default function TaskCoverPopover({
   };
 
   return (
-    <div className="w-[336px] overflow-hidden rounded-lg border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl">
-      <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
-        <h3 className="text-sm font-semibold">Select a cover</h3>
+    <div className="w-[336px] overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+      <div className="flex items-center justify-between border-b border-[#EAEAEA] dark:border-white/[0.06] px-3 py-2">
+        <h3 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Select a cover</h3>
         <button
           type="button"
           onClick={onRequestClose}
-          className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+          className="rounded-[4px] p-1 text-[#787774] dark:text-[#9B9A97] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#111111] dark:hover:text-[#E8E8E7]"
           aria-label="Close cover picker"
         >
           <X className="h-4 w-4" />
         </button>
       </div>
 
-      <div className="flex border-b border-slate-800 px-2 pt-2">
+      <div className="flex border-b border-[#EAEAEA] dark:border-white/[0.06] px-2 pt-2">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -169,10 +169,10 @@ export default function TaskCoverPopover({
             onClick={() => {
               setActiveTab(tab);
             }}
-            className={`h-9 flex-1 rounded-t-md text-sm font-medium transition-colors ${
+            className={`h-9 flex-1 rounded-t-[6px] text-[13px] font-medium transition-colors ${
               activeTab === tab
-                ? "bg-slate-800 text-white"
-                : "text-slate-400 hover:bg-slate-800/70 hover:text-slate-100"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
             }`}
           >
             {getTabLabel(tab)}
@@ -183,14 +183,14 @@ export default function TaskCoverPopover({
       <div className="max-h-[360px] overflow-y-auto p-3">
         {activeTab === "colors" && (
           <div>
-            <div className="grid grid-cols-11 gap-1.5 rounded-lg border border-slate-800 bg-slate-950/35 p-2">
+            <div className="grid grid-cols-11 gap-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-2">
               {SOLID_COLORS.map((color) => (
                 <button
                   key={color}
                   type="button"
                   disabled={disabled || saving}
                   onClick={() => onApplyCover({ type: "color", color, source: "system" })}
-                  className="relative h-6 w-6 rounded-md border border-white/10 transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="relative h-6 w-6 rounded-[4px] border border-white/10 transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
                   style={{ background: color }}
                   aria-label={`Set cover ${color}`}
                 >
@@ -212,8 +212,8 @@ export default function TaskCoverPopover({
                   type="button"
                   disabled={disabled || saving}
                   onClick={() => onApplyCover({ type: "image", imageUrl, source: "unsplash" })}
-                  className={`relative h-16 overflow-hidden rounded-md border transition ${
-                    activeImageUrl === imageUrl ? "border-blue-400 ring-2 ring-blue-400/40" : "border-slate-700 hover:border-slate-500"
+                  className={`relative h-16 overflow-hidden rounded-[6px] border transition ${
+                    activeImageUrl === imageUrl ? "border-[#2563EB] ring-2 ring-[#2563EB]/30" : "border-[#EAEAEA] dark:border-white/[0.08] hover:border-[#2563EB]/40"
                   }`}
                   aria-label="Set image cover"
                 >
@@ -226,23 +226,23 @@ export default function TaskCoverPopover({
                 </button>
               ))}
             </div>
-            <div className="flex items-center justify-between gap-2 border-t border-slate-800 pt-3">
+            <div className="flex items-center justify-between gap-2 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-3">
               <button
                 type="button"
                 disabled={imagePage === 1}
                 onClick={() => setImagePage((page) => Math.max(1, page - 1))}
-                className="h-8 rounded-md px-2.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-45"
+                className="h-8 rounded-[6px] px-2.5 text-[11px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Previous
               </button>
-              <span className="text-xs text-slate-400">
+              <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
                 Page {imagePage} of {imagePageCount}
               </span>
               <button
                 type="button"
                 disabled={imagePage === imagePageCount}
                 onClick={() => setImagePage((page) => Math.min(imagePageCount, page + 1))}
-                className="h-8 rounded-md px-2.5 text-xs font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-45"
+                className="h-8 rounded-[6px] px-2.5 text-[11px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Next
               </button>
@@ -252,12 +252,12 @@ export default function TaskCoverPopover({
 
       </div>
 
-      <div className="sticky bottom-0 border-t border-slate-800 bg-slate-900 p-3 text-center">
+      <div className="sticky bottom-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3 text-center">
         <button
           type="button"
           disabled={disabled || saving || !cover}
           onClick={onRemoveCover}
-          className="inline-flex h-8 items-center justify-center rounded-md px-3 text-sm font-medium text-slate-200 transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-8 items-center justify-center rounded-[6px] px-3 text-[13px] font-medium text-[#9F2F2D] dark:text-[#F87171] transition-colors hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           Remove cover
         </button>
@@ -275,10 +275,10 @@ export function TaskCoverMenuRow({
     <button
       type="button"
       onMouseEnter={onMouseEnter}
-      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-gray-200 transition-colors hover:bg-gray-800"
+      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
     >
       <span>Select cover</span>
-      <ChevronRight className="h-4 w-4 text-gray-400" />
+      <ChevronRight className="h-4 w-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
     </button>
   );
 }

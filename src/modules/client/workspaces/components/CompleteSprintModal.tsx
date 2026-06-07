@@ -22,6 +22,8 @@ interface PreviewData {
   incompleteTaskList: any[];
 }
 
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[13px] outline-none transition-colors";
+
 export default function CompleteSprintModal({
   isOpen,
   onClose,
@@ -68,74 +70,63 @@ export default function CompleteSprintModal({
   );
 
   return (
-    <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-700">
-          <h3 className="font-bold text-gray-900 dark:text-white text-lg">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div
+        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-lg border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Complete Sprint: {sprint.name}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {loading ? (
-          <div className="p-10 flex flex-col items-center justify-center space-y-3">
-            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Loading sprint preview...
-            </p>
+          <div className="p-12 flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-6 h-6 text-[#2563EB] animate-spin" />
+            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">Loading sprint preview...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <form onSubmit={handleSubmit} className="p-5 space-y-4">
             {preview && (
               <>
-                <div className="bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Total tasks:</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">
-                      {preview.totalTasks}
-                    </span>
+                <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4 space-y-2.5">
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="text-[#787774] dark:text-[#9B9A97]">Total tasks:</span>
+                    <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{preview.totalTasks}</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-green-600 dark:text-green-400 font-medium">
-                      Completed (Done):
-                    </span>
-                    <span className="font-bold text-green-600 dark:text-green-400">
-                      {preview.completedTasks}
-                    </span>
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="text-[#346538] dark:text-[#4ADE80] font-medium">Completed (Done):</span>
+                    <span className="font-bold text-[#346538] dark:text-[#4ADE80]">{preview.completedTasks}</span>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-amber-600 dark:text-amber-400 font-medium">
-                      Incomplete:
-                    </span>
-                    <span className="font-bold text-amber-600 dark:text-amber-400">
-                      {preview.incompleteTasks}
-                    </span>
+                  <div className="flex items-center justify-between text-[13px]">
+                    <span className="text-[#956400] dark:text-[#FBB040] font-medium">Incomplete:</span>
+                    <span className="font-bold text-[#956400] dark:text-[#FBB040]">{preview.incompleteTasks}</span>
                   </div>
                 </div>
 
                 {preview.incompleteTasks > 0 ? (
                   <div className="space-y-3">
-                    <div className="flex gap-2 text-amber-600 dark:text-amber-400">
-                      <AlertTriangle className="w-5 h-5 flex-shrink-0" />
-                      <p className="text-xs">
-                        There are {preview.incompleteTasks} incomplete tasks in this sprint.
-                        Choose where to move them:
+                    <div className="flex gap-2 text-[#956400] dark:text-[#FBB040]">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <p className="text-[13px]">
+                        There are {preview.incompleteTasks} incomplete tasks. Choose where to move them:
                       </p>
                     </div>
-
                     <div>
-                      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                      <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
                         Move incomplete tasks to
                       </label>
                       <select
                         value={moveToSprintId}
                         onChange={(e) => setMoveToSprintId(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
+                        className={inputCls}
                       >
                         <option value="">Backlog</option>
                         {planningSprints.map((ps) => (
@@ -147,44 +138,32 @@ export default function CompleteSprintModal({
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-150 dark:border-green-900 rounded-xl p-4 flex items-start gap-3">
-                    <div className="p-1 bg-green-500 rounded-full text-white">
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="3"
-                          d="M5 13l4 4L19 7"
-                        />
+                  <div className="bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.15)] border border-[#C3DFC1] dark:border-[rgba(52,101,56,0.3)] rounded-[8px] p-4 flex items-start gap-3">
+                    <div className="p-1 bg-[#346538] rounded-full text-white flex-shrink-0">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-sm font-semibold text-green-800 dark:text-green-300">
-                        Great!
-                      </h4>
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
-                        All tasks in this sprint are complete.
+                      <h4 className="text-[13px] font-semibold text-[#346538] dark:text-[#4ADE80]">All tasks complete</h4>
+                      <p className="text-[11px] text-[#346538]/80 dark:text-[#4ADE80]/70 mt-0.5">
+                        All tasks in this sprint are done.
                       </p>
                     </div>
                   </div>
                 )}
 
-                <div className="flex flex-col-reverse gap-3 pt-3 sm:flex-row sm:justify-end">
+                <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+                    className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
                   >
                     Complete sprint
                   </button>

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Loader2 } from "lucide-react";
 
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import { taskService, TaskActivity } from "../services/taskService";
 
 type TaskActivityHistoryProps = {
@@ -44,9 +46,62 @@ const TYPE_MESSAGES: Record<string, string> = {
 
 const PAGE_LIMIT = 20;
 
+type WorkspaceMember = {
+  userId?:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        fullName?: string;
+        email?: string;
+      };
+};
+
 const formatValue = (value: unknown) => {
   if (value === null || value === undefined || value === "") return "None";
   return String(value);
+};
+
+const isAssigneeActivity = (activity: TaskActivity) =>
+  activity.type === "ASSIGNEE_CHANGED" ||
+  activity.metadata?.field === "assigneeId" ||
+  activity.metadata?.field === "assignee";
+
+const getMemberDisplayName = (member: WorkspaceMember) => {
+  if (!member.userId || typeof member.userId === "string") return null;
+  return member.userId.fullName || member.userId.email || null;
+};
+
+const getMemberIds = (member: WorkspaceMember) => {
+  if (!member.userId) return [];
+  if (typeof member.userId === "string") return [member.userId];
+  return [member.userId._id, member.userId.id].filter(Boolean) as string[];
+};
+
+const buildMemberNameMap = (members: WorkspaceMember[] = []) => {
+  const map = new Map<string, string>();
+
+  members.forEach((member) => {
+    const displayName = getMemberDisplayName(member);
+    if (!displayName) return;
+
+    getMemberIds(member).forEach((id) => {
+      map.set(id, displayName);
+    });
+  });
+
+  return map;
+};
+
+const formatActivityValue = (
+  activity: TaskActivity,
+  value: unknown,
+  memberNameMap: Map<string, string>,
+) => {
+  const fallback = formatValue(value);
+  if (!isAssigneeActivity(activity) || fallback === "None") return fallback;
+
+  return memberNameMap.get(String(value)) ?? fallback;
 };
 
 const formatDateTime = (value?: string) => {
@@ -114,6 +169,18 @@ export default function TaskActivityHistory({
     staleTime: 30_000,
   });
 
+  const { data: members = [] } = useQuery({
+    queryKey: ["workspaceMembers", workspaceId],
+    queryFn: async () => {
+      const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
+      return (response.data?.data ?? response.data ?? []) as WorkspaceMember[];
+    },
+    enabled: Boolean(workspaceId),
+    staleTime: 60_000,
+  });
+
+  const memberNameMap = buildMemberNameMap(members);
+
   // Accumulate pages — replace on page 1 (initial or task change), append on subsequent pages
   useEffect(() => {
     if (!data) return;
@@ -131,7 +198,7 @@ export default function TaskActivityHistory({
 
   if (isFetching && page === 1 && allActivities.length === 0) {
     return (
-      <div className="flex items-center gap-2 pt-2 text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex items-center gap-2 pt-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading history...
       </div>
@@ -140,7 +207,7 @@ export default function TaskActivityHistory({
 
   if (error && allActivities.length === 0) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+      <div className="rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-4 py-3 text-[13px] text-[#9F2F2D] dark:text-[#F87171]">
         Could not load task history.
       </div>
     );
@@ -148,7 +215,7 @@ export default function TaskActivityHistory({
 
   if (allActivities.length === 0 && !isFetching) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-dashed border-gray-200 px-4 py-5 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+      <div className="flex items-center gap-2 rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] px-4 py-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
         <Clock className="h-4 w-4" />
         No history recorded yet.
       </div>
@@ -165,7 +232,7 @@ export default function TaskActivityHistory({
 
         return (
           <div key={activity.id} className="flex gap-4">
-            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-indigo-600 text-xs font-bold text-white">
+            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-[11px] font-bold text-white">
               {activity.actor?.avatar ? (
                 <img
                   src={activity.actor.avatar}
@@ -180,26 +247,26 @@ export default function TaskActivityHistory({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-gray-900 dark:text-white">
+                <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   {actorName}
                 </span>
-                <span className="text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
                   {getActivityMessage(activity)}
                 </span>
                 {activity.createdAt && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
                     {formatDateTime(activity.createdAt)}
                   </span>
                 )}
               </div>
               {hasChange && (
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="rounded bg-gray-100 px-2 py-1 font-mono text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                    {formatValue(activity.metadata?.from)}
+                  <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-1 font-mono text-[11px] text-[#787774] dark:text-[#9B9A97]">
+                    {formatActivityValue(activity, activity.metadata?.from, memberNameMap)}
                   </span>
-                  <span className="text-gray-400">-&gt;</span>
-                  <span className="rounded bg-indigo-50 px-2 py-1 font-mono font-semibold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
-                    {formatValue(activity.metadata?.to)}
+                  <span className="text-[#ABABAB] dark:text-[#6B6B6B]">→</span>
+                  <span className="rounded-[4px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] px-2 py-1 font-mono font-semibold text-[11px] text-[#1F6C9F] dark:text-[#93C5FD]">
+                    {formatActivityValue(activity, activity.metadata?.to, memberNameMap)}
                   </span>
                 </div>
               )}
@@ -214,7 +281,7 @@ export default function TaskActivityHistory({
             type="button"
             onClick={handleLoadMore}
             disabled={isFetching}
-            className="flex items-center gap-2 text-sm font-medium text-indigo-600 hover:text-indigo-700 disabled:opacity-60 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+            className="flex items-center gap-2 text-[13px] font-medium text-[#2563EB] dark:text-[#3B82F6] disabled:opacity-60 transition-colors"
           >
             {isFetching && <Loader2 className="h-4 w-4 animate-spin" />}
             {isFetching

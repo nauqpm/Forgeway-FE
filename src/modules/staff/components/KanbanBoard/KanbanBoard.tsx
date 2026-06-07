@@ -166,14 +166,14 @@ function ColumnComponent({ column }: { column: Column }) {
   return (
     <div
       ref={setNodeRef}
-      className="bg-gray-100 rounded-xl p-3 flex flex-col min-h-[500px]"
+      className="bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] p-3 flex flex-col min-h-[500px]"
     >
       <div className="flex items-center justify-between mb-3 px-1">
-        <h2 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+        <h2 className="text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wide">
           {column.title}
         </h2>
 
-        <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">
+        <span className="text-xs bg-[#F7F6F3] dark:bg-white/8 text-[#787774] dark:text-[#9B9A97] px-2 py-0.5 rounded-[4px]">
           {column.tasks.length}
         </span>
       </div>
@@ -189,7 +189,7 @@ function ColumnComponent({ column }: { column: Column }) {
         </div>
       </SortableContext>
 
-      <button className="mt-3 flex items-center gap-2 text-sm text-gray-500 hover:bg-gray-200 rounded-lg px-2 py-1 transition">
+      <button className="mt-3 flex items-center gap-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] px-2 py-1 transition">
         + Create
       </button>
     </div>
@@ -206,9 +206,9 @@ function TaskCard({ task, isOverlay }: { task: Task; isOverlay?: boolean }) {
   };
 
   const getPriorityColor = () => {
-    if (task.priority === "high") return "text-red-600 border-red-300";
-    if (task.priority === "medium") return "text-orange-600 border-orange-300";
-    return "text-green-600 border-green-300";
+    if (task.priority === "high") return "text-[#9F2F2D] dark:text-[#F87171] border-[#9F2F2D]/30 dark:border-[#F87171]/30 bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)]";
+    if (task.priority === "medium") return "text-[#956400] dark:text-[#F59E0B] border-[#956400]/30 dark:border-[#F59E0B]/30 bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)]";
+    return "text-[#346538] dark:text-[#4ADE80] border-[#346538]/30 dark:border-[#4ADE80]/30 bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)]";
   };
 
   return (
@@ -217,13 +217,13 @@ function TaskCard({ task, isOverlay }: { task: Task; isOverlay?: boolean }) {
       style={!isOverlay ? style : undefined}
       {...attributes}
       {...listeners}
-      className={`bg-white rounded-lg border p-3 shadow-sm hover:shadow-md transition ${
+      className={`bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 hover:border-[#2563EB]/20 transition ${
         isOverlay
           ? "opacity-90 scale-105"
           : "cursor-grab active:cursor-grabbing"
       }`}
     >
-      <p className="text-sm font-medium text-gray-900 mb-2">{task.title}</p>
+      <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] mb-2">{task.title}</p>
 
       <div
         className={`inline-flex items-center gap-1 border px-2 py-0.5 rounded mb-2 ${getPriorityColor()}`}
@@ -231,10 +231,10 @@ function TaskCard({ task, isOverlay }: { task: Task; isOverlay?: boolean }) {
         May 3, 2026
       </div>
 
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-[#787774] dark:text-[#9B9A97]">
         <span>{task.id}</span>
 
-        <div className="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-[10px] font-medium">
+        <div className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-white/8 flex items-center justify-center text-[10px] font-medium">
           TN
         </div>
       </div>

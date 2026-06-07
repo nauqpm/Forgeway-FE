@@ -78,11 +78,11 @@ export default function TaskLabelsField({
         className={`group flex min-h-[32px] w-full min-w-0 items-center gap-2 rounded p-1 text-left transition-colors ${
           disabled
             ? "cursor-default"
-            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+            : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         }`}
       >
         {labels.length === 0 ? (
-          <span className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
+          <span className="flex items-center gap-1.5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
             <Tag className="h-3.5 w-3.5" />
             None
           </span>
@@ -92,8 +92,8 @@ export default function TaskLabelsField({
               <span
                 key={label.id}
                 title={label.name}
-                className={`max-w-full truncate rounded bg-sky-50 px-2 py-0.5 font-semibold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 ${
-                  compact ? "text-[11px]" : "text-xs"
+                className={`max-w-full truncate rounded-[4px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] px-2 py-0.5 font-semibold text-[#1F6C9F] dark:text-[#93C5FD] ${
+                  compact ? "text-[11px]" : "text-[11px]"
                 }`}
               >
                 {label.name}
@@ -102,7 +102,7 @@ export default function TaskLabelsField({
           </span>
         )}
         {!disabled && (
-          <Plus className="ml-auto h-3.5 w-3.5 shrink-0 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
+          <Plus className="ml-auto h-3.5 w-3.5 shrink-0 text-[#ABABAB] dark:text-[#6B6B6B] opacity-0 transition-opacity group-hover:opacity-100" />
         )}
       </button>
 

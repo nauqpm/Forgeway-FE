@@ -65,10 +65,23 @@ export const useTaskHandlers = ({
     );
     taskService.updateBoardTask(workspaceId, id, updates)
       .then((savedIssue) => {
+        const nextIssue = (() => {
+          const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
+          return isObjectId && updates.status
+            ? { ...savedIssue, status: updates.status as string }
+            : savedIssue;
+        })();
+
         setIssues((current) =>
-          current.map((issue) => issue.id === savedIssue.id ? savedIssue : issue)
+          current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
         );
-        queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+        queryClient.setQueriesData<Issue[]>(
+          { queryKey: ["tasks", workspaceId] },
+          (current) =>
+            Array.isArray(current)
+              ? current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
+              : current,
+        );
         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
         if (savedIssue.key) {
           queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
@@ -76,7 +89,7 @@ export const useTaskHandlers = ({
       })
       .catch((error) => {
         setIssues(issues);
-        toast.error(error?.response?.data?.message || "Khong cap nhat duoc task");
+        toast.error(error?.response?.data?.message || "Could not update task");
       });
   };
 
@@ -104,7 +117,7 @@ export const useTaskHandlers = ({
       });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong tao duoc task");
+      toast.error(error?.response?.data?.message || "Could not create task");
     } finally {
       isCreatingRef.current = false;
     }
@@ -114,7 +127,7 @@ export const useTaskHandlers = ({
     updatedIssue: Issue
   ) => {
     if (!updatedIssue.id) {
-      toast.error("Khong tim thay task id");
+      toast.error("Task ID not found");
       return;
     }
 
@@ -140,7 +153,7 @@ export const useTaskHandlers = ({
         queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong cap nhat duoc task");
+      toast.error(error?.response?.data?.message || "Could not update task");
     }
   };
 
@@ -169,7 +182,34 @@ export const useTaskHandlers = ({
       setIssues(prev => [...prev, issue]);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Loi khi tao task");
+      toast.error(error?.response?.data?.message || "Could not create task");
+    } finally {
+      isCreatingRef.current = false;
+    }
+  };
+
+  const handleCreateTaskFromList = async (task: {
+    title: string;
+    type?: string;
+    assigneeId?: string | null;
+    dueDate?: string | null;
+  }) => {
+    if (!task.title.trim() || isCreatingRef.current) return;
+    isCreatingRef.current = true;
+    try {
+      const issue = await taskService.createBoardTask(workspaceId, {
+        title: task.title.trim(),
+        type: task.type || 'Task',
+        priority: 'Medium',
+        status: 'To Do',
+        sprintId: null,
+        assigneeId: task.assigneeId || '',
+        dueDate: task.dueDate || undefined,
+      });
+      setIssues(prev => [...prev, issue]);
+      queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Could not create task');
     } finally {
       isCreatingRef.current = false;
     }
@@ -203,6 +243,7 @@ export const useTaskHandlers = ({
     handleUpdateIssueDate,
     updateIssueDirectly,
     handleQuickCreateTask,
+    handleCreateTaskFromList,
     handleQuickCreateCalendarTask,
   };
 };

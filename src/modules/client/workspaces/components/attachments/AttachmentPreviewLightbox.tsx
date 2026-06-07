@@ -64,7 +64,7 @@ export default function AttachmentPreviewLightbox({
 
     if (error || !objectUrl) {
       return (
-        <div className="flex h-full items-center justify-center px-6 text-center text-sm text-gray-300">
+        <div className="flex h-full items-center justify-center px-6 text-center text-[13px] text-white/60">
           {error || "Preview is not available."}
         </div>
       );
@@ -82,7 +82,7 @@ export default function AttachmentPreviewLightbox({
 
     if (activeAttachment.mimeType === "text/plain") {
       return (
-        <pre className="h-full w-full overflow-auto rounded bg-white p-4 text-left text-sm text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+        <pre className="h-full w-full overflow-auto rounded-[6px] bg-white p-4 text-left text-sm text-[#111111] dark:bg-[#252525] dark:text-[#E8E8E7]">
           {textContent}
         </pre>
       );
@@ -102,7 +102,7 @@ export default function AttachmentPreviewLightbox({
       <div className="flex h-14 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{activeAttachment.originalName}</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-[#9B9A97]">
             {activeIndex + 1} of {attachments.length}
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function AttachmentPreviewLightbox({
           <button
             type="button"
             onClick={() => onDownload(activeAttachment)}
-            className="rounded p-2 text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+            className="rounded-[6px] p-2 text-[#9B9A97] transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Download attachment"
           >
             <Download className="h-4 w-4" />
@@ -118,7 +118,7 @@ export default function AttachmentPreviewLightbox({
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-2 text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+            className="rounded-[6px] p-2 text-[#9B9A97] transition-colors hover:bg-white/10 hover:text-white"
             aria-label="Close preview"
           >
             <X className="h-5 w-5" />
@@ -132,7 +132,7 @@ export default function AttachmentPreviewLightbox({
           <button
             type="button"
             onClick={() => onSelect(attachments[activeIndex - 1])}
-            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-[8px] bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
             aria-label="Previous attachment"
           >
             <ChevronLeft className="h-6 w-6" />
@@ -142,7 +142,7 @@ export default function AttachmentPreviewLightbox({
           <button
             type="button"
             onClick={() => onSelect(attachments[activeIndex + 1])}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-[8px] bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
             aria-label="Next attachment"
           >
             <ChevronRight className="h-6 w-6" />

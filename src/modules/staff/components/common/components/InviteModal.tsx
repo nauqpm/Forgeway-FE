@@ -3,13 +3,12 @@ import { X, Link as LinkIcon, Check, Mail, Briefcase, MessageSquare, AlertCircle
 import CreatableSelect from 'react-select/creatable';
 import { toast } from 'react-hot-toast';
 
-// --- MOCK DATA ---
 const EXISTING_USERS = [
-  { id: '1', name: 'Alex Nguyen', email: 'nva@company.com', avatar: 'N', color: 'bg-indigo-500' },
-  { id: '2', name: 'Taylor Tran', email: 'ttb@company.com', avatar: 'T', color: 'bg-emerald-500' },
-  { id: '3', name: 'Chris Le', email: 'lvc@company.com', avatar: 'L', color: 'bg-blue-500' },
-  { id: '4', name: 'Maria Garcia', email: 'maria@company.com', avatar: 'M', color: 'bg-pink-500' },
-  { id: '5', name: 'John Doe', email: 'john@company.com', avatar: 'J', color: 'bg-amber-500' },
+  { id: '1', name: 'Alex Nguyen', email: 'nva@company.com', avatar: 'N', color: 'bg-[#2563EB]' },
+  { id: '2', name: 'Taylor Tran', email: 'ttb@company.com', avatar: 'T', color: 'bg-[#4ADE80]' },
+  { id: '3', name: 'Chris Le', email: 'lvc@company.com', avatar: 'L', color: 'bg-[#3B82F6]' },
+  { id: '4', name: 'Maria Garcia', email: 'maria@company.com', avatar: 'M', color: 'bg-[#F472B6]' },
+  { id: '5', name: 'John Doe', email: 'john@company.com', avatar: 'J', color: 'bg-[#F59E0B]' },
 ];
 
 const QUICK_SUGGESTIONS = [
@@ -36,7 +35,6 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
   const [isCopied, setIsCopied] = useState(false);
   const [suggestions, setSuggestions] = useState(QUICK_SUGGESTIONS);
 
-  // Reset state when modal opens/closes
   useEffect(() => {
     if (!isOpen) {
       setSelectedOptions([]);
@@ -66,16 +64,10 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
   };
 
   const handleQuickAdd = (user: typeof QUICK_SUGGESTIONS[0]) => {
-    const newOption = {
-      value: user.id,
-      label: `${user.name} (${user.email})`,
-      isFixed: false,
-      user
-    };
+    const newOption = { value: user.id, label: `${user.name} (${user.email})`, isFixed: false, user };
     if (!selectedOptions.find(o => o.value === user.id)) {
       setSelectedOptions([...selectedOptions, newOption]);
     }
-    // Remove from suggestions
     setSuggestions(suggestions.filter(s => s.id !== user.id));
   };
 
@@ -84,18 +76,14 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
     setIsSubmitting(true);
 
     try {
-      // Mock getting the reCAPTCHA token
-      const mockCaptchaToken = 'mock_recaptcha_token_12345';
-      
       const payload = {
         users: selectedOptions.map(opt => opt.value),
         roleId: role,
-        captchaToken: mockCaptchaToken
+        captchaToken: 'mock_recaptcha_token_12345'
       };
 
-      // Mock API Call
       console.log('Sending invitation to API for project:', projectId, 'Payload:', payload);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network latency
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
       toast.success('Invitations sent successfully!');
       onClose();
@@ -106,9 +94,8 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
     }
   };
 
-  // Convert existing users to react-select options format
   const selectOptions = EXISTING_USERS.map(u => ({
-    value: u.email, // using email as ID for simplcity if they are new
+    value: u.email,
     label: `${u.name} (${u.email})`,
     user: u
   }));
@@ -116,61 +103,60 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
   const customStyles = {
     control: (base: any, state: any) => ({
       ...base,
-      minHeight: '44px',
-      borderColor: state.isFocused ? '#6366f1' : '#d1d5db',
-      boxShadow: state.isFocused ? '0 0 0 1px #6366f1' : 'none',
-      '&:hover': {
-        borderColor: state.isFocused ? '#6366f1' : '#9ca3af'
-      },
-      borderRadius: '0.5rem'
+      minHeight: '36px',
+      borderColor: state.isFocused ? '#2563EB' : '#EAEAEA',
+      boxShadow: 'none',
+      backgroundColor: state.isFocused ? '#ffffff' : '#ffffff',
+      '&:hover': { borderColor: state.isFocused ? '#2563EB' : '#ABABAB' },
+      borderRadius: '6px',
+      fontSize: '13px',
     }),
     multiValue: (base: any) => ({
       ...base,
-      backgroundColor: '#f3f4f6',
-      borderRadius: '0.375rem',
+      backgroundColor: '#EFF6FF',
+      borderRadius: '4px',
     }),
     multiValueLabel: (base: any) => ({
       ...base,
-      color: '#374151',
-      fontSize: '0.875rem',
+      color: '#1E40AF',
+      fontSize: '11px',
       fontWeight: 500,
-      padding: '2px 6px',
+      padding: '2px 4px',
     }),
     multiValueRemove: (base: any) => ({
       ...base,
-      color: '#6b7280',
-      ':hover': {
-        backgroundColor: '#e5e7eb',
-        color: '#ef4444',
-      },
+      color: '#93C5FD',
+      ':hover': { backgroundColor: '#DBEAFE', color: '#1E40AF' },
+    }),
+    placeholder: (base: any) => ({
+      ...base,
+      color: '#ABABAB',
+      fontSize: '13px',
     }),
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      {/* Modal Container */}
-      <div className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Add people to this space</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div
+        className="w-full max-w-lg bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden flex flex-col max-h-[90vh]"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#EAEAEA] dark:border-white/8">
+          <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Add people to this space</h2>
           <button
             onClick={onClose}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            className="p-1.5 text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6 overflow-y-auto flex-1">
-          <div className="space-y-6">
-            
-            {/* Input & Role Selector Group */}
+        <div className="p-5 overflow-y-auto flex-1">
+          <div className="space-y-5">
             <div className="flex flex-col sm:flex-row gap-3 items-start">
               <div className="flex-1 w-full">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                  Names or emails <span className="text-red-500">*</span>
+                <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
+                  Names or emails <span className="text-[#9F2F2D]">*</span>
                 </label>
                 <CreatableSelect
                   isMulti
@@ -186,97 +172,92 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
               </div>
 
               <div className="w-full sm:w-32">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role</label>
+                <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Role</label>
                 <div className="relative">
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full appearance-none bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block p-2.5 h-[44px]"
+                    className="w-full appearance-none px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] text-[13px] outline-none focus:border-[#2563EB] h-[36px] transition-colors"
                   >
                     {ROLES.map(r => (
                       <option key={r.value} value={r.value}>{r.label}</option>
                     ))}
                   </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#ABABAB]">
+                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
+                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd" />
                     </svg>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Suggestions */}
             {suggestions.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">Quick Suggestions</p>
+                <p className="text-[11px] font-medium text-[#ABABAB] dark:text-[#6B6B6B] mb-2 uppercase tracking-wider">Quick Suggestions</p>
                 <div className="flex flex-wrap gap-2">
                   {suggestions.map(user => (
                     <button
                       key={user.id}
                       onClick={() => handleQuickAdd(user)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium transition-colors border border-indigo-100"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] hover:bg-[#DBEAFE] dark:hover:bg-[rgba(37,99,235,0.2)] text-[#1F6C9F] dark:text-[#93C5FD] rounded-[6px] text-[11px] font-medium transition-colors border border-[#2563EB]/20"
                     >
-                      <span className="text-indigo-600">+</span> {user.name}
+                      <span>+</span> {user.name}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Integrations (UI only as per MVP assumption) */}
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Or invite from integrations</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm">
-                  <Mail className="w-4 h-4 text-red-500" /> Google
+            <div className="pt-3 border-t border-[#EAEAEA] dark:border-white/8">
+              <p className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-3">Or invite from integrations</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
+                  <Mail className="w-3.5 h-3.5 text-[#F87171]" /> Google
                 </button>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm">
-                  <MessageSquare className="w-4 h-4 text-purple-600" /> Slack
+                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
+                  <MessageSquare className="w-3.5 h-3.5 text-[#A855F7]" /> Slack
                 </button>
-                <button className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all shadow-sm">
-                  <Briefcase className="w-4 h-4 text-blue-600" /> Microsoft
+                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
+                  <Briefcase className="w-3.5 h-3.5 text-[#2563EB]" /> Microsoft
                 </button>
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center w-full sm:w-auto justify-between sm:justify-start gap-4">
-            <button 
+        <div className="px-5 py-4 border-t border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center w-full sm:w-auto justify-between sm:justify-start gap-3">
+            <button
               onClick={handleCopyLink}
-              className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="flex items-center gap-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
             >
-              {isCopied ? <Check className="w-4 h-4 text-green-600" /> : <LinkIcon className="w-4 h-4" />}
-              {isCopied ? <span className="text-green-600">Copied</span> : 'Copy link'}
+              {isCopied ? <Check className="w-3.5 h-3.5 text-[#346538]" /> : <LinkIcon className="w-3.5 h-3.5" />}
+              {isCopied ? <span className="text-[#346538]">Copied</span> : 'Copy link'}
             </button>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> Protected by reCAPTCHA
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <span className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" /> reCAPTCHA protected
             </span>
-            <button 
+            <button
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 bg-gray-100 dark:bg-gray-700 rounded-lg transition-colors"
+              className="px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/10 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors disabled:opacity-40"
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={handleSubmit}
               disabled={selectedOptions.length === 0 || isSubmitting}
-              className="flex items-center gap-2 px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed rounded-lg transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors"
             >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {isSubmitting ? 'Sending...' : 'Add'}
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

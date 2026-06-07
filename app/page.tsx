@@ -1132,7 +1132,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="pricing" className="px-4 py-20 sm:px-6 lg:px-8">
+      {/* <section id="pricing" className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader
             eyebrow="Pricing"
@@ -1193,7 +1193,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       <section className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
