@@ -74,6 +74,13 @@ async function deletePage(id: string): Promise<void> {
   await api.delete(apiRoutes.PAGES.BY_ID(id));
 }
 
+/** Publish a page (set status to 'published') */
+async function publishPage(id: string): Promise<Document> {
+  const res = await api.post(apiRoutes.PAGES.PUBLISH(id));
+  const raw: PageApiResponse = res.data?.data ?? res.data;
+  return mapPage(raw);
+}
+
 export const pagesService = {
   getRootPages,
   getChildren,
@@ -81,4 +88,5 @@ export const pagesService = {
   createPage,
   updatePage,
   deletePage,
+  publishPage,
 };
