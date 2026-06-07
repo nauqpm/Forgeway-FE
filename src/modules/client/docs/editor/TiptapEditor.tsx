@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Editor } from "@tiptap/react";
 import DOMPurify from "dompurify";
 import "highlight.js/styles/github.css";
 
@@ -11,7 +11,10 @@ import EditorToolbar from "./EditorToolbar";
 import EditorHeader from "./EditorHeader";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
-import { getEditorExtensions, getCollaborativeEditorExtensions } from "./editorExtensions";
+import {
+  getEditorExtensions,
+  getCollaborativeEditorExtensions,
+} from "./editorExtensions";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
 import { pagesService } from "../services/pages.service";
@@ -23,13 +26,22 @@ const DRAFT_CONTENT_SYNC_DELAY = 5000; // Sync derived HTML every 5 seconds
 const sanitizeEditorHtml = (html: string) =>
   DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
-    ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan", "width", "height", "data-align"],
+    ADD_ATTR: [
+      "style",
+      "target",
+      "rel",
+      "colspan",
+      "rowspan",
+      "width",
+      "height",
+      "data-align",
+    ],
   });
 
 export type EditorMode = "read" | "edit";
 
 export default function TiptapEditor() {
-  const { documents, selectedDocumentId, updateDocument, setIsSaving } = useDocsStore();
+  const { documents, selectedDocumentId, updateDocument } = useDocsStore();
   const document = documents.find((d) => d.id === selectedDocumentId);
   const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
   const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
@@ -39,12 +51,14 @@ export default function TiptapEditor() {
   const [isPublishing, setIsPublishing] = useState(false);
 
   // ── Connection status ──────────────────────────────────────
-  const [connectionStatus, setConnectionStatus] = useState<RealtimeStatusSnapshot["status"]>("idle");
+  const [connectionStatus, setConnectionStatus] =
+    useState<RealtimeStatusSnapshot["status"]>("idle");
 
   // ── Yjs state ──────────────────────────────────────────────
   const ydocRef = useRef<Y.Doc | null>(null);
   const pendingUpdatesRef = useRef<Uint8Array[]>([]);
   const draftContentTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const remoteUpdateListenerRef = useRef<any>(null);
 
   // ── Title state (collaborative via Y.Text) ─────────────────
   const [editTitle, setEditTitle] = useState("");
@@ -57,44 +71,48 @@ export default function TiptapEditor() {
     editable: false,
     editorProps: {
       attributes: {
-        class: "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
+        class:
+          "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
       },
     },
   });
 
   // Update read editor when document content changes
   useEffect(() => {
-    if (readEditor && document && mode === "read") {
+    if (readEditor && document?.id && mode === "read") {
       readEditor.commands.setContent(document.content || "");
     }
   }, [readEditor, document?.content, document?.id, mode]);
 
   // ── Edit mode editor (with Yjs Collaboration) ─────────────
   const editEditorRef = useRef<ReturnType<typeof useEditor> | null>(null);
+  const [, setEditorUpdateTick] = useState(0);
 
   // Create collaborative editor when entering edit mode
-  const createCollaborativeEditor = useCallback(
-    (ydoc: Y.Doc) => {
-      // We can't use useEditor conditionally, so we'll use the Editor class directly
-      const { Editor } = require("@tiptap/react");
-      const editor = new Editor({
-        immediatelyRender: false,
-        extensions: getCollaborativeEditorExtensions(
-          "Nhập nội dung vào đây...",
-          ydoc,
-        ),
-        editable: true,
-        editorProps: {
-          attributes: {
-            class: "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
-          },
+  const createCollaborativeEditor = useCallback((ydoc: Y.Doc) => {
+    // We can't use useEditor conditionally, so we'll use the Editor class directly
+    const editor = new Editor({
+      extensions: getCollaborativeEditorExtensions(
+        "Nhập nội dung vào đây...",
+        ydoc,
+      ),
+      editable: true,
+      editorProps: {
+        attributes: {
+          class:
+            "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
         },
-      });
-      editEditorRef.current = editor;
-      return editor;
-    },
-    [],
-  );
+      },
+    });
+
+    const tick = () => setEditorUpdateTick((t) => t + 1);
+    editor.on("update", tick);
+    editor.on("selectionUpdate", tick);
+
+    editEditorRef.current = editor;
+    setEditorUpdateTick((t) => t + 1);
+    return editor;
+  }, []);
 
   // ── Enter Edit Mode ────────────────────────────────────────
   const enterEditMode = useCallback(() => {
@@ -105,45 +123,67 @@ export default function TiptapEditor() {
     ydocRef.current = ydoc;
     pendingUpdatesRef.current = [];
 
-    // Connect socket and join page room
+    // Local title initialization - we delay this until socket syncs
+    // to avoid CRDT duplication.
+    const yTitle = ydoc.getText("title");
+    setEditTitle(document.title || "");
+
+    // Create the collaborative editor immediately
+    const editor = createCollaborativeEditor(ydoc);
+
+    // Connect socket
     const socket = realtimeSocketClient.connect();
     if (!socket) return;
 
-    realtimeSocketClient.pageManager.join(socket, selectedDocumentId, (response) => {
-      if (!response.ok) return;
+    const joinAndSync = () => {
+      realtimeSocketClient.pageManager.join(
+        socket,
+        selectedDocumentId,
+        (response) => {
+          if (!response.ok) return;
 
-      // Apply server Yjs state if available
-      if (response.yjsState && response.yjsState.length > 0) {
-        Y.applyUpdate(ydoc, new Uint8Array(response.yjsState));
-      }
+          // Apply server Yjs state if available
+          if (response.yjsState && response.yjsState.length > 0) {
+            Y.applyUpdate(ydoc, new Uint8Array(response.yjsState));
+          }
 
-      // Set title from Y.Text or server response
-      const yTitle = ydoc.getText("title");
-      if (yTitle.length === 0 && (response.title || document.title)) {
-        yTitle.insert(0, response.title || document.title);
-      }
-      setEditTitle(yTitle.toString());
+          // Set title from Y.Text or server response if empty
+          if (yTitle.length === 0 && (response.title || document?.title)) {
+            yTitle.insert(0, response.title || document?.title || "");
+          }
 
-      // Create the collaborative editor after Yjs state is applied
-      const editor = createCollaborativeEditor(ydoc);
+          // If Y.Doc content is empty, initialize from HTML content
+          if (editor.isEmpty && (response.content || document?.content)) {
+            const contentToSet = response.content || document?.content;
+            if (contentToSet) {
+              editor.commands.setContent(contentToSet);
+            }
+          }
+        },
+      );
+    };
 
-      // If Y.Doc content is empty, initialize from HTML content
-      const yFragment = ydoc.getXmlFragment("default");
-      if (yFragment.length === 0 && (response.content || document.content)) {
-        const contentToSet = response.content || document.content;
-        if (contentToSet) {
-          editor.commands.setContent(contentToSet);
-        }
-      }
-    });
+    if (socket.connected) {
+      joinAndSync();
+    } else {
+      socket.once(SOCKET_EVENTS.CONNECT, joinAndSync);
+    }
 
     // Listen for Yjs updates from other clients
-    const handleRemoteYjsUpdate = (data: { pageId: string; update: number[] }) => {
+    const handleRemoteYjsUpdate = (data: {
+      pageId: string;
+      update: number[];
+    }) => {
       if (data.pageId === selectedDocumentId && ydocRef.current) {
         Y.applyUpdate(ydocRef.current, new Uint8Array(data.update));
       }
     };
-    socket.on(SOCKET_EVENTS.PAGE_YJS_UPDATE, handleRemoteYjsUpdate);
+    // Remove old listener if exists
+    if (remoteUpdateListenerRef.current) {
+      socket.off(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, remoteUpdateListenerRef.current);
+    }
+    remoteUpdateListenerRef.current = handleRemoteYjsUpdate;
+    socket.on(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, handleRemoteYjsUpdate);
 
     // Send local Yjs updates to server
     const handleLocalUpdate = (update: Uint8Array, origin: unknown) => {
@@ -161,9 +201,9 @@ export default function TiptapEditor() {
     ydoc.on("update", handleLocalUpdate);
 
     // Observe Y.Text title changes
-    const yTitle = ydoc.getText("title");
     const handleTitleChange = () => {
-      setEditTitle(yTitle.toString());
+      const newT = yTitle.toString();
+      setEditTitle((prev) => (prev !== newT ? newT : prev));
     };
     yTitle.observe(handleTitleChange);
 
@@ -174,7 +214,11 @@ export default function TiptapEditor() {
       if (currentSocket?.connected && editor && ydocRef.current) {
         const html = sanitizeEditorHtml(editor.getHTML());
         const title = ydocRef.current.getText("title").toString();
-        realtimeSocketClient.pageManager.sendDraftContent(currentSocket, html, title);
+        realtimeSocketClient.pageManager.sendDraftContent(
+          currentSocket,
+          html,
+          title,
+        );
       }
     }, DRAFT_CONTENT_SYNC_DELAY);
 
@@ -204,6 +248,10 @@ export default function TiptapEditor() {
     // Leave page room
     const socket = realtimeSocketClient.getSocket();
     if (socket) {
+      if (remoteUpdateListenerRef.current) {
+        socket.off(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, remoteUpdateListenerRef.current);
+        remoteUpdateListenerRef.current = null;
+      }
       realtimeSocketClient.pageManager.leave(socket);
     }
 
@@ -230,11 +278,20 @@ export default function TiptapEditor() {
 
       // Re-join the page room to get latest server state
       if (selectedDocumentId) {
-        realtimeSocketClient.pageManager.join(socket, selectedDocumentId, (response) => {
-          if (response.ok && response.yjsState && response.yjsState.length > 0 && ydocRef.current) {
-            Y.applyUpdate(ydocRef.current, new Uint8Array(response.yjsState));
-          }
-        });
+        realtimeSocketClient.pageManager.join(
+          socket,
+          selectedDocumentId,
+          (response) => {
+            if (
+              response.ok &&
+              response.yjsState &&
+              response.yjsState.length > 0 &&
+              ydocRef.current
+            ) {
+              Y.applyUpdate(ydocRef.current, new Uint8Array(response.yjsState));
+            }
+          },
+        );
       }
     });
 
@@ -292,10 +349,14 @@ export default function TiptapEditor() {
     setIsPublishing(true);
     try {
       const html = sanitizeEditorHtml(editor.getHTML());
-      const title = ydocRef.current?.getText("title").toString() || document.title;
+      const title =
+        ydocRef.current?.getText("title").toString() || document.title;
 
       // Step 1: PATCH content and title to main page
-      await pagesService.updatePage(selectedDocumentId, { title, content: html });
+      await pagesService.updatePage(selectedDocumentId, {
+        title,
+        content: html,
+      });
 
       // Step 2: POST publish
       await pagesService.publishPage(selectedDocumentId);
@@ -313,13 +374,16 @@ export default function TiptapEditor() {
   }, [document, selectedDocumentId, updateDocument]);
 
   // ── Cleanup on unmount or document change ──────────────────
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+
   useEffect(() => {
     return () => {
-      if (mode === "edit") {
+      if (modeRef.current === "edit") {
         exitEditMode();
       }
     };
-  }, [selectedDocumentId]);
+  }, [selectedDocumentId, exitEditMode]);
 
   if (!document) return null;
 

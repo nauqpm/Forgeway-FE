@@ -71,7 +71,7 @@ export const SOCKET_EVENTS = {
   NOTIFICATION_READ: NOTIFICATION_EVENTS.READ,
   NOTIFICATION_READ_ALL: NOTIFICATION_EVENTS.READ_ALL,
   PAGE_UPDATED: 'page.updated',
-  PAGE_YJS_UPDATE: 'page.yjs-update',
+  PAGE_YJS_UPDATE_RECEIVED: 'page.yjs-update',
 } as const;
 
 export type SocketEventName =
