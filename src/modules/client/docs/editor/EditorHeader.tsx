@@ -2,25 +2,82 @@
 
 import { useDocsStore } from "../store/docs.store";
 import { Document } from "../types/docs.type";
-import { ChevronRight, CheckCircle2, Loader2, Globe, Save, XCircle } from "lucide-react";
+import { ChevronRight, Globe, Loader2, Upload, Eye, Pencil } from "lucide-react";
+import { useState, useEffect } from "react";
+import type { EditorMode } from "./TiptapEditor";
+import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
 
-type Props = {
+interface EditorHeaderProps {
   doc: Document;
-  canSave: boolean;
-  canCancel: boolean;
-  hasUnsavedChanges: boolean;
-  onCancel: () => void;
-  onSave: () => void;
-};
+  mode: EditorMode;
+  canEdit: boolean;
+  connectionStatus: RealtimeStatusSnapshot["status"];
+  isPublishing: boolean;
+  onToggleMode: () => void;
+  onPublish: () => void;
+}
 
-export default function EditorHeader({ doc, canSave, canCancel, hasUnsavedChanges, onCancel, onSave }: Props) {
-  const { documents, isSaving } = useDocsStore();
+// ── Connection status indicator ──────────────────────────────
+function ConnectionIndicator({ status }: { status: RealtimeStatusSnapshot["status"] }) {
+  if (status === "connected") {
+    return (
+      <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+        </span>
+        Đang cộng tác
+      </span>
+    );
+  }
+
+  if (status === "connecting") {
+    return (
+      <span className="flex items-center gap-1.5 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+        </span>
+        Đang kết nối...
+      </span>
+    );
+  }
+
+  if (status === "disconnected" || status === "error") {
+    return (
+      <span className="flex items-center gap-1.5 text-[11px] font-medium text-red-600 dark:text-red-400">
+        <span className="relative flex h-2 w-2">
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
+        </span>
+        Mất kết nối
+      </span>
+    );
+  }
+
+  return null;
+}
+
+export default function EditorHeader({
+  doc,
+  mode,
+  canEdit,
+  connectionStatus,
+  isPublishing,
+  onToggleMode,
+  onPublish,
+}: EditorHeaderProps) {
+  const { documents } = useDocsStore();
+  const [title, setTitle] = useState(doc.title);
+
+  useEffect(() => {
+    setTitle(doc.title);
+  }, [doc.id, doc.title]);
 
   const getBreadcrumbs = (currentDoc: Document): Document[] => {
     const breadcrumbs: Document[] = [currentDoc];
     let parentId = currentDoc.parentId;
     while (parentId) {
-      const parent = documents.find(d => d.id === parentId);
+      const parent = documents.find((d) => d.id === parentId);
       if (parent) {
         breadcrumbs.unshift(parent);
         parentId = parent.parentId;
@@ -34,55 +91,83 @@ export default function EditorHeader({ doc, canSave, canCancel, hasUnsavedChange
   const breadcrumbs = getBreadcrumbs(doc);
 
   return (
-    <div className="flex flex-col bg-white dark:bg-[#202020] shrink-0">
-      <div className="flex items-center justify-between px-6 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-        <div className="flex items-center text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] overflow-hidden flex-1">
-          <Globe className="w-3.5 h-3.5 mr-2 text-[#ABABAB] dark:text-[#6B6B6B]" />
+    <div className="flex flex-col bg-white dark:bg-gray-950 shrink-0">
+      {/* Breadcrumbs + Controls Row */}
+      <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 dark:border-gray-800">
+        {/* Left — Breadcrumbs */}
+        <div className="flex items-center text-[12px] text-gray-500 dark:text-gray-400 overflow-hidden flex-1">
+          <Globe className="w-3.5 h-3.5 mr-2 text-gray-400 dark:text-gray-500" />
           <span className="hover:underline cursor-pointer">Workspace</span>
           {breadcrumbs.map((b, index) => (
             <span key={b.id} className="flex items-center shrink-0">
-              <ChevronRight className="w-3.5 h-3.5 mx-0.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
-              <span className={`truncate max-w-[9.375rem] ${index === breadcrumbs.length - 1 ? "text-[#111111] dark:text-[#E8E8E7] font-medium" : "hover:underline cursor-pointer"}`}>
+              <ChevronRight className="w-3.5 h-3.5 mx-0.5 text-gray-400 dark:text-gray-600" />
+              <span
+                className={`truncate max-w-[150px] ${
+                  index === breadcrumbs.length - 1
+                    ? "text-gray-900 dark:text-gray-200 font-medium"
+                    : "hover:underline cursor-pointer"
+                }`}
+              >
                 {b.title}
               </span>
             </span>
           ))}
         </div>
 
-        <div className="flex items-center gap-3 text-[0.6875rem] font-medium ml-4">
-          {isSaving ? (
-            <span className="flex items-center text-[#ABABAB] dark:text-[#6B6B6B]">
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              Saving...
-            </span>
-          ) : hasUnsavedChanges ? (
-            <span className="flex items-center text-[#9F2F2D] dark:text-[#F87171]">
-              <XCircle className="w-3 h-3 mr-1" />
-              Unsaved
-            </span>
-          ) : (
-            <span className="flex items-center text-[#346538] dark:text-[#4ADE80]">
-              <CheckCircle2 className="w-3 h-3 mr-1" />
-              Saved
+        {/* Right — Controls */}
+        <div className="flex items-center gap-2 ml-4">
+          {/* Connection indicator (Edit mode only) */}
+          {mode === "edit" && <ConnectionIndicator status={connectionStatus} />}
+
+          {/* Disconnected warning banner (Edit mode only) */}
+          {mode === "edit" && (connectionStatus === "disconnected" || connectionStatus === "error") && (
+            <span className="hidden sm:inline-flex items-center text-[10px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
+              Thay đổi được lưu cục bộ. Đang kết nối lại...
             </span>
           )}
-          <button
-            type="button"
-            onClick={onSave}
-            disabled={!canSave || isSaving || !hasUnsavedChanges}
-            className="inline-flex items-center gap-1.5 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 py-1.5 text-[0.6875rem] font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Save className="h-3.5 w-3.5" />
-            Save
-          </button>
-          {canCancel && (
+
+          {/* Mode toggle button */}
+          {canEdit && (
             <button
-              type="button"
-              onClick={onCancel}
-              disabled={isSaving}
-              className="inline-flex items-center gap-1.5 rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] px-3 py-1.5 text-[0.6875rem] font-semibold text-[#9F2F2D] dark:text-[#F87171] transition-colors hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={onToggleMode}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                mode === "edit"
+                  ? "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
+              }`}
             >
-              Cancel
+              {mode === "edit" ? (
+                <>
+                  <Eye className="h-3.5 w-3.5" />
+                  Xem
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Chỉnh sửa
+                </>
+              )}
+            </button>
+          )}
+
+          {/* Update (Publish) button — Edit mode only */}
+          {mode === "edit" && canEdit && (
+            <button
+              onClick={onPublish}
+              disabled={isPublishing}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+            >
+              {isPublishing ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Đang cập nhật...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-3.5 w-3.5" />
+                  Cập nhật
+                </>
+              )}
             </button>
           )}
         </div>
