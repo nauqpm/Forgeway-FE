@@ -5,6 +5,7 @@ import { SOCKET_EVENTS } from './socket.events';
 export interface PageJoinResponse {
   ok: boolean;
   yjsState?: number[];
+  stateVector?: number[];
   content?: string;
   title?: string;
 }
@@ -51,6 +52,23 @@ export class PageRoomManager {
     socket.emit(SOCKET_EVENTS.PAGE_JOIN, {
       pageId: this.currentId,
     });
+  }
+
+  sync(
+    socket: Socket,
+    onSyncSuccess?: (response: PageJoinResponse) => void,
+  ): void {
+    if (!this.currentId || !socket.connected) return;
+
+    socket.emit(
+      SOCKET_EVENTS.PAGE_JOIN,
+      { pageId: this.currentId },
+      (response: PageJoinResponse) => {
+        if (response?.ok && onSyncSuccess) {
+          onSyncSuccess(response);
+        }
+      },
+    );
   }
 
   leave(socket: Socket): void {

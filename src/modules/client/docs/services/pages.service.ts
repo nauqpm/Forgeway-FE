@@ -1,11 +1,11 @@
-import api from '@/common/services/api.service';
-import { apiRoutes } from '@/config/apiRoutes';
+import api from "@/common/services/api.service";
+import { apiRoutes } from "@/config/apiRoutes";
 import type {
   Document,
   PageApiResponse,
   CreatePagePayload,
   UpdatePagePayload,
-} from '../types/docs.type';
+} from "../types/docs.type";
 
 // ──────────────────────────────────────────────────────────────
 // Mapper: BE response → FE Document
@@ -22,14 +22,15 @@ function mapPage(raw: PageApiResponse): Document {
     lastEditedBy: raw.lastEditedBy
       ? {
           _id: raw.lastEditedBy._id,
-          fullName: raw.lastEditedBy.fullName ?? raw.lastEditedBy.username ?? "Unknown",
+          fullName:
+            raw.lastEditedBy.fullName ?? raw.lastEditedBy.fullName ?? "Unknown",
         }
       : null,
     version: raw.version,
     status: raw.status,
     labels: raw.labels ?? [],
     versionHistory: raw.versionHistory ?? [],
-    source: 'docs',
+    source: "docs",
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };
@@ -68,7 +69,10 @@ async function createPage(payload: CreatePagePayload): Promise<Document> {
 }
 
 /** Partially update a page (title, content, status, labels) */
-async function updatePage(id: string, payload: UpdatePagePayload): Promise<Document> {
+async function updatePage(
+  id: string,
+  payload: UpdatePagePayload,
+): Promise<Document> {
   const res = await api.patch(apiRoutes.PAGES.BY_ID(id), payload);
   const raw: PageApiResponse = res.data?.data ?? res.data;
   return mapPage(raw);

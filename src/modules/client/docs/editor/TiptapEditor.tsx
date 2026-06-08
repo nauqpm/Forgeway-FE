@@ -21,8 +21,6 @@ import { pagesService } from "../services/pages.service";
 import { toast } from "react-hot-toast";
 import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
 
-const DRAFT_CONTENT_SYNC_DELAY = 5000; // Sync derived HTML every 5 seconds
-
 const sanitizeEditorHtml = (html: string) =>
   DOMPurify.sanitize(html, {
     USE_PROFILES: { html: true },
@@ -38,13 +36,49 @@ const sanitizeEditorHtml = (html: string) =>
     ],
   });
 
+/**
+ * Apply a minimal diff to a Y.Text so that only the changed characters are
+ * transmitted, rather than a full delete+insert on every keystroke.
+ * Mirrors the same pattern used in the vanilla demo (replaceYTextWithDiff).
+ */
+function applyYTextDiff(yText: Y.Text, nextValue: string): void {
+  const current = yText.toString();
+  if (current === nextValue) return;
+
+  let prefixLength = 0;
+  while (
+    prefixLength < current.length &&
+    prefixLength < nextValue.length &&
+    current[prefixLength] === nextValue[prefixLength]
+  ) {
+    prefixLength += 1;
+  }
+
+  let suffixLength = 0;
+  while (
+    suffixLength < current.length - prefixLength &&
+    suffixLength < nextValue.length - prefixLength &&
+    current[current.length - 1 - suffixLength] ===
+      nextValue[nextValue.length - 1 - suffixLength]
+  ) {
+    suffixLength += 1;
+  }
+
+  const deleteLength = current.length - prefixLength - suffixLength;
+  const insertValue = nextValue.slice(
+    prefixLength,
+    nextValue.length - suffixLength,
+  );
+
+  if (deleteLength > 0) yText.delete(prefixLength, deleteLength);
+  if (insertValue) yText.insert(prefixLength, insertValue);
+}
+
 export type EditorMode = "read" | "edit";
 
 export default function TiptapEditor() {
   const { documents, selectedDocumentId, updateDocument } = useDocsStore();
   const document = documents.find((d) => d.id === selectedDocumentId);
-  const documentContent = document?.content ?? "";
-  const isTemporaryDocument = Boolean(document?.id.startsWith("temp-"));
   const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
   const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
 
@@ -60,7 +94,12 @@ export default function TiptapEditor() {
   const ydocRef = useRef<Y.Doc | null>(null);
   const pendingUpdatesRef = useRef<Uint8Array[]>([]);
   const draftContentTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const remoteUpdateListenerRef = useRef<any>(null);
+  const remoteUpdateListenerRef = useRef<
+    ((data: { pageId: string; update: number[] }) => void) | null
+  >(null);
+  const localUpdateListenerRef = useRef<
+    ((update: Uint8Array, origin: unknown) => void) | null
+  >(null);
 
   // ── Title state (collaborative via Y.Text) ─────────────────
   const [editTitle, setEditTitle] = useState("");
@@ -125,8 +164,8 @@ export default function TiptapEditor() {
     ydocRef.current = ydoc;
     pendingUpdatesRef.current = [];
 
-    // Local title initialization - we delay this until socket syncs
-    // to avoid CRDT duplication.
+    // Local title initialization — delayed until socket syncs to avoid CRDT
+    // duplication, but pre-populate the input with the known value immediately.
     const yTitle = ydoc.getText("title");
     setEditTitle(document.title || "");
 
@@ -138,6 +177,9 @@ export default function TiptapEditor() {
     if (!socket) return;
 
     const joinAndSync = () => {
+      // Guard: if the user exited edit mode before the socket connected, bail.
+      if (ydocRef.current !== ydoc) return;
+
       realtimeSocketClient.pageManager.join(
         socket,
         selectedDocumentId,
@@ -146,7 +188,7 @@ export default function TiptapEditor() {
 
           // Apply server Yjs state if available
           if (response.yjsState && response.yjsState.length > 0) {
-            Y.applyUpdate(ydoc, new Uint8Array(response.yjsState));
+            Y.applyUpdate(ydoc, new Uint8Array(response.yjsState), "remote");
           }
 
           // Set title from Y.Text or server response if empty
@@ -177,10 +219,9 @@ export default function TiptapEditor() {
       update: number[];
     }) => {
       if (data.pageId === selectedDocumentId && ydocRef.current) {
-        Y.applyUpdate(ydocRef.current, new Uint8Array(data.update));
+        Y.applyUpdate(ydocRef.current, new Uint8Array(data.update), "remote");
       }
     };
-    // Remove old listener if exists
     if (remoteUpdateListenerRef.current) {
       socket.off(
         SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED,
@@ -190,19 +231,18 @@ export default function TiptapEditor() {
     remoteUpdateListenerRef.current = handleRemoteYjsUpdate;
     socket.on(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, handleRemoteYjsUpdate);
 
-    // Send local Yjs updates to server
+    // Send local Yjs updates to server — store ref so exitEditMode can remove it
     const handleLocalUpdate = (update: Uint8Array, origin: unknown) => {
-      // Skip updates originated from remote (to avoid echo)
       if (origin === "remote") return;
 
       const currentSocket = realtimeSocketClient.getSocket();
       if (currentSocket && currentSocket.connected) {
         realtimeSocketClient.pageManager.yjsUpdate(currentSocket, update);
       } else {
-        // Store in pending queue for later sync
         pendingUpdatesRef.current.push(update);
       }
     };
+    localUpdateListenerRef.current = handleLocalUpdate;
     ydoc.on("update", handleLocalUpdate);
 
     // Observe Y.Text title changes
@@ -212,26 +252,18 @@ export default function TiptapEditor() {
     };
     yTitle.observe(handleTitleChange);
 
-    // Periodically sync derived HTML content to server for search/fallback
-    draftContentTimerRef.current = setInterval(() => {
-      const currentSocket = realtimeSocketClient.getSocket();
-      const editor = editEditorRef.current;
-      if (currentSocket?.connected && editor && ydocRef.current) {
-        const html = sanitizeEditorHtml(editor.getHTML());
-        const title = ydocRef.current.getText("title").toString();
-        realtimeSocketClient.pageManager.sendDraftContent(
-          currentSocket,
-          html,
-          title,
-        );
-      }
-    }, DRAFT_CONTENT_SYNC_DELAY);
-
     setMode("edit");
   }, [selectedDocumentId, document, createCollaborativeEditor]);
 
   // ── Exit Edit Mode ─────────────────────────────────────────
   const exitEditMode = useCallback(() => {
+    // Explicitly remove the local-update listener before destroying the doc so
+    // there's no implicit dependency on ydoc.destroy() cleaning it up.
+    if (ydocRef.current && localUpdateListenerRef.current) {
+      ydocRef.current.off("update", localUpdateListenerRef.current);
+      localUpdateListenerRef.current = null;
+    }
+
     // Cleanup Yjs
     if (ydocRef.current) {
       ydocRef.current.destroy();
@@ -250,7 +282,7 @@ export default function TiptapEditor() {
       draftContentTimerRef.current = null;
     }
 
-    // Leave page room
+    // Leave page room and remove socket listeners
     const socket = realtimeSocketClient.getSocket();
     if (socket) {
       if (remoteUpdateListenerRef.current) {
@@ -267,7 +299,7 @@ export default function TiptapEditor() {
     setMode("read");
   }, []);
 
-  // ── Handle reconnect — drain pending updates ───────────────
+  // ── Handle reconnect — proper state vector sync ───────────────
   useEffect(() => {
     const unsubReconnect = realtimeSocketClient.onReconnect(() => {
       if (mode !== "edit" || !ydocRef.current) return;
@@ -275,31 +307,29 @@ export default function TiptapEditor() {
       const socket = realtimeSocketClient.getSocket();
       if (!socket || !socket.connected) return;
 
-      // Drain pending updates
-      const pending = pendingUpdatesRef.current;
-      if (pending.length > 0) {
-        for (const update of pending) {
-          realtimeSocketClient.pageManager.yjsUpdate(socket, update);
-        }
-        pendingUpdatesRef.current = [];
-      }
-
-      // Re-join the page room to get latest server state
+      // On reconnect, we sync state vectors to ensure no updates are lost
+      // (which happens if we only rely on pendingUpdatesRef during silent network drops)
       if (selectedDocumentId) {
-        realtimeSocketClient.pageManager.join(
-          socket,
-          selectedDocumentId,
-          (response) => {
-            if (
-              response.ok &&
-              response.yjsState &&
-              response.yjsState.length > 0 &&
-              ydocRef.current
-            ) {
-              Y.applyUpdate(ydocRef.current, new Uint8Array(response.yjsState));
-            }
-          },
-        );
+        realtimeSocketClient.pageManager.sync(socket, (response) => {
+          if (!response.ok || !ydocRef.current) return;
+
+          // 1. Apply server's missing updates to our doc
+          if (response.yjsState && response.yjsState.length > 0) {
+            Y.applyUpdate(
+              ydocRef.current,
+              new Uint8Array(response.yjsState),
+              "remote",
+            );
+          }
+
+          // 2. Force sync our FULL state to the server.
+          // This guarantees that any offline edits (even those lost during TCP half-open state)
+          // are fully merged into the server's Y.Doc, preventing any "overwrite" bugs.
+          const fullState = Y.encodeStateAsUpdate(ydocRef.current);
+          realtimeSocketClient.pageManager.yjsUpdate(socket, fullState);
+
+          pendingUpdatesRef.current = [];
+        });
       }
     });
 
@@ -332,16 +362,12 @@ export default function TiptapEditor() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [mode, connectionStatus]);
 
-  // ── Handle title change (collaborative via Y.Text) ─────────
   const handleTitleInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newTitle = e.target.value;
       if (!ydocRef.current) return;
-
       const yTitle = ydocRef.current.getText("title");
       ydocRef.current.transact(() => {
-        yTitle.delete(0, yTitle.length);
-        yTitle.insert(0, newTitle);
+        applyYTextDiff(yTitle, e.target.value);
       });
     },
     [],
@@ -393,6 +419,14 @@ export default function TiptapEditor() {
     };
   }, [selectedDocumentId, exitEditMode]);
 
+  const handleToggleMode = useCallback(() => {
+    if (mode === "read") {
+      enterEditMode();
+    } else {
+      exitEditMode();
+    }
+  }, [mode, enterEditMode, exitEditMode]);
+
   if (!document) return null;
 
   const activeEditor = mode === "edit" ? editEditorRef.current : readEditor;
@@ -405,13 +439,7 @@ export default function TiptapEditor() {
         canEdit={canEditPage}
         connectionStatus={connectionStatus}
         isPublishing={isPublishing}
-        onToggleMode={() => {
-          if (mode === "read") {
-            enterEditMode();
-          } else {
-            exitEditMode();
-          }
-        }}
+        onToggleMode={handleToggleMode}
         onPublish={handlePublish}
       />
 

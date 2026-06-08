@@ -32,11 +32,29 @@ import LinkEditorPopover from "./LinkEditorPopover";
 import TableGridPicker from "./TableGridPicker";
 
 const DEFAULT_FONT_FAMILY = "Arial";
-const FONT_FAMILIES = [DEFAULT_FONT_FAMILY, "Times New Roman", "Courier New", "Inter", "Georgia"];
+const FONT_FAMILIES = [
+  DEFAULT_FONT_FAMILY,
+  "Times New Roman",
+  "Courier New",
+  "Inter",
+  "Georgia",
+];
 const DEFAULT_FONT_SIZE = "16";
 const FONT_SIZES = ["12", "14", DEFAULT_FONT_SIZE, "18", "20", "24", "32"];
-const COLORS = ["#111827", "#EF4444", "#2563EB", "#059669", "#D97706", "#7C3AED"];
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const COLORS = [
+  "#111827",
+  "#EF4444",
+  "#2563EB",
+  "#059669",
+  "#D97706",
+  "#7C3AED",
+];
+const ALLOWED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 type Props = {
@@ -54,20 +72,23 @@ type ToolbarButtonProps = {
 const getTextStyleAttributes = (editor: Editor | null) => {
   const attributes = editor?.getAttributes("textStyle") ?? {};
   return {
-    fontFamily: typeof attributes.fontFamily === "string" ? attributes.fontFamily : "",
-    fontSize: typeof attributes.fontSize === "string" ? attributes.fontSize : "",
+    fontFamily:
+      typeof attributes.fontFamily === "string" ? attributes.fontFamily : "",
+    fontSize:
+      typeof attributes.fontSize === "string" ? attributes.fontSize : "",
   };
 };
 
 const areTextStyleAttributesEqual = (
   first: ReturnType<typeof getTextStyleAttributes>,
   second: ReturnType<typeof getTextStyleAttributes>,
-) => first.fontFamily === second.fontFamily && first.fontSize === second.fontSize;
+) =>
+  first.fontFamily === second.fontFamily && first.fontSize === second.fontSize;
 
 const toImageUrl = (url: string) => {
   if (!url) return "";
   if (/^https?:\/\//i.test(url)) return url;
-  const base = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SERVER_URL || "";
+  const base = process.env.NEXT_PUBLIC_API_URL || "";
   return `${base}${url}`;
 };
 
@@ -75,7 +96,9 @@ export default function EditorToolbar({ editor }: Props) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const linkButtonRef = useRef<HTMLButtonElement | null>(null);
   const tableButtonRef = useRef<HTMLButtonElement | null>(null);
-  const [activeTextStyle, setActiveTextStyle] = useState(() => getTextStyleAttributes(editor));
+  const [activeTextStyle, setActiveTextStyle] = useState(() =>
+    getTextStyleAttributes(editor),
+  );
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [tablePickerOpen, setTablePickerOpen] = useState(false);
   const closeLinkPopover = useCallback(() => setLinkPopoverOpen(false), []);
@@ -89,7 +112,9 @@ export default function EditorToolbar({ editor }: Props) {
     const updateActiveTextStyle = () => {
       const nextTextStyle = getTextStyleAttributes(editor);
       setActiveTextStyle((currentTextStyle) =>
-        areTextStyleAttributesEqual(currentTextStyle, nextTextStyle) ? currentTextStyle : nextTextStyle,
+        areTextStyleAttributesEqual(currentTextStyle, nextTextStyle)
+          ? currentTextStyle
+          : nextTextStyle,
       );
     };
     updateActiveTextStyle();
@@ -103,7 +128,13 @@ export default function EditorToolbar({ editor }: Props) {
 
   if (!editor) return null;
 
-  const ToolbarButton = ({ onClick, isActive, disabled, children, title }: ToolbarButtonProps) => (
+  const ToolbarButton = ({
+    onClick,
+    isActive,
+    disabled,
+    children,
+    title,
+  }: ToolbarButtonProps) => (
     <button
       onClick={onClick}
       disabled={disabled}
@@ -130,12 +161,21 @@ export default function EditorToolbar({ editor }: Props) {
   };
 
   const uploadLocalImage = async (file: File) => {
-    if (file.size > MAX_IMAGE_SIZE) { toast.error("Max image size not over 5MB"); return; }
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) { toast.error("Invalid image format"); return; }
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error("Max image size not over 5MB");
+      return;
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Invalid image format");
+      return;
+    }
     try {
       const result = await imageService.uploadImage(file, true);
       const imageUrl = toImageUrl(result.imageUrl || result.url || "");
-      if (!imageUrl) { toast.error("Failed to get image URL after upload"); return; }
+      if (!imageUrl) {
+        toast.error("Failed to get image URL after upload");
+        return;
+      }
       editor.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
       toast.success("Image inserted successfully");
     } catch {
@@ -146,7 +186,11 @@ export default function EditorToolbar({ editor }: Props) {
   const insertImage = () => imageInputRef.current?.click();
   const toggleTablePicker = () => setTablePickerOpen((c) => !c);
   const insertTable = (rows: number, cols: number) => {
-    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows, cols, withHeaderRow: true })
+      .run();
     closeTablePicker();
   };
 
@@ -154,7 +198,8 @@ export default function EditorToolbar({ editor }: Props) {
   const selectedFontFamily = activeTextStyle.fontFamily || DEFAULT_FONT_FAMILY;
   const selectedFontSize = activeTextStyle.fontSize || DEFAULT_FONT_SIZE;
 
-  const selectCls = "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none";
+  const selectCls =
+    "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none";
 
   return (
     <>
@@ -166,7 +211,10 @@ export default function EditorToolbar({ editor }: Props) {
         >
           <div
             className="flex items-center gap-1 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-1"
-            style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)" }}
+            style={{
+              boxShadow:
+                "0 4px 12px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+            }}
           >
             <button
               type="button"
@@ -186,7 +234,9 @@ export default function EditorToolbar({ editor }: Props) {
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
+              onClick={() =>
+                editor.chain().focus().extendMarkRange("link").unsetLink().run()
+              }
               className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[11px] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
             >
               <Unlink className="h-3.5 w-3.5" />
@@ -220,7 +270,9 @@ export default function EditorToolbar({ editor }: Props) {
           }}
         >
           {FONT_FAMILIES.map((font) => (
-            <option key={font} value={font} style={{ fontFamily: font }}>{font}</option>
+            <option key={font} value={font} style={{ fontFamily: font }}>
+              {font}
+            </option>
           ))}
         </select>
 
@@ -234,20 +286,38 @@ export default function EditorToolbar({ editor }: Props) {
           }}
         >
           {FONT_SIZES.map((size) => (
-            <option key={size} value={size}>{size}</option>
+            <option key={size} value={size}>
+              {size}
+            </option>
           ))}
         </select>
 
-        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive("bold")} title="Bold">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          isActive={editor.isActive("bold")}
+          title="Bold"
+        >
           <Bold className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive("italic")} title="Italic">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          isActive={editor.isActive("italic")}
+          title="Italic"
+        >
           <Italic className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive("underline")} title="Underline">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          isActive={editor.isActive("underline")}
+          title="Underline"
+        >
           <Underline className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive("strike")} title="Strikethrough">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          isActive={editor.isActive("strike")}
+          title="Strikethrough"
+        >
           <Strikethrough className="h-4 w-4" />
         </ToolbarButton>
 
@@ -262,22 +332,41 @@ export default function EditorToolbar({ editor }: Props) {
           />
         ))}
 
-        <ToolbarButton onClick={() => editor.chain().focus().unsetColor().run()} title="Reset text color">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().unsetColor().run()}
+          title="Reset text color"
+        >
           <span className="text-[11px] font-bold">A</span>
         </ToolbarButton>
 
         <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
 
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("left").run()} isActive={editor.isActive({ textAlign: "left" })} title="Align left">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("left").run()}
+          isActive={editor.isActive({ textAlign: "left" })}
+          title="Align left"
+        >
           <AlignLeft className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("center").run()} isActive={editor.isActive({ textAlign: "center" })} title="Align center">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+          isActive={editor.isActive({ textAlign: "center" })}
+          title="Align center"
+        >
           <AlignCenter className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("right").run()} isActive={editor.isActive({ textAlign: "right" })} title="Align right">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+          isActive={editor.isActive({ textAlign: "right" })}
+          title="Align right"
+        >
           <AlignRight className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("justify").run()} isActive={editor.isActive({ textAlign: "justify" })} title="Justify">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+          isActive={editor.isActive({ textAlign: "justify" })}
+          title="Justify"
+        >
           <AlignJustify className="h-4 w-4" />
         </ToolbarButton>
 
@@ -297,9 +386,18 @@ export default function EditorToolbar({ editor }: Props) {
           <LinkIcon className="h-4 w-4" />
         </button>
         {linkPopoverOpen && (
-          <LinkEditorPopover editor={editor} anchorEl={linkButtonRef.current} onClose={closeLinkPopover} />
+          <LinkEditorPopover
+            editor={editor}
+            anchorEl={linkButtonRef.current}
+            onClose={closeLinkPopover}
+          />
         )}
-        <ToolbarButton onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()} title="Remove link">
+        <ToolbarButton
+          onClick={() =>
+            editor.chain().focus().extendMarkRange("link").unsetLink().run()
+          }
+          title="Remove link"
+        >
           <Unlink className="h-4 w-4" />
         </ToolbarButton>
 
@@ -307,7 +405,11 @@ export default function EditorToolbar({ editor }: Props) {
           <ImageIcon className="h-4 w-4" />
         </ToolbarButton>
 
-        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editor.isActive("taskList")} title="Checklist">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleTaskList().run()}
+          isActive={editor.isActive("taskList")}
+          title="Checklist"
+        >
           <ListTodo className="h-4 w-4" />
         </ToolbarButton>
 
@@ -325,37 +427,66 @@ export default function EditorToolbar({ editor }: Props) {
           <TableIcon className="h-4 w-4" />
         </button>
         {tablePickerOpen && (
-          <TableGridPicker anchorEl={tableButtonRef.current} onClose={closeTablePicker} onSelect={insertTable} />
+          <TableGridPicker
+            anchorEl={tableButtonRef.current}
+            onClose={closeTablePicker}
+            onSelect={insertTable}
+          />
         )}
 
         {inTable && (
           <>
-            <ToolbarButton onClick={() => editor.chain().focus().addRowBefore().run()} title="Add row above">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addRowBefore().run()}
+              title="Add row above"
+            >
               <ArrowUp className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Add row below">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              title="Add row below"
+            >
               <ArrowDown className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().addColumnBefore().run()} title="Add column to the left">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addColumnBefore().run()}
+              title="Add column to the left"
+            >
               <ArrowLeft className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add column to the right">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              title="Add column to the right"
+            >
               <ArrowRight className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().deleteRow().run()} title="Delete row">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              title="Delete row"
+            >
               <Trash2 className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().deleteColumn().run()} title="Delete column">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              title="Delete column"
+            >
               <Trash2 className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Delete table">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              title="Delete table"
+            >
               <Trash2 className="h-4 w-4 text-[#9F2F2D]" />
             </ToolbarButton>
           </>
         )}
 
         <div className="ml-auto flex items-center gap-1">
-          <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            title="Undo"
+          >
             <Undo className="h-4 w-4" />
           </ToolbarButton>
         </div>

@@ -25,7 +25,9 @@ export default function DashboardHeader({
         <div className="w-8 h-8 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] rounded-[6px] flex items-center justify-center text-[#2563EB] dark:text-[#3B82F6] shrink-0">
           <Layout className="w-4 h-4" />
         </div>
-        <h1 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] flex-1 min-w-0">Workspace Documents</h1>
+        <h1 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] flex-1 min-w-0">
+          Workspace Documents
+        </h1>
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onImportFromLibrary}
@@ -55,12 +57,20 @@ export default function DashboardHeader({
         </div>
         <select
           value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "az")}
+          onChange={(e) =>
+            setSortOrder(e.target.value as "newest" | "oldest" | "az")
+          }
           className="h-9 px-3 bg-[#F7F6F3] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 text-[12px] font-medium text-[#787774] dark:text-[#9B9A97] rounded-[6px] outline-none cursor-pointer hover:border-[#ABABAB] dark:hover:border-white/15 transition-colors"
         >
-          <option value="newest" className="dark:bg-[#252525]">Newest</option>
-          <option value="oldest" className="dark:bg-[#252525]">Oldest</option>
-          <option value="az" className="dark:bg-[#252525]">A–Z</option>
+          <option value="newest" className="dark:bg-[#252525]">
+            Newest
+          </option>
+          <option value="oldest" className="dark:bg-[#252525]">
+            Oldest
+          </option>
+          <option value="az" className="dark:bg-[#252525]">
+            A–Z
+          </option>
         </select>
       </div>
     </div>
