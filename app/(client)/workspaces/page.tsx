@@ -8,6 +8,8 @@ import Link from "next/link";
 import { BookOpen, Plus, Globe, Lock, ChevronRight, Columns, Repeat } from "lucide-react";
 import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
 import type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
+import { realtimeSocketClient } from "@/lib/socket/socket.client";
+import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
 
 const getWorkspaceType = (workspace: Workspace) =>
   workspace.template ?? workspace.type ?? "kanban";
@@ -46,27 +48,48 @@ export default function WorkspacesPage() {
 
   useEffect(() => {
     if (!workspacesLoaded) return;
-    if (!currentWorkspace) {
-      setLoading(false);
-      return;
-    }
+    
     setLoading(true);
     workspaceService.listMine()
       .then((nextWorkspaces) => setWorkspacesList(nextWorkspaces))
       .catch(() => setWorkspacesList([]))
       .finally(() => setLoading(false));
-  }, [currentWorkspace, workspacesLoaded]);
+  }, [workspacesLoaded]);
+
+  useEffect(() => {
+    const socket = realtimeSocketClient.getSocket();
+    if (!socket) return;
+
+    const handleWorkspaceCreated = (payload: any) => {
+      if (payload.type === SOCKET_EVENTS.WORKSPACE_CREATED) {
+        const newWorkspace = payload.data?.workspace;
+        if (newWorkspace) {
+          setWorkspacesList((prev) => {
+            // Avoid duplicates
+            if (prev.some((w) => w._id === newWorkspace.id || w.id === newWorkspace.id)) return prev;
+            // The event payload has id instead of _id, we normalize it
+            const normalizedWorkspace = { ...newWorkspace, _id: newWorkspace.id } as Workspace;
+            return [normalizedWorkspace, ...prev];
+          });
+        }
+      }
+    };
+
+    socket.on(SOCKET_EVENTS.WORKSPACE_CREATED, handleWorkspaceCreated);
+
+    return () => {
+      socket.off(SOCKET_EVENTS.WORKSPACE_CREATED, handleWorkspaceCreated);
+    };
+  }, []);
 
   if (loading) return <LoadingSpinner />;
-
-  if (!currentWorkspace) return <div className="app-main text-center text-[#787774] dark:text-[#9B9A97]">Select a workspace first</div>;
 
   return (
     <div className="app-page-wide">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-1">Workspaces</h1>
-          <p className="text-[#787774] dark:text-[#9B9A97] text-sm">Showing {workspaces.length} Workspaces in {currentWorkspace.name}</p>
+          <p className="text-[#787774] dark:text-[#9B9A97] text-sm">Showing {workspaces.length} Workspace{workspaces.length !== 1 ? 's' : ''}{currentWorkspace ? ` (Current: ${currentWorkspace.name})` : ''}</p>
         </div>
         <Link href="/workspaces/create" className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-5 py-2.5 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-sm transition-colors shadow-sm">
           <Plus className="w-4 h-4" /> Create New Workspace
