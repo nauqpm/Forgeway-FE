@@ -494,16 +494,20 @@ export default function WorkspaceDetailPage({
 
           if (!hasQueuedReorder) {
             setIssues((current) =>
-              current.map((issue) =>
-                issue.id === updatedTask.id ? updatedTask : issue,
+              sortIssuesByRank(
+                current.map((issue) =>
+                  issue.id === updatedTask.id ? updatedTask : issue,
+                ),
               ),
             );
             queryClient.setQueriesData<Issue[]>(
               { queryKey: ["tasks", workspaceApiId] },
               (current) =>
                 Array.isArray(current)
-                  ? current.map((issue) =>
-                      issue.id === updatedTask.id ? updatedTask : issue,
+                  ? sortIssuesByRank(
+                      current.map((issue) =>
+                        issue.id === updatedTask.id ? updatedTask : issue,
+                      ),
                     )
                   : current,
             );
