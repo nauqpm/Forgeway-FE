@@ -7,8 +7,14 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import DOMPurify from 'dompurify';
 import 'highlight.js/styles/github.css';
+
+function sanitizeContent(html: string): string {
+  if (typeof window === 'undefined') return html;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const DP = require('dompurify');
+  return DP.sanitize(html);
+}
 import {
   Bold, Italic, Strikethrough, Code, List, ListOrdered, Quote, Link as LinkIcon
 } from 'lucide-react';
@@ -160,7 +166,7 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
         className="p-4 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer transition-colors min-h-15 prose prose-sm max-w-none text-[#111111] dark:text-[#E8E8E7]"
       >
         {content && content !== '<p></p>' ? (
-          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
+          <div dangerouslySetInnerHTML={{ __html: sanitizeContent(content) }} />
         ) : (
           <p className="text-[#787774] dark:text-[#9B9A97] text-sm m-0">Add a description...</p>
         )}

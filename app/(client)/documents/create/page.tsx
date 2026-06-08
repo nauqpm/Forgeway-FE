@@ -5,18 +5,21 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EditorContent, useEditor } from "@tiptap/react";
-import DOMPurify from "dompurify";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { documentService } from "@/modules/client/docs/services/documentService";
 import EditorToolbar from "@/modules/client/docs/editor/EditorToolbar";
 import { getEditorExtensions } from "@/modules/client/docs/editor/editorExtensions";
 
-const sanitizeEditorHtml = (html: string) =>
-  DOMPurify.sanitize(html, {
+const sanitizeEditorHtml = (html: string): string => {
+  if (typeof window === "undefined") return html;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const DP = require("dompurify");
+  return DP.sanitize(html, {
     USE_PROFILES: { html: true },
     ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan"],
   });
+};
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (error && typeof error === "object" && "response" in error) {

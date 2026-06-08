@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
-import DOMPurify from "dompurify";
 import { CheckCircle2, Loader2, Save, X, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { documentService } from "../services/documentService";
@@ -10,11 +9,15 @@ import { DocumentItem } from "../types/document.type";
 import EditorToolbar from "../editor/EditorToolbar";
 import { getEditorExtensions } from "../editor/editorExtensions";
 
-const sanitizeEditorHtml = (html: string) =>
-  DOMPurify.sanitize(html, {
+const sanitizeEditorHtml = (html: string): string => {
+  if (typeof window === "undefined") return html;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const DP = require("dompurify");
+  return DP.sanitize(html, {
     USE_PROFILES: { html: true },
     ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan", "width", "height", "data-align"],
   });
+};
 
 type Props = {
   doc: DocumentItem;

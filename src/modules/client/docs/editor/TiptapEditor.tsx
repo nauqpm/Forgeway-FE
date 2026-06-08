@@ -1,7 +1,6 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
-import DOMPurify from "dompurify";
 import "highlight.js/styles/github.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,11 +11,15 @@ import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/wor
 import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
 import { getEditorExtensions } from "./editorExtensions";
 
-const sanitizeEditorHtml = (html: string) =>
-  DOMPurify.sanitize(html, {
+const sanitizeEditorHtml = (html: string): string => {
+  if (typeof window === "undefined") return html;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const DP = require("dompurify");
+  return DP.sanitize(html, {
     USE_PROFILES: { html: true },
     ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan", "width", "height", "data-align"],
   });
+};
 
 export default function TiptapEditor() {
   const { documents, selectedDocumentId, updateDocument, saveDocument, deleteDocument } = useDocsStore();
