@@ -116,6 +116,11 @@ export default function TaskDetailList({
       : String(issue.storyPoints);
   const priorityColor = PRIORITY_COLORS[issue.priority] || "text-[#787774] dark:text-[#9B9A97]";
   const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
+  const currentAssigneeId = getIssueAssigneeId(issue);
+  const currentAssigneeName =
+    issue.assigneeDisplayName ||
+    assigneeUsers.find((candidate) => candidate.id === currentAssigneeId)?.name ||
+    getUserDisplayName(issue.assignee, null);
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -334,7 +339,16 @@ export default function TaskDetailList({
               />
             )}
             {activeTab === "history" && (
-              <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
+              <TaskActivityHistory
+                workspaceId={workspaceId}
+                taskId={issue.id}
+                taskKey={issue.key}
+                workspaceMembers={workspaceMembers}
+                assigneeId={currentAssigneeId}
+                assigneeName={currentAssigneeName}
+                assignee={issue.assignee}
+                labels={issue.labels}
+              />
             )}
           </div>
         </div>
