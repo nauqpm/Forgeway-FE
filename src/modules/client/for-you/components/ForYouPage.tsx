@@ -124,15 +124,15 @@ export default function ForYouPage() {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-4 py-3">
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
           <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Owned</p>
           <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.owned}</p>
         </div>
-        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-4 py-3">
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
           <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Joined</p>
           <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.joined}</p>
         </div>
-        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-4 py-3">
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
           <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Active</p>
           <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.active}</p>
         </div>
@@ -145,7 +145,7 @@ export default function ForYouPage() {
       )}
 
       {workspaces.length === 0 ? (
-        <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-6 py-12 text-center">
+        <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-6 py-12 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]">
             <BookOpen className="h-6 w-6" />
           </div>
@@ -175,7 +175,7 @@ export default function ForYouPage() {
               <Link
                 key={workspaceIdOf(workspace) || routeKey}
                 href={`/workspaces/${routeKey}`}
-                className="group rounded-[8px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-5 transition hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"
+                className="group rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] p-5 transition hover:border-[#2563EB]/30 dark:hover:border-[rgba(59,130,246,0.12)]"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-start gap-4">
