@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { X, Link as LinkIcon, Check, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import RoleChanger, {
+  WorkspaceRoleValue,
+} from "@/modules/client/workspaces/components/RoleChanger";
 import { inviteService } from "@/modules/client/workspaces/services/inviteService";
-
-const ROLES = [
-  { value: "workspace_admin", label: "Admin" },
-  { value: "member", label: "Member" },
-  { value: "viewer", label: "Viewer" },
-];
 
 const EMAIL_SPLIT_REGEX = /[\s,;]+/;
 
@@ -21,7 +18,7 @@ const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.
 
 export default function InviteModal({ isOpen, onClose, projectId }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState<WorkspaceRoleValue>("member");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -151,25 +148,13 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
               />
             </div>
 
-            <div className="w-full sm:w-32">
-              <label className="block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Role</label>
-              <div className="relative">
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className={`${inputCls} appearance-none h-[2.375rem]`}
-                >
-                  {ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#ABABAB]">
-                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <RoleChanger
+              value={role}
+              onChange={setRole}
+              disabled={isSubmitting || isGeneratingLink}
+              compact
+              className="w-full sm:w-[9rem]"
+            />
           </div>
         </div>
 
