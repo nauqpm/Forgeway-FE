@@ -20,7 +20,10 @@ import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
-import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
+import AssigneePicker, {
+  toAssigneePickerUsers,
+  type AssigneePickerUser,
+} from "@/common/components/AssigneePicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
@@ -39,6 +42,12 @@ interface TaskDetailListProps {
 const getUserDisplayName = (user: any, fallback?: string | null) => {
   if (typeof user === "string") return user;
   return user?.fullName || user?.email || fallback || "Unassigned";
+};
+
+const getIssueAssigneeId = (issue: any) => {
+  if (issue?.assigneeId) return String(issue.assigneeId);
+  if (typeof issue?.assignee === "string") return issue.assignee === "U" ? "" : issue.assignee;
+  return issue?.assignee?._id || issue?.assignee?.id || "";
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -106,6 +115,7 @@ export default function TaskDetailList({
       ? "None"
       : String(issue.storyPoints);
   const priorityColor = PRIORITY_COLORS[issue.priority] || "text-[#787774] dark:text-[#9B9A97]";
+  const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -117,6 +127,22 @@ export default function TaskDetailList({
   const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
     if (!onUpdateIssue || issue.isArchived) return;
     onUpdateIssue({ ...issue, [field]: nextValue });
+  };
+
+  const handleAssigneeChange = (uid: string | null) => {
+    if (!onUpdateIssue || issue.isArchived) return;
+
+    const selectedUser: AssigneePickerUser | undefined = assigneeUsers.find(
+      (candidate) => candidate.id === uid,
+    );
+
+    onUpdateIssue({
+      ...issue,
+      assigneeId: uid,
+      assignee: uid ?? "U",
+      assigneeDisplayName: uid ? selectedUser?.name ?? uid : "Unassigned",
+      assigneeAvatar: uid ? selectedUser?.avatar : undefined,
+    });
   };
 
 
@@ -347,9 +373,9 @@ export default function TaskDetailList({
                 {/* Assignee */}
                 <DetailRow label="Assignee">
                   <AssigneePicker
-                    users={toAssigneePickerUsers(workspaceMembers)}
-                    value={issue.assigneeId || (typeof issue.assignee === "string" && issue.assignee !== "U" ? issue.assignee : null)}
-                    onChange={(uid) => onUpdateIssue?.({ ...issue, assigneeId: uid, assignee: uid ?? "U" })}
+                    users={assigneeUsers}
+                    value={getIssueAssigneeId(issue) || null}
+                    onChange={handleAssigneeChange}
                     placement="auto"
                     size="md"
                     disabled={issue.isArchived}

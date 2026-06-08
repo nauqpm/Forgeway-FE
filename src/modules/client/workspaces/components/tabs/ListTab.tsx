@@ -490,6 +490,7 @@ export default function ListTab({
               <TaskDetailList
                 issue={selectedIssue}
                 workspaceId={workspaceId}
+                workspaceMembers={members}
                 sprints={sprints}
                 boardColumns={boardColumns}
                 workspaceTemplate={workspaceTemplate}
