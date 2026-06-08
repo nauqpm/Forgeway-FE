@@ -219,7 +219,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     const backlogIssues = filteredIssues
       .filter((issue) => {
         if (assignedIssueIds.has(issue.id)) return false;
-        return issue.sprintId === null;
+        return issue.sprintId == null;
       })
       .sort(compareIssueRank);
 

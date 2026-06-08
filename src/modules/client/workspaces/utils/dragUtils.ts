@@ -102,7 +102,7 @@ const getOrderedSprintIssues = (issues: Issue[], droppableId: string) =>
   issues
     .filter((issue) =>
       droppableId === "backlog"
-        ? issue.sprintId === null
+        ? issue.sprintId == null
         : issue.sprintId === droppableId.replace("sprint-", ""),
     )
     .sort(compareIssueRank);

@@ -518,7 +518,10 @@ export default function WorkspaceDetailPage({
           });
         })
         .catch((error) => {
-          if (isNoopReorderError(error)) return;
+          if (isNoopReorderError(error)) {
+            queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+            return;
+          }
 
           queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
           toast.error(error?.response?.data?.message || "Could not update task position");
@@ -830,7 +833,10 @@ export default function WorkspaceDetailPage({
                         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
                       })
                       .catch((error) => {
-                        if (isNoopReorderError(error)) return;
+                        if (isNoopReorderError(error)) {
+                          queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+                          return;
+                        }
                         queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
                         toast.error(error?.response?.data?.message || "Could not update task position");
                       });
