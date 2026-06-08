@@ -42,6 +42,7 @@ import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
+import { useSprintRealtime } from "@/hooks/realtime/use-sprint-realtime";
 import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -101,6 +102,8 @@ const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
 
 const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) =>
   tabName === "summary";
+
+const sprintIdOf = (sprint: Sprint) => sprint.id ?? sprint._id;
 
 export default function WorkspaceDetailPage({
   params,
@@ -330,10 +333,29 @@ export default function WorkspaceDetailPage({
     setSelectedTaskIds((current) => current.filter((id) => id !== taskId));
   }, []);
 
+  const handleRealtimeSprintCreated = useCallback((sprint: Sprint) => {
+    const nextSprintId = sprintIdOf(sprint);
+
+    setSprints((current) => {
+      const exists = current.some((item) => sprintIdOf(item) === nextSprintId);
+
+      if (exists) {
+        return current.map((item) =>
+          sprintIdOf(item) === nextSprintId ? { ...item, ...sprint } : item,
+        );
+      }
+
+      return [...current, sprint];
+    });
+  }, []);
+
   useWorkspaceSocket(workspaceApiId);
   useTaskRealtime(workspaceApiId, {
     onTaskRemoved: handleRealtimeTaskRemoved,
     onTaskUpserted: handleRealtimeTaskUpserted,
+  });
+  useSprintRealtime(workspaceApiId, {
+    onSprintCreated: handleRealtimeSprintCreated,
   });
 
   useEffect(() => {
