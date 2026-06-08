@@ -51,7 +51,6 @@ export default function DocsTreeItem({
 
   const children = documents.filter((d) => d.parentId === doc.id);
   const hasLoadedChildren = loadedChildrenOf.includes(doc.id);
-  // Show expand arrow optimistically (always show until we know it has no children)
   const hasChildren = children.length > 0 || !hasLoadedChildren;
   const isExpanded = expandedNodes.includes(doc.id);
   const isSelected = selectedDocumentId === doc.id;
@@ -76,7 +75,6 @@ export default function DocsTreeItem({
   const handleToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // If expanding and children not yet loaded → lazy load
     if (!isExpanded && !hasLoadedChildren) {
       setIsLoadingChildren(true);
       await loadChildren(doc.id);
@@ -93,7 +91,6 @@ export default function DocsTreeItem({
   const handleAddChild = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // If children not loaded yet, load them first
     if (!hasLoadedChildren) {
       await loadChildren(doc.id);
     }
@@ -147,28 +144,27 @@ export default function DocsTreeItem({
     <li className="list-none">
       <div
         className={`
-          group relative flex items-center justify-between px-3 py-1.5 cursor-pointer transition-all duration-200
+          group relative flex items-center justify-between px-3 py-1.5 cursor-pointer transition-all duration-150
           ${
             isSelected
-              ? "bg-[#E6EFFC] dark:bg-blue-900/30 text-[#0052CC] dark:text-blue-400"
-              : "text-[#42526E] dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900"
+              ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
+              : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
           }
-          rounded-lg mx-1 mb-0.5
+          rounded-[6px] mx-1 mb-0.5
         `}
         style={{ paddingLeft: `${level * 12 + 8}px` }}
         onClick={handleSelect}
       >
-        {/* Active Indicator */}
         {isSelected && (
           <motion.div
             layoutId="activeDocIndicator"
-            className="absolute left-0 w-1 h-5 bg-[#0052CC] dark:bg-blue-400 rounded-r-full"
+            className="absolute left-0 w-1 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-r-full"
           />
         )}
 
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <button
-            className={`w-5 h-5 flex items-center justify-center rounded transition-colors ${isSelected ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-600"} ${hasChildren ? "hover:bg-gray-200/50 dark:hover:bg-gray-800" : "opacity-0 cursor-default"}`}
+            className={`w-5 h-5 flex items-center justify-center rounded-[3px] transition-colors ${isSelected ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#ABABAB] dark:text-[#6B6B6B]"} ${hasChildren ? "hover:bg-[#EAEAEA]/50 dark:hover:bg-white/6" : "opacity-0 cursor-default"}`}
             onClick={handleToggle}
           >
             {isLoadingChildren ? (
@@ -184,7 +180,7 @@ export default function DocsTreeItem({
           </button>
 
           <FileText
-            className={`w-4 h-4 shrink-0 ${isSelected ? "text-[#0052CC] dark:text-blue-400" : "text-gray-400 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400"}`}
+            className={`w-4 h-4 shrink-0 ${isSelected ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#ABABAB] dark:text-[#6B6B6B] group-hover:text-[#787774] dark:group-hover:text-[#9B9A97]"}`}
           />
 
           {isEditing ? (
@@ -195,11 +191,11 @@ export default function DocsTreeItem({
               onBlur={handleRenameSubmit}
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="flex-1 min-w-0 bg-white dark:bg-gray-800 border border-[#4C9AFF] dark:border-blue-500 rounded-md px-2 py-0.5 text-[13px] outline-none shadow-sm dark:text-gray-200"
+              className="flex-1 min-w-0 bg-white dark:bg-[#252525] border border-[#2563EB] dark:border-[#3B82F6] rounded-[4px] px-2 py-0.5 text-[0.8125rem] outline-none dark:text-[#E8E8E7]"
             />
           ) : (
             <span
-              className={`truncate text-[13px] leading-tight py-0.5 ${isSelected ? "font-bold" : "font-medium"}`}
+              className={`truncate text-[0.8125rem] leading-tight py-0.5 ${isSelected ? "font-bold" : "font-medium"}`}
             >
               {doc.title}
             </span>
@@ -212,7 +208,7 @@ export default function DocsTreeItem({
         >
           <button
             onClick={handleAddChild}
-            className="p-1 text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 hover:bg-white dark:hover:bg-gray-800 rounded-md transition-all shadow-none hover:shadow-sm"
+            className="p-1 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] hover:bg-[#F9F9F8] dark:hover:bg-[#252525] rounded-[4px] transition-colors"
             title="Add sub-page"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -225,7 +221,7 @@ export default function DocsTreeItem({
               setMenuPos({ top: rect.bottom + 4, left: rect.right - 176 });
               setShowMenu(!showMenu);
             }}
-            className="p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white dark:hover:bg-gray-800 rounded-md transition-all shadow-none hover:shadow-sm"
+            className="p-1 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#787774] dark:hover:text-[#9B9A97] hover:bg-[#F9F9F8] dark:hover:bg-[#252525] rounded-[4px] transition-colors"
           >
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>
@@ -236,8 +232,12 @@ export default function DocsTreeItem({
                 initial={{ opacity: 0, scale: 0.95, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                className="fixed w-44 bg-white dark:bg-gray-900 rounded-xl shadow-[0_10px_38px_rgba(0,0,0,0.1),0_10px_20px_rgba(0,0,0,0.06)] border border-gray-100 dark:border-gray-800 py-1.5 z-[100]"
-                style={{ top: menuPos.top, left: menuPos.left }}
+                className="fixed w-44 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] py-1.5 z-[100]"
+                style={{
+                  top: menuPos.top,
+                  left: menuPos.left,
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+                }}
               >
                 <button
                   onClick={(e) => {
@@ -245,17 +245,17 @@ export default function DocsTreeItem({
                     setIsEditing(true);
                     setShowMenu(false);
                   }}
-                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-[#42526E] dark:text-gray-300 hover:bg-[#F4F5F7] dark:hover:bg-gray-800 flex items-center gap-2.5 transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 flex items-center gap-2.5 transition-colors"
                 >
-                  <Edit2 className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />{" "}
+                  <Edit2 className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />{" "}
                   Rename
                 </button>
-                <div className="my-1 border-t border-gray-50 dark:border-gray-800" />
+                <div className="my-1 border-t border-[#EAEAEA] dark:border-white/[0.06]" />
                 <button
                   onClick={handleOpenDeleteDialog}
-                  className="w-full text-left px-3 py-2 text-[12px] font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2.5 transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] flex items-center gap-2.5 transition-colors"
                 >
-                  <Trash className="w-3.5 h-3.5" /> Delete 
+                  <Trash className="w-3.5 h-3.5" /> Delete
                 </button>
               </motion.div>
             )}
@@ -283,27 +283,28 @@ export default function DocsTreeItem({
 
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4"
           onClick={closeDeleteDialog}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-page-title"
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-5"
+            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] text-[#9F2F2D]">
                 <Trash className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h2 id="delete-page-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                <h2 id="delete-page-title" className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Delete document?
                 </h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   This will permanently delete{" "}
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                     {deleteTarget.title || "Untitled Document"}
                   </span>
                   {" "}and all sub-pages. This action cannot be undone.
@@ -316,7 +317,7 @@ export default function DocsTreeItem({
                 type="button"
                 disabled={deleting}
                 onClick={closeDeleteDialog}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -324,7 +325,7 @@ export default function DocsTreeItem({
                 type="button"
                 disabled={deleting}
                 onClick={handleDelete}
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-medium text-white hover:bg-[#8F2927] dark:hover:bg-[#F87171]/80 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>

@@ -4,12 +4,11 @@ import React, { useState, useEffect } from "react";
 import {
   MoreHorizontal, Plus, Link as LinkIcon,
   ChevronDown, ChevronRight, Settings,
-  Zap, User, Archive, AlertTriangle, ArchiveRestore,
+  Zap, Archive, AlertTriangle, ArchiveRestore,
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { TaskDetailResponse } from "../types/task-detail.type";
-import TaskSubtasks from "@/modules/admin/components/common/components/TaskSubtasks";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -20,10 +19,12 @@ import type { TaskCover } from "../types/task-cover.type";
 import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceMembers?: any[];
   sprints?: SprintOption[];
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
@@ -48,11 +49,11 @@ const formatDateTime = (value?: string | null) => {
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  High: "text-red-500",
-  Medium: "text-orange-400",
-  Low: "text-blue-400",
-  Highest: "text-red-600",
-  Lowest: "text-blue-300",
+  High: "text-[#9F2F2D] dark:text-[#F87171]",
+  Medium: "text-[#956400] dark:text-[#F59E0B]",
+  Low: "text-[#1F6C9F] dark:text-[#93C5FD]",
+  Highest: "text-[#9F2F2D] dark:text-[#F87171]",
+  Lowest: "text-[#1F6C9F] dark:text-[#93C5FD]",
 };
 
 type SprintOption = {
@@ -64,6 +65,7 @@ type SprintOption = {
 export default function TaskDetailList({
   issue,
   workspaceId,
+  workspaceMembers = [],
   sprints = [],
   workspaceTemplate = "kanban",
   boardColumns = [],
@@ -76,7 +78,6 @@ export default function TaskDetailList({
   const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(true);
@@ -85,7 +86,6 @@ export default function TaskDetailList({
   useEffect(() => {
     if (issue) {
       setLocalTitle(issue.title);
-      setSubtasks(issue.subtasks || []);
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
@@ -98,8 +98,6 @@ export default function TaskDetailList({
   const issueKey = issue.key;
   const { statusColumns, currentColumn, displayName: statusDisplayName } =
     resolveTaskStatusColumn(boardColumns, issue);
-  const assigneeName =
-    issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const sprintLabel =
     issue.sprint?.name ||
@@ -110,7 +108,7 @@ export default function TaskDetailList({
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
       : String(issue.storyPoints);
-  const priorityColor = PRIORITY_COLORS[issue.priority] || "text-gray-500";
+  const priorityColor = PRIORITY_COLORS[issue.priority] || "text-[#787774] dark:text-[#9B9A97]";
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -131,56 +129,42 @@ export default function TaskDetailList({
     onUpdateIssue({ ...issue, [field]: nextValue });
   };
 
-  const handleAddSubtask = (title: string) => {
-    if (issue.isArchived) return;
-    const newSubtask = { id: `sub-${Date.now()}`, title, status: "To Do", priority: "Medium" };
-    const updated = [...subtasks, newSubtask];
-    setSubtasks(updated);
-    onUpdateIssue?.({ ...issue, subtasks: updated });
-  };
-
-  const handleUpdateSubtaskStatus = (id: string, newStatus: string) => {
-    if (issue.isArchived) return;
-    const updated = subtasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t));
-    setSubtasks(updated);
-    onUpdateIssue?.({ ...issue, subtasks: updated });
-  };
 
   // Helper: each detail row in the sidebar — label on left (fixed), value on right
   const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div className="flex items-start gap-3 py-1.5">
-      <span className="text-sm text-gray-500 dark:text-gray-400 w-28 shrink-0 pt-0.5">{label}</span>
+      <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] w-28 shrink-0 pt-0.5">{label}</span>
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
 
   return (
-    <div className="flex flex-col h-full w-full bg-white dark:bg-[#1D2125] text-gray-900 dark:text-gray-100 overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] overflow-hidden">
       {/* ── TOP TOOLBAR ── */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-[#1D2125]">
+      <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-sm font-medium min-w-0">
+        <div className="flex items-center gap-1.5 text-[0.8125rem] font-medium min-w-0">
           {showBackButton && (
             <>
               <button
                 onClick={onClose}
-                className="flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors shrink-0"
+                className="flex items-center gap-1 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back</span>
               </button>
-              <span className="text-gray-400 dark:text-gray-600 shrink-0">/</span>
+              <span className="text-[#ABABAB] dark:text-[#6B6B6B] shrink-0">/</span>
             </>
           )}
-          <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer transition-colors shrink-0">
-            <div className="w-4 h-4 bg-[#0052CC] text-white flex items-center justify-center rounded-sm">
-              <span className="text-[9px] font-bold">✓</span>
+          <div className="flex items-center gap-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer transition-colors shrink-0">
+            <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[4px]">
+              <span className="text-[0.5625rem] font-bold">✓</span>
             </div>
             <span>{issueKey}</span>
           </div>
           <div className="flex items-center gap-1 shrink-0 ml-0.5">
-            <button className="p-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"><ChevronRight className="w-3.5 h-3.5 text-gray-400" /></button>
-            <button className="p-0.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"><ChevronDown className="w-3.5 h-3.5 text-gray-400" /></button>
+            <button className="p-0.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px]"><ChevronRight className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" /></button>
+            <button className="p-0.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px]"><ChevronDown className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" /></button>
           </div>
         </div>
 
@@ -189,16 +173,16 @@ export default function TaskDetailList({
           <div className="relative">
             <button
               onClick={() => setShowActionMenu((o) => !o)}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 rounded transition-colors"
+              className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] rounded-[6px] transition-colors"
             >
               <MoreHorizontal className="w-4 h-4" />
             </button>
             {showActionMenu && (
-              <div className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 py-1 shadow-xl">
+              <div className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
                 <button
                   onClick={() => { setShowActionMenu(false); onArchiveIssue?.(issue); }}
                   disabled={!onArchiveIssue || issue.isArchived}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50"
                 >
                   <Archive className="h-4 w-4" /> Archive
                 </button>
@@ -212,7 +196,7 @@ export default function TaskDetailList({
         workspaceId={workspaceId}
         issue={{ ...issue, cover: localCover }}
         maxHeightClass="h-36"
-        colorHeightClass="h-[72px]"
+        colorHeightClass="h-18"
         onIssueCoverChange={setLocalCover}
       />
 
@@ -220,18 +204,18 @@ export default function TaskDetailList({
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── LEFT COLUMN: Main content ── */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 border-r border-gray-200 dark:border-gray-700">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 border-r border-[#EAEAEA] dark:border-white/[0.06]">
 
           {/* Archived Banner */}
           {issue.isArchived && (
-            <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-md">
+            <div className="flex items-center justify-between bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] border-l-4 border-[#956400]/40 dark:border-[#F59E0B]/40 p-3 rounded-[6px]">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                <span className="text-yellow-700 text-sm">
+                <AlertTriangle className="h-4 w-4 text-[#956400] dark:text-[#F59E0B]" />
+                <span className="text-[#956400] dark:text-[#F59E0B] text-sm">
                   Archived by {issue.archivedByUser?.fullName || "Unknown"} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : "Unknown Date"}. Read-only.
                 </span>
               </div>
-              <button className="flex items-center gap-1 px-2.5 py-1 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-xs font-semibold rounded transition-colors">
+              <button className="flex items-center gap-1 px-2.5 py-1 bg-[#FBF3DB] hover:bg-[#F7F6F3] dark:bg-[rgba(149,100,0,0.12)] dark:hover:bg-[#2E2E2E] text-[#956400] dark:text-[#F59E0B] text-xs font-semibold rounded-[6px] transition-colors">
                 <ArchiveRestore className="w-3 h-3" /> Restore
               </button>
             </div>
@@ -246,12 +230,12 @@ export default function TaskDetailList({
               onChange={(e) => setLocalTitle(e.target.value)}
               onBlur={handleTitleBlur}
               onKeyDown={(e) => { if (e.key === "Enter") handleTitleBlur(); }}
-              className="w-full text-2xl font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 border-2 border-[#0052CC] rounded px-2 py-1 outline-none"
+              className="w-full text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] bg-[#F7F6F3] dark:bg-[#252525] border-2 border-[#2563EB] rounded-[6px] px-2 py-1 outline-none"
             />
           ) : (
             <h1
               onClick={() => { if (!issue.isArchived) setIsEditingTitle(true); }}
-              className={`text-2xl font-semibold text-gray-900 dark:text-white leading-snug rounded px-1 -ml-1 transition-colors ${issue.isArchived ? "opacity-80" : "hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"}`}
+              className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-snug rounded-[6px] px-1 -ml-1 transition-colors ${issue.isArchived ? "opacity-80" : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"}`}
             >
               {localTitle}
             </h1>
@@ -259,7 +243,7 @@ export default function TaskDetailList({
 
           {/* Description */}
           <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Description</h2>
+            <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Description</h2>
             <TaskDescription
               initialContent={issue.description || ""}
               onSave={(newDesc: string) => {
@@ -278,34 +262,26 @@ export default function TaskDetailList({
             accessToken={token}
           />
 
-          {/* Subtasks */}
-          <div>
-            {/*<h2 className="text-base font-semibold text-gray-900 dark:text-white mb-2">Subtasks</h2>*/}
-            <TaskSubtasks
-              subtasks={subtasks}
-              onAdd={handleAddSubtask}
-              onUpdateStatus={handleUpdateSubtaskStatus}
-            />
-          </div>
+          {/* Subtasks — hidden until backend supports */}
 
           {/* Linked Work Items */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Linked work items</h2>
-              <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
-                <Plus className="w-4 h-4 text-gray-500" />
+              <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h2>
+              <button className="p-1 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors">
+                <Plus className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
               </button>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">No linked items yet</p>
+            <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4">
+              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-3">No linked items yet</p>
               <div className="flex flex-wrap gap-2">
                 <Link
                   href={`/docs/create?issueId=${issue.id}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-medium rounded transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] text-white text-[0.8125rem] font-medium rounded-[6px] transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
                 >
                   <Plus className="w-3.5 h-3.5" /> Create Document
                 </Link>
-                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded transition-colors">
+                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
                   <LinkIcon className="w-3.5 h-3.5" /> Link item
                 </button>
               </div>
@@ -313,18 +289,18 @@ export default function TaskDetailList({
           </div>
 
           {/* Activity */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h2>
-              <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+              <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h2>
+              <div className="flex items-center gap-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 <span>Show:</span>
                 {(["comments", "history"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-3 py-1 rounded transition-colors capitalize ${activeTab === tab
-                        ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white font-medium"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                    className={`px-3 py-1 rounded-[4px] transition-colors capitalize ${activeTab === tab
+                        ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] font-medium"
+                        : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97]"
                       }`}
                   >
                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -348,7 +324,7 @@ export default function TaskDetailList({
         </div>
 
         {/* ── RIGHT COLUMN: Sidebar ── */}
-        <div className="w-72 shrink-0 overflow-y-auto custom-scrollbar bg-gray-50 dark:bg-[#22272B] p-4 space-y-5">
+        <div className="w-72 shrink-0 overflow-y-auto custom-scrollbar bg-[#F9F9F8] dark:bg-[#252525] p-4 space-y-5">
 
           {/* Status + Automations + Improve Task */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -356,20 +332,20 @@ export default function TaskDetailList({
               <button
                 onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
                 disabled={issue.isArchived}
-                className={`flex items-center gap-1.5 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white text-sm font-semibold rounded transition-colors ${issue.isArchived ? "opacity-70 cursor-not-allowed" : "hover:bg-gray-300 dark:hover:bg-gray-600"}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? "opacity-70 cursor-not-allowed" : "hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"}`}
               >
                 {statusDisplayName}
-                {!issue.isArchived && <ChevronDown className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />}
+                {!issue.isArchived && <ChevronDown className="w-3.5 h-3.5 text-[#787774] dark:text-[#9B9A97]" />}
               </button>
               {showStatusDropdown && (
-                <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
+                <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden z-10 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
                   {statusColumns.map((column) => (
                     <button
                       key={column.id}
                       onClick={() => handleStatusChange(column)}
-                      className={`w-full text-left px-4 py-2 text-sm transition-colors ${column.id === currentColumn?.id
-                          ? "bg-gray-100 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      className={`w-full text-left px-4 py-2 text-[0.8125rem] transition-colors ${column.id === currentColumn?.id
+                          ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium border-l-2 border-[#2563EB] dark:border-[#3B82F6]"
+                          : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                         }`}
                     >
                       {column.name}
@@ -384,13 +360,13 @@ export default function TaskDetailList({
           <div>
             <button
               onClick={() => setDetailsOpen((o) => !o)}
-              className="w-full flex items-center justify-between py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="w-full flex items-center justify-between py-1.5 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
             >
               <div className="flex items-center gap-1.5">
                 {detailsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                 <span>Details</span>
               </div>
-              <Settings className="w-3.5 h-3.5 text-gray-400" />
+              <Settings className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
             </button>
 
             {detailsOpen && (
@@ -398,20 +374,19 @@ export default function TaskDetailList({
 
                 {/* Assignee */}
                 <DetailRow label="Assignee">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">
-                      <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center shrink-0">
-                        <User className="w-3 h-3 text-gray-500 dark:text-gray-300" />
-                      </div>
-                      <span className="truncate">{assigneeName}</span>
-                    </div>
-                    <a href="#" className="text-xs text-[#0052CC] hover:underline block px-1">Assign to me</a>
-                  </div>
+                  <AssigneePicker
+                    users={toAssigneePickerUsers(workspaceMembers)}
+                    value={issue.assigneeId || (typeof issue.assignee === "string" && issue.assignee !== "U" ? issue.assignee : null)}
+                    onChange={(uid) => onUpdateIssue?.({ ...issue, assigneeId: uid, assignee: uid ?? "U" })}
+                    placement="auto"
+                    size="md"
+                    disabled={issue.isArchived}
+                  />
                 </DetailRow>
 
                 {/* Priority */}
                 <DetailRow label="Priority">
-                  <div className={`flex items-center gap-1.5 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors ${priorityColor}`}>
+                  <div className={`flex items-center gap-1.5 text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors ${priorityColor}`}>
                     <span className="inline-block w-2.5 h-2.5 rounded-sm bg-current opacity-80" />
                     {issue.priority}
                   </div>
@@ -419,7 +394,7 @@ export default function TaskDetailList({
 
                 {/* Parent */}
                 <DetailRow label="Parent">
-                  <div className="text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">None</div>
+                  <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">None</div>
                 </DetailRow>
 
                 {/* Due date */}
@@ -455,19 +430,19 @@ export default function TaskDetailList({
 
                 {showSprintField && (
                   <DetailRow label="Sprint">
-                    <div className="text-sm text-gray-900 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">{sprintLabel}</div>
+                    <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{sprintLabel}</div>
                   </DetailRow>
                 )}
 
                 {/* Story point estimate */}
                 <DetailRow label="Story point estimate">
-                  <div className="text-sm text-gray-900 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">{storyPointsLabel}</div>
+                  <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{storyPointsLabel}</div>
                 </DetailRow>
 
                 {/* Reporter */}
                 <DetailRow label="Reporter">
-                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 p-1 -ml-1 rounded cursor-pointer transition-colors">
-                    <div className="w-5 h-5 rounded-full bg-[#0052CC] flex items-center justify-center text-white font-bold text-[10px] shrink-0">
+                  <div className="flex items-center gap-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-[0.625rem] shrink-0">
                       {reporterName.substring(0, 1).toUpperCase()}
                     </div>
                     <span className="truncate">{reporterName}</span>
@@ -479,7 +454,7 @@ export default function TaskDetailList({
           </div>
 
           {/* Meta */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-4 text-xs text-gray-400 dark:text-gray-500 space-y-1">
+          <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-4 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
             <p>Created {formatDateTime(issue.createdAt)}</p>
             <p>Updated {formatDateTime(issue.updatedAt)}</p>
           </div>

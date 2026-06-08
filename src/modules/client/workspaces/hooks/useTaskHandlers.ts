@@ -36,6 +36,13 @@ interface UseIssueHandlersProps {
   >;
 }
 
+const upsertIssue = (current: Issue[], issue: Issue): Issue[] => {
+  const id = issue.id || issue._id;
+  const exists = current.some((item) => (item.id || item._id) === id);
+  if (exists) return current.map((item) => (item.id || item._id) === id ? { ...item, ...issue } : item);
+  return [...current, issue];
+};
+
 export const useTaskHandlers = ({
   workspaceId,
   issues,
@@ -89,7 +96,7 @@ export const useTaskHandlers = ({
       })
       .catch((error) => {
         setIssues(issues);
-        toast.error(error?.response?.data?.message || "Khong cap nhat duoc task");
+        toast.error(error?.response?.data?.message || "Could not update task");
       });
   };
 
@@ -104,7 +111,7 @@ export const useTaskHandlers = ({
     isCreatingRef.current = true;
     try {
       const issue = await taskService.createBoardTask(workspaceId, newIssueForm);
-      setIssues((current) => [...current, issue]);
+      setIssues((current) => upsertIssue(current, issue));
       setShowCreateIssue(false);
       setNewIssueForm({
         title: "",
@@ -117,7 +124,7 @@ export const useTaskHandlers = ({
       });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong tao duoc task");
+      toast.error(error?.response?.data?.message || "Could not create task");
     } finally {
       isCreatingRef.current = false;
     }
@@ -127,7 +134,7 @@ export const useTaskHandlers = ({
     updatedIssue: Issue
   ) => {
     if (!updatedIssue.id) {
-      toast.error("Khong tim thay task id");
+      toast.error("Task ID not found");
       return;
     }
 
@@ -153,7 +160,7 @@ export const useTaskHandlers = ({
         queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong cap nhat duoc task");
+      toast.error(error?.response?.data?.message || "Could not update task");
     }
   };
 
@@ -179,10 +186,10 @@ export const useTaskHandlers = ({
         status: "To Do",
         sprintId,
       });
-      setIssues(prev => [...prev, issue]);
+      setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Loi khi tao task");
+      toast.error(error?.response?.data?.message || "Could not create task");
     } finally {
       isCreatingRef.current = false;
     }
@@ -206,10 +213,10 @@ export const useTaskHandlers = ({
         assigneeId: task.assigneeId || '',
         dueDate: task.dueDate || undefined,
       });
-      setIssues(prev => [...prev, issue]);
+      setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Loi khi tao task');
+      toast.error(error?.response?.data?.message || 'Could not create task');
     } finally {
       isCreatingRef.current = false;
     }
@@ -228,7 +235,7 @@ export const useTaskHandlers = ({
         startDate: date,
         dueDate: date,
       });
-      setIssues((current) => [...current, issue]);
+      setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Could not create work item");

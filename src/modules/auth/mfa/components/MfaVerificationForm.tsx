@@ -53,33 +53,33 @@ const MfaVerificationForm: React.FC = () => {
   const isTotp = method === 'totp';
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#FBFBFA] dark:bg-[#1A1A1A] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            {isTotp ? <KeyRound className="w-8 h-8 text-indigo-600" /> : <Mail className="w-8 h-8 text-indigo-600" />}
+          <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] rounded-[8px] flex items-center justify-center mx-auto mb-4">
+            {isTotp ? <KeyRound className="w-8 h-8 text-[#2563EB] dark:text-[#3B82F6]" /> : <Mail className="w-8 h-8 text-[#2563EB] dark:text-[#3B82F6]" />}
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Two-factor authentication</h1>
-          <p className="text-gray-500 text-sm mt-2">
+          <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">Two-factor authentication</h1>
+          <p className="text-[#787774] dark:text-[#9B9A97] text-[0.8125rem] mt-2">
             {isTotp ? 'Enter the 6-digit code from your authenticator app' : 'Enter the 6-digit code sent to your email'}
           </p>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+        <div className="bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 p-8">
           {!useBackupCode ? (
             <>
               <div className="flex justify-center gap-2 mb-6" onPaste={handlePaste}>
                 {code.map((d, i) => (
                   <input key={i} ref={(el) => { inputRefs.current[i] = el; }} type="text" inputMode="numeric" maxLength={1} value={d}
                     onChange={(e) => handleCodeChange(i, e.target.value)} onKeyDown={(e) => handleKeyDown(i, e)} disabled={loading}
-                    className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-xl outline-none transition-colors ${d ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200'} focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200`} />
+                    className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-[6px] outline-none transition-colors dark:bg-[#252525] dark:text-[#E8E8E7] ${d ? 'border-[#2563EB] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)]' : 'border-[#EAEAEA] dark:border-white/10'} focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20`} />
                 ))}
               </div>
-              {error && <p className="text-red-500 text-sm text-center mb-4">{error}</p>}
-              {loading && <div className="flex items-center justify-center gap-2 text-indigo-600 mb-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-sm">Verifying...</span></div>}
+              {error && <p className="text-red-500 text-[0.8125rem] text-center mb-4">{error}</p>}
+              {loading && <div className="flex items-center justify-center gap-2 text-[#2563EB] dark:text-[#3B82F6] mb-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-[0.8125rem]">Verifying...</span></div>}
               {method === 'email_otp' && (
                 <div className="text-center mb-4">
                   <button type="button" onClick={handleResend} disabled={resendCooldown > 0 || loading}
-                    className="inline-flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed">
+                    className="inline-flex items-center gap-1.5 text-[0.8125rem] text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8] disabled:text-[#ABABAB] dark:disabled:text-[#6B6B6B] disabled:cursor-not-allowed">
                     <RotateCcw className="w-3.5 h-3.5" />{resendCooldown > 0 ? `Resend after ${resendCooldown}s` : 'Resend OTP'}
                   </button>
                 </div>
@@ -88,21 +88,21 @@ const MfaVerificationForm: React.FC = () => {
           ) : (
             <form onSubmit={handleBackupSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Backup code</label>
+                <label className="block text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] mb-1.5">Backup code</label>
                 <input type="text" value={backupCode} onChange={(e) => { setBackupCode(e.target.value); clearError(); }}
                   placeholder="Enter backup code" disabled={loading}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none font-mono" />
+                  className="w-full px-4 py-2.5 border border-[#EAEAEA] dark:border-white/8 rounded-[6px] text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] outline-none font-mono" />
               </div>
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+              {error && <p className="text-red-500 text-[0.8125rem] text-center">{error}</p>}
               <button type="submit" disabled={loading || !backupCode.trim()}
-                className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                className="w-full py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] font-semibold hover:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed">
                 {loading ? 'Verifying...' : 'Verify'}
               </button>
             </form>
           )}
-          <div className="text-center mt-4 pt-4 border-t border-gray-100">
+          <div className="text-center mt-4 pt-4 border-t border-[#EAEAEA] dark:border-white/8">
             <button type="button" onClick={() => { setUseBackupCode(!useBackupCode); clearError(); }}
-              className="text-xs text-gray-500 hover:text-indigo-600">{useBackupCode ? '← Back to code entry' : 'Use backup code'}</button>
+              className="text-xs text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] dark:hover:text-[#3B82F6]">{useBackupCode ? '← Back to code entry' : 'Use backup code'}</button>
           </div>
         </div>
       </div>

@@ -82,7 +82,7 @@ const ROLE_BADGES: Record<string, string> = {
   space_admin:
     "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
   member: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  viewer: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+  viewer: "bg-[#F7F6F3] text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]",
 };
 
 const MEMBER_ROLE_OPTIONS: { value: InviteRole; label: string }[] = [
@@ -449,7 +449,7 @@ export default function WorkspaceSettingsPage({
 
   if (!workspace) {
     return (
-      <div className="p-10 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-10 text-center text-[#787774] dark:text-[#9B9A97]">
         Workspace not found.
       </div>
     );
@@ -460,32 +460,32 @@ export default function WorkspaceSettingsPage({
       <div className="flex items-center gap-3 mb-6">
         <Link
           href={`/workspaces/${workspaceKey}`}
-          className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <ArrowLeft className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">
             Workspace settings
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">
+          <p className="text-[#787774] dark:text-[#9B9A97] text-sm mt-0.5">
             {workspace.name}
-            <span className="text-gray-400 dark:text-gray-500 mx-1">-</span>
+            <span className="text-[#ABABAB] dark:text-[#6B6B6B] mx-1">-</span>
             {workspace.key}
           </p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden flex flex-col md:flex-row min-h-[max(500px,var(--app-board-h))]">
-        <div className="w-full md:w-[var(--workspace-settings-nav-w)] bg-gray-50 dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 p-[var(--workspace-surface-pad)]">
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col md:flex-row min-h-[max(500px,var(--app-board-h))]">
+        <div className="w-full md:w-[var(--workspace-settings-nav-w)] bg-[#F9F9F8] dark:bg-[#252525] border-b md:border-b-0 md:border-r border-[#EAEAEA] dark:border-white/[0.06] p-[var(--workspace-surface-pad)]">
           <nav className="space-y-1">
             <button
               type="button"
               onClick={() => setActiveTab("general")}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === "general"
-                  ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
+                  : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
               }`}
             >
               <Settings className="w-4 h-4" /> Overview
@@ -495,8 +495,8 @@ export default function WorkspaceSettingsPage({
               onClick={() => setActiveTab("members")}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === "members"
-                  ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
+                  : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
               }`}
             >
               <Users className="w-4 h-4" /> Member
@@ -611,17 +611,17 @@ function GeneralSettings({
   return (
     <form onSubmit={handleSave} className="space-y-8 max-w-[min(100%,42rem)]">
       <section>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">
           Basic information
         </h2>
         {!canManageWorkspace && (
-          <p className="mb-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-800/60 dark:text-gray-300">
+          <p className="mb-4 rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
             You can view workspace information. Only administrators can edit it.
           </p>
         )}
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
               Workspace name
             </label>
             <input
@@ -631,13 +631,13 @@ function GeneralSettings({
                 setForm({ ...form, name: event.target.value })
               }
               disabled={!canManageWorkspace}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
               Description
             </label>
             <textarea
@@ -646,29 +646,29 @@ function GeneralSettings({
                 setForm({ ...form, description: event.target.value })
               }
               disabled={!canManageWorkspace}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+              className="w-full px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] resize-none"
               rows={3}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
               Workspace key
             </label>
             <input
               type="text"
               value={workspace.key}
               disabled
-              className="w-full px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 font-mono cursor-not-allowed"
+              className="w-full px-4 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[#787774] dark:text-[#9B9A97] font-mono cursor-not-allowed"
             />
           </div>
         </div>
       </section>
 
-      <hr className="border-gray-100 dark:border-gray-800" />
+      <hr className="border-[#EAEAEA] dark:border-white/[0.06]" />
 
       <section>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">
           Access
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -680,8 +680,8 @@ function GeneralSettings({
               key={option.value}
               className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
                 form.access === option.value
-                  ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
-                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  ? "border-[#2563EB] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)]"
+                  : "border-[#EAEAEA] dark:border-white/[0.06] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/40"
               }`}
             >
               <input
@@ -693,11 +693,11 @@ function GeneralSettings({
                   setForm({ ...form, access: option.value as WorkspaceAccess })
                 }
                 disabled={!canManageWorkspace}
-                className="text-indigo-600 focus:ring-indigo-500"
+                className="text-[#2563EB] focus:ring-[#2563EB]"
               />
               <div className="flex items-center gap-2">
-                <option.icon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                <option.icon className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
+                <span className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">
                   {option.label}
                 </span>
               </div>
@@ -707,7 +707,7 @@ function GeneralSettings({
       </section>
 
       <section>
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">
           Status
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -719,8 +719,8 @@ function GeneralSettings({
               key={option.value}
               className={`flex items-center gap-3 p-4 border rounded-lg cursor-pointer transition-colors ${
                 form.status === option.value
-                  ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
-                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                  ? "border-[#2563EB] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)]"
+                  : "border-[#EAEAEA] dark:border-white/[0.06] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/40"
               }`}
             >
               <input
@@ -732,9 +732,9 @@ function GeneralSettings({
                   setForm({ ...form, status: option.value as WorkspaceStatus })
                 }
                 disabled={!canManageWorkspace}
-                className="text-indigo-600 focus:ring-indigo-500"
+                className="text-[#2563EB] focus:ring-[#2563EB]"
               />
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
+              <span className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">
                 {option.label}
               </span>
             </label>
@@ -747,7 +747,7 @@ function GeneralSettings({
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="px-6 py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-sm font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors flex items-center gap-2 disabled:opacity-50"
           >
             {saving ? (
               <>
@@ -780,7 +780,7 @@ function GeneralSettings({
           <button
             type="button"
             onClick={() => setShowLeaveDialog(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-amber-600/20"
+            className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white hover:bg-amber-700 rounded-[6px] text-sm font-semibold transition-colors shadow-sm shadow-amber-600/20"
           >
             <LogOut className="w-4 h-4" />
             Leave workspace
@@ -803,7 +803,7 @@ function GeneralSettings({
                 setDeleteConfirm("");
                 setShowDeleteDialog(true);
               }}
-              className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm shadow-red-600/20"
+              className="px-4 py-2 bg-[#9F2F2D] text-white hover:bg-[#8F2927] rounded-[6px] text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm shadow-[#9F2F2D]/20"
             >
               <Trash2 className="w-4 h-4" />
               Delete workspace
@@ -815,18 +815,18 @@ function GeneralSettings({
       {/* Delete dialog */}
       {showDeleteDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6">
+          <div className="w-full max-w-md bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-2xl p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
-                <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+              <div className="w-10 h-10 rounded-full bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-5 h-5 text-[#9F2F2D] dark:text-[#F87171]" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">
                 Delete workspace
               </h2>
             </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4">
               This action will delete workspace{" "}
-              <span className="font-semibold text-gray-900 dark:text-white">
+              <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                 {workspace.name}
               </span>{" "}
               and cannot be undone. Enter{" "}
@@ -839,7 +839,7 @@ function GeneralSettings({
               onChange={(event) => setDeleteConfirm(event.target.value)}
               onKeyDown={handleDeleteConfirmKeyDown}
               placeholder="delete"
-              className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              className="w-full mb-4 px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D]"
               autoFocus
             />
             <div className="flex justify-end gap-3">
@@ -849,7 +849,7 @@ function GeneralSettings({
                   setShowDeleteDialog(false);
                   setDeleteConfirm("");
                 }}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-[#111111] dark:text-[#E8E8E7] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
               >
                 Cancel
               </button>
@@ -857,7 +857,7 @@ function GeneralSettings({
                 type="button"
                 onClick={handleDelete}
                 disabled={deleteConfirm !== "delete" || deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm font-medium text-white bg-[#9F2F2D] hover:bg-[#8F2927] disabled:bg-[#F5C6C7] disabled:cursor-not-allowed rounded-[6px] transition-colors flex items-center gap-2"
               >
                 {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
                 {deleting ? "Deleting..." : "Confirm delete"}
@@ -870,20 +870,20 @@ function GeneralSettings({
       {/* Leave dialog */}
       {showLeaveDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6">
+          <div className="w-full max-w-md bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-2xl p-6">
             {canManageWorkspace ? (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center flex-shrink-0">
                     <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">
                     You are the owner of this workspace
                   </h2>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-6">
                   Do you want to delete workspace{" "}
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                     {workspace.name}
                   </span>{" "}
                   now? This action will delete all data and cannot be undone.
@@ -892,7 +892,7 @@ function GeneralSettings({
                   <button
                     type="button"
                     onClick={() => setShowLeaveDialog(false)}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-[#111111] dark:text-[#E8E8E7] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
                   >
                     Close
                   </button>
@@ -910,7 +910,7 @@ function GeneralSettings({
                           ?.focus();
                       }, 0);
                     }}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-2"
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#9F2F2D] hover:bg-[#8F2927] rounded-[6px] transition-colors flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
                     Go to delete workspace
@@ -920,16 +920,16 @@ function GeneralSettings({
             ) : (
               <>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0">
-                    <LogOut className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  <div className="w-10 h-10 rounded-full bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] flex items-center justify-center flex-shrink-0">
+                    <LogOut className="w-5 h-5 text-[#9F2F2D] dark:text-[#F87171]" />
                   </div>
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">
                     Leave workspace
                   </h2>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4">
                   You will lose access to workspace{" "}
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                     {workspace.name}
                   </span>
                   . Enter <span className="font-mono font-semibold">leave</span>{" "}
@@ -941,7 +941,7 @@ function GeneralSettings({
                   onChange={(e) => setLeaveConfirm(e.target.value)}
                   onKeyDown={handleLeaveConfirmKeyDown}
                   placeholder="leave"
-                  className="w-full mb-4 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full mb-4 px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D]"
                   autoFocus
                 />
                 <div className="flex justify-end gap-3">
@@ -951,7 +951,7 @@ function GeneralSettings({
                       setShowLeaveDialog(false);
                       setLeaveConfirm("");
                     }}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-[#111111] dark:text-[#E8E8E7] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
                   >
                     Cancel
                   </button>
@@ -959,7 +959,7 @@ function GeneralSettings({
                     type="button"
                     onClick={handleLeave}
                     disabled={leaveConfirm !== "leave" || leaving}
-                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed rounded-lg transition-colors flex items-center gap-2"
+                    className="px-4 py-2 text-sm font-medium text-white bg-[#9F2F2D] hover:bg-[#8F2927] disabled:bg-[#F5C6C7] disabled:cursor-not-allowed rounded-[6px] transition-colors flex items-center gap-2"
                   >
                     {leaving && <Loader2 className="w-4 h-4 animate-spin" />}
                     {leaving ? "Leaving..." : "Confirm leave"}
@@ -1035,21 +1035,21 @@ function MemberSettings({
 
   const listTabClass =
     memberSubTab === "list"
-      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white"
-      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white";
+      ? "bg-white text-[#111111] shadow-sm dark:bg-[#202020] dark:text-[#E8E8E7]"
+      : "text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]";
   const invitesTabClass =
     memberSubTab === "invites"
-      ? "bg-white text-gray-900 shadow-sm dark:bg-gray-900 dark:text-white"
-      : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white";
+      ? "bg-white text-[#111111] shadow-sm dark:bg-[#202020] dark:text-[#E8E8E7]"
+      : "text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]";
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-600" /> Member
+          <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
+            <Users className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" /> Member
           </h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-[#787774] dark:text-[#9B9A97]">
             Manage access permissions and pending invitations in this workspace.
           </p>
         </div>
@@ -1057,7 +1057,7 @@ function MemberSettings({
           <button
             type="button"
             onClick={() => setShowInviteModal(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-indigo-600/20 transition-colors hover:bg-indigo-700"
+            className="inline-flex items-center justify-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[#2563EB]/20 transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB]"
           >
             <UserPlus className="h-4 w-4" />
             Invite member
@@ -1065,7 +1065,7 @@ function MemberSettings({
         )}
       </div>
 
-      <div className="inline-flex rounded-lg border border-gray-200 bg-gray-100 p-1 dark:border-gray-700 dark:bg-gray-800">
+      <div className="inline-flex rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] p-1 dark:border-white/[0.06] dark:bg-[#252525]">
         <button
           type="button"
           onClick={() => setMemberSubTab("list")}
@@ -1093,17 +1093,16 @@ function MemberSettings({
       {memberSubTab === "list" || !canManageWorkspace ? (
         <section>
           {loadingMembers ? (
-            <div className="flex items-center gap-2 py-8 text-sm text-gray-400">
-              <Loader2 className="h-4 w-4 animate-spin" /> Dang tai thanh
-              vien...
+            <div className="flex items-center gap-2 py-8 text-sm text-[#ABABAB] dark:text-[#6B6B6B]">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading members...
             </div>
           ) : members.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <div className="rounded-[6px] border border-dashed border-[#EAEAEA] p-6 text-center text-sm text-[#787774] dark:border-white/[0.08] dark:text-[#9B9A97]">
               There are no members in this workspace yet.
             </div>
           ) : (
-            <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
+            <div className="overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
+              <div className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06]">
                 {members.map((member) => {
                   const memberUser = member.userId;
                   const displayName =
@@ -1120,7 +1119,7 @@ function MemberSettings({
                   return (
                     <div
                       key={memberId ?? displayName + "-" + member.role}
-                      className="flex flex-col gap-3 bg-white p-4 dark:bg-gray-900 sm:flex-row sm:items-center"
+                        className="flex flex-col gap-3 bg-white p-4 dark:bg-[#202020] sm:flex-row sm:items-center"
                     >
                       <div className="flex min-w-0 flex-1 items-center gap-3">
                         {memberUser?.avatar ? (
@@ -1130,22 +1129,22 @@ function MemberSettings({
                             className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
                           />
                         ) : (
-                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white">
+                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-xs font-bold text-white">
                             {getMemberInitials(member)}
                           </span>
                         )}
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                            <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
                               {displayName}
                             </p>
                             {isSelf && (
-                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                              <span className="rounded-full bg-[#F7F6F3] px-2 py-0.5 text-xs font-semibold text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]">
                                 You
                               </span>
                             )}
                           </div>
-                          <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+                          <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">
                             {memberUser?.email || "No email"}
                           </p>
                         </div>
@@ -1165,7 +1164,7 @@ function MemberSettings({
                             )
                           }
                           disabled={!canManageWorkspace || isSelf || isBusy}
-                          className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                          className="h-9 rounded-[6px] border border-[#EAEAEA] bg-white px-3 text-sm text-[#111111] outline-none focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.08] dark:bg-[#252525] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
                         >
                           {MEMBER_ROLE_OPTIONS.map((role) => (
                             <option key={role.value} value={role.value}>
@@ -1177,7 +1176,7 @@ function MemberSettings({
                           type="button"
                           onClick={() => handleRemoveMember(member)}
                           disabled={!canManageWorkspace || isSelf || isBusy}
-                          className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-red-200 px-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:text-red-300 dark:hover:bg-red-900/20"
+                          className="inline-flex h-9 items-center justify-center gap-2 rounded-[6px] border border-[#F5C6C7] px-3 text-sm font-semibold text-[#9F2F2D] transition-colors hover:bg-[#FDEBEC] disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#9F2F2D]/40 dark:text-[#F87171] dark:hover:bg-[rgba(159,47,45,0.12)]"
                         >
                           {removingMemberId === memberId ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -1197,18 +1196,18 @@ function MemberSettings({
       ) : (
         <section>
           {loadingInvites ? (
-            <div className="flex items-center gap-2 py-8 text-sm text-gray-400">
+            <div className="flex items-center gap-2 py-8 text-sm text-[#ABABAB] dark:text-[#6B6B6B]">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading
               invitations...
             </div>
           ) : invites.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+            <div className="rounded-[6px] border border-dashed border-[#EAEAEA] p-6 text-center text-sm text-[#787774] dark:border-white/[0.08] dark:text-[#9B9A97]">
               There are no pending invitations.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-              <table className="w-full min-w-[620px] text-left text-sm">
-                <thead className="border-b border-gray-200 bg-gray-50 font-medium text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+            <div className="overflow-x-auto rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
+              <table className="w-full min-w-[38.75rem] text-left text-sm">
+                <thead className="border-b border-[#EAEAEA] bg-[#F9F9F8] font-medium text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
                   <tr>
                     <th className="px-4 py-3">Email</th>
                     <th className="px-4 py-3 w-36">Role</th>
@@ -1216,21 +1215,21 @@ function MemberSettings({
                     <th className="px-4 py-3 w-24 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06]">
                   {invites.map((invite) => (
                     <tr
                       key={invite._id}
-                      className="bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800/60"
+                      className="bg-white hover:bg-[#F7F6F3] dark:bg-[#202020] dark:hover:bg-[#2E2E2E]"
                     >
-                      <td className="px-4 py-3 font-medium text-gray-900 dark:text-white">
+                      <td className="px-4 py-3 font-medium text-[#111111] dark:text-[#E8E8E7]">
                         {invite.invitedEmail}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                        <span className="rounded bg-[#EFF6FF] px-2 py-0.5 text-xs font-semibold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
                           {ROLE_LABELS[invite.role] ?? invite.role}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">
+                      <td className="px-4 py-3 text-xs text-[#787774] dark:text-[#9B9A97]">
                         {invite.expiresAt
                           ? "Expires " +
                             new Date(invite.expiresAt).toLocaleDateString(
@@ -1243,7 +1242,7 @@ function MemberSettings({
                           type="button"
                           onClick={() => handleCancelInvite(invite._id)}
                           disabled={cancellingId === invite._id}
-                          className="inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:text-red-300 dark:hover:bg-red-900/20"
+                          className="inline-flex items-center justify-center gap-2 rounded-[6px] px-3 py-1.5 text-sm font-semibold text-[#9F2F2D] transition-colors hover:bg-[#FDEBEC] disabled:opacity-50 dark:text-[#F87171] dark:hover:bg-[rgba(159,47,45,0.12)]"
                         >
                           {cancellingId === invite._id ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

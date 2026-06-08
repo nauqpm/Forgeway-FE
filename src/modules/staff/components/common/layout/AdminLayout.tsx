@@ -12,7 +12,7 @@ export default function AdminLayout({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-[#FBFBFA] dark:bg-[#202020]">
       <Sidebar
         collapsed={sidebarCollapsed}
         onCollapse={setSidebarCollapsed}
@@ -21,7 +21,7 @@ export default function AdminLayout({
       />
       <main
         className={`transition-all duration-200 ${
-          sidebarCollapsed ? "lg:ml-[68px]" : "lg:ml-[240px]"
+          sidebarCollapsed ? "lg:ml-[4.25rem]" : "lg:ml-60"
         }`}
       >
         <div className="p-6">{children}</div>

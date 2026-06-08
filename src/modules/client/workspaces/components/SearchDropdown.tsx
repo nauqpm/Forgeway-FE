@@ -256,19 +256,19 @@ export default function SearchDropdown({
   return (
     <div ref={rootRef} className={`relative ${className}`}>
       <div ref={inputWrapRef} className="relative w-full">
-        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <input
             value={filters.search}
             onFocus={() => setIsOpen(true)}
             onClick={() => setIsOpen(true)}
             onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Search"
-            className={`${inputClassName} w-full rounded-[10px] border border-gray-300 bg-white pl-10 pr-11 font-medium text-gray-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-indigo-500 dark:focus:ring-indigo-500`}
+            className={`${inputClassName} w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#2A2A2A] pl-10 pr-11 font-medium text-[#111111] dark:text-[#E8E8E7] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]`}
           />
           <button
             type="button"
             onClick={() => setIsOpen((open) => !open)}
-            className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-gray-500 hover:bg-gray-100 hover:text-indigo-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-indigo-400"
+            className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-[#ABABAB] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
             aria-label="Open task filters"
           >
             <SlidersHorizontal className="h-4 w-4" />
@@ -277,21 +277,21 @@ export default function SearchDropdown({
 
       {isOpen && (
         <div
-          style={dropdownStyle}
-          className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl dark:border-gray-700 dark:bg-gray-900"
+          style={{ ...dropdownStyle, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+          className="overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525]"
         >
           <div className="grid h-[min(76vh,640px)] grid-cols-1 overflow-hidden lg:grid-cols-[minmax(320px,0.95fr)_minmax(340px,1.05fr)]">
-            <div className="min-h-0 overflow-y-auto border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900 lg:border-b-0 lg:border-r">
-              <div className="mb-4 flex rounded-lg bg-gray-100 p-1 dark:bg-gray-900">
+            <div className="min-h-0 overflow-y-auto border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] p-4 lg:border-b-0 lg:border-r">
+              <div className="mb-4 flex rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] p-1">
                 {apps.map((app) => (
                   <button
                     key={app}
                     type="button"
                     onClick={() => setActiveApp(app)}
-                    className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+                    className={`flex-1 rounded-[4px] px-3 py-2 text-[0.8125rem] font-medium transition-colors ${
                       activeApp === app
-                        ? "bg-white text-indigo-600 shadow-sm dark:bg-gray-800 dark:text-indigo-400"
-                        : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+                        ? "bg-white dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6]"
+                        : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                     }`}
                   >
                     {app}
@@ -301,15 +301,15 @@ export default function SearchDropdown({
 
               <div className="space-y-5">
                 <section>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Recently viewed</h3>
+                  <h3 className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Recently viewed</h3>
                   {isLoadingTasks && (
-                    <p className="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">Loading work items...</p>
+                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Loading work items...</p>
                   )}
                   {!isLoadingTasks && workspaceTargets.length === 0 && (
-                    <p className="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">Select a workspace to search work items.</p>
+                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Select a workspace to search work items.</p>
                   )}
                   {!isLoadingTasks && workspaceTargets.length > 0 && visibleTasks.length === 0 && (
-                    <p className="px-2 py-2 text-sm text-gray-500 dark:text-gray-400">No work items match these filters.</p>
+                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No work items match these filters.</p>
                   )}
                   {visibleTasks.map((task) => (
                     <RecentItem
@@ -331,7 +331,7 @@ export default function SearchDropdown({
                 </section>
 
                 <section>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Recent boards, projects, filters and plans</h3>
+                  <h3 className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Recent boards, projects, filters and plans</h3>
                   {(projects.length > 0 ? projects : [{ id: activeWorkspaceKey, name: `${activeWorkspaceKey} board`, key: activeWorkspaceKey }])
                     .slice(0, 6)
                     .map((project, index) => (
@@ -347,22 +347,22 @@ export default function SearchDropdown({
                 </section>
               </div>
 
-              <div className="mt-5 border-t border-gray-100 pt-4 dark:border-gray-700">
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Go to all</div>
+              <div className="mt-5 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-4">
+                <div className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Go to all</div>
                 <div className="flex flex-wrap gap-2">
                   {goToLinks.map((item) => (
-                    <button key={item} type="button" className="rounded-md border border-gray-200 px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 dark:border-gray-800 dark:text-gray-300 dark:hover:border-indigo-900 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-300">
+                    <button key={item} type="button" className="rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08] px-2.5 py-1.5 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/30 hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)] hover:text-[#1F6C9F] dark:hover:text-[#93C5FD] transition-colors">
                       {item}
                     </button>
                   ))}
                 </div>
-                <button type="button" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+                <button type="button" className="mt-4 inline-flex items-center gap-2 text-[0.8125rem] font-semibold text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#3B82F6] transition-colors">
                   <Search className="h-4 w-4" /> View all work items
                 </button>
               </div>
             </div>
 
-            <div className="min-h-0 overflow-y-auto bg-gray-50 p-4 dark:bg-gray-800/60">
+            <div className="min-h-0 overflow-y-auto bg-[#F9F9F8] dark:bg-[#252525] p-4">
               <TaskFilterPanel
                 filters={filters}
                 setFilters={setFilters}
@@ -397,8 +397,8 @@ export default function SearchDropdown({
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}
               />
-              <div className="mt-4 flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
-                <Users className="h-4 w-4 text-indigo-500" />
+              <div className="mt-4 flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-3 py-2 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+                <Users className="h-4 w-4 text-[#2563EB] dark:text-[#3B82F6]" />
                 Filters apply to workspace tasks when you are inside a workspace.
               </div>
             </div>

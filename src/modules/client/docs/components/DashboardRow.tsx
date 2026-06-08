@@ -20,25 +20,25 @@ export default function DashboardRow({
   return (
     <tr
       onClick={() => onSelect(doc.id)}
-      className="group border-b border-gray-50 dark:border-gray-800 last:border-0 hover:bg-[#F8FBFF] dark:hover:bg-gray-800/50 cursor-pointer transition-all duration-200"
+      className="group border-b border-[#EAEAEA] dark:border-white/[0.04] last:border-0 hover:bg-[#F7F6F3] dark:hover:bg-white/[0.025] cursor-pointer transition-all duration-150"
     >
       <td className="px-6 py-4">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-gray-50 dark:bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 dark:text-gray-500 group-hover:bg-white dark:group-hover:bg-gray-700 group-hover:text-[#0052CC] dark:group-hover:text-blue-400 group-hover:shadow-sm transition-all border border-transparent group-hover:border-gray-100 dark:group-hover:border-gray-600">
+          <div className="w-10 h-10 bg-[#F7F6F3] dark:bg-[#252525] rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B] group-hover:bg-white dark:group-hover:bg-[#2A2A2A] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-all border border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/8">
             <FileText className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-[#172B4D] dark:text-gray-200 group-hover:text-[#0052CC] dark:group-hover:text-blue-400 transition-colors block leading-tight">
+              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-colors block leading-tight">
                 {doc.title}
               </span>
               <span
-                className={`px-2 py-0.5 text-[10px] rounded-full font-semibold ${doc.source === "import" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"}`}
+                className={`px-2 py-0.5 text-[0.625rem] rounded-[4px] font-semibold ${doc.source === "import" ? "bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] text-[#956400] dark:text-[#F59E0B]" : "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]"}`}
               >
                 {doc.source === "import" ? "IMPORT" : "DOCS"}
               </span>
             </div>
-            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 block">
+            <span className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] font-medium mt-1 block">
               Created {new Date(doc.createdAt).toLocaleDateString()}
             </span>
           </div>
@@ -47,22 +47,20 @@ export default function DashboardRow({
       <td className="px-6 py-4">
         {doc.lastEditedBy ? (
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-800/30 flex items-center justify-center text-[10px] font-bold text-indigo-600 dark:text-indigo-400 border border-indigo-200/20 dark:border-indigo-700/20">
+            <div className="w-7 h-7 rounded-full bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] flex items-center justify-center text-[0.625rem] font-bold text-[#2563EB] dark:text-[#3B82F6] border border-[#2563EB]/10">
               {doc.lastEditedBy?.fullName?.slice(0, 2).toUpperCase()}
             </div>
-            <span className="text-[13px] font-medium text-[#42526E] dark:text-gray-300">
+            <span className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]">
               {doc.lastEditedBy.fullName}
             </span>
           </div>
         ) : (
-          <span className="text-[13px] text-gray-400 dark:text-gray-500">
-            —
-          </span>
+          <span className="text-[0.8125rem] text-[#ABABAB] dark:text-[#6B6B6B]">—</span>
         )}
       </td>
       <td className="px-6 py-4">
-        <div className="flex items-center gap-2 text-xs font-medium text-[#6B778C] dark:text-gray-400">
-          <History className="w-3.5 h-3.5 text-gray-300 dark:text-gray-600" />
+        <div className="flex items-center gap-2 text-[0.6875rem] font-medium text-[#ABABAB] dark:text-[#6B6B6B]">
+          <History className="w-3.5 h-3.5" />
           {new Date(doc.updatedAt).toLocaleDateString()}
         </div>
       </td>
@@ -73,7 +71,7 @@ export default function DashboardRow({
               <a
                 href={documentService.downloadUrl(doc.id)}
                 onClick={(e) => e.stopPropagation()}
-                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 transition-all hover:shadow-sm border border-transparent hover:border-gray-100 dark:hover:border-gray-600"
+                className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-all border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/10"
                 title="Download"
               >
                 <Download className="w-4 h-4" />
@@ -83,7 +81,7 @@ export default function DashboardRow({
                   e.stopPropagation();
                   onDelete(doc);
                 }}
-                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-all hover:shadow-sm border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+                className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] dark:hover:text-[#F87171] transition-all border border-transparent hover:border-[#F5C6C7] dark:hover:border-red-900/20"
                 title="Delete"
               >
                 <Trash2 className="w-4 h-4" />
@@ -92,11 +90,8 @@ export default function DashboardRow({
           ) : (
             <>
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRename(doc.id, doc.title);
-                }}
-                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-[#0052CC] dark:hover:text-blue-400 transition-all hover:shadow-sm border border-transparent hover:border-gray-100 dark:hover:border-gray-600"
+                onClick={(e) => { e.stopPropagation(); onRename(doc.id, doc.title); }}
+                className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-all border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8"
                 title="Rename"
               >
                 <FileText className="w-4 h-4" />
@@ -106,7 +101,7 @@ export default function DashboardRow({
                   e.stopPropagation();
                   onDelete(doc);
                 }}
-                className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-all hover:shadow-sm border border-transparent hover:border-red-100 dark:hover:border-red-900/30"
+                className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] dark:hover:text-[#F87171] transition-all border border-transparent hover:border-[#F5C6C7] dark:hover:border-red-900/20"
                 title="Delete"
               >
                 <Trash2 className="w-4 h-4" />

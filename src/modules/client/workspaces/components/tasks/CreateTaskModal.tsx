@@ -5,15 +5,15 @@ import { Workspace } from "../../types/workspace.type";
 
 type CreateTaskModalProps = {
   showCreateIssue: boolean;
-
   setShowCreateIssue: (value: boolean) => void;
-
   newIssueForm: any;
   setNewIssueForm: any;
-
   handleCreateIssue: any;
   workspace: Workspace;
 };
+
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[0.8125rem] outline-none transition-colors";
+const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
 
 export default function CreateTaskModal({
   showCreateIssue,
@@ -40,127 +40,91 @@ export default function CreateTaskModal({
     .filter((member) => member.id);
 
   return (
-    <div className="fixed inset-0 bg-gray-900/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 border border-transparent dark:border-gray-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-gray-800">
-          <h3 className="font-bold text-gray-900 dark:text-white text-lg flex items-center gap-2">
-            <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div
+        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-lg border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden"
+        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      >
+        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
+            <FileText className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
             Create new task
           </h3>
-
           <button
             onClick={() => setShowCreateIssue(false)}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <form
           onSubmit={(e) => handleCreateIssue(e, newIssueForm)}
-          className="p-6 space-y-5 bg-gray-50/30 dark:bg-gray-900"
+          className="p-5 space-y-4"
         >
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Work item title <span className="text-red-500">*</span>
+            <label className={labelCls}>
+              Work item title <span className="text-[#9F2F2D]">*</span>
             </label>
-
             <input
               type="text"
               autoFocus
               required
               value={newIssueForm.title}
-              onChange={(e) =>
-                setNewIssueForm({
-                  ...newIssueForm,
-                  title: e.target.value,
-                })
-              }
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm transition-all"
+              onChange={(e) => setNewIssueForm({ ...newIssueForm, title: e.target.value })}
+              className={inputCls}
               placeholder="Example: Fix display issue on mobile..."
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Task type
-              </label>
-
+              <label className={labelCls}>Task type</label>
               <select
                 value={newIssueForm.type}
-                onChange={(e) =>
-                  setNewIssueForm({
-                    ...newIssueForm,
-                    type: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"
+                onChange={(e) => setNewIssueForm({ ...newIssueForm, type: e.target.value })}
+                className={inputCls}
               >
-                <option value="Task">📌 Task</option>
-                <option value="Bug">🐛 Bug</option>
-                <option value="Story">📖 Story</option>
+                <option value="Task">Task</option>
+                <option value="Bug">Bug</option>
+                <option value="Story">Story</option>
                 <option value="Epic">Epic</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Priority
-              </label>
-
+              <label className={labelCls}>Priority</label>
               <select
                 value={newIssueForm.priority}
-                onChange={(e) =>
-                  setNewIssueForm({
-                    ...newIssueForm,
-                    priority: e.target.value,
-                  })
-                }
-                className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm"
+                onChange={(e) => setNewIssueForm({ ...newIssueForm, priority: e.target.value })}
+                className={inputCls}
               >
-                <option value="High">🔴 High</option>
-                <option value="Medium">🟠 Medium</option>
-                <option value="Low">🟢 Low</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Initial status
-            </label>
-
+            <label className={labelCls}>Initial status</label>
             <select
               value={newIssueForm.status}
-              onChange={(e) =>
-                setNewIssueForm({
-                  ...newIssueForm,
-                  status: e.target.value,
-                })
-              }
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              onChange={(e) => setNewIssueForm({ ...newIssueForm, status: e.target.value })}
+              className={inputCls}
             >
-              <option value="To Do">⭕ To Do</option>
-              <option value="In Progress">⏳ In Progress</option>
-              <option value="Done">✅ Done</option>
+              <option value="To Do">To Do</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Done">Done</option>
             </select>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Assignee
-            </label>
-
+            <label className={labelCls}>Assignee</label>
             <select
               value={newIssueForm.assigneeId ?? ""}
-              onChange={(e) =>
-                setNewIssueForm({
-                  ...newIssueForm,
-                  assigneeId: e.target.value,
-                })
-              }
-              className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              onChange={(e) => setNewIssueForm({ ...newIssueForm, assigneeId: e.target.value })}
+              className={inputCls}
             >
               <option value="">Unassigned</option>
               {workspaceMembers.map((member) => (
@@ -171,18 +135,17 @@ export default function CreateTaskModal({
             </select>
           </div>
 
-          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <button
               type="button"
               onClick={() => setShowCreateIssue(false)}
-              className="px-5 py-2.5 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
             >
               Cancel
             </button>
-
             <button
               type="submit"
-              className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-colors shadow-sm"
+              className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
             >
               Create now
             </button>

@@ -182,39 +182,39 @@ export default function CustomDatePicker({
 
   const themeClass =
     theme === "dark"
-      ? "bg-gray-900 text-gray-100 border-gray-700"
+      ? "bg-[#252525] text-[#E8E8E7] border-white/10"
       : theme === "light"
-        ? "bg-white text-gray-900 border-gray-200"
-        : "bg-white text-gray-900 border-gray-200 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700";
+        ? "bg-white text-[#111111] border-[#EAEAEA]"
+        : "bg-white text-[#111111] border-[#EAEAEA] dark:bg-[#252525] dark:text-[#E8E8E7] dark:border-white/10";
   const panelThemeClass =
     theme === "dark"
-      ? "bg-gray-900 text-gray-100 border-gray-700"
+      ? "bg-[#252525] text-[#E8E8E7] border-white/10"
       : theme === "light"
-        ? "bg-white text-gray-900 border-gray-200"
-        : "bg-white text-gray-900 border-gray-200 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700";
+        ? "bg-white text-[#111111] border-[#EAEAEA]"
+        : "bg-white text-[#111111] border-[#EAEAEA] dark:bg-[#252525] dark:text-[#E8E8E7] dark:border-white/10";
 
   const popover = isOpen && !disabled ? (
     <div
       ref={popoverRef}
-      style={popoverStyle}
-      className={`rounded-xl border shadow-2xl ${panelThemeClass}`}
+      style={{ ...popoverStyle, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      className={`rounded-[8px] border ${panelThemeClass}`}
       role="dialog"
       aria-label="Date picker calendar"
     >
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 dark:border-gray-700">
+      <div className="flex items-center justify-between border-b border-[#EAEAEA] px-4 py-3 dark:border-white/8">
         <button
           type="button"
           onClick={() => setViewMonth((current) => subMonths(current, 1))}
-          className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+          className="rounded-[6px] p-1.5 text-[#787774] hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:bg-white/8 dark:hover:text-[#E8E8E7]"
           aria-label="Previous month"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <div className="text-sm font-semibold">{format(viewMonth, "MMMM yyyy")}</div>
+        <div className="text-[0.8125rem] font-semibold">{format(viewMonth, "MMMM yyyy")}</div>
         <button
           type="button"
           onClick={() => setViewMonth((current) => addMonths(current, 1))}
-          className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+          className="rounded-[6px] p-1.5 text-[#787774] hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:bg-white/8 dark:hover:text-[#E8E8E7]"
           aria-label="Next month"
         >
           <ChevronRight className="h-4 w-4" />
@@ -222,7 +222,7 @@ export default function CustomDatePicker({
       </div>
 
       <div className="p-4">
-        <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase text-gray-500 dark:text-gray-400">
+        <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[0.6875rem] font-semibold uppercase text-[#ABABAB] dark:text-[#6B6B6B]">
           {WEEK_DAYS.map((day) => (
             <div key={day} className="py-1">{day}</div>
           ))}
@@ -239,13 +239,13 @@ export default function CustomDatePicker({
                 type="button"
                 onClick={() => selectDate(day)}
                 className={[
-                  "grid h-9 place-items-center rounded-md text-sm font-medium transition-colors",
+                  "grid h-9 place-items-center rounded-[6px] text-[0.8125rem] font-medium transition-colors",
                   selected
-                    ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                    : "hover:bg-indigo-50 hover:text-indigo-700 dark:hover:bg-indigo-950/50 dark:hover:text-indigo-300",
-                  !selected && currentMonth ? "text-gray-800 dark:text-gray-100" : "",
-                  !selected && !currentMonth ? "text-gray-400 dark:text-gray-600" : "",
-                  !selected && isToday ? "ring-1 ring-indigo-400" : "",
+                    ? "bg-[#2563EB] text-white hover:bg-[#1D4ED8]"
+                    : "hover:bg-[#EFF6FF] hover:text-[#2563EB] dark:hover:bg-[rgba(37,99,235,0.12)] dark:hover:text-[#93C5FD]",
+                  !selected && currentMonth ? "text-[#111111] dark:text-[#E8E8E7]" : "",
+                  !selected && !currentMonth ? "text-[#ABABAB] dark:text-[#6B6B6B]" : "",
+                  !selected && isToday ? "ring-1 ring-[#2563EB]" : "",
                 ].join(" ")}
                 aria-pressed={selected}
               >
@@ -256,11 +256,11 @@ export default function CustomDatePicker({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 dark:border-gray-700">
+      <div className="flex items-center justify-between border-t border-[#EAEAEA] px-4 py-3 dark:border-white/8">
         <button
           type="button"
           onClick={clearDate}
-          className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-red-400"
+          className="inline-flex items-center gap-1 rounded-[6px] px-2.5 py-1.5 text-[0.8125rem] font-medium text-[#787774] hover:bg-[#F7F6F3] hover:text-[#9F2F2D] dark:text-[#9B9A97] dark:hover:bg-white/8 dark:hover:text-[#F87171]"
         >
           <X className="h-3.5 w-3.5" />
           Clear
@@ -268,7 +268,7 @@ export default function CustomDatePicker({
         <button
           type="button"
           onClick={() => selectDate(today)}
-          className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          className="rounded-[6px] bg-[#2563EB] px-3 py-1.5 text-[0.8125rem] font-semibold text-white hover:bg-[#1D4ED8]"
         >
           Today
         </button>
@@ -278,7 +278,7 @@ export default function CustomDatePicker({
 
   return (
     <div ref={rootRef} className={`relative ${className}`}>
-      <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+      <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
       <input
         type="text"
         value={inputValue}
@@ -295,7 +295,7 @@ export default function CustomDatePicker({
             setIsOpen(false);
           }
         }}
-        className={`h-9 w-full rounded-md border pl-9 pr-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 disabled:cursor-not-allowed disabled:opacity-60 ${themeClass} ${inputClassName}`}
+        className={`h-9 w-full rounded-[6px] border pl-9 pr-3 text-[0.8125rem] outline-none transition focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 disabled:cursor-not-allowed disabled:opacity-60 ${themeClass} ${inputClassName}`}
       />
       {typeof document !== "undefined" ? createPortal(popover, document.body) : null}
     </div>

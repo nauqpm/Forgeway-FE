@@ -209,18 +209,18 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   if (workspace.type === "scrum" && !activeSprint) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center mb-4">
-          <PlayCircle className="w-8 h-8 text-indigo-500" />
+        <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] rounded-full flex items-center justify-center mb-4">
+          <PlayCircle className="w-8 h-8 text-[#2563EB] dark:text-[#60A5FA]" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">
           No active sprint
         </h3>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
           Start a sprint from the Backlog tab to view the board
         </p>
         <Link
           href={`/workspaces/${workspace.key}/backlog`}
-          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          className="mt-5 inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 dark:focus:ring-offset-[#202020]"
         >
           Go to backlog
        
@@ -234,24 +234,24 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     : null;
 
   return (
-    <div className="flex flex-col gap-4 relative">
+    <div className="flex flex-col gap-0.5 relative">
       {filters.archived && (
-        <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-red-100 text-red-600 px-3 py-1 rounded-md text-xs font-bold z-10">
+        <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[0.6875rem] font-bold z-10">
           Archived View - Read Only
         </div>
       )}
 
       {isFetching && (
-        <div className="pointer-events-none absolute inset-0 bg-white/50 dark:bg-gray-900/50 z-40 flex items-center justify-center backdrop-blur-[1px]">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="pointer-events-none absolute inset-0 bg-white/60 dark:bg-[#202020]/60 z-40 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-[#2563EB] border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
 
       {/* Quick Filters */}
-      <BoardFilters 
-        filters={filters} 
-        setFilters={setFilters} 
-        uniqueAssignees={uniqueAssignees} 
+      <BoardFilters
+        filters={filters}
+        setFilters={setFilters}
+        uniqueAssignees={uniqueAssignees}
       />
 
       <DragDropContext onBeforeDragStart={handleBoardDragStart} onDragEnd={handleBoardDragEnd}>
@@ -262,7 +262,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         >
           {(provided) => (
             <div
-              className="workspace-board-height flex overflow-x-auto pb-[var(--workspace-surface-pad)] p-[var(--workspace-surface-pad)]"
+              className="workspace-board-height flex overflow-x-auto pt-2 px-[var(--workspace-surface-pad)] pb-[var(--workspace-surface-pad)]"
               style={{ gap: "var(--workspace-board-gap)" }}
               ref={provided.innerRef}
               {...provided.droppableProps}
@@ -278,11 +278,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="workspace-column flex-shrink-0 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex flex-col max-h-full border border-gray-200 dark:border-gray-800 shadow-sm"
+                      className="workspace-column flex-shrink-0 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] flex flex-col max-h-full border border-[#EAEAEA] dark:border-white/[0.06]"
                     >
                       <div
                         {...(filters.archived ? {} : provided.dragHandleProps)}
-                        className={`p-3 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between bg-gray-100/50 dark:bg-gray-800/80 rounded-t-xl ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
+                        className={`p-3 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-t-[8px] ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
                         onDoubleClick={() => {
                           if (filters.archived) return;
                           setEditingColumnId(column.id);
@@ -302,12 +302,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                               if (e.key === "Escape") setEditingColumnId(null);
                             }}
                             onBlur={() => setEditingColumnId(null)}
-                            className="w-full text-sm font-semibold px-2 py-1 border border-indigo-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
                           />
                         ) : (
-                          <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm uppercase tracking-wide flex items-center gap-2">
+                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2">
                             {column.name}
-                            <span className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center text-[10px] font-bold">
+                            <span className="w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold">
                               {getColumnIssues(column).length}
                             </span>
                           </h3>
@@ -319,7 +319,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                 setColumnToDelete(column);
                                 setDeleteModalOpen(true);
                               }}
-                              className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500 rounded transition-colors"
+                              className="p-1 hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.15)] text-[#9F2F2D] rounded-[4px] transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -333,7 +333,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                 });
                                 setShowCreateIssue(true);
                               }}
-                              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition-colors"
+                              className="p-1 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -346,7 +346,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 flex-1 overflow-visible space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/50 dark:bg-indigo-900/20" : ""}`}
+                            className={`p-3 flex-1 overflow-visible space-y-3 min-h-[9.375rem] transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
                           >
                             {getColumnIssues(column)
                               .map((issue, issueIndex) => (
@@ -365,10 +365,20 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         if (filters.archived) return;
                                         setSelectedIssue(issue);
                                       }}
-                                      className={`relative overflow-visible rounded-lg border bg-white shadow-sm dark:bg-gray-900 ${snapshot.isDragging ? "border-indigo-500 shadow-lg rotate-2 z-50 relative" : "border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-md"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      className={`relative overflow-visible rounded-[8px] border bg-white dark:bg-[#202020] ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#EAEAEA] dark:border-white/[0.06] hover:border-[#2563EB]/50 dark:hover:border-[#3B82F6]/40"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      style={
+                                        filters.archived
+                                          ? undefined
+                                          : {
+                                              ...provided.draggableProps.style,
+                                              ...(snapshot.isDragging
+                                                ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }
+                                                : {}),
+                                            }
+                                      }
                                     >
                                       {issue.cover?.type === "image" && (
-                                        <div className="h-28 w-full overflow-hidden rounded-t-lg bg-gray-100 dark:bg-gray-800">
+                                        <div className="h-28 w-full overflow-hidden rounded-t-[8px] bg-[#F7F6F3] dark:bg-[#252525]">
                                           <img
                                             src={issue.cover.imageUrl}
                                             alt=""
@@ -378,7 +388,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                       )}
                                       {issue.cover?.type === "color" && (
                                         <div
-                                          className="h-7 w-full rounded-t-lg"
+                                          className="h-7 w-full rounded-t-[8px]"
                                           style={{ background: issue.cover.color }}
                                         />
                                       )}
@@ -396,7 +406,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                               setActionMenuIssueId((current) => current === issue.id ? null : issue.id);
                                             }}
                                             onMouseDown={(event) => event.stopPropagation()}
-                                            className={`rounded-md bg-white/90 p-1 text-gray-500 opacity-0 shadow-sm transition-all hover:bg-gray-100 hover:text-gray-800 group-hover:opacity-100 dark:bg-gray-950/80 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100 ${
+                                            className={`rounded-[6px] bg-white/90 dark:bg-[#202020]/80 p-1 text-[#787774] dark:text-[#9B9A97] opacity-0 transition-all hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] hover:text-[#111111] dark:hover:text-[#E8E8E7] group-hover:opacity-100 ${
                                               actionMenuIssueId === issue.id ? "opacity-100" : ""
                                             }`}
                                             aria-label="Task actions"
@@ -407,37 +417,35 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         </div>
                                       )}
                                       <div className="p-3.5">
-                                        <p className="mb-2 text-sm font-medium leading-snug text-gray-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                                        <p className="mb-2 text-[0.8125rem] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
                                           {issue.title}
                                         </p>
                                         <div className="mb-3 flex flex-wrap gap-1.5">
                                           <span
-                                            className={`px-2 py-0.5 rounded text-[10px] font-semibold ${issue.priority === "High" ? "bg-red-50 text-red-600" : issue.priority === "Medium" ? "bg-amber-50 text-amber-600" : "bg-green-50 text-green-600"}`}
+                                            className={`px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold ${issue.priority === "High" || issue.priority === "Highest" ? "bg-[#FDEBEC] text-[#9F2F2D]" : issue.priority === "Medium" ? "bg-[#FBF3DB] text-[#956400]" : "bg-[#EDF3EC] text-[#346538]"}`}
                                           >
                                             {issue.priority}
                                           </span>
-                                          <span
-                                            className={`px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-600`}
-                                          >
+                                          <span className="px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
                                             {issue.type}
                                           </span>
                                           {(issue.labels ?? []).slice(0, 3).map((label) => (
                                             <span
                                               key={label.id}
                                               title={label.name}
-                                              className="max-w-[120px] truncate rounded bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-700 dark:bg-sky-950/40 dark:text-sky-300"
+                                              className="max-w-[7.5rem] truncate rounded-[4px] bg-[#EFF6FF] px-2 py-0.5 text-[0.625rem] font-semibold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
                                             >
                                               {label.name}
                                             </span>
                                           ))}
                                           {(issue.labels?.length ?? 0) > 3 && (
-                                            <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">
+                                            <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-0.5 text-[0.625rem] font-semibold text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">
                                               +{(issue.labels?.length ?? 0) - 3}
                                             </span>
                                           )}
                                         </div>
-                                        <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-2 dark:border-gray-800">
-                                          <span className="text-xs font-mono font-bold text-gray-400">
+                                        <div className="mt-auto flex items-center justify-between border-t border-[#F0F0EE] dark:border-white/[0.04] pt-2">
+                                          <span className="text-[0.6875rem] font-mono font-bold text-[#ABABAB] dark:text-[#6B6B6B]">
                                             {issue.key}
                                           </span>
                                           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
@@ -445,7 +453,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                               users={workspaceMembers}
                                               value={issue.assigneeId ?? issue.assignee ?? null}
                                               onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
-                                              placement="top"
+                                              placement="auto"
                                               size="sm"
                                               disabled={!!(filters.archived || !canEditTask)}
                                             />
@@ -459,7 +467,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             {provided.placeholder}
                             {getColumnIssues(column).length === 0 &&
                               !snapshot.isDraggingOver && (
-                                <div className="h-24 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg flex items-center justify-center text-sm font-medium text-gray-400">
+                                <div className="h-24 border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] flex items-center justify-center text-[0.8125rem] font-medium text-[#ABABAB] dark:text-[#6B6B6B]">
                                   {issues.filter((i) => issueMatchesColumn(i, column))
                                     .length === 0
                                     ? "Drag tasks here"
@@ -481,7 +489,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 ref={columnsEndRef}
               >
                 {canUpdateWorkspace && showCreateColumn ? (
-                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-indigo-200 dark:border-indigo-800 p-3 shadow-sm">
+                  <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-3">
                     <input
                       type="text"
                       autoFocus
@@ -495,12 +503,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         }
                       }}
                       placeholder="New column name..."
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                      className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] focus:border-[#2563EB] outline-none transition-colors"
                     />
                     <div className="flex items-center gap-2 mt-3">
                       <button
                         onClick={handleAddColumn}
-                        className="flex-1 bg-indigo-600 text-white text-xs font-medium py-1.5 rounded hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1"
+                        className="flex-1 bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[0.6875rem] font-medium py-1.5 rounded-[4px] hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-1"
                       >
                         <Check className="w-3.5 h-3.5" /> Add column
                       </button>
@@ -509,7 +517,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           setShowCreateColumn(false);
                           setNewColumnName("");
                         }}
-                        className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-xs font-medium py-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1"
+                        className="flex-1 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] font-medium py-1.5 rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] transition-colors flex items-center justify-center gap-1"
                       >
                         <X className="w-3.5 h-3.5" /> Cancel
                       </button>
@@ -518,7 +526,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 ) : canUpdateWorkspace ? (
                   <button
                     onClick={() => setShowCreateColumn(true)}
-                    className="flex items-center gap-2 w-full bg-gray-50/50 dark:bg-gray-800/30 hover:bg-gray-100 dark:hover:bg-gray-800 border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 rounded-xl p-4 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-all font-medium text-sm justify-center"
+                    className="flex items-center gap-2 w-full bg-transparent hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] hover:border-[#C8C7C4] dark:hover:border-white/[0.12] rounded-[8px] p-4 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-all text-[0.8125rem] justify-center"
                   >
                     <Plus className="w-5 h-5" /> Add new column
                   </button>
@@ -563,7 +571,6 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         />
       )}
 
-      {/* Import explicitly if not using Next.js dynamic imports, or ensure it's in the component tree */}
       {deleteModalOpen && columnToDelete && (
         <DeleteColumnModal
           isOpen={deleteModalOpen}
@@ -583,29 +590,32 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       )}
 
       {issueToDelete && (
-        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900">
-            <div className="flex items-start justify-between gap-4 border-b border-gray-200 p-5 dark:border-gray-800">
+        <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/30 p-4">
+          <div
+            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#202020]"
+            style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
+          >
+            <div className="flex items-start justify-between gap-4 border-b border-[#EAEAEA] dark:border-white/[0.06] p-5">
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Delete work item
                 </h3>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   This permanently deletes {issueToDelete.key}. Archive it instead if you may need it later.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeDeleteIssueModal}
-                className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                className="rounded-[6px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] hover:text-[#787774] dark:hover:bg-[#2E2E2E] dark:hover:text-[#9B9A97]"
                 aria-label="Close delete confirmation"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="space-y-3 p-5">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Type <span className="font-mono font-semibold text-red-600">delete</span> to confirm
+              <label className="block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]">
+                Type <span className="font-mono font-semibold text-[#9F2F2D]">delete</span> to confirm
               </label>
               <input
                 autoFocus
@@ -615,11 +625,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                   if (event.key === "Enter") confirmDeleteIssue();
                   if (event.key === "Escape") closeDeleteIssueModal();
                 }}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 dark:border-gray-700 dark:bg-gray-950 dark:text-white dark:focus:ring-red-950"
+                className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#202020] px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D] transition-colors"
                 placeholder="delete"
               />
             </div>
-            <div className="flex justify-end gap-2 border-t border-gray-200 p-4 dark:border-gray-800">
+            <div className="flex justify-end gap-2 border-t border-[#EAEAEA] dark:border-white/[0.06] p-4">
               <button
                 type="button"
                 onClick={() => {
@@ -628,7 +638,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                   onArchiveIssue?.(issue);
                 }}
                 disabled={!onArchiveIssue}
-                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800"
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-40"
               >
                 Archive
               </button>
@@ -636,7 +646,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 type="button"
                 onClick={confirmDeleteIssue}
                 disabled={deleteConfirmText !== "delete"}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#8A2826] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Delete
               </button>

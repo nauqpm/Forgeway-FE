@@ -15,6 +15,8 @@ export const SOCKET_COMMANDS = {
   PAGE_JOIN: 'page:join',
   PAGE_LEAVE: 'page:leave',
   PAGE_UPDATE: 'page:update',
+  PAGE_YJS_UPDATE: 'page:yjs-update',
+  PAGE_DRAFT_CONTENT: 'page:draft-content',
 } as const;
 
 export const TASK_EVENTS = {
@@ -25,6 +27,10 @@ export const TASK_EVENTS = {
   ARCHIVED: 'task.archived',
   RESTORED: 'task.restored',
   DELETED: 'task.deleted',
+} as const;
+
+export const SPRINT_EVENTS = {
+  CREATED: 'sprint.created',
 } as const;
 
 export const TASK_DETAIL_EVENTS = {
@@ -57,6 +63,7 @@ export const SOCKET_EVENTS = {
   TASK_ARCHIVED: TASK_EVENTS.ARCHIVED,
   TASK_RESTORED: TASK_EVENTS.RESTORED,
   TASK_DELETED: TASK_EVENTS.DELETED,
+  SPRINT_CREATED: SPRINT_EVENTS.CREATED,
   TASK_COMMENT_CREATED: TASK_DETAIL_EVENTS.COMMENT_CREATED,
   TASK_COMMENT_UPDATED: TASK_DETAIL_EVENTS.COMMENT_UPDATED,
   TASK_COMMENT_DELETED: TASK_DETAIL_EVENTS.COMMENT_DELETED,
@@ -69,6 +76,7 @@ export const SOCKET_EVENTS = {
   NOTIFICATION_READ: NOTIFICATION_EVENTS.READ,
   NOTIFICATION_READ_ALL: NOTIFICATION_EVENTS.READ_ALL,
   PAGE_UPDATED: 'page.updated',
+  PAGE_YJS_UPDATE_RECEIVED: 'page.yjs-update',
 } as const;
 
 export type SocketEventName =

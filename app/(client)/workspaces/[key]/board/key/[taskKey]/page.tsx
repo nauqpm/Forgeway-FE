@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowLeft } from "lucide-react";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -68,8 +68,8 @@ export default function TaskDetailDeepLinkPage() {
 
         const status = err?.response?.status;
         if (status === 404) setError("Task not found");
-        else if (status === 403) setError("Ban khong co quyen truy cap task nay");
-        else setError("Khong tai duoc chi tiet task");
+        else if (status === 403) setError("You do not have permission to access this task");
+        else setError("Could not load task details");
       })
       .finally(() => {
         if (isActive) setLoading(false);
@@ -93,7 +93,7 @@ export default function TaskDetailDeepLinkPage() {
       sprintId: updatedIssue.sprintId ?? null,
       storyPoints: updatedIssue.storyPoints ?? undefined,
       dueDate: updatedIssue.dueDate ?? undefined,
-      assigneeId: updatedIssue.assigneeId ?? undefined,
+      assigneeId: updatedIssue.assigneeId ?? null,
     };
 
     await taskService.updateBoardTask(workspace._id, updatedIssue.id, updates);
@@ -103,28 +103,31 @@ export default function TaskDetailDeepLinkPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0052CC] border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563EB] dark:border-[#3B82F6] border-t-transparent" />
       </div>
     );
   }
 
   if (error || !issue || !workspace) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-6 text-center dark:bg-gray-950">
-        <h1 className="mb-3 text-2xl font-semibold text-gray-900 dark:text-white">
-          {error ?? "Khong tim thay task"}
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A] p-6 text-center">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[8px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)]">
+          <AlertCircle className="h-6 w-6 text-[#9F2F2D] dark:text-[#F87171]" />
+        </div>
+        <h1 className="mb-2 text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          {error ?? "Task not found"}
         </h1>
-        <p className="mb-6 max-w-md text-sm text-gray-500 dark:text-gray-400">
-          Task co the da bi xoa, bi archive, hoac workspace khong con kha dung.
+        <p className="mb-6 max-w-sm text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+          The task may have been deleted, archived, or the workspace is no longer available.
         </p>
         <button
           type="button"
           onClick={backToBoard}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#0052CC] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#0065FF]"
+          className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB]"
         >
           <ArrowLeft className="h-4 w-4" />
-          Quay lai board
+          Back to board
         </button>
       </div>
     );

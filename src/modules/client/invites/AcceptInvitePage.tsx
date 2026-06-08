@@ -80,20 +80,20 @@ export default function AcceptInvitePage({ token }: Props) {
 
   if (loadingInvite || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
       </div>
     );
   }
 
   if (fetchError) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A] p-4">
+        <div className="bg-white dark:bg-[#202020] rounded-[10px] p-8 max-w-md w-full text-center" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
           <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Invalid invitation</h1>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">{fetchError}</p>
-          <Link href="/" className="inline-block px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+          <h1 className="text-xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-2">Invalid invitation</h1>
+          <p className="text-[#787774] dark:text-[#9B9A97] mb-6">{fetchError}</p>
+          <Link href="/" className="inline-block px-6 py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#1D4ED8] transition-colors">
             Back to home
           </Link>
         </div>
@@ -109,35 +109,35 @@ export default function AcceptInvitePage({ token }: Props) {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A] p-4">
+        <div className="bg-white dark:bg-[#202020] rounded-[10px] p-8 max-w-md w-full text-center" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
           <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Joined successfully!</h1>
-          <p className="text-gray-500 dark:text-gray-400">Redirecting to workspace...</p>
+          <h1 className="text-xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-2">Joined successfully!</h1>
+          <p className="text-[#787774] dark:text-[#9B9A97]">Redirecting to workspace...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg p-8 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A] p-4">
+      <div className="bg-white dark:bg-[#202020] rounded-[10px] p-8 max-w-md w-full" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 rounded-[8px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center flex-shrink-0">
             <Building2 className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white">{invite.workspaceName}</h1>
-            <p className="text-xs text-gray-400 dark:text-gray-500">{invite.workspaceKey}</p>
+            <h1 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">{invite.workspaceName}</h1>
+            <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B]">{invite.workspaceKey}</p>
           </div>
         </div>
 
-        <p className="text-gray-700 dark:text-gray-300 text-sm mb-1">
+        <p className="text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] mb-1">
           <span className="font-semibold">{invite.invitedBy?.fullName || invite.invitedBy?.email}</span>{' '}
           invited you to join as{' '}
-          <span className="font-semibold text-indigo-600 dark:text-indigo-400">{invite.role}</span>.
+          <span className="font-semibold text-[#2563EB] dark:text-[#3B82F6]">{invite.role}</span>.
         </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mb-6">
+        <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] mb-6">
           {invite.invitedEmail ? `Sent to: ${invite.invitedEmail}` : 'Open invite link'}
           {invite.expiresAt ? ` · Expires: ${new Date(invite.expiresAt).toLocaleDateString('en-US')}` : ''}
         </p>
@@ -177,7 +177,7 @@ export default function AcceptInvitePage({ token }: Props) {
               <button
                 onClick={handleAccept}
                 disabled={accepting}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] font-semibold hover:bg-[#1D4ED8] transition-colors disabled:opacity-50"
               >
                 {accepting ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
                 {accepting ? 'Processing...' : 'Accept invitation'}
@@ -186,13 +186,13 @@ export default function AcceptInvitePage({ token }: Props) {
               <>
                 <Link
                   href={`/login?callbackUrl=/invites/accept/${token}`}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] font-semibold hover:bg-[#1D4ED8] transition-colors"
                 >
                   Sign in to accept
                 </Link>
                 <Link
                   href={`/register?callbackUrl=/invites/accept/${token}`}
-                  className="w-full flex items-center justify-center px-6 py-3 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="w-full flex items-center justify-center px-6 py-3 border border-[#EAEAEA] dark:border-white/10 text-[#111111] dark:text-[#E8E8E7] rounded-[6px] font-semibold hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
                 >
                   Create new account
                 </Link>

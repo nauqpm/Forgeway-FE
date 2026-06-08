@@ -8,8 +8,8 @@ function shiftDate(dateStr: string, days: number): string {
   return format(addDays(parseISO(dateStr), days), 'yyyy-MM-dd');
 }
 
-const CALENDAR_EVENT_BG = '#303236';
-const CALENDAR_EVENT_BORDER = '#3b3f46';
+const CALENDAR_EVENT_BG = '#2563EB';
+const CALENDAR_EVENT_BORDER = 'rgba(37, 99, 235, 0.18)';
 
 export function useCalendarData(issues: Issue[], sprints: Sprint[]) {
   return useMemo(() => {

@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { TaskDetailResponse } from '../types/task-detail.type';
-import TaskSubtasks from "@/modules/admin/components/common/components/TaskSubtasks";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -24,6 +23,7 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
@@ -123,7 +123,6 @@ export default function TaskDetailDrawer({
   const [activeTab, setActiveTab] = useState<'comments' | 'history'>('comments');
   const [localTitle, setLocalTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [subtasks, setSubtasks] = useState<any[]>([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
@@ -147,17 +146,14 @@ export default function TaskDetailDrawer({
   useEffect(() => {
     if (!isResizing) return;
     const handleMouseMove = (e: MouseEvent) => {
-      // Drawer is on the right. Width is window width - mouse X position
       let newWidth = window.innerWidth - e.clientX;
-      const maxWidth = window.innerWidth * 0.5; // Max 50% of the screen
-      
+      const maxWidth = window.innerWidth * 0.5;
       if (newWidth < 300) newWidth = 300;
       if (newWidth > maxWidth) newWidth = maxWidth;
-      
       setDrawerWidth(newWidth);
     };
     const handleMouseUp = () => setIsResizing(false);
-    
+
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     return () => {
@@ -166,11 +162,9 @@ export default function TaskDetailDrawer({
     };
   }, [isResizing]);
 
-  // Sync state when issue prop changes
   useEffect(() => {
     if (issue) {
       setLocalTitle(issue.title);
-      setSubtasks(issue.subtasks || []);
       setIsEditingTitle(false);
       setShowStatusDropdown(false);
       setShowActionMenu(false);
@@ -264,7 +258,7 @@ export default function TaskDetailDrawer({
   };
 
   const editableTextClass =
-    "text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors";
+    "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors";
 
   const renderDateInput = (field: "startDate" | "dueDate", rawValue?: string | null) => (
     <CustomDatePicker
@@ -290,7 +284,7 @@ export default function TaskDetailDrawer({
         onChange={(event) => setDraftValue(event.target.value)}
         onBlur={() => saveInlineEdit(field)}
         onKeyDown={(event) => handleInlineKeyDown(event, field)}
-        className="w-full rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
+        className="w-full rounded-[4px] border border-[#2563EB] bg-white dark:bg-[#2A2A2A] px-2 py-1 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none"
       />
     ) : (
       <div
@@ -314,7 +308,7 @@ export default function TaskDetailDrawer({
         onChange={(event) => setDraftValue(event.target.value)}
         onBlur={() => saveInlineEdit(field)}
         onKeyDown={(event) => handleInlineKeyDown(event, field)}
-        className="w-full rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
+        className="w-full rounded-[4px] border border-[#2563EB] bg-white dark:bg-[#2A2A2A] px-2 py-1 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -346,33 +340,10 @@ export default function TaskDetailDrawer({
     }
   };
 
-  const handleAddSubtask = (title: string) => {
-    if (issue.isArchived) return;
-    const newSubtask = {
-      id: `sub-${Date.now()}`,
-      title,
-      status: "To Do",
-      priority: "Medium"
-    };
-    const updatedSubtasks = [...subtasks, newSubtask];
-    setSubtasks(updatedSubtasks);
-    if (onUpdateIssue) {
-      onUpdateIssue({ ...issue, subtasks: updatedSubtasks });
-    }
-  };
-
-  const handleUpdateSubtaskStatus = (id: string, newStatus: string) => {
-    if (issue.isArchived) return;
-    const updatedSubtasks = subtasks.map(t => t.id === id ? { ...t, status: newStatus } : t);
-    setSubtasks(updatedSubtasks);
-    if (onUpdateIssue) {
-      onUpdateIssue({ ...issue, subtasks: updatedSubtasks });
-    }
-  };
 
   const panelClasses = embedded
-    ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 shadow-none border-0 rounded-none overflow-hidden"
-    : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 flex flex-col shadow-2xl border-l border-gray-200 dark:border-gray-700 transform ${isResizing ? '' : 'transition-transform duration-300 ease-in-out'} ${
+    ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] shadow-none border-0 rounded-none overflow-hidden"
+    : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] flex flex-col border-l border-[#EAEAEA] dark:border-white/[0.06] transform ${isResizing ? '' : 'transition-transform duration-300 ease-in-out'} ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`;
 
@@ -387,30 +358,30 @@ export default function TaskDetailDrawer({
 
       <div className={panelClasses} style={{ width: embedded ? '100%' : `${drawerWidth}px` }}>
         {!embedded && (
-          <div 
-            className={`absolute top-0 left-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize z-[100000] hover:bg-[#0052CC]/50 transition-colors ${isResizing ? 'bg-[#0052CC]' : 'bg-transparent'}`}
+          <div
+            className={`absolute top-0 left-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize z-[100000] hover:bg-[#2563EB]/30 transition-colors ${isResizing ? 'bg-[#2563EB]/50' : 'bg-transparent'}`}
             onMouseDown={(e) => {
               e.preventDefault();
               setIsResizing(true);
             }}
           />
         )}
-        
+
         {/* Top Header */}
-        <div className="app-header border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0 bg-gray-100 dark:bg-gray-800">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <div className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded cursor-pointer transition-colors">
-              <div className="w-5 h-5 bg-[#0052CC] rounded text-white flex items-center justify-center">
+        <div className="app-header border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between shrink-0 bg-[#F7F6F3] dark:bg-[#252525]">
+          <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
+            <div className="flex items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors">
+              <div className="w-5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[4px] text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
               </div>
-              <span className="text-gray-500 dark:text-gray-400">Add epic</span>
+              <span className="text-[#787774] dark:text-[#9B9A97]">Add epic</span>
             </div>
-            <span className="text-gray-500 dark:text-gray-400">/</span>
-            <div className="flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 px-2 py-1 rounded cursor-pointer transition-colors">
-              <div className="w-4 h-4 bg-[#0052CC] text-white flex items-center justify-center rounded-sm">
-                <span className="text-[10px]">✓</span>
+            <span className="text-[#ABABAB] dark:text-[#6B6B6B]">/</span>
+            <div className="flex items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors">
+              <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[3px]">
+                <span className="text-[0.625rem]">✓</span>
               </div>
-              <span className="text-gray-900 dark:text-white">{issueKey}</span>
+              <span className="text-[#111111] dark:text-[#E8E8E7]">{issueKey}</span>
             </div>
           </div>
 
@@ -419,13 +390,16 @@ export default function TaskDetailDrawer({
               <button
                 type="button"
                 onClick={() => setShowActionMenu((open) => !open)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"
+                className="p-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
                 aria-label="Task actions"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
               {showActionMenu && (
-                <div className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                <div
+                  className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
+                  style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
+                >
                   <button
                     type="button"
                     onClick={() => {
@@ -433,15 +407,20 @@ export default function TaskDetailDrawer({
                       onArchiveIssue?.(issue);
                     }}
                     disabled={!onArchiveIssue || issue.isArchived}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-gray-200 dark:hover:bg-gray-800"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    <Archive className="h-4 w-4" />
+                    <Archive className="h-4 w-4 text-[#787774]" />
                     Archive
                   </button>
                 </div>
               )}
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded transition-colors"><X className="w-4 h-4" /></button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
@@ -453,22 +432,22 @@ export default function TaskDetailDrawer({
           onIssueCoverChange={setLocalCover}
         />
 
-        {/* Content Body - Single Vertical Column */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-900">
+        {/* Content Body */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
           <div className="p-4 md:p-6 space-y-8">
-            
+
             {/* Archived Banner */}
             {issue.isArchived && (
-              <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
+              <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-[6px]">
                 <div className="flex items-center">
                   <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-                  <span className="text-yellow-700 text-sm font-medium">
+                  <span className="text-yellow-700 text-[0.8125rem] font-medium">
                     This task was archived by {issue.archivedByUser?.fullName || 'Unknown'} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : 'Unknown Date'}. It is currently read-only.
                   </span>
                 </div>
-                <button 
+                <button
                   onClick={() => { console.log("Restore triggered") }}
-                  className="flex items-center px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-sm font-semibold rounded transition-colors"
+                  className="flex items-center px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-[0.8125rem] font-semibold rounded-[6px] transition-colors"
                 >
                   <ArchiveRestore className="w-4 h-4 mr-1.5" />
                   Restore
@@ -486,35 +465,38 @@ export default function TaskDetailDrawer({
                   onChange={(e) => setLocalTitle(e.target.value)}
                   onBlur={handleTitleBlur}
                   onKeyDown={(e) => { if (e.key === 'Enter') handleTitleBlur(); }}
-                  className="w-full text-3xl font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 border-2 border-[#0052CC] rounded px-2 py-1 outline-none mb-4"
+                  className="w-full text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] bg-[#F7F6F3] dark:bg-[#2A2A2A] border-2 border-[#2563EB] rounded-[6px] px-2 py-1 outline-none mb-4"
                 />
               ) : (
                 <h1
                   onClick={() => { if (!issue.isArchived) setIsEditingTitle(true); }}
-                  className={`text-3xl font-semibold text-gray-900 dark:text-white leading-tight mb-4 p-2 -ml-2 rounded transition-colors ${issue.isArchived ? 'opacity-90' : 'hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer'}`}
+                  className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4 p-2 -ml-2 rounded-[6px] transition-colors ${issue.isArchived ? 'opacity-90' : 'hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer'}`}
                 >
                   {localTitle}
                 </h1>
               )}
             </div>
 
-            {/* Top Quick Actions (Status, Settings) */}
+            {/* Status */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative">
                 <button
                   onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
                   disabled={issue.isArchived}
-                  className={`flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-sm font-semibold rounded-md transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+                  className={`flex items-center gap-2 px-4 py-2 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#F0F0EE] dark:hover:bg-[#333333]'}`}
                 >
-                  {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4 text-gray-500" />}
+                  {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4 text-[#ABABAB]" />}
                 </button>
                 {showStatusDropdown && (
-                  <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-10 py-1">
+                  <div
+                    className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden z-10 py-1"
+                    style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
+                  >
                     {statusColumns.map((column) => (
                       <button
                         key={column.id}
                         onClick={() => handleStatusChange(column)}
-                        className={`w-full text-left px-4 py-2 text-sm transition-colors ${column.id === currentColumn?.id ? 'bg-gray-100 dark:bg-gray-700 text-[#0052CC] font-medium border-l-2 border-[#0052CC]' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`w-full text-left px-4 py-2 text-[0.8125rem] transition-colors ${column.id === currentColumn?.id ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] font-medium border-l-2 border-[#2563EB]' : 'text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]'}`}
                       >
                         {column.name}
                       </button>
@@ -522,56 +504,33 @@ export default function TaskDetailDrawer({
                   </div>
                 )}
               </div>
-              
             </div>
 
-            {/* Details List (Assignee, Reporter, Priority, etc) */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 overflow-hidden">
-              <div className="w-full flex items-center justify-between p-3 text-sm font-semibold text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            {/* Details */}
+            <div className="border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] bg-white dark:bg-[#202020] overflow-hidden">
+              <div className="w-full flex items-center justify-between p-3 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
                 Details
               </div>
               <div className="p-4 flex flex-col space-y-2">
                 {/* Assignee */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Assignee</div>
-                  <div
-                    onDoubleClick={() => startInlineEdit("assigneeId", getIssueAssigneeId(issue))}
-                    title="Double click to edit"
-                    className="flex min-w-0 flex-1 items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors"
-                  >
-                    <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                      <User className="w-3 h-3 text-gray-500 dark:text-gray-400" />
-                    </div>
-                    {editingField === "assigneeId" ? (
-                      <select
-                        autoFocus
-                        value={draftValue}
-                        onChange={(event) => {
-                          setDraftValue(event.target.value);
-                          saveInlineEdit("assigneeId", event.target.value);
-                        }}
-                        onBlur={cancelInlineEdit}
-                        onKeyDown={(event) => handleInlineKeyDown(event, "assigneeId")}
-                        className="min-w-0 flex-1 rounded border border-[#0052CC] bg-white px-2 py-1 text-sm text-gray-900 outline-none dark:bg-gray-900 dark:text-white"
-                      >
-                        <option value="">Unassigned</option>
-                        {memberOptions.map((member) => (
-                          <option key={member.id} value={member.id}>
-                            {member.email ? `${member.label} (${member.email})` : member.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <span className="truncate">{assigneeName}</span>
-                    )}
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Assignee</div>
+                  <div className="min-w-0 flex-1 -ml-1">
+                    <AssigneePicker
+                      users={toAssigneePickerUsers(providedWorkspaceMembers as any[])}
+                      value={getIssueAssigneeId(issue) || null}
+                      onChange={(uid) => saveInlineEdit("assigneeId", uid ?? "")}
+                      placement="auto"
+                      size="md"
+                    />
                   </div>
                 </div>
 
                 {/* Reporter */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Reporter</div>
-                  <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-800 p-1 -ml-1 rounded cursor-pointer transition-colors">
-                    <div className="w-5 h-5 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold text-[10px]">
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Reporter</div>
+                  <div className="flex items-center gap-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold text-[0.625rem]">
                       {reporterName.substring(0, 2).toUpperCase()}
                     </div>
                     <span className="truncate">{reporterName}</span>
@@ -579,24 +538,24 @@ export default function TaskDetailDrawer({
                 </div>
 
                 {/* Type */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Type</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Type</div>
                   <div className="min-w-0 flex-1">
                     {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
                   </div>
                 </div>
 
                 {/* Priority */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Priority</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Priority</div>
                   <div className="min-w-0 flex-1">
                     {renderInlineSelect("priority", issue.priority, ["Lowest", "Low", "Medium", "High", "Highest"])}
                   </div>
                 </div>
 
                 {/* Labels */}
-                <div className="flex items-start min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0 pt-1.5">Labels</div>
+                <div className="flex items-start min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0 pt-1.5">Labels</div>
                   <div className="min-w-0 flex-1">
                     <TaskLabelsField
                       workspaceId={workspaceId}
@@ -606,24 +565,25 @@ export default function TaskDetailDrawer({
                   </div>
                 </div>
 
-                {/* Due date */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Start date</div>
+                {/* Start date */}
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Start date</div>
                   <div className="min-w-0 flex-1">
                     {renderDateInput("startDate", toDateInputValue(issue.startDate))}
                   </div>
                 </div>
 
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Due date</div>
+                {/* Due date */}
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Due date</div>
                   <div className="min-w-0 flex-1">
                     {renderDateInput("dueDate", toDateInputValue(issue.dueDate))}
                   </div>
                 </div>
 
                 {showSprintField && (
-                  <div className="flex items-center min-h-[32px]">
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Sprint</div>
+                  <div className="flex items-center min-h-8">
+                    <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Sprint</div>
                     <div className="min-w-0 flex-1">
                       {renderInlineInput("sprintId", sprintLabel, issue.sprintId)}
                     </div>
@@ -631,8 +591,8 @@ export default function TaskDetailDrawer({
                 )}
 
                 {/* Story points */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 w-32 shrink-0">Story points</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Story points</div>
                   <div className="min-w-0 flex-1">
                     {renderInlineInput("storyPoints", storyPointsLabel, issue.storyPoints, "number")}
                   </div>
@@ -642,7 +602,7 @@ export default function TaskDetailDrawer({
 
             {/* Description */}
             <div className="space-y-3">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Description</h3>
+              <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Description</h3>
               <div className="pl-1">
                 <TaskDescription
                   initialContent={issue.description || ''}
@@ -663,48 +623,41 @@ export default function TaskDetailDrawer({
               accessToken={token}
             />
 
-            {/* Subtasks */}
-            <div className="pt-2">
-              <TaskSubtasks
-                subtasks={subtasks}
-                onAdd={handleAddSubtask}
-                onUpdateStatus={handleUpdateSubtaskStatus}
-              />
-            </div>
+            {/* Subtasks — hidden until backend supports */}
 
             {/* Linked Work Items */}
             <div className="space-y-3 pt-2">
-              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Linked work items</h3>
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h3>
+              <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">No linked items yet</span>
+                  <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No linked items yet</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
                     href={`/docs/create?issueId=${issue.id}`}
-                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#0052CC] hover:bg-[#357BFF] text-white text-sm font-bold rounded transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
+                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] text-white text-[0.8125rem] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
                   >
                     <Plus className="w-4 h-4" /> Create Document
                   </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white text-sm font-medium rounded transition-colors">
-                    <LinkIcon className="w-4 h-4" /> Link item
+                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
+                    <LinkIcon className="w-4 h-4 text-[#787774]" /> Link item
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Activity */}
-            <div className="space-y-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div className="space-y-4 pt-6 border-t border-[#EAEAEA] dark:border-white/[0.06]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white">Activity</h3>
-                <div className="flex items-center gap-1 text-sm bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+                <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h3>
+                <div className="flex items-center gap-1 text-[0.8125rem] bg-[#F7F6F3] dark:bg-white/5 p-1 rounded-[6px]">
                   <button
                     onClick={() => setActiveTab('comments')}
-                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'comments' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                    className={`px-4 py-1.5 rounded-[4px] font-medium transition-colors ${activeTab === 'comments' ? 'bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]' : 'text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'}`}
                   >Comments</button>
                   <button
                     onClick={() => setActiveTab('history')}
-                    className={`px-4 py-1.5 rounded-md font-medium transition-colors ${activeTab === 'history' ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
+                    className={`px-4 py-1.5 rounded-[4px] font-medium transition-colors ${activeTab === 'history' ? 'bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]' : 'text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'}`}
                   >History</button>
                 </div>
               </div>
@@ -724,8 +677,8 @@ export default function TaskDetailDrawer({
               </div>
             </div>
 
-            {/* Meta information */}
-            <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-4 pt-4 pb-8">
+            {/* Meta */}
+            <div className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] flex items-center justify-center gap-4 pt-4 pb-8">
               <span>Created: {formatDateTime(issue.createdAt)}</span>
               <span>•</span>
               <span>Updated: {formatDateTime(issue.updatedAt)}</span>
@@ -734,13 +687,14 @@ export default function TaskDetailDrawer({
           </div>
         </div>
       </div>
-      
-      {/* Reusing Timeline custom scrollbar classes for convenience */}
+
       <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #DFE1E6; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #C1C7D0; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #EAEAEA; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #C8C7C4; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
       `}} />
     </>
   );

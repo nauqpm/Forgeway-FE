@@ -17,6 +17,11 @@ interface Props {
   }>;
 }
 
+const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]";
+const inputBaseCls = "w-full px-3 py-2 pr-10 border rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:outline-none transition-colors";
+const inputNormalCls = `${inputBaseCls} border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]`;
+const inputErrorCls = `${inputBaseCls} border-[#9F2F2D] focus:border-[#9F2F2D]`;
+
 export function ChangePasswordForm({ saving, onChangePassword }: Props) {
   const [form, setForm] = useState({
     currentPassword: "",
@@ -46,15 +51,9 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
     let hasClientError = false;
     const newFieldErrors: Record<string, string> = {};
 
-    // if (!form.currentPassword) {
-    //   newFieldErrors.currentPassword = "Please enter your current password";
-    //   hasClientError = true;
-    // }
-
     const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
     if (!passwordPattern.test(form.newPassword)) {
-      newFieldErrors.newPassword =
-        "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+      newFieldErrors.newPassword = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
       hasClientError = true;
     }
 
@@ -90,32 +89,27 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {validationError && (
-        <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-400">
+        <div className="p-3 rounded-[6px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
           {validationError}
         </div>
       )}
       {success && (
-        <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-sm text-green-700 dark:text-green-400 flex items-center gap-2">
+        <div className="p-3 rounded-[6px] bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] border border-[#C3DFC1] dark:border-[rgba(52,101,56,0.2)] text-[0.8125rem] text-[#346538] dark:text-[#4ADE80] flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 shrink-0" />
           Your password has been changed successfully
         </div>
       )}
 
-      {/* Current password */}
       <div>
         <div className="flex items-center justify-between mb-1.5">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Current password
-          </label>
-
+          <label className={labelCls}>Current password</label>
           <Link
             href="/forgot-password"
-            className="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+            className="text-[0.6875rem] text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#3B82F6] transition-colors"
           >
             Forgot password?
           </Link>
         </div>
-
         <div className="relative">
           <input
             type={showCurrent ? "text" : "password"}
@@ -128,38 +122,25 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
             autoCorrect="off"
             spellCheck="false"
             lang="en"
-            className={`w-full px-3 py-2.5 pr-10 border ${
-              fieldErrors.currentPassword
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
-            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
+            className={fieldErrors.currentPassword ? inputErrorCls : inputNormalCls}
           />
-
           <button
             type="button"
             onClick={() => setShowCurrent((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
           >
-            {showCurrent ? (
-              <EyeOff className="w-4 h-4" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
+            {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-
         {fieldErrors.currentPassword && (
-          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
             {fieldErrors.currentPassword}
           </p>
         )}
       </div>
 
-      {/* New password */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-          New password
-        </label>
+        <label className={`${labelCls} mb-1.5 block`}>New password</label>
         <div className="relative">
           <input
             type={showNew ? "text" : "password"}
@@ -172,36 +153,25 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
             autoCorrect="off"
             spellCheck="false"
             lang="en"
-            className={`w-full px-3 py-2.5 pr-10 border ${
-              fieldErrors.newPassword
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
-            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
+            className={fieldErrors.newPassword ? inputErrorCls : inputNormalCls}
           />
           <button
             type="button"
             onClick={() => setShowNew((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
           >
-            {showNew ? (
-              <EyeOff className="w-4 h-4" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
+            {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         {fieldErrors.newPassword && (
-          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
             {fieldErrors.newPassword}
           </p>
         )}
       </div>
 
-      {/* Confirm password */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-          Confirm new password
-        </label>
+        <label className={`${labelCls} mb-1.5 block`}>Confirm new password</label>
         <div className="relative">
           <input
             type={showConfirm ? "text" : "password"}
@@ -214,42 +184,28 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
             autoCorrect="off"
             spellCheck="false"
             lang="en"
-            className={`w-full px-3 py-2.5 pr-10 border ${
-              fieldErrors.confirmPassword
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
-            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
+            className={fieldErrors.confirmPassword ? inputErrorCls : inputNormalCls}
           />
           <button
             type="button"
             onClick={() => setShowConfirm((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
           >
-            {showConfirm ? (
-              <EyeOff className="w-4 h-4" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
+            {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         {fieldErrors.confirmPassword && (
-          <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
             {fieldErrors.confirmPassword}
           </p>
         )}
       </div>
 
-      {/* <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2">
-        Note: The "Current password" field is currently only validated on the client.
-        The backend needs to add validation for <code className="font-mono">currentPassword</code> trong{" "}
-        <code className="font-mono">UpdateUserProfileDto</code> to ensure security.
-      </p> */}
-
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={saving}
-          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[0.8125rem] font-medium transition-colors flex items-center gap-2"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           {saving ? "Saving..." : "Change password"}

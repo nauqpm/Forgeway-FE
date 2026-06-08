@@ -52,9 +52,10 @@ const PasswordPolicyChecklist: React.FC<PasswordPolicyChecklistProps> = ({
 
   return (
     <div
-      className={`absolute left-0 right-0 top-full mt-2 z-50 bg-white/95 backdrop-blur-md border border-rose-200/80 rounded-2xl p-4 shadow-xl animate-fadeIn ${className}`}
+      className={`absolute left-0 right-0 top-full mt-2 z-50 bg-white dark:bg-[#202020] border border-[#FDEBEC] dark:border-[rgba(159,47,45,0.3)] rounded-[8px] p-4 animate-fadeIn ${className}`}
+      style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
     >
-      <div className="text-xs font-bold text-rose-600 mb-2 flex items-center gap-1.5">
+      <div className="text-xs font-bold text-rose-600 dark:text-rose-400 mb-2 flex items-center gap-1.5">
         <X className="w-4 h-4 text-rose-500 stroke-[2.5]" />
         <span>Password does not meet these requirements:</span>
       </div>
@@ -62,7 +63,7 @@ const PasswordPolicyChecklist: React.FC<PasswordPolicyChecklistProps> = ({
         {failedRules.map((rule) => (
           <div
             key={rule.key}
-            className="flex items-center gap-2 text-xs text-gray-700 font-medium"
+            className="flex items-center gap-2 text-xs text-[#111111] dark:text-[#E8E8E7] font-medium"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" />
             <span>{rule.label}</span>

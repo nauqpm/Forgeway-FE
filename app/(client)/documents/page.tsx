@@ -169,13 +169,13 @@ export default function DocumentsLibraryPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-indigo-100 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="rounded-[8px] border border-[#EAEAEA] bg-white p-5 dark:border-white/[0.06] dark:bg-[#252525]">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <h1 className="text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
               LIBRARY OF DOCUMENTS
             </h1>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            <p className="mt-1 text-sm text-[#787774] dark:text-[#9B9A97]">
               Management your documents, create online documents or upload files to keep all your important information in one place.
             </p>
           </div>
@@ -204,22 +204,22 @@ export default function DocumentsLibraryPage() {
           */}
           <Link
             href="/documents/create"
-            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-[6px] bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
           >
             Create new document
           </Link>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+      <div className="rounded-[8px] border border-[#EAEAEA] bg-white p-4 dark:border-white/[0.06] dark:bg-[#252525]">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[260px] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="relative min-w-[16.25rem] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search documents..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-indigo-300 focus:bg-white dark:border-gray-700 dark:bg-gray-800"
+              className="w-full rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] py-2.5 pl-9 pr-3 text-sm text-[#111111] outline-none transition-colors focus:border-[#2563EB] focus:bg-white dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
             />
           </div>
           <select
@@ -227,7 +227,7 @@ export default function DocumentsLibraryPage() {
             onChange={(e) =>
               setSortBy(e.target.value as "newest" | "name" | "size")
             }
-            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-indigo-300 focus:bg-white dark:border-gray-700 dark:bg-gray-800"
+            className="rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-3 py-2.5 text-sm text-[#111111] outline-none transition-colors focus:border-[#2563EB] focus:bg-white dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
           >
             <option value="newest">Newest</option>
             <option value="name">Name (A-Z)</option>
@@ -237,11 +237,11 @@ export default function DocumentsLibraryPage() {
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 dark:border-gray-800 dark:bg-gray-900">
+        <div className="rounded-[8px] border border-[#EAEAEA] bg-white p-10 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
           Loading documents...
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-sm text-slate-500 dark:border-gray-700 dark:bg-gray-900">
+        <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-white p-10 text-center text-sm text-[#787774] dark:border-white/[0.08] dark:bg-[#252525] dark:text-[#9B9A97]">
           No matching documents found.
         </div>
       ) : (
@@ -260,10 +260,10 @@ export default function DocumentsLibraryPage() {
                     setViewingDoc(doc);
                   }
                 }}
-                className="group relative cursor-pointer rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-800 dark:bg-gray-900"
+                className="group relative cursor-pointer rounded-[8px] border border-[#EAEAEA] bg-white p-4 transition-colors hover:border-[#2563EB]/25 hover:bg-[#F9F9F8] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 dark:border-white/[0.06] dark:bg-[#252525] dark:hover:border-[#3B82F6]/25 dark:hover:bg-[#2A2A2A]"
               >
                 <div className="mb-3 flex items-start justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-[6px] bg-[#EFF6FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]">
                     <Icon className="h-5 w-5" />
                   </div>
                   <button
@@ -273,7 +273,7 @@ export default function DocumentsLibraryPage() {
                         curr === doc._id ? null : doc._id,
                       );
                     }}
-                    className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-gray-800"
+                    className="rounded-[4px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] hover:text-[#787774] dark:text-[#6B6B6B] dark:hover:bg-white/5 dark:hover:text-[#9B9A97]"
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
@@ -281,7 +281,7 @@ export default function DocumentsLibraryPage() {
                 {openMenuId === doc._id && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute right-4 top-12 z-20 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+                    className="absolute right-4 top-12 z-20 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]"
                   >
                     <a
                       href={documentService.downloadUrl(doc._id)}
@@ -329,13 +329,13 @@ export default function DocumentsLibraryPage() {
                   </div>
                 )}
 
-                <p className="line-clamp-2 min-h-[40px] text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p className="line-clamp-2 min-h-10 text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   {doc.name}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-[#787774] dark:text-[#9B9A97]">
                   {doc.extension.toUpperCase()} · {formatSize(doc.size)}
                 </p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-[#ABABAB] dark:text-[#6B6B6B]">
                   Date uploaded: {formatDate(doc.updatedAt || doc.createdAt)}
                 </p>
               </div>
@@ -362,18 +362,18 @@ export default function DocumentsLibraryPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="rename-document-title"
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            className="w-full max-w-md rounded-[8px] border border-[#EAEAEA] bg-white p-5 dark:border-white/[0.06] dark:bg-[#252525]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]">
                 <Pencil className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 id="rename-document-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                <h2 id="rename-document-title" className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Rename document
                 </h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-sm text-[#787774] dark:text-[#9B9A97]">
                   Enter a new name for this document.
                 </p>
               </div>
@@ -393,7 +393,7 @@ export default function DocumentsLibraryPage() {
                   closeRenameDialog();
                 }
               }}
-              className="mt-5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:bg-gray-800 dark:text-slate-100 dark:focus:bg-gray-900"
+              className="mt-5 w-full rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-3 py-2.5 text-sm text-[#111111] outline-none transition-colors focus:border-[#2563EB] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
               placeholder="Document name"
             />
 
@@ -402,7 +402,7 @@ export default function DocumentsLibraryPage() {
                 type="button"
                 disabled={renaming}
                 onClick={closeRenameDialog}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+                className="rounded-[6px] border border-[#EAEAEA] px-4 py-2 text-sm font-semibold text-[#787774] transition-colors hover:bg-[#F7F6F3] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.06] dark:text-[#9B9A97] dark:hover:bg-white/5"
               >
                 Cancel
               </button>
@@ -410,7 +410,7 @@ export default function DocumentsLibraryPage() {
                 type="button"
                 disabled={renaming}
                 onClick={handleRenameDocument}
-                className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-[6px] bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
               >
                 {renaming ? "Renaming..." : "Rename"}
               </button>
@@ -429,7 +429,7 @@ export default function DocumentsLibraryPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-document-title"
-            className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-gray-800 dark:bg-gray-900"
+            className="w-full max-w-md rounded-[8px] border border-[#EAEAEA] bg-white p-5 dark:border-white/[0.06] dark:bg-[#252525]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3">
@@ -437,12 +437,12 @@ export default function DocumentsLibraryPage() {
                 <Trash2 className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h2 id="delete-document-title" className="text-base font-semibold text-slate-900 dark:text-slate-100">
+                <h2 id="delete-document-title" className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Delete document?
                 </h2>
-                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                <p className="mt-1 text-sm text-[#787774] dark:text-[#9B9A97]">
                   This will permanently delete{" "}
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                     {deleteTarget.name}
                   </span>
                   . This action cannot be undone.
@@ -455,7 +455,7 @@ export default function DocumentsLibraryPage() {
                 type="button"
                 disabled={deleting}
                 onClick={() => setDeleteTarget(null)}
-                className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800"
+                className="rounded-[6px] border border-[#EAEAEA] px-4 py-2 text-sm font-semibold text-[#787774] transition-colors hover:bg-[#F7F6F3] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.06] dark:text-[#9B9A97] dark:hover:bg-white/5"
               >
                 Cancel
               </button>
@@ -477,12 +477,12 @@ export default function DocumentsLibraryPage() {
           onClick={() => setViewingDoc(null)}
         >
           <div
-            className="flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl dark:bg-gray-900"
+            className="flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[8px] bg-white dark:bg-[#252525]"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 dark:border-gray-800">
+            <div className="flex items-center justify-between gap-3 border-b border-[#EAEAEA] px-4 py-3 dark:border-white/[0.06]">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   {viewingDoc.name}
                 </p>
                 <p className="text-xs text-slate-500">

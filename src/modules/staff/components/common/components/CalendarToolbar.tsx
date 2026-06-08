@@ -17,9 +17,9 @@ interface CalendarToolbarProps {
 }
 
 const SELECT_CLASS =
-  'px-2.5 py-1.5 text-sm font-medium border border-gray-200 dark:border-gray-700 rounded-lg ' +
-  'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 ' +
-  'focus:outline-none focus:ring-2 focus:ring-indigo-500';
+  'px-2.5 py-1.5 text-sm font-medium border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] ' +
+  'bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] ' +
+  'focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20';
 
 export default function CalendarToolbar({
   calendarRef,
@@ -43,7 +43,7 @@ export default function CalendarToolbar({
           placeholder="Search tasks…"
           value={filters.search}
           onChange={(e) => onFiltersChange({ ...filters, search: e.target.value })}
-          className={`${SELECT_CLASS} w-44 placeholder-gray-400 dark:placeholder-gray-500`}
+          className={`${SELECT_CLASS} w-44 placeholder-[#ABABAB] dark:placeholder-[#6B6B6B]`}
         />
 
         <select
@@ -93,42 +93,42 @@ export default function CalendarToolbar({
         <div className="flex items-center gap-2">
           <button
             onClick={() => api()?.today()}
-            className="px-3 py-1.5 text-sm font-semibold rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="px-3 py-1.5 text-sm font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
           >
             Today
           </button>
 
           <button
             onClick={() => api()?.prev()}
-            className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="p-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
 
           <button
             onClick={() => api()?.next()}
-            className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+            className="p-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
 
-          <span className="text-base font-bold text-gray-800 dark:text-gray-100 min-w-[150px]">
+          <span className="text-base font-bold text-[#111111] dark:text-[#E8E8E7] min-w-[9.375rem]">
             {currentDateTitle}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           {/* Month / Week toggle */}
-          <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
+          <div className="flex bg-[#F7F6F3] dark:bg-[#252525] rounded-[8px] p-1 gap-1">
             {(['dayGridMonth', 'dayGridWeek'] as CalendarViewType[]).map((view) => (
               <button
                 key={view}
                 onClick={() => onViewChange(view)}
                 className={[
-                  'px-3 py-1 text-xs font-medium rounded-md transition-all',
+                  'px-3 py-1 text-xs font-medium rounded-[6px] transition-all',
                   currentView === view
-                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300',
+                    ? 'bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]'
+                    : 'text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]',
                 ].join(' ')}
               >
                 {view === 'dayGridMonth' ? 'Month' : 'Week'}
@@ -141,10 +141,10 @@ export default function CalendarToolbar({
             onClick={onToggleSidebar}
             title="Unscheduled work"
             className={[
-              'p-1.5 rounded-lg border transition-colors',
+              'p-1.5 rounded-[6px] border transition-colors',
               isSidebarOpen
-                ? 'border-indigo-300 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400'
-                : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700',
+                ? 'border-[#2563EB]/30 dark:border-[#3B82F6]/40 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]'
+                : 'border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5',
             ].join(' ')}
           >
             <AlignJustify className="w-4 h-4" />

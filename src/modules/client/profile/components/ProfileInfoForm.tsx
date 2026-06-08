@@ -21,6 +21,11 @@ interface Props {
   onUploadAvatar: (file: File) => Promise<boolean>;
 }
 
+const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
+const inputBaseCls = "w-full px-3 py-2 border rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:outline-none transition-colors";
+const inputNormalCls = `${inputBaseCls} border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]`;
+const inputErrorCls = `${inputBaseCls} border-[#9F2F2D] focus:border-[#9F2F2D]`;
+
 export function ProfileInfoForm({
   profile,
   saving,
@@ -71,17 +76,17 @@ export function ProfileInfoForm({
     let hasClientError = false;
 
     if (form.phone && !/^(\+?[1-9]\d{7,14}|0\d{9,10})$/.test(form.phone)) {
-      newFieldErrors.phone = "Số điện thoại không hợp lệ";
+      newFieldErrors.phone = "Invalid phone number";
       hasClientError = true;
     }
 
     if (form.birthday) {
       const bdate = new Date(form.birthday);
       if (isNaN(bdate.getTime())) {
-        newFieldErrors.birthday = "Ngày sinh không hợp lệ";
+        newFieldErrors.birthday = "Invalid date of birth";
         hasClientError = true;
       } else if (bdate > new Date()) {
-        newFieldErrors.birthday = "Ngày sinh không thể ở tương lai";
+        newFieldErrors.birthday = "Date of birth cannot be in the future";
         hasClientError = true;
       }
     }
@@ -90,7 +95,7 @@ export function ProfileInfoForm({
       form.fullName &&
       (form.fullName.length < 2 || form.fullName.length > 100)
     ) {
-      newFieldErrors.fullName = "Họ tên phải từ 2 đến 100 ký tự";
+      newFieldErrors.fullName = "Full name must be between 2 and 100 characters";
       hasClientError = true;
     }
 
@@ -137,10 +142,9 @@ export function ProfileInfoForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Avatar */}
       <div className="flex items-center gap-5">
         <div className="relative shrink-0">
-          <div className="w-20 h-20 rounded-full overflow-hidden bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.15)] flex items-center justify-center">
             {profile.avatar ? (
               <Image
                 src={profile.avatar}
@@ -150,25 +154,23 @@ export function ProfileInfoForm({
                 className="object-cover w-full h-full"
               />
             ) : (
-              <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-300">
+              <span className="text-2xl font-bold text-[#2563EB] dark:text-[#3B82F6]">
                 {initials}
               </span>
             )}
           </div>
 
-          {/* Upload overlay */}
           {avatarUploading && (
             <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
               <Loader2 className="w-6 h-6 text-white animate-spin" />
             </div>
           )}
 
-          {/* Camera button */}
           <button
             type="button"
             disabled={avatarUploading}
             onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-0 right-0 w-7 h-7 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-full flex items-center justify-center shadow-md transition-colors"
+            className="absolute bottom-0 right-0 w-7 h-7 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white rounded-full flex items-center justify-center transition-colors"
             aria-label="Change avatar"
           >
             <Camera className="w-3.5 h-3.5" />
@@ -184,151 +186,122 @@ export function ProfileInfoForm({
         </div>
 
         <div>
-          <p className="font-medium text-gray-900 dark:text-white">
+          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
             {profile.fullName ?? "Not updated"}
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             {profile.email}
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-            JPG, PNG, GIF, WEBP · max 10MB
+          <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-0.5">
+            JPG, PNG, GIF, WEBP - max 10MB
           </p>
           {fieldErrors.avatar && (
-            <p className="text-sm text-red-600 dark:text-red-400 mt-1">
+            <p className="text-[0.8125rem] text-[#9F2F2D] mt-1">
               {fieldErrors.avatar}
             </p>
           )}
         </div>
       </div>
 
-      {/* Fields */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Full name
-          </label>
+          <label className={labelCls}>Full name</label>
           <input
             type="text"
             name="fullName"
             value={form.fullName}
             onChange={handleChange}
             placeholder="Enter full name"
-            className={`w-full px-3 py-2.5 border ${
-              fieldErrors.fullName
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
-            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
+            className={fieldErrors.fullName ? inputErrorCls : inputNormalCls}
           />
           {fieldErrors.fullName && (
-            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.fullName}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Email
-          </label>
+          <label className={labelCls}>Email</label>
           <input
             type="email"
             value={profile.email}
             disabled
-            className="w-full px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+            className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B] cursor-not-allowed"
           />
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+          <p className="mt-1 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
             Email cannot be changed
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Phone number
-          </label>
+          <label className={labelCls}>Phone number</label>
           <input
             type="tel"
             name="phone"
             value={form.phone}
             onChange={handleChange}
             placeholder="Enter phone number"
-            className={`w-full px-3 py-2.5 border ${
-              fieldErrors.phone
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
-            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
+            className={fieldErrors.phone ? inputErrorCls : inputNormalCls}
           />
           {fieldErrors.phone && (
-            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.phone}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Date of birth
-          </label>
+          <label className={labelCls}>Date of birth</label>
           <CustomDatePicker
             value={form.birthday}
             onChange={handleBirthdayChange}
             placeholder="DD/MM/YYYY"
-            inputClassName={`h-[46px] rounded-lg ${
+            inputClassName={`h-9 rounded-[6px] ${
               fieldErrors.birthday
-                ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                : "border-gray-300 dark:border-gray-700 focus:border-indigo-500"
-            } bg-white dark:bg-gray-800 text-gray-900 dark:text-white`}
+                ? "border-[#9F2F2D] focus:border-[#9F2F2D]"
+                : "border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
+            } bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]`}
             ariaLabel="Date of birth"
           />
           {fieldErrors.birthday && (
-            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.birthday}
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Gender
-          </label>
+          <label className={labelCls}>Gender</label>
           <select
             name="gender"
             value={form.gender}
             onChange={handleChange}
-            className={`w-full px-3 py-2.5 border ${
-              fieldErrors.gender
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
-            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2`}
+            className={fieldErrors.gender ? inputErrorCls : inputNormalCls}
           >
-            <option value="male">Nam</option>
-            <option value="female">Nữ</option>
-            <option value="other">Khác</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
           </select>
           {fieldErrors.gender && (
-            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.gender}
             </p>
           )}
         </div>
 
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-            Address
-          </label>
+          <label className={labelCls}>Address</label>
           <input
             type="text"
             name="address"
             value={form.address}
             onChange={handleChange}
             placeholder="Enter address"
-            className={`w-full px-3 py-2.5 border ${
-              fieldErrors.address
-                ? "border-red-500 focus:ring-red-500"
-                : "border-gray-300 dark:border-gray-700 focus:ring-indigo-500"
-            } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2`}
+            className={fieldErrors.address ? inputErrorCls : inputNormalCls}
           />
           {fieldErrors.address && (
-            <p className="mt-1.5 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.address}
             </p>
           )}
@@ -339,7 +312,7 @@ export function ProfileInfoForm({
         <button
           type="submit"
           disabled={saving}
-          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[0.8125rem] font-medium transition-colors flex items-center gap-2"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           {saving ? "Saving..." : "Save changes"}

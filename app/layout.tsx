@@ -1,10 +1,21 @@
 import "@/styles/globals.css";
 import "@/styles/suneditor.min.css";
+import { Geist, Geist_Mono } from "next/font/google";
 import QueryProvider from "@/common/providers/QueryProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import TokenHandler from "@/common/components/TokenHandler";
 import ToastProvider from "@/common/providers/ToastProvider";
 import { Suspense } from "react";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata = {
     title: {
@@ -34,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
         <link rel="icon" href="/favicon.ico?v=5" sizes="any" />
         <link rel="icon" type="image/png" href="/icon.png?v=5" sizes="512x512" />
@@ -53,6 +64,12 @@ export default function RootLayout({
                   } else {
                     classList.add(theme);
                   }
+                } catch (e) {}
+              })();
+              (function() {
+                try {
+                  var scale = localStorage.getItem('app-font-scale') || '1';
+                  document.documentElement.style.setProperty('--font-scale', scale);
                 } catch (e) {}
               })();
             `,

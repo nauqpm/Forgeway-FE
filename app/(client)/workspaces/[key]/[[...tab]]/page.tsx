@@ -42,6 +42,8 @@ import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
+import { useSprintRealtime } from "@/hooks/realtime/use-sprint-realtime";
+import { sprintIdOf } from "@/hooks/realtime/sprint-realtime-cache.utils";
 import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -311,7 +313,9 @@ export default function WorkspaceDetailPage({
           )
         : [...current, issue];
 
-      return sortIssuesByRank(next);
+      // Skip re-sort during active drag — changing Draggable indices mid-drag
+      // causes @hello-pangea/dnd to use stale source.index vs current position.
+      return isDraggingIssueRef.current ? next : sortIssuesByRank(next);
     });
     setSelectedIssue((current) =>
       current && taskIdOf(current) === nextIssueId
@@ -330,10 +334,29 @@ export default function WorkspaceDetailPage({
     setSelectedTaskIds((current) => current.filter((id) => id !== taskId));
   }, []);
 
+  const handleRealtimeSprintCreated = useCallback((sprint: Sprint) => {
+    const nextSprintId = sprintIdOf(sprint);
+
+    setSprints((current) => {
+      const exists = current.some((item) => sprintIdOf(item) === nextSprintId);
+
+      if (exists) {
+        return current.map((item) =>
+          sprintIdOf(item) === nextSprintId ? { ...item, ...sprint } : item,
+        );
+      }
+
+      return [...current, sprint];
+    });
+  }, []);
+
   useWorkspaceSocket(workspaceApiId);
   useTaskRealtime(workspaceApiId, {
     onTaskRemoved: handleRealtimeTaskRemoved,
     onTaskUpserted: handleRealtimeTaskUpserted,
+  });
+  useSprintRealtime(workspaceApiId, {
+    onSprintCreated: handleRealtimeSprintCreated,
   });
 
   useEffect(() => {
@@ -399,7 +422,7 @@ export default function WorkspaceDetailPage({
 
   const openTaskDetail = useCallback((issue: Issue) => {
     if (!issue.key) {
-      toast.error("Khong tim thay task key");
+      toast.error("Task key not found");
       return;
     }
 
@@ -494,7 +517,7 @@ export default function WorkspaceDetailPage({
           if (isNoopReorderError(error)) return;
 
           queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-          toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+          toast.error(error?.response?.data?.message || "Could not update task position");
         })
         .finally(() => {
           reorderInFlightRef.current.delete(taskId);
@@ -576,17 +599,18 @@ export default function WorkspaceDetailPage({
             })
             .catch((error) => {
               queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-              toast.error(error?.response?.data?.message || "Khong cap nhat duoc sprint cua task");
+              toast.error(error?.response?.data?.message || "Could not update task sprint");
             });
         }
       },
     });
     isDraggingIssueRef.current = false;
+    setIssues((current) => sortIssuesByRank(current));
   };
 
   const handleArchiveIssue = async (issue: Issue) => {
     if (!workspaceApiId || !issue.id) {
-      toast.error("Khong tim thay task id");
+      toast.error("Task ID not found");
       return;
     }
 
@@ -598,13 +622,13 @@ export default function WorkspaceDetailPage({
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item archived");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong archive duoc work item");
+      toast.error(error?.response?.data?.message || "Could not archive work item");
     }
   };
 
   const handleRestoreIssue = async (issue: Issue) => {
     if (!workspaceApiId || !issue.id) {
-      toast.error("Khong tim thay task id");
+      toast.error("Task ID not found");
       return;
     }
 
@@ -619,13 +643,13 @@ export default function WorkspaceDetailPage({
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item restored");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong restore duoc work item");
+      toast.error(error?.response?.data?.message || "Could not restore work item");
     }
   };
 
   const handleDeleteIssue = async (issue: Issue) => {
     if (!workspaceApiId || !issue.id) {
-      toast.error("Khong tim thay task id");
+      toast.error("Task ID not found");
       return;
     }
 
@@ -638,7 +662,7 @@ export default function WorkspaceDetailPage({
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item deleted");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Khong delete duoc work item");
+      toast.error(error?.response?.data?.message || "Could not delete work item");
     }
   };
 
@@ -804,7 +828,7 @@ export default function WorkspaceDetailPage({
                       .catch((error) => {
                         if (isNoopReorderError(error)) return;
                         queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-                        toast.error(error?.response?.data?.message || "Khong cap nhat duoc vi tri task");
+                        toast.error(error?.response?.data?.message || "Could not update task position");
                       });
                   }
                 },

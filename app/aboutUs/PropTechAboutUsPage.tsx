@@ -397,12 +397,12 @@ function HeroSection() {
       <motion.div
         animate={{ x: [0, 40, -20, 0], y: [0, -30, 15, 0], scale: [1, 1.1, 1.02, 1] }}
         transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute left-[-10%] top-20 h-[400px] w-[400px] rounded-full bg-[#00F2FE]/[0.15] blur-[100px] will-change-transform"
+        className="absolute left-[-10%] top-20 h-[25rem] w-[25rem] rounded-full bg-[#00F2FE]/[0.15] blur-[100px] will-change-transform"
       />
       <motion.div
         animate={{ x: [0, -40, 20, 0], y: [0, 20, -20, 0], scale: [1, 1.05, 1.12, 1] }}
         transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute bottom-[-10%] right-[-5%] h-[500px] w-[500px] rounded-full bg-[#F59E0B]/[0.12] blur-[110px] will-change-transform"
+        className="absolute bottom-[-10%] right-[-5%] h-[31.25rem] w-[31.25rem] rounded-full bg-[#F59E0B]/[0.12] blur-[110px] will-change-transform"
       />
 
       <div className="relative z-10 mx-auto grid min-h-screen max-w-7xl items-center gap-14 px-5 py-28 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10">
@@ -446,7 +446,7 @@ function HeroSection() {
           transition={{ duration: 0.85, delay: 0.1, ease: [0.215, 0.61, 0.355, 1.0] }}
           className="relative hidden lg:block"
         >
-          <div className="relative mx-auto aspect-[4/5] max-w-[460px] rounded-[36px] border border-white/[0.12] bg-white/[0.03] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+          <div className="relative mx-auto aspect-[4/5] max-w-[28.75rem] rounded-[36px] border border-white/[0.12] bg-white/[0.03] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.35)] backdrop-blur-xl">
             <div className="absolute inset-5 rounded-[28px] border border-sky-300/[0.15]" />
             <div className="absolute left-1/2 top-1/2 h-[78%] w-[78%] -translate-x-1/2 -translate-y-1/2 rounded-[32px] border border-dashed border-white/10" />
             <div className="relative z-10 grid h-full grid-rows-[auto_1fr_auto] gap-5 rounded-[28px] bg-[#0F172A]/90 p-6">
@@ -724,7 +724,7 @@ function TrustPartnersSection() {
     <section id="trust" className="relative overflow-hidden bg-[#F8FAFC] px-5 py-24 sm:px-8 lg:px-10">
       {/* Decorative ambient glowing blur circles */}
       <div className="pointer-events-none absolute left-1/4 top-1/4 -translate-x-1/2 -translate-y-1/2 h-96 w-96 rounded-full bg-sky-300/10 blur-[100px]" />
-      <div className="pointer-events-none absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 h-[450px] w-[450px] rounded-full bg-amber-200/10 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 h-[28.125rem] w-[28.125rem] rounded-full bg-amber-200/10 blur-[120px]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
         <SectionEyebrow>Trust &amp; Partners</SectionEyebrow>
@@ -754,7 +754,7 @@ function TrustPartnersSection() {
                   return (
                     <div
                       key={`r1-c1-${partner.name}-${index}`}
-                      className="group flex h-20 min-w-[200px] items-center justify-start gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 px-6 font-serif text-lg font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-sky-300 hover:bg-white hover:shadow-md"
+                      className="group flex h-20 min-w-[12.5rem] items-center justify-start gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 px-6 font-serif text-lg font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-sky-300 hover:bg-white hover:shadow-md"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-slate-200 text-[#38BDF8] transition-colors duration-300 group-hover:bg-[#0B132B] group-hover:text-white">
                         <Icon size={18} />
@@ -771,7 +771,7 @@ function TrustPartnersSection() {
                   return (
                     <div
                       key={`r1-c2-${partner.name}-${index}`}
-                      className="group flex h-20 min-w-[200px] items-center justify-start gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 px-6 font-serif text-lg font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-sky-300 hover:bg-white hover:shadow-md"
+                      className="group flex h-20 min-w-[12.5rem] items-center justify-start gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 px-6 font-serif text-lg font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-sky-300 hover:bg-white hover:shadow-md"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-slate-200 text-[#38BDF8] transition-colors duration-300 group-hover:bg-[#0B132B] group-hover:text-white">
                         <Icon size={18} />
@@ -799,7 +799,7 @@ function TrustPartnersSection() {
                   return (
                     <div
                       key={`r2-c1-${partner.name}-${index}`}
-                      className="group flex h-20 min-w-[200px] items-center justify-start gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 px-6 font-serif text-lg font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-amber-300 hover:bg-white hover:shadow-md"
+                      className="group flex h-20 min-w-[12.5rem] items-center justify-start gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 px-6 font-serif text-lg font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-amber-300 hover:bg-white hover:shadow-md"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-slate-200 text-[#F59E0B] transition-colors duration-300 group-hover:bg-[#0B132B] group-hover:text-white">
                         <Icon size={18} />
@@ -816,7 +816,7 @@ function TrustPartnersSection() {
                   return (
                     <div
                       key={`r2-c2-${partner.name}-${index}`}
-                      className="group flex h-20 min-w-[200px] items-center justify-start gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 px-6 font-serif text-lg font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-amber-300 hover:bg-white hover:shadow-md"
+                      className="group flex h-20 min-w-[12.5rem] items-center justify-start gap-3 rounded-[24px] border border-slate-200 bg-slate-50/80 px-6 font-serif text-lg font-bold text-slate-700 transition-all duration-300 hover:scale-105 hover:border-amber-300 hover:bg-white hover:shadow-md"
                     >
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[14px] bg-slate-200 text-[#F59E0B] transition-colors duration-300 group-hover:bg-[#0B132B] group-hover:text-white">
                         <Icon size={18} />

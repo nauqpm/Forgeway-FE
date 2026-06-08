@@ -1,8 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
-import DOMPurify from "dompurify";
 import { CheckCircle2, Loader2, Save, X, XCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { documentService } from "../services/documentService";
@@ -10,11 +9,15 @@ import { DocumentItem } from "../types/document.type";
 import EditorToolbar from "../editor/EditorToolbar";
 import { getEditorExtensions } from "../editor/editorExtensions";
 
-const sanitizeEditorHtml = (html: string) =>
-  DOMPurify.sanitize(html, {
+const sanitizeEditorHtml = (html: string): string => {
+  if (typeof window === "undefined") return html;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const DP = require("dompurify");
+  return DP.sanitize(html, {
     USE_PROFILES: { html: true },
     ADD_ATTR: ["style", "target", "rel", "colspan", "rowspan", "width", "height", "data-align"],
   });
+};
 
 type Props = {
   doc: DocumentItem;
@@ -36,7 +39,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
     editorProps: {
       attributes: {
         class:
-          "tiptap-content prose m-5 max-w-none px-2 pb-32 text-slate-900 focus:outline-none dark:prose-invert dark:text-slate-100 prose-strong:text-slate-900 dark:prose-strong:text-slate-100",
+          "tiptap-content prose m-5 max-w-none px-2 pb-32 text-[#111111] focus:outline-none dark:prose-invert dark:text-[#E8E8E7] prose-strong:text-[#111111] dark:prose-strong:text-[#E8E8E7]",
       },
     },
     onUpdate: () => setStatus("idle"),
@@ -111,17 +114,17 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-gray-950">
+    <div className="fixed inset-0 z-50 bg-white dark:bg-[#202020]">
       <div className="flex h-full flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-gray-100 bg-white px-5 py-3 dark:border-gray-800 dark:bg-gray-950">
-          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-between border-b border-[#EAEAEA] bg-white px-5 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
+          <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <span>Workspace</span>
             <span>{">"}</span>
-            <span className="font-semibold text-gray-900 dark:text-gray-100">{title || "Untitled Document"}</span>
+            <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{title || "Untitled Document"}</span>
           </div>
           <div className="flex items-center gap-2">
             {status === "saving" ? (
-              <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+              <span className="inline-flex items-center gap-1.5 text-xs text-[#787774] dark:text-[#9B9A97]">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 {statusLabel}
               </span>
@@ -138,12 +141,12 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
             )}
             <button
               onClick={saveContent}
-              className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+              className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 py-2 text-xs font-semibold text-white hover:bg-[#1D4ED8]"
             >
               <Save className="h-3.5 w-3.5" />
               Save
             </button>
-            <button onClick={onClose} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <button onClick={onClose} className="rounded-[4px] p-2 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -151,19 +154,19 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
 
         <EditorToolbar editor={editor} />
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
           {loading ? (
-            <div className="flex h-full items-center justify-center text-sm text-gray-500">
+            <div className="flex h-full items-center justify-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Loading content...
             </div>
           ) : (
-            <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
+            <div className="mx-auto w-full max-w-[75rem] px-6 py-16 lg:px-10">
               <div className="mb-10">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                   Document Title
                 </p>
-                <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
+                <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-5 py-4 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
                   <input
                     type="text"
                     value={title}
@@ -171,17 +174,17 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
                       setTitle(e.target.value);
                       setStatus("idle");
                     }}
-                    className="w-full bg-transparent text-4xl font-extrabold leading-tight tracking-tight text-[#172B4D] outline-none placeholder:text-slate-400 dark:text-gray-100 dark:placeholder:text-slate-500"
+                    className="w-full bg-transparent text-4xl font-extrabold leading-tight tracking-tight text-[#111111] dark:text-[#E8E8E7] outline-none placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]"
                     placeholder="Enter document title..."
                   />
                 </div>
               </div>
 
               <div className="pb-40">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                   Document Content
                 </p>
-                <div className="min-h-[600px] rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
+                <div className="min-h-[37.5rem] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
                   <div className="dark:prose-invert">
                     <EditorContent editor={editor} />
                   </div>

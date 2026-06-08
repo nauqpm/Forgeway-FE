@@ -88,19 +88,22 @@ export default function WorkspaceSwitcher() {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setShowDropdown(!showDropdown)}
-        className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/8 rounded-[6px] transition-colors"
       >
-        <Building2 className="w-4 h-4 text-indigo-600" />
-        <span className="font-medium text-sm text-gray-800 dark:text-gray-200 max-w-[150px] truncate">
+        <Building2 className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
+        <span className="font-medium text-sm text-[#111111] dark:text-[#E8E8E7] max-w-[9.375rem] truncate">
           {currentWorkspace?.name || "Select Workspace"}
         </span>
-        <ChevronDown className="w-4 h-4 text-gray-400" />
+        <ChevronDown className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
       </button>
 
       {showDropdown && (
-        <div className="absolute top-full left-0 mt-1 w-72 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+        <div
+          className="absolute top-full left-0 mt-1 w-72 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] py-2 z-50"
+          style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
+        >
           <div className="px-3 py-2">
-            <p className="text-xs text-gray-400 dark:text-gray-500 uppercase tracking-wider font-medium">Workspaces</p>
+            <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider font-medium">Workspaces</p>
           </div>
           {workspaces.map((ws) => (
             <button
@@ -109,21 +112,21 @@ export default function WorkspaceSwitcher() {
                 setCurrentWorkspace(ws);
                 setShowDropdown(false);
               }}
-              className={`w-full flex items-center justify-between px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                currentWorkspace?._id === ws._id ? "bg-indigo-50 dark:bg-indigo-900/20" : ""
+              className={`w-full flex items-center justify-between px-3 py-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors ${
+                currentWorkspace?._id === ws._id ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)]" : ""
               }`}
             >
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
+                <div className="w-7 h-7 rounded-[6px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] flex items-center justify-center text-xs font-bold">
                   {ws.name.charAt(0)}
                 </div>
-                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{ws.name}</span>
+                <span className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">{ws.name}</span>
               </div>
-              {currentWorkspace?._id === ws._id && <Check className="w-4 h-4 text-indigo-600" />}
+              {currentWorkspace?._id === ws._id && <Check className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />}
             </button>
           ))}
 
-          <div className="border-t border-gray-100 dark:border-gray-700 mt-2 pt-2">
+          <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] mt-2 pt-2">
             {showCreate ? (
               <div className="px-3 py-2">
                 <input
@@ -131,21 +134,21 @@ export default function WorkspaceSwitcher() {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="Workspace name"
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-sm mb-2 bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB] dark:placeholder-[#6B6B6B] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]"
                   autoFocus
                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                 />
                 <div className="flex gap-2">
-                  <button onClick={handleCreate} disabled={loading} className="flex-1 bg-indigo-600 text-white text-sm py-1.5 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                  <button onClick={handleCreate} disabled={loading} className="flex-1 bg-[#2563EB] text-white text-sm py-1.5 rounded-[6px] hover:bg-[#1D4ED8] disabled:opacity-50">
                     {loading ? "..." : "Create"}
                   </button>
-                  <button onClick={() => { setShowCreate(false); setNewName(""); }} className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <button onClick={() => { setShowCreate(false); setNewName(""); }} className="flex-1 border border-[#EAEAEA] dark:border-white/[0.06] text-[#787774] dark:text-[#9B9A97] text-sm py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5">
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setShowCreate(true)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
+              <button onClick={() => setShowCreate(true)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#2563EB] dark:text-[#3B82F6] hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.12)]">
                 <Plus className="w-4 h-4" /> Create Workspace
               </button>
             )}

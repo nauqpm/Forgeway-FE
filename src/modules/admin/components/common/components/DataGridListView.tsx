@@ -12,11 +12,12 @@ import {
   VisibilityState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, X, Check } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, Check } from 'lucide-react';
 import BulkActionBar from './BulkActionBar';
 import BulkEditDrawer from './BulkEditDrawer';
 import AssigneePicker, { AssigneePickerMember, getMemberId, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
+import TaskLabelsField from '../../../../client/workspaces/components/labels/TaskLabelsField';
 
 type WorkspaceMember = AssigneePickerMember;
 
@@ -32,21 +33,22 @@ type BoardColumn = {
 const PRIORITY_OPTIONS = [ 'High', 'Medium', 'Low'];
 
 const PRIORITY_CLS: Record<string, string> = {
-    High:   'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-  Medium: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  Low:    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  High:   'bg-[#FDEBEC] text-[#9F2F2D] dark:bg-[rgba(159,47,45,0.12)] dark:text-[#F87171]',
+  Medium: 'bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.12)] dark:text-[#F59E0B]',
+  Low:    'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]',
 };
 
 function statusCls(name: string): string {
   const n = name.toLowerCase();
-  if (n.includes('done') || n.includes('complete')) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-  if (n.includes('progress')) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-  if (n.includes('test') || n.includes('review')) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-  return 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+  if (n.includes('done') || n.includes('complete')) return 'bg-[#EDF3EC] text-[#346538] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#4ADE80]';
+  if (n.includes('progress')) return 'bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.12)] dark:text-[#F59E0B]';
+  if (n.includes('test') || n.includes('review')) return 'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]';
+  return 'bg-[#F7F6F3] text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]';
 }
 
 interface DataGridListViewProps {
   issues: any[];
+  workspaceId?: string;
   members?: WorkspaceMember[];
   boardColumns?: BoardColumn[];
   columnVisibility?: VisibilityState;
@@ -64,6 +66,7 @@ interface DataGridListViewProps {
 
 export default function DataGridListView({
   issues,
+  workspaceId,
   members,
   boardColumns,
   columnVisibility: columnVisibilityProp,
@@ -186,7 +189,7 @@ export default function DataGridListView({
       header: ({ table }) => (
         <input
           type="checkbox"
-          className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+          className="w-4 h-4 rounded-[6px] accent-[#2563EB] cursor-pointer"
           checked={table.getIsAllRowsSelected()}
           ref={input => { if (input) input.indeterminate = table.getIsSomeRowsSelected(); }}
           onChange={table.getToggleAllRowsSelectedHandler()}
@@ -195,7 +198,7 @@ export default function DataGridListView({
       cell: ({ row }) => (
         <input
           type="checkbox"
-          className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+          className="w-4 h-4 rounded-[6px] accent-[#2563EB] cursor-pointer"
           checked={row.getIsSelected()}
           onChange={row.getToggleSelectedHandler()}
           onClick={e => e.stopPropagation()}
@@ -208,7 +211,7 @@ export default function DataGridListView({
       accessorKey: 'key',
       header: 'Key',
       size: 110,
-      cell: info => <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{info.getValue() as string}</span>,
+      cell: info => <span className="text-[#787774] dark:text-[#9B9A97] font-mono text-xs">{info.getValue() as string}</span>,
     },
     {
       accessorKey: 'title',
@@ -217,7 +220,7 @@ export default function DataGridListView({
       cell: info => {
         const issue = info.row.original;
         const isEditing = editingCell?.rowId === issue.id && editingCell?.col === 'title';
-        const typeIcon = issue.type === 'Bug' ? 'text-red-500' : issue.type === 'Story' ? 'text-emerald-500' : 'text-blue-500';
+        const typeIcon = issue.type === 'Bug' ? 'text-[#9F2F2D]' : issue.type === 'Story' ? 'text-[#346538]' : 'text-[#1F6C9F]';
         if (isEditing) {
           return (
             <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
@@ -231,7 +234,7 @@ export default function DataGridListView({
                   if (e.key === 'Enter') { if (editValue.trim() && editValue !== issue.title) saveEdit(issue.id, 'title', editValue.trim()); else setEditingCell(null); }
                   if (e.key === 'Escape') setEditingCell(null);
                 }}
-                className="flex-1 px-1.5 py-0.5 text-sm border border-indigo-400 rounded outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="flex-1 px-1.5 py-0.5 text-sm border border-[#2563EB] rounded-[6px] outline-none bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]"
               />
             </div>
           );
@@ -240,14 +243,14 @@ export default function DataGridListView({
           <div className="flex items-center gap-2 group/title">
             <FileText className={`w-4 h-4 shrink-0 ${typeIcon}`} />
             <span
-              className="truncate text-gray-800 dark:text-gray-200 font-medium cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+              className="truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
               onClick={e => { e.stopPropagation(); setEditingCell({ rowId: issue.id, col: 'title' }); setEditValue(issue.title || ''); }}
               title="Click to edit"
             >
               {info.getValue() as string}
             </span>
             <button
-              className="opacity-0 group-hover/title:opacity-100 ml-auto shrink-0 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-opacity"
+              className="opacity-0 group-hover/title:opacity-100 ml-auto shrink-0 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-opacity"
               onClick={e => { e.stopPropagation(); onClickTask && onClickTask(issue); }}
               title="Open detail"
             >
@@ -280,7 +283,7 @@ export default function DataGridListView({
               <ChevronDown className="w-3 h-3" />
             </button>
             {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[150px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 z-50 min-w-[9.375rem] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]  overflow-hidden">
                 {colOptions.map(col => {
                   const isSelected = col.id === rawStatus || col.name === rawStatus;
                   return (
@@ -290,7 +293,7 @@ export default function DataGridListView({
                         onUpdateIssue && onUpdateIssue(issue.id, { columnId: col.id, status: col.name });
                         setOpenDropdown(null);
                       }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${isSelected ? 'font-semibold text-indigo-600 dark:text-indigo-400' : 'text-gray-700 dark:text-gray-300'}`}
+                      className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F9F9F8] dark:hover:bg-white/5 flex items-center gap-2 transition-colors ${isSelected ? 'font-semibold text-[#2563EB] dark:text-[#3B82F6]' : 'text-[#787774] dark:text-[#9B9A97]'}`}
                     >
                       {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
                       <span className={isSelected ? '' : 'ml-5'}>{col.name}</span>
@@ -321,16 +324,16 @@ export default function DataGridListView({
               <ChevronDown className="w-3 h-3" />
             </button>
             {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 z-50 min-w-[7.5rem] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
                 {PRIORITY_OPTIONS.map(p => (
                   <button
                     key={p}
                     onClick={() => { onUpdateIssue && onUpdateIssue(issue.id, { priority: p }); setOpenDropdown(null); }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors ${p === priority ? 'font-semibold' : 'text-gray-700 dark:text-gray-300'}`}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F9F9F8] dark:hover:bg-white/5 flex items-center gap-2 transition-colors ${p === priority ? 'font-semibold' : 'text-[#787774] dark:text-[#9B9A97]'}`}
                   >
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${ p === 'High' ? 'bg-orange-500' : p === 'Medium' ? 'bg-yellow-500' : 'bg-blue-400'}`} />
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${ p === 'High' ? 'bg-[#9F2F2D]' : p === 'Medium' ? 'bg-[#956400]' : 'bg-[#1F6C9F]'}`} />
                     {p}
-                    {p === priority && <Check className="w-3.5 h-3.5 ml-auto text-indigo-500" />}
+                    {p === priority && <Check className="w-3.5 h-3.5 ml-auto text-[#2563EB]" />}
                   </button>
                 ))}
               </div>
@@ -381,14 +384,14 @@ export default function DataGridListView({
                 if (e.key === 'Escape') setEditingCell(null);
               }}
               onClick={e => e.stopPropagation()}
-              className="w-16 text-center text-xs border border-indigo-400 rounded outline-none px-1 py-0.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+              className="w-16 text-center text-xs border border-[#2563EB] rounded-[6px] outline-none px-1 py-0.5 bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]"
             />
           );
         }
         return (
           <span
             onClick={e => { e.stopPropagation(); setEditingCell({ rowId: issue.id, col: 'storyPoints' }); setEditValue(String(pts ?? 0)); }}
-            className="w-6 h-6 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded text-xs font-bold text-gray-600 dark:text-gray-300 cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+            className="w-6 h-6 flex items-center justify-center bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-[6px] text-xs font-bold text-[#787774] dark:text-[#9B9A97] cursor-pointer hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.12)] transition-colors"
             title="Click to edit"
           >
             {pts || '-'}
@@ -425,7 +428,7 @@ export default function DataGridListView({
         const v = info.getValue() as string | undefined;
         const isOverdue = v && new Date(v) < new Date() && !issue.status?.toLowerCase().includes('done');
         return (
-          <div className={isOverdue ? "text-red-600 dark:text-red-400" : ""} onClick={e => e.stopPropagation()}>
+          <div className={isOverdue ? "text-[#9F2F2D] dark:text-[#F87171]" : ""} onClick={e => e.stopPropagation()}>
             <CustomDatePicker
               value={v}
               onChange={nextValue => onUpdateIssue && onUpdateIssue(issue.id, { dueDate: nextValue })}
@@ -443,7 +446,7 @@ export default function DataGridListView({
       size: 130,
       cell: info => {
         const v = info.getValue() as string | undefined;
-        return <span className="text-sm text-gray-500 dark:text-gray-400">{v ? v.slice(0, 10) : '-'}</span>;
+        return <span className="text-sm text-[#787774] dark:text-[#9B9A97]">{v ? v.slice(0, 10) : '-'}</span>;
       },
     },
     {
@@ -452,55 +455,29 @@ export default function DataGridListView({
       size: 200,
       cell: info => {
         const issue = info.row.original;
-        const isAdding = editingCell?.rowId === issue.id && editingCell?.col === 'labels';
+        if (workspaceId && issue.id && issue.key) {
+          return (
+            <div onClick={e => e.stopPropagation()}>
+              <TaskLabelsField
+                workspaceId={workspaceId}
+                issue={issue}
+                compact
+              />
+            </div>
+          );
+        }
         const labels = (info.getValue() as { id?: string; name: string; color?: string }[]) ?? [];
         return (
-          <div className="flex flex-wrap gap-1 items-center min-h-[24px]" onClick={e => e.stopPropagation()}>
+          <div className="flex flex-wrap gap-1 items-center min-h-6 px-1">
             {labels.map((l, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-0.5 pl-1.5 pr-0.5 py-0.5 rounded text-[11px] font-medium text-white"
+                className="inline-flex items-center gap-0.5 pl-1.5 pr-0.5 py-0.5 rounded-[6px] text-[0.6875rem] font-medium text-white"
                 style={{ backgroundColor: l.color ?? '#6366f1' }}
               >
                 {l.name}
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    const next = labels.filter((_, idx) => idx !== i);
-                    onUpdateIssue && onUpdateIssue(issue.id, { labelIds: next.map(x => x.id ?? x.name) });
-                  }}
-                  className="hover:opacity-75 p-0.5 rounded"
-                >
-                  <X className="w-2.5 h-2.5" />
-                </button>
               </span>
             ))}
-            {isAdding ? (
-              <input
-                autoFocus
-                value={editValue}
-                onChange={e => setEditValue(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && editValue.trim()) {
-                    const newLabel = { id: editValue.trim(), name: editValue.trim() };
-                    onUpdateIssue && onUpdateIssue(issue.id, { labelIds: [...labels.map(x => x.id ?? x.name), newLabel.id] });
-                    setEditValue('');
-                    setEditingCell(null);
-                  }
-                  if (e.key === 'Escape') { setEditingCell(null); setEditValue(''); }
-                }}
-                onBlur={() => { setEditingCell(null); setEditValue(''); }}
-                placeholder="Label name + Enter"
-                className="text-xs border border-indigo-400 rounded px-1.5 py-0.5 w-32 outline-none bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400"
-              />
-            ) : (
-              <button
-                onClick={e => { e.stopPropagation(); setEditingCell({ rowId: issue.id, col: 'labels' }); setEditValue(''); }}
-                className="text-xs text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 px-1 py-0.5 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-              >
-                + Add
-              </button>
-            )}
           </div>
         );
       },
@@ -512,7 +489,7 @@ export default function DataGridListView({
       enableResizing: false,
       cell: ({ row }) => (
         <button
-          className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors opacity-0 group-hover:opacity-100"
+          className="p-1.5 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors opacity-0 group-hover:opacity-100"
           onClick={e => { e.stopPropagation(); onClickTask && onClickTask(row.original); }}
           title="Open"
         >
@@ -544,19 +521,19 @@ export default function DataGridListView({
   });
 
   return (
-    <div className="workspace-list-height bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col font-sans">
+    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col font-sans">
 
       {/* Data Grid Table */}
       <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table className="w-full text-left border-collapse" style={{ width: table.getCenterTotalSize() }}>
-          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+          <thead className="sticky top-0 z-10 bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
                   <th
                     key={header.id}
                     style={{ width: header.getSize() }}
-                    className="relative px-3 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-800 select-none"
+                    className="relative px-3 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wider bg-[#F9F9F8] dark:bg-[#252525] select-none"
                   >
                     <div className="flex items-center">
                       {flexRender(header.column.columnDef.header, header.getContext())}
@@ -565,7 +542,7 @@ export default function DataGridListView({
                       <div
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
-                        className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-indigo-500/50 bg-gray-300/0 ${header.column.getIsResizing() ? 'bg-indigo-500' : ''}`}
+                        className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-[#2563EB]/50 bg-[#EAEAEA]/0 ${header.column.getIsResizing() ? 'bg-[#2563EB]' : ''}`}
                       />
                     )}
                   </th>
@@ -573,17 +550,17 @@ export default function DataGridListView({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+          <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06] bg-white dark:bg-[#202020]">
             {table.getRowModel().rows.map(row => (
               <tr
                 key={row.id}
-                className={`hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors group ${row.getIsSelected() ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+                className={`hover:bg-[#F9F9F8]/50 dark:hover:bg-white/5 transition-colors group ${row.getIsSelected() ? 'bg-[#EFF6FF]/70 dark:bg-[rgba(37,99,235,0.12)]' : ''}`}
               >
                 {row.getVisibleCells().map(cell => (
                   <td
                     key={cell.id}
                     style={{ width: cell.column.getSize() }}
-                    className="px-3 py-2 border-r border-transparent group-hover:border-gray-100 dark:group-hover:border-gray-800 last:border-r-0 overflow-visible"
+                    className="px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/[0.06] last:border-r-0 overflow-visible"
                   >
                     {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
@@ -592,7 +569,7 @@ export default function DataGridListView({
             ))}
             {table.getRowModel().rows.length === 0 && (
               <tr>
-                <td colSpan={table.getVisibleLeafColumns().length} className="px-3 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                <td colSpan={table.getVisibleLeafColumns().length} className="px-3 py-8 text-center text-sm text-[#787774] dark:text-[#9B9A97]">
                   No issues found.
                 </td>
               </tr>
@@ -602,23 +579,23 @@ export default function DataGridListView({
       </div>
 
       {/* Table Footer */}
-      <div className="flex justify-between items-center p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shrink-0 h-14">
+      <div className="flex justify-between items-center p-3 border-t border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] shrink-0 h-14">
         {!isCreating && !hideCreate ? (
           <button
             onClick={() => setIsCreating(true)}
-            className="px-4 py-1 border border-gray-300 dark:border-gray-600 rounded text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors flex items-center gap-2 shadow-sm"
+            className="px-4 py-1 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F9F9F8] dark:hover:bg-white/5 text-sm font-medium transition-colors flex items-center gap-2 "
           >
             + Create
           </button>
         ) : (
-          <div className="flex items-center border border-indigo-500 rounded-md px-2 py-1 flex-1 max-w-[min(100%,var(--app-narrow-content))] shadow-sm bg-white dark:bg-gray-800 gap-1">
+          <div className="flex items-center border border-[#2563EB] rounded-[6px] px-2 py-1 flex-1 max-w-[min(100%,var(--app-narrow-content))]  bg-white dark:bg-[#252525] gap-1">
             <input
               ref={inputRef}
               value={taskTitle}
               onChange={e => setTaskTitle(e.target.value)}
               onKeyDown={handleKeyDownInlineCreate}
               placeholder="What needs to be done?"
-              className="flex-1 outline-none py-1 px-2 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-400"
+              className="flex-1 outline-none py-1 px-2 text-sm bg-transparent text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB]"
             />
             <div className="flex items-center gap-0.5 shrink-0">
               {/* Due date */}
@@ -644,24 +621,24 @@ export default function DataGridListView({
 
               <button
                 onClick={handleSubmitInlineCreate}
-                className="bg-[#0c66e4] hover:bg-blue-700 text-white text-sm font-medium px-3 py-1.5 rounded flex items-center gap-1 transition-colors shadow-sm ml-1"
+                className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium px-3 py-1.5 rounded-[6px] flex items-center gap-1 transition-colors  ml-1"
               >
                 Create
-                <span className="text-[10px] opacity-80 border border-blue-400 rounded-[2px] px-[2px] py-[1px] leading-none bg-blue-500/30">↵</span>
+                <span className="text-[0.625rem] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] leading-none bg-[#3B82F6]/30">↵</span>
               </button>
             </div>
           </div>
         )}
 
-        <div className="flex items-center gap-4 text-gray-500 dark:text-gray-400 text-sm ml-4">
+        <div className="flex items-center gap-4 text-[#787774] dark:text-[#9B9A97] text-sm ml-4">
           <span className="font-medium">{table.getRowModel().rows.length} of {totalCount ?? issues.length}</span>
           <button
             onClick={() => onRefresh && !isRefreshing ? onRefresh() : null}
             disabled={isRefreshing}
-            className={`p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700 ${isRefreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`p-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] transition-colors border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 ${isRefreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
             title="Refresh Data"
           >
-            <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`} />
+            <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#2563EB]' : ''}`} />
           </button>
         </div>
       </div>

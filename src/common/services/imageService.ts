@@ -21,7 +21,7 @@ export interface ImageResponse {
 let imageCompressionSupported: boolean | null = null;
 
 const isImageCompressionSupported = (): boolean => {
-  // Re-evaluate on each call to ensure the latest state
+  if (typeof window === "undefined") return false;
   imageCompressionSupported =
     typeof window.File !== "undefined" &&
     typeof window.Blob !== "undefined" &&
@@ -390,11 +390,13 @@ const imageService = {
   },
 };
 
-// Log image compression support state when initializing module
-if (!isImageCompressionSupported()) {
-  console.log("Device or browser does not support image compression. Please update your browser.");
-} else {
-  console.log("Device or browser supports image compression.");
+// Log image compression support state when initializing module (client-only)
+if (typeof window !== "undefined") {
+  if (!isImageCompressionSupported()) {
+    console.log("Device or browser does not support image compression. Please update your browser.");
+  } else {
+    console.log("Device or browser supports image compression.");
+  }
 }
 
 export default imageService;

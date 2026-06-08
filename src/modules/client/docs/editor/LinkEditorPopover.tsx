@@ -24,9 +24,7 @@ const VIEWPORT_MARGIN = 12;
 const normalizeLinkUrl = (raw: string) => {
   const input = raw.trim();
   if (!input) return "";
-
   if (/^(mailto:|tel:)/i.test(input)) return input;
-
   const withProtocol = /^https?:\/\//i.test(input) ? input : `https://${input}`;
   try {
     return new URL(withProtocol).toString();
@@ -51,7 +49,6 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
 
   const updatePosition = useCallback(() => {
     if (!anchorEl) return;
-
     const rect = anchorEl.getBoundingClientRect();
     const left = Math.min(
       Math.max(VIEWPORT_MARGIN, rect.left),
@@ -64,7 +61,6 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
     const selectedText = getSelectedText(editor);
     const attrs = editor.getAttributes("link") as Partial<LinkAttrs>;
     const hasActiveLink = editor.isActive("link");
-
     setDisplayText(selectedText);
     setUrl(attrs.href || "");
     setOpenNewTab(attrs.target !== null);
@@ -78,18 +74,15 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
         onClose();
       }
     };
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
-
     setMounted(true);
     updatePosition();
     window.addEventListener("pointerdown", handlePointerDown);
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
-
     return () => {
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("keydown", handleKeyDown);
@@ -105,13 +98,11 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
 
   const submitLink = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
     const href = normalizeLinkUrl(url);
     if (!href) {
-      toast.error("URL không hợp lệ");
+      toast.error("Invalid URL");
       return;
     }
-
     const attrs: LinkAttrs = {
       href,
       target: openNewTab ? "_blank" : null,
@@ -121,69 +112,52 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
     const { empty } = editor.state.selection;
 
     if (empty && !editor.isActive("link")) {
-      editor
-        .chain()
-        .focus()
-        .insertContent({
-          type: "text",
-          text: label,
-          marks: [{ type: "link", attrs }],
-        })
-        .run();
+      editor.chain().focus().insertContent({ type: "text", text: label, marks: [{ type: "link", attrs }] }).run();
       onClose();
       return;
     }
-
     if (!empty && displayText.trim()) {
-      editor
-        .chain()
-        .focus()
-        .deleteSelection()
-        .insertContent({
-          type: "text",
-          text: label,
-          marks: [{ type: "link", attrs }],
-        })
-        .run();
+      editor.chain().focus().deleteSelection().insertContent({ type: "text", text: label, marks: [{ type: "link", attrs }] }).run();
       onClose();
       return;
     }
-
     editor.chain().focus().extendMarkRange("link").setLink(attrs).run();
     onClose();
   };
 
   if (!mounted) return null;
 
+  const inputCls = "mt-1 h-9 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
+
   return createPortal(
     <div
       ref={popoverRef}
-      className="fixed z-[90] w-[320px] rounded-lg border border-gray-200 bg-white p-3 shadow-xl dark:border-gray-700 dark:bg-gray-900"
-      style={{ left: position.left, top: position.top }}
+      className="fixed z-[90] w-80 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3"
+      style={{ left: position.left, top: position.top, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-200">
+        <div className="flex items-center gap-2 text-[0.6875rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
           <LinkIcon className="h-3.5 w-3.5" />
           Link
         </div>
-        <button type="button" onClick={onClose} className="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800">
+        <button type="button" onClick={onClose} className="rounded-[4px] p-1 text-[#ABABAB] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
 
       <form onSubmit={submitLink} className="space-y-3">
-        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400">
+        <label className="block text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
           Display Text
           <input
             type="text"
             value={displayText}
             onChange={(event) => setDisplayText(event.target.value)}
-            placeholder="Nhập text hiển thị"
-            className="mt-1 h-9 w-full rounded border border-gray-200 bg-white px-2 text-sm text-gray-900 outline-none focus:border-indigo-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+            placeholder="Enter display text"
+            className={inputCls}
           />
         </label>
 
-        <label className="block text-[11px] font-medium text-gray-500 dark:text-gray-400">
+        <label className="block text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
           URL
           <input
             type="text"
@@ -191,16 +165,16 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
             onChange={(event) => setUrl(event.target.value)}
             placeholder="https://example.com, mailto:, tel:"
             autoFocus
-            className="mt-1 h-9 w-full rounded border border-gray-200 bg-white px-2 text-sm text-gray-900 outline-none focus:border-indigo-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
+            className={inputCls}
           />
         </label>
 
-        <label className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+        <label className="flex items-center gap-2 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] cursor-pointer">
           <input
             type="checkbox"
             checked={openNewTab}
             onChange={(event) => setOpenNewTab(event.target.checked)}
-            className="h-3.5 w-3.5 rounded border-gray-300"
+            className="h-3.5 w-3.5 rounded border-[#EAEAEA] accent-[#2563EB]"
           />
           Open in new tab
         </label>
@@ -210,7 +184,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
             <button
               type="button"
               onClick={removeLink}
-              className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+              className="inline-flex h-8 items-center gap-1.5 rounded-[4px] px-2 text-[0.6875rem] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Remove Link
@@ -220,7 +194,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
           )}
           <button
             type="submit"
-            className="inline-flex h-8 items-center gap-1.5 rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[0.6875rem] font-semibold text-white hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Apply
