@@ -30,6 +30,7 @@ import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDet
 import {
   handleBoardDragEnd,
   handleBacklogDragEnd,
+  compareIssueRank,
   TaskReorderSyncInput,
 } from "@/modules/client/workspaces/utils/dragUtils";
 
@@ -103,6 +104,11 @@ const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
 
 const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) =>
   tabName === "summary";
+
+const clearOptimisticIssueOrder = (issue: Issue): Issue => {
+  const { optimisticOrder, optimisticScope, ...rest } = issue;
+  return rest;
+};
 
 export default function WorkspaceDetailPage({
   params,
@@ -505,7 +511,9 @@ export default function WorkspaceDetailPage({
             setIssues((current) =>
               sortIssuesByRank(
                 current.map((issue) =>
-                  issue.id === updatedTask.id ? updatedTask : issue,
+                  issue.id === updatedTask.id
+                    ? updatedTask
+                    : clearOptimisticIssueOrder(issue),
                 ),
               ),
             );
@@ -515,7 +523,9 @@ export default function WorkspaceDetailPage({
                 Array.isArray(current)
                   ? sortIssuesByRank(
                       current.map((issue) =>
-                        issue.id === updatedTask.id ? updatedTask : issue,
+                        issue.id === updatedTask.id
+                          ? updatedTask
+                          : clearOptimisticIssueOrder(issue),
                       ),
                     )
                   : current,
@@ -527,6 +537,8 @@ export default function WorkspaceDetailPage({
           });
         })
         .catch((error) => {
+          setIssues((current) => current.map(clearOptimisticIssueOrder));
+
           if (isNoopReorderError(error)) {
             queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
             return;
@@ -621,7 +633,7 @@ export default function WorkspaceDetailPage({
       },
     });
     isDraggingIssueRef.current = false;
-    setIssues((current) => sortIssuesByRank(current));
+    setIssues((current) => [...current].sort(compareIssueRank));
   };
 
   const handleArchiveIssue = async (issue: Issue) => {

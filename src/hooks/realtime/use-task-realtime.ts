@@ -117,6 +117,10 @@ export function useTaskRealtime(
       const eventTaskId = envelope.data.taskId ?? envelope.data.task?.id ?? issue.id;
       const incomingVersion = envelope.version ?? envelope.data.version ?? envelope.data.task?.version;
       const actorId = envelope.actorId ?? envelope.data.actorId;
+      if (actorId && actorId === currentUserId) {
+        return;
+      }
+
       const cachedTasks = queryClient.getQueriesData<Issue[]>({
         queryKey: ['tasks', workspaceId],
       });

@@ -393,7 +393,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...(canMoveTask ? provided.dragHandleProps : {})}
-                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-all group`}
+                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-colors group`}
                               style={{
                                 ...provided.draggableProps.style,
                                 ...(snapshot.isDragging
@@ -591,7 +591,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...(canMoveTask ? provided.dragHandleProps : {})}
-                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-all group`}
+                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-colors group`}
                             style={{
                               ...provided.draggableProps.style,
                               ...(snapshot.isDragging

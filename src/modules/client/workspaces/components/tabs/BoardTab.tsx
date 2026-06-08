@@ -365,7 +365,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         if (filters.archived) return;
                                         setSelectedIssue(issue);
                                       }}
-                                      className={`relative overflow-visible rounded-[8px] border bg-white dark:bg-[#202020] ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#EAEAEA] dark:border-white/[0.06] hover:border-[#2563EB]/50 dark:hover:border-[#3B82F6]/40"} transition-all ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
+                                      className={`relative overflow-visible rounded-[8px] border bg-white dark:bg-[#202020] ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#EAEAEA] dark:border-white/[0.06] hover:border-[#2563EB]/50 dark:hover:border-[#3B82F6]/40"} transition-colors ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group`}
                                       style={
                                         filters.archived
                                           ? undefined
