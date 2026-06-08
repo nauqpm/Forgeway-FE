@@ -14,6 +14,8 @@ export interface Task {
   type: string;
   assignee: string;
   assigneeId?: string | null;
+  assigneeDisplayName?: string;
+  assigneeAvatar?: string;
   color: string;
   sprintId: string | null;
   storyPoints: number;

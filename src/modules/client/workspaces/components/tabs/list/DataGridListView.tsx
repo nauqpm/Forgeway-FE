@@ -207,18 +207,27 @@ export default function DataGridListView({
         header: "Assignee",
         size: 140,
         cell: (info) => {
-          const assignee = info.getValue() as string;
+          const assigneeId = info.getValue() as string;
+          const issue = info.row.original;
+          const displayName = issue.assigneeDisplayName;
+          const avatar = issue.assigneeAvatar;
 
-          if (!assignee || assignee === "U") {
+          if (!assigneeId || assigneeId === "U" || !displayName) {
             return <span className="text-[0.8125rem] italic text-[#ABABAB] dark:text-[#6B6B6B]">Unassigned</span>;
           }
 
           return (
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-[0.625rem] font-bold text-white">
-                {assignee.charAt(0).toUpperCase()}
+              <div className="relative h-6 w-6 rounded-full overflow-hidden shrink-0">
+                {avatar ? (
+                  <img src={avatar} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-[0.625rem] font-bold text-white">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
-              <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{assignee}</span>
+              <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] truncate">{displayName}</span>
             </div>
           );
         },
