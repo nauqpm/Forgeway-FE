@@ -43,6 +43,7 @@ import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/wor
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
 import { useSprintRealtime } from "@/hooks/realtime/use-sprint-realtime";
+import { sprintIdOf } from "@/hooks/realtime/sprint-realtime-cache.utils";
 import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -102,8 +103,6 @@ const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
 
 const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) =>
   tabName === "summary";
-
-const sprintIdOf = (sprint: Sprint) => sprint.id ?? sprint._id;
 
 export default function WorkspaceDetailPage({
   params,

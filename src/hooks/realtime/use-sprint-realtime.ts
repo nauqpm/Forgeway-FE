@@ -5,70 +5,16 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { SPRINT_EVENTS } from '@/lib/socket/socket.events';
-import type { RealtimeEnvelope } from '@/lib/socket/socket.types';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import type { Sprint } from '@/modules/client/workspaces/types/sprint.type';
-
-type SprintSummaryPayload = Partial<Sprint> & {
-  id?: string;
-  _id?: string;
-  workspaceId: string;
-  name: string;
-  status: Sprint['status'];
-};
-
-type SprintCreatedEventData = {
-  workspaceId: string;
-  sprintId: string;
-  actorId?: string;
-  version?: number;
-  sprint?: SprintSummaryPayload;
-};
-
-type SprintRealtimeEnvelope = RealtimeEnvelope<SprintCreatedEventData>;
+import {
+  mapSprintPayload,
+  upsertSprint,
+  type SprintRealtimeEnvelope,
+} from './sprint-realtime-cache.utils';
 
 type UseSprintRealtimeOptions = {
   onSprintCreated?: (sprint: Sprint) => void;
-};
-
-const mapSprintPayload = (payload?: SprintSummaryPayload): Sprint | null => {
-  if (!payload) return null;
-
-  const id = payload.id ?? payload._id;
-  if (!id || !payload.workspaceId || !payload.name || !payload.status) {
-    return null;
-  }
-
-  return {
-    ...payload,
-    id,
-    _id: id,
-    workspaceId: payload.workspaceId,
-    name: payload.name,
-    status: payload.status,
-  };
-};
-
-const isSameSprint = (a: Sprint, b: Sprint): boolean => {
-  const aId = a.id ?? a._id;
-  const bId = b.id ?? b._id;
-  return Boolean(aId && bId && aId === bId);
-};
-
-const upsertSprint = (
-  current: Sprint[] | undefined,
-  sprint: Sprint,
-): Sprint[] => {
-  const sprints = current ?? [];
-  const exists = sprints.some((item) => isSameSprint(item, sprint));
-
-  if (exists) {
-    return sprints.map((item) =>
-      isSameSprint(item, sprint) ? { ...item, ...sprint } : item,
-    );
-  }
-
-  return [...sprints, sprint];
 };
 
 export function useSprintRealtime(
