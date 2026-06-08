@@ -17,8 +17,9 @@ import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
+import TaskStatusChanger from "./TaskStatusChanger";
 import type { TaskCover } from "../types/task-cover.type";
-import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
+import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -123,7 +124,6 @@ export default function TaskDetailDrawer({
   const [activeTab, setActiveTab] = useState<'comments' | 'history'>('comments');
   const [localTitle, setLocalTitle] = useState('');
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
@@ -166,7 +166,6 @@ export default function TaskDetailDrawer({
     if (issue) {
       setLocalTitle(issue.title);
       setIsEditingTitle(false);
-      setShowStatusDropdown(false);
       setShowActionMenu(false);
       setLocalCover(issue.cover ?? null);
       setEditingField(null);
@@ -177,8 +176,6 @@ export default function TaskDetailDrawer({
   if (!issue) return null;
 
   const issueKey = issue.key;
-  const { statusColumns, currentColumn, displayName: statusDisplayName } =
-    resolveTaskStatusColumn(boardColumns, issue);
   const assigneeName =
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
@@ -333,14 +330,6 @@ export default function TaskDetailDrawer({
     }
   };
 
-  const handleStatusChange = (column: TaskStatusColumn) => {
-    setShowStatusDropdown(false);
-    if ((column.id !== issue.columnId || column.name !== issue.status) && onUpdateIssue) {
-      onUpdateIssue({ ...issue, columnId: column.id, status: column.name });
-    }
-  };
-
-
   const panelClasses = embedded
     ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] shadow-none border-0 rounded-none overflow-hidden"
     : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] flex flex-col border-l border-[#EAEAEA] dark:border-white/[0.06] transform ${isResizing ? '' : 'transition-transform duration-300 ease-in-out'} ${
@@ -479,31 +468,14 @@ export default function TaskDetailDrawer({
 
             {/* Status */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="relative">
-                <button
-                  onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
-                  disabled={issue.isArchived}
-                  className={`flex items-center gap-2 px-4 py-2 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#F0F0EE] dark:hover:bg-[#333333]'}`}
-                >
-                  {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4 text-[#ABABAB]" />}
-                </button>
-                {showStatusDropdown && (
-                  <div
-                    className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden z-10 py-1"
-                    style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
-                  >
-                    {statusColumns.map((column) => (
-                      <button
-                        key={column.id}
-                        onClick={() => handleStatusChange(column)}
-                        className={`w-full text-left px-4 py-2 text-[0.8125rem] transition-colors ${column.id === currentColumn?.id ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] font-medium border-l-2 border-[#2563EB]' : 'text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]'}`}
-                      >
-                        {column.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <TaskStatusChanger
+                issue={issue}
+                boardColumns={boardColumns}
+                disabled={issue.isArchived}
+                onChange={({ columnId, status }) =>
+                  onUpdateIssue?.({ ...issue, columnId, status })
+                }
+              />
             </div>
 
             {/* Details */}

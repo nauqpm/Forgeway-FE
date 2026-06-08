@@ -448,6 +448,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                           <span className="text-[0.6875rem] font-mono font-bold text-[#ABABAB] dark:text-[#6B6B6B]">
                                             {issue.key}
                                           </span>
+
                                           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
                                             <AssigneePicker
                                               users={workspaceMembers}
