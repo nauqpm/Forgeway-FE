@@ -196,6 +196,8 @@ export default function TaskDetailModal({
   const memberOptions = mapMemberOptions(
     providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers,
   );
+  const detailWorkspaceMembers =
+    providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers;
 
   const startInlineEdit = (field: string, value?: string | number | null) => {
     if (issue.isArchived) return;
@@ -547,7 +549,16 @@ export default function TaskDetailModal({
                 />
               )}
               {activeTab === "history" && (
-                <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
+                <TaskActivityHistory
+                  workspaceId={workspaceId}
+                  taskId={issue.id}
+                  taskKey={issue.key}
+                  workspaceMembers={detailWorkspaceMembers}
+                  assigneeId={getIssueAssigneeId(issue)}
+                  assigneeName={assigneeName}
+                  assignee={issue.assignee}
+                  labels={issue.labels}
+                />
               )}
             </div>
           </div>
