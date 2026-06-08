@@ -212,10 +212,10 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] rounded-full flex items-center justify-center mb-4">
           <PlayCircle className="w-8 h-8 text-[#2563EB] dark:text-[#60A5FA]" />
         </div>
-        <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">
+        <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">
           No active sprint
         </h3>
-        <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
+        <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
           Start a sprint from the Backlog tab to view the board
         </p>
         <Link
@@ -236,7 +236,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   return (
     <div className="flex flex-col gap-0.5 relative">
       {filters.archived && (
-        <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[11px] font-bold z-10">
+        <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[0.6875rem] font-bold z-10">
           Archived View - Read Only
         </div>
       )}
@@ -302,12 +302,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                               if (e.key === "Escape") setEditingColumnId(null);
                             }}
                             onBlur={() => setEditingColumnId(null)}
-                            className="w-full text-[13px] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
+                            className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
                           />
                         ) : (
-                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[11px] uppercase tracking-[0.06em] flex items-center gap-2">
+                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2">
                             {column.name}
-                            <span className="w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[10px] font-bold">
+                            <span className="w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold">
                               {getColumnIssues(column).length}
                             </span>
                           </h3>
@@ -346,7 +346,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 flex-1 overflow-visible space-y-3 min-h-[150px] transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
+                            className={`p-3 flex-1 overflow-visible space-y-3 min-h-[9.375rem] transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
                           >
                             {getColumnIssues(column)
                               .map((issue, issueIndex) => (
@@ -417,35 +417,35 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         </div>
                                       )}
                                       <div className="p-3.5">
-                                        <p className="mb-2 text-[13px] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
+                                        <p className="mb-2 text-[0.8125rem] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
                                           {issue.title}
                                         </p>
                                         <div className="mb-3 flex flex-wrap gap-1.5">
                                           <span
-                                            className={`px-2 py-0.5 rounded-[4px] text-[10px] font-semibold ${issue.priority === "High" || issue.priority === "Highest" ? "bg-[#FDEBEC] text-[#9F2F2D]" : issue.priority === "Medium" ? "bg-[#FBF3DB] text-[#956400]" : "bg-[#EDF3EC] text-[#346538]"}`}
+                                            className={`px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold ${issue.priority === "High" || issue.priority === "Highest" ? "bg-[#FDEBEC] text-[#9F2F2D]" : issue.priority === "Medium" ? "bg-[#FBF3DB] text-[#956400]" : "bg-[#EDF3EC] text-[#346538]"}`}
                                           >
                                             {issue.priority}
                                           </span>
-                                          <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-semibold bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
+                                          <span className="px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
                                             {issue.type}
                                           </span>
                                           {(issue.labels ?? []).slice(0, 3).map((label) => (
                                             <span
                                               key={label.id}
                                               title={label.name}
-                                              className="max-w-[120px] truncate rounded-[4px] bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
+                                              className="max-w-[7.5rem] truncate rounded-[4px] bg-[#EFF6FF] px-2 py-0.5 text-[0.625rem] font-semibold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
                                             >
                                               {label.name}
                                             </span>
                                           ))}
                                           {(issue.labels?.length ?? 0) > 3 && (
-                                            <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-0.5 text-[10px] font-semibold text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">
+                                            <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-0.5 text-[0.625rem] font-semibold text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">
                                               +{(issue.labels?.length ?? 0) - 3}
                                             </span>
                                           )}
                                         </div>
                                         <div className="mt-auto flex items-center justify-between border-t border-[#F0F0EE] dark:border-white/[0.04] pt-2">
-                                          <span className="text-[11px] font-mono font-bold text-[#ABABAB] dark:text-[#6B6B6B]">
+                                          <span className="text-[0.6875rem] font-mono font-bold text-[#ABABAB] dark:text-[#6B6B6B]">
                                             {issue.key}
                                           </span>
                                           <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
@@ -467,7 +467,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             {provided.placeholder}
                             {getColumnIssues(column).length === 0 &&
                               !snapshot.isDraggingOver && (
-                                <div className="h-24 border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] flex items-center justify-center text-[13px] font-medium text-[#ABABAB] dark:text-[#6B6B6B]">
+                                <div className="h-24 border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] flex items-center justify-center text-[0.8125rem] font-medium text-[#ABABAB] dark:text-[#6B6B6B]">
                                   {issues.filter((i) => issueMatchesColumn(i, column))
                                     .length === 0
                                     ? "Drag tasks here"
@@ -503,12 +503,12 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         }
                       }}
                       placeholder="New column name..."
-                      className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] focus:border-[#2563EB] outline-none transition-colors"
+                      className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] focus:border-[#2563EB] outline-none transition-colors"
                     />
                     <div className="flex items-center gap-2 mt-3">
                       <button
                         onClick={handleAddColumn}
-                        className="flex-1 bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[11px] font-medium py-1.5 rounded-[4px] hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-1"
+                        className="flex-1 bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[0.6875rem] font-medium py-1.5 rounded-[4px] hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-1"
                       >
                         <Check className="w-3.5 h-3.5" /> Add column
                       </button>
@@ -517,7 +517,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           setShowCreateColumn(false);
                           setNewColumnName("");
                         }}
-                        className="flex-1 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] text-[11px] font-medium py-1.5 rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] transition-colors flex items-center justify-center gap-1"
+                        className="flex-1 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] font-medium py-1.5 rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] transition-colors flex items-center justify-center gap-1"
                       >
                         <X className="w-3.5 h-3.5" /> Cancel
                       </button>
@@ -526,7 +526,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 ) : canUpdateWorkspace ? (
                   <button
                     onClick={() => setShowCreateColumn(true)}
-                    className="flex items-center gap-2 w-full bg-transparent hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] hover:border-[#C8C7C4] dark:hover:border-white/[0.12] rounded-[8px] p-4 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-all text-[13px] justify-center"
+                    className="flex items-center gap-2 w-full bg-transparent hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] hover:border-[#C8C7C4] dark:hover:border-white/[0.12] rounded-[8px] p-4 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-all text-[0.8125rem] justify-center"
                   >
                     <Plus className="w-5 h-5" /> Add new column
                   </button>
@@ -597,10 +597,10 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           >
             <div className="flex items-start justify-between gap-4 border-b border-[#EAEAEA] dark:border-white/[0.06] p-5">
               <div>
-                <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Delete work item
                 </h3>
-                <p className="mt-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   This permanently deletes {issueToDelete.key}. Archive it instead if you may need it later.
                 </p>
               </div>
@@ -614,7 +614,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
               </button>
             </div>
             <div className="space-y-3 p-5">
-              <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97]">
+              <label className="block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]">
                 Type <span className="font-mono font-semibold text-[#9F2F2D]">delete</span> to confirm
               </label>
               <input
@@ -625,7 +625,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                   if (event.key === "Enter") confirmDeleteIssue();
                   if (event.key === "Escape") closeDeleteIssueModal();
                 }}
-                className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#202020] px-3 py-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D] transition-colors"
+                className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#202020] px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D] transition-colors"
                 placeholder="delete"
               />
             </div>
@@ -638,7 +638,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                   onArchiveIssue?.(issue);
                 }}
                 disabled={!onArchiveIssue}
-                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-40"
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-40"
               >
                 Archive
               </button>
@@ -646,7 +646,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 type="button"
                 onClick={confirmDeleteIssue}
                 disabled={deleteConfirmText !== "delete"}
-                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#8A2826] disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#8A2826] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Delete
               </button>

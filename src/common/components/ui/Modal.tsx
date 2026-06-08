@@ -99,13 +99,13 @@ function Modal({
               {title && (
                 <h2
                   id="modal-title"
-                  className="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-[#E8E8E7]"
+                  className="text-[0.9375rem] font-semibold tracking-[-0.01em] text-[#111111] dark:text-[#E8E8E7]"
                 >
                   {title}
                 </h2>
               )}
               {description && (
-                <p className="mt-0.5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <p className="mt-0.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   {description}
                 </p>
               )}
@@ -165,7 +165,7 @@ function ModalFooter({
   if (children) return <>{children}</>;
 
   const confirmBase =
-    "inline-flex items-center justify-center h-8 px-3 text-[13px] font-medium rounded-[6px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed";
+    "inline-flex items-center justify-center h-8 px-3 text-[0.8125rem] font-medium rounded-[6px] transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed";
 
   const confirmStyles =
     confirmVariant === "danger"
@@ -177,7 +177,7 @@ function ModalFooter({
       {onCancel && (
         <button
           onClick={onCancel}
-          className="inline-flex items-center justify-center h-8 px-3 text-[13px] font-medium rounded-[6px] bg-[#F9F9F8] text-[#111111] border border-[#EAEAEA] hover:bg-[#F0F0EE] dark:bg-[#252525] dark:text-[#E8E8E7] dark:border-white/10 dark:hover:bg-[#2E2E2E] transition-all duration-150"
+          className="inline-flex items-center justify-center h-8 px-3 text-[0.8125rem] font-medium rounded-[6px] bg-[#F9F9F8] text-[#111111] border border-[#EAEAEA] hover:bg-[#F0F0EE] dark:bg-[#252525] dark:text-[#E8E8E7] dark:border-white/10 dark:hover:bg-[#2E2E2E] transition-all duration-150"
         >
           {cancelLabel}
         </button>

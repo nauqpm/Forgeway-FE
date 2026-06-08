@@ -125,7 +125,7 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] p-4 text-[#172B4D] dark:text-white',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[7.5rem] p-4 text-[#172B4D] dark:text-white',
       },
     },
     immediatelyRender: false,
@@ -157,7 +157,7 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
     return (
       <div
         onClick={() => setIsEditing(true)}
-        className="p-4 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer transition-colors min-h-[60px] prose prose-sm max-w-none text-[#111111] dark:text-[#E8E8E7]"
+        className="p-4 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer transition-colors min-h-15 prose prose-sm max-w-none text-[#111111] dark:text-[#E8E8E7]"
       >
         {content && content !== '<p></p>' ? (
           <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />

@@ -28,10 +28,10 @@ export default function AttachmentDocumentList({
             <AttachmentFileIcon mimeType={attachment.mimeType} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
+            <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
               {attachment.originalName}
             </p>
-            <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
+            <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
               {formatAttachmentSize(attachment.size)} - {formatAttachmentDate(attachment.createdAt)}
             </p>
           </div>

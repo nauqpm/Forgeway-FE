@@ -66,6 +66,12 @@ export default function RootLayout({
                   }
                 } catch (e) {}
               })();
+              (function() {
+                try {
+                  var scale = localStorage.getItem('app-font-scale') || '1';
+                  document.documentElement.style.setProperty('--font-scale', scale);
+                } catch (e) {}
+              })();
             `,
           }}
         />

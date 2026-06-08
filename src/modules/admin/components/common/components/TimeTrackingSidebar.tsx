@@ -45,7 +45,7 @@ export default function TimeTrackingSidebar({ timeEstimated, timeLogged, onLogWo
         />
       </div>
 
-      <div className="flex justify-between text-[11px] font-medium text-[#787774] dark:text-[#9B9A97]">
+      <div className="flex justify-between text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
         <span>{formatMinutesToTimeString(timeLogged)} logged</span>
         <span>
           {estimatedMinutes > 0 

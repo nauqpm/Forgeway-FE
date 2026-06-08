@@ -38,7 +38,7 @@ const SessionList: React.FC = () => {
   };
 
   if (loading) return (
-    <div className="flex items-center gap-2 text-[13px] text-[#787774] dark:text-[#9B9A97] py-4">
+    <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] py-4">
       <Loader2 className="w-4 h-4 animate-spin" />Loading...
     </div>
   );
@@ -46,12 +46,12 @@ const SessionList: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Login sessions</h3>
+        <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Login sessions</h3>
         {sessions.filter((s) => !s.isCurrent).length > 0 && (
           <button
             onClick={handleRevokeAll}
             disabled={revoking === 'all'}
-            className="text-[13px] text-[#9F2F2D] dark:text-[#F87171] hover:underline flex items-center gap-1 disabled:opacity-50"
+            className="text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171] hover:underline flex items-center gap-1 disabled:opacity-50"
           >
             <X className="w-3.5 h-3.5" />Sign out all
           </button>
@@ -74,13 +74,13 @@ const SessionList: React.FC = () => {
               }
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
+              <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
                 {s.browser || s.deviceInfo}
                 {s.isCurrent && (
-                  <span className="ml-2 text-[11px] text-[#2563EB] dark:text-[#3B82F6] font-semibold">(Current)</span>
+                  <span className="ml-2 text-[0.6875rem] text-[#2563EB] dark:text-[#3B82F6] font-semibold">(Current)</span>
                 )}
               </p>
-              <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
+              <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
                 {s.ipAddress} · {formatRelative(s.lastActiveAt)}
               </p>
             </div>

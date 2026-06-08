@@ -10,8 +10,8 @@ interface SprintModalProps {
   sprintCount?: number;
 }
 
-const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[13px] outline-none transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
-const labelCls = "block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[0.8125rem] outline-none transition-colors disabled:opacity-40 disabled:cursor-not-allowed";
+const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
 
 export default function SprintModal({ isOpen, onClose, onSave, initialData, sprintCount = 0 }: SprintModalProps) {
   const [formData, setFormData] = useState({
@@ -132,7 +132,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             {initialData ? 'Edit Sprint' : 'Create Sprint'}
           </h3>
           <button onClick={onClose} className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors">
@@ -141,7 +141,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
         </div>
         {initialData?.status === 'active' && (
           <div className="px-5 pt-4 pb-0">
-            <p className="text-[11px] text-[#956400] dark:text-[#F59E0B] bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] border border-[#F0D88A] dark:border-[rgba(245,158,11,0.2)] rounded-[6px] px-3 py-2">
+            <p className="text-[0.6875rem] text-[#956400] dark:text-[#F59E0B] bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] border border-[#F0D88A] dark:border-[rgba(245,158,11,0.2)] rounded-[6px] px-3 py-2">
               Running sprints can only have their name and goal edited.
             </p>
           </div>
@@ -200,10 +200,10 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
             />
           </div>
           <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-            <button type="button" onClick={onClose} className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors">
+            <button type="button" onClick={onClose} className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors">
               Cancel
             </button>
-            <button type="submit" className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors">
+            <button type="submit" className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors">
               {initialData ? 'Update' : 'Create Sprint'}
             </button>
           </div>

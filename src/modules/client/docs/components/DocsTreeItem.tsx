@@ -191,11 +191,11 @@ export default function DocsTreeItem({
               onBlur={handleRenameSubmit}
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
-              className="flex-1 min-w-0 bg-white dark:bg-[#252525] border border-[#2563EB] dark:border-[#3B82F6] rounded-[4px] px-2 py-0.5 text-[13px] outline-none dark:text-[#E8E8E7]"
+              className="flex-1 min-w-0 bg-white dark:bg-[#252525] border border-[#2563EB] dark:border-[#3B82F6] rounded-[4px] px-2 py-0.5 text-[0.8125rem] outline-none dark:text-[#E8E8E7]"
             />
           ) : (
             <span
-              className={`truncate text-[13px] leading-tight py-0.5 ${isSelected ? "font-bold" : "font-medium"}`}
+              className={`truncate text-[0.8125rem] leading-tight py-0.5 ${isSelected ? "font-bold" : "font-medium"}`}
             >
               {doc.title}
             </span>
@@ -245,7 +245,7 @@ export default function DocsTreeItem({
                     setIsEditing(true);
                     setShowMenu(false);
                   }}
-                  className="w-full text-left px-3 py-2 text-[12px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 flex items-center gap-2.5 transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 flex items-center gap-2.5 transition-colors"
                 >
                   <Edit2 className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />{" "}
                   Rename
@@ -253,7 +253,7 @@ export default function DocsTreeItem({
                 <div className="my-1 border-t border-[#EAEAEA] dark:border-white/[0.06]" />
                 <button
                   onClick={handleOpenDeleteDialog}
-                  className="w-full text-left px-3 py-2 text-[12px] font-medium text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] flex items-center gap-2.5 transition-colors"
+                  className="w-full text-left px-3 py-2 text-xs font-medium text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] flex items-center gap-2.5 transition-colors"
                 >
                   <Trash className="w-3.5 h-3.5" /> Delete
                 </button>
@@ -299,10 +299,10 @@ export default function DocsTreeItem({
                 <Trash className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h2 id="delete-page-title" className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                <h2 id="delete-page-title" className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Delete document?
                 </h2>
-                <p className="mt-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   This will permanently delete{" "}
                   <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                     {deleteTarget.title || "Untitled Document"}
@@ -317,7 +317,7 @@ export default function DocsTreeItem({
                 type="button"
                 disabled={deleting}
                 onClick={closeDeleteDialog}
-                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -325,7 +325,7 @@ export default function DocsTreeItem({
                 type="button"
                 disabled={deleting}
                 onClick={handleDelete}
-                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[13px] font-medium text-white hover:bg-[#8F2927] dark:hover:bg-[#F87171]/80 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
+                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-medium text-white hover:bg-[#8F2927] dark:hover:bg-[#F87171]/80 disabled:cursor-not-allowed disabled:opacity-60 transition-colors"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>

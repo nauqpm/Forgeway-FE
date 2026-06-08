@@ -133,7 +133,7 @@ export default function TaskDetailList({
   // Helper: each detail row in the sidebar — label on left (fixed), value on right
   const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div className="flex items-start gap-3 py-1.5">
-      <span className="text-[13px] text-[#787774] dark:text-[#9B9A97] w-28 shrink-0 pt-0.5">{label}</span>
+      <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] w-28 shrink-0 pt-0.5">{label}</span>
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
@@ -143,7 +143,7 @@ export default function TaskDetailList({
       {/* ── TOP TOOLBAR ── */}
       <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-[13px] font-medium min-w-0">
+        <div className="flex items-center gap-1.5 text-[0.8125rem] font-medium min-w-0">
           {showBackButton && (
             <>
               <button
@@ -158,7 +158,7 @@ export default function TaskDetailList({
           )}
           <div className="flex items-center gap-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer transition-colors shrink-0">
             <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[4px]">
-              <span className="text-[9px] font-bold">✓</span>
+              <span className="text-[0.5625rem] font-bold">✓</span>
             </div>
             <span>{issueKey}</span>
           </div>
@@ -182,7 +182,7 @@ export default function TaskDetailList({
                 <button
                   onClick={() => { setShowActionMenu(false); onArchiveIssue?.(issue); }}
                   disabled={!onArchiveIssue || issue.isArchived}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50"
                 >
                   <Archive className="h-4 w-4" /> Archive
                 </button>
@@ -196,7 +196,7 @@ export default function TaskDetailList({
         workspaceId={workspaceId}
         issue={{ ...issue, cover: localCover }}
         maxHeightClass="h-36"
-        colorHeightClass="h-[72px]"
+        colorHeightClass="h-18"
         onIssueCoverChange={setLocalCover}
       />
 
@@ -243,7 +243,7 @@ export default function TaskDetailList({
 
           {/* Description */}
           <div>
-            <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Description</h2>
+            <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Description</h2>
             <TaskDescription
               initialContent={issue.description || ""}
               onSave={(newDesc: string) => {
@@ -267,21 +267,21 @@ export default function TaskDetailList({
           {/* Linked Work Items */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h2>
+              <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h2>
               <button className="p-1 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors">
                 <Plus className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
               </button>
             </div>
             <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4">
-              <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-3">No linked items yet</p>
+              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-3">No linked items yet</p>
               <div className="flex flex-wrap gap-2">
                 <Link
                   href={`/docs/create?issueId=${issue.id}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] text-white text-[13px] font-medium rounded-[6px] transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] text-white text-[0.8125rem] font-medium rounded-[6px] transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
                 >
                   <Plus className="w-3.5 h-3.5" /> Create Document
                 </Link>
-                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[13px] font-medium rounded-[6px] transition-colors">
+                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
                   <LinkIcon className="w-3.5 h-3.5" /> Link item
                 </button>
               </div>
@@ -291,8 +291,8 @@ export default function TaskDetailList({
           {/* Activity */}
           <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h2>
-              <div className="flex items-center gap-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+              <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h2>
+              <div className="flex items-center gap-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 <span>Show:</span>
                 {(["comments", "history"] as const).map((tab) => (
                   <button
@@ -332,7 +332,7 @@ export default function TaskDetailList({
               <button
                 onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
                 disabled={issue.isArchived}
-                className={`flex items-center gap-1.5 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[13px] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? "opacity-70 cursor-not-allowed" : "hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"}`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? "opacity-70 cursor-not-allowed" : "hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"}`}
               >
                 {statusDisplayName}
                 {!issue.isArchived && <ChevronDown className="w-3.5 h-3.5 text-[#787774] dark:text-[#9B9A97]" />}
@@ -343,7 +343,7 @@ export default function TaskDetailList({
                     <button
                       key={column.id}
                       onClick={() => handleStatusChange(column)}
-                      className={`w-full text-left px-4 py-2 text-[13px] transition-colors ${column.id === currentColumn?.id
+                      className={`w-full text-left px-4 py-2 text-[0.8125rem] transition-colors ${column.id === currentColumn?.id
                           ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium border-l-2 border-[#2563EB] dark:border-[#3B82F6]"
                           : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                         }`}
@@ -360,7 +360,7 @@ export default function TaskDetailList({
           <div>
             <button
               onClick={() => setDetailsOpen((o) => !o)}
-              className="w-full flex items-center justify-between py-1.5 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
+              className="w-full flex items-center justify-between py-1.5 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
             >
               <div className="flex items-center gap-1.5">
                 {detailsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -386,7 +386,7 @@ export default function TaskDetailList({
 
                 {/* Priority */}
                 <DetailRow label="Priority">
-                  <div className={`flex items-center gap-1.5 text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors ${priorityColor}`}>
+                  <div className={`flex items-center gap-1.5 text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors ${priorityColor}`}>
                     <span className="inline-block w-2.5 h-2.5 rounded-sm bg-current opacity-80" />
                     {issue.priority}
                   </div>
@@ -394,7 +394,7 @@ export default function TaskDetailList({
 
                 {/* Parent */}
                 <DetailRow label="Parent">
-                  <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">None</div>
+                  <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">None</div>
                 </DetailRow>
 
                 {/* Due date */}
@@ -430,19 +430,19 @@ export default function TaskDetailList({
 
                 {showSprintField && (
                   <DetailRow label="Sprint">
-                    <div className="text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{sprintLabel}</div>
+                    <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{sprintLabel}</div>
                   </DetailRow>
                 )}
 
                 {/* Story point estimate */}
                 <DetailRow label="Story point estimate">
-                  <div className="text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{storyPointsLabel}</div>
+                  <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{storyPointsLabel}</div>
                 </DetailRow>
 
                 {/* Reporter */}
                 <DetailRow label="Reporter">
-                  <div className="flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-[10px] shrink-0">
+                  <div className="flex items-center gap-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-[0.625rem] shrink-0">
                       {reporterName.substring(0, 1).toUpperCase()}
                     </div>
                     <span className="truncate">{reporterName}</span>
@@ -454,7 +454,7 @@ export default function TaskDetailList({
           </div>
 
           {/* Meta */}
-          <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-4 text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
+          <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-4 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
             <p>Created {formatDateTime(issue.createdAt)}</p>
             <p>Updated {formatDateTime(issue.updatedAt)}</p>
           </div>

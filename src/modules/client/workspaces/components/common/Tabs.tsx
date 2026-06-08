@@ -12,7 +12,7 @@ interface TabProps {
 }
 
 const TAB_CLS = (active: boolean) =>
-  `whitespace-nowrap px-3 py-2 text-[13px] font-medium transition-all sm:px-5 rounded-[6px] ${
+  `whitespace-nowrap px-3 py-2 text-[0.8125rem] font-medium transition-all sm:px-5 rounded-[6px] ${
     active
       ? "bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7]"
       : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"

@@ -92,12 +92,12 @@ export default function TaskDetailPage() {
 
   if (loading) return <LoadingSpinner />;
   if (!task) return (
-    <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[25rem] p-6 text-center">
       <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)]">
         <AlertCircle className="h-5 w-5 text-[#9F2F2D] dark:text-[#F87171]" />
       </div>
-      <p className="text-[14px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Task not found</p>
-      <p className="mt-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">The task may have been deleted or is no longer available.</p>
+      <p className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">Task not found</p>
+      <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">The task may have been deleted or is no longer available.</p>
     </div>
   );
 
@@ -140,7 +140,7 @@ export default function TaskDetailPage() {
                 </div>
               </div>
             ) : (
-              <div onClick={() => setEditingDesc(true)} className="text-sm text-gray-700 dark:text-gray-300 min-h-[60px] cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-3 -m-3" dangerouslySetInnerHTML={{ __html: task.description || '<p class="text-gray-400 italic">Click to add description...</p>' }} />
+              <div onClick={() => setEditingDesc(true)} className="text-sm text-gray-700 dark:text-gray-300 min-h-15 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg p-3 -m-3" dangerouslySetInnerHTML={{ __html: task.description || '<p class="text-gray-400 italic">Click to add description...</p>' }} />
             )}
           </div>
 

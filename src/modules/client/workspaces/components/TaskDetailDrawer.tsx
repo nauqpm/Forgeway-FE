@@ -258,7 +258,7 @@ export default function TaskDetailDrawer({
   };
 
   const editableTextClass =
-    "text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors";
+    "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors";
 
   const renderDateInput = (field: "startDate" | "dueDate", rawValue?: string | null) => (
     <CustomDatePicker
@@ -284,7 +284,7 @@ export default function TaskDetailDrawer({
         onChange={(event) => setDraftValue(event.target.value)}
         onBlur={() => saveInlineEdit(field)}
         onKeyDown={(event) => handleInlineKeyDown(event, field)}
-        className="w-full rounded-[4px] border border-[#2563EB] bg-white dark:bg-[#2A2A2A] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
+        className="w-full rounded-[4px] border border-[#2563EB] bg-white dark:bg-[#2A2A2A] px-2 py-1 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none"
       />
     ) : (
       <div
@@ -308,7 +308,7 @@ export default function TaskDetailDrawer({
         onChange={(event) => setDraftValue(event.target.value)}
         onBlur={() => saveInlineEdit(field)}
         onKeyDown={(event) => handleInlineKeyDown(event, field)}
-        className="w-full rounded-[4px] border border-[#2563EB] bg-white dark:bg-[#2A2A2A] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
+        className="w-full rounded-[4px] border border-[#2563EB] bg-white dark:bg-[#2A2A2A] px-2 py-1 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -369,7 +369,7 @@ export default function TaskDetailDrawer({
 
         {/* Top Header */}
         <div className="app-header border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between shrink-0 bg-[#F7F6F3] dark:bg-[#252525]">
-          <div className="flex items-center gap-2 text-[13px] font-medium">
+          <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
             <div className="flex items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors">
               <div className="w-5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[4px] text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
@@ -379,7 +379,7 @@ export default function TaskDetailDrawer({
             <span className="text-[#ABABAB] dark:text-[#6B6B6B]">/</span>
             <div className="flex items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors">
               <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[3px]">
-                <span className="text-[10px]">✓</span>
+                <span className="text-[0.625rem]">✓</span>
               </div>
               <span className="text-[#111111] dark:text-[#E8E8E7]">{issueKey}</span>
             </div>
@@ -407,7 +407,7 @@ export default function TaskDetailDrawer({
                       onArchiveIssue?.(issue);
                     }}
                     disabled={!onArchiveIssue || issue.isArchived}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Archive className="h-4 w-4 text-[#787774]" />
                     Archive
@@ -441,13 +441,13 @@ export default function TaskDetailDrawer({
               <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-[6px]">
                 <div className="flex items-center">
                   <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
-                  <span className="text-yellow-700 text-[13px] font-medium">
+                  <span className="text-yellow-700 text-[0.8125rem] font-medium">
                     This task was archived by {issue.archivedByUser?.fullName || 'Unknown'} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : 'Unknown Date'}. It is currently read-only.
                   </span>
                 </div>
                 <button
                   onClick={() => { console.log("Restore triggered") }}
-                  className="flex items-center px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-[13px] font-semibold rounded-[6px] transition-colors"
+                  className="flex items-center px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-[0.8125rem] font-semibold rounded-[6px] transition-colors"
                 >
                   <ArchiveRestore className="w-4 h-4 mr-1.5" />
                   Restore
@@ -483,7 +483,7 @@ export default function TaskDetailDrawer({
                 <button
                   onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
                   disabled={issue.isArchived}
-                  className={`flex items-center gap-2 px-4 py-2 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[13px] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#F0F0EE] dark:hover:bg-[#333333]'}`}
+                  className={`flex items-center gap-2 px-4 py-2 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#F0F0EE] dark:hover:bg-[#333333]'}`}
                 >
                   {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4 text-[#ABABAB]" />}
                 </button>
@@ -496,7 +496,7 @@ export default function TaskDetailDrawer({
                       <button
                         key={column.id}
                         onClick={() => handleStatusChange(column)}
-                        className={`w-full text-left px-4 py-2 text-[13px] transition-colors ${column.id === currentColumn?.id ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] font-medium border-l-2 border-[#2563EB]' : 'text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]'}`}
+                        className={`w-full text-left px-4 py-2 text-[0.8125rem] transition-colors ${column.id === currentColumn?.id ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] font-medium border-l-2 border-[#2563EB]' : 'text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]'}`}
                       >
                         {column.name}
                       </button>
@@ -508,13 +508,13 @@ export default function TaskDetailDrawer({
 
             {/* Details */}
             <div className="border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] bg-white dark:bg-[#202020] overflow-hidden">
-              <div className="w-full flex items-center justify-between p-3 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
+              <div className="w-full flex items-center justify-between p-3 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
                 Details
               </div>
               <div className="p-4 flex flex-col space-y-2">
                 {/* Assignee */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Assignee</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Assignee</div>
                   <div className="min-w-0 flex-1 -ml-1">
                     <AssigneePicker
                       users={toAssigneePickerUsers(providedWorkspaceMembers as any[])}
@@ -527,10 +527,10 @@ export default function TaskDetailDrawer({
                 </div>
 
                 {/* Reporter */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Reporter</div>
-                  <div className="flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors">
-                    <div className="w-5 h-5 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold text-[10px]">
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Reporter</div>
+                  <div className="flex items-center gap-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold text-[0.625rem]">
                       {reporterName.substring(0, 2).toUpperCase()}
                     </div>
                     <span className="truncate">{reporterName}</span>
@@ -538,24 +538,24 @@ export default function TaskDetailDrawer({
                 </div>
 
                 {/* Type */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Type</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Type</div>
                   <div className="min-w-0 flex-1">
                     {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
                   </div>
                 </div>
 
                 {/* Priority */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Priority</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Priority</div>
                   <div className="min-w-0 flex-1">
                     {renderInlineSelect("priority", issue.priority, ["Lowest", "Low", "Medium", "High", "Highest"])}
                   </div>
                 </div>
 
                 {/* Labels */}
-                <div className="flex items-start min-h-[32px]">
-                  <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0 pt-1.5">Labels</div>
+                <div className="flex items-start min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0 pt-1.5">Labels</div>
                   <div className="min-w-0 flex-1">
                     <TaskLabelsField
                       workspaceId={workspaceId}
@@ -566,24 +566,24 @@ export default function TaskDetailDrawer({
                 </div>
 
                 {/* Start date */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Start date</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Start date</div>
                   <div className="min-w-0 flex-1">
                     {renderDateInput("startDate", toDateInputValue(issue.startDate))}
                   </div>
                 </div>
 
                 {/* Due date */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Due date</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Due date</div>
                   <div className="min-w-0 flex-1">
                     {renderDateInput("dueDate", toDateInputValue(issue.dueDate))}
                   </div>
                 </div>
 
                 {showSprintField && (
-                  <div className="flex items-center min-h-[32px]">
-                    <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Sprint</div>
+                  <div className="flex items-center min-h-8">
+                    <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Sprint</div>
                     <div className="min-w-0 flex-1">
                       {renderInlineInput("sprintId", sprintLabel, issue.sprintId)}
                     </div>
@@ -591,8 +591,8 @@ export default function TaskDetailDrawer({
                 )}
 
                 {/* Story points */}
-                <div className="flex items-center min-h-[32px]">
-                  <div className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Story points</div>
+                <div className="flex items-center min-h-8">
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Story points</div>
                   <div className="min-w-0 flex-1">
                     {renderInlineInput("storyPoints", storyPointsLabel, issue.storyPoints, "number")}
                   </div>
@@ -602,7 +602,7 @@ export default function TaskDetailDrawer({
 
             {/* Description */}
             <div className="space-y-3">
-              <h3 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Description</h3>
+              <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Description</h3>
               <div className="pl-1">
                 <TaskDescription
                   initialContent={issue.description || ''}
@@ -627,19 +627,19 @@ export default function TaskDetailDrawer({
 
             {/* Linked Work Items */}
             <div className="space-y-3 pt-2">
-              <h3 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h3>
+              <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h3>
               <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4">
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-[13px] text-[#787774] dark:text-[#9B9A97]">No linked items yet</span>
+                  <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No linked items yet</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
                     href={`/docs/create?issueId=${issue.id}`}
-                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] text-white text-[13px] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
+                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] text-white text-[0.8125rem] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
                   >
                     <Plus className="w-4 h-4" /> Create Document
                   </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[13px] font-medium rounded-[6px] transition-colors">
+                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
                     <LinkIcon className="w-4 h-4 text-[#787774]" /> Link item
                   </button>
                 </div>
@@ -649,8 +649,8 @@ export default function TaskDetailDrawer({
             {/* Activity */}
             <div className="space-y-4 pt-6 border-t border-[#EAEAEA] dark:border-white/[0.06]">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <h3 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h3>
-                <div className="flex items-center gap-1 text-[13px] bg-[#F7F6F3] dark:bg-white/5 p-1 rounded-[6px]">
+                <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h3>
+                <div className="flex items-center gap-1 text-[0.8125rem] bg-[#F7F6F3] dark:bg-white/5 p-1 rounded-[6px]">
                   <button
                     onClick={() => setActiveTab('comments')}
                     className={`px-4 py-1.5 rounded-[4px] font-medium transition-colors ${activeTab === 'comments' ? 'bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]' : 'text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'}`}
@@ -678,7 +678,7 @@ export default function TaskDetailDrawer({
             </div>
 
             {/* Meta */}
-            <div className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] flex items-center justify-center gap-4 pt-4 pb-8">
+            <div className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] flex items-center justify-center gap-4 pt-4 pb-8">
               <span>Created: {formatDateTime(issue.createdAt)}</span>
               <span>•</span>
               <span>Updated: {formatDateTime(issue.updatedAt)}</span>

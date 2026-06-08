@@ -262,7 +262,7 @@ export default function TaskDetailModal({
   };
 
   const editableTextClass =
-    "text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors";
+    "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors";
 
   const renderDateInput = (field: "startDate" | "dueDate", rawValue?: string | null) => (
     <CustomDatePicker
@@ -288,7 +288,7 @@ export default function TaskDetailModal({
         onChange={(event) => setDraftValue(event.target.value)}
         onBlur={() => saveInlineEdit(field)}
         onKeyDown={(event) => handleInlineKeyDown(event, field)}
-        className="w-full rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
+        className="w-full rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none"
       />
     ) : (
       <div
@@ -312,7 +312,7 @@ export default function TaskDetailModal({
         onChange={(event) => setDraftValue(event.target.value)}
         onBlur={() => saveInlineEdit(field)}
         onKeyDown={(event) => handleInlineKeyDown(event, field)}
-        className="w-full rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
+        className="w-full rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -388,7 +388,7 @@ export default function TaskDetailModal({
       >
         {/* Top Header */}
         <div className="app-header border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between shrink-0 bg-[#F9F9F8] dark:bg-[#252525]">
-          <div className="flex items-center gap-2 text-[13px] font-medium">
+          <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
             <div className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors">
               <div className="w-5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[4px] text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
@@ -398,7 +398,7 @@ export default function TaskDetailModal({
             <span className="text-[#ABABAB] dark:text-[#6B6B6B]">/</span>
             <div className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors">
               <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[4px]">
-                <span className="text-[10px]">✓</span>
+                <span className="text-[0.625rem]">✓</span>
               </div>
               <span className="text-[#111111] dark:text-[#E8E8E7]">{issueKey}</span>
             </div>
@@ -423,7 +423,7 @@ export default function TaskDetailModal({
                       onArchiveIssue?.(issue);
                     }}
                     disabled={!onArchiveIssue || issue.isArchived}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Archive className="h-4 w-4" />
                     Archive
@@ -498,7 +498,7 @@ export default function TaskDetailModal({
 
             {/* Description */}
             <div className="space-y-2">
-              <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+              <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                 Description
               </h3>
               <TaskDescription
@@ -529,10 +529,10 @@ export default function TaskDetailModal({
             {/* Activity */}
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Activity
                 </h3>
-                <div className="flex items-center gap-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   <span>Show:</span>
                   <button
                     onClick={() => setActiveTab("comments")}
@@ -569,7 +569,7 @@ export default function TaskDetailModal({
                 <button
                   onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
                   disabled={issue.isArchived}
-                  className={`flex items-center gap-2 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[13px] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
+                  className={`flex items-center gap-2 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
                 >
                   {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4" />}
                 </button>
@@ -579,7 +579,7 @@ export default function TaskDetailModal({
                       <button
                         key={column.id}
                         onClick={() => handleStatusChange(column)}
-                        className={`w-full text-left px-4 py-2 text-[13px] transition-colors ${column.id === currentColumn?.id ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium border-l-2 border-[#2563EB] dark:border-[#3B82F6]" : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"}`}
+                        className={`w-full text-left px-4 py-2 text-[0.8125rem] transition-colors ${column.id === currentColumn?.id ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium border-l-2 border-[#2563EB] dark:border-[#3B82F6]" : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"}`}
                       >
                         {column.name}
                       </button>
@@ -591,13 +591,13 @@ export default function TaskDetailModal({
 
             <div className="space-y-6">
               <div className="border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] rounded-[8px]">
-                <button className="w-full flex items-center justify-between p-3 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-t-[8px] transition-colors">
+                <button className="w-full flex items-center justify-between p-3 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-t-[8px] transition-colors">
                   Details <ChevronDown className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 </button>
                 <div className="p-4 border-t border-[#EAEAEA] dark:border-white/[0.06] space-y-4">
                   {/* Assignee */}
                   <div className="grid grid-cols-3 gap-2 items-center">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97]">Assignee</div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Assignee</div>
                     <div className="col-span-2">
                       <AssigneePicker
                         users={toAssigneePickerUsers((providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers) as any[])}
@@ -611,7 +611,7 @@ export default function TaskDetailModal({
 
                   {/* Type */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">Type</div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Type</div>
                     <div className="col-span-2">
                       {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
                     </div>
@@ -619,9 +619,9 @@ export default function TaskDetailModal({
 
                   {/* Reporter */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">Reporter</div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Reporter</div>
                     <div className="col-span-2">
-                      <div className="text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
+                      <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
                         {reporterName}
                       </div>
                     </div>
@@ -629,7 +629,7 @@ export default function TaskDetailModal({
 
                   {/* Due date */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Start date
                     </div>
                     <div className="col-span-2">
@@ -638,7 +638,7 @@ export default function TaskDetailModal({
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Due date
                     </div>
                     <div className="col-span-2">
@@ -648,7 +648,7 @@ export default function TaskDetailModal({
 
                   {/* Story points */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Story points
                     </div>
                     <div className="col-span-2">
@@ -658,7 +658,7 @@ export default function TaskDetailModal({
 
                   {/* Labels */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Labels
                     </div>
                     <div className="col-span-2">
@@ -672,7 +672,7 @@ export default function TaskDetailModal({
 
                   {showSprintField && (
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                      <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                         Sprint
                       </div>
                       <div className="col-span-2">
@@ -683,11 +683,11 @@ export default function TaskDetailModal({
 
                   {showBoardField && (
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                      <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                         Board
                       </div>
                       <div className="col-span-2">
-                        <div className="text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
+                        <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
                           {boardLabel}
                         </div>
                       </div>
@@ -696,7 +696,7 @@ export default function TaskDetailModal({
 
                   {/* Priority */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Priority
                     </div>
                     <div className="col-span-2">
@@ -714,7 +714,7 @@ export default function TaskDetailModal({
               /> */}
 
               {/* Meta information */}
-              <div className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
+              <div className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
                 <p>Created {formatDateTime(issue.createdAt)}</p>
                 <p>Updated {formatDateTime(issue.updatedAt)}</p>
               </div>

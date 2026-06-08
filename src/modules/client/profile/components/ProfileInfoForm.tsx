@@ -21,7 +21,7 @@ interface Props {
   onUploadAvatar: (file: File) => Promise<boolean>;
 }
 
-const labelCls = "block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
+const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
 const inputBaseCls = "w-full px-3 py-2 border rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:outline-none transition-colors";
 const inputNormalCls = `${inputBaseCls} border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]`;
 const inputErrorCls = `${inputBaseCls} border-[#9F2F2D] focus:border-[#9F2F2D]`;
@@ -186,17 +186,17 @@ export function ProfileInfoForm({
         </div>
 
         <div>
-          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
+          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
             {profile.fullName ?? "Not updated"}
           </p>
-          <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             {profile.email}
           </p>
-          <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] mt-0.5">
+          <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-0.5">
             JPG, PNG, GIF, WEBP - max 10MB
           </p>
           {fieldErrors.avatar && (
-            <p className="text-[13px] text-[#9F2F2D] mt-1">
+            <p className="text-[0.8125rem] text-[#9F2F2D] mt-1">
               {fieldErrors.avatar}
             </p>
           )}
@@ -215,7 +215,7 @@ export function ProfileInfoForm({
             className={fieldErrors.fullName ? inputErrorCls : inputNormalCls}
           />
           {fieldErrors.fullName && (
-            <p className="mt-1.5 text-[13px] text-[#9F2F2D]">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.fullName}
             </p>
           )}
@@ -229,7 +229,7 @@ export function ProfileInfoForm({
             disabled
             className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B] cursor-not-allowed"
           />
-          <p className="mt-1 text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
+          <p className="mt-1 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
             Email cannot be changed
           </p>
         </div>
@@ -245,7 +245,7 @@ export function ProfileInfoForm({
             className={fieldErrors.phone ? inputErrorCls : inputNormalCls}
           />
           {fieldErrors.phone && (
-            <p className="mt-1.5 text-[13px] text-[#9F2F2D]">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.phone}
             </p>
           )}
@@ -265,7 +265,7 @@ export function ProfileInfoForm({
             ariaLabel="Date of birth"
           />
           {fieldErrors.birthday && (
-            <p className="mt-1.5 text-[13px] text-[#9F2F2D]">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.birthday}
             </p>
           )}
@@ -284,7 +284,7 @@ export function ProfileInfoForm({
             <option value="other">Other</option>
           </select>
           {fieldErrors.gender && (
-            <p className="mt-1.5 text-[13px] text-[#9F2F2D]">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.gender}
             </p>
           )}
@@ -301,7 +301,7 @@ export function ProfileInfoForm({
             className={fieldErrors.address ? inputErrorCls : inputNormalCls}
           />
           {fieldErrors.address && (
-            <p className="mt-1.5 text-[13px] text-[#9F2F2D]">
+            <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
               {fieldErrors.address}
             </p>
           )}
@@ -312,7 +312,7 @@ export function ProfileInfoForm({
         <button
           type="submit"
           disabled={saving}
-          className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[13px] font-medium transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[0.8125rem] font-medium transition-colors flex items-center gap-2"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           {saving ? "Saving..." : "Save changes"}

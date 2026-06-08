@@ -27,13 +27,13 @@ const SessionExpiredModal: React.FC = () => {
           <div className="w-14 h-14 bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] rounded-[10px] flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="w-7 h-7 text-[#956400] dark:text-[#F59E0B]" />
           </div>
-          <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Session expired</h2>
-          <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-6">
+          <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Session expired</h2>
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-6">
             Your session has expired due to inactivity. Please sign in again to continue.
           </p>
           <button
             onClick={handleLoginAgain}
-            className="w-full py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[13px] font-semibold hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
+            className="w-full py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-semibold hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
           >
             Sign in again
           </button>

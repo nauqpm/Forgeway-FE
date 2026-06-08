@@ -142,7 +142,7 @@ export default function AssigneePicker({
   const avatarSm = size === "sm";
   const avatarSize = avatarSm ? "w-5 h-5" : "w-6 h-6";
   const iconSize = avatarSm ? "w-2.5 h-2.5" : "w-3 h-3";
-  const textSize = avatarSm ? "text-[9px]" : "text-[10px]";
+  const textSize = avatarSm ? "text-[0.5625rem]" : "text-[0.625rem]";
 
   const dropdown = open ? (
     <div
@@ -150,12 +150,12 @@ export default function AssigneePicker({
       style={{ ...menuStyle, boxShadow: "0 4px 20px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.06)" }}
       className="max-h-52 overflow-y-auto bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[8px]"
     >
-      <div className="px-3 py-2 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97] border-b border-[#EAEAEA] dark:border-white/[0.08] uppercase tracking-wide">
+      <div className="px-3 py-2 text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97] border-b border-[#EAEAEA] dark:border-white/[0.08] uppercase tracking-wide">
         Assign to
       </div>
       <button
         onClick={() => { onChange(null); setOpen(false); }}
-        className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#F7F6F3] dark:hover:bg-white/[0.05] flex items-center gap-2 transition-colors ${
+        className={`w-full text-left px-3 py-2 text-[0.8125rem] hover:bg-[#F7F6F3] dark:hover:bg-white/[0.05] flex items-center gap-2 transition-colors ${
           !value
             ? "text-[#2563EB] dark:text-[#3B82F6] font-semibold"
             : "text-[#787774] dark:text-[#9B9A97]"
@@ -175,13 +175,13 @@ export default function AssigneePicker({
           <button
             key={u.id}
             onClick={() => { onChange(u.id); setOpen(false); }}
-            className={`w-full text-left px-3 py-2 text-[13px] hover:bg-[#F7F6F3] dark:hover:bg-white/[0.05] flex items-center gap-2 transition-colors ${
+            className={`w-full text-left px-3 py-2 text-[0.8125rem] hover:bg-[#F7F6F3] dark:hover:bg-white/[0.05] flex items-center gap-2 transition-colors ${
               isSelected
                 ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]"
                 : "text-[#111111] dark:text-[#E8E8E7]"
             }`}
           >
-            <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[9px] font-bold shrink-0 overflow-hidden">
+            <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.5625rem] font-bold shrink-0 overflow-hidden">
               {u.avatar ? (
                 <img src={u.avatar} alt="" className="h-full w-full object-cover" />
               ) : (
@@ -225,7 +225,7 @@ export default function AssigneePicker({
         )}
         {!avatarSm && (
           <span
-            className={`text-[13px] truncate ${
+            className={`text-[0.8125rem] truncate ${
               displayName
                 ? "text-[#111111] dark:text-[#E8E8E7]"
                 : "text-[#ABABAB] dark:text-[#6B6B6B] italic"

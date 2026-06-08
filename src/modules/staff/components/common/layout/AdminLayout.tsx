@@ -21,7 +21,7 @@ export default function AdminLayout({
       />
       <main
         className={`transition-all duration-200 ${
-          sidebarCollapsed ? "lg:ml-[68px]" : "lg:ml-[240px]"
+          sidebarCollapsed ? "lg:ml-[4.25rem]" : "lg:ml-60"
         }`}
       >
         <div className="p-6">{children}</div>

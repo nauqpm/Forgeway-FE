@@ -127,16 +127,16 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
 
   if (!mounted) return null;
 
-  const inputCls = "mt-1 h-9 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
+  const inputCls = "mt-1 h-9 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
 
   return createPortal(
     <div
       ref={popoverRef}
-      className="fixed z-[90] w-[320px] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3"
+      className="fixed z-[90] w-80 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3"
       style={{ left: position.left, top: position.top, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
       <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-[11px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+        <div className="flex items-center gap-2 text-[0.6875rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
           <LinkIcon className="h-3.5 w-3.5" />
           Link
         </div>
@@ -146,7 +146,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
       </div>
 
       <form onSubmit={submitLink} className="space-y-3">
-        <label className="block text-[11px] font-medium text-[#787774] dark:text-[#9B9A97]">
+        <label className="block text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
           Display Text
           <input
             type="text"
@@ -157,7 +157,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
           />
         </label>
 
-        <label className="block text-[11px] font-medium text-[#787774] dark:text-[#9B9A97]">
+        <label className="block text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
           URL
           <input
             type="text"
@@ -169,7 +169,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
           />
         </label>
 
-        <label className="flex items-center gap-2 text-[11px] text-[#787774] dark:text-[#9B9A97] cursor-pointer">
+        <label className="flex items-center gap-2 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] cursor-pointer">
           <input
             type="checkbox"
             checked={openNewTab}
@@ -184,7 +184,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
             <button
               type="button"
               onClick={removeLink}
-              className="inline-flex h-8 items-center gap-1.5 rounded-[4px] px-2 text-[11px] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
+              className="inline-flex h-8 items-center gap-1.5 rounded-[4px] px-2 text-[0.6875rem] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Remove Link
@@ -194,7 +194,7 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
           )}
           <button
             type="submit"
-            className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[11px] font-semibold text-white hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[0.6875rem] font-semibold text-white hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             Apply

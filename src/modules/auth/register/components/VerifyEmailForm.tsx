@@ -70,7 +70,7 @@ export default function VerifyEmailForm() {
             <div className="w-12 h-12 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[8px] flex items-center justify-center"><Zap className="w-7 h-7 text-white" /></div>
           </Link>
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">Verify Email</h1>
-          <p className="text-[#787774] dark:text-[#9B9A97] text-[13px] mt-1">
+          <p className="text-[#787774] dark:text-[#9B9A97] text-[0.8125rem] mt-1">
             Please enter the 6-digit OTP sent to <br />
             <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{email || 'your email'}</span>
           </p>
@@ -85,7 +85,7 @@ export default function VerifyEmailForm() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] mb-1.5 text-center">Verification code (OTP)</label>
+              <label className="block text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] mb-1.5 text-center">Verification code (OTP)</label>
               <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required maxLength={6} placeholder="Enter 6 digits"
                 className="w-full text-center text-2xl px-4 py-3 border border-[#EAEAEA] dark:border-white/8 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] outline-none transition-all" />
             </div>
@@ -98,12 +98,12 @@ export default function VerifyEmailForm() {
 
           <div className="mt-6 flex flex-col items-center gap-4">
             <button type="button" onClick={handleResend} disabled={isResending || !email}
-              className="text-[13px] font-medium text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8] disabled:opacity-50 transition-colors flex items-center gap-1">
+              className="text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8] disabled:opacity-50 transition-colors flex items-center gap-1">
               {isResending ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
               Resend verification code
             </button>
 
-            <Link href={AUTH_ROUTES.LOGIN} className="text-[13px] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] flex items-center gap-1">
+            <Link href={AUTH_ROUTES.LOGIN} className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] flex items-center gap-1">
               <ArrowLeft className="w-4 h-4" />
               Back to Sign in
             </Link>

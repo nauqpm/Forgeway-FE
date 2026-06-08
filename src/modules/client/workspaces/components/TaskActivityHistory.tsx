@@ -198,7 +198,7 @@ export default function TaskActivityHistory({
 
   if (isFetching && page === 1 && allActivities.length === 0) {
     return (
-      <div className="flex items-center gap-2 pt-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+      <div className="flex items-center gap-2 pt-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
         <Loader2 className="h-4 w-4 animate-spin" />
         Loading history...
       </div>
@@ -207,7 +207,7 @@ export default function TaskActivityHistory({
 
   if (error && allActivities.length === 0) {
     return (
-      <div className="rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-4 py-3 text-[13px] text-[#9F2F2D] dark:text-[#F87171]">
+      <div className="rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-4 py-3 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
         Could not load task history.
       </div>
     );
@@ -215,7 +215,7 @@ export default function TaskActivityHistory({
 
   if (allActivities.length === 0 && !isFetching) {
     return (
-      <div className="flex items-center gap-2 rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] px-4 py-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+      <div className="flex items-center gap-2 rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] px-4 py-5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
         <Clock className="h-4 w-4" />
         No history recorded yet.
       </div>
@@ -232,7 +232,7 @@ export default function TaskActivityHistory({
 
         return (
           <div key={activity.id} className="flex gap-4">
-            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-[11px] font-bold text-white">
+            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-[0.6875rem] font-bold text-white">
               {activity.actor?.avatar ? (
                 <img
                   src={activity.actor.avatar}
@@ -250,22 +250,22 @@ export default function TaskActivityHistory({
                 <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   {actorName}
                 </span>
-                <span className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   {getActivityMessage(activity)}
                 </span>
                 {activity.createdAt && (
-                  <span className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
+                  <span className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
                     {formatDateTime(activity.createdAt)}
                   </span>
                 )}
               </div>
               {hasChange && (
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                  <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-1 font-mono text-[11px] text-[#787774] dark:text-[#9B9A97]">
+                  <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-1 font-mono text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                     {formatActivityValue(activity, activity.metadata?.from, memberNameMap)}
                   </span>
                   <span className="text-[#ABABAB] dark:text-[#6B6B6B]">→</span>
-                  <span className="rounded-[4px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] px-2 py-1 font-mono font-semibold text-[11px] text-[#1F6C9F] dark:text-[#93C5FD]">
+                  <span className="rounded-[4px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] px-2 py-1 font-mono font-semibold text-[0.6875rem] text-[#1F6C9F] dark:text-[#93C5FD]">
                     {formatActivityValue(activity, activity.metadata?.to, memberNameMap)}
                   </span>
                 </div>
@@ -281,7 +281,7 @@ export default function TaskActivityHistory({
             type="button"
             onClick={handleLoadMore}
             disabled={isFetching}
-            className="flex items-center gap-2 text-[13px] font-medium text-[#2563EB] dark:text-[#3B82F6] disabled:opacity-60 transition-colors"
+            className="flex items-center gap-2 text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6] disabled:opacity-60 transition-colors"
           >
             {isFetching && <Loader2 className="h-4 w-4 animate-spin" />}
             {isFetching

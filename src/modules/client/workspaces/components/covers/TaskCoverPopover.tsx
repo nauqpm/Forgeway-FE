@@ -148,9 +148,9 @@ export default function TaskCoverPopover({
   };
 
   return (
-    <div className="w-[336px] overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+    <div className="w-[21rem] overflow-hidden rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
       <div className="flex items-center justify-between border-b border-[#EAEAEA] dark:border-white/[0.06] px-3 py-2">
-        <h3 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Select a cover</h3>
+        <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Select a cover</h3>
         <button
           type="button"
           onClick={onRequestClose}
@@ -169,7 +169,7 @@ export default function TaskCoverPopover({
             onClick={() => {
               setActiveTab(tab);
             }}
-            className={`h-9 flex-1 rounded-t-[6px] text-[13px] font-medium transition-colors ${
+            className={`h-9 flex-1 rounded-t-[6px] text-[0.8125rem] font-medium transition-colors ${
               activeTab === tab
                 ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
                 : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
@@ -180,7 +180,7 @@ export default function TaskCoverPopover({
         ))}
       </div>
 
-      <div className="max-h-[360px] overflow-y-auto p-3">
+      <div className="max-h-[22.5rem] overflow-y-auto p-3">
         {activeTab === "colors" && (
           <div>
             <div className="grid grid-cols-11 gap-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-2">
@@ -231,18 +231,18 @@ export default function TaskCoverPopover({
                 type="button"
                 disabled={imagePage === 1}
                 onClick={() => setImagePage((page) => Math.max(1, page - 1))}
-                className="h-8 rounded-[6px] px-2.5 text-[11px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-45"
+                className="h-8 rounded-[6px] px-2.5 text-[0.6875rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Previous
               </button>
-              <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
+              <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                 Page {imagePage} of {imagePageCount}
               </span>
               <button
                 type="button"
                 disabled={imagePage === imagePageCount}
                 onClick={() => setImagePage((page) => Math.min(imagePageCount, page + 1))}
-                className="h-8 rounded-[6px] px-2.5 text-[11px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-45"
+                className="h-8 rounded-[6px] px-2.5 text-[0.6875rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Next
               </button>
@@ -257,7 +257,7 @@ export default function TaskCoverPopover({
           type="button"
           disabled={disabled || saving || !cover}
           onClick={onRemoveCover}
-          className="inline-flex h-8 items-center justify-center rounded-[6px] px-3 text-[13px] font-medium text-[#9F2F2D] dark:text-[#F87171] transition-colors hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-8 items-center justify-center rounded-[6px] px-3 text-[0.8125rem] font-medium text-[#9F2F2D] dark:text-[#F87171] transition-colors hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           Remove cover
         </button>
@@ -275,7 +275,7 @@ export function TaskCoverMenuRow({
     <button
       type="button"
       onMouseEnter={onMouseEnter}
-      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[13px] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
     >
       <span>Select cover</span>
       <ChevronRight className="h-4 w-4 text-[#ABABAB] dark:text-[#6B6B6B]" />

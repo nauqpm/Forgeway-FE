@@ -114,7 +114,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
     <div className="fixed inset-0 z-50 bg-white dark:bg-[#202020]">
       <div className="flex h-full flex-col overflow-hidden">
         <div className="flex items-center justify-between border-b border-[#EAEAEA] bg-white px-5 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
-          <div className="flex items-center gap-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+          <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <span>Workspace</span>
             <span>{">"}</span>
             <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{title || "Untitled Document"}</span>
@@ -153,14 +153,14 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
 
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
           {loading ? (
-            <div className="flex h-full items-center justify-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <div className="flex h-full items-center justify-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Loading content...
             </div>
           ) : (
-            <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
+            <div className="mx-auto w-full max-w-[75rem] px-6 py-16 lg:px-10">
               <div className="mb-10">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                   Document Title
                 </p>
                 <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-5 py-4 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
@@ -178,10 +178,10 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
               </div>
 
               <div className="pb-40">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                   Document Content
                 </p>
-                <div className="min-h-[600px] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
+                <div className="min-h-[37.5rem] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
                   <div className="dark:prose-invert">
                     <EditorContent editor={editor} />
                   </div>

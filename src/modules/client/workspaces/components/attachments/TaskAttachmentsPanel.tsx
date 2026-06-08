@@ -92,10 +92,10 @@ export default function TaskAttachmentsPanel({
             <Paperclip className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+            <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
               Attachments
             </h3>
-            <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">{panelDescription}</p>
+            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{panelDescription}</p>
           </div>
         </div>
 
@@ -113,7 +113,7 @@ export default function TaskAttachmentsPanel({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={isArchived}
-            className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 py-2 text-[0.8125rem] font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
             Add
@@ -130,7 +130,7 @@ export default function TaskAttachmentsPanel({
       </div>
 
       {error && (
-        <div className="rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-3 py-2 text-[13px] text-[#9F2F2D] dark:text-[#F87171]">
+        <div className="rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-3 py-2 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
           Could not load attachments.
         </div>
       )}
@@ -138,7 +138,7 @@ export default function TaskAttachmentsPanel({
       <AttachmentUploadQueue items={uploadingFiles} onClear={clearQueueItem} />
 
       {!hasContent && !isLoading && (
-        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-6 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-6 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
           No attachments yet.
         </div>
       )}

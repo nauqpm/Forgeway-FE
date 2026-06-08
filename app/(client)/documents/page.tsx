@@ -213,7 +213,7 @@ export default function DocumentsLibraryPage() {
 
       <div className="rounded-[8px] border border-[#EAEAEA] bg-white p-4 dark:border-white/[0.06] dark:bg-[#252525]">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[260px] flex-1">
+          <div className="relative min-w-[16.25rem] flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
             <input
               value={query}
@@ -329,7 +329,7 @@ export default function DocumentsLibraryPage() {
                   </div>
                 )}
 
-                <p className="line-clamp-2 min-h-[40px] text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                <p className="line-clamp-2 min-h-10 text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   {doc.name}
                 </p>
                 <p className="mt-1 text-xs text-[#787774] dark:text-[#9B9A97]">

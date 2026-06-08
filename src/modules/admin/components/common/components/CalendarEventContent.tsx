@@ -10,7 +10,7 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
   if (extendedProps.type === 'sprint') {
     return (
       <div className="flex h-full w-full items-center overflow-hidden px-1.5">
-        <span className="truncate text-[11px] font-medium text-white">
+        <span className="truncate text-[0.6875rem] font-medium text-white">
           {eventInfo.event.title}
         </span>
       </div>
@@ -21,7 +21,7 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
   if (!issue) {
     return (
       <div className="flex h-full w-full items-center overflow-hidden px-1.5">
-        <span className="truncate text-[11px] font-medium text-white">
+        <span className="truncate text-[0.6875rem] font-medium text-white">
           {eventInfo.event.title}
         </span>
       </div>
@@ -43,7 +43,7 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
       <div className="flex h-full w-full items-center overflow-hidden px-1.5">
         <span
           className={[
-            'truncate text-[11px] font-semibold text-white',
+            'truncate text-[0.6875rem] font-semibold text-white',
             isDone ? 'line-through opacity-70' : '',
             isOverdue ? 'text-red-200' : '',
           ].join(' ')}
@@ -58,7 +58,7 @@ export default function CalendarEventContent({ eventInfo }: { eventInfo: EventCo
     <div className="flex h-full w-full items-center overflow-hidden px-1.5">
       <span
         className={[
-          'truncate text-[11px] font-semibold text-white',
+          'truncate text-[0.6875rem] font-semibold text-white',
           isDone ? 'line-through opacity-70' : '',
           isOverdue ? 'text-red-200' : '',
         ].join(' ')}

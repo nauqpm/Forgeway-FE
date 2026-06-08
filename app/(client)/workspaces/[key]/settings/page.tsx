@@ -1206,7 +1206,7 @@ function MemberSettings({
             </div>
           ) : (
             <div className="overflow-x-auto rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
-              <table className="w-full min-w-[620px] text-left text-sm">
+              <table className="w-full min-w-[38.75rem] text-left text-sm">
                 <thead className="border-b border-[#EAEAEA] bg-[#F9F9F8] font-medium text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
                   <tr>
                     <th className="px-4 py-3">Email</th>

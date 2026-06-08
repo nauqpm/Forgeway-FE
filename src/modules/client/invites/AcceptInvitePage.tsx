@@ -93,7 +93,7 @@ export default function AcceptInvitePage({ token }: Props) {
           <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h1 className="text-xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-2">Invalid invitation</h1>
           <p className="text-[#787774] dark:text-[#9B9A97] mb-6">{fetchError}</p>
-          <Link href="/" className="inline-block px-6 py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#1D4ED8] transition-colors">
+          <Link href="/" className="inline-block px-6 py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#1D4ED8] transition-colors">
             Back to home
           </Link>
         </div>
@@ -132,7 +132,7 @@ export default function AcceptInvitePage({ token }: Props) {
           </div>
         </div>
 
-        <p className="text-[#111111] dark:text-[#E8E8E7] text-[13px] mb-1">
+        <p className="text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] mb-1">
           <span className="font-semibold">{invite.invitedBy?.fullName || invite.invitedBy?.email}</span>{' '}
           invited you to join as{' '}
           <span className="font-semibold text-[#2563EB] dark:text-[#3B82F6]">{invite.role}</span>.

@@ -42,12 +42,12 @@ const MfaSetupForm: React.FC = () => {
           <div className="w-12 h-12 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] rounded-[8px] flex items-center justify-center mx-auto mb-3">
             <Shield className="w-6 h-6 text-[#2563EB] dark:text-[#3B82F6]" />
           </div>
-          <h2 className="text-[15px] font-bold text-[#111111] dark:text-[#E8E8E7]">Set up MFA</h2>
+          <h2 className="text-[0.9375rem] font-bold text-[#111111] dark:text-[#E8E8E7]">Set up MFA</h2>
         </div>
 
         {step === 'init' && (
           <div className="space-y-4">
-            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] text-center">Protect your account with two-factor authentication (TOTP).</p>
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] text-center">Protect your account with two-factor authentication (TOTP).</p>
             <button onClick={handleStart} disabled={loading}
               className="w-full py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] font-semibold hover:bg-[#1D4ED8] disabled:opacity-50 flex items-center justify-center gap-2">
               {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Setting up...</> : 'Start setup'}
@@ -57,7 +57,7 @@ const MfaSetupForm: React.FC = () => {
 
         {step === 'qr' && setupData && (
           <div className="space-y-4">
-            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] text-center">Scan the QR code with an authenticator app such as Google Authenticator or Authy.</p>
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] text-center">Scan the QR code with an authenticator app such as Google Authenticator or Authy.</p>
             <div className="flex justify-center p-4 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]">
               <img src={setupData.qrCodeUrl} alt="QR Code" className="w-48 h-48" />
             </div>
@@ -74,11 +74,11 @@ const MfaSetupForm: React.FC = () => {
 
         {step === 'verify' && (
           <form onSubmit={handleVerify} className="space-y-4">
-            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] text-center">Enter the 6-digit code from your authenticator app to confirm.</p>
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] text-center">Enter the 6-digit code from your authenticator app to confirm.</p>
             <input type="text" value={verifyCode} onChange={(e) => { setVerifyCode(e.target.value.replace(/\D/g, '').slice(0, 6)); clearError(); }}
               placeholder="000000" maxLength={6}
               className="w-full px-4 py-3 border border-[#EAEAEA] dark:border-white/8 rounded-[6px] text-center text-2xl font-mono tracking-[0.5em] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] outline-none" />
-            {error && <p className="text-red-500 text-[13px] text-center">{error}</p>}
+            {error && <p className="text-red-500 text-[0.8125rem] text-center">{error}</p>}
             <button type="submit" disabled={loading || verifyCode.length !== 6}
               className="w-full py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] font-semibold hover:bg-[#1D4ED8] disabled:opacity-50">
               {loading ? 'Verifying...' : 'Confirm'}
@@ -88,10 +88,10 @@ const MfaSetupForm: React.FC = () => {
 
         {step === 'backup' && setupData?.backupCodes && (
           <div className="space-y-4">
-            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] text-center">Store backup codes in a safe place. Each code can only be used once.</p>
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] text-center">Store backup codes in a safe place. Each code can only be used once.</p>
             <div className="grid grid-cols-2 gap-2 p-4 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px]">
               {setupData.backupCodes.map((c, i) => (
-                <code key={i} className="text-[13px] font-mono text-[#111111] dark:text-[#E8E8E7] text-center py-1">{c}</code>
+                <code key={i} className="text-[0.8125rem] font-mono text-[#111111] dark:text-[#E8E8E7] text-center py-1">{c}</code>
               ))}
             </div>
             <button onClick={downloadBackupCodes}

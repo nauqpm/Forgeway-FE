@@ -14,7 +14,7 @@ export default function RecentDocs() {
 
   return (
     <div className="mb-6 px-2">
-      <h3 className="px-3 flex items-center gap-1.5 text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest mb-3">
+      <h3 className="px-3 flex items-center gap-1.5 text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest mb-3">
         Recent
       </h3>
       <ul className="space-y-1">
@@ -23,7 +23,7 @@ export default function RecentDocs() {
             <li key={doc.id}>
               <button
                 onClick={() => selectDocument(doc.id)}
-                className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[13px] transition-all ${
+                className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[0.8125rem] transition-all ${
                   selectedDocumentId === doc.id
                     ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium"
                     : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"

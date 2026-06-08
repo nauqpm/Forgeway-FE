@@ -105,9 +105,9 @@ export default function TiptapEditor() {
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
         <div className="sticky top-0 z-20">{canEditPage && <EditorToolbar editor={editor} />}</div>
 
-        <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
+        <div className="mx-auto w-full max-w-[75rem] px-6 py-16 lg:px-10">
           <div className="mb-10">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+            <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
               Document Title
             </p>
             <div className="rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-5 py-4 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
@@ -126,10 +126,10 @@ export default function TiptapEditor() {
           </div>
 
           <div className="pb-40">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+            <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
               Document Content
             </p>
-            <div className="min-h-[600px] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
+            <div className="min-h-[37.5rem] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-3 transition focus-within:border-[#2563EB] dark:focus-within:border-[#3B82F6]">
               <div className="dark:prose-invert">
                 <EditorContent editor={editor} />
               </div>

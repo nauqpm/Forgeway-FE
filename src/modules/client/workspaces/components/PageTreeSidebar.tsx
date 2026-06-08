@@ -49,7 +49,7 @@ const SortableTreeItem = ({ item, isExpanded, onToggle, workspaceId }: SortableT
         {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
       </button>
 
-      <Link href={`/workspaces/${workspaceId}/pages/${item.id}`} className="flex-1 flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#3B82F6] font-medium truncate">
+      <Link href={`/workspaces/${workspaceId}/pages/${item.id}`} className="flex-1 flex items-center gap-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#3B82F6] font-medium truncate">
         <FileText className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B] shrink-0" />
         <span className="truncate">{item.title}</span>
       </Link>
@@ -127,7 +127,7 @@ export default function PageTreeSidebar({ initialData, workspaceId }: { initialD
   return (
     <div className="w-[var(--workspace-list-sidebar-w)] border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex flex-col rounded-l-[8px] overflow-hidden shrink-0">
       <div className="p-[var(--workspace-surface-pad)] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between">
-        <h3 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Docs</h3>
+        <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Docs</h3>
         <Link href={`/workspaces/${workspaceId}/pages/create`} className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08]">
           <Plus className="w-4 h-4" />
         </Link>

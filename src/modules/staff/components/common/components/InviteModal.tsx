@@ -142,7 +142,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#EAEAEA] dark:border-white/8">
-          <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Add people to this space</h2>
+          <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Add people to this space</h2>
           <button
             onClick={onClose}
             className="p-1.5 text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
@@ -155,7 +155,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
           <div className="space-y-5">
             <div className="flex flex-col sm:flex-row gap-3 items-start">
               <div className="flex-1 w-full">
-                <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
+                <label className="block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
                   Names or emails <span className="text-[#9F2F2D]">*</span>
                 </label>
                 <CreatableSelect
@@ -172,12 +172,12 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
               </div>
 
               <div className="w-full sm:w-32">
-                <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Role</label>
+                <label className="block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Role</label>
                 <div className="relative">
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
-                    className="w-full appearance-none px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] text-[13px] outline-none focus:border-[#2563EB] h-[36px] transition-colors"
+                    className="w-full appearance-none px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] outline-none focus:border-[#2563EB] h-9 transition-colors"
                   >
                     {ROLES.map(r => (
                       <option key={r.value} value={r.value}>{r.label}</option>
@@ -194,13 +194,13 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
 
             {suggestions.length > 0 && (
               <div>
-                <p className="text-[11px] font-medium text-[#ABABAB] dark:text-[#6B6B6B] mb-2 uppercase tracking-wider">Quick Suggestions</p>
+                <p className="text-[0.6875rem] font-medium text-[#ABABAB] dark:text-[#6B6B6B] mb-2 uppercase tracking-wider">Quick Suggestions</p>
                 <div className="flex flex-wrap gap-2">
                   {suggestions.map(user => (
                     <button
                       key={user.id}
                       onClick={() => handleQuickAdd(user)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] hover:bg-[#DBEAFE] dark:hover:bg-[rgba(37,99,235,0.2)] text-[#1F6C9F] dark:text-[#93C5FD] rounded-[6px] text-[11px] font-medium transition-colors border border-[#2563EB]/20"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] hover:bg-[#DBEAFE] dark:hover:bg-[rgba(37,99,235,0.2)] text-[#1F6C9F] dark:text-[#93C5FD] rounded-[6px] text-[0.6875rem] font-medium transition-colors border border-[#2563EB]/20"
                     >
                       <span>+</span> {user.name}
                     </button>
@@ -210,15 +210,15 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
             )}
 
             <div className="pt-3 border-t border-[#EAEAEA] dark:border-white/8">
-              <p className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-3">Or invite from integrations</p>
+              <p className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-3">Or invite from integrations</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
+                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
                   <Mail className="w-3.5 h-3.5 text-[#F87171]" /> Google
                 </button>
-                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
+                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
                   <MessageSquare className="w-3.5 h-3.5 text-[#A855F7]" /> Slack
                 </button>
-                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
+                <button className="flex items-center justify-center gap-2 px-3 py-2 border border-[#EAEAEA] dark:border-white/10 rounded-[6px] text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
                   <Briefcase className="w-3.5 h-3.5 text-[#2563EB]" /> Microsoft
                 </button>
               </div>
@@ -230,7 +230,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
           <div className="flex items-center w-full sm:w-auto justify-between sm:justify-start gap-3">
             <button
               onClick={handleCopyLink}
-              className="flex items-center gap-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+              className="flex items-center gap-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
             >
               {isCopied ? <Check className="w-3.5 h-3.5 text-[#346538]" /> : <LinkIcon className="w-3.5 h-3.5" />}
               {isCopied ? <span className="text-[#346538]">Copied</span> : 'Copy link'}
@@ -238,20 +238,20 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <span className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] flex items-center gap-1">
+            <span className="text-[0.625rem] text-[#ABABAB] dark:text-[#6B6B6B] flex items-center gap-1">
               <AlertCircle className="w-3 h-3" /> reCAPTCHA protected
             </span>
             <button
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/10 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors disabled:opacity-40"
+              className="px-4 py-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/10 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors disabled:opacity-40"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={selectedOptions.length === 0 || isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-[0.8125rem] font-medium text-white bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {isSubmitting ? 'Sending...' : 'Add'}

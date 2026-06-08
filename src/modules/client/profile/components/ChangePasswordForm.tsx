@@ -17,7 +17,7 @@ interface Props {
   }>;
 }
 
-const labelCls = "block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97]";
+const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]";
 const inputBaseCls = "w-full px-3 py-2 pr-10 border rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:outline-none transition-colors";
 const inputNormalCls = `${inputBaseCls} border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]`;
 const inputErrorCls = `${inputBaseCls} border-[#9F2F2D] focus:border-[#9F2F2D]`;
@@ -89,12 +89,12 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {validationError && (
-        <div className="p-3 rounded-[6px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] text-[13px] text-[#9F2F2D] dark:text-[#F87171]">
+        <div className="p-3 rounded-[6px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
           {validationError}
         </div>
       )}
       {success && (
-        <div className="p-3 rounded-[6px] bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] border border-[#C3DFC1] dark:border-[rgba(52,101,56,0.2)] text-[13px] text-[#346538] dark:text-[#4ADE80] flex items-center gap-2">
+        <div className="p-3 rounded-[6px] bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] border border-[#C3DFC1] dark:border-[rgba(52,101,56,0.2)] text-[0.8125rem] text-[#346538] dark:text-[#4ADE80] flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 shrink-0" />
           Your password has been changed successfully
         </div>
@@ -105,7 +105,7 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
           <label className={labelCls}>Current password</label>
           <Link
             href="/forgot-password"
-            className="text-[11px] text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#3B82F6] transition-colors"
+            className="text-[0.6875rem] text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#3B82F6] transition-colors"
           >
             Forgot password?
           </Link>
@@ -133,7 +133,7 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
           </button>
         </div>
         {fieldErrors.currentPassword && (
-          <p className="mt-1.5 text-[13px] text-[#9F2F2D] dark:text-[#F87171]">
+          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
             {fieldErrors.currentPassword}
           </p>
         )}
@@ -164,7 +164,7 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
           </button>
         </div>
         {fieldErrors.newPassword && (
-          <p className="mt-1.5 text-[13px] text-[#9F2F2D] dark:text-[#F87171]">
+          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
             {fieldErrors.newPassword}
           </p>
         )}
@@ -195,7 +195,7 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
           </button>
         </div>
         {fieldErrors.confirmPassword && (
-          <p className="mt-1.5 text-[13px] text-[#9F2F2D] dark:text-[#F87171]">
+          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
             {fieldErrors.confirmPassword}
           </p>
         )}
@@ -205,7 +205,7 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
         <button
           type="submit"
           disabled={saving}
-          className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[13px] font-medium transition-colors flex items-center gap-2"
+          className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[0.8125rem] font-medium transition-colors flex items-center gap-2"
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           {saving ? "Saving..." : "Change password"}

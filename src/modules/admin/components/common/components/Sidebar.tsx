@@ -102,13 +102,13 @@ const NavItem = ({
       }`}
     >
       <item.icon
-        className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`}
+        className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`}
       />
       {!collapsed && (
         <>
-          <span className="text-[13px] font-medium flex-1 text-left">{item.label}</span>
+          <span className="text-[0.8125rem] font-medium flex-1 text-left">{item.label}</span>
           {showBadge && item.badge && (
-            <span className="text-[10px] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
+            <span className="text-[0.625rem] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
               {item.badge}
             </span>
           )}
@@ -188,10 +188,10 @@ const PopoverNavItem = ({
           isActive ? navActiveClass : navInactiveClass
         }`}
       >
-        <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`} />
+        <item.icon className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`} />
         {!collapsed && (
           <>
-            <span className="text-[13px] font-medium flex-1 text-left">{item.label}</span>
+            <span className="text-[0.8125rem] font-medium flex-1 text-left">{item.label}</span>
             <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
           </>
         )}
@@ -209,7 +209,7 @@ const PopoverNavItem = ({
             }}
           >
             <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-              <span className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">{item.label}</span>
+              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{item.label}</span>
               <button
                 onClick={() => setActivePopover(null)}
                 className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
@@ -228,7 +228,7 @@ const PopoverNavItem = ({
                       value={forYouSearch}
                       onChange={(event) => setForYouSearch(event.target.value)}
                       placeholder="Search for you items"
-                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -239,10 +239,10 @@ const PopoverNavItem = ({
                       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
                         <Sparkles className="h-5 w-5" />
                       </div>
-                      <h4 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                      <h4 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                         No workspace suggestions
                       </h4>
-                      <p className="mt-1 text-[11px] text-[#787774] dark:text-[#9B9A97]">
+                      <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                         Workspaces you own or join will appear here.
                       </p>
                     </div>
@@ -251,10 +251,10 @@ const PopoverNavItem = ({
                       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
                         <Search className="h-5 w-5" />
                       </div>
-                      <h4 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                      <h4 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                         No matching items
                       </h4>
-                      <p className="mt-1 text-[11px] text-[#787774] dark:text-[#9B9A97]">
+                      <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                         Try another workspace name, key, role, or status.
                       </p>
                     </div>
@@ -277,10 +277,10 @@ const PopoverNavItem = ({
                               {workspace.name?.charAt(0) || "W"}
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors">
+                              <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors">
                                 {workspace.name}
                               </p>
-                              <p className="truncate text-[11px] capitalize text-[#787774] dark:text-[#9B9A97]">
+                              <p className="truncate text-[0.6875rem] capitalize text-[#787774] dark:text-[#9B9A97]">
                                 {workspace.ownershipLabel || workspace.relationship || workspace.role?.replace(/_/g, " ") || workspace.type || "Workspace"}
                               </p>
                             </div>
@@ -294,7 +294,7 @@ const PopoverNavItem = ({
                 <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
                   <Link
                     href="/for-you"
-                    className="flex w-full items-center justify-between p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+                    className="flex w-full items-center justify-between p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
                     onClick={() => {
                       setActivePopover(null);
                       onMobileClose?.();
@@ -315,59 +315,59 @@ const PopoverNavItem = ({
                     <input
                       type="text"
                       placeholder="Search recent items"
-                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
                     />
                   </div>
                 </div>
                 <div className="overflow-y-auto flex-1 p-2 space-y-4">
                   <div>
-                    <h4 className="text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">Today</h4>
+                    <h4 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">Today</h4>
                     <div className="space-y-0.5">
                       <Link href="/workspaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-center text-[#787774] dark:text-[#9B9A97]"><Columns className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">QUAN board</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">6 seconds ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">QUAN board</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">6 seconds ago</p>
                         </div>
                       </Link>
                       <Link href="/workspaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs">Q</div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">quan</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">quan</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
                         </div>
                       </Link>
                       <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B]"><ListFilter className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">Reported by me</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">Reported by me</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">More than 1 month ago</h4>
+                    <h4 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">More than 1 month ago</h4>
                     <div className="space-y-0.5">
                       <Link href="/workspaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-center text-[#787774] dark:text-[#9B9A97]"><Columns className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">SCRUM board</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">SCRUM board</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
                         </div>
                       </Link>
                       <Link href="/workspaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs"><Zap className="w-3.5 h-3.5" /></div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">My Software Team</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">My Software Team</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                 </div>
                 <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                  <button className="w-full text-left p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+                  <button className="w-full text-left p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
                     View all recent items
                   </button>
                 </div>
@@ -384,11 +384,11 @@ const PopoverNavItem = ({
                       <Plus className="w-3.5 h-3.5" />
                     </div>
                   </div>
-                  <h4 className="text-[14px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2 mt-4">You have not starred any items yet.</h4>
-                  <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] leading-relaxed">Star important items for quick access. They will appear here.</p>
+                  <h4 className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2 mt-4">You have not starred any items yet.</h4>
+                  <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-relaxed">Star important items for quick access. They will appear here.</p>
                 </div>
                 <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                  <button className="w-full text-left p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+                  <button className="w-full text-left p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
                     View all starred items
                   </button>
                 </div>
@@ -501,8 +501,8 @@ export default function Sidebar({
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
               collapsed
-                ? "max-w-[240px] opacity-100 lg:max-w-0 lg:opacity-0 lg:pointer-events-none"
-                : "max-w-[240px] opacity-100"
+                ? "max-w-60 opacity-100 lg:max-w-0 lg:opacity-0 lg:pointer-events-none"
+                : "max-w-60 opacity-100"
             }`}
           >
             <Link
@@ -553,7 +553,7 @@ export default function Sidebar({
                   setShowCreateMenu(false);
                   onMobileClose();
                 }}
-                className="w-full flex items-center justify-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white py-2 px-3 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors text-[13px] font-medium"
+                className="w-full flex items-center justify-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white py-2 px-3 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors text-[0.8125rem] font-medium"
               >
                 <Plus className="w-4 h-4" />
                 Create workspace
@@ -582,11 +582,11 @@ export default function Sidebar({
                   onClick={() => setWorkspaceOpen(!workspaceOpen)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors ${collapsed ? "justify-center" : ""}`}
                 >
-                  <BookOpen className="w-[18px] h-[18px] text-[#ABABAB] dark:text-[#6B6B6B]" />
+                  <BookOpen className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
 
                   {!collapsed && (
                     <>
-                      <span className="text-[13px] font-medium flex-1 text-left">
+                      <span className="text-[0.8125rem] font-medium flex-1 text-left">
                         Workspaces
                       </span>
                       {workspaceOpen ? (
@@ -605,9 +605,9 @@ export default function Sidebar({
                       <Link
                         key={workspace._id}
                         href={`/workspaces/${workspace.key}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                       >
-                        <div className="w-4 h-4 rounded-[3px] bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                        <div className="w-4 h-4 rounded-[3px] bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.625rem] font-bold flex-shrink-0">
                           {workspace.name?.charAt(0)}
                         </div>
                         <span className="truncate">{workspace.name}</span>
@@ -618,7 +618,7 @@ export default function Sidebar({
                       <button
                         ref={moreWorkspacesBtnRef}
                         onClick={handleToggleMoreWorkspaces}
-                        className="w-full text-left flex items-center justify-between px-2 py-1.5 text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] group transition-colors"
+                        className="w-full text-left flex items-center justify-between px-2 py-1.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] group transition-colors"
                       >
                         <span>More Workspaces</span>
                         <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -636,7 +636,7 @@ export default function Sidebar({
             <div className="mt-4 px-2">
               <button
                 onClick={() => setAdminOpen(!adminOpen)}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
               >
                 {!collapsed && (
                   <>
@@ -666,7 +666,7 @@ export default function Sidebar({
                       onClick={onMobileClose}
                       className={`flex justify-center p-2 rounded-[6px] transition-colors ${pathname.startsWith(item.href) ? navActiveClass : navInactiveClass}`}
                     >
-                      <item.icon className="w-[18px] h-[18px]" />
+                      <item.icon className="w-[1.125rem] h-[1.125rem]" />
                     </Link>
                   ))}
                 </div>
@@ -679,10 +679,10 @@ export default function Sidebar({
         <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] p-3 space-y-1">
           {!collapsed && currentWorkspace && (
             <div className="px-3 py-2 bg-[#F9F9F8] dark:bg-white/5 rounded-[6px] mb-2">
-              <p className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] font-semibold">
+              <p className="text-[0.625rem] text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] font-semibold">
                 Workspace
               </p>
-              <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
+              <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
                 {currentWorkspace.name}
               </p>
             </div>
@@ -692,8 +692,8 @@ export default function Sidebar({
             onClick={onMobileClose}
             className={`flex items-center gap-3 px-3 py-2 rounded-[6px] transition-colors ${pathname === "/settings" ? navActiveClass : navInactiveClass}`}
           >
-            <Settings className={`w-[18px] h-[18px] flex-shrink-0 ${pathname === "/settings" ? iconActiveClass : iconInactiveClass}`} />
-            {!collapsed && <span className="text-[13px] font-medium">Settings</span>}
+            <Settings className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${pathname === "/settings" ? iconActiveClass : iconInactiveClass}`} />
+            {!collapsed && <span className="text-[0.8125rem] font-medium">Settings</span>}
           </Link>
         </div>
 
@@ -712,7 +712,7 @@ export default function Sidebar({
             }}
           >
             <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-              <span className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Workspaces</span>
+              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Workspaces</span>
               <button
                 onClick={() => setActivePopover(null)}
                 className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
@@ -729,27 +729,27 @@ export default function Sidebar({
                   value={moreWorkspaceSearch}
                   onChange={(event) => setMoreWorkspaceSearch(event.target.value)}
                   placeholder="Search all Workspaces"
-                  className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
+                  className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
                 />
               </div>
             </div>
 
-            <div className="max-h-[260px] overflow-y-auto p-2">
+            <div className="max-h-[16.25rem] overflow-y-auto p-2">
               {hiddenSidebarWorkspaces.length === 0 ? (
                 <div className="px-3 py-8 text-center">
                   <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
                     <BookOpen className="h-5 w-5" />
                   </div>
-                  <p className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">No more workspaces</p>
-                  <p className="mt-1 text-[11px] text-[#787774] dark:text-[#9B9A97]">All available workspaces are already shown in the sidebar.</p>
+                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No more workspaces</p>
+                  <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">All available workspaces are already shown in the sidebar.</p>
                 </div>
               ) : visibleMoreWorkspaces.length === 0 ? (
                 <div className="px-3 py-8 text-center">
                   <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
                     <Search className="h-5 w-5" />
                   </div>
-                  <p className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">No matching workspaces</p>
-                  <p className="mt-1 text-[11px] text-[#787774] dark:text-[#9B9A97]">Try another workspace name or key.</p>
+                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No matching workspaces</p>
+                  <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Try another workspace name or key.</p>
                 </div>
               ) : (
                 <div className="space-y-0.5">
@@ -779,8 +779,8 @@ export default function Sidebar({
                           {workspace.name?.charAt(0) || workspace.key?.charAt(0) || "W"}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-[13px] font-semibold">{workspace.name || "Untitled workspace"}</p>
-                          <p className="truncate text-[11px] text-[#787774] dark:text-[#9B9A97]">{workspace.key || workspace.slug || "Workspace"}</p>
+                          <p className="truncate text-[0.8125rem] font-semibold">{workspace.name || "Untitled workspace"}</p>
+                          <p className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{workspace.key || workspace.slug || "Workspace"}</p>
                         </div>
                       </Link>
                     );
@@ -793,7 +793,7 @@ export default function Sidebar({
               <Link
                 href="/workspaces"
                 onClick={() => setActivePopover(null)}
-                className="w-full flex items-center gap-3 p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+                className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
               >
                 <ListFilter className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 View all Workspaces
@@ -801,7 +801,7 @@ export default function Sidebar({
               <Link
                 href="/workspaces/create"
                 onClick={() => setActivePopover(null)}
-                className="w-full flex items-center gap-3 p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+                className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
               >
                 <Plus className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 Create Workspace

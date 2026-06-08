@@ -54,11 +54,11 @@ const Header = ({
         </div>
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <span className="px-2 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[11px] font-mono font-bold">
+            <span className="px-2 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.6875rem] font-mono font-bold">
               {workspace.key}
             </span>
             <span
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[10px] font-medium ${
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[0.625rem] font-medium ${
                 workspace.visibility === "private"
                   ? "bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] text-[#956400] dark:text-[#F59E0B]"
                   : "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] text-[#346538] dark:text-[#4ADE80]"
@@ -75,7 +75,7 @@ const Header = ({
               )}
             </span>
           </div>
-          <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             <span className="min-w-0 break-words">{workspace.name}</span>
             <Link
               href={`/workspaces/${workspaceId}/settings`}
@@ -90,7 +90,7 @@ const Header = ({
         {canUpdateWorkspace && (
           <button
             onClick={() => setIsInviteModalOpen(true)}
-            className="inline-flex items-center gap-2 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] text-[#111111] dark:text-[#E8E8E7] px-4 py-2 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] font-medium text-[13px] transition-colors"
+            className="inline-flex items-center gap-2 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] text-[#111111] dark:text-[#E8E8E7] px-4 py-2 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] font-medium text-[0.8125rem] transition-colors"
           >
             Invite members
           </button>
@@ -98,7 +98,7 @@ const Header = ({
         {canCreateTask && (
           <button
             onClick={() => setShowCreateIssue(true)}
-            className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-4 py-2 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-[13px] transition-colors"
+            className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-4 py-2 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-[0.8125rem] transition-colors"
           >
             <Plus className="w-4 h-4" /> Create Task
           </button>

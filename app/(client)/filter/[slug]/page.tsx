@@ -90,7 +90,7 @@ function FilterDropdown({
         {label} 
         {hasSelection && <span className="text-gray-400 font-normal">=</span>}
         {hasSelection && (
-          <span className="truncate max-w-[100px]">
+          <span className="truncate max-w-[6.25rem]">
              {selectedIds.length === 1 ? groups.flatMap(g => g.options).find(o => o.id === selectedIds[0])?.label : `${selectedIds.length} selected`}
           </span>
         )}
@@ -140,7 +140,7 @@ function FilterDropdown({
                           />
                           {opt.icon && <span className="text-gray-400 group-hover:text-gray-600">{opt.icon}</span>}
                           {opt.color ? (
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${opt.color}`}>
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[0.625rem] font-bold uppercase tracking-wider ${opt.color}`}>
                               {opt.label}
                             </span>
                           ) : (
@@ -307,7 +307,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
                 placeholder="Search work..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all sm:w-[clamp(240px,20vw,320px)]"
+                className="w-full min-w-[13.75rem] max-w-[min(100vw-48px,20rem)] pl-9 pr-4 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all sm:w-[clamp(240px,20vw,320px)]"
               />
             </div>
 
@@ -363,7 +363,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
       </div>
 
       {/* Table View */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm flex-1 overflow-hidden flex flex-col min-h-[400px]">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-sm flex-1 overflow-hidden flex flex-col min-h-[25rem]">
         <div className="overflow-x-auto">
           <table className="w-full app-table-min text-left text-sm whitespace-nowrap">
             <thead>

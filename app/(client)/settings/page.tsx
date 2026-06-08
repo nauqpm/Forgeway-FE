@@ -6,6 +6,7 @@ import { usePageTitle } from "@/hooks/usePageTitle";
 import api from "@/common/services/api.service";
 import { Key, LogOut, Shield, User } from "lucide-react";
 import ThemeSwitcher from "@/common/components/ThemeSwitcher";
+import FontSizeControl from "@/common/components/FontSizeControl";
 
 export default function SettingsPage() {
   usePageTitle("Settings");
@@ -154,6 +155,10 @@ export default function SettingsPage() {
 
       <div className="mb-6">
         <ThemeSwitcher />
+      </div>
+
+      <div className="mb-6">
+        <FontSizeControl />
       </div>
     </div>
   );

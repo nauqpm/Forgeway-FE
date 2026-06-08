@@ -126,7 +126,7 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
     },
     editorProps: {
       attributes: {
-          class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] p-4 text-[#111111] dark:text-[#E8E8E7] prose-strong:text-[#111111] dark:prose-strong:text-[#E8E8E7] prose-em:text-[#111111] dark:prose-em:text-[#E8E8E7] prose-code:text-[#111111] dark:prose-code:text-[#E8E8E7] prose-blockquote:text-[#787774] dark:prose-blockquote:text-[#9B9A97] [&_*]:text-inherit [&_.is-editor-empty:first-child::before]:text-[#ABABAB] dark:[&_.is-editor-empty:first-child::before]:text-[#6B6B6B]',
+          class: 'prose prose-sm max-w-none focus:outline-none min-h-[7.5rem] p-4 text-[#111111] dark:text-[#E8E8E7] prose-strong:text-[#111111] dark:prose-strong:text-[#E8E8E7] prose-em:text-[#111111] dark:prose-em:text-[#E8E8E7] prose-code:text-[#111111] dark:prose-code:text-[#E8E8E7] prose-blockquote:text-[#787774] dark:prose-blockquote:text-[#9B9A97] [&_*]:text-inherit [&_.is-editor-empty:first-child::before]:text-[#ABABAB] dark:[&_.is-editor-empty:first-child::before]:text-[#6B6B6B]',
       },
     },
     immediatelyRender: false,
@@ -160,7 +160,7 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
     return (
       <div
         onClick={() => setIsEditing(true)}
-        className="p-4 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer transition-colors min-h-[60px] prose prose-sm max-w-none text-[#111111] dark:text-[#E8E8E7]"
+        className="p-4 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer transition-colors min-h-15 prose prose-sm max-w-none text-[#111111] dark:text-[#E8E8E7]"
       >
         {content && content !== '<p></p>' ? (
           <div

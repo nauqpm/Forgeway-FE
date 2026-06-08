@@ -112,7 +112,7 @@ export default function CalendarToolbar({
             <ChevronRight className="w-4 h-4" />
           </button>
 
-          <span className="text-base font-bold text-[#111111] dark:text-[#E8E8E7] min-w-[150px]">
+          <span className="text-base font-bold text-[#111111] dark:text-[#E8E8E7] min-w-[9.375rem]">
             {currentDateTitle}
           </span>
         </div>

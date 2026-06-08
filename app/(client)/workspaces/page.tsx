@@ -109,7 +109,7 @@ export default function WorkspacesPage() {
                         ) : (
                           <Lock className="w-3.5 h-3.5 text-amber-500" />
                         )}
-                        <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded text-[10px] font-mono font-bold tracking-wider">{workspace.key || routeKey}</span>
+                        <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded text-[0.625rem] font-mono font-bold tracking-wider">{workspace.key || routeKey}</span>
                       </div>
                       <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-lg group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-colors line-clamp-1">{workspace.name}</h3>
                       <div className="mt-2 flex flex-wrap items-center gap-2">

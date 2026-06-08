@@ -283,7 +283,7 @@ export default function DataGridListView({
               <ChevronDown className="w-3 h-3" />
             </button>
             {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[150px] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]  overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 z-50 min-w-[9.375rem] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]  overflow-hidden">
                 {colOptions.map(col => {
                   const isSelected = col.id === rawStatus || col.name === rawStatus;
                   return (
@@ -324,7 +324,7 @@ export default function DataGridListView({
               <ChevronDown className="w-3 h-3" />
             </button>
             {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 z-50 min-w-[7.5rem] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
                 {PRIORITY_OPTIONS.map(p => (
                   <button
                     key={p}
@@ -468,11 +468,11 @@ export default function DataGridListView({
         }
         const labels = (info.getValue() as { id?: string; name: string; color?: string }[]) ?? [];
         return (
-          <div className="flex flex-wrap gap-1 items-center min-h-[24px] px-1">
+          <div className="flex flex-wrap gap-1 items-center min-h-6 px-1">
             {labels.map((l, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-0.5 pl-1.5 pr-0.5 py-0.5 rounded-[6px] text-[11px] font-medium text-white"
+                className="inline-flex items-center gap-0.5 pl-1.5 pr-0.5 py-0.5 rounded-[6px] text-[0.6875rem] font-medium text-white"
                 style={{ backgroundColor: l.color ?? '#6366f1' }}
               >
                 {l.name}
@@ -624,7 +624,7 @@ export default function DataGridListView({
                 className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium px-3 py-1.5 rounded-[6px] flex items-center gap-1 transition-colors  ml-1"
               >
                 Create
-                <span className="text-[10px] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] leading-none bg-[#3B82F6]/30">↵</span>
+                <span className="text-[0.625rem] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] leading-none bg-[#3B82F6]/30">↵</span>
               </button>
             </div>
           </div>

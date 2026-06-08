@@ -115,16 +115,16 @@ export default function TaskDetailDeepLinkPage() {
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-[8px] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)]">
           <AlertCircle className="h-6 w-6 text-[#9F2F2D] dark:text-[#F87171]" />
         </div>
-        <h1 className="mb-2 text-[18px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+        <h1 className="mb-2 text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">
           {error ?? "Task not found"}
         </h1>
-        <p className="mb-6 max-w-sm text-[13px] text-[#787774] dark:text-[#9B9A97]">
+        <p className="mb-6 max-w-sm text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
           The task may have been deleted, archived, or the workspace is no longer available.
         </p>
         <button
           type="button"
           onClick={backToBoard}
-          className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB]"
+          className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB]"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to board

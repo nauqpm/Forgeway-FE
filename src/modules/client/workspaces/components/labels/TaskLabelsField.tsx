@@ -75,14 +75,14 @@ export default function TaskLabelsField({
           if (!disabled) setIsModalOpen(true);
         }}
         disabled={disabled}
-        className={`group flex min-h-[32px] w-full min-w-0 items-center gap-2 rounded p-1 text-left transition-colors ${
+        className={`group flex min-h-8 w-full min-w-0 items-center gap-2 rounded p-1 text-left transition-colors ${
           disabled
             ? "cursor-default"
             : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         }`}
       >
         {labels.length === 0 ? (
-          <span className="flex items-center gap-1.5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+          <span className="flex items-center gap-1.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <Tag className="h-3.5 w-3.5" />
             None
           </span>
@@ -93,7 +93,7 @@ export default function TaskLabelsField({
                 key={label.id}
                 title={label.name}
                 className={`max-w-full truncate rounded-[4px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] px-2 py-0.5 font-semibold text-[#1F6C9F] dark:text-[#93C5FD] ${
-                  compact ? "text-[11px]" : "text-[11px]"
+                  compact ? "text-[0.6875rem]" : "text-[0.6875rem]"
                 }`}
               >
                 {label.name}

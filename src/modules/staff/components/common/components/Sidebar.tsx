@@ -102,13 +102,13 @@ const NavItem = ({
       }`}
     >
       <item.icon
-        className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`}
+        className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`}
       />
       {!collapsed && (
         <>
-          <span className="text-[13px] font-medium flex-1 text-left">{item.label}</span>
+          <span className="text-[0.8125rem] font-medium flex-1 text-left">{item.label}</span>
           {showBadge && item.badge && (
-            <span className="text-[10px] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
+            <span className="text-[0.625rem] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
               {item.badge}
             </span>
           )}
@@ -162,10 +162,10 @@ const PopoverNavItem = ({
           isActive ? navActiveClass : navInactiveClass
         }`}
       >
-        <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`} />
+        <item.icon className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`} />
         {!collapsed && (
           <>
-            <span className="text-[13px] font-medium flex-1 text-left">{item.label}</span>
+            <span className="text-[0.8125rem] font-medium flex-1 text-left">{item.label}</span>
             <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
           </>
         )}
@@ -175,7 +175,7 @@ const PopoverNavItem = ({
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
-            className="fixed bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[10px] z-[9999] flex flex-col w-[320px]"
+            className="fixed bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[10px] z-[9999] flex flex-col w-80"
             style={{
               top: `${pos.top}px`,
               left: `${pos.left}px`,
@@ -183,7 +183,7 @@ const PopoverNavItem = ({
             }}
           >
             <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-              <span className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">{item.label}</span>
+              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{item.label}</span>
               <button
                 onClick={() => setActivePopover(null)}
                 className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
@@ -200,59 +200,59 @@ const PopoverNavItem = ({
                     <input
                       type="text"
                       placeholder="Search recent items"
-                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
                     />
                   </div>
                 </div>
                 <div className="overflow-y-auto flex-1 p-2 space-y-4">
                   <div>
-                    <h4 className="text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">Today</h4>
+                    <h4 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">Today</h4>
                     <div className="space-y-0.5">
                       <Link href="/spaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-center text-[#787774] dark:text-[#9B9A97]"><Columns className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">QUAN board</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">6 seconds ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">QUAN board</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">6 seconds ago</p>
                         </div>
                       </Link>
                       <Link href="/spaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs">Q</div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">quan</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">quan</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
                         </div>
                       </Link>
                       <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B]"><ListFilter className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">Reported by me</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">Reported by me</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">More than 1 month ago</h4>
+                    <h4 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">More than 1 month ago</h4>
                     <div className="space-y-0.5">
                       <Link href="/spaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-center text-[#787774] dark:text-[#9B9A97]"><Columns className="w-4 h-4" /></div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">SCRUM board</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">SCRUM board</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
                         </div>
                       </Link>
                       <Link href="/spaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
                         <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs"><Zap className="w-3.5 h-3.5" /></div>
                         <div>
-                          <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">My Software Team</p>
-                          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
+                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">My Software Team</p>
+                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
                         </div>
                       </Link>
                     </div>
                   </div>
                 </div>
                 <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                  <button className="w-full text-left p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+                  <button className="w-full text-left p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
                     View all recent items
                   </button>
                 </div>
@@ -269,11 +269,11 @@ const PopoverNavItem = ({
                       <Plus className="w-3.5 h-3.5" />
                     </div>
                   </div>
-                  <h4 className="text-[14px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2 mt-4">You have not starred any items.</h4>
-                  <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] leading-relaxed">Star important items for quick access. They will appear here.</p>
+                  <h4 className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2 mt-4">You have not starred any items.</h4>
+                  <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-relaxed">Star important items for quick access. They will appear here.</p>
                 </div>
                 <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                  <button className="w-full text-left p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+                  <button className="w-full text-left p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
                     View all starred items
                   </button>
                 </div>
@@ -357,7 +357,7 @@ export default function Sidebar({
       {/* Sidebar */}
       <aside
         className={`fixed top-0 left-0 h-full bg-[#FBFBFA] dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] z-40 transition-all duration-200 flex flex-col ${
-          collapsed ? "w-[68px]" : "w-[240px]"
+          collapsed ? "w-[4.25rem]" : "w-60"
         } ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         {/* Logo / Brand */}
@@ -395,7 +395,7 @@ export default function Sidebar({
                   setShowCreateMenu(false);
                   onMobileClose();
                 }}
-                className="w-full flex items-center justify-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white py-2 px-3 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors text-[13px] font-medium"
+                className="w-full flex items-center justify-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white py-2 px-3 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors text-[0.8125rem] font-medium"
               >
                 <Plus className="w-4 h-4" />
                 Create new workspace
@@ -431,11 +431,11 @@ export default function Sidebar({
                   onClick={() => setSpaceOpen(!spaceOpen)}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                 >
-                  <BookOpen className="w-[18px] h-[18px] text-[#ABABAB] dark:text-[#6B6B6B]" />
+                  <BookOpen className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
 
                   {!collapsed && (
                     <>
-                      <span className="text-[13px] font-medium flex-1 text-left">
+                      <span className="text-[0.8125rem] font-medium flex-1 text-left">
                         Workspaces
                       </span>
                       {spaceOpen ? (
@@ -454,9 +454,9 @@ export default function Sidebar({
                       <Link
                         key={space._id}
                         href={`/spaces/${space._id}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                       >
-                        <div className="w-4 h-4 rounded-[3px] bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                        <div className="w-4 h-4 rounded-[3px] bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.625rem] font-bold flex-shrink-0">
                           {space.name?.charAt(0)}
                         </div>
                         <span className="truncate">{space.name}</span>
@@ -467,7 +467,7 @@ export default function Sidebar({
                     <button
                       ref={moreSpacesBtnRef}
                       onClick={handleToggleMoreSpaces}
-                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] group transition-colors"
+                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] group transition-colors"
                     >
                       <span>More spaces</span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -481,11 +481,11 @@ export default function Sidebar({
                   onClick={() => setFilterOpen(!filterOpen)}
                   className="w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                 >
-                  <ListFilter className="w-[18px] h-[18px] text-[#ABABAB] dark:text-[#6B6B6B]" />
+                  <ListFilter className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
 
                   {!collapsed && (
                     <>
-                      <span className="text-[13px] font-medium flex-1 text-left">
+                      <span className="text-[0.8125rem] font-medium flex-1 text-left">
                         Filters
                       </span>
                       {filterOpen ? (
@@ -504,7 +504,7 @@ export default function Sidebar({
                       <Link
                         key={filter.slug}
                         href={`/filter/${filter.slug}`}
-                        className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] transition-colors ${
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors ${
                           pathname.includes(filter.slug)
                             ? "bg-[#F0F0EE] text-[#111111] dark:bg-white/6 dark:text-[#E8E8E7]"
                             : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
@@ -528,7 +528,7 @@ export default function Sidebar({
             <div className="mt-4 px-2">
               <button
                 onClick={() => setAdminOpen(!adminOpen)}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
               >
                 {!collapsed && (
                   <>
@@ -558,7 +558,7 @@ export default function Sidebar({
                       onClick={onMobileClose}
                       className={`flex justify-center p-2 rounded-[6px] transition-colors ${pathname.startsWith(item.href) ? navActiveClass : navInactiveClass}`}
                     >
-                      <item.icon className="w-[18px] h-[18px]" />
+                      <item.icon className="w-[1.125rem] h-[1.125rem]" />
                     </Link>
                   ))}
                 </div>
@@ -571,10 +571,10 @@ export default function Sidebar({
         <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] p-3 space-y-1">
           {!collapsed && currentWorkspace && (
             <div className="px-3 py-2 bg-[#F9F9F8] dark:bg-white/5 rounded-[6px] mb-2">
-              <p className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] font-semibold">
+              <p className="text-[0.625rem] text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] font-semibold">
                 Workspaces
               </p>
-              <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
+              <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
                 {currentWorkspace.name}
               </p>
             </div>
@@ -584,8 +584,8 @@ export default function Sidebar({
             onClick={onMobileClose}
             className={`flex items-center gap-3 px-3 py-2 rounded-[6px] transition-colors ${pathname === "/settings" ? navActiveClass : navInactiveClass}`}
           >
-            <Settings className={`w-[18px] h-[18px] flex-shrink-0 ${pathname === "/settings" ? iconActiveClass : iconInactiveClass}`} />
-            {!collapsed && <span className="text-[13px] font-medium">Settings</span>}
+            <Settings className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${pathname === "/settings" ? iconActiveClass : iconInactiveClass}`} />
+            {!collapsed && <span className="text-[0.8125rem] font-medium">Settings</span>}
           </Link>
         </div>
 
@@ -607,7 +607,7 @@ export default function Sidebar({
         <>
           <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
           <div
-            className="fixed bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[10px] z-[9999] flex flex-col w-[320px]"
+            className="fixed bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[10px] z-[9999] flex flex-col w-80"
             style={{
               top: `${moreSpacesPos.top}px`,
               left: `${moreSpacesPos.left}px`,
@@ -615,7 +615,7 @@ export default function Sidebar({
             }}
           >
             <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-              <span className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Spaces</span>
+              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Spaces</span>
               <button
                 onClick={() => setActivePopover(null)}
                 className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
@@ -630,17 +630,17 @@ export default function Sidebar({
                 <input
                   type="text"
                   placeholder="Search all spaces"
-                  className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[13px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
+                  className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
                 />
               </div>
             </div>
 
             <div className="p-2">
-              <Link href="/spaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+              <Link href="/spaces" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
                 <ListFilter className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 View all spaces
               </Link>
-              <Link href="/spaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
+              <Link href="/spaces/create" onClick={() => setActivePopover(null)} className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
                 <Plus className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 Create space
               </Link>

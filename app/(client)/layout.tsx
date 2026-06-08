@@ -196,7 +196,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FBFBFA] dark:bg-[#202020]">
+      <div className="min-h-screen flex items-center justify-center bg-[#F2FAFF] dark:bg-[#202020]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
           <p className="text-sm text-[#787774] dark:text-[#9B9A97]">Authenticating...</p>
@@ -208,7 +208,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-[#FBFBFA] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">
+    <div className="min-h-screen bg-[#F2FAFF] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">
       <Sidebar
         collapsed={sidebarCollapsed}
         onCollapse={setSidebarCollapsed}
@@ -233,7 +233,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Logo in topbar — desktop only, slides in when sidebar is collapsed */}
             <div
               className={`hidden lg:flex items-center gap-2 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
-                sidebarCollapsed ? "max-w-[260px] opacity-100" : "max-w-0 opacity-0 pointer-events-none"
+                sidebarCollapsed ? "max-w-[16.25rem] opacity-100" : "max-w-0 opacity-0 pointer-events-none"
               }`}
             >
               <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1">
@@ -295,7 +295,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 />
               </svg>
               {unreadNotificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[#9F2F2D] text-white text-[10px] leading-5 rounded-full text-center font-semibold">
+                <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[#9F2F2D] text-white text-[0.625rem] leading-5 rounded-full text-center font-semibold">
                   {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
                 </span>
               )}

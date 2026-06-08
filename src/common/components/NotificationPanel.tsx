@@ -294,9 +294,9 @@ export default function NotificationPanel({
     >
       <div className="px-4 pt-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Notifications</h2>
+          <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Notifications</h2>
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium text-[#787774] dark:text-[#9B9A97]">Unread</span>
+            <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">Unread</span>
             <button
               onClick={() => setShowUnreadOnly((value) => !value)}
               className={`h-5 w-9 rounded-full relative transition-colors ${showUnreadOnly ? "bg-[#2563EB] dark:bg-[#3B82F6]" : "bg-[#EAEAEA] dark:bg-white/10"}`}
@@ -318,7 +318,7 @@ export default function NotificationPanel({
                 >
                   <button
                     onClick={markAllAsRead}
-                    className="w-full text-left px-3 py-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
+                    className="w-full text-left px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
                   >
                     <Check className="w-3.5 h-3.5 text-[#ABABAB]" />
                     Mark all as read
@@ -338,13 +338,13 @@ export default function NotificationPanel({
         <div className="flex gap-5">
           <button
             onClick={() => setActiveTab("DIRECT")}
-            className={`pb-3 text-[13px] font-semibold border-b-2 transition-colors ${activeTab === "DIRECT" ? "border-[#2563EB] text-[#2563EB] dark:text-[#3B82F6] dark:border-[#3B82F6]" : "border-transparent text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}
+            className={`pb-3 text-[0.8125rem] font-semibold border-b-2 transition-colors ${activeTab === "DIRECT" ? "border-[#2563EB] text-[#2563EB] dark:text-[#3B82F6] dark:border-[#3B82F6]" : "border-transparent text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}
           >
             Direct
           </button>
           <button
             onClick={() => setActiveTab("WATCHING")}
-            className={`pb-3 text-[13px] font-semibold border-b-2 transition-colors ${activeTab === "WATCHING" ? "border-[#2563EB] text-[#2563EB] dark:text-[#3B82F6] dark:border-[#3B82F6]" : "border-transparent text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}
+            className={`pb-3 text-[0.8125rem] font-semibold border-b-2 transition-colors ${activeTab === "WATCHING" ? "border-[#2563EB] text-[#2563EB] dark:text-[#3B82F6] dark:border-[#3B82F6]" : "border-transparent text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}
           >
             Watching
           </button>
@@ -355,22 +355,22 @@ export default function NotificationPanel({
         {isLoading ? (
           <div className="p-12 text-center flex flex-col items-center gap-3">
             <Loader2 className="w-5 h-5 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
-            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">Loading notifications...</p>
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Loading notifications...</p>
           </div>
         ) : error ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-14 h-14 bg-[#F7F6F3] dark:bg-[#252525] rounded-full flex items-center justify-center mb-3">
               <Bell className="w-7 h-7 text-[#ABABAB] dark:text-[#6B6B6B]" />
             </div>
-            <p className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">{error}</p>
+            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{error}</p>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center">
             <div className="w-14 h-14 bg-[#F7F6F3] dark:bg-[#252525] rounded-full flex items-center justify-center mb-3">
               <Bell className="w-7 h-7 text-[#ABABAB] dark:text-[#6B6B6B]" />
             </div>
-            <p className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">You're all caught up!</p>
-            <p className="text-[11px] text-[#787774] dark:text-[#9B9A97] mt-1">No notifications here.</p>
+            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">You're all caught up!</p>
+            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">No notifications here.</p>
           </div>
         ) : (
           <div className="p-3 space-y-5">
@@ -380,7 +380,7 @@ export default function NotificationPanel({
 
               return (
                 <div key={group}>
-                  <h3 className="text-[11px] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider mb-2 px-1">{group}</h3>
+                  <h3 className="text-[0.6875rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider mb-2 px-1">{group}</h3>
                   <div className="space-y-0.5">
                     {items.map((notification) => (
                       <button
@@ -393,7 +393,7 @@ export default function NotificationPanel({
                         )}
 
                         <div className="flex items-start gap-3 pr-5">
-                          <div className="w-7 h-7 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0 overflow-hidden">
+                          <div className="w-7 h-7 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.6875rem] font-bold flex-shrink-0 overflow-hidden">
                             {notification.actor.avatar?.startsWith("http") ? (
                               <img src={notification.actor.avatar} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -401,14 +401,14 @@ export default function NotificationPanel({
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] leading-snug">
+                            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-snug">
                               <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.actor.name}</span>{" "}{notification.actionText}
                             </p>
 
                             {notification.type === "STANDARD" && notification.target && (
                               <div className="mt-1.5 flex items-center gap-1.5 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] p-1.5 w-fit max-w-full hover:border-[#2563EB]/40 transition-colors">
                                 <FileText className="w-3.5 h-3.5 text-[#2563EB] dark:text-[#3B82F6] flex-shrink-0" />
-                                <span className="text-[11px] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
+                                <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
                                   {notification.target.key ? `${notification.target.key}: ` : ""}{notification.target.title}
                                 </span>
                               </div>
@@ -416,12 +416,12 @@ export default function NotificationPanel({
 
                             {notification.type === "INVITE" && notification.inviteData && (
                               <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] p-3">
-                                <p className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.inviteData.workspaceName}</p>
-                                <p className="text-[11px] text-[#787774] dark:text-[#9B9A97] mt-1">{notification.inviteData.message}</p>
+                                <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.inviteData.workspaceName}</p>
+                                <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">{notification.inviteData.message}</p>
                               </div>
                             )}
 
-                            <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] mt-1.5">{formatTime(notification.createdAt)}</p>
+                            <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1.5">{formatTime(notification.createdAt)}</p>
                           </div>
                         </div>
                       </button>

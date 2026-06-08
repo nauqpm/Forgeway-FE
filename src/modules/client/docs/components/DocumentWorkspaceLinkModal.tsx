@@ -107,7 +107,7 @@ export default function DocumentWorkspaceLinkModal({
         <div className="flex items-center justify-between border-b border-[#EAEAEA] dark:border-white/[0.06] p-5">
           <div className="flex items-center gap-2">
             <Link2 className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
-            <h3 className="text-[15px] font-bold text-[#111111] dark:text-[#E8E8E7]">
+            <h3 className="text-[0.9375rem] font-bold text-[#111111] dark:text-[#E8E8E7]">
               Linked workspaces
             </h3>
           </div>
@@ -120,25 +120,25 @@ export default function DocumentWorkspaceLinkModal({
         </div>
 
         <div className="p-5">
-          <p className="mb-1 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
+          <p className="mb-1 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
             Document:
           </p>
-          <p className="mb-4 truncate text-[13px] text-[#787774] dark:text-[#9B9A97]">
+          <p className="mb-4 truncate text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             {doc.name}
           </p>
 
           {loading ? (
-            <div className="flex items-center justify-center py-8 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <div className="flex items-center justify-center py-8 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Loading workspace list...
             </div>
           ) : workspaces.length === 0 ? (
-            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] py-6 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] py-6 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
               You do not have any workspaces yet.
             </div>
           ) : (
             <>
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+              <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                 Select workspaces
               </p>
               <div className="flex flex-wrap gap-2">
@@ -149,7 +149,7 @@ export default function DocumentWorkspaceLinkModal({
                       key={ws._id}
                       type="button"
                       onClick={() => toggle(ws._id)}
-                      className={`inline-flex items-center gap-1.5 rounded-[4px] border px-3 py-1.5 text-[13px] font-medium transition-all ${
+                      className={`inline-flex items-center gap-1.5 rounded-[4px] border px-3 py-1.5 text-[0.8125rem] font-medium transition-all ${
                         isActive
                           ? "border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]"
                           : "border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/20 hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)]"
@@ -165,7 +165,7 @@ export default function DocumentWorkspaceLinkModal({
           )}
 
           {showConfirm && hasChanges && (
-            <div className="mt-4 rounded-[8px] border border-[#2563EB]/20 dark:border-[rgba(37,99,235,0.2)] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] p-3 text-[13px]">
+            <div className="mt-4 rounded-[8px] border border-[#2563EB]/20 dark:border-[rgba(37,99,235,0.2)] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] p-3 text-[0.8125rem]">
               {added.length > 0 && (
                 <p className="text-emerald-700 dark:text-emerald-400">
                   <span className="font-semibold">+ Add:</span>{" "}
@@ -186,7 +186,7 @@ export default function DocumentWorkspaceLinkModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-5 py-2.5 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+            className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-5 py-2.5 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5"
           >
             Cancel
           </button>
@@ -195,7 +195,7 @@ export default function DocumentWorkspaceLinkModal({
               type="button"
               disabled={saving}
               onClick={handleSave}
-              className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-[0.8125rem] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-50"
             >
               {saving && <Loader2 className="h-4 w-4 animate-spin" />}
               Confirm save
@@ -205,7 +205,7 @@ export default function DocumentWorkspaceLinkModal({
               type="button"
               disabled={!hasChanges}
               onClick={() => setShowConfirm(true)}
-              className="rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-[0.8125rem] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50"
             >
               Save changes
             </button>
