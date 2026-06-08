@@ -256,10 +256,9 @@ export const handleBacklogDragEnd = ({
   let targetSprintId: string | null = null;
 
   if (destination.droppableId.startsWith("sprint-")) {
-    targetSprintId = destination.droppableId.replace(
-      "sprint-",
-      ""
-    );
+    const candidateId = destination.droppableId.replace("sprint-", "");
+    if (candidateId.startsWith("temp-")) return;
+    targetSprintId = candidateId;
   }
 
   const destinationIssuesWithoutDragged =

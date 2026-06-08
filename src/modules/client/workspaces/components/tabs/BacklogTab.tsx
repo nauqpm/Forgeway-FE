@@ -282,7 +282,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
             return (
               <div
-                key={sprint.id}
+                key={sprint._id}
                 className="bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden group/sprint"
               >
                 <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-4 xl:flex-row xl:items-center xl:justify-between">

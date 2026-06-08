@@ -311,7 +311,9 @@ export default function WorkspaceDetailPage({
           )
         : [...current, issue];
 
-      return sortIssuesByRank(next);
+      // Skip re-sort during active drag — changing Draggable indices mid-drag
+      // causes @hello-pangea/dnd to use stale source.index vs current position.
+      return isDraggingIssueRef.current ? next : sortIssuesByRank(next);
     });
     setSelectedIssue((current) =>
       current && taskIdOf(current) === nextIssueId
@@ -582,6 +584,7 @@ export default function WorkspaceDetailPage({
       },
     });
     isDraggingIssueRef.current = false;
+    setIssues((current) => sortIssuesByRank(current));
   };
 
   const handleArchiveIssue = async (issue: Issue) => {
