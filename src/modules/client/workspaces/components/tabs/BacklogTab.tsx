@@ -708,7 +708,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   users={workspaceMembers}
                                   value={issue.assigneeId ?? issue.assignee ?? null}
                                   onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
-                                  placement="top"
+                                  placement="bottom"
                                   size="sm"
                                   disabled={!canEditTask}
                                 />

@@ -23,6 +23,8 @@ export type AssigneePickerMember = {
         fullName?: string;
         name?: string;
         email?: string;
+        avatar?: string;
+        avatarUrl?: string;
       };
   role: string;
 };
@@ -59,12 +61,16 @@ export function toAssigneePickerUsers(
     .map((m) => {
       const id = getMemberId(m);
       const name = getMemberDisplayName(m);
+      const avatar =
+        typeof m.userId === "object"
+          ? m.userId?.avatar || m.userId?.avatarUrl
+          : undefined;
       const parts = name.trim().split(/\s+/).filter(Boolean);
       const initials =
         parts.length >= 2
           ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
           : name.substring(0, 2).toUpperCase();
-      return { id, name, initials };
+      return { id, name, initials, avatar };
     })
     .filter((u) => u.id);
 }
@@ -181,9 +187,9 @@ export default function AssigneePicker({
                 : "text-[#111111] dark:text-[#E8E8E7]"
             }`}
           >
-            <div className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.5625rem] font-bold shrink-0 overflow-hidden">
+            <div className={`w-5 h-5 rounded-full overflow-hidden flex items-center justify-center text-[0.5625rem] font-bold shrink-0 ${u.avatar ? "" : "bg-[#2563EB] text-white"}`}>
               {u.avatar ? (
-                <img src={u.avatar} alt="" className="h-full w-full object-cover" />
+                <img src={u.avatar} alt="" className="w-full h-full object-cover" />
               ) : (
                 ini
               )}
@@ -207,11 +213,9 @@ export default function AssigneePicker({
         title={displayName ?? "Unassigned"}
       >
         {displayName ? (
-          <div
-            className={`${avatarSize} rounded-full bg-[#2563EB] text-white flex items-center justify-center ${textSize} font-bold shrink-0 overflow-hidden`}
-          >
+          <div className={`${avatarSize} rounded-full overflow-hidden flex items-center justify-center ${textSize} font-bold shrink-0 ${avatar ? "" : "bg-[#2563EB] text-white"}`}>
             {avatar ? (
-              <img src={avatar} alt="" className="h-full w-full object-cover" />
+              <img src={avatar} alt="" className="w-full h-full object-cover" />
             ) : (
               initials
             )}
