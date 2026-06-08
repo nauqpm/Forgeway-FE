@@ -17,7 +17,29 @@ export type SprintCreatedEventData = {
   sprint?: SprintSummaryPayload;
 };
 
-export type SprintRealtimeEnvelope = RealtimeEnvelope<SprintCreatedEventData>;
+export type SprintUpdatedEventData = SprintCreatedEventData;
+export type SprintStartedEventData = SprintCreatedEventData;
+
+export type SprintDeletedEventData = {
+  workspaceId: string;
+  sprintId: string;
+  actorId?: string;
+  version?: number;
+  sprint?: SprintSummaryPayload;
+};
+
+export type SprintCompletedEventData = SprintCreatedEventData & {
+  incompleteTasksMovedTo?: string | null;
+};
+
+export type SprintRealtimeEventData =
+  | SprintCreatedEventData
+  | SprintUpdatedEventData
+  | SprintDeletedEventData
+  | SprintStartedEventData
+  | SprintCompletedEventData;
+
+export type SprintRealtimeEnvelope = RealtimeEnvelope<SprintRealtimeEventData>;
 
 export const sprintIdOf = (sprint: Sprint): string => sprint.id ?? sprint._id;
 
@@ -61,4 +83,20 @@ export const upsertSprint = (
   }
 
   return [...sprints, sprint];
+};
+
+export const removeSprint = (
+  current: Sprint[] | undefined,
+  sprintId: string,
+): Sprint[] => {
+  const sprints = current ?? [];
+  return sprints.filter((item) => sprintIdOf(item) !== sprintId);
+};
+
+export const isActiveSprint = (
+  sprints: Sprint[] | undefined,
+  sprintId: string,
+): boolean => {
+  const sprint = (sprints ?? []).find((item) => sprintIdOf(item) === sprintId);
+  return sprint?.status === 'active';
 };

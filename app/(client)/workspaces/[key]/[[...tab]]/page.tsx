@@ -350,6 +350,12 @@ export default function WorkspaceDetailPage({
     });
   }, []);
 
+  const handleRealtimeSprintDeleted = useCallback((sprintId: string) => {
+    setSprints((current) =>
+      current.filter((sprint) => sprintIdOf(sprint) !== sprintId),
+    );
+  }, []);
+
   useWorkspaceSocket(workspaceApiId);
   useTaskRealtime(workspaceApiId, {
     onTaskRemoved: handleRealtimeTaskRemoved,
@@ -357,6 +363,9 @@ export default function WorkspaceDetailPage({
   });
   useSprintRealtime(workspaceApiId, {
     onSprintCreated: handleRealtimeSprintCreated,
+    onSprintUpdated: handleRealtimeSprintCreated,
+    onSprintStarted: handleRealtimeSprintCreated,
+    onSprintDeleted: handleRealtimeSprintDeleted,
   });
 
   useEffect(() => {
