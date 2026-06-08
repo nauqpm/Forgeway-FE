@@ -22,7 +22,7 @@ interface PreviewData {
   incompleteTaskList: any[];
 }
 
-const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[13px] outline-none transition-colors";
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[0.8125rem] outline-none transition-colors";
 
 export default function CompleteSprintModal({
   isOpen,
@@ -76,7 +76,7 @@ export default function CompleteSprintModal({
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Complete Sprint: {sprint.name}
           </h3>
           <button
@@ -90,22 +90,22 @@ export default function CompleteSprintModal({
         {loading ? (
           <div className="p-12 flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-6 h-6 text-[#2563EB] animate-spin" />
-            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">Loading sprint preview...</p>
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Loading sprint preview...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-5 space-y-4">
             {preview && (
               <>
                 <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4 space-y-2.5">
-                  <div className="flex items-center justify-between text-[13px]">
+                  <div className="flex items-center justify-between text-[0.8125rem]">
                     <span className="text-[#787774] dark:text-[#9B9A97]">Total tasks:</span>
                     <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{preview.totalTasks}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[13px]">
+                  <div className="flex items-center justify-between text-[0.8125rem]">
                     <span className="text-[#346538] dark:text-[#4ADE80] font-medium">Completed (Done):</span>
                     <span className="font-bold text-[#346538] dark:text-[#4ADE80]">{preview.completedTasks}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[13px]">
+                  <div className="flex items-center justify-between text-[0.8125rem]">
                     <span className="text-[#956400] dark:text-[#FBB040] font-medium">Incomplete:</span>
                     <span className="font-bold text-[#956400] dark:text-[#FBB040]">{preview.incompleteTasks}</span>
                   </div>
@@ -115,12 +115,12 @@ export default function CompleteSprintModal({
                   <div className="space-y-3">
                     <div className="flex gap-2 text-[#956400] dark:text-[#FBB040]">
                       <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                      <p className="text-[13px]">
+                      <p className="text-[0.8125rem]">
                         There are {preview.incompleteTasks} incomplete tasks. Choose where to move them:
                       </p>
                     </div>
                     <div>
-                      <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
+                      <label className="block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
                         Move incomplete tasks to
                       </label>
                       <select
@@ -145,8 +145,8 @@ export default function CompleteSprintModal({
                       </svg>
                     </div>
                     <div>
-                      <h4 className="text-[13px] font-semibold text-[#346538] dark:text-[#4ADE80]">All tasks complete</h4>
-                      <p className="text-[11px] text-[#346538]/80 dark:text-[#4ADE80]/70 mt-0.5">
+                      <h4 className="text-[0.8125rem] font-semibold text-[#346538] dark:text-[#4ADE80]">All tasks complete</h4>
+                      <p className="text-[0.6875rem] text-[#346538]/80 dark:text-[#4ADE80]/70 mt-0.5">
                         All tasks in this sprint are done.
                       </p>
                     </div>
@@ -157,13 +157,13 @@ export default function CompleteSprintModal({
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
+                    className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
+                    className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
                   >
                     Complete sprint
                   </button>

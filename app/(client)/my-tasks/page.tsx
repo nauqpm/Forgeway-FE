@@ -132,7 +132,7 @@ export default function MyTasksPage() {
       <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
         <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-[12.5rem]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search tasks..." className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
@@ -248,14 +248,14 @@ function TaskRow({ task }: { task: Task }) {
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-gray-400">{task.key}</span>
           {task.projectId && (
-            <span className="text-[11px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-medium">{task.projectId.key}</span>
+            <span className="text-[0.6875rem] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-medium">{task.projectId.key}</span>
           )}
         </div>
         <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate mt-0.5 group-hover:text-indigo-600 transition-colors">{task.title}</p>
         {task.labels.length > 0 && (
           <div className="flex items-center gap-1 mt-1">
             {task.labels.slice(0, 3).map((label) => (
-              <span key={label} className="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">{label}</span>
+              <span key={label} className="text-[0.625rem] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">{label}</span>
             ))}
           </div>
         )}

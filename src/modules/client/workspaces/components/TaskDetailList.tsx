@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import {
   MoreHorizontal, Plus, Link as LinkIcon,
   ChevronDown, ChevronRight, Settings,
-  Zap, User, Archive, AlertTriangle, ArchiveRestore,
+  Zap, Archive, AlertTriangle, ArchiveRestore,
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
@@ -15,14 +15,20 @@ import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
+import TaskStatusChanger from "./TaskStatusChanger";
 import type { TaskCover } from "../types/task-cover.type";
-import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
+import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
+import AssigneePicker, {
+  toAssigneePickerUsers,
+  type AssigneePickerUser,
+} from "@/common/components/AssigneePicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
+  workspaceMembers?: any[];
   sprints?: SprintOption[];
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
@@ -36,6 +42,12 @@ interface TaskDetailListProps {
 const getUserDisplayName = (user: any, fallback?: string | null) => {
   if (typeof user === "string") return user;
   return user?.fullName || user?.email || fallback || "Unassigned";
+};
+
+const getIssueAssigneeId = (issue: any) => {
+  if (issue?.assigneeId) return String(issue.assigneeId);
+  if (typeof issue?.assignee === "string") return issue.assignee === "U" ? "" : issue.assignee;
+  return issue?.assignee?._id || issue?.assignee?.id || "";
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -63,6 +75,7 @@ type SprintOption = {
 export default function TaskDetailList({
   issue,
   workspaceId,
+  workspaceMembers = [],
   sprints = [],
   workspaceTemplate = "kanban",
   boardColumns = [],
@@ -75,7 +88,6 @@ export default function TaskDetailList({
   const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
@@ -84,7 +96,6 @@ export default function TaskDetailList({
     if (issue) {
       setLocalTitle(issue.title);
       setIsEditingTitle(false);
-      setShowStatusDropdown(false);
       setShowActionMenu(false);
       setLocalCover(issue.cover ?? null);
     }
@@ -93,10 +104,6 @@ export default function TaskDetailList({
   if (!issue) return null;
 
   const issueKey = issue.key;
-  const { statusColumns, currentColumn, displayName: statusDisplayName } =
-    resolveTaskStatusColumn(boardColumns, issue);
-  const assigneeName =
-    issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const sprintLabel =
     issue.sprint?.name ||
@@ -108,6 +115,12 @@ export default function TaskDetailList({
       ? "None"
       : String(issue.storyPoints);
   const priorityColor = PRIORITY_COLORS[issue.priority] || "text-[#787774] dark:text-[#9B9A97]";
+  const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
+  const currentAssigneeId = getIssueAssigneeId(issue);
+  const currentAssigneeName =
+    issue.assigneeDisplayName ||
+    assigneeUsers.find((candidate) => candidate.id === currentAssigneeId)?.name ||
+    getUserDisplayName(issue.assignee, null);
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -116,23 +129,32 @@ export default function TaskDetailList({
     }
   };
 
-  const handleStatusChange = (column: TaskStatusColumn) => {
-    setShowStatusDropdown(false);
-    if ((column.id !== issue.columnId || column.name !== issue.status) && onUpdateIssue) {
-      onUpdateIssue({ ...issue, columnId: column.id, status: column.name });
-    }
-  };
-
   const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
     if (!onUpdateIssue || issue.isArchived) return;
     onUpdateIssue({ ...issue, [field]: nextValue });
+  };
+
+  const handleAssigneeChange = (uid: string | null) => {
+    if (!onUpdateIssue || issue.isArchived) return;
+
+    const selectedUser: AssigneePickerUser | undefined = assigneeUsers.find(
+      (candidate) => candidate.id === uid,
+    );
+
+    onUpdateIssue({
+      ...issue,
+      assigneeId: uid,
+      assignee: uid ?? "U",
+      assigneeDisplayName: uid ? selectedUser?.name ?? uid : "Unassigned",
+      assigneeAvatar: uid ? selectedUser?.avatar : undefined,
+    });
   };
 
 
   // Helper: each detail row in the sidebar — label on left (fixed), value on right
   const DetailRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div className="flex items-start gap-3 py-1.5">
-      <span className="text-[13px] text-[#787774] dark:text-[#9B9A97] w-28 shrink-0 pt-0.5">{label}</span>
+      <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] w-28 shrink-0 pt-0.5">{label}</span>
       <div className="flex-1 min-w-0">{children}</div>
     </div>
   );
@@ -142,7 +164,7 @@ export default function TaskDetailList({
       {/* ── TOP TOOLBAR ── */}
       <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-[13px] font-medium min-w-0">
+        <div className="flex items-center gap-1.5 text-[0.8125rem] font-medium min-w-0">
           {showBackButton && (
             <>
               <button
@@ -157,7 +179,7 @@ export default function TaskDetailList({
           )}
           <div className="flex items-center gap-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer transition-colors shrink-0">
             <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[4px]">
-              <span className="text-[9px] font-bold">✓</span>
+              <span className="text-[0.5625rem] font-bold">✓</span>
             </div>
             <span>{issueKey}</span>
           </div>
@@ -181,7 +203,7 @@ export default function TaskDetailList({
                 <button
                   onClick={() => { setShowActionMenu(false); onArchiveIssue?.(issue); }}
                   disabled={!onArchiveIssue || issue.isArchived}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50"
                 >
                   <Archive className="h-4 w-4" /> Archive
                 </button>
@@ -195,7 +217,7 @@ export default function TaskDetailList({
         workspaceId={workspaceId}
         issue={{ ...issue, cover: localCover }}
         maxHeightClass="h-36"
-        colorHeightClass="h-[72px]"
+        colorHeightClass="h-18"
         onIssueCoverChange={setLocalCover}
       />
 
@@ -242,7 +264,7 @@ export default function TaskDetailList({
 
           {/* Description */}
           <div>
-            <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Description</h2>
+            <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2">Description</h2>
             <TaskDescription
               initialContent={issue.description || ""}
               onSave={(newDesc: string) => {
@@ -266,21 +288,21 @@ export default function TaskDetailList({
           {/* Linked Work Items */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h2>
+              <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h2>
               <button className="p-1 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors">
                 <Plus className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
               </button>
             </div>
             <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4">
-              <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-3">No linked items yet</p>
+              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-3">No linked items yet</p>
               <div className="flex flex-wrap gap-2">
                 <Link
                   href={`/docs/create?issueId=${issue.id}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] text-white text-[13px] font-medium rounded-[6px] transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] text-white text-[0.8125rem] font-medium rounded-[6px] transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
                 >
                   <Plus className="w-3.5 h-3.5" /> Create Document
                 </Link>
-                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[13px] font-medium rounded-[6px] transition-colors">
+                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
                   <LinkIcon className="w-3.5 h-3.5" /> Link item
                 </button>
               </div>
@@ -290,8 +312,8 @@ export default function TaskDetailList({
           {/* Activity */}
           <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h2>
-              <div className="flex items-center gap-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+              <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h2>
+              <div className="flex items-center gap-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 <span>Show:</span>
                 {(["comments", "history"] as const).map((tab) => (
                   <button
@@ -317,7 +339,16 @@ export default function TaskDetailList({
               />
             )}
             {activeTab === "history" && (
-              <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
+              <TaskActivityHistory
+                workspaceId={workspaceId}
+                taskId={issue.id}
+                taskKey={issue.key}
+                workspaceMembers={workspaceMembers}
+                assigneeId={currentAssigneeId}
+                assigneeName={currentAssigneeName}
+                assignee={issue.assignee}
+                labels={issue.labels}
+              />
             )}
           </div>
         </div>
@@ -327,39 +358,21 @@ export default function TaskDetailList({
 
           {/* Status + Automations + Improve Task */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative">
-              <button
-                onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
-                disabled={issue.isArchived}
-                className={`flex items-center gap-1.5 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[13px] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? "opacity-70 cursor-not-allowed" : "hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"}`}
-              >
-                {statusDisplayName}
-                {!issue.isArchived && <ChevronDown className="w-3.5 h-3.5 text-[#787774] dark:text-[#9B9A97]" />}
-              </button>
-              {showStatusDropdown && (
-                <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden z-10 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
-                  {statusColumns.map((column) => (
-                    <button
-                      key={column.id}
-                      onClick={() => handleStatusChange(column)}
-                      className={`w-full text-left px-4 py-2 text-[13px] transition-colors ${column.id === currentColumn?.id
-                          ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium border-l-2 border-[#2563EB] dark:border-[#3B82F6]"
-                          : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-                        }`}
-                    >
-                      {column.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <TaskStatusChanger
+              issue={issue}
+              boardColumns={boardColumns}
+              disabled={issue.isArchived}
+              onChange={({ columnId, status }) =>
+                onUpdateIssue?.({ ...issue, columnId, status })
+              }
+            />
           </div>
 
           {/* Details collapsible */}
           <div>
             <button
               onClick={() => setDetailsOpen((o) => !o)}
-              className="w-full flex items-center justify-between py-1.5 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
+              className="w-full flex items-center justify-between py-1.5 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
             >
               <div className="flex items-center gap-1.5">
                 {detailsOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -373,20 +386,19 @@ export default function TaskDetailList({
 
                 {/* Assignee */}
                 <DetailRow label="Assignee">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">
-                      <div className="w-5 h-5 rounded-full bg-[#F7F6F3] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.08] flex items-center justify-center shrink-0">
-                        <User className="w-3 h-3 text-[#787774] dark:text-[#9B9A97]" />
-                      </div>
-                      <span className="truncate">{assigneeName}</span>
-                    </div>
-                    <a href="#" className="text-[11px] text-[#2563EB] dark:text-[#3B82F6] hover:underline block px-1">Assign to me</a>
-                  </div>
+                  <AssigneePicker
+                    users={assigneeUsers}
+                    value={getIssueAssigneeId(issue) || null}
+                    onChange={handleAssigneeChange}
+                    placement="auto"
+                    size="md"
+                    disabled={issue.isArchived}
+                  />
                 </DetailRow>
 
                 {/* Priority */}
                 <DetailRow label="Priority">
-                  <div className={`flex items-center gap-1.5 text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors ${priorityColor}`}>
+                  <div className={`flex items-center gap-1.5 text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors ${priorityColor}`}>
                     <span className="inline-block w-2.5 h-2.5 rounded-sm bg-current opacity-80" />
                     {issue.priority}
                   </div>
@@ -394,7 +406,7 @@ export default function TaskDetailList({
 
                 {/* Parent */}
                 <DetailRow label="Parent">
-                  <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">None</div>
+                  <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">None</div>
                 </DetailRow>
 
                 {/* Due date */}
@@ -430,19 +442,19 @@ export default function TaskDetailList({
 
                 {showSprintField && (
                   <DetailRow label="Sprint">
-                    <div className="text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{sprintLabel}</div>
+                    <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{sprintLabel}</div>
                   </DetailRow>
                 )}
 
                 {/* Story point estimate */}
                 <DetailRow label="Story point estimate">
-                  <div className="text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{storyPointsLabel}</div>
+                  <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">{storyPointsLabel}</div>
                 </DetailRow>
 
                 {/* Reporter */}
                 <DetailRow label="Reporter">
-                  <div className="flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">
-                    <div className="w-5 h-5 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-[10px] shrink-0">
+                  <div className="flex items-center gap-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors">
+                    <div className="w-5 h-5 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-[0.625rem] shrink-0">
                       {reporterName.substring(0, 1).toUpperCase()}
                     </div>
                     <span className="truncate">{reporterName}</span>
@@ -454,7 +466,7 @@ export default function TaskDetailList({
           </div>
 
           {/* Meta */}
-          <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-4 text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
+          <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-4 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
             <p>Created {formatDateTime(issue.createdAt)}</p>
             <p>Updated {formatDateTime(issue.updatedAt)}</p>
           </div>

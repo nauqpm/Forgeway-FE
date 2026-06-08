@@ -63,10 +63,10 @@ export default function ArchiveTab({
     <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
       <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          <h2 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Archived work items
           </h2>
-          <p className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
+          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
             {total !== undefined
               ? `Showing ${issues.length} of ${total}`
               : `${issues.length} item archived`}
@@ -79,20 +79,20 @@ export default function ArchiveTab({
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search archived items..."
-            className="w-full min-w-[220px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] py-1.5 pl-9 pr-3 text-[13px] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[#111111] dark:text-[#E8E8E7] transition-colors sm:w-80 placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]"
+            className="w-full min-w-[13.75rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] py-1.5 pl-9 pr-3 text-[0.8125rem] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[#111111] dark:text-[#E8E8E7] transition-colors sm:w-80 placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]"
           />
         </div>
       </div>
 
-      <div className="relative min-h-[320px] overflow-auto">
+      <div className="relative min-h-80 overflow-auto">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-[#202020]/70">
             <Loader2 className="h-6 w-6 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
           </div>
         )}
 
-        <table className="w-full min-w-[820px] border-collapse text-left">
-          <thead className="sticky top-0 z-0 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] text-[11px] font-semibold uppercase text-[#ABABAB] dark:text-[#6B6B6B]">
+        <table className="w-full min-w-[51.25rem] border-collapse text-left">
+          <thead className="sticky top-0 z-0 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] text-[0.6875rem] font-semibold uppercase text-[#ABABAB] dark:text-[#6B6B6B]">
             <tr>
               <th className="px-4 py-3">Key</th>
               <th className="px-4 py-3">Work item</th>
@@ -105,7 +105,7 @@ export default function ArchiveTab({
           <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06] bg-white dark:bg-[#202020]">
             {visibleIssues.map((issue) => (
               <tr key={issue.id} className="hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]">
-                <td className="px-4 py-3 font-mono text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97]">
+                <td className="px-4 py-3 font-mono text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97]">
                   {issue.key}
                 </td>
                 <td className="px-4 py-3">
@@ -120,27 +120,27 @@ export default function ArchiveTab({
                       }`}
                     />
                     <div className="min-w-0">
-                      <p className="truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
+                      <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
                         {issue.title}
                       </p>
-                      <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
+                      <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
                         {issue.type} - {issue.priority}
                       </p>
                     </div>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-1 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97]">
+                  <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-1 text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97]">
                     {issue.status}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <td className="px-4 py-3 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   {issue.archivedByUser?.fullName ||
                     issue.archivedByUser?.email ||
                     issue.archivedBy ||
                     "-"}
                 </td>
-                <td className="px-4 py-3 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <td className="px-4 py-3 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   {formatDateTime(issue.archivedAt)}
                 </td>
                 <td className="px-4 py-3 text-right">
@@ -148,7 +148,7 @@ export default function ArchiveTab({
                     type="button"
                     onClick={() => onRestore(issue)}
                     disabled={isRestoring}
-                    className="inline-flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-3 py-1.5 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-3 py-1.5 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isRestoring ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -164,7 +164,7 @@ export default function ArchiveTab({
         </table>
 
         {!isLoading && visibleIssues.length === 0 && (
-          <div className="flex h-56 flex-col items-center justify-center gap-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+          <div className="flex h-56 flex-col items-center justify-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <CheckSquare className="h-6 w-6 text-[#ABABAB] dark:text-[#6B6B6B]" />
             No archived work items match this list.
           </div>
@@ -177,7 +177,7 @@ export default function ArchiveTab({
             type="button"
             onClick={onLoadMore}
             disabled={isLoadingMore}
-            className="flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoadingMore ? (
               <Loader2 className="h-4 w-4 animate-spin" />

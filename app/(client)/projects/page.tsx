@@ -49,7 +49,7 @@ export default function ProjectsPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="relative flex-1 min-w-[220px] max-w-[min(100%,28rem)]">
+        <div className="relative flex-1 min-w-[13.75rem] max-w-[min(100%,28rem)]">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search projects..." className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500" />
         </div>

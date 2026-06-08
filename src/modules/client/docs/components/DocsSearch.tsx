@@ -14,7 +14,7 @@ export default function DocsSearch() {
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         placeholder="Search..."
-        className="w-full pl-8 pr-3 py-1.5 bg-[#F7F6F3] dark:bg-[#252525] border border-transparent rounded-[6px] text-[11px] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] text-[#111111] dark:text-[#E8E8E7] focus:bg-white dark:focus:bg-[#202020] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-all duration-200"
+        className="w-full pl-8 pr-3 py-1.5 bg-[#F7F6F3] dark:bg-[#252525] border border-transparent rounded-[6px] text-[0.6875rem] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] text-[#111111] dark:text-[#E8E8E7] focus:bg-white dark:focus:bg-[#202020] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-all duration-200"
       />
     </div>
   );

@@ -112,7 +112,7 @@ export default function SharePopover() {
             {/* Search Input Area */}
             <div className="flex items-start gap-2">
               <div className="relative flex-1">
-                <div className="min-h-[40px] border border-[#2563EB] rounded-[6px] p-1.5 flex flex-wrap gap-1.5 items-center bg-white dark:bg-[#252525] focus-within:ring-2 focus-within:ring-[#2563EB]/20 transition-shadow">
+                <div className="min-h-10 border border-[#2563EB] rounded-[6px] p-1.5 flex flex-wrap gap-1.5 items-center bg-white dark:bg-[#252525] focus-within:ring-2 focus-within:ring-[#2563EB]/20 transition-shadow">
                   {selectedUsers.map(u => (
                     <span key={u.id} className="flex items-center gap-1 bg-[#F7F6F3] dark:bg-white/8 text-[#111111] dark:text-[#E8E8E7] text-xs font-medium px-2 py-1 rounded-[4px]">
                       {u.name}
@@ -126,7 +126,7 @@ export default function SharePopover() {
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     placeholder={selectedUsers.length === 0 ? "Names, teams, or emails" : ""}
-                    className="flex-1 outline-none text-sm min-w-[120px] px-1 bg-transparent"
+                    className="flex-1 outline-none text-sm min-w-[7.5rem] px-1 bg-transparent"
                   />
                 </div>
 
@@ -164,7 +164,7 @@ export default function SharePopover() {
               <button 
                 onClick={handleSendInvite}
                 disabled={selectedUsers.length === 0}
-                className="bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-[#F7F6F3] dark:disabled:bg-[#252525] disabled:text-[#ABABAB] dark:disabled:text-[#6B6B6B] disabled:cursor-not-allowed text-white text-sm font-medium px-4 h-[40px] rounded-[6px] transition-colors whitespace-nowrap"
+                className="bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-[#F7F6F3] dark:disabled:bg-[#252525] disabled:text-[#ABABAB] dark:disabled:text-[#6B6B6B] disabled:cursor-not-allowed text-white text-sm font-medium px-4 h-10 rounded-[6px] transition-colors whitespace-nowrap"
               >
                 Invite
               </button>

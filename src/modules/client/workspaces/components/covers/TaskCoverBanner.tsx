@@ -80,7 +80,7 @@ export default function TaskCoverBanner<TIssue extends CoverableIssue>({
           event.stopPropagation();
           setAnchorRect(editButtonRef.current?.getBoundingClientRect() ?? null);
         }}
-        className="absolute bottom-2 right-2 inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-[#111111]/85 px-2.5 text-[11px] font-semibold text-white transition-colors hover:bg-[#111111] disabled:cursor-not-allowed disabled:opacity-60"
+        className="absolute bottom-2 right-2 inline-flex h-8 items-center gap-1.5 rounded-[6px] bg-[#111111]/85 px-2.5 text-[0.6875rem] font-semibold text-white transition-colors hover:bg-[#111111] disabled:cursor-not-allowed disabled:opacity-60"
       >
         <ImagePlus className="h-3.5 w-3.5" />
         Edit Cover

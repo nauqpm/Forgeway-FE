@@ -3,7 +3,11 @@ import type {
   TaskActivity,
   TaskComment,
 } from '@/modules/client/workspaces/services/taskService';
-import type { TaskAttachment } from '@/modules/client/workspaces/types/attachment.type';
+import {
+  normalizeTaskAttachment,
+  type RawTaskAttachment,
+  type TaskAttachment,
+} from '@/modules/client/workspaces/types/attachment.type';
 import type { TaskCover } from '@/modules/client/workspaces/types/task-cover.type';
 import type { TaskDetailResponse } from '@/modules/client/workspaces/types/task-detail.type';
 
@@ -42,12 +46,15 @@ export const removeComment = (
 
 export const upsertAttachment = (
   current: TaskAttachment[] | undefined,
-  attachment: TaskAttachment,
+  attachment: RawTaskAttachment,
 ): TaskAttachment[] => {
   const list = current ?? [];
-  const next = list.some((item) => item.id === attachment.id)
-    ? list.map((item) => (item.id === attachment.id ? { ...item, ...attachment } : item))
-    : [attachment, ...list];
+  const normalizedAttachment = normalizeTaskAttachment(attachment);
+  const next = list.some((item) => item.id === normalizedAttachment.id)
+    ? list.map((item) =>
+        item.id === normalizedAttachment.id ? { ...item, ...normalizedAttachment } : item,
+      )
+    : [normalizedAttachment, ...list];
 
   return next.sort(
     (a, b) =>

@@ -25,9 +25,9 @@ const variantClasses: Record<Variant, string> = {
 };
 
 const sizeClasses: Record<Size, string> = {
-  sm: "h-7 px-2.5 text-[11px] rounded-[4px] gap-1.5",
-  md: "h-8 px-3 text-[13px] rounded-[6px] gap-2",
-  lg: "h-9 px-4 text-[13px] rounded-[6px] gap-2",
+  sm: "h-7 px-2.5 text-[0.6875rem] rounded-[4px] gap-1.5",
+  md: "h-8 px-3 text-[0.8125rem] rounded-[6px] gap-2",
+  lg: "h-9 px-4 text-[0.8125rem] rounded-[6px] gap-2",
 };
 
 const iconSizeClasses: Record<Size, string> = {

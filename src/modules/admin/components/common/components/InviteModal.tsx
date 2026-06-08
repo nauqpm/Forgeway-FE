@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { X, Link as LinkIcon, Check, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
+import RoleChanger, {
+  WorkspaceRoleValue,
+} from "@/modules/client/workspaces/components/RoleChanger";
 import { inviteService } from "@/modules/client/workspaces/services/inviteService";
-
-const ROLES = [
-  { value: "workspace_admin", label: "Admin" },
-  { value: "member", label: "Member" },
-  { value: "viewer", label: "Viewer" },
-];
 
 const EMAIL_SPLIT_REGEX = /[\s,;]+/;
 
@@ -17,11 +14,11 @@ interface InviteModalProps {
   projectId: string;
 }
 
-const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] text-[13px] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6]";
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6]";
 
 export default function InviteModal({ isOpen, onClose, projectId }: InviteModalProps) {
   const [emailInput, setEmailInput] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState<WorkspaceRoleValue>("member");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -124,7 +121,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-          <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Add people to this Workspace</h2>
+          <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Add people to this Workspace</h2>
           <button
             onClick={onClose}
             className="p-1.5 text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
@@ -136,7 +133,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
         <div className="p-5 overflow-y-auto flex-1">
           <div className="flex flex-col sm:flex-row gap-3 items-start">
             <div className="flex-1 w-full">
-              <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
+              <label className="block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
                 Emails <span className="text-[#9F2F2D]">*</span>
               </label>
               <textarea
@@ -151,25 +148,13 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
               />
             </div>
 
-            <div className="w-full sm:w-32">
-              <label className="block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Role</label>
-              <div className="relative">
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className={`${inputCls} appearance-none h-[38px]`}
-                >
-                  {ROLES.map((r) => (
-                    <option key={r.value} value={r.value}>{r.label}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#ABABAB]">
-                  <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            <RoleChanger
+              value={role}
+              onChange={setRole}
+              disabled={isSubmitting || isGeneratingLink}
+              compact
+              className="w-full sm:w-[9rem]"
+            />
           </div>
         </div>
 
@@ -177,7 +162,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
           <button
             onClick={handleCopyLink}
             disabled={isGeneratingLink || isSubmitting}
-            className="flex items-center gap-2 text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors disabled:opacity-40"
+            className="flex items-center gap-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors disabled:opacity-40"
           >
             {isGeneratingLink ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -193,14 +178,14 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
             <button
               onClick={onClose}
               disabled={isSubmitting || isGeneratingLink}
-              className="px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors disabled:opacity-40"
+              className="px-4 py-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors disabled:opacity-40"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!canSubmit}
-              className="flex items-center gap-2 px-4 py-2 text-[13px] font-medium text-white bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-[0.8125rem] font-medium text-white bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors"
             >
               {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               {isSubmitting ? "Sending..." : "Add"}

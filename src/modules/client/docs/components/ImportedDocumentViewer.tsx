@@ -60,14 +60,14 @@ export default function ImportedDocumentViewer({ doc, showBackButton = true }: P
         {isImage ? (
           <img src={viewUrl} alt={currentDoc.name} className="max-w-full h-auto mx-auto rounded-[6px]" />
         ) : isPdf ? (
-          <iframe src={viewUrl} className="w-full h-full min-h-[500px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06]" />
+          <iframe src={viewUrl} className="w-full h-full min-h-[31.25rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06]" />
         ) : isOfficePreview || isOnline ? (
-          <iframe sandbox="allow-same-origin" src={previewUrl} className="w-full h-full min-h-[500px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white" />
+          <iframe sandbox="allow-same-origin" src={previewUrl} className="w-full h-full min-h-[31.25rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white" />
         ) : (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
-              <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-2">This format is not supported for direct preview.</p>
-              <a href={downloadUrl} className="text-[13px] text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8]">Download to view</a>
+              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-2">This format is not supported for direct preview.</p>
+              <a href={downloadUrl} className="text-[0.8125rem] text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8]">Download to view</a>
             </div>
           </div>
         )}

@@ -28,10 +28,10 @@ export default function AttachmentUploadQueue({
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
+                  <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
                     {item.fileName}
                   </p>
-                  <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
+                  <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
                     {formatAttachmentSize(item.fileSize)}
                   </p>
                 </div>
@@ -65,7 +65,7 @@ export default function AttachmentUploadQueue({
                 />
               </div>
               <p
-                className={`mt-1 text-[11px] ${
+                className={`mt-1 text-[0.6875rem] ${
                   item.status === "error"
                     ? "text-[#9F2F2D] dark:text-[#F87171]"
                     : "text-[#ABABAB] dark:text-[#6B6B6B]"

@@ -56,7 +56,7 @@ export default function Header() {
           </Link>
           <Link
             href="/aboutUs"
-            className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
+            className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
           >
             About us
           </Link>
@@ -71,7 +71,7 @@ export default function Header() {
               <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-semibold">
                 {user?.fullName?.charAt(0)?.toUpperCase() ?? user?.email?.charAt(0)?.toUpperCase() ?? "U"}
               </div>
-              <span className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] hidden sm:block">
+              <span className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] hidden sm:block">
                 {user?.fullName ?? user?.email}
               </span>
               <ChevronDown className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
@@ -83,7 +83,7 @@ export default function Header() {
                 style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)" }}
               >
                 <div className="px-4 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                  <p className="text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] truncate">
+                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] truncate">
                     {user?.fullName ?? "User"}
                   </p>
                   <p className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">
@@ -93,7 +93,7 @@ export default function Header() {
 
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
                   onClick={() => setDropdownOpen(false)}
                 >
                   <LayoutDashboard className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
@@ -102,7 +102,7 @@ export default function Header() {
 
                 <Link
                   href="/account"
-                  className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
                   onClick={() => setDropdownOpen(false)}
                 >
                   <User className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
@@ -111,7 +111,7 @@ export default function Header() {
 
                 <Link
                   href="/settings"
-                  className="flex items-center gap-3 px-4 py-2.5 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
                   onClick={() => setDropdownOpen(false)}
                 >
                   <Settings className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
@@ -124,7 +124,7 @@ export default function Header() {
                       setDropdownOpen(false);
                       logout();
                     }}
-                    className="flex items-center gap-3 w-full px-4 py-2.5 text-[13px] text-red-600 dark:text-red-400 hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-[0.8125rem] text-red-600 dark:text-red-400 hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     Log out
@@ -137,13 +137,13 @@ export default function Header() {
           <div className="flex items-center gap-4">
             <Link
               href="/login"
-              className="text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
+              className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
             >
               Sign in
             </Link>
             <Link
               href="/register"
-              className="text-[13px] font-medium bg-[#2563EB] dark:bg-[#3B82F6] text-white px-4 py-2 rounded-[6px] hover:bg-[#1D4ED8] transition-colors"
+              className="text-[0.8125rem] font-medium bg-[#2563EB] dark:bg-[#3B82F6] text-white px-4 py-2 rounded-[6px] hover:bg-[#1D4ED8] transition-colors"
             >
               Get started
             </Link>

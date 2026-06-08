@@ -91,7 +91,7 @@ export default function WorkspaceSwitcher() {
         className="flex items-center gap-2 px-3 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/8 rounded-[6px] transition-colors"
       >
         <Building2 className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
-        <span className="font-medium text-sm text-[#111111] dark:text-[#E8E8E7] max-w-[150px] truncate">
+        <span className="font-medium text-sm text-[#111111] dark:text-[#E8E8E7] max-w-[9.375rem] truncate">
           {currentWorkspace?.name || "Select Workspace"}
         </span>
         <ChevronDown className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />

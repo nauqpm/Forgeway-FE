@@ -27,14 +27,16 @@ import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
+import TaskStatusChanger from "./TaskStatusChanger";
 import type { TaskCover } from "../types/task-cover.type";
-import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
+import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
@@ -130,7 +132,6 @@ export default function TaskDetailModal({
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [subtasks, setSubtasks] = useState<any[]>([]);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
@@ -166,7 +167,6 @@ export default function TaskDetailModal({
       setSubtasks(issue.subtasks || []);
       setTimeLogged(issue.timeLogged || 0);
       setIsEditingTitle(false);
-      setShowStatusDropdown(false);
       setShowActionMenu(false);
       setLocalCover(issue.cover ?? null);
       setEditingField(null);
@@ -178,8 +178,6 @@ export default function TaskDetailModal({
 
   const issueKey = issue.key;
   const timeEstimated = issue.timeEstimated || "1d 4h"; // Mock default
-  const { statusColumns, currentColumn, displayName: statusDisplayName } =
-    resolveTaskStatusColumn(boardColumns, issue);
   const assigneeName =
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
@@ -198,6 +196,8 @@ export default function TaskDetailModal({
   const memberOptions = mapMemberOptions(
     providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers,
   );
+  const detailWorkspaceMembers =
+    providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers;
 
   const startInlineEdit = (field: string, value?: string | number | null) => {
     if (issue.isArchived) return;
@@ -261,7 +261,7 @@ export default function TaskDetailModal({
   };
 
   const editableTextClass =
-    "text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors";
+    "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors";
 
   const renderDateInput = (field: "startDate" | "dueDate", rawValue?: string | null) => (
     <CustomDatePicker
@@ -287,7 +287,7 @@ export default function TaskDetailModal({
         onChange={(event) => setDraftValue(event.target.value)}
         onBlur={() => saveInlineEdit(field)}
         onKeyDown={(event) => handleInlineKeyDown(event, field)}
-        className="w-full rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
+        className="w-full rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none"
       />
     ) : (
       <div
@@ -311,7 +311,7 @@ export default function TaskDetailModal({
         onChange={(event) => setDraftValue(event.target.value)}
         onBlur={() => saveInlineEdit(field)}
         onKeyDown={(event) => handleInlineKeyDown(event, field)}
-        className="w-full rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
+        className="w-full rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -333,13 +333,6 @@ export default function TaskDetailModal({
     setIsEditingTitle(false);
     if (localTitle !== issue.title && onUpdateIssue) {
       onUpdateIssue({ ...issue, title: localTitle });
-    }
-  };
-
-  const handleStatusChange = (column: TaskStatusColumn) => {
-    setShowStatusDropdown(false);
-    if ((column.id !== issue.columnId || column.name !== issue.status) && onUpdateIssue) {
-      onUpdateIssue({ ...issue, columnId: column.id, status: column.name });
     }
   };
 
@@ -387,7 +380,7 @@ export default function TaskDetailModal({
       >
         {/* Top Header */}
         <div className="app-header border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between shrink-0 bg-[#F9F9F8] dark:bg-[#252525]">
-          <div className="flex items-center gap-2 text-[13px] font-medium">
+          <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
             <div className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors">
               <div className="w-5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[4px] text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
@@ -397,7 +390,7 @@ export default function TaskDetailModal({
             <span className="text-[#ABABAB] dark:text-[#6B6B6B]">/</span>
             <div className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors">
               <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[4px]">
-                <span className="text-[10px]">✓</span>
+                <span className="text-[0.625rem]">✓</span>
               </div>
               <span className="text-[#111111] dark:text-[#E8E8E7]">{issueKey}</span>
             </div>
@@ -422,7 +415,7 @@ export default function TaskDetailModal({
                       onArchiveIssue?.(issue);
                     }}
                     disabled={!onArchiveIssue || issue.isArchived}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <Archive className="h-4 w-4" />
                     Archive
@@ -497,7 +490,7 @@ export default function TaskDetailModal({
 
             {/* Description */}
             <div className="space-y-2">
-              <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+              <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                 Description
               </h3>
               <TaskDescription
@@ -528,10 +521,10 @@ export default function TaskDetailModal({
             {/* Activity */}
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Activity
                 </h3>
-                <div className="flex items-center gap-2 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   <span>Show:</span>
                   <button
                     onClick={() => setActiveTab("comments")}
@@ -556,7 +549,16 @@ export default function TaskDetailModal({
                 />
               )}
               {activeTab === "history" && (
-                <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
+                <TaskActivityHistory
+                  workspaceId={workspaceId}
+                  taskId={issue.id}
+                  taskKey={issue.key}
+                  workspaceMembers={detailWorkspaceMembers}
+                  assigneeId={getIssueAssigneeId(issue)}
+                  assigneeName={assigneeName}
+                  assignee={issue.assignee}
+                  labels={issue.labels}
+                />
               )}
             </div>
           </div>
@@ -564,83 +566,39 @@ export default function TaskDetailModal({
           {/* Right Column (Sidebar) */}
           <div className="workspace-detail-panel bg-[#F9F9F8] dark:bg-[#252525] p-[var(--workspace-surface-pad)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <div className="flex items-center gap-2 mb-6">
-              <div className="relative">
-                <button
-                  onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
-                  disabled={issue.isArchived}
-                  className={`flex items-center gap-2 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[13px] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
-                >
-                  {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4" />}
-                </button>
-                {showStatusDropdown && (
-                  <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden z-10 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
-                    {statusColumns.map((column) => (
-                      <button
-                        key={column.id}
-                        onClick={() => handleStatusChange(column)}
-                        className={`w-full text-left px-4 py-2 text-[13px] transition-colors ${column.id === currentColumn?.id ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium border-l-2 border-[#2563EB] dark:border-[#3B82F6]" : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"}`}
-                      >
-                        {column.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <TaskStatusChanger
+                issue={issue}
+                boardColumns={boardColumns}
+                disabled={issue.isArchived}
+                onChange={({ columnId, status }) =>
+                  onUpdateIssue?.({ ...issue, columnId, status })
+                }
+              />
             </div>
 
             <div className="space-y-6">
               <div className="border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] rounded-[8px]">
-                <button className="w-full flex items-center justify-between p-3 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-t-[8px] transition-colors">
+                <button className="w-full flex items-center justify-between p-3 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-t-[8px] transition-colors">
                   Details <ChevronDown className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 </button>
                 <div className="p-4 border-t border-[#EAEAEA] dark:border-white/[0.06] space-y-4">
                   {/* Assignee */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1">Assignee</div>
-                    <div className="col-span-2 space-y-2">
-                      <div
-                        onDoubleClick={() => startInlineEdit("assigneeId", getIssueAssigneeId(issue))}
-                        title="Double click to edit"
-                        className="flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors"
-                      >
-                        <div className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-[#252525] flex items-center justify-center border border-[#EAEAEA] dark:border-white/[0.08]">
-                          <User className="w-3 h-3 text-[#787774] dark:text-[#9B9A97]" />
-                        </div>
-                        {editingField === "assigneeId" ? (
-                          <select
-                            autoFocus
-                            value={draftValue}
-                            onChange={(event) => {
-                              setDraftValue(event.target.value);
-                              saveInlineEdit("assigneeId", event.target.value);
-                            }}
-                            onBlur={cancelInlineEdit}
-                            onKeyDown={(event) => handleInlineKeyDown(event, "assigneeId")}
-                            className="min-w-0 flex-1 rounded-[6px] border border-[#2563EB] bg-white dark:bg-[#252525] px-2 py-1 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none"
-                          >
-                            <option value="">Unassigned</option>
-                            {memberOptions.map((member) => (
-                              <option key={member.id} value={member.id}>
-                                {member.email ? `${member.label} (${member.email})` : member.label}
-                              </option>
-                            ))}
-                          </select>
-                        ) : (
-                          assigneeName
-                        )}
-                      </div>
-                      <a
-                        href="#"
-                        className="text-[13px] text-[#2563EB] dark:text-[#3B82F6] hover:underline font-medium block"
-                      >
-                        Assign to me
-                      </a>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Assignee</div>
+                    <div className="col-span-2">
+                      <AssigneePicker
+                        users={toAssigneePickerUsers((providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers) as any[])}
+                        value={getIssueAssigneeId(issue) || null}
+                        onChange={(uid) => saveInlineEdit("assigneeId", uid ?? "")}
+                        placement="auto"
+                        size="md"
+                      />
                     </div>
                   </div>
 
                   {/* Type */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">Type</div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Type</div>
                     <div className="col-span-2">
                       {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
                     </div>
@@ -648,9 +606,9 @@ export default function TaskDetailModal({
 
                   {/* Reporter */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">Reporter</div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Reporter</div>
                     <div className="col-span-2">
-                      <div className="text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
+                      <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
                         {reporterName}
                       </div>
                     </div>
@@ -658,7 +616,7 @@ export default function TaskDetailModal({
 
                   {/* Due date */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Start date
                     </div>
                     <div className="col-span-2">
@@ -667,7 +625,7 @@ export default function TaskDetailModal({
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Due date
                     </div>
                     <div className="col-span-2">
@@ -677,7 +635,7 @@ export default function TaskDetailModal({
 
                   {/* Story points */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Story points
                     </div>
                     <div className="col-span-2">
@@ -687,7 +645,7 @@ export default function TaskDetailModal({
 
                   {/* Labels */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Labels
                     </div>
                     <div className="col-span-2">
@@ -701,7 +659,7 @@ export default function TaskDetailModal({
 
                   {showSprintField && (
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                      <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                         Sprint
                       </div>
                       <div className="col-span-2">
@@ -712,11 +670,11 @@ export default function TaskDetailModal({
 
                   {showBoardField && (
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                      <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                         Board
                       </div>
                       <div className="col-span-2">
-                        <div className="text-[13px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
+                        <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
                           {boardLabel}
                         </div>
                       </div>
@@ -725,7 +683,7 @@ export default function TaskDetailModal({
 
                   {/* Priority */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[13px] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
                       Priority
                     </div>
                     <div className="col-span-2">
@@ -743,7 +701,7 @@ export default function TaskDetailModal({
               /> */}
 
               {/* Meta information */}
-              <div className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
+              <div className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] space-y-1">
                 <p>Created {formatDateTime(issue.createdAt)}</p>
                 <p>Updated {formatDateTime(issue.updatedAt)}</p>
               </div>

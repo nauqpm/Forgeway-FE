@@ -28,7 +28,7 @@ const config: Config = {
         light: "#6B7280",
 
         // design tokens mới
-        canvas: "#FBFBFA",
+        canvas: "#F2FAFF",
         surface: "#FFFFFF",
         "surface-subtle": "#F9F9F8",
         "app-border": "#EAEAEA",

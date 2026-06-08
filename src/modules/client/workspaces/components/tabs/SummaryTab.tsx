@@ -140,7 +140,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
       <div className="flex items-center justify-between relative" ref={summaryFilterRef}>
         <button
           onClick={() => setIsSummaryFilterOpen((prev) => !prev)}
-          className={`inline-flex items-center gap-2 border px-3 py-2 rounded-[6px] text-[13px] font-medium transition-colors ${
+          className={`inline-flex items-center gap-2 border px-3 py-2 rounded-[6px] text-[0.8125rem] font-medium transition-colors ${
             isSummaryFilterOpen
               ? "border-[#2563EB] text-[#2563EB] dark:text-[#93C5FD] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)]"
               : "border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
@@ -149,7 +149,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
           <SlidersHorizontal className="w-4 h-4" />
           Filter
           {selectedSummaryFields.length > 0 && (
-            <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[11px]">
+            <span className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[0.6875rem]">
               {selectedSummaryFields.length}
             </span>
           )}
@@ -166,19 +166,19 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
                 value={summaryFilterSearch}
                 onChange={(e) => setSummaryFilterSearch(e.target.value)}
                 placeholder="Search more filters"
-                className="w-full px-3 py-2 rounded-[6px] border border-[#2563EB] dark:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-[13px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB] dark:placeholder-[#6B6B6B]"
+                className="w-full px-3 py-2 rounded-[6px] border border-[#2563EB] dark:border-[#3B82F6] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB] dark:placeholder-[#6B6B6B]"
               />
             </div>
             <div className="max-h-80 overflow-y-auto py-1">
               {visibleSummaryFilterFields.length === 0 ? (
-                <p className="px-4 py-3 text-[13px] text-[#787774] dark:text-[#9B9A97]">No filters found</p>
+                <p className="px-4 py-3 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No filters found</p>
               ) : (
                 visibleSummaryFilterFields.map((field) => {
                   const checked = selectedSummaryFields.includes(field.id);
                   return (
                     <label
                       key={field.id}
-                      className={`flex items-center gap-3 px-4 py-2.5 text-[13px] cursor-pointer border-l-2 ${
+                      className={`flex items-center gap-3 px-4 py-2.5 text-[0.8125rem] cursor-pointer border-l-2 ${
                         checked
                           ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] border-[#2563EB] text-[#111111] dark:text-[#E8E8E7]"
                           : "border-transparent hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7]"
@@ -202,7 +202,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
                 })
               )}
             </div>
-            <div className="px-4 py-3 border-t border-[#EAEAEA] dark:border-white/[0.06] text-right text-[11px] text-[#787774] dark:text-[#9B9A97] font-medium">
+            <div className="px-4 py-3 border-t border-[#EAEAEA] dark:border-white/[0.06] text-right text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] font-medium">
               {visibleSummaryFilterFields.length} of {SUMMARY_FILTER_FIELDS.length}
             </div>
           </div>
@@ -210,7 +210,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
       </div>
 
       {selectedSummaryFields.length > 0 && (
-        <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
+        <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
           Showing{" "}
           <span className="font-semibold">{dashboardData.totalVisibleItems}</span> work
           items after applying{" "}
@@ -259,10 +259,10 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
             </div>
             <div>
               <p className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] leading-none">{item.value}</p>
-              <p className="text-[15px] text-[#111111] dark:text-[#E8E8E7] font-semibold leading-tight capitalize">
+              <p className="text-[0.9375rem] text-[#111111] dark:text-[#E8E8E7] font-semibold leading-tight capitalize">
                 {item.label}
               </p>
-              <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] mt-0.5">{item.subtitle}</p>
+              <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-0.5">{item.subtitle}</p>
             </div>
           </div>
         ))}
@@ -271,8 +271,8 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
       <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
         <div className="flex items-start justify-between gap-3 mb-5">
           <div>
-            <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Status overview</h3>
-            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Status overview</h3>
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
               Get a snapshot of the status of your work items.{" "}
               <button className="text-[#2563EB] dark:text-[#3B82F6] hover:underline font-medium">
                 View all work items
@@ -306,7 +306,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
                   <p className="text-4xl font-bold text-[#111111] dark:text-[#E8E8E7] leading-none">
                     {dashboardData.totalVisibleItems}
                   </p>
-                  <p className="text-[13px] font-semibold text-[#787774] dark:text-[#9B9A97] mt-2">
+                  <p className="text-[0.8125rem] font-semibold text-[#787774] dark:text-[#9B9A97] mt-2">
                     Total work items
                   </p>
                 </div>
@@ -314,7 +314,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
             </div>
             <div className="space-y-4">
               {dashboardData.statusDistribution.map((status) => (
-                <div key={status.name} className="flex items-center gap-3 text-[13px]">
+                <div key={status.name} className="flex items-center gap-3 text-[0.8125rem]">
                   <span
                     className="w-4 h-4 rounded-[2px]"
                     style={{ backgroundColor: status.color }}
@@ -327,14 +327,14 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
             </div>
           </div>
         ) : (
-          <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">No status data available.</p>
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No status data available.</p>
         )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
-          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Priority breakdown</h3>
-          <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Priority breakdown</h3>
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-4">
             Get a holistic view of how work is being prioritized.{" "}
             <button className="text-[#2563EB] dark:text-[#3B82F6] hover:underline font-medium">
               How to manage priorities for Workspaces
@@ -358,7 +358,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
                       )}%`,
                     }}
                   />
-                  <span className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] truncate max-w-full">
+                  <span className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] truncate max-w-full">
                     {priority.level}
                   </span>
                 </div>
@@ -368,8 +368,8 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
         </div>
 
         <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
-          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Types of work</h3>
-          <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Types of work</h3>
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-4">
             Get a breakdown of work items by their types.{" "}
             <button className="text-[#2563EB] dark:text-[#3B82F6] hover:underline font-medium">
               View all items
@@ -378,10 +378,10 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
           <div className="max-h-64 overflow-y-auto pr-2 space-y-3">
             {dashboardData.typeBreakdown.map((item) => (
               <div key={item.type} className="grid grid-cols-[1fr_2fr] items-center gap-4">
-                <span className="text-[13px] text-[#111111] dark:text-[#E8E8E7]">{item.type}</span>
+                <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{item.type}</span>
                 <div className="h-7 rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] overflow-hidden">
                   <div
-                    className="h-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[11px] font-semibold px-3 flex items-center"
+                    className="h-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[0.6875rem] font-semibold px-3 flex items-center"
                     style={{ width: `${item.percent}%` }}
                   >
                     {item.percent > 10 ? `${item.percent}%` : ""}
@@ -395,8 +395,8 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
-          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Team workload</h3>
-          <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Team workload</h3>
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-4">
             Monitor the capacity of your team.{" "}
             <button className="text-[#2563EB] dark:text-[#3B82F6] hover:underline font-medium">
               Reassign work items to get the right balance
@@ -408,9 +408,9 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
                 key={item.assignee}
                 className="grid grid-cols-[1fr_2fr] items-center gap-4"
               >
-                <div className="flex items-center gap-2 text-[13px] text-[#111111] dark:text-[#E8E8E7]">
+                <div className="flex items-center gap-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
                   <span
-                    className={`w-7 h-7 rounded-full ${item.color} text-white text-[10px] font-bold flex items-center justify-center`}
+                    className={`w-7 h-7 rounded-full ${item.color} text-white text-[0.625rem] font-bold flex items-center justify-center`}
                   >
                     {item.assignee === "Unassigned" ? "U" : item.assignee}
                   </span>
@@ -418,7 +418,7 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
                 </div>
                 <div className="h-7 rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] overflow-hidden">
                   <div
-                    className="h-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[11px] font-semibold px-3 flex items-center"
+                    className="h-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[0.6875rem] font-semibold px-3 flex items-center"
                     style={{ width: `${item.percent}%` }}
                   >
                     {item.percent > 10 ? `${item.percent}%` : ""}
@@ -430,14 +430,14 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
         </div>
 
         <div className="bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-5">
-          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Epic progress</h3>
-          <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Epic progress</h3>
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-4">
             See how your epics are progressing at a glance.{" "}
             <button className="text-[#2563EB] dark:text-[#3B82F6] hover:underline font-medium">
               View all epics
             </button>
           </p>
-          <div className="flex items-center gap-5 text-[13px] text-[#787774] dark:text-[#9B9A97] mb-4">
+          <div className="flex items-center gap-5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-4">
             <span className="inline-flex items-center gap-2">
               <span className="w-3 h-3 bg-green-600 rounded-[2px]" />
               Done
@@ -452,17 +452,17 @@ export default function SummaryTab({ issues, workspaceId, workspaceMongoId }: Su
             </span>
           </div>
           {dashboardData.epicProgress.length === 0 ? (
-            <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] p-5 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] p-5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
               No epics yet.
             </div>
           ) : (
             <div className="space-y-4">
               {dashboardData.epicProgress.map((epic) => (
                 <div key={epic.epic}>
-                  <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] mb-2">{epic.epic}</p>
+                  <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] mb-2">{epic.epic}</p>
                   <div className="h-7 rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] overflow-hidden">
                     <div
-                      className="h-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[11px] font-semibold px-3 flex items-center"
+                      className="h-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[0.6875rem] font-semibold px-3 flex items-center"
                       style={{ width: `${epic.percent}%` }}
                     >
                       {epic.percent}%

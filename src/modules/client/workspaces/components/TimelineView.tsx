@@ -323,7 +323,7 @@ export default function TimelineView({
 
   const renderSprintOverlay = () => (
     <div
-      className="relative h-[42px] shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]"
+      className="relative h-[2.625rem] shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]"
       style={{ width: totalWidth, minWidth: totalWidth }}
     >
       {renderWeeklyBoundaryGrid(SPRINT_TRACK_H)}
@@ -336,7 +336,7 @@ export default function TimelineView({
         return (
           <div
             key={sprint.id}
-            className="absolute top-2 h-7 rounded-[4px] border border-[#2563EB]/40 bg-[#EFF6FF]/80 px-3 text-[11px] font-semibold leading-7 text-[#1F6C9F] transition-colors hover:border-[#2563EB]/60 hover:bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] dark:text-[#93C5FD]"
+            className="absolute top-2 h-7 rounded-[4px] border border-[#2563EB]/40 bg-[#EFF6FF]/80 px-3 text-[0.6875rem] font-semibold leading-7 text-[#1F6C9F] transition-colors hover:border-[#2563EB]/60 hover:bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] dark:text-[#93C5FD]"
             style={{ left, width }}
             onMouseMove={(event) => handleHoverMove(event, sprint.title, sprint.startDate!, sprint.endDate!)}
             onMouseLeave={clearHoverTooltip}
@@ -360,7 +360,7 @@ export default function TimelineView({
       <div
         key={row.id}
         style={{ position: 'absolute', top: globalIdx * ROW_H, left: 0, right: 0, height: ROW_H }}
-        className={`flex items-center border-b border-[#EAEAEA] dark:border-white/8 px-3 gap-2 select-none
+        className={`flex items-center border-b border-[#EAEAEA] dark:border-white/[0.04] px-3 gap-2 select-none
           ${isSection
             ? 'bg-[#F9F9F8]/60 dark:bg-[rgba(255,255,255,0.02)]'
             : 'hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer'}`}
@@ -386,10 +386,10 @@ export default function TimelineView({
           />
         )}
 
-        <span className={`text-[11px] truncate leading-none
+        <span className={`text-[0.6875rem] truncate leading-none
           ${row.kind === 'sprint'  ? 'font-semibold text-[#2563EB] dark:text-[#3B82F6]' : ''}
           ${row.kind === 'epic'    ? 'font-semibold text-[#6D28D9] dark:text-[#A78BFA]' : ''}
-          ${row.kind === 'section' ? 'font-bold uppercase tracking-wider text-[10px] text-[#ABABAB] dark:text-[#6B6B6B]' : ''}
+          ${row.kind === 'section' ? 'font-bold uppercase tracking-wider text-[0.625rem] text-[#ABABAB] dark:text-[#6B6B6B]' : ''}
           ${row.kind === 'task'    ? 'text-[#111111] dark:text-[#E8E8E7]' : ''}
         `}>
           {row.title}
@@ -407,7 +407,7 @@ export default function TimelineView({
       <div
         key={row.id}
         style={{ position: 'absolute', top: globalIdx * ROW_H, left: 0, width: totalWidth, height: ROW_H }}
-        className="border-b border-[#EAEAEA] dark:border-white/8"
+        className="border-b border-[#EAEAEA] dark:border-white/[0.04]"
         onMouseMove={(event) => handleHoverMove(event, row.title, row.startDate, row.endDate)}
         onMouseLeave={clearHoverTooltip}
       >
@@ -443,7 +443,7 @@ export default function TimelineView({
               }
               if (row.meta) onClickTask?.(row.meta);
             }}
-            className={`group rounded-[6px] flex items-center px-2.5 text-white text-[12px] font-semibold overflow-visible select-none hover:brightness-110 transition-[filter] relative ${
+            className={`group rounded-[6px] flex items-center px-2.5 text-white text-xs font-semibold overflow-visible select-none hover:brightness-110 transition-[filter] relative ${
               isInteractiveTask ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'
             }`}
             style={{ background: row.barColor, boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
@@ -454,7 +454,7 @@ export default function TimelineView({
               <span className="sr-only">{row.title}</span>
             )}
             {width < TASK_LABEL_MIN_W && (
-              <span className="pointer-events-none absolute right-full top-1/2 z-30 mr-2 hidden max-w-[260px] -translate-y-1/2 whitespace-nowrap rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-2 py-1 text-[12px] font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:block" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
+              <span className="pointer-events-none absolute right-full top-1/2 z-30 mr-2 hidden max-w-[16.25rem] -translate-y-1/2 whitespace-nowrap rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-2 py-1 text-xs font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:block" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
                 {row.title}
               </span>
             )}
@@ -473,7 +473,7 @@ export default function TimelineView({
           <div
             className={`absolute pointer-events-none ${
               row.kind === 'sprint'
-                ? 'rounded-[6px] px-3 py-1 text-[11px] font-semibold text-white'
+                ? 'rounded-[6px] px-3 py-1 text-[0.6875rem] font-semibold text-white'
                 : 'rounded opacity-20'
             }`}
             style={{
@@ -511,12 +511,12 @@ export default function TimelineView({
             className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex items-center px-3 shrink-0 gap-2"
             style={{ height: TIMELINE_HEADER_H }}
           >
-            <span className="font-semibold text-[13px] text-[#787774] dark:text-[#9B9A97]">Work Items</span>
-            <span className="ml-auto text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] tabular-nums">{rows.length}</span>
+            <span className="font-semibold text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Work Items</span>
+            <span className="ml-auto text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] tabular-nums">{rows.length}</span>
           </div>
           {hasSprintTrack && (
           <div
-            className="flex shrink-0 items-center border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-3 text-[10px] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#3B82F6]"
+            className="flex shrink-0 items-center border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-3 text-[0.625rem] font-bold uppercase tracking-wider text-[#2563EB] dark:text-[#3B82F6]"
             style={{ height: SPRINT_TRACK_H }}
           >
             Sprints
@@ -554,11 +554,11 @@ export default function TimelineView({
                   <span className="absolute left-0 top-0 h-full w-px bg-[#EAEAEA] dark:bg-[#2A2A2A]" />
                 )}
                 {(day.getDate() === 1 || i === 0) && (
-                  <span className="absolute top-1.5 left-1.5 text-[9px] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider whitespace-nowrap">
+                  <span className="absolute top-1.5 left-1.5 text-[0.5625rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider whitespace-nowrap">
                     {format(day, 'MMM yy')}
                   </span>
                 )}
-                <span className={`text-[10px] font-medium
+                <span className={`text-[0.625rem] font-medium
                   ${isToday(day)
                     ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.15)] px-1 rounded-[3px]'
                     : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`}>
@@ -632,7 +632,7 @@ export default function TimelineView({
         >
           <ZoomOut className="w-4 h-4" />
         </button>
-        <span className="text-[11px] font-mono px-2 text-[#787774] dark:text-[#9B9A97] tabular-nums">
+        <span className="text-[0.6875rem] font-mono px-2 text-[#787774] dark:text-[#9B9A97] tabular-nums">
           {pixelsPerDay}px
         </span>
         <button
@@ -646,14 +646,14 @@ export default function TimelineView({
 
       {/* Drag date tooltip */}
       {tooltip && (
-        <div className="fixed bottom-16 right-8 z-50 bg-[#111111] text-white text-[11px] px-3 py-1.5 rounded-[4px] pointer-events-none font-mono" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
+        <div className="fixed bottom-16 right-8 z-50 bg-[#111111] text-white text-[0.6875rem] px-3 py-1.5 rounded-[4px] pointer-events-none font-mono" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}>
           {tooltip}
         </div>
       )}
 
       {hoverTooltip && (
         <div
-          className="fixed z-50 rounded-[4px] border border-white/10 bg-[#111111] px-2.5 py-1.5 text-[11px] font-medium text-white pointer-events-none"
+          className="fixed z-50 rounded-[4px] border border-white/10 bg-[#111111] px-2.5 py-1.5 text-[0.6875rem] font-medium text-white pointer-events-none"
           style={{ left: hoverTooltip.x, top: hoverTooltip.y, boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
         >
           {hoverTooltip.text}

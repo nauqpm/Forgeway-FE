@@ -8,7 +8,9 @@ import { useSecurityStore } from '../../shared/stores/authStore';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
 import LockoutAlert from '../security/LockoutAlert';
 import toast from 'react-hot-toast';
-import { Zap, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import Image from 'next/image';
+import logoIcon from '../../../../../app/icon.png';
 
 function LoginFormInner() {
   const [email, setEmail] = useState('');
@@ -59,12 +61,12 @@ function LoginFormInner() {
         <div className="bg-white/30 backdrop-blur-2xl rounded-[12px] border border-white/30 p-8 md:p-10 transition-all duration-300 hover:border-white/55">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-3 group">
-              <div className="w-12 h-12 bg-[#2563EB] rounded-[8px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                <Zap className="w-7 h-7 text-white" />
+              <div className="w-12 h-12 rounded-[8px] flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                <Image src={logoIcon} width={48} height={48} alt="Logo" className="w-12 h-12 object-contain" />
               </div>
             </Link>
             <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Welcome back</h1>
-            <p className="text-gray-600 text-[13px] mt-1.5 font-semibold">Sign in to your AL-TASK account</p>
+            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Sign in to your AL-TASK account</p>
           </div>
 
           {lockoutInfo && (lockoutInfo.isLocked || lockoutInfo.remainingAttempts < lockoutInfo.maxAttempts) && (
@@ -90,20 +92,20 @@ function LoginFormInner() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">Email</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="JaneDoe@gmail.com"
                 disabled={lockoutInfo?.isLocked}
-                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
+                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-[13px] font-semibold text-gray-800">Password</label>
+                <label className="block text-[0.8125rem] font-semibold text-gray-800">Password</label>
                 <Link href="/forgot-password" className="text-xs text-[#2563EB] hover:text-[#1D4ED8] font-semibold">Forgot password?</Link>
               </div>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required
                   placeholder="Enter your password" disabled={lockoutInfo?.isLocked}
-                  className="w-full px-4 py-2.5 pr-11 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
+                  className="w-full px-4 py-2.5 pr-11 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -116,7 +118,7 @@ function LoginFormInner() {
             </button>
           </form>
 
-          <p className="text-center text-[13px] text-gray-600 mt-6 font-medium">
+          <p className="text-center text-[0.8125rem] text-gray-600 mt-6 font-medium">
             Do not have an account?{' '}
             <Link href="/register" className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">Sign up for free</Link>
           </p>

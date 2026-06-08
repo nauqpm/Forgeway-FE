@@ -75,7 +75,7 @@ function MemberAvatar({ user }: { user: WorkspaceMember["userId"] }) {
     );
   }
   return (
-    <span className="w-9 h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0">
+    <span className="w-9 h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[0.6875rem] font-bold flex items-center justify-center flex-shrink-0">
       {initials}
     </span>
   );
@@ -130,7 +130,7 @@ function InviteForm({
   return (
     <div className="border border-[#2563EB]/20 dark:border-[#3B82F6]/20 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.06)] rounded-[8px] p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[13px] font-semibold text-[#1F6C9F] dark:text-[#93C5FD]">
+        <p className="text-[0.8125rem] font-semibold text-[#1F6C9F] dark:text-[#93C5FD]">
           Invite to workspace
         </p>
         <button
@@ -153,14 +153,14 @@ function InviteForm({
             }}
             placeholder="user@email.com"
             autoFocus
-            className={`w-full px-3 py-2 text-[13px] rounded-[6px] border bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:outline-none transition-colors ${
+            className={`w-full px-3 py-2 text-[0.8125rem] rounded-[6px] border bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:outline-none transition-colors ${
               emailError
                 ? "border-[#9F2F2D] focus:border-[#9F2F2D]"
                 : "border-[#EAEAEA] dark:border-white/[0.08] focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
             }`}
           />
           {emailError && (
-            <p className="text-[11px] text-[#9F2F2D] mt-1">{emailError}</p>
+            <p className="text-[0.6875rem] text-[#9F2F2D] mt-1">{emailError}</p>
           )}
         </div>
 
@@ -168,7 +168,7 @@ function InviteForm({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="appearance-none w-full sm:w-32 px-3 py-2 pr-7 text-[13px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:border-[#2563EB] transition-colors"
+            className="appearance-none w-full sm:w-32 px-3 py-2 pr-7 text-[0.8125rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:border-[#2563EB] transition-colors"
           >
             {ROLES.map((r) => (
               <option key={r.value} value={r.value}>
@@ -182,7 +182,7 @@ function InviteForm({
         <button
           type="submit"
           disabled={submitting || !email}
-          className="flex items-center justify-center gap-1.5 px-4 py-2 text-[13px] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors flex-shrink-0"
+          className="flex items-center justify-center gap-1.5 px-4 py-2 text-[0.8125rem] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors flex-shrink-0"
         >
           {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
           {submitting ? "Sending..." : "Send invite"}
@@ -342,11 +342,11 @@ export default function WorkspaceMembersPanel({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
-          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Members
           </h3>
           {!loading && (
-            <span className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
               ({members.length})
             </span>
           )}
@@ -354,7 +354,7 @@ export default function WorkspaceMembersPanel({
         <button
           onClick={() => setShowInvite((v) => !v)}
           disabled={!canManageMembers}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[0.8125rem] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-40 disabled:cursor-not-allowed rounded-[6px] transition-colors"
         >
           <UserPlus className="w-4 h-4" />
           Add Member
@@ -377,7 +377,7 @@ export default function WorkspaceMembersPanel({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search members..."
-          className="w-full pl-9 pr-3 py-2 text-[13px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors"
+          className="w-full pl-9 pr-3 py-2 text-[0.8125rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors"
         />
         {search && (
           <button
@@ -390,12 +390,12 @@ export default function WorkspaceMembersPanel({
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-[13px] text-[#787774] dark:text-[#9B9A97] py-4">
+        <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] py-4">
           <div className="w-4 h-4 border-2 border-[#EAEAEA] border-t-[#2563EB] rounded-full animate-spin" />
           Loading members...
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] p-5 text-[13px] text-[#787774] dark:text-[#9B9A97] text-center">
+        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] p-5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] text-center">
           {search ? "No members match your search." : "No members yet."}
         </div>
       ) : (
@@ -414,15 +414,15 @@ export default function WorkspaceMembersPanel({
               >
                 <MemberAvatar user={user} />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
+                  <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
                     {user.fullName || user.email}
                   </p>
-                  <p className="text-[11px] text-[#787774] dark:text-[#9B9A97] truncate">
+                  <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] truncate">
                     {user.email}
                   </p>
                 </div>
                 <span
-                  className={`text-[11px] font-medium px-2 py-0.5 rounded-[4px] flex-shrink-0 ${badgeClass}`}
+                  className={`text-[0.6875rem] font-medium px-2 py-0.5 rounded-[4px] flex-shrink-0 ${badgeClass}`}
                 >
                   {roleLabel}
                 </span>
@@ -443,7 +443,7 @@ export default function WorkspaceMembersPanel({
           onClick={(event) => event.stopPropagation()}
         >
           <div className="border-b border-[#EAEAEA] dark:border-white/[0.06] px-3 py-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">
               Grant permission
             </p>
           </div>
@@ -455,7 +455,7 @@ export default function WorkspaceMembersPanel({
                 handleUpdateMemberRole(contextMenu.member, role.value)
               }
               disabled={updatingMemberId === contextMenu.member.userId?._id}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50 transition-colors ${
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-[0.8125rem] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50 transition-colors ${
                 contextMenu.member.role === role.value
                   ? "text-[#2563EB] dark:text-[#3B82F6] font-semibold"
                   : "text-[#787774] dark:text-[#9B9A97]"
@@ -474,7 +474,7 @@ export default function WorkspaceMembersPanel({
             type="button"
             onClick={() => handleRemoveMember(contextMenu.member)}
             disabled={removingMemberId === contextMenu.member.userId?._id}
-            className="w-full flex items-center gap-2 px-3 py-2 text-left text-[13px] text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] disabled:opacity-50 transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] disabled:opacity-50 transition-colors"
           >
             {removingMemberId === contextMenu.member.userId?._id ? (
               <Loader2 className="w-4 h-4 animate-spin" />

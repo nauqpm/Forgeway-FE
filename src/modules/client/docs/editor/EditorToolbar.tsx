@@ -154,7 +154,7 @@ export default function EditorToolbar({ editor }: Props) {
   const selectedFontFamily = activeTextStyle.fontFamily || DEFAULT_FONT_FAMILY;
   const selectedFontSize = activeTextStyle.fontSize || DEFAULT_FONT_SIZE;
 
-  const selectCls = "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none";
+  const selectCls = "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[0.6875rem] text-[#111111] dark:text-[#E8E8E7] outline-none";
 
   return (
     <>
@@ -171,7 +171,7 @@ export default function EditorToolbar({ editor }: Props) {
             <button
               type="button"
               onClick={openActiveLink}
-              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Open
@@ -179,7 +179,7 @@ export default function EditorToolbar({ editor }: Props) {
             <button
               type="button"
               onClick={openLinkPopover}
-              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[11px] font-semibold text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
             >
               <Pencil className="h-3.5 w-3.5" />
               Edit
@@ -187,7 +187,7 @@ export default function EditorToolbar({ editor }: Props) {
             <button
               type="button"
               onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
-              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[11px] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
+              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[0.6875rem] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
             >
               <Unlink className="h-3.5 w-3.5" />
               Remove
@@ -263,7 +263,7 @@ export default function EditorToolbar({ editor }: Props) {
         ))}
 
         <ToolbarButton onClick={() => editor.chain().focus().unsetColor().run()} title="Reset text color">
-          <span className="text-[11px] font-bold">A</span>
+          <span className="text-[0.6875rem] font-bold">A</span>
         </ToolbarButton>
 
         <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />

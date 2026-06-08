@@ -63,7 +63,7 @@ export default function TaskSubtasks({ subtasks = [], onAdd, onUpdateStatus }: T
               <span className={`text-sm flex-1 font-medium ${task.status === "Done" ? "text-[#787774] dark:text-[#9B9A97] line-through" : "text-[#111111] dark:text-[#E8E8E7]"}`}>
                 {task.title}
               </span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border transition-colors ${
+              <span className={`px-2 py-0.5 rounded text-[0.625rem] font-bold border transition-colors ${
                   task.status === "Done" ? "bg-[#EDF3EC] text-[#346538] border-[#346538]/20 dark:bg-[rgba(52,101,56,0.12)] dark:text-[#4ADE80] dark:border-[#4ADE80]/20" :
                   task.status === "In Progress" ? "bg-[#FBF3DB] text-[#956400] border-[#956400]/20 dark:bg-[rgba(149,100,0,0.12)] dark:text-[#F59E0B] dark:border-[#F59E0B]/20" :
                   "bg-[#EFF6FF] text-[#1F6C9F] border-[#2563EB]/20 dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD] dark:border-[#93C5FD]/20"

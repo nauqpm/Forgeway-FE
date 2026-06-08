@@ -166,7 +166,7 @@ function ColumnComponent({ column }: { column: Column }) {
   return (
     <div
       ref={setNodeRef}
-      className="bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] p-3 flex flex-col min-h-[500px]"
+      className="bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] p-3 flex flex-col min-h-[31.25rem]"
     >
       <div className="flex items-center justify-between mb-3 px-1">
         <h2 className="text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wide">
@@ -234,7 +234,7 @@ function TaskCard({ task, isOverlay }: { task: Task; isOverlay?: boolean }) {
       <div className="flex items-center justify-between text-xs text-[#787774] dark:text-[#9B9A97]">
         <span>{task.id}</span>
 
-        <div className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-white/8 flex items-center justify-center text-[10px] font-medium">
+        <div className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-white/8 flex items-center justify-center text-[0.625rem] font-medium">
           TN
         </div>
       </div>

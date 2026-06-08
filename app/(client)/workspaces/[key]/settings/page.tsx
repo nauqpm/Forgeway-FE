@@ -32,6 +32,9 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
 import InviteModal from "@/modules/admin/components/common/components/InviteModal";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import RoleChanger, {
+  WorkspaceRoleValue,
+} from "@/modules/client/workspaces/components/RoleChanger";
 import {
   inviteService,
   PendingInvite,
@@ -40,7 +43,7 @@ import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/servic
 
 type WorkspaceStatus = "active" | "archived";
 type WorkspaceAccess = "public" | "private";
-type InviteRole = "workspace_admin" | "member" | "viewer";
+type InviteRole = WorkspaceRoleValue;
 
 interface WorkspaceSettings {
   _id: string;
@@ -75,21 +78,6 @@ const ROLE_LABELS: Record<string, string> = {
   member: "Member",
   viewer: "Viewer",
 };
-
-const ROLE_BADGES: Record<string, string> = {
-  workspace_admin:
-    "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-  space_admin:
-    "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
-  member: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  viewer: "bg-[#F7F6F3] text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]",
-};
-
-const MEMBER_ROLE_OPTIONS: { value: InviteRole; label: string }[] = [
-  { value: "workspace_admin", label: "Administrator" },
-  { value: "member", label: "Member" },
-  { value: "viewer", label: "Viewer" },
-];
 
 const normalizeWorkspace = (payload: any): WorkspaceSettings =>
   (payload?.data ?? payload) as WorkspaceSettings;
@@ -1107,19 +1095,20 @@ function MemberSettings({
                   const memberUser = member.userId;
                   const displayName =
                     memberUser?.fullName || memberUser?.email || "User";
-                  const roleLabel = ROLE_LABELS[member.role] ?? member.role;
-                  const badgeClass =
-                    ROLE_BADGES[member.role] ?? ROLE_BADGES.member;
                   const memberId = memberUser?._id;
                   const isSelf = memberId === currentUserId;
                   const isBusy =
                     updatingMemberId === memberId ||
                     removingMemberId === memberId;
+                  const normalizedRole: InviteRole =
+                    member.role === "space_admin"
+                      ? "workspace_admin"
+                      : (member.role as InviteRole);
 
                   return (
                     <div
                       key={memberId ?? displayName + "-" + member.role}
-                        className="flex flex-col gap-3 bg-white p-4 dark:bg-[#202020] sm:flex-row sm:items-center"
+                      className="flex flex-col gap-3 bg-white p-4 dark:bg-[#202020] sm:flex-row sm:items-center"
                     >
                       <div className="flex min-w-0 flex-1 items-center gap-3">
                         {memberUser?.avatar ? (
@@ -1150,28 +1139,15 @@ function MemberSettings({
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2 sm:w-60 sm:flex-row sm:items-center sm:justify-end">
-                        <select
-                          value={
-                            member.role === "space_admin"
-                              ? "workspace_admin"
-                              : member.role
-                          }
-                          onChange={(event) =>
-                            handleUpdateMemberRole(
-                              member,
-                              event.target.value as InviteRole,
-                            )
-                          }
+                      <div className="flex flex-col gap-2 sm:w-[20rem] sm:flex-row sm:items-end sm:justify-end">
+                        <RoleChanger
+                          value={normalizedRole}
+                          onChange={(role) => handleUpdateMemberRole(member, role)}
                           disabled={!canManageWorkspace || isSelf || isBusy}
-                          className="h-9 rounded-[6px] border border-[#EAEAEA] bg-white px-3 text-sm text-[#111111] outline-none focus:border-[#2563EB] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.08] dark:bg-[#252525] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
-                        >
-                          {MEMBER_ROLE_OPTIONS.map((role) => (
-                            <option key={role.value} value={role.value}>
-                              {role.label}
-                            </option>
-                          ))}
-                        </select>
+                          isLoading={updatingMemberId === memberId}
+                          compact
+                          className="w-full sm:w-[9rem]"
+                        />
                         <button
                           type="button"
                           onClick={() => handleRemoveMember(member)}
@@ -1206,7 +1182,7 @@ function MemberSettings({
             </div>
           ) : (
             <div className="overflow-x-auto rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
-              <table className="w-full min-w-[620px] text-left text-sm">
+              <table className="w-full min-w-[38.75rem] text-left text-sm">
                 <thead className="border-b border-[#EAEAEA] bg-[#F9F9F8] font-medium text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
                   <tr>
                     <th className="px-4 py-3">Email</th>

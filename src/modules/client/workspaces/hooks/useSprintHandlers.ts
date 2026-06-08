@@ -39,23 +39,13 @@ export const useSprintHandlers = ({
   const createSprintMutation = useMutation({
     mutationFn: (input: CreateSprintInput) =>
       sprintService.createSprint(workspaceId, input),
-    onMutate: async (input) => {
+    onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
-      const previousSprints = sprints;
-      const tempId = `temp-${Date.now()}`;
-      const tempSprint: Sprint = {
-        _id: tempId,
-        id: tempId,
-        workspaceId,
-        name: input.name,
-        goal: input.goal,
-        status: "planning",
-        startDate: input.startDate,
-        endDate: input.endDate,
-        duration: input.duration,
-      };
-      setSprints([...sprints, tempSprint]);
-      return { previousSprints };
+      return { previousSprints: sprints };
+    },
+    onSuccess: (newSprint) => {
+      setSprints((prev) => [...prev, newSprint]);
+      toast.success("Sprint created");
     },
     onError: (err, _input, context) => {
       if (context?.previousSprints) setSprints(context.previousSprints);
@@ -63,9 +53,6 @@ export const useSprintHandlers = ({
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
-    },
-    onSuccess: () => {
-      toast.success("Sprint created");
     },
   });
 

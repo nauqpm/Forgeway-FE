@@ -16,7 +16,7 @@ type TaskLabelModalProps = {
   onSaved: (issue: Issue) => void;
 };
 
-const inputCls = "h-10 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-3 text-[13px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]";
+const inputCls = "h-10 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-3 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]";
 
 export default function TaskLabelModal({
   isOpen,
@@ -129,7 +129,7 @@ export default function TaskLabelModal({
 
   if (!isOpen) return null;
 
-  const cancelBtnCls = "rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50";
+  const cancelBtnCls = "rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <div
@@ -143,11 +143,11 @@ export default function TaskLabelModal({
       >
         <div className="flex items-start justify-between gap-4 border-b border-[#EAEAEA] dark:border-white/[0.06] p-5">
           <div className="min-w-0">
-            <h3 className="flex items-center gap-2 text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+            <h3 className="flex items-center gap-2 text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
               <Tag className="h-4 w-4 text-[#2563EB] dark:text-[#3B82F6]" />
               Labels
             </h3>
-            <p className="mt-1 truncate text-[13px] text-[#787774] dark:text-[#9B9A97]">
+            <p className="mt-1 truncate text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
               {issue.key} - {issue.title}
             </p>
           </div>
@@ -178,7 +178,7 @@ export default function TaskLabelModal({
               type="button"
               onClick={handleCreateLabel}
               disabled={creating || !newLabelName.trim()}
-              className="inline-flex h-10 items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[13px] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Add
@@ -197,12 +197,12 @@ export default function TaskLabelModal({
 
           <div className="max-h-72 overflow-y-auto rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] p-1">
             {loading ? (
-              <div className="flex h-28 items-center justify-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+              <div className="flex h-28 items-center justify-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Loading labels
               </div>
             ) : filteredLabels.length === 0 ? (
-              <div className="px-3 py-8 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+              <div className="px-3 py-8 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 No labels found
               </div>
             ) : (
@@ -211,7 +211,7 @@ export default function TaskLabelModal({
                 return (
                   <div
                     key={label.id}
-                    className={`flex w-full items-center justify-between gap-3 rounded-[6px] px-3 py-2 text-left text-[13px] transition-colors ${
+                    className={`flex w-full items-center justify-between gap-3 rounded-[6px] px-3 py-2 text-left text-[0.8125rem] transition-colors ${
                       active
                         ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]"
                         : "text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
@@ -258,8 +258,8 @@ export default function TaskLabelModal({
                     <Trash2 className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
-                    <h4 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Delete label</h4>
-                    <p className="mt-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                    <h4 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Delete label</h4>
+                    <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                       Delete{" "}
                       <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">"{labelToDelete.name}"</span>?
                       {" "}This will remove it from all tasks.
@@ -280,7 +280,7 @@ export default function TaskLabelModal({
                   type="button"
                   onClick={confirmDeleteLabel}
                   disabled={deletingIds.includes(labelToDelete.id)}
-                  className="inline-flex items-center gap-2 rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#8F2927] dark:hover:bg-[#F87171]/80 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#8F2927] dark:hover:bg-[#F87171]/80 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {deletingIds.includes(labelToDelete.id) && <Loader2 className="h-4 w-4 animate-spin" />}
                   Delete
@@ -298,7 +298,7 @@ export default function TaskLabelModal({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             Save

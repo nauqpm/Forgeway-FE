@@ -111,14 +111,14 @@ export default function ListTab({
       <button
         type="button"
         onClick={() => setShowColumnMenu(o => !o)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border text-[13px] bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border text-[0.8125rem] bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
       >
         <Columns className="w-4 h-4" />
         Columns
       </button>
       {showColumnMenu && (
         <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 p-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
-          <div className="text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-2 px-2 uppercase tracking-wider">Show / Hide</div>
+          <div className="text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-2 px-2 uppercase tracking-wider">Show / Hide</div>
           {Object.keys(COLUMN_LABELS).map(id => (
             <label key={id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] cursor-pointer">
               <input
@@ -129,7 +129,7 @@ export default function ListTab({
                   setColumnVisibility(prev => ({ ...prev, [id]: prev[id] === false }))
                 }
               />
-              <span className="text-[13px] text-[#111111] dark:text-[#E8E8E7]">{COLUMN_LABELS[id]}</span>
+              <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{COLUMN_LABELS[id]}</span>
             </label>
           ))}
         </div>
@@ -304,6 +304,7 @@ export default function ListTab({
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
+              workspaceMembers={members}
               sprints={sprints}
               boardColumns={boardColumns}
               workspaceTemplate={workspaceTemplate}
@@ -320,6 +321,7 @@ export default function ListTab({
             <div className="flex-1 overflow-x-auto min-w-0">
             <DataGridListView
               issues={filteredIssues}
+              workspaceId={workspaceId}
               members={members}
               boardColumns={boardColumns}
               columnVisibility={columnVisibility}
@@ -345,7 +347,7 @@ export default function ListTab({
                   type="button"
                   onClick={() => setListSplitOrderOpen((o) => !o)}
                   title={`Order work items by: ${LIST_SPLIT_SORT_OPTIONS.find((o) => o.id === listSplitSortBy)?.label ?? listSplitSortBy} (${listSplitSortDir})`}
-                  className={`flex w-full items-center justify-between gap-2 rounded-[6px] border bg-white dark:bg-[#202020] px-2.5 py-1.5 text-left text-[13px] font-medium transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] ${
+                  className={`flex w-full items-center justify-between gap-2 rounded-[6px] border bg-white dark:bg-[#202020] px-2.5 py-1.5 text-left text-[0.8125rem] font-medium transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] ${
                     listSplitOrderOpen
                       ? "border-[#2563EB] dark:border-[#3B82F6] text-[#2563EB] dark:text-[#3B82F6]"
                       : "border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7]"
@@ -358,13 +360,13 @@ export default function ListTab({
                 </button>
                 {listSplitOrderOpen && (
                   <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
-                    <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+                    <div className="px-3 py-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                       Order work items by
                     </div>
                     {LIST_SPLIT_SORT_OPTIONS.map((opt) => (
                       <label
                         key={opt.id}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[13px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[0.8125rem] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                       >
                         <input
                           type="radio"
@@ -409,7 +411,7 @@ export default function ListTab({
 
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {splitSortedIssues.length === 0 ? (
-                <p className="p-4 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <p className="p-4 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   No tasks match the current filter.
                 </p>
               ) : (
@@ -441,16 +443,16 @@ export default function ListTab({
                                       : "text-blue-500"
                                 }`}
                               />
-                              <span className="shrink-0 font-mono text-[11px] text-[#787774] dark:text-[#9B9A97]">
+                              <span className="shrink-0 font-mono text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                                 {issueKey}
                               </span>
                             </div>
-                            <p className="mt-1 line-clamp-2 text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
+                            <p className="mt-1 line-clamp-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
                               {issue.title}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               <span
-                                className={`rounded-[4px] px-1.5 py-0.5 text-[10px] font-semibold ${
+                                className={`rounded-[4px] px-1.5 py-0.5 text-[0.625rem] font-semibold ${
                                   resolvedCol?.isDone || statusName.toLowerCase().includes("done")
                                     ? "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] text-[#346538] dark:text-[#4ADE80]"
                                     : statusName.toLowerCase().includes("progress")
@@ -461,7 +463,7 @@ export default function ListTab({
                                 {statusName}
                               </span>
                               {issue.priority && (
-                                <span className="rounded-[4px] bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] px-1.5 py-0.5 text-[10px] font-semibold text-[#956400] dark:text-[#F59E0B]">
+                                <span className="rounded-[4px] bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] px-1.5 py-0.5 text-[0.625rem] font-semibold text-[#956400] dark:text-[#F59E0B]">
                                   {issue.priority}
                                 </span>
                               )}
@@ -471,7 +473,7 @@ export default function ListTab({
                       );
                     })}
                   </ul>
-                  <div className="shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] px-3 py-2 text-center text-[11px] text-[#787774] dark:text-[#9B9A97]">
+                  <div className="shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] px-3 py-2 text-center text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                     {splitSortedIssues.length} of {splitSortedIssues.length}
                   </div>
                 </>
@@ -479,15 +481,16 @@ export default function ListTab({
             </div>
           </aside>
 
-          <section className="flex min-h-[320px] flex-col overflow-hidden bg-white dark:bg-[#202020] lg:min-h-0">
+          <section className="flex min-h-80 flex-col overflow-hidden bg-white dark:bg-[#202020] lg:min-h-0">
             {!selectedIssue ? (
-              <div className="flex flex-1 items-center justify-center p-8 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+              <div className="flex flex-1 items-center justify-center p-8 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 Select a task in the left column to view details.
               </div>
             ) : splitSortedIssues.some((i) => i.id === selectedIssue.id) ? (
               <TaskDetailList
                 issue={selectedIssue}
                 workspaceId={workspaceId}
+                workspaceMembers={members}
                 sprints={sprints}
                 boardColumns={boardColumns}
                 workspaceTemplate={workspaceTemplate}
@@ -499,7 +502,7 @@ export default function ListTab({
                 onUpdateIssue={handleUpdateIssue}
               />
             ) : (
-              <div className="flex flex-1 items-center justify-center p-8 text-center text-[13px] text-[#787774] dark:text-[#9B9A97]">
+              <div className="flex flex-1 items-center justify-center p-8 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 The selected task is no longer in the filtered list.{" "}
                 <button
                   type="button"

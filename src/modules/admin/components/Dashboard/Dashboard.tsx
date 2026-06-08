@@ -6,6 +6,7 @@ import { BookOpen, CheckCircle2, Database, LayoutDashboard } from "lucide-react"
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
+import { boardService } from "@/modules/client/workspaces/services/boardService";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
 import type { Issue } from "@/modules/client/workspaces/types/issue.type";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -31,8 +32,8 @@ type UserDashboardStats = {
   tasksAssigned?: number;
   tasksByStatus?: Record<string, number>;
   tasksByPriority?: Record<string, number>;
-  recentlyCompleted?: Issue[];
-  recentActivity?: unknown[];
+  recentlyCompleted?: any[];
+  recentActivity?: any[];
 };
 
 type DashboardTask = {
@@ -72,23 +73,28 @@ const toWorkspaceCard = (workspace: ForYouWorkspace, index: number) => {
   };
 };
 
-const isObjectId = (s?: string) => /^[0-9a-f]{24}$/i.test(s ?? "");
+const isIdLike = (s?: string) =>
+  /^[0-9a-f]{24}$/i.test(s ?? "") ||
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s ?? "");
 
-const resolveStatusLabel = (issue: Issue): string => {
-  if (!isObjectId(issue.status)) return issue.status || "No status";
-  if (!isObjectId(issue.columnId)) return issue.columnId || "In Progress";
-  return "In Progress";
+const resolveStatusLabel = (issue: Issue, columnMap: Record<string, string> = {}): string => {
+  if (issue.status && columnMap[issue.status]) return columnMap[issue.status];
+  if (issue.columnId && columnMap[issue.columnId]) return columnMap[issue.columnId];
+  if (issue.status && !isIdLike(issue.status)) return issue.status;
+  if (issue.columnId && !isIdLike(issue.columnId)) return issue.columnId;
+  return "No status";
 };
 
 const toDashboardTask = (
   issue: Issue,
   workspace: ForYouWorkspace,
   type: "assigned" | "worked",
+  columnMap: Record<string, string> = {},
 ): DashboardTask => {
   const workspaceId = workspaceIdOf(workspace);
   const workspaceKey = workspaceRouteKeyOf(workspace);
   const wsName = (workspace as any).name ?? (workspace as any).title ?? (workspace as any).label ?? "Workspace";
-  const statusLabel = resolveStatusLabel(issue);
+  const statusLabel = resolveStatusLabel(issue, columnMap);
 
   return {
     id: `${workspaceId}-${issue.id}`,
@@ -140,37 +146,71 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
           return;
         }
 
-        const assignedGroups = await Promise.all(
+        const workspaceDataList = await Promise.all(
           nextWorkspaces.slice(0, 6).map(async (workspace) => {
             const workspaceId = workspaceIdOf(workspace);
-            if (!workspaceId) return [];
+            if (!workspaceId) return { tasks: [] as Issue[], columnMap: {} as Record<string, string>, workspace };
 
-            const tasks = await taskService
-              .getBoardTasks(workspaceId, {
-                assigneeId: user.id,
-                page: 1,
-                limit: 5,
-                sortBy: "updatedAt",
-                sortOrder: "desc",
-              })
-              .catch(() => []);
+            const [tasks, boardData] = await Promise.all([
+              taskService
+                .getBoardTasks(workspaceId, {
+                  assigneeId: user.id,
+                  page: 1,
+                  limit: 5,
+                  sortBy: "updatedAt",
+                  sortOrder: "desc",
+                })
+                .catch(() => [] as Issue[]),
+              boardService.getBoardByWorkspace(workspaceId).catch(() => ({ columns: [] })),
+            ]);
 
-            return tasks.map((task) => toDashboardTask(task, workspace, "assigned"));
+            const columnMap: Record<string, string> = {};
+            for (const col of boardData.columns ?? []) {
+              if (col.id) columnMap[col.id] = col.name;
+              if ((col as any)._id) columnMap[(col as any)._id] = col.name;
+            }
+
+            return { tasks, columnMap, workspace };
           }),
         );
 
         if (cancelled) return;
 
-        const completedTasks = Array.isArray(nextUserStats?.recentlyCompleted)
-          ? nextUserStats.recentlyCompleted
-              .map((task) => {
-                const workspace =
-                  nextWorkspaces.find((item) => workspaceIdOf(item) === (task as any).workspaceId) ||
-                  nextWorkspaces[0];
-                return workspace ? toDashboardTask(task, workspace, "worked") : null;
-              })
-              .filter(Boolean) as DashboardTask[]
-          : [];
+        const globalColumnMap: Record<string, string> = {};
+        for (const { columnMap } of workspaceDataList) {
+          Object.assign(globalColumnMap, columnMap);
+        }
+
+        const assignedGroups = workspaceDataList.map(({ tasks, workspace }) =>
+          (tasks as Issue[]).map((task) => toDashboardTask(task, workspace, "assigned", globalColumnMap)),
+        );
+
+        const rawWorked: any[] = Array.isArray(nextUserStats?.recentActivity)
+          ? nextUserStats.recentActivity
+          : Array.isArray(nextUserStats?.recentlyCompleted)
+            ? nextUserStats.recentlyCompleted
+            : [];
+
+        const completedTasks = rawWorked
+          .map((activity) => {
+            const rawWsId =
+              typeof activity.workspaceId === "string"
+                ? activity.workspaceId
+                : activity.workspaceId?._id ?? activity.workspaceId?.id ?? "";
+            const workspace =
+              nextWorkspaces.find((item) => workspaceIdOf(item) === rawWsId) ||
+              nextWorkspaces[0];
+            if (!workspace) return null;
+            const proxy = {
+              id: activity._id ?? activity.id ?? "",
+              key: activity.key ?? "",
+              title: activity.title ?? "",
+              columnId: activity.columnId ?? "",
+              status: activity.status ?? "",
+            } as Issue;
+            return toDashboardTask(proxy, workspace, "worked", globalColumnMap);
+          })
+          .filter(Boolean) as DashboardTask[];
 
         setAssignedTasks(assignedGroups.flat().slice(0, 10));
         setWorkedTasks(completedTasks.slice(0, 10));
@@ -297,7 +337,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
               className={`rounded-[6px] px-3 py-1.5 text-sm transition ${
                 activeTab === tab.key
                   ? "bg-[#EFF6FF] font-medium text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
-                  : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-white/8"
+                  : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-white/[0.05]"
               }`}
             >
               {tab.label}

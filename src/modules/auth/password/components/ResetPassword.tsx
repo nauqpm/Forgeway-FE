@@ -66,12 +66,12 @@ const ResetPassword = () => {
               </div>
             </Link>
             <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Reset password</h1>
-            <p className="text-gray-600 text-[13px] mt-1.5 font-semibold">Enter your email, OTP, and new password</p>
+            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Enter your email, OTP, and new password</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">Email</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
@@ -80,13 +80,13 @@ const ResetPassword = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="ten@company.com"
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">OTP</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">OTP</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
@@ -97,13 +97,13 @@ const ResetPassword = () => {
                   placeholder="Enter the 6-digit code"
                   pattern="[0-9]{6}"
                   maxLength={6}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">New password</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">New password</label>
               <div className="relative">
                 <input
                   type="password"
@@ -111,25 +111,25 @@ const ResetPassword = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   placeholder="Enter new password"
-                  className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
+                  className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
                 />
                 <PasswordPolicyChecklist password={password} />
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-semibold text-gray-800 mb-1.5">Confirm password</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Confirm password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 placeholder="Re-enter new password"
-                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[13px] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
+                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] outline-none transition-all shadow-inner"
               />
             </div>
 
-            {error && <p className="text-red-600 text-[13px] text-center font-medium bg-red-500/10 py-2 rounded-[6px] border border-red-500/20">{error}</p>}
+            {error && <p className="text-red-600 text-[0.8125rem] text-center font-medium bg-red-500/10 py-2 rounded-[6px] border border-red-500/20">{error}</p>}
 
             <button
               type="submit"
@@ -147,7 +147,7 @@ const ResetPassword = () => {
             </button>
           </form>
 
-          <p className="text-center text-[13px] text-gray-600 mt-6 font-medium">
+          <p className="text-center text-[0.8125rem] text-gray-600 mt-6 font-medium">
             <Link href="/login" className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">
               Back to sign in
             </Link>

@@ -249,7 +249,7 @@ export default function DataGridListView({
         const assignee = info.getValue() as string;
         return assignee && assignee !== 'U' ? (
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[10px] font-bold">
+            <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.625rem] font-bold">
               {assignee}
             </div>
             <span className="text-sm text-[#787774] dark:text-[#9B9A97]">{assignee}</span>
@@ -326,7 +326,7 @@ export default function DataGridListView({
   const [showGroupMenu, setShowGroupMenu] = useState(false);
 
   return (
-    <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8  overflow-hidden flex flex-col font-sans h-[700px]">
+    <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8  overflow-hidden flex flex-col font-sans h-[43.75rem]">
       {/* Top Toolbar */}
       <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525] shrink-0">
         <div className="flex items-center gap-3">
@@ -352,7 +352,7 @@ export default function DataGridListView({
                 <div 
                   key={idx}
                   onClick={() => toggleAssigneeFilter(assignee)}
-                  className={`w-7 h-7 rounded-full text-white flex items-center justify-center text-[10px] font-bold border-2 cursor-pointer transition-transform hover:z-10 hover:scale-110 ${isActive ? 'bg-[#2563EB] border-[#BFDBFE] ring-2 ring-[#2563EB]' : 'bg-[#ABABAB] border-white'}`}
+                  className={`w-7 h-7 rounded-full text-white flex items-center justify-center text-[0.625rem] font-bold border-2 cursor-pointer transition-transform hover:z-10 hover:scale-110 ${isActive ? 'bg-[#2563EB] border-[#BFDBFE] ring-2 ring-[#2563EB]' : 'bg-[#ABABAB] border-white'}`}
                   title={assignee}
                 >
                   {assignee.substring(0, 2).toUpperCase()}
@@ -360,7 +360,7 @@ export default function DataGridListView({
               );
             })}
             {uniqueAssignees.length > 4 && (
-              <div className="w-7 h-7 rounded-full bg-[#F7F6F3] dark:bg-[#2A2A2A] border-2 border-white dark:border-white/8 text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[10px] font-bold z-0">
+              <div className="w-7 h-7 rounded-full bg-[#F7F6F3] dark:bg-[#2A2A2A] border-2 border-white dark:border-white/8 text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold z-0">
                 +{uniqueAssignees.length - 4}
               </div>
             )}
@@ -571,7 +571,7 @@ export default function DataGridListView({
                      <option key={a} value={a}>{a}</option>
                    ))}
                  </select>
-                 {newTaskAssignee && <span className="text-xs font-medium text-[#787774] dark:text-[#9B9A97] max-w-[80px] truncate">{newTaskAssignee}</span>}
+                 {newTaskAssignee && <span className="text-xs font-medium text-[#787774] dark:text-[#9B9A97] max-w-20 truncate">{newTaskAssignee}</span>}
                </div>
 
                {/* Create Button */}
@@ -580,7 +580,7 @@ export default function DataGridListView({
                  className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium px-3 py-1.5 rounded-[6px] flex items-center gap-1 transition-colors  ml-1"
                >
                  Create
-                 <span className="text-[10px] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] ml-0.5 leading-none bg-[#3B82F6]/30">↵</span>
+                 <span className="text-[0.625rem] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] ml-0.5 leading-none bg-[#3B82F6]/30">↵</span>
                </button>
              </div>
           </div>

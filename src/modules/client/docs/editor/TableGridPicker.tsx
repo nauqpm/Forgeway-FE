@@ -65,17 +65,17 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
 
   if (!mounted) return null;
 
-  const inputCls = "mt-1 h-8 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[11px] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
+  const inputCls = "mt-1 h-8 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[0.6875rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
 
   return createPortal(
     <div
       ref={pickerRef}
-      className="fixed z-[80] w-[250px] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3"
+      className="fixed z-[80] w-[15.625rem] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3"
       style={{ left: position.left, top: position.top, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Insert Table</span>
-        <span className="text-[11px] text-[#2563EB] dark:text-[#3B82F6]">
+        <span className="text-[0.6875rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Insert Table</span>
+        <span className="text-[0.6875rem] text-[#2563EB] dark:text-[#3B82F6]">
           {hovered.rows} x {hovered.cols}
         </span>
       </div>
@@ -103,13 +103,13 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
       </div>
 
       <div className="mt-3 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-3">
-        <div className="mb-2 text-[11px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Customize</div>
+        <div className="mb-2 text-[0.6875rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Customize</div>
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
+          <label className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
             Rows
             <input type="number" min={1} max={MAX_CUSTOM_SIZE} value={customRows} onChange={(e) => setCustomRows(Number(e.target.value))} className={inputCls} />
           </label>
-          <label className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
+          <label className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
             Columns
             <input type="number" min={1} max={MAX_CUSTOM_SIZE} value={customCols} onChange={(e) => setCustomCols(Number(e.target.value))} className={inputCls} />
           </label>
@@ -117,7 +117,7 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
         <button
           type="button"
           onClick={insertCustomTable}
-          className="mt-3 h-8 w-full rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[11px] font-semibold text-white hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
+          className="mt-3 h-8 w-full rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[0.6875rem] font-semibold text-white hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
         >
           Insert table
         </button>

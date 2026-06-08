@@ -241,7 +241,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                         <ChevronDown className="w-3 h-3" />
                       </button>
                       {openMenu === item.userId && item.role !== "owner" && (
-                        <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-[8px] z-10 py-1 min-w-[160px]" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}>
+                        <div className="absolute top-full left-0 mt-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-[8px] z-10 py-1 min-w-40" style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}>
                           {["admin", "member", "viewer"].map((r) => (
                             <button key={r} onClick={() => handleChangeRole(item.userId, r)}
                               className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[#F7F6F3] dark:hover:bg-white/8 ${item.role === r ? "text-[#2563EB] dark:text-[#3B82F6] font-medium" : "text-[#787774] dark:text-[#9B9A97]"}`}>

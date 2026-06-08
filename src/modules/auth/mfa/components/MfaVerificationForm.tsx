@@ -60,7 +60,7 @@ const MfaVerificationForm: React.FC = () => {
             {isTotp ? <KeyRound className="w-8 h-8 text-[#2563EB] dark:text-[#3B82F6]" /> : <Mail className="w-8 h-8 text-[#2563EB] dark:text-[#3B82F6]" />}
           </div>
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">Two-factor authentication</h1>
-          <p className="text-[#787774] dark:text-[#9B9A97] text-[13px] mt-2">
+          <p className="text-[#787774] dark:text-[#9B9A97] text-[0.8125rem] mt-2">
             {isTotp ? 'Enter the 6-digit code from your authenticator app' : 'Enter the 6-digit code sent to your email'}
           </p>
         </div>
@@ -74,12 +74,12 @@ const MfaVerificationForm: React.FC = () => {
                     className={`w-12 h-14 text-center text-xl font-bold border-2 rounded-[6px] outline-none transition-colors dark:bg-[#252525] dark:text-[#E8E8E7] ${d ? 'border-[#2563EB] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)]' : 'border-[#EAEAEA] dark:border-white/10'} focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20`} />
                 ))}
               </div>
-              {error && <p className="text-red-500 text-[13px] text-center mb-4">{error}</p>}
-              {loading && <div className="flex items-center justify-center gap-2 text-[#2563EB] dark:text-[#3B82F6] mb-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-[13px]">Verifying...</span></div>}
+              {error && <p className="text-red-500 text-[0.8125rem] text-center mb-4">{error}</p>}
+              {loading && <div className="flex items-center justify-center gap-2 text-[#2563EB] dark:text-[#3B82F6] mb-4"><Loader2 className="w-4 h-4 animate-spin" /><span className="text-[0.8125rem]">Verifying...</span></div>}
               {method === 'email_otp' && (
                 <div className="text-center mb-4">
                   <button type="button" onClick={handleResend} disabled={resendCooldown > 0 || loading}
-                    className="inline-flex items-center gap-1.5 text-[13px] text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8] disabled:text-[#ABABAB] dark:disabled:text-[#6B6B6B] disabled:cursor-not-allowed">
+                    className="inline-flex items-center gap-1.5 text-[0.8125rem] text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8] disabled:text-[#ABABAB] dark:disabled:text-[#6B6B6B] disabled:cursor-not-allowed">
                     <RotateCcw className="w-3.5 h-3.5" />{resendCooldown > 0 ? `Resend after ${resendCooldown}s` : 'Resend OTP'}
                   </button>
                 </div>
@@ -88,12 +88,12 @@ const MfaVerificationForm: React.FC = () => {
           ) : (
             <form onSubmit={handleBackupSubmit} className="space-y-4">
               <div>
-                <label className="block text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7] mb-1.5">Backup code</label>
+                <label className="block text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] mb-1.5">Backup code</label>
                 <input type="text" value={backupCode} onChange={(e) => { setBackupCode(e.target.value); clearError(); }}
                   placeholder="Enter backup code" disabled={loading}
-                  className="w-full px-4 py-2.5 border border-[#EAEAEA] dark:border-white/8 rounded-[6px] text-[13px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] outline-none font-mono" />
+                  className="w-full px-4 py-2.5 border border-[#EAEAEA] dark:border-white/8 rounded-[6px] text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] outline-none font-mono" />
               </div>
-              {error && <p className="text-red-500 text-[13px] text-center">{error}</p>}
+              {error && <p className="text-red-500 text-[0.8125rem] text-center">{error}</p>}
               <button type="submit" disabled={loading || !backupCode.trim()}
                 className="w-full py-2.5 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] font-semibold hover:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed">
                 {loading ? 'Verifying...' : 'Verify'}

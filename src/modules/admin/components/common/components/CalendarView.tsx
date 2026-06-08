@@ -260,13 +260,13 @@ export default function CalendarView({
           className="flex items-center gap-2 rounded-[6px] px-2 py-1.5 text-sm"
         >
           <span className="h-2 w-2 shrink-0 rounded-full bg-[#2563EB] dark:bg-[#3B82F6]" />
-          <span className="w-16 shrink-0 truncate text-[11px] font-bold uppercase text-[#2563EB] dark:text-[#3B82F6]">
+          <span className="w-16 shrink-0 truncate text-[0.6875rem] font-bold uppercase text-[#2563EB] dark:text-[#3B82F6]">
             Sprint
           </span>
           <span className="min-w-0 flex-1 truncate font-semibold text-[#111111] dark:text-[#E8E8E7]">
             {sprint.name}
           </span>
-          <span className="shrink-0 rounded-[4px] bg-[#EFF6FF] px-1.5 py-0.5 text-[10px] font-bold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
+          <span className="shrink-0 rounded-[4px] bg-[#EFF6FF] px-1.5 py-0.5 text-[0.625rem] font-bold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
             {sprint.status}
           </span>
         </div>
@@ -290,17 +290,17 @@ export default function CalendarView({
           className="h-2 w-2 shrink-0 rounded-full"
           style={{ backgroundColor: event.backgroundColor || '#6366f1' }}
         />
-        <span className="w-20 shrink-0 truncate text-[11px] font-bold uppercase text-[#787774] dark:text-[#9B9A97]">
+        <span className="w-20 shrink-0 truncate text-[0.6875rem] font-bold uppercase text-[#787774] dark:text-[#9B9A97]">
           {display.key}
         </span>
         <span className="min-w-0 flex-1 truncate font-semibold text-[#111111] dark:text-[#E8E8E7]">
           {issue.title}
         </span>
-        <span className="shrink-0 rounded-[4px] bg-[#F7F6F3] px-1.5 py-0.5 text-[10px] font-bold text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]">
+        <span className="shrink-0 rounded-[4px] bg-[#F7F6F3] px-1.5 py-0.5 text-[0.625rem] font-bold text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]">
           {issue.status}
         </span>
         <span
-          className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EFF6FF] text-[10px] font-bold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
+          className="ml-1 flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#EFF6FF] text-[0.625rem] font-bold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
           title={display.assigneeName}
         >
           {display.assigneeAvatar ? (
@@ -414,7 +414,7 @@ export default function CalendarView({
       {morePopover && (
         <div
           ref={morePopoverRef}
-          className="fixed z-[70] w-[360px] max-w-[calc(100vw-24px)] rounded-[10px] border border-[#EAEAEA] bg-white p-3 dark:border-white/[0.06] dark:bg-[#202020]"
+          className="fixed z-[70] w-[22.5rem] max-w-[calc(100vw-24px)] rounded-[10px] border border-[#EAEAEA] bg-white p-3 dark:border-white/[0.06] dark:bg-[#202020]"
           style={{
             left: morePopoverPosition?.left ?? -9999,
             top: morePopoverPosition?.top ?? -9999,
@@ -432,7 +432,7 @@ export default function CalendarView({
               <X className="h-4 w-4" />
             </button>
           </div>
-          <div className="max-h-[340px] overflow-y-auto pr-1">
+          <div className="max-h-[21.25rem] overflow-y-auto pr-1">
             {morePopover.events.map(renderPopoverEvent)}
           </div>
         </div>

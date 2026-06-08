@@ -35,7 +35,7 @@ export default function AttachmentImageGrid({
           >
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#F7F6F3] dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B]">
               <AttachmentFileIcon mimeType={attachment.mimeType} className="h-8 w-8" />
-              <span className="max-w-[80%] truncate text-[11px] font-medium">
+              <span className="max-w-[80%] truncate text-[0.6875rem] font-medium">
                 {attachment.originalName}
               </span>
             </div>
@@ -43,10 +43,10 @@ export default function AttachmentImageGrid({
           <div className="p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <p className="truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
+                <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
                   {attachment.originalName}
                 </p>
-                <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
+                <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
                   {formatAttachmentSize(attachment.size)} - {formatAttachmentDate(attachment.createdAt)}
                 </p>
               </div>

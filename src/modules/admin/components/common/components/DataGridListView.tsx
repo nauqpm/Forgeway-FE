@@ -12,11 +12,13 @@ import {
   VisibilityState,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, X, Check } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, FileText, RefreshCcw, Check } from 'lucide-react';
 import BulkActionBar from './BulkActionBar';
 import BulkEditDrawer from './BulkEditDrawer';
 import AssigneePicker, { AssigneePickerMember, getMemberId, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
+import TaskLabelsField from '../../../../client/workspaces/components/labels/TaskLabelsField';
+import TaskStatusChanger from '../../../../client/workspaces/components/TaskStatusChanger';
 
 type WorkspaceMember = AssigneePickerMember;
 
@@ -37,16 +39,9 @@ const PRIORITY_CLS: Record<string, string> = {
   Low:    'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]',
 };
 
-function statusCls(name: string): string {
-  const n = name.toLowerCase();
-  if (n.includes('done') || n.includes('complete')) return 'bg-[#EDF3EC] text-[#346538] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#4ADE80]';
-  if (n.includes('progress')) return 'bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.12)] dark:text-[#F59E0B]';
-  if (n.includes('test') || n.includes('review')) return 'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]';
-  return 'bg-[#F7F6F3] text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]';
-}
-
 interface DataGridListViewProps {
   issues: any[];
+  workspaceId?: string;
   members?: WorkspaceMember[];
   boardColumns?: BoardColumn[];
   columnVisibility?: VisibilityState;
@@ -64,6 +59,7 @@ interface DataGridListViewProps {
 
 export default function DataGridListView({
   issues,
+  workspaceId,
   members,
   boardColumns,
   columnVisibility: columnVisibilityProp,
@@ -263,43 +259,16 @@ export default function DataGridListView({
       size: 150,
       cell: info => {
         const issue = info.row.original;
-        const rawStatus = info.getValue() as string;
-        const resolvedCol = boardColumns?.find(c => c.id === rawStatus);
-        const status = resolvedCol?.name ?? rawStatus;
-        const isOpen = openDropdown?.rowId === issue.id && openDropdown?.col === 'status';
-        const colOptions = boardColumns && boardColumns.length > 0
-          ? boardColumns
-          : [{ id: 'todo', name: 'To Do' }, { id: 'inprogress', name: 'In Progress' }, { id: 'testing', name: 'Testing' }, { id: 'done', name: 'Done' }];
         return (
-          <div className="relative" onClick={e => e.stopPropagation()} ref={isOpen ? dropdownRef : undefined}>
-            <button
-              onClick={() => toggleDropdown(issue.id, 'status')}
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold cursor-pointer transition-opacity hover:opacity-80 ${statusCls(status)}`}
-            >
-              {status}
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[150px] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]  overflow-hidden">
-                {colOptions.map(col => {
-                  const isSelected = col.id === rawStatus || col.name === rawStatus;
-                  return (
-                    <button
-                      key={col.id}
-                      onClick={() => {
-                        onUpdateIssue && onUpdateIssue(issue.id, { columnId: col.id, status: col.name });
-                        setOpenDropdown(null);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F9F9F8] dark:hover:bg-white/5 flex items-center gap-2 transition-colors ${isSelected ? 'font-semibold text-[#2563EB] dark:text-[#3B82F6]' : 'text-[#787774] dark:text-[#9B9A97]'}`}
-                    >
-                      {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
-                      <span className={isSelected ? '' : 'ml-5'}>{col.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <TaskStatusChanger
+            issue={issue}
+            boardColumns={boardColumns}
+            variant="pill"
+            size="sm"
+            onChange={({ columnId, status }) =>
+              onUpdateIssue?.(issue.id, { columnId, status })
+            }
+          />
         );
       },
     },
@@ -321,7 +290,7 @@ export default function DataGridListView({
               <ChevronDown className="w-3 h-3" />
             </button>
             {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[120px] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]  overflow-hidden">
+              <div className="absolute left-0 top-full mt-1 z-50 min-w-[7.5rem] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
                 {PRIORITY_OPTIONS.map(p => (
                   <button
                     key={p}
@@ -452,55 +421,29 @@ export default function DataGridListView({
       size: 200,
       cell: info => {
         const issue = info.row.original;
-        const isAdding = editingCell?.rowId === issue.id && editingCell?.col === 'labels';
+        if (workspaceId && issue.id && issue.key) {
+          return (
+            <div onClick={e => e.stopPropagation()}>
+              <TaskLabelsField
+                workspaceId={workspaceId}
+                issue={issue}
+                compact
+              />
+            </div>
+          );
+        }
         const labels = (info.getValue() as { id?: string; name: string; color?: string }[]) ?? [];
         return (
-          <div className="flex flex-wrap gap-1 items-center min-h-[24px]" onClick={e => e.stopPropagation()}>
+          <div className="flex flex-wrap gap-1 items-center min-h-6 px-1">
             {labels.map((l, i) => (
               <span
                 key={i}
-                className="inline-flex items-center gap-0.5 pl-1.5 pr-0.5 py-0.5 rounded-[6px] text-[11px] font-medium text-white"
+                className="inline-flex items-center gap-0.5 pl-1.5 pr-0.5 py-0.5 rounded-[6px] text-[0.6875rem] font-medium text-white"
                 style={{ backgroundColor: l.color ?? '#6366f1' }}
               >
                 {l.name}
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    const next = labels.filter((_, idx) => idx !== i);
-                    onUpdateIssue && onUpdateIssue(issue.id, { labelIds: next.map(x => x.id ?? x.name) });
-                  }}
-                  className="hover:opacity-75 p-0.5 rounded"
-                >
-                  <X className="w-2.5 h-2.5" />
-                </button>
               </span>
             ))}
-            {isAdding ? (
-              <input
-                autoFocus
-                value={editValue}
-                onChange={e => setEditValue(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && editValue.trim()) {
-                    const newLabel = { id: editValue.trim(), name: editValue.trim() };
-                    onUpdateIssue && onUpdateIssue(issue.id, { labelIds: [...labels.map(x => x.id ?? x.name), newLabel.id] });
-                    setEditValue('');
-                    setEditingCell(null);
-                  }
-                  if (e.key === 'Escape') { setEditingCell(null); setEditValue(''); }
-                }}
-                onBlur={() => { setEditingCell(null); setEditValue(''); }}
-                placeholder="Label name + Enter"
-                className="text-xs border border-[#2563EB] rounded-[6px] px-1.5 py-0.5 w-32 outline-none bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB]"
-              />
-            ) : (
-              <button
-                onClick={e => { e.stopPropagation(); setEditingCell({ rowId: issue.id, col: 'labels' }); setEditValue(''); }}
-                className="text-xs text-[#ABABAB] hover:text-[#2563EB] dark:hover:text-[#3B82F6] px-1 py-0.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
-              >
-                + Add
-              </button>
-            )}
           </div>
         );
       },
@@ -544,12 +487,12 @@ export default function DataGridListView({
   });
 
   return (
-    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8  overflow-hidden flex flex-col font-sans">
+    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col font-sans">
 
       {/* Data Grid Table */}
       <div className="flex-1 overflow-auto custom-scrollbar relative">
         <table className="w-full text-left border-collapse" style={{ width: table.getCenterTotalSize() }}>
-          <thead className="sticky top-0 z-10 bg-[#F9F9F8] dark:bg-[#252525]  border-b border-[#EAEAEA] dark:border-white/8">
+          <thead className="sticky top-0 z-10 bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
@@ -573,7 +516,7 @@ export default function DataGridListView({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/8 bg-white dark:bg-[#202020]">
+          <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06] bg-white dark:bg-[#202020]">
             {table.getRowModel().rows.map(row => (
               <tr
                 key={row.id}
@@ -583,7 +526,7 @@ export default function DataGridListView({
                   <td
                     key={cell.id}
                     style={{ width: cell.column.getSize() }}
-                    className="px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/8 last:border-r-0 overflow-visible"
+                    className="px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/[0.06] last:border-r-0 overflow-visible"
                   >
                     {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
@@ -647,7 +590,7 @@ export default function DataGridListView({
                 className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium px-3 py-1.5 rounded-[6px] flex items-center gap-1 transition-colors  ml-1"
               >
                 Create
-                <span className="text-[10px] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] leading-none bg-[#3B82F6]/30">↵</span>
+                <span className="text-[0.625rem] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] leading-none bg-[#3B82F6]/30">↵</span>
               </button>
             </div>
           </div>

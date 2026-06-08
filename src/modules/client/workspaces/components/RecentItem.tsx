@@ -25,10 +25,10 @@ export default function RecentItem({ icon: Icon, title, meta, tone = "gray", onC
         <Icon className="h-4 w-4" />
       </span>
       <span className="min-w-0">
-        <span className="block truncate text-[13px] font-medium text-[#111111] dark:text-[#E8E8E7]">
+        <span className="block truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
           {title}
         </span>
-        <span className="block truncate text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">
+        <span className="block truncate text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
           {meta}
         </span>
       </span>

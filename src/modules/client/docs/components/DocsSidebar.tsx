@@ -103,7 +103,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
             <div className="p-4 flex flex-col gap-4">
               <button
                 onClick={() => selectDocument(null)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-[6px] text-[13px] font-medium transition-all ${
+                className={`flex items-center gap-3 px-3 py-2 rounded-[6px] text-[0.8125rem] font-medium transition-all ${
                   !selectedDocumentId && !selectedImportedDocumentId
                     ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
                     : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
@@ -121,7 +121,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
             <div className="flex-1 overflow-y-auto px-2 pb-6 space-y-6 custom-scrollbar">
               {searchQuery ? (
                 <div className="px-2">
-                  <h3 className="px-3 text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest mb-3">
+                  <h3 className="px-3 text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest mb-3">
                     Search Results
                   </h3>
                   <ul className="space-y-1">
@@ -133,7 +133,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                               ? selectImportedDocument(doc.id)
                               : selectDocument(doc.id)
                           }
-                          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[13px] transition-all ${
+                          className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[0.8125rem] transition-all ${
                             selectedDocumentId === doc.id || selectedImportedDocumentId === doc.id
                               ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium"
                               : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
@@ -145,7 +145,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                       </li>
                     ))}
                     {filteredDocs.length === 0 && (
-                      <p className="px-3 text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] italic py-2">No results found</p>
+                      <p className="px-3 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] italic py-2">No results found</p>
                     )}
                   </ul>
                 </div>
@@ -154,7 +154,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                   <RecentDocs />
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
-                      <h3 className="text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest">
+                      <h3 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest">
                         Documents in Workspace
                       </h3>
                     </div>
@@ -162,14 +162,14 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                   </div>
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
-                      <h3 className="text-[10px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest">
+                      <h3 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest">
                         Imported Documents
                       </h3>
                     </div>
                     <ul className="space-y-1 px-1">
                       {uploadedDocs.map((doc) => (
                         <li key={doc._id} className="group">
-                          <div className="w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[13px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
+                          <div className="w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
                             <button
                               onClick={() => selectImportedDocument(doc._id)}
                               className="flex items-center gap-2 min-w-0 flex-1 text-left"
@@ -200,7 +200,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                         </li>
                       ))}
                       {uploadedDocs.length === 0 && (
-                        <li className="px-3 py-1.5 text-[11px] text-[#ABABAB] dark:text-[#6B6B6B] italic">No imported files</li>
+                        <li className="px-3 py-1.5 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] italic">No imported files</li>
                       )}
                     </ul>
                   </div>
@@ -231,10 +231,10 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                 <Trash2 className="h-5 w-5" />
               </div>
               <div className="min-w-0">
-                <h2 id="remove-imported-document-title" className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                <h2 id="remove-imported-document-title" className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Remove from workspace?
                 </h2>
-                <p className="mt-1 text-[13px] text-[#787774] dark:text-[#9B9A97]">
+                <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   This will remove{" "}
                   <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                     {removeTarget.name}
@@ -249,7 +249,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                 type="button"
                 disabled={removing}
                 onClick={() => setRemoveTarget(null)}
-                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[13px] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Cancel
               </button>
@@ -257,7 +257,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                 type="button"
                 disabled={removing}
                 onClick={handleRemoveImportedDocument}
-                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#8F2927] disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-semibold text-white transition-colors hover:bg-[#8F2927] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {removing ? "Removing..." : "Remove"}
               </button>

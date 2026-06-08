@@ -36,6 +36,13 @@ interface UseIssueHandlersProps {
   >;
 }
 
+const upsertIssue = (current: Issue[], issue: Issue): Issue[] => {
+  const id = issue.id || issue._id;
+  const exists = current.some((item) => (item.id || item._id) === id);
+  if (exists) return current.map((item) => (item.id || item._id) === id ? { ...item, ...issue } : item);
+  return [...current, issue];
+};
+
 export const useTaskHandlers = ({
   workspaceId,
   issues,
@@ -104,7 +111,7 @@ export const useTaskHandlers = ({
     isCreatingRef.current = true;
     try {
       const issue = await taskService.createBoardTask(workspaceId, newIssueForm);
-      setIssues((current) => [...current, issue]);
+      setIssues((current) => upsertIssue(current, issue));
       setShowCreateIssue(false);
       setNewIssueForm({
         title: "",
@@ -179,7 +186,7 @@ export const useTaskHandlers = ({
         status: "To Do",
         sprintId,
       });
-      setIssues(prev => [...prev, issue]);
+      setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Could not create task");
@@ -206,7 +213,7 @@ export const useTaskHandlers = ({
         assigneeId: task.assigneeId || '',
         dueDate: task.dueDate || undefined,
       });
-      setIssues(prev => [...prev, issue]);
+      setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
     } catch (error: any) {
       toast.error(error?.response?.data?.message || 'Could not create task');
@@ -228,7 +235,7 @@ export const useTaskHandlers = ({
         startDate: date,
         dueDate: date,
       });
-      setIssues((current) => [...current, issue]);
+      setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Could not create work item");

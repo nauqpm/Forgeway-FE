@@ -31,8 +31,8 @@ export default function ThemeSwitcher() {
   return (
     <div className="p-6 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] w-full">
       <div className="mb-6">
-        <h2 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7]">Appearance</h2>
-        <p className="text-[13px] text-[#787774] dark:text-[#9B9A97] mt-1">
+        <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Appearance</h2>
+        <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mt-1">
           Customize the look and feel of the application.
         </p>
       </div>

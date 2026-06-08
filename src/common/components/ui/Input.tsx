@@ -4,7 +4,7 @@ import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes, ReactNode } fr
 
 // ── Base classes shared by all input types ───────────────────────────────────
 const baseInputClasses = [
-  "w-full px-3 text-[13px] font-normal",
+  "w-full px-3 text-[0.8125rem] font-normal",
   "bg-white dark:bg-[#252525]",
   "text-[#111111] dark:text-[#E8E8E7]",
   "placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]",
@@ -30,16 +30,16 @@ function FieldWrapper({ label, hint, error, required, children, className = "" }
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-[#787774] dark:text-[#9B9A97]">
+        <label className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[#787774] dark:text-[#9B9A97]">
           {label}
           {required && <span className="ml-0.5 text-[#9F2F2D]">*</span>}
         </label>
       )}
       {children}
       {error ? (
-        <p className="text-[11px] text-[#9F2F2D]">{error}</p>
+        <p className="text-[0.6875rem] text-[#9F2F2D]">{error}</p>
       ) : hint ? (
-        <p className="text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">{hint}</p>
+        <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">{hint}</p>
       ) : null}
     </div>
   );
@@ -123,7 +123,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         ref={ref}
         className={[
           baseInputClasses,
-          "py-2 resize-none min-h-[80px]",
+          "py-2 resize-none min-h-20",
           hasError ? "border-[#9F2F2D] focus:border-[#9F2F2D]" : "",
           className,
         ]

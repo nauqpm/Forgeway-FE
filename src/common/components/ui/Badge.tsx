@@ -51,7 +51,7 @@ function Badge({
       className={[
         "inline-flex items-center gap-1",
         "px-1.5 py-0.5",
-        "text-[11px] font-medium tracking-wide uppercase",
+        "text-[0.6875rem] font-medium tracking-wide uppercase",
         "rounded-[4px] whitespace-nowrap",
         className,
       ]

@@ -32,7 +32,7 @@ function Section({
 }) {
   return (
     <section className="border-b border-[#EAEAEA] dark:border-white/[0.06] pb-4 last:border-0 last:pb-0">
-      <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
+      <div className="mb-2 flex items-center gap-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
         <Icon className="h-4 w-4 text-[#2563EB] dark:text-[#3B82F6]" />
         {title}
       </div>
@@ -63,13 +63,13 @@ function CheckboxRow({
         className="h-4 w-4 rounded accent-[#2563EB]"
       />
       {avatar && (
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-[10px] font-bold text-white">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-[0.625rem] font-bold text-white">
           {avatar}
         </span>
       )}
-      <span className="min-w-0 text-[13px] text-[#111111] dark:text-[#E8E8E7]">
+      <span className="min-w-0 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
         <span className="block truncate">{label}</span>
-        {detail && <span className="block truncate text-[11px] text-[#ABABAB] dark:text-[#6B6B6B]">{detail}</span>}
+        {detail && <span className="block truncate text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">{detail}</span>}
       </span>
     </label>
   );
@@ -134,7 +134,7 @@ export default function TaskFilterPanel({
             }}
           />
         ))}
-        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-[13px] font-medium text-[#2563EB] dark:text-[#3B82F6]">
+        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6]">
           Show more <ChevronDown className="h-4 w-4" />
         </button>
       </Section>
@@ -150,7 +150,7 @@ export default function TaskFilterPanel({
             onChange={() => toggleArray("assignees", user.id)}
           />
         ))}
-        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-[13px] font-medium text-[#2563EB] dark:text-[#3B82F6]">
+        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6]">
           Show more <ChevronDown className="h-4 w-4" />
         </button>
       </Section>
@@ -174,7 +174,7 @@ export default function TaskFilterPanel({
       <Section title="Filter by task fields" icon={Flag}>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
-            <p className="mb-1 px-2 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Status</p>
+            <p className="mb-1 px-2 text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Status</p>
             {statuses.map((status) => (
               <CheckboxRow
                 key={status}
@@ -185,7 +185,7 @@ export default function TaskFilterPanel({
             ))}
           </div>
           <div>
-            <p className="mb-1 px-2 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Type</p>
+            <p className="mb-1 px-2 text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Type</p>
             {types.map((type) => (
               <CheckboxRow
                 key={type}
@@ -196,7 +196,7 @@ export default function TaskFilterPanel({
             ))}
           </div>
           <div>
-            <p className="mb-1 px-2 text-[11px] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Priority</p>
+            <p className="mb-1 px-2 text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Priority</p>
             {priorities.map((priority) => (
               <CheckboxRow
                 key={priority}

@@ -44,7 +44,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
         <div className="min-h-screen flex items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A]">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
-            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">Verifying...</p>
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Verifying...</p>
           </div>
         </div>
       )

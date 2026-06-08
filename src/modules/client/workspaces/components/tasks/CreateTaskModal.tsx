@@ -12,8 +12,8 @@ type CreateTaskModalProps = {
   workspace: Workspace;
 };
 
-const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[13px] outline-none transition-colors";
-const labelCls = "block text-[13px] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
+const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[0.8125rem] outline-none transition-colors";
+const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
 
 export default function CreateTaskModal({
   showCreateIssue,
@@ -46,7 +46,7 @@ export default function CreateTaskModal({
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
         <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-          <h3 className="text-[15px] font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
             <FileText className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
             Create new task
           </h3>
@@ -139,13 +139,13 @@ export default function CreateTaskModal({
             <button
               type="button"
               onClick={() => setShowCreateIssue(false)}
-              className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[13px] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
+              className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
+              className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
             >
               Create now
             </button>

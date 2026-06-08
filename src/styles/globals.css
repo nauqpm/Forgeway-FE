@@ -42,6 +42,10 @@
   --priority-low-text:     #6DB374;
 }
 
+html {
+  font-size: calc(clamp(13px, 0.5vw + 12.5px, 16px) * var(--font-scale, 1));
+}
+
 body {
     margin: 0;
     padding: 0;
@@ -52,9 +56,9 @@ body {
 }
 
 :root {
-  --app-header-h: 56px;
-  --app-page-pad: clamp(12px, 1.2vw, 24px);
-  --app-page-pad-y: clamp(16px, 1.6vw, 28px);
+  --app-header-h: 3.5rem;
+  --app-page-pad: clamp(0.75rem, 1.2vw, 1.5rem);
+  --app-page-pad-y: clamp(1rem, 1.6vw, 1.75rem);
   --app-content-max: min(100%, 1440px);
   --app-sidebar-expanded: clamp(220px, 15vw, 260px);
   --app-sidebar-collapsed: 68px;
@@ -65,16 +69,16 @@ body {
   --app-medium-content: min(100%, 1152px);
   --app-wide-content: min(100%, 1440px);
   --app-table-min-w: min(960px, calc(100vw - 48px));
-  --app-board-h: min(720px, calc(100vh - var(--app-header-h) - 124px));
-  --workspace-surface-pad: clamp(12px, 1.1vw, 20px);
-  --workspace-board-gap: clamp(16px, 1.4vw, 24px);
+  --app-board-h: min(45rem, calc(100vh - var(--app-header-h) - 7.75rem));
+  --workspace-surface-pad: clamp(0.75rem, 1.1vw, 1.25rem);
+  --workspace-board-gap: clamp(1rem, 1.4vw, 1.5rem);
   --workspace-column-w: clamp(280px, 22vw, 340px);
   --workspace-list-sidebar-w: clamp(195px, 18.75vw, 270px);
   --workspace-chart-size: clamp(220px, 24vw, 288px);
   --workspace-settings-nav-w: clamp(220px, 20vw, 272px);
 
   /* ── Design tokens: Color ── */
-  --color-canvas:        #FBFBFA;
+  --color-canvas:        #F2FAFF;
   --color-surface:       #FFFFFF;
   --color-surface-2:     #F9F9F8;
   --color-border:        #EAEAEA;
@@ -122,6 +126,7 @@ body {
 @layer components {
   .app-shell-offset {
     margin-left: 0;
+    min-width: 0;
   }
 
   .app-shell-offset[data-sidebar="collapsed"] {
@@ -140,6 +145,8 @@ body {
 
   .app-main {
     padding: var(--app-page-pad-y) var(--app-page-pad);
+    overflow-x: auto;
+    min-width: 0;
   }
 
   .app-container {
@@ -226,6 +233,8 @@ body {
 @media (min-width: 1024px) {
   .app-shell-offset {
     margin-left: var(--app-current-sidebar-w, var(--app-sidebar-expanded));
+    /* Fix: subtract sidebar from table min-width so tables don't overflow on smaller/zoomed viewports */
+    --app-table-min-w: min(60rem, calc(100vw - var(--app-current-sidebar-w, var(--app-sidebar-expanded)) - 3rem));
   }
 }
 
@@ -261,6 +270,16 @@ body {
             transform: translateY(0);
         }
     }
+}
+
+/* ── Hide browser-native password reveal / clear buttons ── */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ── Sidebar & global scrollbar ── */
@@ -451,7 +470,7 @@ body {
 
 /* Calendar shell container — prevent transparent fallback to canvas */
 .al-calendar-shell {
-  background-color: #FBFBFA;
+  background-color: #F2FAFF;
   border-radius: 8px;
 }
 .dark .al-calendar-shell {

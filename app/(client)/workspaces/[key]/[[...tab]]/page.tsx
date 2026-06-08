@@ -30,6 +30,7 @@ import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDet
 import {
   handleBoardDragEnd,
   handleBacklogDragEnd,
+  compareIssueRank,
   TaskReorderSyncInput,
 } from "@/modules/client/workspaces/utils/dragUtils";
 
@@ -42,6 +43,8 @@ import { useTaskFilters } from "@/modules/client/workspaces/hooks/useTaskFilters
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
+import { useSprintRealtime } from "@/hooks/realtime/use-sprint-realtime";
+import { sprintIdOf } from "@/hooks/realtime/sprint-realtime-cache.utils";
 import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -101,6 +104,11 @@ const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
 
 const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) =>
   tabName === "summary";
+
+const clearOptimisticIssueOrder = (issue: Issue): Issue => {
+  const { optimisticOrder, optimisticScope, ...rest } = issue;
+  return rest;
+};
 
 export default function WorkspaceDetailPage({
   params,
@@ -311,7 +319,9 @@ export default function WorkspaceDetailPage({
           )
         : [...current, issue];
 
-      return sortIssuesByRank(next);
+      // Skip re-sort during active drag — changing Draggable indices mid-drag
+      // causes @hello-pangea/dnd to use stale source.index vs current position.
+      return isDraggingIssueRef.current ? next : sortIssuesByRank(next);
     });
     setSelectedIssue((current) =>
       current && taskIdOf(current) === nextIssueId
@@ -330,10 +340,38 @@ export default function WorkspaceDetailPage({
     setSelectedTaskIds((current) => current.filter((id) => id !== taskId));
   }, []);
 
+  const handleRealtimeSprintCreated = useCallback((sprint: Sprint) => {
+    const nextSprintId = sprintIdOf(sprint);
+
+    setSprints((current) => {
+      const exists = current.some((item) => sprintIdOf(item) === nextSprintId);
+
+      if (exists) {
+        return current.map((item) =>
+          sprintIdOf(item) === nextSprintId ? { ...item, ...sprint } : item,
+        );
+      }
+
+      return [...current, sprint];
+    });
+  }, []);
+
+  const handleRealtimeSprintDeleted = useCallback((sprintId: string) => {
+    setSprints((current) =>
+      current.filter((sprint) => sprintIdOf(sprint) !== sprintId),
+    );
+  }, []);
+
   useWorkspaceSocket(workspaceApiId);
   useTaskRealtime(workspaceApiId, {
     onTaskRemoved: handleRealtimeTaskRemoved,
     onTaskUpserted: handleRealtimeTaskUpserted,
+  });
+  useSprintRealtime(workspaceApiId, {
+    onSprintCreated: handleRealtimeSprintCreated,
+    onSprintUpdated: handleRealtimeSprintCreated,
+    onSprintStarted: handleRealtimeSprintCreated,
+    onSprintDeleted: handleRealtimeSprintDeleted,
   });
 
   useEffect(() => {
@@ -471,16 +509,24 @@ export default function WorkspaceDetailPage({
 
           if (!hasQueuedReorder) {
             setIssues((current) =>
-              current.map((issue) =>
-                issue.id === updatedTask.id ? updatedTask : issue,
+              sortIssuesByRank(
+                current.map((issue) =>
+                  issue.id === updatedTask.id
+                    ? updatedTask
+                    : clearOptimisticIssueOrder(issue),
+                ),
               ),
             );
             queryClient.setQueriesData<Issue[]>(
               { queryKey: ["tasks", workspaceApiId] },
               (current) =>
                 Array.isArray(current)
-                  ? current.map((issue) =>
-                      issue.id === updatedTask.id ? updatedTask : issue,
+                  ? sortIssuesByRank(
+                      current.map((issue) =>
+                        issue.id === updatedTask.id
+                          ? updatedTask
+                          : clearOptimisticIssueOrder(issue),
+                      ),
                     )
                   : current,
             );
@@ -491,7 +537,12 @@ export default function WorkspaceDetailPage({
           });
         })
         .catch((error) => {
-          if (isNoopReorderError(error)) return;
+          setIssues((current) => current.map(clearOptimisticIssueOrder));
+
+          if (isNoopReorderError(error)) {
+            queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+            return;
+          }
 
           queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
           toast.error(error?.response?.data?.message || "Could not update task position");
@@ -582,6 +633,7 @@ export default function WorkspaceDetailPage({
       },
     });
     isDraggingIssueRef.current = false;
+    setIssues((current) => [...current].sort(compareIssueRank));
   };
 
   const handleArchiveIssue = async (issue: Issue) => {
@@ -802,7 +854,10 @@ export default function WorkspaceDetailPage({
                         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
                       })
                       .catch((error) => {
-                        if (isNoopReorderError(error)) return;
+                        if (isNoopReorderError(error)) {
+                          queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+                          return;
+                        }
                         queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
                         toast.error(error?.response?.data?.message || "Could not update task position");
                       });
@@ -833,6 +888,7 @@ export default function WorkspaceDetailPage({
           data: {
             issues,
             filteredIssues,
+            columns,
             sprints,
             uniqueAssignees,
             selectedTaskIds,
