@@ -27,8 +27,9 @@ import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
+import TaskStatusChanger from "./TaskStatusChanger";
 import type { TaskCover } from "../types/task-cover.type";
-import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
+import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -131,7 +132,6 @@ export default function TaskDetailModal({
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [subtasks, setSubtasks] = useState<any[]>([]);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [timeLogged, setTimeLogged] = useState(0);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
@@ -167,7 +167,6 @@ export default function TaskDetailModal({
       setSubtasks(issue.subtasks || []);
       setTimeLogged(issue.timeLogged || 0);
       setIsEditingTitle(false);
-      setShowStatusDropdown(false);
       setShowActionMenu(false);
       setLocalCover(issue.cover ?? null);
       setEditingField(null);
@@ -179,8 +178,6 @@ export default function TaskDetailModal({
 
   const issueKey = issue.key;
   const timeEstimated = issue.timeEstimated || "1d 4h"; // Mock default
-  const { statusColumns, currentColumn, displayName: statusDisplayName } =
-    resolveTaskStatusColumn(boardColumns, issue);
   const assigneeName =
     issue.assigneeDisplayName ||
     getUserDisplayName(issue.assignee, issue.assigneeId);
@@ -334,13 +331,6 @@ export default function TaskDetailModal({
     setIsEditingTitle(false);
     if (localTitle !== issue.title && onUpdateIssue) {
       onUpdateIssue({ ...issue, title: localTitle });
-    }
-  };
-
-  const handleStatusChange = (column: TaskStatusColumn) => {
-    setShowStatusDropdown(false);
-    if ((column.id !== issue.columnId || column.name !== issue.status) && onUpdateIssue) {
-      onUpdateIssue({ ...issue, columnId: column.id, status: column.name });
     }
   };
 
@@ -565,28 +555,14 @@ export default function TaskDetailModal({
           {/* Right Column (Sidebar) */}
           <div className="workspace-detail-panel bg-[#F9F9F8] dark:bg-[#252525] p-[var(--workspace-surface-pad)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <div className="flex items-center gap-2 mb-6">
-              <div className="relative">
-                <button
-                  onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
-                  disabled={issue.isArchived}
-                  className={`flex items-center gap-2 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#EAEAEA] dark:hover:bg-[#333333]'}`}
-                >
-                  {statusDisplayName} {!issue.isArchived && <ChevronDown className="w-4 h-4" />}
-                </button>
-                {showStatusDropdown && (
-                  <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden z-10 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
-                    {statusColumns.map((column) => (
-                      <button
-                        key={column.id}
-                        onClick={() => handleStatusChange(column)}
-                        className={`w-full text-left px-4 py-2 text-[0.8125rem] transition-colors ${column.id === currentColumn?.id ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium border-l-2 border-[#2563EB] dark:border-[#3B82F6]" : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"}`}
-                      >
-                        {column.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <TaskStatusChanger
+                issue={issue}
+                boardColumns={boardColumns}
+                disabled={issue.isArchived}
+                onChange={({ columnId, status }) =>
+                  onUpdateIssue?.({ ...issue, columnId, status })
+                }
+              />
             </div>
 
             <div className="space-y-6">

@@ -6,13 +6,16 @@ import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import AssigneePicker from "../../../../../common/components/AssigneePicker";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
+import TaskStatusChanger from "../TaskStatusChanger";
 import { compareIssueRank } from "../../utils/dragUtils";
+import type { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
 
 type BacklogTabProps = {
   data: {
     issues: any[];
     filteredIssues: any[];
+    columns?: BoardColumn[];
     sprints: any[];
     uniqueAssignees: any[];
     selectedTaskIds: string[];
@@ -69,23 +72,6 @@ type BacklogTabProps = {
   };
 };
 
-const statusSelectClasses = (status: string) => {
-  const base =
-    "px-2 py-1 rounded-[4px] text-[0.6875rem] font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-[#2563EB]/20 appearance-none disabled:cursor-not-allowed disabled:opacity-60";
-
-  if (status === "Done") {
-    return `${base} bg-[#EDF3EC] text-[#346538] dark:bg-[rgba(52,101,56,0.15)] dark:text-[#6FCF7B]`;
-  }
-
-  if (status === "In Progress") {
-    return `${base} bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.15)] dark:text-[#F0C040]`;
-  }
-
-  return `${base} bg-[#F7F6F3] text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]`;
-};
-
-const statusOptionClass = "bg-white text-[#111111] dark:bg-[#202020] dark:text-[#E8E8E7]";
-
 const getInitials = (value: string) =>
   (value ?? "")
     .split(/\s+/)
@@ -126,6 +112,7 @@ type AssigneeInfo = {
 export default function BacklogTab({ data, ui, actions, permissions }: BacklogTabProps) {
   const {
     filteredIssues,
+    columns = [],
     sprints,
     uniqueAssignees,
     selectedTaskIds,
@@ -462,36 +449,16 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   />
                                 </div>
 
-                                {/* Editable Status */}
-                                <select
-                                  value={issue.status}
-                                  onChange={(e) =>
-                                    updateIssueDirectly(issue.id, {
-                                      status: e.target.value,
-                                    })
-                                  }
+                                <TaskStatusChanger
+                                  issue={issue}
+                                  boardColumns={columns}
                                   disabled={!canEditTask}
-                                  className={statusSelectClasses(issue.status)}
-                                >
-                                  <option
-                                    value="To Do"
-                                    className={statusOptionClass}
-                                  >
-                                    To Do
-                                  </option>
-                                  <option
-                                    value="In Progress"
-                                    className={statusOptionClass}
-                                  >
-                                    In Progress
-                                  </option>
-                                  <option
-                                    value="Done"
-                                    className={statusOptionClass}
-                                  >
-                                    Done
-                                  </option>
-                                </select>
+                                  variant="pill"
+                                  size="sm"
+                                  onChange={({ columnId, status }) =>
+                                    updateIssueDirectly(issue.id, { columnId, status })
+                                  }
+                                />
 
                                 {/* Assignee */}
                                 <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
@@ -680,27 +647,16 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 />
                               </div>
 
-                              {/* Editable Status */}
-                              <select
-                                value={issue.status}
-                                onChange={(e) =>
-                                  updateIssueDirectly(issue.id, {
-                                    status: e.target.value,
-                                  })
-                                }
+                              <TaskStatusChanger
+                                issue={issue}
+                                boardColumns={columns}
                                 disabled={!canEditTask}
-                                className={statusSelectClasses(issue.status)}
-                              >
-                                <option value="To Do" className={statusOptionClass}>
-                                  To Do
-                                </option>
-                                <option value="In Progress" className={statusOptionClass}>
-                                  In Progress
-                                </option>
-                                <option value="Done" className={statusOptionClass}>
-                                  Done
-                                </option>
-                              </select>
+                                variant="pill"
+                                size="sm"
+                                onChange={({ columnId, status }) =>
+                                  updateIssueDirectly(issue.id, { columnId, status })
+                                }
+                              />
 
                               {/* Assignee */}
                               <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>

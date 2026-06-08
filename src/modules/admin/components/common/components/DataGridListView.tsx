@@ -18,6 +18,7 @@ import BulkEditDrawer from './BulkEditDrawer';
 import AssigneePicker, { AssigneePickerMember, getMemberId, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
 import TaskLabelsField from '../../../../client/workspaces/components/labels/TaskLabelsField';
+import TaskStatusChanger from '../../../../client/workspaces/components/TaskStatusChanger';
 
 type WorkspaceMember = AssigneePickerMember;
 
@@ -37,14 +38,6 @@ const PRIORITY_CLS: Record<string, string> = {
   Medium: 'bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.12)] dark:text-[#F59E0B]',
   Low:    'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]',
 };
-
-function statusCls(name: string): string {
-  const n = name.toLowerCase();
-  if (n.includes('done') || n.includes('complete')) return 'bg-[#EDF3EC] text-[#346538] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#4ADE80]';
-  if (n.includes('progress')) return 'bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.12)] dark:text-[#F59E0B]';
-  if (n.includes('test') || n.includes('review')) return 'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]';
-  return 'bg-[#F7F6F3] text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]';
-}
 
 interface DataGridListViewProps {
   issues: any[];
@@ -266,43 +259,16 @@ export default function DataGridListView({
       size: 150,
       cell: info => {
         const issue = info.row.original;
-        const rawStatus = info.getValue() as string;
-        const resolvedCol = boardColumns?.find(c => c.id === rawStatus);
-        const status = resolvedCol?.name ?? rawStatus;
-        const isOpen = openDropdown?.rowId === issue.id && openDropdown?.col === 'status';
-        const colOptions = boardColumns && boardColumns.length > 0
-          ? boardColumns
-          : [{ id: 'todo', name: 'To Do' }, { id: 'inprogress', name: 'In Progress' }, { id: 'testing', name: 'Testing' }, { id: 'done', name: 'Done' }];
         return (
-          <div className="relative" onClick={e => e.stopPropagation()} ref={isOpen ? dropdownRef : undefined}>
-            <button
-              onClick={() => toggleDropdown(issue.id, 'status')}
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold cursor-pointer transition-opacity hover:opacity-80 ${statusCls(status)}`}
-            >
-              {status}
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[9.375rem] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]  overflow-hidden">
-                {colOptions.map(col => {
-                  const isSelected = col.id === rawStatus || col.name === rawStatus;
-                  return (
-                    <button
-                      key={col.id}
-                      onClick={() => {
-                        onUpdateIssue && onUpdateIssue(issue.id, { columnId: col.id, status: col.name });
-                        setOpenDropdown(null);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F9F9F8] dark:hover:bg-white/5 flex items-center gap-2 transition-colors ${isSelected ? 'font-semibold text-[#2563EB] dark:text-[#3B82F6]' : 'text-[#787774] dark:text-[#9B9A97]'}`}
-                    >
-                      {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
-                      <span className={isSelected ? '' : 'ml-5'}>{col.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <TaskStatusChanger
+            issue={issue}
+            boardColumns={boardColumns}
+            variant="pill"
+            size="sm"
+            onChange={({ columnId, status }) =>
+              onUpdateIssue?.(issue.id, { columnId, status })
+            }
+          />
         );
       },
     },

@@ -14,6 +14,7 @@ import { CheckSquare, Columns, FileText, MoreHorizontal, Search } from "lucide-r
 
 import { Issue } from "../../../types/issue.type";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
+import TaskStatusChanger from "../../TaskStatusChanger";
 
 type BoardColumn = { id: string; name: string; order: number; mappedStatuses?: string[]; isDone?: boolean };
 
@@ -164,31 +165,17 @@ export default function DataGridListView({
         size: 150,
         cell: (info) => {
           const issue = info.row.original;
-          const rawStatus = info.getValue() as string;
-          const resolvedCol = boardColumns.find((c) => c.id === rawStatus || c.name === rawStatus);
-          const displayName = resolvedCol?.name ?? rawStatus;
-
-          if (boardColumns.length > 0) {
-            return (
-              <select
-                value={resolvedCol?.id ?? rawStatus}
-                onChange={(event) =>
-                  onUpdateIssue(issue.id, { status: event.target.value })
-                }
-                className="rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] px-2 py-1 text-[0.6875rem] font-semibold text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                {boardColumns.map((col) => (
-                  <option key={col.id} value={col.id}>{col.name}</option>
-                ))}
-              </select>
-            );
-          }
 
           return (
-            <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#2A2A2A] px-1.5 py-0.5 text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97]">
-              {displayName}
-            </span>
+            <TaskStatusChanger
+              issue={issue}
+              boardColumns={boardColumns}
+              variant="pill"
+              size="sm"
+              onChange={({ columnId, status }) =>
+                onUpdateIssue(issue.id, { columnId, status })
+              }
+            />
           );
         },
       },
@@ -308,7 +295,7 @@ export default function DataGridListView({
         ),
       },
     ],
-    [onClickTask, onUpdateIssue],
+    [boardColumns, onClickTask, onUpdateIssue],
   );
 
   const table = useReactTable({

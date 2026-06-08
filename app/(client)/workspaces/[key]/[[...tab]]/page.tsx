@@ -867,6 +867,7 @@ export default function WorkspaceDetailPage({
           data: {
             issues,
             filteredIssues,
+            columns,
             sprints,
             uniqueAssignees,
             selectedTaskIds,

@@ -13,6 +13,7 @@ import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
 import BoardTaskActionMenu from "../covers/BoardTaskActionMenu";
 import TaskLabelModal from "../labels/TaskLabelModal";
+import TaskStatusChanger from "../TaskStatusChanger";
 import { compareIssueRank } from "../../utils/dragUtils";
 
 import {
@@ -448,15 +449,28 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                           <span className="text-[0.6875rem] font-mono font-bold text-[#ABABAB] dark:text-[#6B6B6B]">
                                             {issue.key}
                                           </span>
-                                          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                                            <AssigneePicker
-                                              users={workspaceMembers}
-                                              value={issue.assigneeId ?? issue.assignee ?? null}
-                                              onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
-                                              placement="auto"
-                                              size="sm"
+                                          <div className="flex min-w-0 items-center gap-2">
+                                            <TaskStatusChanger
+                                              issue={issue}
+                                              boardColumns={columns}
                                               disabled={!!(filters.archived || !canEditTask)}
+                                              variant="pill"
+                                              size="sm"
+                                              menuAlign="right"
+                                              onChange={({ columnId, status }) =>
+                                                updateIssueDirectly(issue.id, { columnId, status })
+                                              }
                                             />
+                                            <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                              <AssigneePicker
+                                                users={workspaceMembers}
+                                                value={issue.assigneeId ?? issue.assignee ?? null}
+                                                onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
+                                                placement="auto"
+                                                size="sm"
+                                                disabled={!!(filters.archived || !canEditTask)}
+                                              />
+                                            </div>
                                           </div>
                                         </div>
                                       </div>
