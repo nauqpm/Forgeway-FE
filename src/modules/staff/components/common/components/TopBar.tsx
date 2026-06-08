@@ -72,8 +72,14 @@ export default function TopBar() {
           onClick={() => setShowUserMenu(!showUserMenu)}
           className="flex items-center p-1 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
         >
-          <div className="w-7 h-7 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-xs font-semibold">
-            {user?.fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+          <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-xs font-semibold">
+                {user?.fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
         </button>
       </div>

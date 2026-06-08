@@ -260,6 +260,8 @@ const toIssue = (task: TaskDto): Issue => {
     type: toUiLabel(task.type, "Task"),
     assignee,
     assigneeId: task.assigneeId,
+    assigneeDisplayName: task.assignee?.fullName ?? task.assignee?.email ?? undefined,
+    assigneeAvatar: task.assignee?.avatar ?? undefined,
     color: "bg-[#2563EB]",
     sprintId: task.sprintId ?? null,
     storyPoints: task.storyPoints ?? 0,
