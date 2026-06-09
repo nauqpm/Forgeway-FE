@@ -10,6 +10,8 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from '../stores/authStore';
 import { usePermissionStore } from '../../permission/stores/permissionStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { getQueryClient } from '@/common/providers/QueryProvider';
 import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from '../services/authService';
 import { clearTokens } from '../services/tokenService';
 import { getMyPermissionsAPI } from '../../permission/services/permissionService';
@@ -186,6 +188,8 @@ export const useAuth = () => {
       usePermissionStore.getState().clearPermissions();
       useSessionStore.getState().clearSessionState();
       useSecurityStore.getState().clearSecurityState();
+      useWorkspaceStore.getState().clearWorkspace();
+      getQueryClient()?.clear();
       router.push(AUTH_ROUTES.LOGIN);
     }
   }, [clearAuth, router]);
