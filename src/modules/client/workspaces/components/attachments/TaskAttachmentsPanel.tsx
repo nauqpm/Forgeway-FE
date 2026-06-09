@@ -82,20 +82,20 @@ export default function TaskAttachmentsPanel({
   return (
     <section
       {...getDropzoneProps()}
-      className={`relative space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/60 ${className}`}
+      className={`relative space-y-3 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-4 ${className}`}
     >
       <AttachmentDropOverlay visible={isDraggingFiles} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="rounded bg-white p-2 text-gray-600 shadow-sm dark:bg-gray-800 dark:text-gray-300">
+          <div className="rounded-[4px] bg-white dark:bg-[#202020] p-2 text-[#787774] dark:text-[#9B9A97] border border-[#EAEAEA] dark:border-white/[0.06]">
             <Paperclip className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
               Attachments
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{panelDescription}</p>
+            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{panelDescription}</p>
           </div>
         </div>
 
@@ -103,7 +103,7 @@ export default function TaskAttachmentsPanel({
           <button
             type="button"
             onClick={() => refetch()}
-            className="rounded p-2 text-gray-500 transition-colors hover:bg-white hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            className="rounded-[4px] p-2 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-white dark:hover:bg-[#202020] hover:text-[#111111] dark:hover:text-[#E8E8E7]"
             aria-label="Refresh attachments"
             title="Refresh"
           >
@@ -113,7 +113,7 @@ export default function TaskAttachmentsPanel({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={isArchived}
-            className="inline-flex items-center gap-2 rounded bg-[#0052CC] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#357BFF] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 py-2 text-[0.8125rem] font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
             Add
@@ -130,7 +130,7 @@ export default function TaskAttachmentsPanel({
       </div>
 
       {error && (
-        <div className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300">
+        <div className="rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-3 py-2 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
           Could not load attachments.
         </div>
       )}
@@ -138,7 +138,7 @@ export default function TaskAttachmentsPanel({
       <AttachmentUploadQueue items={uploadingFiles} onClear={clearQueueItem} />
 
       {!hasContent && !isLoading && (
-        <div className="rounded border border-dashed border-gray-300 bg-white px-4 py-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400">
+        <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-4 py-6 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
           No attachments yet.
         </div>
       )}

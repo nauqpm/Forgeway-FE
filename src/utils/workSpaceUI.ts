@@ -7,11 +7,11 @@ import {
 } from "lucide-react";
 
 const COLORS = [
-  "bg-blue-500",
-  "bg-green-500",
-  "bg-purple-500",
-  "bg-pink-500",
-  "bg-orange-500",
+  "bg-[#2563EB]",
+  "bg-[#346538]",
+  "bg-[#1F6C9F]",
+  "bg-[#9F2F2D]",
+  "bg-[#956400]",
 ];
 
 const ICONS = [LayoutDashboard, FolderKanban, BookOpen, Database];

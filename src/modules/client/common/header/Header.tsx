@@ -30,33 +30,33 @@ export default function Header() {
 
   if (isLoading) {
     return (
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center">
               <span className="text-white font-bold text-sm">AL</span>
             </div>
-            <span className="font-bold text-lg text-gray-900 dark:text-white">AL-TASK</span>
+            <span className="font-bold text-lg text-[#111111] dark:text-[#E8E8E7]">AL-TASK</span>
           </Link>
-          <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+          <Loader2 className="w-5 h-5 animate-spin text-[#ABABAB] dark:text-[#6B6B6B]" />
         </div>
       </header>
     );
   }
 
   return (
-    <header className="border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
+    <header className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center">
               <span className="text-white font-bold text-sm">AL</span>
             </div>
-            <span className="font-bold text-lg text-gray-900 dark:text-white">AL-TASK</span>
+            <span className="font-bold text-lg text-[#111111] dark:text-[#E8E8E7]">AL-TASK</span>
           </Link>
           <Link
             href="/aboutUs"
-            className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+            className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
           >
             About us
           </Link>
@@ -66,62 +66,65 @@ export default function Header() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
             >
-              <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold">
+              <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-semibold">
                 {user?.fullName?.charAt(0)?.toUpperCase() ?? user?.email?.charAt(0)?.toUpperCase() ?? "U"}
               </div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block">
+              <span className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] hidden sm:block">
                 {user?.fullName ?? user?.email}
               </span>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+              <ChevronDown className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-2 z-50">
-                <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-800">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+              <div
+                className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] py-2 z-50"
+                style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)" }}
+              >
+                <div className="px-4 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] truncate">
                     {user?.fullName ?? "User"}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  <p className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">
                     {user?.email}
                   </p>
                 </div>
 
                 <Link
                   href="/dashboard"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
                   onClick={() => setDropdownOpen(false)}
                 >
-                  <LayoutDashboard className="w-4 h-4 text-indigo-500" />
+                  <LayoutDashboard className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
                   Dashboard
                 </Link>
 
                 <Link
                   href="/account"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
                   onClick={() => setDropdownOpen(false)}
                 >
-                  <User className="w-4 h-4 text-indigo-500" />
+                  <User className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
                   Profile
                 </Link>
 
                 <Link
                   href="/settings"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
                   onClick={() => setDropdownOpen(false)}
                 >
-                  <Settings className="w-4 h-4 text-gray-400" />
+                  <Settings className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                   Settings
                 </Link>
 
-                <div className="border-t border-gray-100 dark:border-gray-800 mt-2 pt-2">
+                <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] mt-2 pt-2">
                   <button
                     onClick={() => {
                       setDropdownOpen(false);
                       logout();
                     }}
-                    className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="flex items-center gap-3 w-full px-4 py-2.5 text-[0.8125rem] text-red-600 dark:text-red-400 hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
                     Log out
@@ -134,13 +137,13 @@ export default function Header() {
           <div className="flex items-center gap-4">
             <Link
               href="/login"
-              className="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
             >
               Sign in
             </Link>
             <Link
               href="/register"
-              className="text-sm font-medium bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+              className="text-[0.8125rem] font-medium bg-[#2563EB] dark:bg-[#3B82F6] text-white px-4 py-2 rounded-[6px] hover:bg-[#1D4ED8] transition-colors"
             >
               Get started
             </Link>

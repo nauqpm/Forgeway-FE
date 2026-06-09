@@ -5,12 +5,10 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpen,
-  CheckCircle2,
   LayoutDashboard,
   Loader2,
   Plus,
   ShieldCheck,
-  Sparkles,
   Users,
 } from "lucide-react";
 import api from "@/common/services/api.service";
@@ -102,7 +100,7 @@ export default function ForYouPage() {
   if (loading) {
     return (
       <div className="app-page-medium flex min-h-[50vh] items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
       </div>
     );
   }
@@ -111,18 +109,14 @@ export default function ForYouPage() {
     <div className="app-page-medium">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300">
-            <Sparkles className="h-3.5 w-3.5" />
-            For you
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Your workspaces
           </h1>
         </div>
 
         <Link
           href="/workspaces/create"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+          className="inline-flex items-center justify-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[0.8125rem] font-semibold text-white transition hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB]"
         >
           <Plus className="h-4 w-4" />
           Create workspace
@@ -130,40 +124,40 @@ export default function ForYouPage() {
       </div>
 
       <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Owned</p>
-          <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{stats.owned}</p>
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
+          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Owned</p>
+          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.owned}</p>
         </div>
-        <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Joined</p>
-          <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{stats.joined}</p>
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
+          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Joined</p>
+          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.joined}</p>
         </div>
-        <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Active</p>
-          <p className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">{stats.active}</p>
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
+          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Active</p>
+          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.active}</p>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+        <div className="mb-4 rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-4 py-3 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
           {error}
         </div>
       )}
 
       {workspaces.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-12 text-center dark:border-gray-800 dark:bg-gray-900">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-300">
+        <div className="rounded-[8px] border border-dashed border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-6 py-12 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]">
             <BookOpen className="h-6 w-6" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             No workspace yet
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
+          <p className="mx-auto mt-2 max-w-md text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             Create a workspace to start organizing work, documents, and team collaboration.
           </p>
           <Link
             href="/workspaces/create"
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            className="mt-6 inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[0.8125rem] font-semibold text-white transition hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB]"
           >
             <Plus className="h-4 w-4" />
             Create your first workspace
@@ -181,38 +175,38 @@ export default function ForYouPage() {
               <Link
                 key={workspaceIdOf(workspace) || routeKey}
                 href={`/workspaces/${routeKey}`}
-                className="group rounded-xl border border-gray-200 bg-white p-5 transition hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-900 dark:hover:border-indigo-700"
+                className="group rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] p-5 transition hover:border-[#2563EB]/30 dark:hover:border-[rgba(59,130,246,0.12)]"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white">
-                      {isOwner ? <ShieldCheck className="h-6 w-6" /> : <Users className="h-6 w-6" />}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-[#2563EB] dark:bg-[#3B82F6] text-white">
+                      {isOwner ? <ShieldCheck className="h-5 w-5" /> : <Users className="h-5 w-5" />}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="truncate font-semibold text-gray-900 group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
+                      <h3 className="truncate text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-colors">
                         {workspace.name}
                       </h3>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {workspace.key && (
-                          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-mono font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                          <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-0.5 text-[0.625rem] font-mono font-semibold text-[#787774] dark:text-[#9B9A97]">
                             {workspace.key}
                           </span>
                         )}
-                        <span className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium capitalize text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300">
+                        <span className="rounded-[4px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] px-2 py-0.5 text-[0.625rem] font-medium capitalize text-[#1F6C9F] dark:text-[#93C5FD]">
                           {roleLabel(workspace)}
                         </span>
                         {workspace.status && (
-                          <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium capitalize text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                          <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-0.5 text-[0.625rem] font-medium capitalize text-[#787774] dark:text-[#9B9A97]">
                             {workspace.status}
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
-                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-gray-400 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" />
+                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-[#ABABAB] dark:text-[#6B6B6B] transition group-hover:translate-x-0.5 group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6]" />
                 </div>
 
-                <div className="mt-5 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="mt-5 flex items-center gap-2 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
                   <LayoutDashboard className="h-4 w-4" />
                   Open workspace
                 </div>

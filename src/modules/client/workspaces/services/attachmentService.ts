@@ -3,6 +3,8 @@ import { apiRoutes } from "@/config/apiRoutes";
 import {
   AttachmentRequestContext,
   AttachmentUploadInput,
+  normalizeTaskAttachment,
+  type RawTaskAttachment,
   TaskAttachment,
 } from "../types/attachment.type";
 
@@ -36,7 +38,9 @@ export const attachmentService = {
       authConfig(accessToken),
     );
     const payload = normalizeResponseData<unknown>(response);
-    return Array.isArray(payload) ? (payload as TaskAttachment[]) : [];
+    return Array.isArray(payload)
+      ? (payload as RawTaskAttachment[]).map(normalizeTaskAttachment)
+      : [];
   },
 
   async uploadAttachment({
@@ -67,7 +71,7 @@ export const attachmentService = {
       },
     );
 
-    return normalizeResponseData<TaskAttachment>(response);
+    return normalizeTaskAttachment(normalizeResponseData<RawTaskAttachment>(response));
   },
 
   async getPreviewBlob({

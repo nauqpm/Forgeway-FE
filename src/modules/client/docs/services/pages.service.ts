@@ -19,7 +19,12 @@ function mapPage(raw: PageApiResponse): Document {
     workspaceId: raw.workspaceId,
     slug: raw.slug,
     authorId: raw.authorId,
-    lastEditedBy: raw.lastEditedBy,
+    lastEditedBy: raw.lastEditedBy
+      ? {
+          _id: raw.lastEditedBy._id,
+          fullName: raw.lastEditedBy.fullName ?? raw.lastEditedBy.username ?? "Unknown",
+        }
+      : null,
     version: raw.version,
     status: raw.status,
     labels: raw.labels ?? [],
@@ -74,6 +79,13 @@ async function deletePage(id: string): Promise<void> {
   await api.delete(apiRoutes.PAGES.BY_ID(id));
 }
 
+/** Publish a page (set status to 'published') */
+async function publishPage(id: string): Promise<Document> {
+  const res = await api.post(apiRoutes.PAGES.PUBLISH(id));
+  const raw: PageApiResponse = res.data?.data ?? res.data;
+  return mapPage(raw);
+}
+
 export const pagesService = {
   getRootPages,
   getChildren,
@@ -81,4 +93,5 @@ export const pagesService = {
   createPage,
   updatePage,
   deletePage,
+  publishPage,
 };

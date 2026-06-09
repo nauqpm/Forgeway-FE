@@ -25,15 +25,12 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
 
   const updatePosition = useCallback(() => {
     if (!anchorEl) return;
-
     const rect = anchorEl.getBoundingClientRect();
     const left = Math.min(
       Math.max(VIEWPORT_MARGIN, rect.left),
       window.innerWidth - PICKER_WIDTH - VIEWPORT_MARGIN,
     );
-    const top = rect.bottom + 8;
-
-    setPosition({ left, top });
+    setPosition({ left, top: rect.bottom + 8 });
   }, [anchorEl]);
 
   useEffect(() => {
@@ -43,11 +40,9 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
         onClose();
       }
     };
-
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
-
     setMounted(true);
     updatePosition();
     window.addEventListener("pointerdown", handlePointerDown);
@@ -70,15 +65,17 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
 
   if (!mounted) return null;
 
+  const inputCls = "mt-1 h-8 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[0.6875rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors";
+
   return createPortal(
     <div
       ref={pickerRef}
-      className="fixed z-[80] w-[250px] rounded-lg border border-gray-200 bg-white p-3 shadow-xl dark:border-gray-700 dark:bg-gray-900"
-      style={{ left: position.left, top: position.top }}
+      className="fixed z-[80] w-[15.625rem] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3"
+      style={{ left: position.left, top: position.top, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-700 dark:text-gray-200">Insert Table</span>
-        <span className="text-xs text-indigo-600 dark:text-indigo-300">
+        <span className="text-[0.6875rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Insert Table</span>
+        <span className="text-[0.6875rem] text-[#2563EB] dark:text-[#3B82F6]">
           {hovered.rows} x {hovered.cols}
         </span>
       </div>
@@ -88,7 +85,6 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
           const row = Math.floor(index / GRID_COLS) + 1;
           const col = (index % GRID_COLS) + 1;
           const active = row <= hovered.rows && col <= hovered.cols;
-
           return (
             <button
               key={`${row}-${col}`}
@@ -96,46 +92,32 @@ export default function TableGridPicker({ anchorEl, onClose, onSelect }: TableGr
               aria-label={`Insert ${row} by ${col} table`}
               onMouseEnter={() => setHovered({ rows: row, cols: col })}
               onClick={() => onSelect(row, col)}
-              className={`h-5 w-5 rounded-sm border transition ${
+              className={`h-5 w-5 rounded-sm border transition-colors ${
                 active
-                  ? "border-indigo-500 bg-indigo-100 dark:border-indigo-400 dark:bg-indigo-500/30"
-                  : "border-gray-300 bg-white hover:border-indigo-300 dark:border-gray-600 dark:bg-gray-800"
+                  ? "border-[#2563EB] bg-[#EFF6FF] dark:border-[#3B82F6] dark:bg-[rgba(37,99,235,0.15)]"
+                  : "border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] hover:border-[#2563EB]/50"
               }`}
             />
           );
         })}
       </div>
 
-      <div className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-800">
-        <div className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-200">Customize</div>
+      <div className="mt-3 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-3">
+        <div className="mb-2 text-[0.6875rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Customize</div>
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-[11px] text-gray-500 dark:text-gray-400">
+          <label className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
             Rows
-            <input
-              type="number"
-              min={1}
-              max={MAX_CUSTOM_SIZE}
-              value={customRows}
-              onChange={(event) => setCustomRows(Number(event.target.value))}
-              className="mt-1 h-8 w-full rounded border border-gray-200 bg-white px-2 text-xs text-gray-900 outline-none focus:border-indigo-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-            />
+            <input type="number" min={1} max={MAX_CUSTOM_SIZE} value={customRows} onChange={(e) => setCustomRows(Number(e.target.value))} className={inputCls} />
           </label>
-          <label className="text-[11px] text-gray-500 dark:text-gray-400">
+          <label className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
             Columns
-            <input
-              type="number"
-              min={1}
-              max={MAX_CUSTOM_SIZE}
-              value={customCols}
-              onChange={(event) => setCustomCols(Number(event.target.value))}
-              className="mt-1 h-8 w-full rounded border border-gray-200 bg-white px-2 text-xs text-gray-900 outline-none focus:border-indigo-400 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-100"
-            />
+            <input type="number" min={1} max={MAX_CUSTOM_SIZE} value={customCols} onChange={(e) => setCustomCols(Number(e.target.value))} className={inputCls} />
           </label>
         </div>
         <button
           type="button"
           onClick={insertCustomTable}
-          className="mt-3 h-8 w-full rounded-md bg-indigo-600 px-3 text-xs font-semibold text-white hover:bg-indigo-700"
+          className="mt-3 h-8 w-full rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[0.6875rem] font-semibold text-white hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
         >
           Insert table
         </button>

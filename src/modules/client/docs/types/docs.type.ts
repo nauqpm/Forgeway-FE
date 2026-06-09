@@ -27,7 +27,7 @@ export interface Document {
   status: "draft" | "published";
   labels: string[];
   versionHistory: VersionHistoryEntry[];
-  source?: "docs" | "upload";
+  source?: "docs" | "import";
   createdAt: string;
   updatedAt: string;
 }
@@ -43,7 +43,7 @@ export interface PageApiResponse {
   workspaceId: string;
   slug: string;
   authorId: string;
-  lastEditedBy?: { _id: string; username: string } | null;
+  lastEditedBy?: { _id: string; fullName?: string; username?: string } | null;
   version: number;
   status: "draft" | "published";
   labels: string[];
@@ -110,6 +110,7 @@ export interface DocsState {
     id: string,
     updates: Partial<Pick<Document, "title" | "content">>,
   ) => Promise<void>;
+  saveDocument: (id: string) => Promise<Document | null>;
   deleteDocument: (id: string) => Promise<void>;
   renameDocument: (id: string, newTitle: string) => Promise<void>;
 }

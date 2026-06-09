@@ -32,7 +32,7 @@ export default function CreateWorkspacePage({
   useEffect(() => {
     resolveWorkspaceFromRouteKey(key)
       .then((workspace) => setWorkspaceId(workspace._id))
-      .catch(() => toast.error("Khong tim thay workspace"))
+      .catch(() => toast.error("Workspace not found"))
       .finally(() => setResolvingWorkspace(false));
   }, [key]);
 
@@ -51,10 +51,10 @@ export default function CreateWorkspacePage({
         labels,
       });
       const created = res.data?.data ?? res.data;
-      toast.success("Da tao page trong workspace");
+      toast.success("Page created in workspace");
       router.push(`/workspaces/${key}/pages/${created.slug}`);
     } catch {
-      toast.error("Tao page that bai");
+      toast.error("Could not create page");
     } finally {
       setLoading(false);
     }

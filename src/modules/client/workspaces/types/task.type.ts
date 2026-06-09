@@ -13,7 +13,9 @@ export interface Task {
   priority: string;
   type: string;
   assignee: string;
-  assigneeId?: string;
+  assigneeId?: string | null;
+  assigneeDisplayName?: string;
+  assigneeAvatar?: string;
   color: string;
   sprintId: string | null;
   storyPoints: number;
@@ -32,6 +34,8 @@ export interface Task {
   createdAt?: string;
   updatedAt?: string;
   version?: number;
+  optimisticOrder?: number;
+  optimisticScope?: string;
   cover?: TaskCover | null;
   labels?: TaskLabel[];
   labelIds?: string[];
