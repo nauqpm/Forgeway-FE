@@ -194,9 +194,10 @@ export default function TaskDetailDrawer({
   );
   const detailWorkspaceMembers =
     providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers;
+  const canEditTask = Boolean(onUpdateIssue);
 
   const startInlineEdit = (field: string, value?: string | number | null) => {
-    if (issue.isArchived) return;
+    if (!canEditTask || issue.isArchived) return;
     setEditingField(field);
     setDraftValue(value === null || value === undefined ? "" : String(value));
   };
@@ -263,7 +264,7 @@ export default function TaskDetailDrawer({
     <CustomDatePicker
       value={rawValue}
       onChange={(nextValue) => saveInlineEdit(field, nextValue ?? "")}
-      disabled={issue.isArchived}
+      disabled={!canEditTask || issue.isArchived}
       inputClassName="h-8 bg-transparent dark:bg-transparent"
       ariaLabel={field === "startDate" ? "Task start date" : "Task due date"}
     />
@@ -275,7 +276,7 @@ export default function TaskDetailDrawer({
     rawValue?: string | number | null,
     type: "text" | "date" | "number" = "text",
   ) =>
-    editingField === field ? (
+    canEditTask && editingField === field ? (
       <input
         autoFocus
         type={type}
@@ -288,8 +289,8 @@ export default function TaskDetailDrawer({
     ) : (
       <div
         onDoubleClick={() => startInlineEdit(field, rawValue ?? displayValue)}
-        title="Double click to edit"
-        className={editableTextClass}
+        title={canEditTask ? "Double click to edit" : undefined}
+        className={canEditTask ? editableTextClass : "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] p-1 -ml-1"}
       >
         {displayValue}
       </div>
@@ -300,7 +301,7 @@ export default function TaskDetailDrawer({
     value: string,
     options: string[],
   ) =>
-    editingField === field ? (
+    canEditTask && editingField === field ? (
       <select
         autoFocus
         value={draftValue}
@@ -318,8 +319,8 @@ export default function TaskDetailDrawer({
     ) : (
       <div
         onDoubleClick={() => startInlineEdit(field, value)}
-        title="Double click to edit"
-        className={editableTextClass}
+        title={canEditTask ? "Double click to edit" : undefined}
+        className={canEditTask ? editableTextClass : "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] p-1 -ml-1"}
       >
         {value}
       </div>
@@ -327,7 +328,7 @@ export default function TaskDetailDrawer({
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
-    if (localTitle !== issue.title && onUpdateIssue) {
+    if (canEditTask && localTitle !== issue.title && onUpdateIssue) {
       onUpdateIssue({ ...issue, title: localTitle });
     }
   };
@@ -377,6 +378,7 @@ export default function TaskDetailDrawer({
           </div>
 
           <div className="flex items-center gap-1">
+            {onArchiveIssue && (
             <div className="relative">
               <button
                 type="button"
@@ -406,6 +408,7 @@ export default function TaskDetailDrawer({
                 </div>
               )}
             </div>
+            )}
             <button
               onClick={onClose}
               className="p-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
@@ -448,7 +451,7 @@ export default function TaskDetailDrawer({
 
             {/* Title */}
             <div>
-              {isEditingTitle && !issue.isArchived ? (
+              {canEditTask && isEditingTitle && !issue.isArchived ? (
                 <input
                   autoFocus
                   type="text"
@@ -460,8 +463,8 @@ export default function TaskDetailDrawer({
                 />
               ) : (
                 <h1
-                  onClick={() => { if (!issue.isArchived) setIsEditingTitle(true); }}
-                  className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4 p-2 -ml-2 rounded-[6px] transition-colors ${issue.isArchived ? 'opacity-90' : 'hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer'}`}
+                  onClick={() => { if (canEditTask && !issue.isArchived) setIsEditingTitle(true); }}
+                  className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4 p-2 -ml-2 rounded-[6px] transition-colors ${canEditTask && !issue.isArchived ? 'hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer' : 'opacity-90'}`}
                 >
                   {localTitle}
                 </h1>
@@ -473,7 +476,7 @@ export default function TaskDetailDrawer({
               <TaskStatusChanger
                 issue={issue}
                 boardColumns={boardColumns}
-                disabled={issue.isArchived}
+                disabled={!canEditTask || issue.isArchived}
                 onChange={({ columnId, status }) =>
                   onUpdateIssue?.({ ...issue, columnId, status })
                 }
@@ -496,6 +499,7 @@ export default function TaskDetailDrawer({
                       onChange={(uid) => saveInlineEdit("assigneeId", uid ?? "")}
                       placement="auto"
                       size="md"
+                      disabled={!canEditTask || issue.isArchived}
                     />
                   </div>
                 </div>
@@ -534,7 +538,7 @@ export default function TaskDetailDrawer({
                     <TaskLabelsField
                       workspaceId={workspaceId}
                       issue={issue}
-                      disabled={issue.isArchived}
+                      disabled={!canEditTask || issue.isArchived}
                     />
                   </div>
                 </div>
@@ -581,7 +585,7 @@ export default function TaskDetailDrawer({
                 <TaskDescription
                   initialContent={issue.description || ''}
                   onSave={(newDesc: string) => {
-                    if (onUpdateIssue && !issue.isArchived) {
+                    if (canEditTask && onUpdateIssue && !issue.isArchived) {
                       onUpdateIssue({ ...issue, description: newDesc });
                     }
                   }}
@@ -592,7 +596,7 @@ export default function TaskDetailDrawer({
             <TaskAttachmentsPanel
               workspaceId={workspaceId}
               taskId={issue.id}
-              isArchived={issue.isArchived ?? false}
+              isArchived={!canEditTask || (issue.isArchived ?? false)}
               currentUserId={user?.id}
               accessToken={token}
             />
@@ -606,6 +610,7 @@ export default function TaskDetailDrawer({
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No linked items yet</span>
                 </div>
+                {canEditTask && (
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
                     href={`/docs/create?issueId=${issue.id}`}
@@ -617,6 +622,7 @@ export default function TaskDetailDrawer({
                     <LinkIcon className="w-4 h-4 text-[#787774]" /> Link item
                   </button>
                 </div>
+                )}
               </div>
             </div>
 

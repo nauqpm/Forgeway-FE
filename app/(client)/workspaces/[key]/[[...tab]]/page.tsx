@@ -48,6 +48,7 @@ import { sprintIdOf } from "@/hooks/realtime/sprint-realtime-cache.utils";
 import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useAuth } from "@/context/AuthContext";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
@@ -110,6 +111,34 @@ const clearOptimisticIssueOrder = (issue: Issue): Issue => {
   return rest;
 };
 
+const normalizeRole = (role?: string | null) =>
+  role?.trim().toLowerCase().replace(/[-\s]+/g, "_") ?? null;
+
+const getUserObject = (member: any) => member?.userId ?? member?.user ?? member?.member ?? member;
+
+const normalizeObjectId = (value: string) => {
+  const trimmed = value.trim();
+  const objectIdMatch = trimmed.match(/^ObjectId\(['"]?([a-f0-9]{24})['"]?\)$/i);
+  return objectIdMatch?.[1] ?? trimmed;
+};
+
+const getUserId = (value: any) => {
+  if (!value) return "";
+  if (typeof value === "string") return normalizeObjectId(value);
+  const id = value._id ?? value.id ?? value.userId ?? value.$oid;
+  if (id) return normalizeObjectId(String(id));
+  const stringValue = value.toString?.();
+  return stringValue && stringValue !== "[object Object]" ? normalizeObjectId(stringValue) : "";
+};
+
+const getUserEmail = (value: any) => {
+  if (!value || typeof value === "string") return "";
+  return value.email ?? "";
+};
+
+const sameNonEmpty = (left?: string | null, right?: string | null) =>
+  Boolean(left && right && left === right);
+
 export default function WorkspaceDetailPage({
   params,
 }: {
@@ -117,6 +146,7 @@ export default function WorkspaceDetailPage({
 }) {
   const { key: workspaceKey, tab } = use(params);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const tabFromUrl = tab?.[0];
   const routeInitialTab = tabFromUrl === "key" ? null : (tabFromUrl as WorkspaceTab) || null;
   const initialTab = isHiddenWorkspaceTab(routeInitialTab) ? null : routeInitialTab;
@@ -423,12 +453,29 @@ export default function WorkspaceDetailPage({
 
   const uniqueAssignees = useAssignees(issues, workspace);
   const workspacePermissions = useWorkspacePermission(workspaceApiId ?? "", workspace);
-  const canCreateTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
-  const canEditTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
-  const canDeleteTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
-  const canMoveTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_MOVE);
-  const canManageSprint = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.SPRINT_MANAGE);
-  const canUpdateWorkspace = workspacePermissions.hasPermission(
+  const currentWorkspaceRole = useMemo(() => {
+    if (!user || !workspace) return workspacePermissions.role;
+    const currentMember = (workspace.members ?? []).find((member: any) => {
+      const memberUser = getUserObject(member);
+      const memberId = getUserId(memberUser);
+      const memberEmail = getUserEmail(memberUser);
+      return (
+        sameNonEmpty(memberId, user.id) ||
+        sameNonEmpty(memberId, user.email) ||
+        sameNonEmpty(memberEmail, user.email)
+      );
+    });
+
+    return normalizeRole((currentMember as any)?.role) ?? workspacePermissions.role;
+  }, [user, workspace, workspacePermissions.role]);
+  const isWorkspaceAdmin =
+    currentWorkspaceRole === "workspace_admin" || user?.role === "super_admin";
+  const canCreateTask = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
+  const canEditTask = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
+  const canDeleteTask = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
+  const canMoveTask = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_MOVE);
+  const canManageSprint = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.SPRINT_MANAGE);
+  const canUpdateWorkspace = isWorkspaceAdmin && workspacePermissions.hasPermission(
     WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE,
   );
 
@@ -578,6 +625,7 @@ export default function WorkspaceDetailPage({
   const activeSprint = sprints.find(s => s.status === "active") ?? null;
 
   const handleOpenGlobalCreateIssue = useCallback(() => {
+    if (!canCreateTask) return;
     if (activeTab === "board" && workspace?.type === "scrum" && activeSprint) {
       const firstColumn = columns[0];
       setNewIssueForm(prev => ({
@@ -588,7 +636,7 @@ export default function WorkspaceDetailPage({
       }));
     }
     setShowCreateIssue(true);
-  }, [activeTab, workspace, activeSprint, columns]);
+  }, [activeTab, workspace, activeSprint, columns, canCreateTask]);
 
   const {
     handleAddColumn,
@@ -974,6 +1022,8 @@ export default function WorkspaceDetailPage({
           handleUpdateIssue,
           onBulkDeleteIds: (ids: string[]) => setIssues(prev => prev.filter(i => !ids.includes(i.id))),
           onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
+          canEditTask,
+          canDeleteTask,
         }}
         summaryProps={{
           issues,
@@ -1051,7 +1101,7 @@ export default function WorkspaceDetailPage({
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
-          onUpdateIssue={handleUpdateIssue}
+          onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
           detailUrl={detailUrl}
         />
@@ -1064,7 +1114,7 @@ export default function WorkspaceDetailPage({
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
-          onUpdateIssue={handleUpdateIssue}
+          onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
           detailUrl={detailUrl}
         />

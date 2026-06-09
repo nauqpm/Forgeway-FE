@@ -37,6 +37,7 @@ interface TaskDetailListProps {
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
   detailUrl?: string;
+  canEditTask?: boolean;
 }
 
 const getUserDisplayName = (user: any, fallback?: string | null) => {
@@ -83,6 +84,7 @@ export default function TaskDetailList({
   showBackButton = true,
   onUpdateIssue,
   onArchiveIssue,
+  canEditTask = true,
 }: TaskDetailListProps) {
   const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
@@ -124,18 +126,18 @@ export default function TaskDetailList({
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
-    if (localTitle !== issue.title && onUpdateIssue) {
+    if (canEditTask && localTitle !== issue.title && onUpdateIssue) {
       onUpdateIssue({ ...issue, title: localTitle });
     }
   };
 
   const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
-    if (!onUpdateIssue || issue.isArchived) return;
+    if (!canEditTask || !onUpdateIssue || issue.isArchived) return;
     onUpdateIssue({ ...issue, [field]: nextValue });
   };
 
   const handleAssigneeChange = (uid: string | null) => {
-    if (!onUpdateIssue || issue.isArchived) return;
+    if (!canEditTask || !onUpdateIssue || issue.isArchived) return;
 
     const selectedUser: AssigneePickerUser | undefined = assigneeUsers.find(
       (candidate) => candidate.id === uid,
@@ -190,6 +192,7 @@ export default function TaskDetailList({
         </div>
 
         {/* Actions */}
+        {(onArchiveIssue || canEditTask) && (
         <div className="flex items-center gap-0.5 shrink-0 ml-2">
           <div className="relative">
             <button
@@ -211,6 +214,7 @@ export default function TaskDetailList({
             )}
           </div>
         </div>
+        )}
       </div>
 
       <TaskCoverBanner
@@ -243,7 +247,7 @@ export default function TaskDetailList({
           )}
 
           {/* Title */}
-          {isEditingTitle && !issue.isArchived ? (
+          {canEditTask && isEditingTitle && !issue.isArchived ? (
             <input
               autoFocus
               type="text"
@@ -255,8 +259,8 @@ export default function TaskDetailList({
             />
           ) : (
             <h1
-              onClick={() => { if (!issue.isArchived) setIsEditingTitle(true); }}
-              className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-snug rounded-[6px] px-1 -ml-1 transition-colors ${issue.isArchived ? "opacity-80" : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"}`}
+              onClick={() => { if (canEditTask && !issue.isArchived) setIsEditingTitle(true); }}
+              className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-snug rounded-[6px] px-1 -ml-1 transition-colors ${canEditTask && !issue.isArchived ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer" : "opacity-80"}`}
             >
               {localTitle}
             </h1>
@@ -268,7 +272,7 @@ export default function TaskDetailList({
             <TaskDescription
               initialContent={issue.description || ""}
               onSave={(newDesc: string) => {
-                if (onUpdateIssue && !issue.isArchived) {
+                if (canEditTask && onUpdateIssue && !issue.isArchived) {
                   onUpdateIssue({ ...issue, description: newDesc });
                 }
               }}
@@ -278,7 +282,7 @@ export default function TaskDetailList({
           <TaskAttachmentsPanel
             workspaceId={workspaceId}
             taskId={issue.id}
-            isArchived={issue.isArchived ?? false}
+            isArchived={!canEditTask || (issue.isArchived ?? false)}
             currentUserId={user?.id}
             accessToken={token}
           />
@@ -361,7 +365,7 @@ export default function TaskDetailList({
             <TaskStatusChanger
               issue={issue}
               boardColumns={boardColumns}
-              disabled={issue.isArchived}
+              disabled={!canEditTask || issue.isArchived}
               onChange={({ columnId, status }) =>
                 onUpdateIssue?.({ ...issue, columnId, status })
               }
@@ -392,7 +396,7 @@ export default function TaskDetailList({
                     onChange={handleAssigneeChange}
                     placement="auto"
                     size="md"
-                    disabled={issue.isArchived}
+                    disabled={!canEditTask || issue.isArchived}
                   />
                 </DetailRow>
 
@@ -414,7 +418,7 @@ export default function TaskDetailList({
                   <CustomDatePicker
                     value={issue.startDate}
                     onChange={(nextValue) => handleDateChange("startDate", nextValue)}
-                    disabled={issue.isArchived}
+                    disabled={!canEditTask || issue.isArchived}
                     inputClassName="h-8 bg-transparent dark:bg-transparent"
                     ariaLabel="Task start date"
                   />
@@ -424,7 +428,7 @@ export default function TaskDetailList({
                   <CustomDatePicker
                     value={issue.dueDate}
                     onChange={(nextValue) => handleDateChange("dueDate", nextValue)}
-                    disabled={issue.isArchived}
+                    disabled={!canEditTask || issue.isArchived}
                     inputClassName="h-8 bg-transparent dark:bg-transparent"
                     ariaLabel="Task due date"
                   />
@@ -435,7 +439,7 @@ export default function TaskDetailList({
                   <TaskLabelsField
                     workspaceId={workspaceId}
                     issue={issue}
-                    disabled={issue.isArchived}
+                    disabled={!canEditTask || issue.isArchived}
                     compact
                   />
                 </DetailRow>
