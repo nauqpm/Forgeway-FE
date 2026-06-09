@@ -17,7 +17,6 @@ export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
   const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
 
   useEffect(() => {
-    // Load root pages from API instead of mock data
     loadRootPages(workspaceId);
     setMounted(true);
   }, [workspaceId]);
@@ -42,17 +41,15 @@ export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
   if (!mounted) return null;
 
   return (
-    <div className="flex h-[calc(100vh-200px)] min-h-[600px] w-full bg-white dark:bg-gray-950 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-800 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-      {/* Persistent Sidebar */}
+    <div className="flex h-[calc(100vh-200px)] min-h-[37.5rem] w-full bg-white dark:bg-[#252525] rounded-[8px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06]">
       <DocsSidebar workspaceId={workspaceId} />
-      
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col bg-white overflow-hidden relative">
+
+      <main className="flex-1 flex flex-col bg-white dark:bg-[#252525] overflow-hidden relative">
         {isLoading && documents.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-500">
+            <div className="flex flex-col items-center gap-3 text-[#ABABAB] dark:text-[#6B6B6B]">
               <Loader2 className="w-6 h-6 animate-spin" />
-              <span className="text-sm font-medium">Loading...</span>
+              <span className="text-[0.8125rem] font-medium">Loading...</span>
             </div>
           </div>
         ) : (

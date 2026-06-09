@@ -13,6 +13,8 @@ import {
 import { CheckSquare, Columns, FileText, MoreHorizontal, Search } from "lucide-react";
 
 import { Issue } from "../../../types/issue.type";
+import CustomDatePicker from "@/common/components/CustomDatePicker";
+import TaskStatusChanger from "../../TaskStatusChanger";
 
 type BoardColumn = { id: string; name: string; order: number; mappedStatuses?: string[]; isDone?: boolean };
 
@@ -34,7 +36,7 @@ const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
   sprintId: true,
   storyPoints: true,
   startDate: true,
-  endDate: true,
+  dueDate: true,
 };
 
 const readJsonSetting = <T,>(key: string, fallback: T): T => {
@@ -106,14 +108,14 @@ export default function DataGridListView({
         header: () => (
           <input
             type="checkbox"
-            className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+            className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
             aria-label="Select all issues"
           />
         ),
         cell: () => (
           <input
             type="checkbox"
-            className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+            className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
             aria-label="Select task"
           />
         ),
@@ -125,7 +127,7 @@ export default function DataGridListView({
         header: "Key",
         size: 90,
         cell: (info) => (
-          <span className="font-mono text-xs font-semibold text-gray-500">
+          <span className="font-mono text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">
             {info.getValue() as string}
           </span>
         ),
@@ -140,16 +142,16 @@ export default function DataGridListView({
           return (
             <button
               type="button"
-              className="flex min-w-0 items-center gap-2 text-left font-medium text-gray-800 hover:text-indigo-700"
+              className="flex min-w-0 items-center gap-2 text-left font-medium text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#60A5FA]"
               onClick={() => onClickTask(issue)}
             >
               <FileText
                 className={`h-4 w-4 shrink-0 ${
                   issue.type === "Bug"
-                    ? "text-red-500"
+                    ? "text-[#9F2F2D]"
                     : issue.type === "Story"
-                      ? "text-emerald-500"
-                      : "text-blue-500"
+                      ? "text-[#346538]"
+                      : "text-[#2563EB] dark:text-[#60A5FA]"
                 }`}
               />
               <span className="truncate">{info.getValue() as string}</span>
@@ -163,31 +165,17 @@ export default function DataGridListView({
         size: 150,
         cell: (info) => {
           const issue = info.row.original;
-          const rawStatus = info.getValue() as string;
-          const resolvedCol = boardColumns.find((c) => c.id === rawStatus || c.name === rawStatus);
-          const displayName = resolvedCol?.name ?? rawStatus;
-
-          if (boardColumns.length > 0) {
-            return (
-              <select
-                value={resolvedCol?.id ?? rawStatus}
-                onChange={(event) =>
-                  onUpdateIssue(issue.id, { status: event.target.value })
-                }
-                className="rounded border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-indigo-500"
-                onClick={(event) => event.stopPropagation()}
-              >
-                {boardColumns.map((col) => (
-                  <option key={col.id} value={col.id}>{col.name}</option>
-                ))}
-              </select>
-            );
-          }
 
           return (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-300">
-              {displayName}
-            </span>
+            <TaskStatusChanger
+              issue={issue}
+              boardColumns={boardColumns}
+              variant="pill"
+              size="sm"
+              onChange={({ columnId, status }) =>
+                onUpdateIssue(issue.id, { columnId, status })
+              }
+            />
           );
         },
       },
@@ -196,7 +184,7 @@ export default function DataGridListView({
         header: "Priority",
         size: 120,
         cell: (info) => (
-          <span className="text-sm font-medium text-gray-600">
+          <span className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]">
             {info.getValue() as string}
           </span>
         ),
@@ -206,18 +194,27 @@ export default function DataGridListView({
         header: "Assignee",
         size: 140,
         cell: (info) => {
-          const assignee = info.getValue() as string;
+          const assigneeId = info.getValue() as string;
+          const issue = info.row.original;
+          const displayName = issue.assigneeDisplayName;
+          const avatar = issue.assigneeAvatar;
 
-          if (!assignee || assignee === "U") {
-            return <span className="text-sm italic text-gray-400">Unassigned</span>;
+          if (!assigneeId || assigneeId === "U" || !displayName) {
+            return <span className="text-[0.8125rem] italic text-[#ABABAB] dark:text-[#6B6B6B]">Unassigned</span>;
           }
 
           return (
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white">
-                {assignee}
+              <div className="relative h-6 w-6 rounded-full overflow-hidden shrink-0">
+                {avatar ? (
+                  <img src={avatar} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0 bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-[0.625rem] font-bold text-white">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
-              <span className="text-sm text-gray-700">{assignee}</span>
+              <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] truncate">{displayName}</span>
             </div>
           );
         },
@@ -227,7 +224,7 @@ export default function DataGridListView({
         header: "Sprint",
         size: 120,
         cell: (info) => (
-          <span className="text-sm text-gray-500">
+          <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             {(info.getValue() as string | null) ?? "Backlog"}
           </span>
         ),
@@ -237,7 +234,7 @@ export default function DataGridListView({
         header: "Points",
         size: 90,
         cell: (info) => (
-          <span className="flex h-6 w-6 items-center justify-center rounded bg-gray-100 text-xs font-bold text-gray-600">
+          <span className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97]">
             {(info.getValue() as number) || "-"}
           </span>
         ),
@@ -246,21 +243,41 @@ export default function DataGridListView({
         accessorKey: "startDate",
         header: "Start Date",
         size: 140,
-        cell: (info) => (
-          <span className="text-sm text-gray-600">
-            {(info.getValue() as string | undefined) || "-"}
-          </span>
-        ),
+        cell: (info) => {
+          const issue = info.row.original;
+          const value = info.getValue() as string | undefined;
+
+          return (
+            <div onClick={(event) => event.stopPropagation()}>
+              <CustomDatePicker
+                value={value}
+                onChange={(nextValue) => onUpdateIssue(issue.id, { startDate: nextValue ?? undefined })}
+                inputClassName="h-8 border-transparent bg-transparent px-2 pl-8"
+                ariaLabel="Task start date"
+              />
+            </div>
+          );
+        },
       },
       {
-        accessorKey: "endDate",
-        header: "End Date",
+        accessorKey: "dueDate",
+        header: "Due Date",
         size: 140,
-        cell: (info) => (
-          <span className="text-sm text-gray-600">
-            {(info.getValue() as string | undefined) || "-"}
-          </span>
-        ),
+        cell: (info) => {
+          const issue = info.row.original;
+          const value = info.getValue() as string | undefined;
+
+          return (
+            <div onClick={(event) => event.stopPropagation()}>
+              <CustomDatePicker
+                value={value}
+                onChange={(nextValue) => onUpdateIssue(issue.id, { dueDate: nextValue ?? undefined })}
+                inputClassName="h-8 border-transparent bg-transparent px-2 pl-8"
+                ariaLabel="Task due date"
+              />
+            </div>
+          );
+        },
       },
       {
         id: "actions",
@@ -270,7 +287,7 @@ export default function DataGridListView({
         cell: () => (
           <button
             type="button"
-            className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            className="rounded-[4px] p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#787774] dark:hover:text-[#9B9A97]"
             aria-label="Task actions"
           >
             <MoreHorizontal className="h-4 w-4" />
@@ -278,7 +295,7 @@ export default function DataGridListView({
         ),
       },
     ],
-    [onClickTask, onUpdateIssue],
+    [boardColumns, onClickTask, onUpdateIssue],
   );
 
   const table = useReactTable({
@@ -297,16 +314,16 @@ export default function DataGridListView({
   });
 
   return (
-    <div className="workspace-list-height flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-gray-200 bg-gray-50 p-3">
+    <div className="workspace-list-height flex flex-col overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <input
             type="text"
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             placeholder="Search in list..."
-            className="w-full min-w-[220px] max-w-[min(100vw-48px,20rem)] rounded-lg border border-gray-300 bg-white py-1.5 pl-9 pr-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 sm:w-[clamp(240px,20vw,320px)]"
+            className="w-full min-w-[13.75rem] max-w-[min(100vw-48px,20rem)] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] py-1.5 pl-9 pr-3 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors sm:w-[clamp(240px,20vw,320px)]"
           />
         </div>
 
@@ -314,15 +331,18 @@ export default function DataGridListView({
           <button
             type="button"
             onClick={() => setShowColumnMenu((value) => !value)}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
+            className="inline-flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-3 py-1.5 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
           >
-            <Columns className="h-4 w-4 text-gray-500" />
+            <Columns className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
             Columns
           </button>
 
           {showColumnMenu && (
-            <div className="absolute right-0 z-50 mt-2 w-52 rounded-lg border border-gray-200 bg-white p-2 shadow-xl">
-              <div className="mb-2 px-2 text-xs font-semibold uppercase text-gray-500">
+            <div
+              className="absolute right-0 z-50 mt-2 w-52 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-2"
+              style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
+            >
+              <div className="mb-2 px-2 text-[0.6875rem] font-semibold uppercase text-[#787774] dark:text-[#9B9A97]">
                 Show columns
               </div>
               {table.getAllLeafColumns().map((column) => {
@@ -331,15 +351,15 @@ export default function DataGridListView({
                 return (
                   <label
                     key={column.id}
-                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-gray-50"
+                    className="flex cursor-pointer items-center gap-2 rounded-[4px] px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                   >
                     <input
                       type="checkbox"
                       checked={column.getIsVisible()}
                       onChange={column.getToggleVisibilityHandler()}
-                      className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+                      className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
                     />
-                    <span className="text-sm capitalize text-gray-700">
+                    <span className="text-[0.8125rem] capitalize text-[#111111] dark:text-[#E8E8E7]">
                       {column.id}
                     </span>
                   </label>
@@ -355,14 +375,14 @@ export default function DataGridListView({
           className="w-full border-collapse text-left"
           style={{ width: table.getCenterTotalSize() }}
         >
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 shadow-sm">
+          <thead className="sticky top-0 z-10 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525]">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
                     style={{ width: header.getSize() }}
-                    className="group relative select-none bg-gray-50 px-3 py-3 text-xs font-semibold uppercase text-gray-500"
+                    className="group relative select-none bg-[#F9F9F8] dark:bg-[#252525] px-3 py-3 text-[0.6875rem] font-semibold uppercase text-[#787774] dark:text-[#9B9A97]"
                   >
                     <div className="flex items-center justify-between gap-2">
                       {flexRender(header.column.columnDef.header, header.getContext())}
@@ -371,8 +391,8 @@ export default function DataGridListView({
                       <div
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
-                        className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-indigo-500/50 ${
-                          header.column.getIsResizing() ? "bg-indigo-500" : ""
+                        className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-[#2563EB]/40 ${
+                          header.column.getIsResizing() ? "bg-[#2563EB]/60" : ""
                         }`}
                       />
                     )}
@@ -381,14 +401,14 @@ export default function DataGridListView({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
+          <tbody className="divide-y divide-[#F0F0EE] dark:divide-white/5 bg-white dark:bg-[#202020]">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="group transition-colors hover:bg-gray-50">
+              <tr key={row.id} className="group transition-colors hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]">
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
                     style={{ width: cell.column.getSize() }}
-                    className="border-r border-transparent px-3 py-2 last:border-r-0 group-hover:border-gray-100"
+                    className="border-r border-transparent px-3 py-2 last:border-r-0 group-hover:border-[#F0F0EE] dark:group-hover:border-white/5"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
@@ -399,8 +419,8 @@ export default function DataGridListView({
         </table>
 
         {visibleIssues.length === 0 && (
-          <div className="flex h-40 flex-col items-center justify-center gap-2 text-sm text-gray-500">
-            <CheckSquare className="h-6 w-6 text-gray-300" />
+          <div className="flex h-40 flex-col items-center justify-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+            <CheckSquare className="h-6 w-6 text-[#ABABAB] dark:text-[#6B6B6B]" />
             No issues match this list.
           </div>
         )}

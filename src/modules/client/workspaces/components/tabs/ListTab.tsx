@@ -56,6 +56,8 @@ type ListTabProps = {
   handleUpdateIssue: (updated: Issue) => void;
   onBulkDeleteIds?: (ids: string[]) => void;
   onCreateTask?: (task: { title: string; type?: string; assigneeId?: string | null; dueDate?: string | null }) => Promise<void>;
+  canEditTask?: boolean;
+  canDeleteTask?: boolean;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -83,6 +85,8 @@ export default function ListTab({
   handleUpdateIssue,
   onBulkDeleteIds,
   onCreateTask,
+  canEditTask = true,
+  canDeleteTask = true,
 }: ListTabProps) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
     if (typeof window !== "undefined") {
@@ -111,25 +115,25 @@ export default function ListTab({
       <button
         type="button"
         onClick={() => setShowColumnMenu(o => !o)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-md text-sm bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border text-[0.8125rem] bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
       >
         <Columns className="w-4 h-4" />
         Columns
       </button>
       {showColumnMenu && (
-        <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 p-2">
-          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2 px-2 uppercase tracking-wider">Show / Hide</div>
+        <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 p-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+          <div className="text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-2 px-2 uppercase tracking-wider">Show / Hide</div>
           {Object.keys(COLUMN_LABELS).map(id => (
-            <label key={id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded cursor-pointer">
+            <label key={id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] cursor-pointer">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+                className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
                 checked={columnVisibility[id] !== false}
                 onChange={() =>
                   setColumnVisibility(prev => ({ ...prev, [id]: prev[id] === false }))
                 }
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{COLUMN_LABELS[id]}</span>
+              <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{COLUMN_LABELS[id]}</span>
             </label>
           ))}
         </div>
@@ -257,15 +261,15 @@ export default function ListTab({
   };
 
   const viewToggle = (
-    <div className="ml-auto inline-flex items-center rounded-md border border-gray-200 dark:border-gray-700 overflow-hidden shrink-0">
+    <div className="ml-auto inline-flex items-center rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden shrink-0">
       <button
         type="button"
         onClick={() => setListViewModePersisted("grid")}
         title="Table view"
         className={`p-1.5 transition-colors ${
           listViewMode === "grid"
-            ? "bg-[#0052CC] text-white"
-            : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            ? "bg-[#2563EB] dark:bg-[#3B82F6] text-white"
+            : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         }`}
       >
         <LayoutGrid className="w-4 h-4" />
@@ -278,10 +282,10 @@ export default function ListTab({
           setListViewModePersisted("split");
         }}
         title="Split view"
-        className={`p-1.5 transition-colors border-l border-gray-200 dark:border-gray-700 ${
+        className={`p-1.5 transition-colors border-l border-[#EAEAEA] dark:border-white/[0.06] ${
           listViewMode === "split"
-            ? "bg-[#0052CC] text-white"
-            : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            ? "bg-[#2563EB] dark:bg-[#3B82F6] text-white"
+            : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
         }`}
       >
         <PanelRight className="w-4 h-4" />
@@ -290,7 +294,7 @@ export default function ListTab({
   );
 
   return (
-    <div className="workspace-panel bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm transition-all duration-200">
+    <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
       <BoardFilters
         filters={filters}
         setFilters={setFilters}
@@ -300,18 +304,21 @@ export default function ListTab({
 
       {listViewMode === "grid" ? (
         selectedIssue ? (
-          <div className="workspace-list-height overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 transition-all duration-200">
+          <div className="workspace-list-height overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
+              workspaceMembers={members}
               sprints={sprints}
+              boardColumns={boardColumns}
               workspaceTemplate={workspaceTemplate}
               showBackButton
               onClose={() => {
                 setSelectedIssue(null);
                 setListGridDrawerOpen(false);
               }}
-              onUpdateIssue={handleUpdateIssue}
+              onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+              canEditTask={canEditTask}
             />
           </div>
         ) : (
@@ -319,51 +326,55 @@ export default function ListTab({
             <div className="flex-1 overflow-x-auto min-w-0">
             <DataGridListView
               issues={filteredIssues}
+              workspaceId={workspaceId}
               members={members}
               boardColumns={boardColumns}
               columnVisibility={columnVisibility}
               setColumnVisibility={setColumnVisibility}
               onClickTask={(issue) => setSelectedIssue(issue)}
-              onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
+              onUpdateIssue={canEditTask ? (id, updates) => updateIssueDirectly(id, updates) : undefined}
               onCreateTask={onCreateTask}
-              onBulkUpdate={async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates))}
-              onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
+              onBulkUpdate={canEditTask ? async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates)) : undefined}
+              onBulkDelete={canDeleteTask && onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
+              hideCreate={!onCreateTask}
+              canEditTask={canEditTask}
+              canDeleteTask={canDeleteTask}
             />
             </div>
           </div>
         )
       ) : (
-        <div className="workspace-list-height flex flex-col lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden">
-          <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30 shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
+        <div className="workspace-list-height flex flex-col lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
+          <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
             <div
               ref={listSplitToolbarRef}
-              className="flex items-center gap-1.5 px-2 py-2 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0"
+              className="flex items-center gap-1.5 px-2 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] shrink-0"
             >
               <div className="relative flex-1 min-w-0">
                 <button
                   type="button"
                   onClick={() => setListSplitOrderOpen((o) => !o)}
                   title={`Order work items by: ${LIST_SPLIT_SORT_OPTIONS.find((o) => o.id === listSplitSortBy)?.label ?? listSplitSortBy} (${listSplitSortDir})`}
-                  className={`flex w-full items-center justify-between gap-2 rounded-md border bg-white dark:bg-gray-900 px-2.5 py-1.5 text-left text-sm font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                  className={`flex w-full items-center justify-between gap-2 rounded-[6px] border bg-white dark:bg-[#202020] px-2.5 py-1.5 text-left text-[0.8125rem] font-medium transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] ${
                     listSplitOrderOpen
-                      ? "border-blue-500 dark:border-blue-500 text-blue-700 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-900"
-                      : "border-gray-300 dark:border-gray-700 text-gray-800 dark:text-gray-200"
+                      ? "border-[#2563EB] dark:border-[#3B82F6] text-[#2563EB] dark:text-[#3B82F6]"
+                      : "border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7]"
                   }`}
                 >
                   <span className="truncate">Custom field</span>
                   <ChevronDown
-                    className={`h-4 w-4 shrink-0 ${listSplitOrderOpen ? "text-blue-600 dark:text-blue-400" : "text-gray-500 dark:text-gray-400"}`}
+                    className={`h-4 w-4 shrink-0 ${listSplitOrderOpen ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#ABABAB] dark:text-[#6B6B6B]"}`}
                   />
                 </button>
                 {listSplitOrderOpen && (
-                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1 shadow-lg">
-                    <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                  <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-72 overflow-y-auto rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+                    <div className="px-3 py-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B]">
                       Order work items by
                     </div>
                     {LIST_SPLIT_SORT_OPTIONS.map((opt) => (
                       <label
                         key={opt.id}
-                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className="flex cursor-pointer items-center gap-2 px-3 py-2 text-[0.8125rem] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                       >
                         <input
                           type="radio"
@@ -373,9 +384,9 @@ export default function ListTab({
                             setListSplitSortBy(opt.id);
                             setListSplitOrderOpen(false);
                           }}
-                          className="text-blue-600 focus:ring-blue-500"
+                          className="accent-[#2563EB]"
                         />
-                        <span>{opt.label}</span>
+                        <span className="text-[#111111] dark:text-[#E8E8E7]">{opt.label}</span>
                       </label>
                     ))}
                   </div>
@@ -387,7 +398,7 @@ export default function ListTab({
                 onClick={() =>
                   setListSplitSortDir((d) => (d === "asc" ? "desc" : "asc"))
                 }
-                className="shrink-0 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="shrink-0 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] p-2 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
               >
                 <ArrowDownWideNarrow
                   className={`h-4 w-4 ${listSplitSortDir === "asc" ? "rotate-180" : ""}`}
@@ -400,7 +411,7 @@ export default function ListTab({
                   setListSplitSortBy("key");
                   setListSplitSortDir("asc");
                 }}
-                className="shrink-0 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="shrink-0 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#202020] p-2 text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
               >
                 <RotateCw className="h-4 w-4" />
               </button>
@@ -408,7 +419,7 @@ export default function ListTab({
 
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               {splitSortedIssues.length === 0 ? (
-                <p className="p-4 text-sm text-gray-500 dark:text-gray-400">
+                <p className="p-4 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   No tasks match the current filter.
                 </p>
               ) : (
@@ -424,10 +435,10 @@ export default function ListTab({
                           <button
                             type="button"
                             onClick={() => setSelectedIssue(issue)}
-                            className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                            className={`w-full rounded-[6px] border px-3 py-2.5 text-left transition-colors ${
                               active
-                                ? "border-indigo-400 bg-white dark:bg-gray-800 shadow-sm ring-1 ring-indigo-200 dark:ring-indigo-800"
-                                : "border-transparent bg-white dark:bg-gray-900 hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                ? "border-[#2563EB]/30 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)]"
+                                : "border-transparent bg-white dark:bg-[#202020] hover:border-[#EAEAEA] dark:hover:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -440,27 +451,27 @@ export default function ListTab({
                                       : "text-blue-500"
                                 }`}
                               />
-                              <span className="shrink-0 font-mono text-xs text-gray-500 dark:text-gray-400">
+                              <span className="shrink-0 font-mono text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                                 {issueKey}
                               </span>
                             </div>
-                            <p className="mt-1 line-clamp-2 text-sm font-medium text-gray-900 dark:text-white">
+                            <p className="mt-1 line-clamp-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
                               {issue.title}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
                               <span
-                                className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                                className={`rounded-[4px] px-1.5 py-0.5 text-[0.625rem] font-semibold ${
                                   resolvedCol?.isDone || statusName.toLowerCase().includes("done")
-                                    ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                    ? "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] text-[#346538] dark:text-[#4ADE80]"
                                     : statusName.toLowerCase().includes("progress")
-                                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
-                                      : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                                      ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD]"
+                                      : "bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97]"
                                 }`}
                               >
                                 {statusName}
                               </span>
                               {issue.priority && (
-                                <span className="rounded bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 dark:text-amber-400">
+                                <span className="rounded-[4px] bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] px-1.5 py-0.5 text-[0.625rem] font-semibold text-[#956400] dark:text-[#F59E0B]">
                                   {issue.priority}
                                 </span>
                               )}
@@ -470,7 +481,7 @@ export default function ListTab({
                       );
                     })}
                   </ul>
-                  <div className="shrink-0 border-t border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-center text-xs text-gray-600 dark:text-gray-400">
+                  <div className="shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] px-3 py-2 text-center text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                     {splitSortedIssues.length} of {splitSortedIssues.length}
                   </div>
                 </>
@@ -478,31 +489,34 @@ export default function ListTab({
             </div>
           </aside>
 
-          <section className="flex min-h-[320px] flex-col overflow-hidden bg-white dark:bg-gray-900 lg:min-h-0">
+          <section className="flex min-h-80 flex-col overflow-hidden bg-white dark:bg-[#202020] lg:min-h-0">
             {!selectedIssue ? (
-              <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex flex-1 items-center justify-center p-8 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 Select a task in the left column to view details.
               </div>
             ) : splitSortedIssues.some((i) => i.id === selectedIssue.id) ? (
               <TaskDetailList
                 issue={selectedIssue}
                 workspaceId={workspaceId}
+                workspaceMembers={members}
                 sprints={sprints}
+                boardColumns={boardColumns}
                 workspaceTemplate={workspaceTemplate}
                 showBackButton={false}
                 onClose={() => {
                   setSelectedIssue(null);
                   setListGridDrawerOpen(false);
                 }}
-                onUpdateIssue={handleUpdateIssue}
+                onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+                canEditTask={canEditTask}
               />
             ) : (
-              <div className="flex flex-1 items-center justify-center p-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex flex-1 items-center justify-center p-8 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 The selected task is no longer in the filtered list.{" "}
                 <button
                   type="button"
                   onClick={() => setSelectedIssue(null)}
-                  className="ml-1 font-medium text-indigo-600 dark:text-indigo-400 hover:underline"
+                  className="ml-1 font-medium text-[#2563EB] dark:text-[#3B82F6] hover:underline"
                 >
                   Clear selection
                 </button>

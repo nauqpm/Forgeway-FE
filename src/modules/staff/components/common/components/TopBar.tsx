@@ -15,13 +15,13 @@ export default function TopBar() {
   const menuRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-
   useEffect(() => {
     notificationService
       .unreadCount()
       .then(setUnreadNotificationCount)
       .catch(() => setUnreadNotificationCount(0));
   }, []);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -39,20 +39,23 @@ export default function TopBar() {
     <div ref={menuRef} className="relative">
       <div className="flex items-center gap-2">
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <input
             type="text"
             placeholder="Search tasks, pages, projects..."
-            className="pl-10 pr-4 py-2 bg-gray-100 dark:bg-gray-800 border border-transparent dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:bg-white dark:focus:bg-gray-700 focus:border-gray-300 dark:focus:border-gray-600 focus:outline-none w-64 transition-colors"
+            className="w-64 pl-9 pr-8 h-8 bg-[#F9F9F8] dark:bg-[#2A2A2A] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:bg-white dark:focus:bg-[#303030] focus:border-[#2563EB] dark:focus:border-[#3B82F6] outline-none transition-colors"
           />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded">/</kbd>
+          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[0.625rem] text-[#ABABAB] dark:text-[#6B6B6B] bg-[#EAEAEA] dark:bg-white/10 px-1.5 py-0.5 rounded-[4px] font-mono">/</kbd>
         </div>
-        
+
         <div className="relative" ref={notifRef}>
-          <button onClick={() => setShowNotifications(!showNotifications)} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg relative">
-            <Bell className="w-5 h-5 text-gray-500" />
+          <button
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="w-8 h-8 flex items-center justify-center hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] relative transition-colors"
+          >
+            <Bell className="w-[1.125rem] h-[1.125rem] text-[#787774] dark:text-[#9B9A97]" />
             {unreadNotificationCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] leading-5 rounded-full text-center font-semibold">
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 bg-[#9F2F2D] dark:bg-[#F87171] text-white dark:text-[#111111] text-[0.5625rem] leading-4 rounded-[4px] text-center font-semibold">
                 {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
               </span>
             )}
@@ -65,28 +68,52 @@ export default function TopBar() {
           )}
         </div>
 
-        <button onClick={() => setShowUserMenu(!showUserMenu)} className="flex items-center gap-2 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
-            {user?.fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+        <button
+          onClick={() => setShowUserMenu(!showUserMenu)}
+          className="flex items-center p-1 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+        >
+          <div className="relative w-7 h-7 rounded-full overflow-hidden shrink-0">
+            {user?.avatar ? (
+              <img src={user.avatar} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-xs font-semibold">
+                {user?.fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
         </button>
       </div>
 
       {showUserMenu && (
-        <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.fullName || "User"}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+        <div
+          className="absolute right-0 mt-1.5 w-56 bg-white dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] py-1 z-50"
+          style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
+        >
+          <div className="px-3 py-2.5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{user?.fullName || "User"}</p>
+            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{user?.email}</p>
           </div>
-          <button onClick={() => { router.push("/profile"); setShowUserMenu(false); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-            <User className="w-4 h-4" /> Profile
+          <button
+            onClick={() => { router.push("/profile"); setShowUserMenu(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+          >
+            <User className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+            Profile
           </button>
-          <button onClick={() => { router.push("/settings"); setShowUserMenu(false); }} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
-            <Settings className="w-4 h-4" /> Settings
+          <button
+            onClick={() => { router.push("/settings"); setShowUserMenu(false); }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+          >
+            <Settings className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+            Settings
           </button>
-          <div className="border-t border-gray-100 dark:border-gray-700 my-1" />
-          <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50">
-            <LogOut className="w-4 h-4" /> Log out
+          <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] my-1" />
+          <button
+            onClick={logout}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-[0.8125rem] text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.15)] transition-colors"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            Log out
           </button>
         </div>
       )}

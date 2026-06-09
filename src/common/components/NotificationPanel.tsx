@@ -257,6 +257,7 @@ export default function NotificationPanel({
       );
     }
   };
+
   const handleNotificationClick = async (notification: NotificationViewModel) => {
     await markAsRead(notification.id);
 
@@ -265,6 +266,7 @@ export default function NotificationPanel({
     onClose();
     router.push(notification.href);
   };
+
   const filteredNotifications = useMemo(() => {
     return notifications.filter((notification) => {
       if (notification.category !== activeTab) return false;
@@ -287,16 +289,17 @@ export default function NotificationPanel({
   return (
     <div
       ref={panelRef}
-      className="absolute right-0 top-12 w-[min(calc(100vw-32px),420px)] bg-white dark:bg-gray-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200 dark:border-gray-700 z-50 flex flex-col max-h-[85vh] animate-in fade-in slide-in-from-top-2 duration-200"
+      className="absolute right-0 top-12 w-[min(calc(100vw-32px),420px)] bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] z-50 flex flex-col max-h-[85vh]"
+      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
     >
-      <div className="px-4 pt-4 border-b border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+      <div className="px-4 pt-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Notifications</h2>
+          <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Notifications</h2>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Unread</span>
+            <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">Unread</span>
             <button
               onClick={() => setShowUnreadOnly((value) => !value)}
-              className={`h-5 w-9 rounded-full relative transition-colors ${showUnreadOnly ? "bg-indigo-600" : "bg-gray-300 dark:bg-gray-600"}`}
+              className={`h-5 w-9 rounded-full relative transition-colors ${showUnreadOnly ? "bg-[#2563EB] dark:bg-[#3B82F6]" : "bg-[#EAEAEA] dark:bg-white/10"}`}
               aria-pressed={showUnreadOnly}
             >
               <span className={`h-4 w-4 bg-white rounded-full absolute top-0.5 transition-transform ${showUnreadOnly ? "translate-x-4 left-0.5" : "left-0.5"}`} />
@@ -304,17 +307,20 @@ export default function NotificationPanel({
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setShowMenu((value) => !value)}
-                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-gray-500 dark:text-gray-400"
+                className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
               >
                 <MoreHorizontal className="w-4 h-4" />
               </button>
               {showMenu && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50">
+                <div
+                  className="absolute right-0 top-full mt-1 w-44 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] py-1 z-50"
+                  style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
+                >
                   <button
                     onClick={markAllAsRead}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"
+                    className="w-full text-left px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 flex items-center gap-2 transition-colors"
                   >
-                    <Check className="w-4 h-4 text-gray-400" />
+                    <Check className="w-3.5 h-3.5 text-[#ABABAB]" />
                     Mark all as read
                   </button>
                 </div>
@@ -322,72 +328,72 @@ export default function NotificationPanel({
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-gray-500 dark:text-gray-400"
+              className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex gap-5">
           <button
             onClick={() => setActiveTab("DIRECT")}
-            className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "DIRECT" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}
+            className={`pb-3 text-[0.8125rem] font-semibold border-b-2 transition-colors ${activeTab === "DIRECT" ? "border-[#2563EB] text-[#2563EB] dark:text-[#3B82F6] dark:border-[#3B82F6]" : "border-transparent text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}
           >
             Direct
           </button>
           <button
             onClick={() => setActiveTab("WATCHING")}
-            className={`pb-3 text-sm font-semibold border-b-2 transition-colors ${activeTab === "WATCHING" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}
+            className={`pb-3 text-[0.8125rem] font-semibold border-b-2 transition-colors ${activeTab === "WATCHING" ? "border-[#2563EB] text-[#2563EB] dark:text-[#3B82F6] dark:border-[#3B82F6]" : "border-transparent text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}
           >
             Watching
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-gray-50/30 dark:bg-gray-800/30">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {isLoading ? (
           <div className="p-12 text-center flex flex-col items-center gap-3">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-            <p className="text-sm text-gray-500 dark:text-gray-400">Loading notifications...</p>
+            <Loader2 className="w-5 h-5 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Loading notifications...</p>
           </div>
         ) : error ? (
           <div className="p-12 text-center flex flex-col items-center">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-              <Bell className="w-8 h-8 text-gray-300 dark:text-gray-600" />
+            <div className="w-14 h-14 bg-[#F7F6F3] dark:bg-[#252525] rounded-full flex items-center justify-center mb-3">
+              <Bell className="w-7 h-7 text-[#ABABAB] dark:text-[#6B6B6B]" />
             </div>
-            <p className="text-base font-semibold text-gray-900 dark:text-white">{error}</p>
+            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{error}</p>
           </div>
         ) : filteredNotifications.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-              <Bell className="w-8 h-8 text-gray-300 dark:text-gray-600" />
+            <div className="w-14 h-14 bg-[#F7F6F3] dark:bg-[#252525] rounded-full flex items-center justify-center mb-3">
+              <Bell className="w-7 h-7 text-[#ABABAB] dark:text-[#6B6B6B]" />
             </div>
-            <p className="text-base font-semibold text-gray-900 dark:text-white">You're all caught up!</p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No notifications here.</p>
+            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">You're all caught up!</p>
+            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">No notifications here.</p>
           </div>
         ) : (
-          <div className="p-4 space-y-6">
+          <div className="p-3 space-y-5">
             {groupOrder.map((group) => {
               const items = groupedNotifications[group];
               if (!items?.length) return null;
 
               return (
                 <div key={group}>
-                  <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{group}</h3>
-                  <div className="space-y-1">
+                  <h3 className="text-[0.6875rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider mb-2 px-1">{group}</h3>
+                  <div className="space-y-0.5">
                     {items.map((notification) => (
                       <button
                         key={notification.id}
                         onClick={() => handleNotificationClick(notification)}
-                        className={`w-full text-left relative p-3 rounded-xl transition-all group hover:bg-white dark:hover:bg-gray-800 hover:shadow-sm border border-transparent hover:border-gray-200 dark:hover:border-gray-700 ${!notification.isRead ? "bg-indigo-50/40 dark:bg-indigo-900/10" : ""}`}
+                        className={`w-full text-left relative p-3 rounded-[8px] transition-all group hover:bg-[#F9F9F8] dark:hover:bg-[#252525] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 ${!notification.isRead ? "bg-[#EFF6FF]/30 dark:bg-[rgba(37,99,235,0.06)]" : ""}`}
                       >
                         {!notification.isRead && (
-                          <span className="absolute top-4 right-3 w-2.5 h-2.5 bg-[#0c66e4] rounded-full" />
+                          <span className="absolute top-3.5 right-3 w-2 h-2 bg-[#2563EB] dark:bg-[#3B82F6] rounded-full" />
                         )}
 
-                        <div className="flex items-start gap-3 pr-6">
-                          <div className="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 shadow-sm overflow-hidden">
+                        <div className="flex items-start gap-3 pr-5">
+                          <div className="w-7 h-7 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.6875rem] font-bold flex-shrink-0 overflow-hidden">
                             {notification.actor.avatar?.startsWith("http") ? (
                               <img src={notification.actor.avatar} alt="" className="w-full h-full object-cover" />
                             ) : (
@@ -395,27 +401,27 @@ export default function NotificationPanel({
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">
-                              <span className="font-semibold text-gray-900 dark:text-white">{notification.actor.name}</span> {notification.actionText}
+                            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-snug">
+                              <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.actor.name}</span>{" "}{notification.actionText}
                             </p>
 
                             {notification.type === "STANDARD" && notification.target && (
-                              <div className="mt-1.5 flex items-center gap-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-1.5 w-fit max-w-full hover:border-indigo-300 transition-colors">
-                                <FileText className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0" />
-                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
+                              <div className="mt-1.5 flex items-center gap-1.5 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] p-1.5 w-fit max-w-full hover:border-[#2563EB]/40 transition-colors">
+                                <FileText className="w-3.5 h-3.5 text-[#2563EB] dark:text-[#3B82F6] flex-shrink-0" />
+                                <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
                                   {notification.target.key ? `${notification.target.key}: ` : ""}{notification.target.title}
                                 </span>
                               </div>
                             )}
 
                             {notification.type === "INVITE" && notification.inviteData && (
-                              <div className="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 shadow-sm">
-                                <p className="text-sm font-semibold text-gray-900 dark:text-white">{notification.inviteData.workspaceName}</p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{notification.inviteData.message}</p>
+                              <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] p-3">
+                                <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.inviteData.workspaceName}</p>
+                                <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">{notification.inviteData.message}</p>
                               </div>
                             )}
 
-                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{formatTime(notification.createdAt)}</p>
+                            <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1.5">{formatTime(notification.createdAt)}</p>
                           </div>
                         </div>
                       </button>

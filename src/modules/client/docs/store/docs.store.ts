@@ -1,30 +1,28 @@
 import { create } from "zustand";
+import { toast } from "react-hot-toast";
 import { DocsState, Document } from "../types/docs.type";
 import { pagesService } from "../services/pages.service";
-import { toast } from "react-hot-toast";
 
-// ──────────────────────────────────────────────────────────────
-// Helper: extract error message from Axios / API errors
-// ──────────────────────────────────────────────────────────────
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (error && typeof error === "object" && "response" in error) {
-    const res = (error as any).response;
+    const res = (error as { response?: { data?: { message?: string; error?: string } } }).response;
     return res?.data?.message || res?.data?.error || fallback;
   }
   return fallback;
 };
 
-// ──────────────────────────────────────────────────────────────
-// Helper: collect all descendant IDs (for optimistic delete)
-// ──────────────────────────────────────────────────────────────
 const getDescendantIds = (docs: Document[], parentId: string): string[] => {
-  const children = docs.filter(d => d.parentId === parentId);
-  let ids = children.map(c => c.id);
-  children.forEach(c => {
-    ids = [...ids, ...getDescendantIds(docs, c.id)];
+  const children = docs.filter((doc) => doc.parentId === parentId);
+  let ids = children.map((child) => child.id);
+
+  children.forEach((child) => {
+    ids = [...ids, ...getDescendantIds(docs, child.id)];
   });
+
   return ids;
 };
+
+const isTemporaryDocument = (id: string) => id.startsWith("temp-");
 
 export const useDocsStore = create<DocsState>((set, get) => ({
   documents: [],
@@ -37,7 +35,6 @@ export const useDocsStore = create<DocsState>((set, get) => ({
   recentDocumentIds: [],
   loadedChildrenOf: [],
 
-  // ── Pure state setters ─────────────────────────────────────
   setDocuments: (documents) => set({ documents }),
 
   selectDocument: (id) => {
@@ -47,25 +44,22 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       return;
     }
 
-    // Update recent documents
-    const newRecent = [id, ...state.recentDocumentIds.filter(docId => docId !== id)].slice(0, 5);
-
-    // Auto-expand parent chain
-    let currentDoc = state.documents.find(d => d.id === id);
-    let toExpand = [...state.expandedNodes];
+    const newRecent = [id, ...state.recentDocumentIds.filter((docId) => docId !== id)].slice(0, 5);
+    let currentDoc = state.documents.find((doc) => doc.id === id);
+    const toExpand = [...state.expandedNodes];
 
     while (currentDoc?.parentId) {
       if (!toExpand.includes(currentDoc.parentId)) {
         toExpand.push(currentDoc.parentId);
       }
-      currentDoc = state.documents.find(d => d.id === currentDoc!.parentId);
+      currentDoc = state.documents.find((doc) => doc.id === currentDoc!.parentId);
     }
 
     set({
       selectedDocumentId: id,
       selectedImportedDocumentId: null,
       expandedNodes: toExpand,
-      recentDocumentIds: newRecent
+      recentDocumentIds: newRecent,
     });
   },
 
@@ -75,20 +69,20 @@ export const useDocsStore = create<DocsState>((set, get) => ({
       selectedDocumentId: null,
     }),
 
-  toggleExpand: (id) => set((state) => {
-    const isExpanded = state.expandedNodes.includes(id);
-    return {
-      expandedNodes: isExpanded
-        ? state.expandedNodes.filter(nodeId => nodeId !== id)
-        : [...state.expandedNodes, id]
-    };
-  }),
+  toggleExpand: (id) =>
+    set((state) => {
+      const isExpanded = state.expandedNodes.includes(id);
+      return {
+        expandedNodes: isExpanded
+          ? state.expandedNodes.filter((nodeId) => nodeId !== id)
+          : [...state.expandedNodes, id],
+      };
+    }),
 
   setSearchQuery: (searchQuery) => set({ searchQuery }),
   setIsSaving: (isSaving) => set({ isSaving }),
   setIsLoading: (isLoading) => set({ isLoading }),
 
-  // ── Async: Load root pages from API ────────────────────────
   loadRootPages: async (workspaceId: string) => {
     set({ isLoading: true });
     try {
@@ -100,144 +94,129 @@ export const useDocsStore = create<DocsState>((set, get) => ({
     }
   },
 
-  // ── Async: Lazy-load children of a node ────────────────────
   loadChildren: async (parentId: string) => {
     const state = get();
-    // Skip if already loaded
     if (state.loadedChildrenOf.includes(parentId)) return;
 
     try {
       const children = await pagesService.getChildren(parentId);
-      set((s) => ({
+      set((current) => ({
         documents: [
-          ...s.documents,
-          // Avoid duplicates (in case of race conditions)
-          ...children.filter(c => !s.documents.some(d => d.id === c.id)),
+          ...current.documents,
+          ...children.filter((child) => !current.documents.some((doc) => doc.id === child.id)),
         ],
-        loadedChildrenOf: [...s.loadedChildrenOf, parentId],
+        loadedChildrenOf: [...current.loadedChildrenOf, parentId],
       }));
     } catch (error) {
       console.error(`Failed to load children for ${parentId}:`, error);
     }
   },
 
-  // ── Async: Create document (optimistic) ────────────────────
   createDocument: async (workspaceId: string, parentId: string | null = null) => {
-    // Optimistic: add a temporary document
-    const tempId = `temp-${Date.now()}`;
-    const tempDoc: Document = {
-      id: tempId,
-      title: "Untitled Document",
-      content: "<h1>Untitled Document</h1><p>Start typing...</p>",
-      parentId,
-      workspaceId: workspaceId,
-      slug: "",
-      authorId: "",
-      version: 1,
-      status: "draft",
-      labels: [],
-      versionHistory: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    set((state) => {
-      let newExpanded = state.expandedNodes;
-      if (parentId && !newExpanded.includes(parentId)) {
-        newExpanded = [...newExpanded, parentId];
-      }
-      return {
-        documents: [...state.documents, tempDoc],
-        expandedNodes: newExpanded,
-      };
-    });
-
+    set({ isSaving: true });
     try {
-      const realDoc = await pagesService.createPage({
-        title: tempDoc.title,
-        content: tempDoc.content,
-        workspaceId: workspaceId,
+      const newDoc = await pagesService.createPage({
+        workspaceId,
         parentId: parentId ?? undefined,
+        title: "Untitled Document",
+        content: "",
+        slug: `untitled-document-${Date.now()}`,
+        status: "draft",
+        labels: [],
       });
 
-      // Replace temp doc with real doc from API
       set((state) => ({
-        documents: state.documents.map(d => d.id === tempId ? realDoc : d),
-        // If the temp doc was selected, update selection to real ID
-        selectedDocumentId: state.selectedDocumentId === tempId ? realDoc.id : state.selectedDocumentId,
-        recentDocumentIds: state.recentDocumentIds.map(rid => rid === tempId ? realDoc.id : rid),
+        documents: [...state.documents, newDoc],
+        expandedNodes:
+          parentId && !state.expandedNodes.includes(parentId)
+            ? [...state.expandedNodes, parentId]
+            : state.expandedNodes,
+        isSaving: false,
       }));
 
-      return realDoc;
+      return newDoc;
     } catch (error) {
       console.error("Failed to create document:", error);
-      toast.error(getErrorMessage(error, "Không thể tạo trang"));
-      // Rollback: remove the temp document
-      set((state) => ({
-        documents: state.documents.filter(d => d.id !== tempId),
-        selectedDocumentId: state.selectedDocumentId === tempId ? null : state.selectedDocumentId,
-      }));
+      toast.error(getErrorMessage(error, "Could not create document"));
+      set({ isSaving: false });
       return null;
     }
   },
 
-  // ── Async: Update document (content/title save) ────────────
   updateDocument: async (id, updates) => {
-    const state = get();
-    const oldDoc = state.documents.find(d => d.id === id);
-    if (!oldDoc) return;
-
-    // Optimistic update
-    set((s) => ({
-      documents: s.documents.map(doc =>
-        doc.id === id
-          ? { ...doc, ...updates, updatedAt: new Date().toISOString() }
-          : doc
-      )
+    set((state) => ({
+      documents: state.documents.map((doc) =>
+        doc.id === id ? { ...doc, ...updates, updatedAt: new Date().toISOString() } : doc,
+      ),
     }));
+  },
+
+  saveDocument: async (id) => {
+    const doc = get().documents.find((item) => item.id === id);
+    if (!doc) return null;
+
+    set({ isSaving: true });
 
     try {
-      await pagesService.updatePage(id, updates);
-    } catch (error) {
-      console.error(`Failed to update document ${id}:`, error);
-      toast.error(getErrorMessage(error, "Không thể cập nhật trang"));
-      // Rollback
-      set((s) => ({
-        documents: s.documents.map(doc =>
-          doc.id === id ? oldDoc : doc
-        )
+      const payload = {
+        title: doc.title.trim() || "Untitled Document",
+        content: doc.content,
+      };
+
+      const savedDoc = isTemporaryDocument(id)
+        ? await pagesService.createPage({
+            ...payload,
+            workspaceId: doc.workspaceId,
+            parentId: doc.parentId ?? undefined,
+            slug: doc.slug,
+            status: doc.status,
+            labels: doc.labels,
+          })
+        : await pagesService.updatePage(id, payload);
+
+      set((state) => ({
+        documents: state.documents.map((item) => (item.id === id ? savedDoc : item)),
+        selectedDocumentId: state.selectedDocumentId === id ? savedDoc.id : state.selectedDocumentId,
+        recentDocumentIds: state.recentDocumentIds.map((recentId) =>
+          recentId === id ? savedDoc.id : recentId,
+        ),
+        isSaving: false,
       }));
+
+      toast.success("Document saved");
+      return savedDoc;
+    } catch (error) {
+      console.error(`Failed to save document ${id}:`, error);
+      toast.error(getErrorMessage(error, "Could not save page"));
+      set({ isSaving: false });
+      return null;
     }
   },
 
-  // ── Async: Delete document (optimistic) ────────────────────
   deleteDocument: async (id) => {
     const state = get();
     const descendants = getDescendantIds(state.documents, id);
     const toDelete = [id, ...descendants];
-
-    // Snapshot for rollback
     const snapshotDocs = state.documents;
     const snapshotSelected = state.selectedDocumentId;
     const snapshotRecent = state.recentDocumentIds;
-
-    const newDocuments = state.documents.filter(d => !toDelete.includes(d.id));
+    const newDocuments = state.documents.filter((doc) => !toDelete.includes(doc.id));
     const isSelectedDeleted = state.selectedDocumentId && toDelete.includes(state.selectedDocumentId);
-    const newRecent = state.recentDocumentIds.filter(docId => !toDelete.includes(docId));
+    const newRecent = state.recentDocumentIds.filter((docId) => !toDelete.includes(docId));
 
-    // Optimistic remove
     set({
       documents: newDocuments,
       selectedDocumentId: isSelectedDeleted ? null : state.selectedDocumentId,
       recentDocumentIds: newRecent,
     });
 
+    if (isTemporaryDocument(id)) return;
+
     try {
       await pagesService.deletePage(id);
     } catch (error) {
       console.error(`Failed to delete document ${id}:`, error);
-      toast.error(getErrorMessage(error, "Không thể xóa trang"));
-      // Rollback
+      toast.error(getErrorMessage(error, "Could not delete page"));
       set({
         documents: snapshotDocs,
         selectedDocumentId: snapshotSelected,
@@ -246,29 +225,26 @@ export const useDocsStore = create<DocsState>((set, get) => ({
     }
   },
 
-  // ── Async: Rename document (optimistic) ────────────────────
   renameDocument: async (id, newTitle) => {
     const state = get();
-    const oldDoc = state.documents.find(d => d.id === id);
+    const oldDoc = state.documents.find((doc) => doc.id === id);
     if (!oldDoc) return;
 
-    // Optimistic
-    set((s) => ({
-      documents: s.documents.map(doc =>
-        doc.id === id ? { ...doc, title: newTitle, updatedAt: new Date().toISOString() } : doc
-      )
+    set((current) => ({
+      documents: current.documents.map((doc) =>
+        doc.id === id ? { ...doc, title: newTitle, updatedAt: new Date().toISOString() } : doc,
+      ),
     }));
+
+    if (isTemporaryDocument(id)) return;
 
     try {
       await pagesService.updatePage(id, { title: newTitle });
     } catch (error) {
       console.error(`Failed to rename document ${id}:`, error);
-      toast.error(getErrorMessage(error, "Không thể đổi tên trang"));
-      // Rollback
-      set((s) => ({
-        documents: s.documents.map(doc =>
-          doc.id === id ? oldDoc : doc
-        )
+      toast.error(getErrorMessage(error, "Could not rename page"));
+      set((current) => ({
+        documents: current.documents.map((doc) => (doc.id === id ? oldDoc : doc)),
       }));
     }
   },

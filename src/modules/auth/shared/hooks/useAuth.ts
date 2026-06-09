@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // =============================================================================
 // useAuth HOOK - Main auth orchestration hook
@@ -10,6 +10,8 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from '../stores/authStore';
 import { usePermissionStore } from '../../permission/stores/permissionStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { getQueryClient } from '@/common/providers/QueryProvider';
 import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from '../services/authService';
 import { clearTokens } from '../services/tokenService';
 import { getMyPermissionsAPI } from '../../permission/services/permissionService';
@@ -88,6 +90,14 @@ export const useAuth = () => {
             return response;
           }
           */
+
+          // Step 5b: redirect based on role
+          const isSuperAdmin = currentUser.role === 'super_admin';
+          if (isSuperAdmin) {
+            // SUPER_ADMIN goes to admin dashboard (separate admin portal)
+            window.location.href = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001';
+            return response;
+          }
 
           router.push(AUTH_ROUTES.HOME);
         } else {
@@ -178,6 +188,8 @@ export const useAuth = () => {
       usePermissionStore.getState().clearPermissions();
       useSessionStore.getState().clearSessionState();
       useSecurityStore.getState().clearSecurityState();
+      useWorkspaceStore.getState().clearWorkspace();
+      getQueryClient()?.clear();
       router.push(AUTH_ROUTES.LOGIN);
     }
   }, [clearAuth, router]);

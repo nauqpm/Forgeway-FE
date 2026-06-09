@@ -39,8 +39,8 @@ export function AdminGuard({ children }: AdminGuardProps) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-500">Checking access permissions...</p>
+          <div className="w-8 h-8 border-4 border-[#EAEAEA] dark:border-white/10 border-t-[#2563EB] dark:border-t-[#3B82F6] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Checking access permissions...</p>
         </div>
       </div>
     );

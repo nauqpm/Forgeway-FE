@@ -96,24 +96,27 @@ export default function SharePopover() {
     <div className="relative" ref={popoverRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-medium text-sm transition-colors shadow-sm"
+        className="inline-flex items-center gap-2 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 text-[#787774] dark:text-[#9B9A97] px-4 py-2 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 font-medium text-sm transition-colors"
       >
         Invite members
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[420px] bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-          <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Share</h3>
+        <div
+          className="absolute right-0 mt-2 w-[26.25rem] bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+        >
+          <div className="p-4 border-b border-[#EAEAEA] dark:border-white/8">
+            <h3 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7] mb-4">Share</h3>
             
             {/* Search Input Area */}
             <div className="flex items-start gap-2">
               <div className="relative flex-1">
-                <div className="min-h-[40px] border border-blue-500 rounded-lg p-1.5 flex flex-wrap gap-1.5 items-center bg-white dark:bg-gray-800 focus-within:ring-2 focus-within:ring-blue-200 transition-shadow">
+                <div className="min-h-10 border border-[#2563EB] rounded-[6px] p-1.5 flex flex-wrap gap-1.5 items-center bg-white dark:bg-[#252525] focus-within:ring-2 focus-within:ring-[#2563EB]/20 transition-shadow">
                   {selectedUsers.map(u => (
-                    <span key={u.id} className="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs font-medium px-2 py-1 rounded-md">
+                    <span key={u.id} className="flex items-center gap-1 bg-[#F7F6F3] dark:bg-white/8 text-[#111111] dark:text-[#E8E8E7] text-xs font-medium px-2 py-1 rounded-[4px]">
                       {u.name}
-                      <button onClick={() => handleRemoveUser(u.id)} className="hover:text-red-500">
+                      <button onClick={() => handleRemoveUser(u.id)} className="hover:text-[#F87171]">
                         <X className="w-3 h-3" />
                       </button>
                     </span>
@@ -123,33 +126,36 @@ export default function SharePopover() {
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     placeholder={selectedUsers.length === 0 ? "Names, teams, or emails" : ""}
-                    className="flex-1 outline-none text-sm min-w-[120px] px-1 bg-transparent"
+                    className="flex-1 outline-none text-sm min-w-[7.5rem] px-1 bg-transparent"
                   />
                 </div>
 
                 {/* Dropdown Results */}
                 {searchTerm && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                  <div
+                    className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] z-10 max-h-48 overflow-y-auto"
+                    style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
+                  >
                     {isSearching ? (
-                      <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">Searching...</div>
+                      <div className="p-3 text-sm text-[#787774] dark:text-[#9B9A97] text-center">Searching...</div>
                     ) : searchResults.length > 0 ? (
                       searchResults.map(u => (
                         <button
                           key={u.id}
                           onClick={() => handleSelectUser(u)}
-                          className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+                          className="w-full flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors text-left"
                         >
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                          <div className="w-8 h-8 rounded-full bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#93C5FD] flex items-center justify-center font-bold text-sm">
                             {u.avatar}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{u.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{u.email}</p>
+                            <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">{u.name}</p>
+                            <p className="text-xs text-[#787774] dark:text-[#9B9A97]">{u.email}</p>
                           </div>
                         </button>
                       ))
                     ) : (
-                      <div className="p-3 text-sm text-gray-500 dark:text-gray-400 text-center">No matches found.</div>
+                      <div className="p-3 text-sm text-[#787774] dark:text-[#9B9A97] text-center">No matches found.</div>
                     )}
                   </div>
                 )}
@@ -158,35 +164,35 @@ export default function SharePopover() {
               <button 
                 onClick={handleSendInvite}
                 disabled={selectedUsers.length === 0}
-                className="bg-[#0c66e4] hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium px-4 h-[40px] rounded-md transition-colors whitespace-nowrap"
+                className="bg-[#2563EB] hover:bg-[#1D4ED8] disabled:bg-[#F7F6F3] dark:disabled:bg-[#252525] disabled:text-[#ABABAB] dark:disabled:text-[#6B6B6B] disabled:cursor-not-allowed text-white text-sm font-medium px-4 h-10 rounded-[6px] transition-colors whitespace-nowrap"
               >
                 Invite
               </button>
             </div>
           </div>
 
-          <div className="p-4 bg-gray-50 dark:bg-gray-800">
-            <h4 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Space Access</h4>
+          <div className="p-4 bg-[#F9F9F8] dark:bg-[#252525]">
+            <h4 className="text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wider mb-3">Space Access</h4>
             
             <div className="flex items-start justify-between gap-4">
               <div className="flex gap-3">
                 <div className="mt-1">
                   {spaceAccess === 'OPEN' ? (
-                    <Globe className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    <Globe className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
                   ) : (
-                    <Lock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    <Lock className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
                   )}
                 </div>
                 <div>
                   <select 
                     value={spaceAccess}
                     onChange={(e) => handleSpaceAccessChange(e.target.value as any)}
-                    className="text-sm font-medium text-gray-900 dark:text-white bg-transparent dark:bg-transparent outline-none cursor-pointer hover:underline mb-0.5"
+                    className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] bg-transparent dark:bg-transparent outline-none cursor-pointer hover:underline mb-0.5"
                   >
                     <option value="OPEN">Open</option>
                     <option value="PRIVATE">Private</option>
                   </select>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                  <p className="text-xs text-[#787774] dark:text-[#9B9A97]">
                     {spaceAccess === 'OPEN' 
                       ? 'Anyone in this workspace can view and join.' 
                       : 'Only people invited to this space can view and join.'}
@@ -196,13 +202,13 @@ export default function SharePopover() {
             </div>
           </div>
 
-          <div className="p-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <div className="p-3 border-t border-[#EAEAEA] dark:border-white/8 flex items-center justify-between">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 px-3 py-1.5 rounded-md transition-colors"
+              className="flex items-center gap-2 text-sm font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 px-3 py-1.5 rounded-[6px] transition-colors"
             >
-              {isCopied ? <Check className="w-4 h-4 text-green-600" /> : <LinkIcon className="w-4 h-4 text-gray-500" />}
-              {isCopied ? <span className="text-green-600">Copied!</span> : 'Copy link'}
+              {isCopied ? <Check className="w-4 h-4 text-[#346538] dark:text-[#4ADE80]" /> : <LinkIcon className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />}
+              {isCopied ? <span className="text-[#346538] dark:text-[#4ADE80]">Copied!</span> : 'Copy link'}
             </button>
           </div>
         </div>

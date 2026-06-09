@@ -1,34 +1,31 @@
-import { io, Socket } from 'socket.io-client';
+import { io, Socket } from "socket.io-client";
 
 import {
   getSocketAuthPayload,
   isUnauthorizedError,
   refreshSocketAuth,
-} from './socket.auth';
-import { SOCKET_EVENTS } from './socket.events';
+} from "./socket.auth";
+import { SOCKET_EVENTS } from "./socket.events";
 import type {
   RealtimeConnectionStatus,
   RealtimeStatusSnapshot,
-} from './socket.types';
-import { WorkspaceRoomManager } from './socket.workspace';
-import { PageRoomManager } from './socket.page';
+} from "./socket.types";
+import { WorkspaceRoomManager } from "./socket.workspace";
+import { PageRoomManager } from "./socket.page";
 
 const getSocketUrl = (): string => {
-  const base =
-    process.env.NEXT_PUBLIC_API_URL ||
-    process.env.NEXT_PUBLIC_SERVER_URL ||
-    'http://localhost:5512';
+  const base = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5512";
 
   try {
     return `${new URL(base).origin}/realtime`;
   } catch {
-    return 'http://localhost:5512/realtime';
+    return "http://localhost:5512/realtime";
   }
 };
 
 class RealtimeSocketClient {
   private socket?: Socket;
-  private status: RealtimeConnectionStatus = 'idle';
+  private status: RealtimeConnectionStatus = "idle";
   private lastError?: string;
   private hasConnectedBefore = false;
   private readonly workspaceManager = new WorkspaceRoomManager();
@@ -43,19 +40,19 @@ class RealtimeSocketClient {
   }
 
   connect(): Socket | undefined {
-    if (typeof window === 'undefined') return undefined;
+    if (typeof window === "undefined") return undefined;
 
     if (this.socket) {
       this.applyLatestAuth();
       if (!this.socket.connected && !this.socket.active) {
-        this.setStatus('connecting');
+        this.setStatus("connecting");
         this.socket.connect();
       }
       return this.socket;
     }
 
     this.socket = io(getSocketUrl(), {
-      transports: ['websocket'],
+      transports: ["websocket"],
       withCredentials: true,
       auth: getSocketAuthPayload(),
       reconnection: true,
@@ -66,7 +63,7 @@ class RealtimeSocketClient {
     });
 
     this.registerLifecycleHandlers(this.socket);
-    this.setStatus('connecting');
+    this.setStatus("connecting");
     this.socket.connect();
 
     return this.socket;
@@ -82,7 +79,7 @@ class RealtimeSocketClient {
     this.socket.io.removeAllListeners();
     this.socket = undefined;
     this.hasConnectedBefore = false;
-    this.setStatus('idle');
+    this.setStatus("idle");
   }
 
   switchWorkspace(workspaceId?: string): void {
@@ -126,7 +123,7 @@ class RealtimeSocketClient {
   private registerLifecycleHandlers(socket: Socket): void {
     socket.on(SOCKET_EVENTS.CONNECT, () => {
       this.lastError = undefined;
-      this.setStatus('connected');
+      this.setStatus("connected");
       this.workspaceManager.rejoin(socket);
       this.pageManager.rejoin(socket);
 
@@ -138,12 +135,12 @@ class RealtimeSocketClient {
 
     socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
       this.lastError = reason;
-      this.setStatus('disconnected');
+      this.setStatus("disconnected");
     });
 
     socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {
       this.lastError = error.message;
-      this.setStatus('error');
+      this.setStatus("error");
 
       if (!isUnauthorizedError(error)) return;
 
@@ -151,7 +148,7 @@ class RealtimeSocketClient {
         .then(() => {
           this.applyLatestAuth();
           if (!socket.connected) {
-            this.setStatus('connecting');
+            this.setStatus("connecting");
             socket.connect();
           }
         })
@@ -160,7 +157,7 @@ class RealtimeSocketClient {
 
     socket.io.on(SOCKET_EVENTS.RECONNECT_ATTEMPT, () => {
       this.applyLatestAuth();
-      this.setStatus('connecting');
+      this.setStatus("connecting");
     });
   }
 

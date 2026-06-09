@@ -4,13 +4,17 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import api from "@/common/services/api.service";
-import { User, Shield, Key, LogOut } from "lucide-react";
+import { Key, LogOut, Shield, User } from "lucide-react";
 import ThemeSwitcher from "@/common/components/ThemeSwitcher";
+import FontSizeControl from "@/common/components/FontSizeControl";
 
 export default function SettingsPage() {
-  usePageTitle('Settings');
+  usePageTitle("Settings");
   const { user, logout } = useAuth();
-  const [profile, setProfile] = useState({ fullName: user?.fullName || "", email: user?.email || "" });
+  const [profile, setProfile] = useState({
+    fullName: user?.fullName || "",
+    email: user?.email || "",
+  });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -20,46 +24,141 @@ export default function SettingsPage() {
     try {
       await api.put("/users/profile", profile);
       setMessage("Profile updated successfully!");
-    } catch (e: any) { setMessage(e.response?.data?.message || "Failed to update"); }
-    finally { setSaving(false); }
+    } catch (e: any) {
+      setMessage(e.response?.data?.message || "Failed to update");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const initial =
+    user?.fullName?.charAt(0).toUpperCase() ||
+    user?.email?.charAt(0).toUpperCase() ||
+    "U";
 
   return (
     <div className="app-page-narrow">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Settings</h1>
-      {message && <div className={`mb-4 p-4 rounded-lg text-sm ${message.includes("success") ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800" : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"}`}>{message}</div>}
+      <h1 className="mb-6 text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
+        Settings
+      </h1>
 
-      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><User className="w-5 h-5 text-indigo-500" /> Profile</h2>
+      {message && (
+        <div
+          className={`mb-4 rounded-[6px] border p-4 text-sm ${
+            message.includes("success")
+              ? "border-[#C3DFC1] bg-[#EDF3EC] text-[#346538] dark:border-[rgba(52,101,56,0.18)] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#6DB374]"
+              : "border-[#F5C6C7] bg-[#FDEBEC] text-[#9F2F2D] dark:border-[rgba(159,47,45,0.18)] dark:bg-[rgba(159,47,45,0.12)] dark:text-[#F87171]"
+          }`}
+        >
+          {message}
+        </div>
+      )}
+
+      <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
+        <h2 className="mb-4 flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          <User className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
+          Profile
+        </h2>
         <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center text-white text-2xl font-bold">{user?.fullName?.charAt(0) || user?.email?.charAt(0).toUpperCase()}</div>
-            <div><p className="font-medium text-gray-900 dark:text-white">{user?.fullName || "User"}</p><p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p></div>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2563EB] text-2xl font-bold text-white dark:bg-[#3B82F6]">
+              {initial}
+            </div>
+            <div>
+              <p className="font-medium text-[#111111] dark:text-[#E8E8E7]">
+                {user?.fullName || "User"}
+              </p>
+              <p className="text-sm text-[#787774] dark:text-[#9B9A97]">
+                {user?.email}
+              </p>
+            </div>
           </div>
-          <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label><input type="text" value={profile.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white" /></div>
-          <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label><input type="email" value={profile.email} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 cursor-not-allowed" disabled /><p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Email cannot be changed</p></div>
-          <div className="flex justify-end"><button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50">{saving ? "Saving..." : "Save Profile"}</button></div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">
+              Full Name
+            </label>
+            <input
+              type="text"
+              value={profile.fullName}
+              onChange={(event) =>
+                setProfile({ ...profile, fullName: event.target.value })
+              }
+              className="w-full rounded-[6px] border border-[#EAEAEA] bg-white px-4 py-2.5 text-[#111111] outline-none transition-colors focus:border-[#2563EB] dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">
+              Email
+            </label>
+            <input
+              type="email"
+              value={profile.email}
+              className="w-full cursor-not-allowed rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-2.5 text-[#ABABAB] dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#6B6B6B]"
+              disabled
+            />
+            <p className="mt-1 text-xs text-[#ABABAB] dark:text-[#6B6B6B]">
+              Email cannot be changed
+            </p>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="rounded-[6px] bg-[#2563EB] px-6 py-2.5 font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-50 dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
+            >
+              {saving ? "Saving..." : "Save Profile"}
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><Shield className="w-5 h-5 text-indigo-500" /> Security</h2>
-        <button className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-          <div className="flex items-center gap-3"><Key className="w-5 h-5 text-gray-400" /><div className="text-left"><p className="text-sm font-medium text-gray-900 dark:text-white">Change Password</p><p className="text-xs text-gray-500 dark:text-gray-400">Update your account password</p></div></div>
-          <span className="text-gray-400">→</span>
+      <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
+        <h2 className="mb-4 flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          <Shield className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
+          Security
+        </h2>
+        <button className="flex w-full items-center justify-between rounded-[6px] bg-[#F9F9F8] p-4 transition-colors hover:bg-[#F7F6F3] dark:bg-[#2A2A2A] dark:hover:bg-white/5">
+          <div className="flex items-center gap-3">
+            <Key className="h-5 w-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+            <div className="text-left">
+              <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">
+                Change Password
+              </p>
+              <p className="text-xs text-[#787774] dark:text-[#9B9A97]">
+                Update your account password
+              </p>
+            </div>
+          </div>
+          <span className="text-[#ABABAB] dark:text-[#6B6B6B]">-&gt;</span>
         </button>
       </div>
 
-      <div className="workspace-panel bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 mb-6">
-        <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><LogOut className="w-5 h-5 text-red-500" /> Account</h2>
-        <button onClick={logout} className="w-full flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-red-600 dark:text-red-400">
-          <LogOut className="w-5 h-5" />
-          <div className="text-left"><p className="text-sm font-medium">Log out</p><p className="text-xs opacity-75">Sign out of the current account</p></div>
+      <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
+        <h2 className="mb-4 flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          <LogOut className="h-5 w-5 text-[#9F2F2D] dark:text-[#F87171]" />
+          Account
+        </h2>
+        <button
+          onClick={logout}
+          className="flex w-full items-center gap-3 rounded-[6px] border border-[#F5C6C7] bg-[#FDEBEC] p-4 text-[#9F2F2D] transition-colors hover:bg-[#F5C6C7]/40 dark:border-[rgba(159,47,45,0.18)] dark:bg-[rgba(159,47,45,0.12)] dark:text-[#F87171] dark:hover:bg-[rgba(159,47,45,0.18)]"
+        >
+          <LogOut className="h-5 w-5" />
+          <div className="text-left">
+            <p className="text-sm font-medium">Log out</p>
+            <p className="text-xs opacity-75">Sign out of the current account</p>
+          </div>
         </button>
       </div>
 
       <div className="mb-6">
         <ThemeSwitcher />
+      </div>
+
+      <div className="mb-6">
+        <FontSizeControl />
       </div>
     </div>
   );

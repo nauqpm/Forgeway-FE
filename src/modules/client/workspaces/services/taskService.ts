@@ -86,6 +86,7 @@ export type ReorderTaskInput = {
   columnId?: string;
   status?: string;
   sprintId?: string | null;
+  rankScope?: "board" | "sprint";
   beforeTaskId?: string;
   afterTaskId?: string;
 };
@@ -259,7 +260,9 @@ const toIssue = (task: TaskDto): Issue => {
     type: toUiLabel(task.type, "Task"),
     assignee,
     assigneeId: task.assigneeId,
-    color: "bg-indigo-600",
+    assigneeDisplayName: task.assignee?.fullName ?? task.assignee?.email ?? undefined,
+    assigneeAvatar: task.assignee?.avatar ?? undefined,
+    color: "bg-[#2563EB]",
     sprintId: task.sprintId ?? null,
     storyPoints: task.storyPoints ?? 0,
     startDate: toTaskDateKey(task.startDate),

@@ -26,6 +26,7 @@ export interface TaskReorderSyncInput {
   columnId?: string;
   status?: string;
   sprintId?: string | null;
+  rankScope?: "board" | "sprint";
   beforeTaskId?: string;
   afterTaskId?: string;
 }
@@ -57,6 +58,15 @@ const compareRanks = (left?: string, right?: string) => {
 };
 
 export const compareIssueRank = (a: Issue, b: Issue) => {
+  if (
+    a.optimisticScope &&
+    a.optimisticScope === b.optimisticScope &&
+    typeof a.optimisticOrder === "number" &&
+    typeof b.optimisticOrder === "number"
+  ) {
+    return a.optimisticOrder - b.optimisticOrder;
+  }
+
   const rankDiff = compareRanks(a.rank, b.rank);
   if (rankDiff !== 0) return rankDiff;
   return (a.createdAt ?? a.id).localeCompare(b.createdAt ?? b.id);
@@ -70,6 +80,10 @@ const getRankDigit = (rank: string, index: number, fallback: number) => {
 };
 
 const generateOptimisticRankBetween = (beforeRank?: string, afterRank?: string) => {
+  if (beforeRank && afterRank && beforeRank === afterRank) {
+    return afterRank;
+  }
+
   if (!beforeRank && !afterRank) return DEFAULT_RANK;
 
   let prefix = "";
@@ -92,6 +106,49 @@ const generateOptimisticRankBetween = (beforeRank?: string, afterRank?: string) 
   }
 };
 
+const resolveOptimisticBoundaryRanks = (
+  orderedScopeWithoutDragged: Issue[],
+  beforeIssue?: Issue,
+  afterIssue?: Issue,
+) => {
+  const beforeRank = beforeIssue?.rank;
+  const afterRank = afterIssue?.rank;
+
+  if (orderedScopeWithoutDragged.length === 0) {
+    return { beforeRank, afterRank };
+  }
+
+  if (!beforeIssue && afterIssue) {
+    return {
+      beforeRank: undefined,
+      afterRank: orderedScopeWithoutDragged[orderedScopeWithoutDragged.length - 1]?.rank ?? afterRank,
+    };
+  }
+
+  if (beforeIssue && !afterIssue) {
+    return {
+      beforeRank: orderedScopeWithoutDragged[0]?.rank ?? beforeRank,
+      afterRank: undefined,
+    };
+  }
+
+  return { beforeRank, afterRank };
+};
+
+const generateOptimisticRankForPosition = (
+  orderedScopeWithoutDragged: Issue[],
+  beforeIssue?: Issue,
+  afterIssue?: Issue,
+) => {
+  const { beforeRank, afterRank } = resolveOptimisticBoundaryRanks(
+    orderedScopeWithoutDragged,
+    beforeIssue,
+    afterIssue,
+  );
+
+  return generateOptimisticRankBetween(beforeRank, afterRank);
+};
+
 const getOrderedColumnIssues = (issues: Issue[], columnId: string) =>
   issues
     .filter((issue) => issue.columnId === columnId)
@@ -101,7 +158,7 @@ const getOrderedSprintIssues = (issues: Issue[], droppableId: string) =>
   issues
     .filter((issue) =>
       droppableId === "backlog"
-        ? issue.sprintId === null
+        ? issue.sprintId == null
         : issue.sprintId === droppableId.replace("sprint-", ""),
     )
     .sort(compareIssueRank);
@@ -120,6 +177,34 @@ const areSameNeighbors = (
   current: Pick<TaskReorderSyncInput, "beforeTaskId" | "afterTaskId">,
   next: Pick<TaskReorderSyncInput, "beforeTaskId" | "afterTaskId">,
 ) => current.beforeTaskId === next.beforeTaskId && current.afterTaskId === next.afterTaskId;
+
+const applyOptimisticDestinationOrder = (
+  current: Issue[],
+  destinationIssues: Issue[],
+  movedTask: Issue,
+  optimisticScope: string,
+) => {
+  const orderedById = new Map(
+    destinationIssues.map((issue, index) => [
+      issue.id,
+      {
+        optimisticOrder: index,
+        optimisticScope,
+      },
+    ]),
+  );
+
+  return current.map((issue) => {
+    const marker = orderedById.get(issue.id);
+    if (!marker) return issue;
+
+    return {
+      ...issue,
+      ...(issue.id === movedTask.id ? movedTask : {}),
+      ...marker,
+    };
+  });
+};
 
 export const handleBoardDragEnd = ({
   result,
@@ -197,12 +282,19 @@ export const handleBoardDragEnd = ({
     const afterIssue = destinationIssues.find((issue) => issue.id === neighbors.afterTaskId);
     const optimisticMovedIssue = {
       ...movedIssue,
-      rank: generateOptimisticRankBetween(beforeIssue?.rank, afterIssue?.rank),
+      rank: generateOptimisticRankForPosition(
+        destinationIssuesWithoutDragged,
+        beforeIssue,
+        afterIssue,
+      ),
     };
 
     setIssues((current) =>
-      current.map((issue) =>
-        issue.id === draggableId ? optimisticMovedIssue : issue,
+      applyOptimisticDestinationOrder(
+        current,
+        destinationIssues,
+        optimisticMovedIssue,
+        `board:${destStatus}:${movedIssue.sprintId ?? "none"}`,
       ),
     );
 
@@ -255,10 +347,9 @@ export const handleBacklogDragEnd = ({
   let targetSprintId: string | null = null;
 
   if (destination.droppableId.startsWith("sprint-")) {
-    targetSprintId = destination.droppableId.replace(
-      "sprint-",
-      ""
-    );
+    const candidateId = destination.droppableId.replace("sprint-", "");
+    if (candidateId.startsWith("temp-")) return;
+    targetSprintId = candidateId;
   }
 
   const destinationIssuesWithoutDragged =
@@ -285,12 +376,19 @@ export const handleBacklogDragEnd = ({
   const afterIssue = destinationIssues.find((issue) => issue.id === neighbors.afterTaskId);
   const optimisticMovedTask = {
     ...movedTask,
-    rank: generateOptimisticRankBetween(beforeIssue?.rank, afterIssue?.rank),
+    rank: generateOptimisticRankForPosition(
+      destinationIssuesWithoutDragged,
+      beforeIssue,
+      afterIssue,
+    ),
   };
 
   setIssues((current) =>
-    current.map((issue) =>
-      issue.id === draggableId ? optimisticMovedTask : issue,
+    applyOptimisticDestinationOrder(
+      current,
+      destinationIssues,
+      optimisticMovedTask,
+      `sprint:${optimisticMovedTask.sprintId ?? "backlog"}`,
     ),
   );
 
@@ -300,6 +398,7 @@ export const handleBacklogDragEnd = ({
       columnId: optimisticMovedTask.columnId,
       status: optimisticMovedTask.columnId,
       sprintId: optimisticMovedTask.sprintId ?? null,
+      rankScope: "sprint",
       ...neighbors,
     });
   }

@@ -1,12 +1,14 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { verifyEmailAPI, resendVerifyEmailAPI } from '../../shared/services/authService';
 import toast from 'react-hot-toast';
-import { Zap, Loader2, MailCheck, ArrowLeft } from 'lucide-react';
+import { Loader2, MailCheck, ArrowLeft } from 'lucide-react';
 import { AUTH_ROUTES } from '../../shared/constants/auth-routes';
+import logoIcon from '../../../../../app/icon.png';
 
 export default function VerifyEmailForm() {
   const router = useRouter();
@@ -63,47 +65,56 @@ export default function VerifyEmailForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 mb-2">
-            <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center"><Zap className="w-7 h-7 text-white" /></div>
-          </Link>
-          <h1 className="text-2xl font-bold text-gray-900">Verify Email</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Please enter the 6-digit OTP sent to <br />
-            <span className="font-semibold text-gray-900">{email || 'your email'}</span>
-          </p>
-        </div>
+    <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden">
+      <video autoPlay loop muted playsInline className="absolute top-0 left-0 w-full h-full object-cover z-0">
+        <source src="/videos/mixkit-clouds-and-blue-sky-background-2408-full-hd.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+      <div className="absolute top-0 left-0 w-full h-full bg-slate-900/10 z-10" />
+
+      <div className="w-full max-w-md relative z-20">
+        <div className="bg-white/30 backdrop-blur-2xl rounded-[12px] border border-white/30 p-8 md:p-10 transition-all duration-300 hover:border-white/55">
+          <div className="text-center mb-8">
+            <Link href="/" className="inline-flex items-center gap-2 mb-3 group">
+              <div className="w-12 h-12 rounded-[8px] flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                <Image src={logoIcon} width={48} height={48} alt="Logo" className="w-12 h-12 object-contain" priority />
+              </div>
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Verify Email</h1>
+            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">
+              Please enter the 6-digit OTP sent to <br />
+              <span className="font-bold text-gray-950">{email || 'your email'}</span>
+            </p>
+          </div>
+
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center">
-              <MailCheck className="w-8 h-8 text-indigo-600" />
+            <div className="w-16 h-16 bg-white/50 border border-white/30 rounded-full flex items-center justify-center">
+              <MailCheck className="w-8 h-8 text-[#2563EB]" />
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5 text-center">Verification code (OTP)</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5 text-center">Verification code (OTP)</label>
               <input type="text" value={otp} onChange={(e) => setOtp(e.target.value)} required maxLength={6} placeholder="Enter 6 digits"
-                className="w-full text-center text-2xl px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all" />
+                className="w-full text-center px-4 py-3 bg-white/45 border border-gray-200/35 rounded-[6px] font-sans text-[0.8125rem] font-medium text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner" />
             </div>
 
             <button type="submit" disabled={isLoading}
-              className="w-full py-2.5 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              className="w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Verifying...</> : 'Verify account'}
             </button>
           </form>
 
           <div className="mt-6 flex flex-col items-center gap-4">
             <button type="button" onClick={handleResend} disabled={isResending || !email}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-800 disabled:opacity-50 transition-colors flex items-center gap-1">
+              className="text-[0.8125rem] font-semibold text-[#2563EB] hover:text-[#1D4ED8] disabled:opacity-50 transition-colors flex items-center gap-1">
               {isResending ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
               Resend verification code
             </button>
 
-            <Link href={AUTH_ROUTES.LOGIN} className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1">
+            <Link href={AUTH_ROUTES.LOGIN} className="text-[0.8125rem] text-gray-600 hover:text-gray-950 font-medium flex items-center gap-1">
               <ArrowLeft className="w-4 h-4" />
               Back to Sign in
             </Link>

@@ -1,13 +1,15 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '../../shared/hooks/useAuth';
 import PasswordPolicyChecklist, { validatePassword } from '../../password/security/PasswordPolicyChecklist';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
 import { extractRegisterError } from '../../shared/services/authService';
 import toast from 'react-hot-toast';
-import { Zap, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import logoIcon from '../../../../../app/icon.png';
 
 export default function RegisterForm() {
   const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
@@ -39,19 +41,19 @@ export default function RegisterForm() {
       <div className="absolute top-0 left-0 w-full h-full bg-slate-900/10 z-10" />
 
       <div className="w-full max-w-md relative z-20">
-        <div className="bg-white/30 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/30 p-8 md:p-10 transition-all duration-300 hover:shadow-indigo-500/10 hover:border-white/55">
+        <div className="bg-white/30 backdrop-blur-2xl rounded-[12px] border border-white/30 p-8 md:p-10 transition-all duration-300 hover:border-white/55">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-3 group">
-              <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-105">
-                <Zap className="w-7 h-7 text-white" />
+              <div className="w-12 h-12 rounded-[8px] flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                <Image src={logoIcon} width={48} height={48} alt="Logo" className="w-12 h-12 object-contain" priority />
               </div>
             </Link>
             <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Create account</h1>
-            <p className="text-gray-600 text-sm mt-1.5 font-semibold">Start using AL-TASK for free</p>
+            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Start using SLDC platform for free</p>
           </div>
 
           <button onClick={initiateGoogleLogin} type="button"
-            className="w-full mb-6 py-3 px-4 flex items-center justify-center gap-3 bg-white/50 hover:bg-white/80 border border-white/30 rounded-xl hover:border-white transition-all font-medium text-gray-800 shadow-sm">
+            className="w-full mb-6 py-3 px-4 flex items-center justify-center gap-3 bg-white/50 hover:bg-white/80 border border-white/30 rounded-[6px] hover:border-white transition-all font-medium text-gray-800">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -69,16 +71,16 @@ export default function RegisterForm() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Work email</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Work email</label>
               <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="JaneDoe@gmail.com"
-                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-inner" />
+                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner" />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Password</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Password</label>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required placeholder="At least 8 characters"
-                  className="w-full px-4 py-2.5 pr-11 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-inner" />
+                  className="w-full px-4 py-2.5 pr-11 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -86,23 +88,23 @@ export default function RegisterForm() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Confirm password</label>
+              <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Confirm password</label>
               <input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required placeholder="Re-enter password"
-                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-xl text-sm text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all shadow-inner" />
+                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner" />
             </div>
             <button type="submit" disabled={isLoading}
-              className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-[0.99] transition-all shadow-md hover:shadow-indigo-600/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+              className="w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Creating account...</> : 'Create account'}
             </button>
           </form>
 
           <p className="text-center text-xs text-gray-800 mt-5">
             By creating an account, you agree to the{' '}
-            <Link href="#" className="text-indigo-600 font-semibold hover:underline">Terms of Service</Link> and{' '}
-            <Link href="#" className="text-indigo-600 font-semibold hover:underline">Privacy Policy</Link>.
+            <Link href="#" className="text-[#2563EB] font-semibold hover:underline">Terms of Service</Link> and{' '}
+            <Link href="#" className="text-[#2563EB] font-semibold hover:underline">Privacy Policy</Link>.
           </p>
-          <p className="text-center text-sm text-gray-600 mt-6 font-medium">
-            Already have an account?{' '}<Link href="/login" className="text-indigo-600 font-bold hover:text-indigo-800 transition-colors">Sign in</Link>
+          <p className="text-center text-[0.8125rem] text-gray-600 mt-6 font-medium">
+            Already have an account?{' '}<Link href="/login" className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">Sign in</Link>
           </p>
         </div>
       </div>

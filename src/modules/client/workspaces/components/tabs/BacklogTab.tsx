@@ -2,17 +2,20 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-import { FileText, Pencil, Plus, Trash2, UserMinus, UserRound } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import AssigneePicker from "../../../../../common/components/AssigneePicker";
+import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
+import TaskStatusChanger from "../TaskStatusChanger";
 import { compareIssueRank } from "../../utils/dragUtils";
+import type { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
 
 type BacklogTabProps = {
   data: {
     issues: any[];
     filteredIssues: any[];
+    columns?: BoardColumn[];
     sprints: any[];
     uniqueAssignees: any[];
     selectedTaskIds: string[];
@@ -69,31 +72,31 @@ type BacklogTabProps = {
   };
 };
 
-const statusSelectClasses = (status: string) => {
-  const base =
-    "px-2 py-1 rounded text-xs font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-indigo-500 appearance-none disabled:cursor-not-allowed disabled:opacity-60";
-
-  if (status === "Done") {
-    return `${base} bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300`;
-  }
-
-  if (status === "In Progress") {
-    return `${base} bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300`;
-  }
-
-  return `${base} bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300`;
-};
-
-const statusOptionClass = "bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200";
-
 const getInitials = (value: string) =>
-  value
+  (value ?? "")
     .split(/\s+/)
     .filter(Boolean)
     .map((part) => part[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+const normalizeObjectId = (value: unknown): string => {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const objectIdMatch = value.match(/^ObjectId\(['"]?(.+?)['"]?\)$/);
+    return objectIdMatch?.[1] ?? value;
+  }
+  if (typeof value === "object") {
+    const obj = value as { _id?: unknown; id?: unknown; $oid?: unknown; toString?: () => string };
+    if (obj.$oid) return normalizeObjectId(obj.$oid);
+    if (obj._id) return normalizeObjectId(obj._id);
+    if (obj.id) return normalizeObjectId(obj.id);
+    const stringValue = obj.toString?.();
+    if (stringValue && stringValue !== "[object Object]") return normalizeObjectId(stringValue);
+  }
+  return "";
+};
 
 type WorkspaceMemberUser =
   | string
@@ -122,18 +125,11 @@ type AssigneeInfo = {
   initials: string;
 };
 
-type AssigneeIssue = {
-  id: string;
-  assigneeId?: string | null;
-  assignee?: string | null;
-  assigneeDisplayName?: string;
-  color?: string;
-};
 
 export default function BacklogTab({ data, ui, actions, permissions }: BacklogTabProps) {
   const {
-    issues,
     filteredIssues,
+    columns = [],
     sprints,
     uniqueAssignees,
     selectedTaskIds,
@@ -145,7 +141,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const {
     handleBacklogDragEnd,
     handleBacklogDragStart,
-    setIssues,
     setDensity,
     setFilters,
     setIsFilterOpen,
@@ -170,29 +165,14 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canEditTask = permissions?.canEditTask ?? true;
   const canMoveTask = permissions?.canMoveTask ?? true;
   const canManageSprint = permissions?.canManageSprint ?? true;
-  const [openAssigneeIssueId, setOpenAssigneeIssueId] = useState<string | null>(null);
-  const [assigneeMenuPosition, setAssigneeMenuPosition] = useState<CSSProperties>({});
-  const assigneePopoverRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!openAssigneeIssueId) return;
-
-    const closeAssigneeMenu = (event: MouseEvent) => {
-      if (assigneePopoverRef.current?.contains(event.target as Node)) return;
-      setOpenAssigneeIssueId(null);
-    };
-
-    document.addEventListener("mousedown", closeAssigneeMenu);
-    return () => document.removeEventListener("mousedown", closeAssigneeMenu);
-  }, [openAssigneeIssueId]);
 
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
       .map((member: WorkspaceMemberItem): AssigneeInfo => {
-        const user = member.userId;
-        const id = typeof user === "string" ? user : user?._id ?? user?.id ?? "";
-        const name = typeof user === "string" ? user : user?.fullName || user?.name || user?.email || id;
+        const user = member.userId as any;
+        const id = typeof user === "string" ? normalizeObjectId(user) : normalizeObjectId(user);
         const email = typeof user === "string" ? "" : user?.email ?? "";
+        const name = typeof user === "string" ? id : user?.fullName || user?.name || email || id;
         const avatar = typeof user === "string" ? undefined : user?.avatar || user?.avatarUrl || user?.image;
 
         return {
@@ -206,21 +186,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
       })
       .filter((member: AssigneeInfo) => member.id);
   }, [workspace.members]);
-
-  const getIssueAssignee = (issue: AssigneeIssue): AssigneeInfo | null => {
-    const assigneeId = issue.assigneeId ?? issue.assignee;
-    if (!assigneeId || assigneeId === "U") return null;
-
-    return (
-      workspaceMembers.find((member: any) => member.id === assigneeId) ?? {
-        id: assigneeId,
-        name: issue.assigneeDisplayName || "Unknown member",
-        email: "",
-        avatar: undefined,
-        initials: getInitials(issue.assigneeDisplayName || "") || "",
-      }
-    );
-  };
 
   const filterAssignees = useMemo(() => {
     return uniqueAssignees.map((assignee) => {
@@ -237,222 +202,58 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     });
   }, [uniqueAssignees, workspaceMembers]);
 
-  const handleAssignIssue = (issue: AssigneeIssue, assignee: AssigneeInfo) => {
-    updateIssueDirectly(issue.id, {
-      assigneeId: assignee.id,
-      assignee: assignee.id,
-      assigneeDisplayName: assignee.name,
+  const getReadonlyAssignee = (issue: any): AssigneeInfo | null => {
+    const assigneeId = normalizeObjectId(issue.assigneeId ?? issue.assignee);
+    if (!assigneeId || assigneeId === "U") return null;
+
+    const member = workspaceMembers.find((item: AssigneeInfo) => {
+      return item.id === assigneeId || item.email === assigneeId;
     });
-    setOpenAssigneeIssueId(null);
+
+    if (member) return member;
+
+    const displayName = issue.assigneeDisplayName && issue.assigneeDisplayName !== assigneeId
+      ? issue.assigneeDisplayName
+      : assigneeId;
+
+    return {
+      id: assigneeId,
+      name: displayName,
+      email: "",
+      avatar: issue.assigneeAvatar,
+      initials: getInitials(displayName) || "?",
+    };
   };
 
-  const handleUnassignIssue = (issue: AssigneeIssue) => {
-    updateIssueDirectly(issue.id, {
-      assigneeId: null,
-      assignee: "U",
-      assigneeDisplayName: "Unassigned",
-    });
-    setOpenAssigneeIssueId(null);
-  };
-
-  const toggleAssigneeMenu = (
-    issueId: string,
-    button: HTMLButtonElement,
-  ) => {
-    const rect = button.getBoundingClientRect();
-
-    setOpenAssigneeIssueId((current) => current === issueId ? null : issueId);
-    setAssigneeMenuPosition({
-      position: "fixed",
-      top: rect.bottom + 8,
-      left: Math.max(8, Math.min(rect.right - 256, window.innerWidth - 272)),
-    });
-  };
-
-  const renderAssigneeMenu = (issue: AssigneeIssue, assignee: AssigneeInfo | null) => {
-    const isOpen = openAssigneeIssueId === issue.id;
-
-    if (!isOpen) return null;
-
-    return (
-      <div
-        style={assigneeMenuPosition}
-        className="z-[9999] w-64 overflow-hidden rounded-lg border border-gray-200 bg-white text-left shadow-xl dark:border-gray-700 dark:bg-gray-900"
-        onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <div className="border-b border-gray-100 px-3 py-2 text-xs font-semibold uppercase text-gray-500 dark:border-gray-800 dark:text-gray-400">
-          Assignee
-        </div>
-        <div className="max-h-64 overflow-y-auto p-1">
-          {workspaceMembers.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-              No workspace members
-            </div>
-          ) : (
-            workspaceMembers.map((member: AssigneeInfo) => {
-              const isSelected = assignee?.id === member.id;
-
-              return (
-                <button
-                  key={member.id}
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!canEditTask) return;
-                    handleAssignIssue(issue, member);
-                  }}
-                  disabled={!canEditTask}
-                  className="flex w-full min-w-0 items-center gap-3 rounded-md px-2 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-default disabled:bg-indigo-50 disabled:text-indigo-700 dark:text-gray-200 dark:hover:bg-gray-800 dark:disabled:bg-indigo-900/30 dark:disabled:text-indigo-300"
-                >
-                  <span className={`flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-[10px] font-bold text-white`}>
-                    {member.avatar ? (
-                      <img
-                        src={member.avatar}
-                        alt=""
-                        className="h-full w-full rounded-full object-cover"
-                      />
-                    ) : member.initials ? (
-                      member.initials
-                    ) : (
-                      <UserRound className="h-3.5 w-3.5" />
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{member.name}</span>
-                    <span className="block truncate text-xs text-gray-500 dark:text-gray-400">
-                      {member.email || member.role || "Member"}
-                    </span>
-                  </span>
-                  {isSelected && (
-                    <span className="flex shrink-0 items-center gap-1.5">
-                      <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-300">
-                        Selected
-                      </span>
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        title="Unassign"
-                        aria-label="Unassign"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (!canEditTask) return;
-                          handleUnassignIssue(issue);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key !== "Enter" && e.key !== " ") return;
-                          e.preventDefault();
-                          e.stopPropagation();
-                          if (!canEditTask) return;
-                          handleUnassignIssue(issue);
-                        }}
-                        className="rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 dark:hover:bg-red-900/30 dark:hover:text-red-300"
-                      >
-                        <UserMinus className="h-3.5 w-3.5" />
-                      </span>
-                    </span>
-                  )}
-                </button>
-              );
-            })
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderAssignee = (issue: AssigneeIssue) => {
-    const assignee = getIssueAssignee(issue);
+  const renderReadonlyAssignee = (issue: any) => {
+    const assignee = getReadonlyAssignee(issue);
 
     if (!assignee) {
       return (
-        <div
-          ref={openAssigneeIssueId === issue.id ? assigneePopoverRef : null}
-          className="relative h-6 w-6 shrink-0"
-        >
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!canEditTask) return;
-              toggleAssigneeMenu(issue.id, e.currentTarget);
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            disabled={!canEditTask}
-            className="flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-gray-300 text-gray-400 transition-colors hover:border-indigo-400 hover:text-indigo-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:text-gray-500 dark:hover:border-indigo-500"
-            title="Assign member"
-            aria-label="Assign member"
-            aria-expanded={openAssigneeIssueId === issue.id}
-          >
-            <Plus className="w-3 h-3" />
-          </button>
-          {renderAssigneeMenu(issue, assignee)}
-        </div>
+        <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+          Unassigned
+        </span>
       );
     }
 
     return (
       <div
-        ref={openAssigneeIssueId === issue.id ? assigneePopoverRef : null}
-        className="group/assignee relative h-6 w-6 shrink-0"
-        onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
+        className="flex min-w-0 max-w-[10rem] items-center gap-1.5"
+        title={assignee.email ? `${assignee.name} (${assignee.email})` : assignee.name}
       >
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (!canEditTask) return;
-            toggleAssigneeMenu(issue.id, e.currentTarget);
-          }}
-          disabled={!canEditTask}
-          className={`h-6 w-6 overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-white flex items-center justify-center text-[10px] font-bold ring-2 ring-transparent hover:ring-indigo-200 disabled:cursor-not-allowed disabled:opacity-70 dark:hover:ring-indigo-800 transition-all`}
-          aria-label={`Change assignee: ${assignee.name}`}
-          aria-expanded={openAssigneeIssueId === issue.id}
-        >
+        <div className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full text-[0.5625rem] font-bold ${assignee.avatar ? "" : "bg-[#2563EB] text-white"}`}>
           {assignee.avatar ? (
-            <img
-              src={assignee.avatar}
-              alt={assignee.name}
-              className="h-full w-full rounded-full object-cover"
-            />
-          ) : assignee.initials ? (
-            assignee.initials
+            <img src={assignee.avatar} alt="" className="h-full w-full object-cover" />
           ) : (
-            <UserRound className="h-3.5 w-3.5" />
+            assignee.initials
           )}
-        </button>
-        <div className="pointer-events-none absolute bottom-full right-0 z-50 mb-2 hidden w-56 rounded-lg border border-gray-200 bg-white p-3 text-left shadow-xl group-hover/assignee:block dark:border-gray-700 dark:bg-gray-900">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className={`h-9 w-9 shrink-0 overflow-hidden rounded-full ${issue.color || "bg-indigo-600"} text-white flex items-center justify-center text-xs font-bold`}>
-              {assignee.avatar ? (
-                <img
-                  src={assignee.avatar}
-                  alt=""
-                  className="h-full w-full rounded-full object-cover"
-                />
-              ) : assignee.initials ? (
-                assignee.initials
-              ) : (
-                <UserRound className="h-4 w-4" />
-              )}
-            </div>
-            <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-gray-900 dark:text-white">
-                {assignee.name}
-              </div>
-              <div className="truncate text-xs text-gray-500 dark:text-gray-400">
-                {assignee.email || assignee.role || "No email"}
-              </div>
-            </div>
-          </div>
         </div>
-        {renderAssigneeMenu(issue, assignee)}
+        <span className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+          {assignee.name}
+        </span>
       </div>
     );
   };
-
 
   const issuesBySprintId = useMemo(() => {
     const assignedIssueIds = new Set<string>();
@@ -475,7 +276,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     const backlogIssues = filteredIssues
       .filter((issue) => {
         if (assignedIssueIds.has(issue.id)) return false;
-        return issue.sprintId === null;
+        return issue.sprintId == null;
       })
       .sort(compareIssueRank);
 
@@ -494,14 +295,14 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
       >
         <div className="workspace-surface max-w-[min(100%,72rem)] space-y-6 py-[var(--workspace-surface-pad)]">
           {/* Backlog Top Bar with Filter */}
-          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <div className="flex flex-col gap-3 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
               Showing {filteredIssues.length} results
             </div>
             <div className="relative">
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-2 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium transition-colors"
               >
                 Advanced filters{" "}
               </button>
@@ -538,10 +339,10 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
             return (
               <div
-                key={sprint.id}
-                className="bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm group/sprint"
+                key={sprint._id}
+                className="bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden group/sprint"
               >
-                <div className="flex flex-col gap-3 border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 xl:flex-row xl:items-center xl:justify-between">
+                <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                     <input
                       type="checkbox"
@@ -551,10 +352,10 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       ref={(input) => {
                         if (input) input.indeterminate = isSomeSelected;
                       }}
-                      className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+                      className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
                     />
                     <h3
-                      className="flex min-w-0 flex-wrap items-center gap-2 font-bold text-gray-900 hover:underline dark:text-white cursor-pointer"
+                      className="flex min-w-0 flex-wrap items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer"
                       onClick={() => {
                         if (sprint.status === "completed") return;
                         setEditingSprint(sprint);
@@ -563,12 +364,12 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     >
                       {sprint.name}
                       {sprint.status === "active" && (
-                        <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-xs font-semibold rounded-full uppercase tracking-wide">
+                        <span className="px-2 py-0.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD] text-[0.6875rem] font-semibold rounded-full uppercase tracking-wide">
                           Active
                         </span>
                       )}
                     </h3>
-                    <p className="flex flex-wrap gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <p className="flex flex-wrap gap-2 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                       <span>
                         {sprint.startDate
                           ? `${new Date(sprint.startDate).toLocaleDateString('en-US')} - ${new Date(sprint.endDate!).toLocaleDateString('en-US')}`
@@ -580,24 +381,24 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                   </div>
                   <div className="flex flex-wrap items-center gap-3 xl:justify-end">
                     <div className="flex gap-2 items-center group relative cursor-help">
-                      <span className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs font-bold flex items-center justify-center">
+                      <span className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] font-bold flex items-center justify-center">
                         {
                           sprintIssues.filter((i) => i.status === "To Do")
                             .length
                         }
                       </span>
-                      <span className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold flex items-center justify-center">
+                      <span className="w-6 h-6 rounded-full bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] text-[#956400] dark:text-[#F0C040] text-[0.6875rem] font-bold flex items-center justify-center">
                         {
                           sprintIssues.filter((i) => i.status === "In Progress")
                             .length
                         }
                       </span>
-                      <span className="w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold flex items-center justify-center">
+                      <span className="w-6 h-6 rounded-full bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.15)] text-[#346538] dark:text-[#6FCF7B] text-[0.6875rem] font-bold flex items-center justify-center">
                         {sprintIssues.filter((i) => i.status === "Done").length}
                       </span>
 
                       {/* Tooltip for Story Points */}
-                      <div className="absolute top-full mt-2 right-0 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                      <div className="absolute top-full mt-2 right-0 bg-[#111111] dark:bg-[#2A2A2A] text-[#E8E8E7] text-[0.6875rem] px-3 py-2 rounded-[6px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                         Progress: {donePoints} / {totalPoints} story points
                       </div>
                     </div>
@@ -605,7 +406,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     <button
                       onClick={() => handleEditSprint(sprint)}
                       disabled={sprint.status === "completed"}
-                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded transition-colors"
+                      className="p-1 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] rounded-[4px] transition-colors"
                       title="Edit sprint"
                     >
                       <Pencil className="w-4 h-4" />
@@ -614,7 +415,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     {canManageSprint && sprint.status === "planning" && (
                       <button
                         onClick={() => handleDeleteSprint(sprint._id)}
-                        className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-colors"
+                        className="p-1 text-[#ABABAB] hover:text-[#9F2F2D] dark:hover:text-[#E07B79] rounded-[4px] transition-colors"
                         title="Delete sprint"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -628,7 +429,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                           : handleStartSprint(sprint._id)
                       }
                       disabled={isStarting || isCompleting || sprint.status === "completed" || sprint._id.startsWith("temp-")}
-                      className="px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      className="px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F0F0EE] dark:hover:bg-[#333333] transition-colors disabled:opacity-40"
                     >
                       {sprint.status === "active"
                         ? "Complete Sprint"
@@ -648,7 +449,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`p-2 space-y-1 min-h-[50px] transition-colors ${snapshot.isDraggingOver ? "bg-indigo-50/30 dark:bg-indigo-900/10" : ""}`}
+                      className={`p-2 space-y-1 min-h-[3.125rem] transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/20 dark:bg-[rgba(37,99,235,0.06)]" : ""}`}
                     >
                       {sprintIssues.map((issue, index) => (
                         <Draggable
@@ -662,7 +463,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...(canMoveTask ? provided.dragHandleProps : {})}
-                              className={`flex flex-col gap-3 bg-white dark:bg-gray-900 lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-lg border ${snapshot.isDragging ? "border-indigo-400 shadow-md rotate-1 z-50 relative" : "border-gray-100 dark:border-gray-800 hover:border-indigo-200 dark:hover:border-indigo-500"} transition-all group shadow-sm`}
+                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-colors group`}
+                              style={{
+                                ...provided.draggableProps.style,
+                                ...(snapshot.isDragging
+                                  ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }
+                                  : {}),
+                              }}
                             >
                               <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <input
@@ -672,79 +479,66 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     toggleTaskSelection(issue.id, e)
                                   }
                                   onClick={(e) => e.stopPropagation()}
-                                  className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+                                  className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
                                 />
                                 <div
                                   className="flex min-w-0 flex-1 items-center gap-3"
                                   onClick={() => setSelectedIssue(issue)}
                                 >
                                   <FileText
-                                    className={`w-4 h-4 ${issue.type === "Bug" ? "text-red-500" : issue.type === "Story" ? "text-emerald-500" : "text-indigo-500"}`}
+                                    className={`w-4 h-4 ${issue.type === "Bug" ? "text-[#9F2F2D]" : issue.type === "Story" ? "text-[#346538]" : "text-[#2563EB] dark:text-[#60A5FA]"}`}
                                   />
-                                  <span className="text-xs font-mono font-medium text-gray-500 w-16 hover:underline cursor-pointer">
+                                  <span className="text-[0.6875rem] font-mono font-medium text-[#ABABAB] dark:text-[#6B6B6B] w-16 hover:underline cursor-pointer">
                                     {issue.key}
                                   </span>
-                                  <span className="min-w-0 break-words text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 cursor-pointer">
+                                  <span className="min-w-0 break-words text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] cursor-pointer">
                                     {issue.title}
                                   </span>
                                 </div>
                               </div>
                               <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-                                {/* Editable Story Points */}
-                                <div className="relative group/pts">
-                                  <input
-                                    type="number"
-                                    value={
-                                      issue.storyPoints === 0
-                                        ? ""
-                                        : issue.storyPoints
-                                    }
-                                    onChange={(e) =>
-                                      updateIssueDirectly(issue.id, {
-                                        storyPoints:
-                                          parseInt(e.target.value) || 0,
-                                      })
-                                    }
-                                    disabled={!canEditTask}
-                                    placeholder="-"
-                                    className="w-8 h-6 text-center text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-indigo-500 outline-none transition-colors appearance-none"
-                                    title="Story Points"
-                                  />
-                                </div>
-
-                                {/* Editable Status */}
-                                <select
-                                  value={issue.status}
-                                  onChange={(e) =>
-                                    updateIssueDirectly(issue.id, {
-                                      status: e.target.value,
-                                    })
-                                  }
-                                  disabled={!canEditTask}
-                                  className={statusSelectClasses(issue.status)}
-                                >
-                                  <option
-                                    value="To Do"
-                                    className={statusOptionClass}
-                                  >
-                                    To Do
-                                  </option>
-                                  <option
-                                    value="In Progress"
-                                    className={statusOptionClass}
-                                  >
-                                    In Progress
-                                  </option>
-                                  <option
-                                    value="Done"
-                                    className={statusOptionClass}
-                                  >
-                                    Done
-                                  </option>
-                                </select>
-
-                                {/* Assignee */}
-                                {renderAssignee(issue)}
+                                {canEditTask ? (
+                                  <>
+                                    <div className="relative group/pts">
+                                      <input
+                                        type="number"
+                                        value={issue.storyPoints === 0 ? "" : issue.storyPoints}
+                                        onChange={(e) =>
+                                          updateIssueDirectly(issue.id, {
+                                            storyPoints: parseInt(e.target.value) || 0,
+                                          })
+                                        }
+                                        placeholder="-"
+                                        className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
+                                        title="Story Points"
+                                      />
+                                    </div>
+                                    <TaskStatusChanger
+                                      issue={issue}
+                                      boardColumns={columns}
+                                      variant="pill"
+                                      size="sm"
+                                      onChange={({ columnId, status }) =>
+                                        updateIssueDirectly(issue.id, { columnId, status })
+                                      }
+                                    />
+                                    <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                      <AssigneePicker
+                                        users={workspaceMembers}
+                                        value={issue.assigneeId ?? issue.assignee ?? null}
+                                        onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                        placement="auto"
+                                        size="sm"
+                                      />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97]">{issue.storyPoints || "-"}</span>
+                                    <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-1 text-[0.6875rem] font-medium text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">{issue.status}</span>
+                                    {renderReadonlyAssignee(issue)}
+                                  </>
+                                )}
                               </div>
                             </div>
                           )}
@@ -753,19 +547,19 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       {provided.placeholder}
                       {sprintIssues.length === 0 &&
                         !snapshot.isDraggingOver && (
-                          <div className="p-4 text-center text-sm text-gray-400 border-2 border-dashed border-gray-200 rounded-lg mx-2 my-1">
+                          <div className="p-4 text-center text-[0.8125rem] text-[#ABABAB] dark:text-[#6B6B6B] border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] mx-2 my-1">
                             Plan your sprint by dragging issues here
                           </div>
                         )}
                     </div>
                   )}
                 </Droppable>
-                {sprint.status !== "completed" && (
+                {canCreateTask && sprint.status !== "completed" && (
                   <div className="px-3 pb-3 flex flex-col gap-2">
                     <input
                       type="text"
                       placeholder="Quick-create task... (Enter to save)"
-                      className="w-full py-1.5 px-3 text-sm bg-transparent border border-dashed border-gray-200 dark:border-gray-700 rounded-lg text-gray-600 dark:text-gray-400 placeholder-gray-400 focus:bg-white dark:focus:bg-gray-800 focus:border-indigo-400 outline-none transition-all"
+                      className="w-full py-1.5 px-3 text-[0.8125rem] bg-transparent border border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[#787774] dark:text-[#9B9A97] placeholder:text-[#ABABAB] focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-all"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && e.currentTarget.value.trim()) {
                           const title = e.currentTarget.value.trim();
@@ -783,7 +577,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                         setShowCreateIssue(true);
                       }}
                       disabled={!canCreateTask}
-                      className="text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 disabled:opacity-50 disabled:hover:bg-transparent p-1.5 px-3 rounded-lg flex items-center gap-1 transition-colors w-fit"
+                      className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)] disabled:opacity-40 disabled:hover:bg-transparent p-1.5 px-3 rounded-[6px] flex items-center gap-1 transition-colors w-fit"
                     >
                       <Plus className="w-4 h-4" /> Create task (full form)
                     </button>
@@ -794,8 +588,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
           })}
 
           {/* Backlog Section */}
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
-            <div className="flex flex-col gap-3 border-b border-gray-200 bg-gray-50/50 p-4 dark:border-gray-800 dark:bg-gray-800/50 sm:flex-row sm:items-center sm:justify-between">
+          <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden">
+            <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -825,11 +619,11 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       input.indeterminate = isSome;
                     }
                   }}
-                  className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+                  className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
                 />
-                <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
                   Backlog
-                  <span className="text-gray-400 dark:text-gray-500 font-normal text-sm">
+                  <span className="text-[#ABABAB] dark:text-[#6B6B6B] font-normal text-[0.8125rem]">
                     ({backlogIssues.length}{" "}
                     issues)
                   </span>
@@ -838,7 +632,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
               {canManageSprint && (
               <button
                 onClick={handleCreateSprint}
-                className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 rounded-lg text-sm font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                className="px-3 py-1.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#DBEAFE] dark:hover:bg-[rgba(37,99,235,0.18)] transition-colors"
               >
                 Create Sprint
               </button>
@@ -850,7 +644,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className={`p-2 space-y-1 min-h-[100px] transition-colors ${snapshot.isDraggingOver ? "bg-gray-50/80 dark:bg-gray-800/80" : ""}`}
+                  className={`p-2 space-y-1 min-h-[6.25rem] transition-colors ${snapshot.isDraggingOver ? "bg-[#F9F9F8] dark:bg-[#252525]" : ""}`}
                 >
                   {backlogIssues
                     .map((issue, index) => (
@@ -865,7 +659,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...(canMoveTask ? provided.dragHandleProps : {})}
-                            className={`flex flex-col gap-3 bg-white dark:bg-gray-900 lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-lg border ${snapshot.isDragging ? "border-indigo-400 shadow-md rotate-1 z-50 relative" : "border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"} transition-all group`}
+                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-colors group`}
+                            style={{
+                              ...provided.draggableProps.style,
+                              ...(snapshot.isDragging
+                                ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }
+                                : {}),
+                            }}
                           >
                             <div className="flex min-w-0 flex-1 items-center gap-3">
                               <input
@@ -875,70 +675,66 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   toggleTaskSelection(issue.id, e)
                                 }
                                 onClick={(e) => e.stopPropagation()}
-                                className="w-4 h-4 rounded accent-indigo-500 dark:accent-indigo-400 cursor-pointer"
+                                className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
                               />
                               <div
                                 className="flex min-w-0 flex-1 items-center gap-3"
                                 onClick={() => setSelectedIssue(issue)}
                               >
                                 <FileText
-                                  className={`w-4 h-4 ${issue.type === "Bug" ? "text-red-500" : issue.type === "Story" ? "text-emerald-500" : "text-gray-400"}`}
+                                  className={`w-4 h-4 ${issue.type === "Bug" ? "text-[#9F2F2D]" : issue.type === "Story" ? "text-[#346538]" : "text-[#ABABAB] dark:text-[#6B6B6B]"}`}
                                 />
-                                <span className="text-xs font-mono font-medium text-gray-400 w-16 hover:underline cursor-pointer">
+                                <span className="text-[0.6875rem] font-mono font-medium text-[#ABABAB] dark:text-[#6B6B6B] w-16 hover:underline cursor-pointer">
                                   {issue.key}
                                 </span>
-                                <span className="min-w-0 break-words text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white cursor-pointer">
+                                <span className="min-w-0 break-words text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] cursor-pointer">
                                   {issue.title}
                                 </span>
                               </div>
                             </div>
                             <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-                              {/* Editable Story Points */}
-                              <div className="relative group/pts">
-                                <input
-                                  type="number"
-                                  value={
-                                    issue.storyPoints === 0
-                                      ? ""
-                                      : issue.storyPoints
-                                  }
-                                  onChange={(e) =>
-                                    updateIssueDirectly(issue.id, {
-                                      storyPoints:
-                                        parseInt(e.target.value) || 0,
-                                    })
-                                  }
-                                  disabled={!canEditTask}
-                                  placeholder="-"
-                                  className="w-8 h-6 text-center text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded border border-transparent focus:bg-white dark:focus:bg-gray-900 focus:border-indigo-500 outline-none transition-colors appearance-none"
-                                  title="Story Points"
-                                />
-                              </div>
-
-                              {/* Editable Status */}
-                              <select
-                                value={issue.status}
-                                onChange={(e) =>
-                                  updateIssueDirectly(issue.id, {
-                                    status: e.target.value,
-                                  })
-                                }
-                                disabled={!canEditTask}
-                                className={statusSelectClasses(issue.status)}
-                              >
-                                <option value="To Do" className={statusOptionClass}>
-                                  To Do
-                                </option>
-                                <option value="In Progress" className={statusOptionClass}>
-                                  In Progress
-                                </option>
-                                <option value="Done" className={statusOptionClass}>
-                                  Done
-                                </option>
-                              </select>
-
-                              {/* Assignee */}
-                              {renderAssignee(issue)}
+                              {canEditTask ? (
+                                <>
+                                  <div className="relative group/pts">
+                                    <input
+                                      type="number"
+                                      value={issue.storyPoints === 0 ? "" : issue.storyPoints}
+                                      onChange={(e) =>
+                                        updateIssueDirectly(issue.id, {
+                                          storyPoints: parseInt(e.target.value) || 0,
+                                        })
+                                      }
+                                      placeholder="-"
+                                      className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
+                                      title="Story Points"
+                                    />
+                                  </div>
+                                  <TaskStatusChanger
+                                    issue={issue}
+                                    boardColumns={columns}
+                                    variant="pill"
+                                    size="sm"
+                                    onChange={({ columnId, status }) =>
+                                      updateIssueDirectly(issue.id, { columnId, status })
+                                    }
+                                  />
+                                  <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                    <AssigneePicker
+                                      users={workspaceMembers}
+                                      value={issue.assigneeId ?? issue.assignee ?? null}
+                                      onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                      placement="bottom"
+                                      size="sm"
+                                    />
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97]">{issue.storyPoints || "-"}</span>
+                                  <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-1 text-[0.6875rem] font-medium text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">{issue.status}</span>
+                                  {renderReadonlyAssignee(issue)}
+                                </>
+                              )}
                             </div>
                           </div>
                         )}
@@ -948,11 +744,12 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 </div>
               )}
             </Droppable>
-            <div className="relative flex flex-col gap-2 border-t border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-800/30 sm:flex-row sm:items-center">
+            {canCreateTask && (
+            <div className="relative flex flex-col gap-2 border-t border-[#F0F0EE] dark:border-white/[0.04] bg-[#F9F9F8]/50 dark:bg-[#252525] p-3 sm:flex-row sm:items-center">
               <input
                 type="text"
                 placeholder="What do you need to do next?"
-                className="flex-1 py-1.5 px-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow"
+                className="flex-1 py-1.5 px-3 bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[0.8125rem] focus:border-[#2563EB] outline-none transition-colors"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && e.currentTarget.value.trim()) {
                     const title = e.currentTarget.value.trim();
@@ -967,11 +764,12 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                   setShowCreateIssue(true);
                 }}
                 disabled={!canCreateTask}
-                className="text-sm font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-100 disabled:opacity-50 px-3 py-1.5 rounded transition-colors whitespace-nowrap"
+                className="text-[0.8125rem] font-medium bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] hover:text-[#111111] dark:hover:text-[#E8E8E7] disabled:opacity-40 px-3 py-1.5 rounded-[6px] transition-colors whitespace-nowrap"
               >
                 Open modal...
               </button>
             </div>
+            )}
           </div>
         </div>
       </DragDropContext>
