@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '../../shared/hooks/useAuth';
 import PasswordPolicyChecklist, { validatePassword } from '../../password/security/PasswordPolicyChecklist';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
 import { extractRegisterError } from '../../shared/services/authService';
 import toast from 'react-hot-toast';
-import { Zap, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import logoIcon from '../../../../../app/icon.png';
 
 export default function RegisterForm() {
   const [form, setForm] = useState({ email: '', password: '', confirmPassword: '' });
@@ -42,12 +44,12 @@ export default function RegisterForm() {
         <div className="bg-white/30 backdrop-blur-2xl rounded-[12px] border border-white/30 p-8 md:p-10 transition-all duration-300 hover:border-white/55">
           <div className="text-center mb-8">
             <Link href="/" className="inline-flex items-center gap-2 mb-3 group">
-              <div className="w-12 h-12 bg-[#2563EB] rounded-[8px] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
-                <Zap className="w-7 h-7 text-white" />
+              <div className="w-12 h-12 rounded-[8px] flex items-center justify-center overflow-hidden transition-transform duration-300 group-hover:scale-105">
+                <Image src={logoIcon} width={48} height={48} alt="Logo" className="w-12 h-12 object-contain" priority />
               </div>
             </Link>
             <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Create account</h1>
-            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Start using AL-TASK for free</p>
+            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Start using SLDC platform for free</p>
           </div>
 
           <button onClick={initiateGoogleLogin} type="button"
