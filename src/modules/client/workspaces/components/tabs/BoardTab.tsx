@@ -26,6 +26,32 @@ import {
 } from "lucide-react";
 import AssigneePicker from "../../../../../common/components/AssigneePicker";
 
+const normalizeObjectId = (value: unknown): string => {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const objectIdMatch = value.match(/^ObjectId\(['"]?(.+?)['"]?\)$/);
+    return objectIdMatch?.[1] ?? value;
+  }
+  if (typeof value === "object") {
+    const obj = value as { _id?: unknown; id?: unknown; $oid?: unknown; toString?: () => string };
+    if (obj.$oid) return normalizeObjectId(obj.$oid);
+    if (obj._id) return normalizeObjectId(obj._id);
+    if (obj.id) return normalizeObjectId(obj.id);
+    const stringValue = obj.toString?.();
+    if (stringValue && stringValue !== "[object Object]") return normalizeObjectId(stringValue);
+  }
+  return "";
+};
+
+const getInitials = (value: string) =>
+  (value || "?")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "?";
+
 type BoardTabProps = {
   data: {
     columns: BoardColumn[];
@@ -87,7 +113,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const visibleIssues = workspace.type === "scrum" && activeSprint
     ? filteredIssues.filter(i => i.sprintId === activeSprint._id)
     : filteredIssues;
-  const { filters, newIssueForm, showCreateColumn, newColumnName, isFetching } = ui;
+  const { filters, newIssueForm, showCreateColumn, newColumnName } = ui;
   const {
     setFilters,
     setColumns,
@@ -131,11 +157,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
       .map((member) => {
-        const user = member.userId;
-        const id = typeof user === "string" ? user : user._id ?? user.id ?? "";
-        const name = typeof user === "string" ? user : user.fullName || user.name || user.email || id;
-        const email = typeof user === "string" ? "" : user.email ?? "";
-        const avatar = typeof user === "string" ? undefined : user.avatar || user.avatarUrl || user.image;
+        const user = member.userId as any;
+        const id = typeof user === "string" ? normalizeObjectId(user) : normalizeObjectId(user);
+        const email = typeof user === "string" ? "" : user?.email ?? "";
+        const name = typeof user === "string" ? id : user?.fullName || user?.name || email || id;
+        const avatar = typeof user === "string" ? undefined : user?.avatar || user?.avatarUrl || user?.image;
 
         return {
           id,
@@ -143,17 +169,64 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           email,
           role: member.role,
           avatar,
-          initials: (name || email || id || "?")
-            .split(/\s+/)
-            .filter(Boolean)
-            .map((part) => part[0])
-            .join("")
-            .slice(0, 2)
-            .toUpperCase(),
+          initials: getInitials(name || email || id || "?"),
         };
       })
       .filter((member) => member.id);
   }, [workspace.members]);
+
+  const getReadonlyAssignee = (issue: Issue) => {
+    const assigneeId = normalizeObjectId(issue.assigneeId ?? issue.assignee);
+    if (!assigneeId || assigneeId === "U") return null;
+
+    const member = workspaceMembers.find((item) => {
+      return item.id === assigneeId || item.email === assigneeId;
+    });
+
+    if (member) return member;
+
+    const displayName = issue.assigneeDisplayName && issue.assigneeDisplayName !== assigneeId
+      ? issue.assigneeDisplayName
+      : assigneeId;
+
+    return {
+      id: assigneeId,
+      name: displayName,
+      email: "",
+      avatar: issue.assigneeAvatar,
+      initials: getInitials(displayName),
+    };
+  };
+
+  const renderReadonlyAssignee = (issue: Issue) => {
+    const assignee = getReadonlyAssignee(issue);
+
+    if (!assignee) {
+      return (
+        <span className="max-w-[8rem] truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+          Unassigned
+        </span>
+      );
+    }
+
+    return (
+      <div
+        className="flex min-w-0 max-w-[9rem] items-center gap-1.5"
+        title={assignee.email ? `${assignee.name} (${assignee.email})` : assignee.name}
+      >
+        <div className={`h-5 w-5 shrink-0 overflow-hidden rounded-full ${assignee.avatar ? "" : "bg-[#2563EB] text-white"} flex items-center justify-center text-[0.5625rem] font-bold`}>
+          {assignee.avatar ? (
+            <img src={assignee.avatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            assignee.initials
+          )}
+        </div>
+        <span className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+          {assignee.name}
+        </span>
+      </div>
+    );
+  };
 
 
   const patchIssueCover = (issueId: string, cover: TaskCover | null) => {
@@ -241,12 +314,6 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         </div>
       )}
 
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-0 bg-white/60 dark:bg-[#202020]/60 z-40 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-[#2563EB] border-t-transparent rounded-full animate-spin"></div>
-        </div>
-      )}
-
       {/* Quick Filters */}
       <BoardFilters
         filters={filters}
@@ -312,31 +379,35 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             </span>
                           </h3>
                         )}
-                        {!filters.archived && (
+                        {!filters.archived && (canUpdateWorkspace || canCreateTask) && (
                           <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => {
-                                setColumnToDelete(column);
-                                setDeleteModalOpen(true);
-                              }}
-                              className="p-1 hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.15)] text-[#9F2F2D] rounded-[4px] transition-colors"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setNewIssueForm({
-                                  ...newIssueForm,
-                                  status: column.name,
-                                  columnId: column.id,
-                                  sprintId: activeSprint?._id ?? null,
-                                });
-                                setShowCreateIssue(true);
-                              }}
-                              className="p-1 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
+                            {canUpdateWorkspace && (
+                              <button
+                                onClick={() => {
+                                  setColumnToDelete(column);
+                                  setDeleteModalOpen(true);
+                                }}
+                                className="p-1 hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.15)] text-[#9F2F2D] rounded-[4px] transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            {canCreateTask && (
+                              <button
+                                onClick={() => {
+                                  setNewIssueForm({
+                                    ...newIssueForm,
+                                    status: column.name,
+                                    columnId: column.id,
+                                    sprintId: activeSprint?._id ?? null,
+                                  });
+                                  setShowCreateIssue(true);
+                                }}
+                                className="p-1 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
+                              >
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -393,7 +464,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         />
                                       )}
 
-                                      {!filters.archived && (canEditTask || canArchiveTask || Boolean(onDeleteIssue)) && (
+                                      {!filters.archived && (
                                         <div
                                           className="absolute right-2 top-2 z-20"
                                           ref={actionMenuIssueId === issue.id ? actionMenuRef : undefined}
@@ -449,16 +520,19 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                             {issue.key}
                                           </span>
 
-                                          <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                                            <AssigneePicker
-                                              users={workspaceMembers}
-                                              value={issue.assigneeId ?? issue.assignee ?? null}
-                                              onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
-                                              placement="auto"
-                                              size="sm"
-                                              disabled={!!(filters.archived || !canEditTask)}
-                                            />
-                                          </div>
+                                          {canEditTask && !filters.archived ? (
+                                            <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                              <AssigneePicker
+                                                users={workspaceMembers}
+                                                value={issue.assigneeId ?? issue.assignee ?? null}
+                                                onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
+                                                placement="auto"
+                                                size="sm"
+                                              />
+                                            </div>
+                                          ) : (
+                                            renderReadonlyAssignee(issue)
+                                          )}
                                         </div>
                                       </div>
                                     </div>
@@ -552,10 +626,10 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
             setActionMenuAnchorRect(null);
           }}
           onArchiveIssue={onArchiveIssue}
-          onDeleteIssue={(issue) => {
+          onDeleteIssue={onDeleteIssue ? (issue) => {
             setIssueToDelete(issue);
             setDeleteConfirmText("");
-          }}
+          } : undefined}
           onOpenLabels={(issue) => setLabelModalIssue(issue)}
           onUpdateIssue={updateIssueDirectly}
           onCoverChange={patchIssueCover}

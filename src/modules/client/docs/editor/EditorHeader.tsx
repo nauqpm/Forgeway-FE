@@ -2,7 +2,15 @@
 
 import { useDocsStore } from "../store/docs.store";
 import { Document } from "../types/docs.type";
-import { ChevronRight, Globe, Loader2, Upload, Eye, Pencil } from "lucide-react";
+import {
+  ChevronRight,
+  Globe,
+  Loader2,
+  Upload,
+  Eye,
+  Pencil,
+  RefreshCw,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import type { EditorMode } from "./TiptapEditor";
 import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
@@ -13,12 +21,18 @@ interface EditorHeaderProps {
   canEdit: boolean;
   connectionStatus: RealtimeStatusSnapshot["status"];
   isPublishing: boolean;
+  isRefreshing?: boolean;
   onToggleMode: () => void;
   onPublish: () => void;
+  onRefresh?: () => void;
 }
 
 // ── Connection status indicator ──────────────────────────────
-function ConnectionIndicator({ status }: { status: RealtimeStatusSnapshot["status"] }) {
+function ConnectionIndicator({
+  status,
+}: {
+  status: RealtimeStatusSnapshot["status"];
+}) {
   if (status === "connected") {
     return (
       <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
@@ -63,8 +77,10 @@ export default function EditorHeader({
   canEdit,
   connectionStatus,
   isPublishing,
+  isRefreshing,
   onToggleMode,
   onPublish,
+  onRefresh,
 }: EditorHeaderProps) {
   const { documents } = useDocsStore();
   const [title, setTitle] = useState(doc.title);
@@ -116,15 +132,33 @@ export default function EditorHeader({
 
         {/* Right — Controls */}
         <div className="flex items-center gap-2 ml-4">
+          {/* Refresh button */}
+          {mode === "read" && (
+            <button
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className={`inline-flex items-center justify-center rounded-lg p-1.5 transition-colors ${
+                isRefreshing
+                  ? "text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                  : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+              }`}
+              title="Tải lại tài liệu"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            </button>
+          )}
+
           {/* Connection indicator (Edit mode only) */}
           {mode === "edit" && <ConnectionIndicator status={connectionStatus} />}
 
           {/* Disconnected warning banner (Edit mode only) */}
-          {mode === "edit" && (connectionStatus === "disconnected" || connectionStatus === "error") && (
-            <span className="hidden sm:inline-flex items-center text-[10px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
-              Thay đổi được lưu cục bộ. Đang kết nối lại...
-            </span>
-          )}
+          {mode === "edit" &&
+            (connectionStatus === "disconnected" ||
+              connectionStatus === "error") && (
+              <span className="hidden sm:inline-flex items-center text-[10px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
+                Thay đổi được lưu cục bộ. Đang kết nối lại...
+              </span>
+            )}
 
           {/* Mode toggle button */}
           {canEdit && (

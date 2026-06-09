@@ -82,6 +82,19 @@ const ROLE_LABELS: Record<string, string> = {
 const normalizeWorkspace = (payload: any): WorkspaceSettings =>
   (payload?.data ?? payload) as WorkspaceSettings;
 
+const normalizeObjectId = (value?: string | null) => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  const objectIdMatch = trimmed.match(/^ObjectId\(['"]?([a-f0-9]{24})['"]?\)$/i);
+  return objectIdMatch?.[1] ?? trimmed;
+};
+
+const getMemberUserId = (member: WorkspaceMember) => {
+  const value = member.userId?._id;
+  if (!value) return "";
+  return normalizeObjectId(String(value));
+};
+
 function getMemberInitials(member: WorkspaceMember) {
   const displayName = member.userId?.fullName || member.userId?.email || "?";
   return displayName
@@ -119,7 +132,7 @@ export default function WorkspaceSettingsPage({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [loadingMembers, setLoadingMembers] = useState(true);
   const [memberMenu, setMemberMenu] = useState<{
     member: WorkspaceMember;
     x: number;
@@ -140,9 +153,12 @@ export default function WorkspaceSettingsPage({
 
   const workspaceInviteId = workspace?._id ?? "";
   const workspaceApiId = workspace?._id ?? "";
-  const currentMember = members.find((m) => m.userId?._id === user?.id);
+  const currentUserId = normalizeObjectId(user?.id);
+  const currentMember = members.find((m) => getMemberUserId(m) === currentUserId);
   const canManageWorkspace =
-    currentMember?.role === "workspace_admin" || user?.role === "super_admin";
+    currentMember?.role === "workspace_admin" ||
+    currentMember?.role === "space_admin" ||
+    user?.role === "super_admin";
 
   useEffect(() => {
     if (!workspaceKey) return;
@@ -439,6 +455,31 @@ export default function WorkspaceSettingsPage({
     return (
       <div className="p-10 text-center text-[#787774] dark:text-[#9B9A97]">
         Workspace not found.
+      </div>
+    );
+  }
+
+  if (loadingMembers) return <LoadingSpinner />;
+
+  if (!canManageWorkspace) {
+    return (
+      <div className="workspace-surface flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+        <div className="rounded-[8px] border border-[#EAEAEA] bg-white p-6 dark:border-white/[0.06] dark:bg-[#202020]">
+          <ShieldAlert className="mx-auto mb-3 h-8 w-8 text-[#ABABAB] dark:text-[#6B6B6B]" />
+          <h1 className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7]">
+            Workspace settings are restricted
+          </h1>
+          <p className="mt-1 text-sm text-[#787774] dark:text-[#9B9A97]">
+            Only workspace admins can view or change settings.
+          </p>
+          <Link
+            href={`/workspaces/${workspaceKey}`}
+            className="mt-4 inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to workspace
+          </Link>
+        </div>
       </div>
     );
   }

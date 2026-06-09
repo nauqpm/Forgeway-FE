@@ -409,12 +409,11 @@ export default function Sidebar({
   onMobileClose,
 }: SidebarProps) {
   const pathname = usePathname();
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, workspaces: sidebarWorkspaces } = useWorkspaceStore();
   const { user } = useAuth();
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
-  const [sidebarWorkspaces, setsidebarWorkspaces] = useState<any[]>([]);
   const [forYouWorkspaces, setForYouWorkspaces] = useState<any[]>([]);
   const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
   const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: "0px" });
@@ -462,14 +461,6 @@ export default function Sidebar({
         setForYouWorkspaces(Array.isArray(payload) ? payload : payload?.workspaces ?? []);
       })
       .catch(() => setForYouWorkspaces([]));
-
-    if (currentWorkspace) {
-      api.get(apiRoutes.WORKSPACES.BASE, { params: { workspaceId: currentWorkspace._id } })
-        .then((res) => setsidebarWorkspaces(res.data))
-        .catch(() => setsidebarWorkspaces([]));
-    } else {
-      setsidebarWorkspaces([]);
-    }
   }, [currentWorkspace]);
 
   const isAdmin = isGlobalAdminRole(user?.role);
