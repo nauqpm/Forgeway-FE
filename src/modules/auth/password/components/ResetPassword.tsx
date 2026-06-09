@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { usePasswordReset } from '../hooks/usePasswordReset';
+import { validateEmailHasNoWhitespace } from '../../shared/utils/emailValidation';
 import PasswordPolicyChecklist, {
   validatePassword,
 } from '../security/PasswordPolicyChecklist';
@@ -25,6 +26,12 @@ const ResetPassword = () => {
 
     if (!email || !otp) {
       toast.error('Please enter both email and OTP');
+      return;
+    }
+
+    const emailError = validateEmailHasNoWhitespace(email);
+    if (emailError) {
+      toast.error(emailError);
       return;
     }
 
@@ -75,7 +82,9 @@ const ResetPassword = () => {
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
