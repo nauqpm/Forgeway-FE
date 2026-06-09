@@ -309,6 +309,24 @@ export default function WorkspaceDetailPage({
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
+  const patchSelectedTaskView = useCallback((issue: Issue) => {
+    const nextIssueId = taskIdOf(issue);
+
+    setSelectedIssue((current) =>
+      current && taskIdOf(current) === nextIssueId
+        ? { ...current, ...issue }
+        : current,
+    );
+
+    if (!workspaceApiId || !issue.key) return;
+
+    queryClient.setQueryData(
+      ["taskDetail", workspaceApiId, issue.key],
+      (current: Issue | undefined) =>
+        current ? { ...current, ...issue } : current,
+    );
+  }, [queryClient, workspaceApiId]);
+
   const handleRealtimeTaskUpserted = useCallback((issue: Issue) => {
     const nextIssueId = taskIdOf(issue);
 
@@ -323,12 +341,8 @@ export default function WorkspaceDetailPage({
       // causes @hello-pangea/dnd to use stale source.index vs current position.
       return isDraggingIssueRef.current ? next : sortIssuesByRank(next);
     });
-    setSelectedIssue((current) =>
-      current && taskIdOf(current) === nextIssueId
-        ? { ...current, ...issue }
-        : current,
-    );
-  }, []);
+    patchSelectedTaskView(issue);
+  }, [patchSelectedTaskView]);
 
   const handleRealtimeTaskRemoved = useCallback((taskId: string) => {
     setIssues((current) =>
@@ -506,6 +520,7 @@ export default function WorkspaceDetailPage({
         })
         .then((updatedTask) => {
           const hasQueuedReorder = pendingReorderRef.current.has(taskId);
+          patchSelectedTaskView(updatedTask);
 
           if (!hasQueuedReorder) {
             setIssues((current) =>
@@ -557,7 +572,7 @@ export default function WorkspaceDetailPage({
           }
         });
     },
-    [queryClient, workspaceApiId],
+    [patchSelectedTaskView, queryClient, workspaceApiId],
   );
 
   const activeSprint = sprints.find(s => s.status === "active") ?? null;
@@ -622,7 +637,8 @@ export default function WorkspaceDetailPage({
       onSprintAssign: (taskId, sprintId) => {
         if (workspaceApiId) {
           taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
-            .then(() => {
+            .then((updatedTask) => {
+              patchSelectedTaskView(updatedTask);
               queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
             })
             .catch((error) => {
@@ -850,7 +866,8 @@ export default function WorkspaceDetailPage({
                 onColumnChange: (taskId, columnId) => {
                   if (workspaceApiId) {
                     taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
-                      .then(() => {
+                      .then((updatedTask) => {
+                        patchSelectedTaskView(updatedTask);
                         queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
                       })
                       .catch((error) => {
