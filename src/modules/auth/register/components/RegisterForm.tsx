@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '../../shared/hooks/useAuth';
 import PasswordPolicyChecklist, { validatePassword } from '../../password/security/PasswordPolicyChecklist';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
-import { extractRegisterError } from '../../shared/services/authService';
+// import { extractRegisterError } from '../../shared/services/authService';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import logoIcon from '../../../../../app/icon.png';
@@ -26,9 +26,8 @@ export default function RegisterForm() {
     try {
       await register({ email: form.email, password: form.password });
       toast.success('Account registered successfully. Please verify your email.');
-    } catch (err: unknown) {
-      const error = extractRegisterError(err);
-      toast.error(error.message || 'Registration failed.');
+    } catch {
+      // Error toast and redirect logic are handled in useAuth hook
     }
   };
 
