@@ -90,7 +90,7 @@ export const upsertWorkspace = (
     );
   }
 
-  return [...current, workspace];
+  return [workspace, ...current];
 };
 
 export const removeWorkspace = (

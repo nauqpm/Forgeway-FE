@@ -157,6 +157,7 @@ export function useWorkspaceRealtime({
       }
     };
 
+    socket.on(WORKSPACE_EVENTS.CREATED, handleWorkspaceUpsert);
     socket.on(WORKSPACE_EVENTS.UPDATED, handleWorkspaceUpsert);
     socket.on(WORKSPACE_EVENTS.ARCHIVED, handleWorkspaceRemoved);
     socket.on(WORKSPACE_EVENTS.RESTORED, handleWorkspaceUpsert);
@@ -166,6 +167,7 @@ export function useWorkspaceRealtime({
     socket.on(WORKSPACE_EVENTS.MEMBER_ROLE_UPDATED, handleMemberRoleUpdated);
 
     return () => {
+      socket.off(WORKSPACE_EVENTS.CREATED, handleWorkspaceUpsert);
       socket.off(WORKSPACE_EVENTS.UPDATED, handleWorkspaceUpsert);
       socket.off(WORKSPACE_EVENTS.ARCHIVED, handleWorkspaceRemoved);
       socket.off(WORKSPACE_EVENTS.RESTORED, handleWorkspaceUpsert);

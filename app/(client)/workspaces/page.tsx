@@ -66,7 +66,7 @@ export default function WorkspacesPage() {
         if (newWorkspace) {
           setWorkspacesList((prev) => {
             // Avoid duplicates
-            if (prev.some((w) => w._id === newWorkspace.id || w.id === newWorkspace.id)) return prev;
+            if (prev.some((w) => w._id === newWorkspace.id || w._id === newWorkspace._id)) return prev;
             // The event payload has id instead of _id, we normalize it
             const normalizedWorkspace = { ...newWorkspace, _id: newWorkspace.id } as Workspace;
             return [normalizedWorkspace, ...prev];
