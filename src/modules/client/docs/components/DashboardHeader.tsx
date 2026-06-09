@@ -58,9 +58,15 @@ export default function DashboardHeader({
           onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "az")}
           className="h-9 px-3 bg-[#F7F6F3] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 text-xs font-medium text-[#787774] dark:text-[#9B9A97] rounded-[6px] outline-none cursor-pointer hover:border-[#ABABAB] dark:hover:border-white/15 transition-colors"
         >
-          <option value="newest" className="dark:bg-[#252525]">Newest</option>
-          <option value="oldest" className="dark:bg-[#252525]">Oldest</option>
-          <option value="az" className="dark:bg-[#252525]">A–Z</option>
+          <option value="newest" className="dark:bg-[#252525]">
+            Newest
+          </option>
+          <option value="oldest" className="dark:bg-[#252525]">
+            Oldest
+          </option>
+          <option value="az" className="dark:bg-[#252525]">
+            A–Z
+          </option>
         </select>
       </div>
     </div>
