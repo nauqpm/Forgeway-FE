@@ -25,6 +25,14 @@ type EventReceiveArg = {
   };
 };
 
+type HandleEventReceiveArgs = {
+  arg: EventReceiveArg;
+  issues: Issue[];
+  sprints: Sprint[];
+  onUpdateIssueDate: (id: string, start: string, end: string) => void;
+  onBlocked: (message: string) => void;
+};
+
 interface UseCalendarHandlersProps {
   issues: Issue[];
   sprints: Sprint[];
@@ -74,6 +82,27 @@ function showBlockedMessage(message: string) {
   toast.error(`${message} Cannot move any further.`);
 }
 
+export function handleEventReceive({
+  arg,
+  issues,
+  sprints,
+  onUpdateIssueDate,
+  onBlocked,
+}: HandleEventReceiveArgs) {
+  const start = toDateStr(arg.event.start!);
+  const issue = getIssueFromEvent(arg.event.id, arg.event.extendedProps?.rawData, issues);
+  const violation = getViolationForIssueDate(issue, sprints, start, start);
+
+  if (violation) {
+    arg.event.remove();
+    onBlocked(violation);
+    return;
+  }
+
+  arg.event.remove();
+  onUpdateIssueDate(arg.event.id, start, start);
+}
+
 export function useCalendarHandlers({
   issues,
   sprints,
@@ -117,17 +146,13 @@ export function useCalendarHandlers({
   }, [issues, sprints, onUpdateIssueDate]);
 
   const onEventReceive = useCallback((arg: EventReceiveArg) => {
-    arg.event.remove();
-    const start = toDateStr(arg.event.start!);
-    const issue = getIssueFromEvent(arg.event.id, arg.event.extendedProps?.rawData, issues);
-    const violation = getViolationForIssueDate(issue, sprints, start, start);
-
-    if (violation) {
-      showBlockedMessage(violation);
-      return;
-    }
-
-    onUpdateIssueDate(arg.event.id, start, start);
+    handleEventReceive({
+      arg,
+      issues,
+      sprints,
+      onUpdateIssueDate,
+      onBlocked: showBlockedMessage,
+    });
   }, [issues, sprints, onUpdateIssueDate]);
 
   const onEventClick = useCallback((arg: EventClickArg) => {
