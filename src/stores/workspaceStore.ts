@@ -29,6 +29,7 @@ interface WorkspaceStore {
     setCurrentWorkspace: (workspace: Workspace | null) => void;
     setProjects: (projects: Project[]) => void;
     setCurrentProject: (project: Project | null) => void;
+    clearWorkspace: () => void;
 }
 
 export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
@@ -47,4 +48,11 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
     setCurrentWorkspace: (workspace) => set({ currentWorkspace: workspace }),
     setProjects: (projects) => set({ projects }),
     setCurrentProject: (project) => set({ currentProject: project }),
+    clearWorkspace: () => set({
+        workspaces: [],
+        currentWorkspace: null,
+        projects: [],
+        currentProject: null,
+        workspacesLoaded: false,
+    }),
 }));
