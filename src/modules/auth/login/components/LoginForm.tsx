@@ -66,7 +66,7 @@ function LoginFormInner() {
               </div>
             </Link>
             <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Welcome back</h1>
-            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Sign in to your AL-TASK account</p>
+            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Sign in to your SDLC platform account</p>
           </div>
 
           {lockoutInfo && (lockoutInfo.isLocked || lockoutInfo.remainingAttempts < lockoutInfo.maxAttempts) && (

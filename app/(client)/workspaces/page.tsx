@@ -75,10 +75,19 @@ export default function WorkspacesPage() {
       }
     };
 
+    const handleWorkspaceDeleted = (payload: any) => {
+      const workspaceId = payload.data?.workspaceId ?? payload.workspaceId;
+      if (workspaceId) {
+        setWorkspacesList((prev) => prev.filter((w) => w._id !== workspaceId));
+      }
+    };
+
     socket.on(SOCKET_EVENTS.WORKSPACE_CREATED, handleWorkspaceCreated);
+    socket.on(SOCKET_EVENTS.WORKSPACE_DELETED, handleWorkspaceDeleted);
 
     return () => {
       socket.off(SOCKET_EVENTS.WORKSPACE_CREATED, handleWorkspaceCreated);
+      socket.off(SOCKET_EVENTS.WORKSPACE_DELETED, handleWorkspaceDeleted);
     };
   }, []);
 

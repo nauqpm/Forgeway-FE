@@ -7,6 +7,8 @@ const normalizeSearch = (value: string) => value.trim().toLowerCase();
 const normalizeCompactSearch = (value: string) =>
   normalizeSearch(value).replace(/[^a-z0-9]/g, "");
 
+const getAssigneeFilterValue = (issue: Issue) => issue.assigneeId || issue.assignee || "U";
+
 const matchesTaskSearch = (issue: Issue, searchValue: string) => {
   const search = normalizeSearch(searchValue);
   if (!search) return true;
@@ -50,7 +52,7 @@ export const filterTasks = (
 
     // Board quick filters
     const matchAssigneeQuick = filters.assigneeId
-      ? issue.assignee === filters.assigneeId
+      ? getAssigneeFilterValue(issue) === filters.assigneeId
       : true;
 
     const matchPriorityQuick = filters.priority
@@ -60,7 +62,7 @@ export const filterTasks = (
     // Backlog multi-filters
     const matchAssignees =
       filters.assignees.length > 0
-        ? filters.assignees.includes(issue.assignee)
+        ? filters.assignees.includes(getAssigneeFilterValue(issue))
         : true;
 
     const matchTypes =

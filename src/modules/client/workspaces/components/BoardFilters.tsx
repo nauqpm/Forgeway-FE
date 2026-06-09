@@ -93,7 +93,13 @@ export default function BoardFilters({
   const allStatuses = ["To Do", "In Progress", "Testing", "Done"];
   const filteredStatuses = allStatuses.filter(s => s.toLowerCase().includes(statusSearch.toLowerCase()));
 
-  const filteredAssignees = uniqueAssignees.filter(u => u.id.toLowerCase().includes(assigneeSearch.toLowerCase()));
+  const filteredAssignees = uniqueAssignees.filter((u) => {
+    const search = assigneeSearch.toLowerCase();
+    return (
+      String(u.name ?? "").toLowerCase().includes(search) ||
+      String(u.id ?? "").toLowerCase().includes(search)
+    );
+  });
 
   const allTypes = ["Task", "Bug", "Story"];
   const filteredTypes = allTypes.filter(t => t.toLowerCase().includes(typeSearch.toLowerCase()));
@@ -191,7 +197,7 @@ export default function BoardFilters({
                   {filteredAssignees.map((user) => (
                     <label key={user.id} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
                       <input type="checkbox" checked={filters.assignees.includes(user.id)} onChange={() => toggleArrayFilter("assignees", user.id)} className="rounded accent-[#2563EB] w-3.5 h-3.5" />
-                      <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{user.id}</span>
+                      <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{user.name ?? user.id}</span>
                     </label>
                   ))}
                   {filteredAssignees.length === 0 && <p className="text-[0.8125rem] text-[#ABABAB] text-center py-4">No assignees found</p>}
