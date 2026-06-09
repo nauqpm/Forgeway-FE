@@ -201,17 +201,7 @@ export default function BoardTaskActionMenu({
           <Copy className="h-4 w-4" />
           Copy key
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            // TODO: Wire to flag API when task flags are available.
-            onClose();
-          }}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-        >
-          <Flag className="h-4 w-4" />
-          Add flag
-        </button>
+        
         <button
           type="button"
           onClick={() => {
