@@ -69,9 +69,37 @@ export const LEGACY_EVENTS = {
   BOARD_DELTA: 'board:delta',
 } as const;
 
+export const CHAT_EVENTS = {
+  // Gửi/Nhận
+  SEND: 'chat.send',
+  SENT: 'chat.message.sent',
+
+  // Hành động
+  EDIT: 'chat.edit',
+  EDITED: 'chat.message.edited',
+  DELETE: 'chat.delete',
+  DELETED: 'chat.message.deleted',
+  REACTION: 'chat.reaction',
+  REACTION_UPDATED: 'chat.reaction.updated',
+
+  // Trạng thái
+  TYPING: 'chat.typing',
+  USER_TYPING: 'chat.user.typing',
+
+  // Đã đọc & Thông báo
+  READ: 'chat.read',
+  UNREAD_UPDATE: 'chat.unread_update',
+
+  // Room
+  JOIN: 'chat.join',
+  JOINED: 'chat.joined',
+  LEAVE: 'chat.leave',
+} as const;
+
 export const SOCKET_EVENTS = {
   ...SOCKET_LIFECYCLE,
   ...SOCKET_COMMANDS,
+  ...CHAT_EVENTS,
   TASK_CREATED: TASK_EVENTS.CREATED,
   TASK_UPDATED: TASK_EVENTS.UPDATED,
   TASK_MOVED: TASK_EVENTS.MOVED,
