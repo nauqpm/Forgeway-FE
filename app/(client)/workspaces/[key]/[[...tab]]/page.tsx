@@ -421,7 +421,7 @@ export default function WorkspaceDetailPage({
     return filterTasks(issues, filters, workspace);
   }, [issues, filters, workspace]);
 
-  const uniqueAssignees = useAssignees(issues);
+  const uniqueAssignees = useAssignees(issues, workspace);
   const workspacePermissions = useWorkspacePermission(workspaceApiId ?? "", workspace);
   const canCreateTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
   const canEditTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);

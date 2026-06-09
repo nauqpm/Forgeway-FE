@@ -87,7 +87,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const visibleIssues = workspace.type === "scrum" && activeSprint
     ? filteredIssues.filter(i => i.sprintId === activeSprint._id)
     : filteredIssues;
-  const { filters, newIssueForm, showCreateColumn, newColumnName, isFetching } = ui;
+  const { filters, newIssueForm, showCreateColumn, newColumnName } = ui;
   const {
     setFilters,
     setColumns,
@@ -238,12 +238,6 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       {filters.archived && (
         <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[0.6875rem] font-bold z-10">
           Archived View - Read Only
-        </div>
-      )}
-
-      {isFetching && (
-        <div className="pointer-events-none absolute inset-0 bg-white/60 dark:bg-[#202020]/60 z-40 flex items-center justify-center">
-          <div className="w-8 h-8 border-4 border-[#2563EB] border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
 
