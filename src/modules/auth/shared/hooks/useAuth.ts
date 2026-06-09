@@ -18,6 +18,7 @@ import { getMyPermissionsAPI } from '../../permission/services/permissionService
 import { AUTH_ROUTES } from '../constants/auth-routes';
 import { AuthErrorCode } from '../types/auth.types';
 import { setupAuthInterceptors } from '../services/axiosAuthInterceptor';
+import { validateEmailHasNoWhitespace } from '../utils/emailValidation';
 import type {
   LoginRequest,
   RegisterRequest,
@@ -52,6 +53,12 @@ export const useAuth = () => {
    */
   const login = useCallback(
     async (data: LoginRequest) => {
+      const emailError = validateEmailHasNoWhitespace(data.email);
+      if (emailError) {
+        toast.error(emailError);
+        throw new Error(emailError);
+      }
+
       setLoading(true); // Step 1: start loading
       try {
         // Step 2: call sign-in API
@@ -147,6 +154,12 @@ export const useAuth = () => {
 
   const register = useCallback(
     async (data: RegisterRequest) => {
+      const emailError = validateEmailHasNoWhitespace(data.email);
+      if (emailError) {
+        toast.error(emailError);
+        throw new Error(emailError);
+      }
+
       setLoading(true);
       try {
         const response = await registerAPI(data);
