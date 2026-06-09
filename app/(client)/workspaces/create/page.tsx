@@ -128,8 +128,8 @@ export default function CreateWorkspacePage() {
 
         <hr className="border-[#EAEAEA] dark:border-white/[0.06]" />
 
-        {/* Visibility */}
-        <div>
+        {/* Visibility
+        /*<div>
           <label className="block text-sm font-semibold text-[#111111] dark:text-[#E8E8E7] mb-3">Access</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
@@ -153,6 +153,7 @@ export default function CreateWorkspacePage() {
             ))}
           </div>
         </div>
+         */}
 
         <div className="flex justify-end gap-3 pt-6 border-t border-[#EAEAEA] dark:border-white/[0.06]">
           <Link href="/workspaces" className="px-6 py-2.5 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] font-medium transition-colors">Cancel</Link>
