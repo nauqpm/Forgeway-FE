@@ -77,12 +77,14 @@ const Header = ({
           </div>
           <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             <span className="min-w-0 break-words">{workspace.name}</span>
-            <Link
-              href={`/workspaces/${workspaceId}/settings`}
-              className="shrink-0 p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]"
-            >
-              <Settings className="w-5 h-5" />
-            </Link>
+            {canUpdateWorkspace && (
+              <Link
+                href={`/workspaces/${workspaceId}/settings`}
+                className="shrink-0 p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+            )}
           </h1>
         </div>
       </div>
