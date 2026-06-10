@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useChatStore, Channel } from '@/stores/chatStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
 import { Hash, Megaphone, MessageSquare, Loader2, MessageSquarePlus, User, UserPlus } from 'lucide-react';
 import { getWorkspaceUI } from '@/utils/workSpaceUI';
@@ -12,6 +13,7 @@ const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filt
 export default function ChatSidebar() {
   const { channels, setChannels, activeChannelId, setActiveChannel } = useChatStore();
   const { workspaces } = useWorkspaceStore();
+  const currentUserId = useAuthStore(state => state.user?.id);
   const [loading, setLoading] = useState(channels.length === 0);
   const [activeTab, setActiveTab] = useState<'all' | 'channels' | 'dms'>('all');
 
@@ -21,6 +23,14 @@ export default function ChatSidebar() {
       .finally(() => setLoading(false));
   }, [setChannels]);
 
+  const sortedChannels = useMemo(() => {
+    return [...(channels || [])].sort((a, b) => {
+      const timeA = new Date(a.lastMessage?.createdAt || 0).getTime();
+      const timeB = new Date(b.lastMessage?.createdAt || 0).getTime();
+      return timeB - timeA;
+    });
+  }, [channels]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -29,17 +39,30 @@ export default function ChatSidebar() {
     );
   }
 
-  const generalChannels = (channels || []).filter(c => c.type === 'general' || c.type === 'announcement' || c.type === 'public');
-  const dmChannels = (channels || []).filter(c => c.type === 'dm');
+  const generalChannels = sortedChannels.filter(c => c.type === 'general' || c.type === 'announcement' || c.type === 'public');
+  const dmChannels = sortedChannels.filter(c => c.type === 'dm');
 
   const getWorkspaceUnread = (wsId: string) => {
     const ch = channels.find(c => c._id === wsId);
     return ch ? ch.unreadCount : 0;
   };
 
+  const getLastMessagePreview = (channel: Channel) => {
+    const lastMsg = channel.lastMessage;
+    if (!lastMsg) return "Start a conversation";
+    
+    const isMine = (lastMsg.senderId as any)?._id === currentUserId || lastMsg.senderId === currentUserId;
+    const senderName = (lastMsg.senderId as any)?.fullName || "User";
+    
+    if (isMine) return `You: ${lastMsg.content}`;
+    if (channel.type === 'dm') return lastMsg.content;
+    return `${senderName}: ${lastMsg.content}`;
+  };
+
   const renderChannelLink = (id: string, name: string, type: string, unreadCount: number = 0, lastMessage?: any) => {
     const isActive = activeChannelId === id;
     const isUnread = unreadCount > 0;
+    const channel = channels.find(c => c._id === id);
     
     let Icon = Hash;
     const iconColorClass = isActive ? "text-[#2563EB] dark:text-[#93C5FD]" : "text-[#ABABAB] dark:text-[#6B6B6B]";
@@ -74,7 +97,6 @@ export default function ChatSidebar() {
             <div className={cn("w-5 h-5 rounded-full text-white flex items-center justify-center shadow-sm", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
               <User className="w-3 h-3" />
             </div>
-            {/* Presence indicator - hardcoded offline */}
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#FBFBFA] dark:border-[#252525] bg-[#D1D5DB]" />
           </div>
         ) : type === 'workspace' ? (
@@ -88,13 +110,16 @@ export default function ChatSidebar() {
         <div className="flex-1 min-w-0 flex flex-col items-start">
           <span className={cn(
             "truncate w-full text-left text-[0.8125rem] transition-all", 
-            isUnread ? "font-semibold text-[#111111] dark:text-[#E8E8E7]" : "font-normal"
+            isUnread ? "font-bold text-[#111111] dark:text-[#E8E8E7]" : "font-normal"
           )}>
             {name}
           </span>
-          {lastMessage && (
-            <div className="text-[11px] text-[#ABABAB] truncate w-full text-left">
-              {lastMessage.senderName ? `${lastMessage.senderName}: ` : ''}{lastMessage.content}
+          {channel && (
+            <div className={cn(
+              "text-[11px] truncate w-full text-left",
+              isUnread ? "text-[#111111] dark:text-[#E8E8E7] font-medium" : "text-[#ABABAB]"
+            )}>
+              {getLastMessagePreview(channel)}
             </div>
           )}
         </div>
