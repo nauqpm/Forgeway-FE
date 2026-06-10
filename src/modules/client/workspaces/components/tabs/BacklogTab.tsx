@@ -7,6 +7,7 @@ import AssigneePicker from "../../../../../common/components/AssigneePicker";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
 import StatusPicker from "@/common/components/StatusPicker";
+import PriorityPicker from "@/common/components/PriorityPicker";
 import { compareIssueRank } from "../../utils/dragUtils";
 import type { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
@@ -532,12 +533,24 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                         size="sm"
                                       />
                                     </div>
+                                    <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                      <PriorityPicker
+                                        value={issue.priority}
+                                        onChange={p => updateIssueDirectly(issue.id, { priority: p })}
+                                        placement="top"
+                                        variant="pill"
+                                        size="sm"
+                                      />
+                                    </div>
                                   </>
                                 ) : (
                                   <>
                                     <span className="text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97]">{issue.storyPoints || "-"}</span>
                                     <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-1 text-[0.6875rem] font-medium text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">{issue.status}</span>
                                     {renderReadonlyAssignee(issue)}
+                                    {issue.priority && (
+                                      <PriorityPicker value={issue.priority} variant="pill" size="sm" disabled />
+                                    )}
                                   </>
                                 )}
                               </div>
@@ -729,12 +742,24 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                       size="sm"
                                     />
                                   </div>
+                                  <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                    <PriorityPicker
+                                      value={issue.priority}
+                                      onChange={p => updateIssueDirectly(issue.id, { priority: p })}
+                                      placement="top"
+                                      variant="pill"
+                                      size="sm"
+                                    />
+                                  </div>
                                 </>
                               ) : (
                                 <>
                                   <span className="text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97]">{issue.storyPoints || "-"}</span>
                                   <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-1 text-[0.6875rem] font-medium text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">{issue.status}</span>
                                   {renderReadonlyAssignee(issue)}
+                                  {issue.priority && (
+                                    <PriorityPicker value={issue.priority} variant="pill" size="sm" disabled />
+                                  )}
                                 </>
                               )}
                             </div>

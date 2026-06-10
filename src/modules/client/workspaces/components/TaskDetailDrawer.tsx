@@ -18,6 +18,7 @@ import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import StatusPicker from "@/common/components/StatusPicker";
+import PriorityPicker from "@/common/components/PriorityPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
@@ -528,7 +529,13 @@ export default function TaskDetailDrawer({
                 <div className="flex items-center min-h-8">
                   <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Priority</div>
                   <div className="min-w-0 flex-1">
-                    {renderInlineSelect("priority", issue.priority, ["Lowest", "Low", "Medium", "High", "Highest"])}
+                    <PriorityPicker
+                      value={issue.priority}
+                      onChange={(p) => onUpdateIssue?.({ ...issue, priority: p })}
+                      disabled={!canEditTask || issue.isArchived}
+                      variant="pill"
+                      size="sm"
+                    />
                   </div>
                 </div>
 

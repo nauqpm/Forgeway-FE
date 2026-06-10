@@ -18,6 +18,10 @@ export type StatusPickerProps = {
   variant?: "default" | "pill" | "input";
   size?: "sm" | "md";
   menuAlign?: "left" | "right";
+  /** Which direction the dropdown opens. Defaults to "bottom". Use "top" when inside a fixed bottom bar. */
+  placement?: "bottom" | "top";
+  /** Label shown when no value is selected (overrides "No status" default). */
+  placeholder?: string;
   className?: string;
 };
 
@@ -44,6 +48,8 @@ export default function StatusPicker({
   variant = "default",
   size = "md",
   menuAlign = "left",
+  placement = "bottom",
+  placeholder,
   className = "",
 }: StatusPickerProps) {
   const [open, setOpen] = useState(false);
@@ -74,7 +80,7 @@ export default function StatusPicker({
       (value && opt.name.toLowerCase() === value.toLowerCase())
   );
 
-  const displayName = currentOption?.name ?? value ?? columnId ?? "No status";
+  const displayName = currentOption?.name ?? placeholder ?? value ?? columnId ?? "No status";
 
   useEffect(() => {
     if (!open) return;
@@ -124,7 +130,9 @@ export default function StatusPicker({
 
       {open && (
         <div
-          className={`absolute top-full z-50 mt-1 min-w-40 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white py-1 dark:border-white/[0.06] dark:bg-[#202020] ${
+          className={`absolute z-50 min-w-40 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white py-1 dark:border-white/[0.06] dark:bg-[#202020] ${
+            placement === "top" ? "bottom-full mb-1" : "top-full mt-1"
+          } ${
             variant === "input" ? "w-full left-0" : menuAlign === "right" ? "right-0" : "left-0"
           }`}
           style={{

@@ -15,10 +15,11 @@ import {
 } from '@tanstack/react-table';
 import { ChevronDown, ChevronRight, Columns, MoreHorizontal, FileText, Search, ListFilter, Group, RefreshCcw, Calendar, User, CheckSquare } from 'lucide-react';
 import BulkActionBar from './BulkActionBar';
-import BulkEditDrawer from './BulkEditDrawer';
+import { toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 
 interface DataGridListViewProps {
   issues: any[];
+  members?: any[];
   onClickTask?: (issue: any) => void;
   onUpdateIssue?: (issueId: string, updates: any) => void;
   onCreateTask?: (task: any) => Promise<void>;
@@ -29,13 +30,14 @@ interface DataGridListViewProps {
   onBulkDelete?: (taskIds: string[]) => Promise<void>;
 }
 
-export default function DataGridListView({ 
-  issues, 
-  onClickTask, 
-  onUpdateIssue, 
-  onCreateTask, 
-  onRefresh, 
-  isRefreshing, 
+export default function DataGridListView({
+  issues,
+  members,
+  onClickTask,
+  onUpdateIssue,
+  onCreateTask,
+  onRefresh,
+  isRefreshing,
   totalCount,
   onBulkUpdate,
   onBulkDelete
@@ -72,7 +74,6 @@ export default function DataGridListView({
   const [expanded, setExpanded] = useState({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
-  const [isBulkEditDrawerOpen, setIsBulkEditDrawerOpen] = useState(false);
 
   // Footer Inline Create state
   const [isCreating, setIsCreating] = useState(false);
@@ -81,12 +82,27 @@ export default function DataGridListView({
   const [newTaskAssignee, setNewTaskAssignee] = useState("");
   const [newTaskDate, setNewTaskDate] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isCreating && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isCreating]);
+
+  // Clear row selection when clicking outside the grid or the floating action bar
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Element;
+      const insideGrid = containerRef.current?.contains(target);
+      const insideBar = !!target.closest('[data-bulk-action-bar]');
+      if (!insideGrid && !insideBar) {
+        setRowSelection({});
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleSubmitInlineCreate = async () => {
     if (!taskTitle.trim() || !onCreateTask) return;
@@ -113,16 +129,9 @@ export default function DataGridListView({
     return table.getSelectedRowModel().flatRows.map(row => row.original.id);
   };
 
-  const handleBulkStatusChange = async (status: string) => {
+  const handleBulkFieldUpdate = async (updates: Record<string, any>) => {
     if (!onBulkUpdate) return;
-    await onBulkUpdate(getSelectedTaskIds(), { status });
-    setRowSelection({});
-  };
-
-  const handleBulkEditSubmit = async (payload: any) => {
-    if (!onBulkUpdate) return;
-    await onBulkUpdate(getSelectedTaskIds(), payload);
-    setIsBulkEditDrawerOpen(false);
+    await onBulkUpdate(getSelectedTaskIds(), updates);
     setRowSelection({});
   };
 
@@ -134,7 +143,7 @@ export default function DataGridListView({
     }
   };
 
-  // Avatar pile mock data for Quick Filter
+  // Avatar pile for Quick Filter
   const uniqueAssignees = useMemo(() => {
     const assignees = new Set<string>();
     issues.forEach(issue => {
@@ -142,6 +151,8 @@ export default function DataGridListView({
     });
     return Array.from(assignees);
   }, [issues]);
+
+  const normalizedMembers = useMemo(() => toAssigneePickerUsers(members as any), [members]);
 
   const toggleAssigneeFilter = (assignee: string) => {
     setColumnFilters(prev => {
@@ -589,14 +600,14 @@ export default function DataGridListView({
         {/* Info & Refresh */}
         <div className="flex items-center gap-4 text-[#787774] dark:text-[#9B9A97] text-sm ml-4">
           <span className="font-medium">{table.getRowModel().rows.length} of {totalCount ?? issues.length}</span>
-          <button 
+          {/*<button 
             onClick={() => onRefresh && !isRefreshing ? onRefresh() : null} 
             disabled={isRefreshing}
             className={`p-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] transition-colors border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 ${isRefreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
             title="Refresh Data"
           >
             <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#2563EB]' : ''}`} />
-          </button>
+          </button>*/}
         </div>
       </div>
 
@@ -607,20 +618,12 @@ export default function DataGridListView({
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
       `}} />
 
-      <BulkActionBar 
+      <BulkActionBar
         selectedCount={selectedCount}
         onClear={() => setRowSelection({})}
-        onChangeStatus={handleBulkStatusChange}
-        onEditFields={() => setIsBulkEditDrawerOpen(true)}
+        onBulkUpdate={handleBulkFieldUpdate}
         onDelete={handleBulkDelete}
-      />
-
-      <BulkEditDrawer 
-        isOpen={isBulkEditDrawerOpen}
-        onClose={() => setIsBulkEditDrawerOpen(false)}
-        selectedCount={selectedCount}
-        uniqueAssignees={uniqueAssignees}
-        onSubmit={handleBulkEditSubmit}
+        members={normalizedMembers}
       />
     </div>
   );

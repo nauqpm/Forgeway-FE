@@ -28,6 +28,7 @@ import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import StatusPicker from "@/common/components/StatusPicker";
+import PriorityPicker from "@/common/components/PriorityPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
@@ -687,12 +688,18 @@ export default function TaskDetailModal({
                   )}
 
                   {/* Priority */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                       Priority
                     </div>
                     <div className="col-span-2">
-                      {renderInlineSelect("priority", issue.priority, ["Lowest", "Low", "Medium", "High", "Highest"])}
+                      <PriorityPicker
+                        value={issue.priority}
+                        onChange={(p) => onUpdateIssue?.({ ...issue, priority: p })}
+                        disabled={!canEditTask || issue.isArchived}
+                        variant="pill"
+                        size="sm"
+                      />
                     </div>
                   </div>
                 </div>
