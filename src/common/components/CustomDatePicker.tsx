@@ -35,7 +35,8 @@ export type CustomDatePickerProps = {
 
 const DISPLAY_FORMAT = "dd/MM/yyyy";
 const VALUE_FORMAT = "yyyy-MM-dd";
-const WEEK_DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const WEEK_START = 1 as const; // Monday — consistent with timeline weekStartsOn
+const WEEK_DAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
 const toDateKey = (date: Date) => format(date, VALUE_FORMAT);
 
@@ -144,10 +145,11 @@ export default function CustomDatePicker({
 
   const monthStart = startOfMonth(viewMonth);
   const calendarDays = eachDayOfInterval({
-    start: startOfWeek(monthStart),
-    end: endOfWeek(endOfMonth(viewMonth)),
+    start: startOfWeek(monthStart, { weekStartsOn: WEEK_START }),
+    end: endOfWeek(endOfMonth(viewMonth), { weekStartsOn: WEEK_START }),
   });
-  const today = new Date();
+  // Phase 6: stable reference — avoids creating a new Date on every render
+  const today = useMemo(() => new Date(), []);
 
   const selectDate = (date: Date) => {
     onChange(toDateKey(date));

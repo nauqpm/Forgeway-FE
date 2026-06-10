@@ -1,10 +1,11 @@
 import { useCallback } from 'react';
-import { format, subDays } from 'date-fns';
+import { addDays, differenceInCalendarDays, format, parseISO, subDays } from 'date-fns';
 import type { EventClickArg, EventDropArg } from '@fullcalendar/core';
 import { toast } from 'react-hot-toast';
 import { Issue } from '../types/issue.type';
 import { Sprint } from '../types/sprint.type';
 import { getSprintDateBoundViolation } from '../utils/sprintDateBounds';
+import { normalizeDate } from '../utils/dateUtils';
 
 type EventResizeArg = {
   event: {
@@ -42,10 +43,6 @@ interface UseCalendarHandlersProps {
 
 function toDateStr(date: Date): string {
   return format(date, 'yyyy-MM-dd');
-}
-
-function normalizeDate(value?: string | null): string | undefined {
-  return value ? value.split('T')[0] : undefined;
 }
 
 function getIssueFromEvent(
@@ -89,9 +86,28 @@ export function handleEventReceive({
   onUpdateIssueDate,
   onBlocked,
 }: HandleEventReceiveArgs) {
-  const start = toDateStr(arg.event.start!);
+  // Phase 3: guard against null start
+  if (!arg.event.start) {
+    arg.event.remove();
+    return;
+  }
+
+  const start = toDateStr(arg.event.start);
   const issue = getIssueFromEvent(arg.event.id, arg.event.extendedProps?.rawData, issues);
-  const violation = getViolationForIssueDate(issue, sprints, start, start);
+
+  // Phase 4: preserve original duration so sprint bound check covers the full task range
+  const end = (() => {
+    if (issue?.startDate && issue?.dueDate) {
+      const durationDays = Math.max(
+        0,
+        differenceInCalendarDays(parseISO(issue.dueDate), parseISO(issue.startDate)),
+      );
+      return toDateStr(addDays(parseISO(start), durationDays));
+    }
+    return start;
+  })();
+
+  const violation = getViolationForIssueDate(issue, sprints, start, end);
 
   if (violation) {
     arg.event.remove();
@@ -100,7 +116,7 @@ export function handleEventReceive({
   }
 
   arg.event.remove();
-  onUpdateIssueDate(arg.event.id, start, start);
+  onUpdateIssueDate(arg.event.id, start, end);
 }
 
 export function useCalendarHandlers({
@@ -109,12 +125,27 @@ export function useCalendarHandlers({
   onUpdateIssueDate,
   onSelectIssue,
 }: UseCalendarHandlersProps) {
+  // Phase 3: guard on oldEvent.start
+  // Phase 5: use oldEvent + delta to avoid wrong position when event start is hidden in "+ X more" popover
   const onEventDrop = useCallback((arg: EventDropArg) => {
     if (arg.event.extendedProps.type === 'sprint') return;
 
-    const start = toDateStr(arg.event.start!);
-    const end = arg.event.end ? toDateStr(subDays(arg.event.end, 1)) : start;
+    if (!arg.oldEvent.start) {
+      arg.revert();
+      return;
+    }
+
     const issue = getIssueFromEvent(arg.event.id, arg.event.extendedProps.rawData, issues);
+
+    const deltaDays = arg.delta.days + Math.round(arg.delta.milliseconds / 86_400_000);
+
+    const anchorStart = issue?.startDate ?? toDateStr(arg.oldEvent.start);
+    const anchorEnd = issue?.dueDate
+      ?? (arg.oldEvent.end ? toDateStr(subDays(arg.oldEvent.end, 1)) : anchorStart);
+
+    const start = toDateStr(addDays(parseISO(anchorStart), deltaDays));
+    const end = toDateStr(addDays(parseISO(anchorEnd), deltaDays));
+
     const violation = getViolationForIssueDate(issue, sprints, start, end);
 
     if (violation) {
