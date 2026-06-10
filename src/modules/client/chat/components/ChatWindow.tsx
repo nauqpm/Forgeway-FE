@@ -77,7 +77,7 @@ export default function ChatWindow() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-[#202020]">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-[#202020]">
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-2 min-w-0">
@@ -101,7 +101,7 @@ export default function ChatWindow() {
       {/* Messages area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto"
+        className="flex-1 overflow-y-auto min-h-0"
       >
         {loading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">

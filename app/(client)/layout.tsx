@@ -210,7 +210,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-[#F2FAFF] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">
+    <div className="h-screen flex flex-col overflow-hidden bg-[#F2FAFF] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">
       <Sidebar
         collapsed={sidebarCollapsed}
         onCollapse={setSidebarCollapsed}
@@ -220,9 +220,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <div
         data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"}
-        className="app-shell-offset transition-all duration-300"
+        className="app-shell-offset flex-1 flex flex-col min-h-0 transition-all duration-300 overflow-hidden"
       >
-        <header className="app-header bg-white dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
+        <header className="app-header flex-shrink-0 bg-white dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between z-20 transition-colors duration-200">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {/* Mobile menu */}
             <button
@@ -360,7 +360,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           />
         )}
 
-        <main className="app-main">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+          {children}
+        </main>
       </div>
     </div>
   );
