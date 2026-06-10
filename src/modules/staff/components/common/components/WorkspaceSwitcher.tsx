@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { ChevronDown, Plus, Check, Building2 } from "lucide-react";
 
@@ -19,21 +19,21 @@ export default function WorkspaceSwitcher() {
   useEffect(() => {
     if (loaded.current || !user) return;
     loaded.current = true;
-    
+
     // Mock API
     const fetchWorkspaces = async () => {
       try {
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 300));
         let mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
-        
+
         // Create one default workspace if none exists
         if (mockWorkspaces.length === 0) {
-          const defaultWs = { 
-            _id: "ws_default_" + Date.now(), 
-            name: "Personal workspace", 
-            slug: "personal-workspace", 
-            ownerId: "user_1", 
-            members: [] 
+          const defaultWs = {
+            _id: "ws_default_" + Date.now(),
+            name: "Personal workspace",
+            slug: "personal-workspace",
+            ownerId: "user_1",
+            members: [],
           };
           mockWorkspaces = [defaultWs];
           localStorage.setItem("MOCK_WORKSPACES", JSON.stringify(mockWorkspaces));
@@ -60,19 +60,19 @@ export default function WorkspaceSwitcher() {
     if (!newName.trim()) return;
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const newWs = { 
-        _id: "ws_" + Date.now(), 
-        name: newName, 
-        slug: newName.toLowerCase().replace(/\s+/g, '-'), 
-        ownerId: "user_1", 
-        members: [] 
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const newWs = {
+        _id: "ws_" + Date.now(),
+        name: newName,
+        slug: newName.toLowerCase().replace(/\s+/g, "-"),
+        ownerId: "user_1",
+        members: [],
       };
-      
+
       const mockWorkspaces = JSON.parse(localStorage.getItem("MOCK_WORKSPACES") || "[]");
       localStorage.setItem("MOCK_WORKSPACES", JSON.stringify([...mockWorkspaces, newWs]));
-      
+
       setWorkspaces([...workspaces, newWs]);
       setCurrentWorkspace(newWs);
       setShowCreate(false);
@@ -103,7 +103,9 @@ export default function WorkspaceSwitcher() {
           style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
         >
           <div className="px-3 py-2">
-            <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider font-medium">Workspaces</p>
+            <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider font-medium">
+              Workspaces
+            </p>
           </div>
           {workspaces.map((ws) => (
             <button
@@ -139,16 +141,29 @@ export default function WorkspaceSwitcher() {
                   onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                 />
                 <div className="flex gap-2">
-                  <button onClick={handleCreate} disabled={loading} className="flex-1 bg-[#2563EB] text-white text-sm py-1.5 rounded-[6px] hover:bg-[#1D4ED8] disabled:opacity-50">
+                  <button
+                    onClick={handleCreate}
+                    disabled={loading}
+                    className="flex-1 bg-[#2563EB] text-white text-sm py-1.5 rounded-[6px] hover:bg-[#1D4ED8] disabled:opacity-50"
+                  >
                     {loading ? "..." : "Create"}
                   </button>
-                  <button onClick={() => { setShowCreate(false); setNewName(""); }} className="flex-1 border border-[#EAEAEA] dark:border-white/[0.06] text-[#787774] dark:text-[#9B9A97] text-sm py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5">
+                  <button
+                    onClick={() => {
+                      setShowCreate(false);
+                      setNewName("");
+                    }}
+                    className="flex-1 border border-[#EAEAEA] dark:border-white/[0.06] text-[#787774] dark:text-[#9B9A97] text-sm py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5"
+                  >
                     Cancel
                   </button>
                 </div>
               </div>
             ) : (
-              <button onClick={() => setShowCreate(true)} className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#2563EB] dark:text-[#3B82F6] hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.12)]">
+              <button
+                onClick={() => setShowCreate(true)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#2563EB] dark:text-[#3B82F6] hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.12)]"
+              >
                 <Plus className="w-4 h-4" /> Create Workspace
               </button>
             )}

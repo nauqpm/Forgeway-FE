@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/admin/components/common/components/Sidebar";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
 import { notificationService } from "@/common/services/notification.service";
@@ -61,16 +61,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return id && key ? { id, name: workspace.name, key } : null;
     })
     .filter((workspace): workspace is { id: string; name: string; key: string } => Boolean(workspace));
-  const defaultSearchWorkspaceKeys = workspaceKey
-    ? [workspaceKey]
-    : searchProjects.map((workspace) => workspace.key);
+  const defaultSearchWorkspaceKeys = workspaceKey ? [workspaceKey] : searchProjects.map((workspace) => workspace.key);
   const searchAssignees = (currentWorkspace?.members ?? [])
     .filter((member) => member && member.userId)
     .map((member) => {
       const memberId =
-        typeof member.userId === "string"
-          ? member.userId
-          : member.userId?._id || member.userId?.id || "member";
+        typeof member.userId === "string" ? member.userId : member.userId?._id || member.userId?.id || "member";
 
       return {
         id: memberId,
@@ -87,7 +83,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
 
   const refreshUnreadNotificationCount = useCallback(() => {
     if (!isAuthenticated) return;
@@ -111,9 +106,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [refreshUnreadNotificationCount]);
   useEffect(() => {
     if (isAuthenticated && !workspacesLoaded) {
-      api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
-        setWorkspaces(res.data?.data ?? res.data);
-      }).catch(() => {});
+      api
+        .get(apiRoutes.WORKSPACES.BASE)
+        .then((res) => {
+          setWorkspaces(res.data?.data ?? res.data);
+        })
+        .catch(() => {});
     }
   }, [isAuthenticated, workspacesLoaded, setWorkspaces]);
 
@@ -134,7 +132,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (taskSearchHydrationPathRef.current === hydrationPath) return;
 
     const params = new URLSearchParams(window.location.search);
-    const csv = (value: string | null) => value?.split(",").map((item) => item.trim()).filter(Boolean) ?? [];
+    const csv = (value: string | null) =>
+      value
+        ?.split(",")
+        .map((item) => item.trim())
+        .filter(Boolean) ?? [];
     const label = (value: string) =>
       value
         .split(/[-_\s]+/)
@@ -145,9 +147,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setTaskSearchFilters((prev) => ({
       ...prev,
       workspaceKey,
-      workspaceKeys: csv(params.get("workspaceKeys")).length > 0
-        ? csv(params.get("workspaceKeys"))
-        : defaultSearchWorkspaceKeys,
+      workspaceKeys:
+        csv(params.get("workspaceKeys")).length > 0 ? csv(params.get("workspaceKeys")) : defaultSearchWorkspaceKeys,
       search: params.get("search") || "",
       taskKey: params.get("taskKey"),
       statuses: csv(params.get("status")).map((item) => {
@@ -239,7 +240,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               }`}
             >
               <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1">
-                <Image src={appleIcon} alt="SDLC Platform" width={38} height={38} className="h-9 w-9 rounded-[8px] object-contain" />
+                <Image
+                  src={appleIcon}
+                  alt="SDLC Platform"
+                  width={38}
+                  height={38}
+                  className="h-9 w-9 rounded-[8px] object-contain"
+                />
               </span>
               <span className="flex flex-col text-base font-bold leading-[0.95] tracking-tight text-[#2563EB] dark:text-[#60A5FA] whitespace-nowrap">
                 <span className="text-2xl">SDLC</span>
@@ -265,13 +272,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             {/* Theme toggle */}
             <button
-              onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}
+              onClick={() => setTheme(theme === "light" ? "dark" : theme === "dark" ? "system" : "light")}
               className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
               title={`Theme: ${theme}`}
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <Moon className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
-              ) : theme === 'system' ? (
+              ) : theme === "system" ? (
                 <Monitor className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
               ) : (
                 <Sun className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
@@ -319,30 +326,44 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {showUserMenu && (
                 <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] py-1 z-50">
                   <div className="px-4 py-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                    <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] truncate">{user?.fullName ?? "User"}</p>
+                    <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
+                      {user?.fullName ?? "User"}
+                    </p>
                     <p className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">{user?.email}</p>
                   </div>
                   <button
-                    onClick={() => { router.push("/dashboard"); setShowUserMenu(false); }}
+                    onClick={() => {
+                      router.push("/dashboard");
+                      setShowUserMenu(false);
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </button>
                   <button
-                    onClick={() => { router.push("/account"); setShowUserMenu(false); }}
+                    onClick={() => {
+                      router.push("/account");
+                      setShowUserMenu(false);
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
                     <User className="w-4 h-4" /> Profile
                   </button>
                   <button
-                    onClick={() => { router.push("/settings"); setShowUserMenu(false); }}
+                    onClick={() => {
+                      router.push("/settings");
+                      setShowUserMenu(false);
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
                     <Settings className="w-4 h-4" /> Settings
                   </button>
                   <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] my-1" />
                   <button
-                    onClick={() => { logout(); setShowUserMenu(false); }}
+                    onClick={() => {
+                      logout();
+                      setShowUserMenu(false);
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#9F2F2D] dark:text-[#F87171] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
                   >
                     <LogOut className="w-4 h-4" /> Log out
@@ -365,5 +386,3 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-

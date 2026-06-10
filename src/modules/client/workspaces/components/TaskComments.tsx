@@ -7,7 +7,7 @@ import { Check, Loader2, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 import { taskService, TaskComment } from "../services/taskService";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
 
@@ -19,9 +19,7 @@ type MentionMember = {
 type RawMemberDto = {
   id?: string;
   _id?: string;
-  userId?:
-  | { id?: string; _id?: string; fullName?: string; email?: string }
-  | string;
+  userId?: { id?: string; _id?: string; fullName?: string; email?: string } | string;
   user?: { id?: string; _id?: string; fullName?: string; email?: string };
   fullName?: string;
   email?: string;
@@ -36,20 +34,12 @@ type TaskCommentsProps = {
 
 const normalizeResponse = <T,>(payload: unknown): T => {
   const p = payload as Record<string, unknown>;
-  return (p?.data
-    ? ((p.data as Record<string, unknown>)?.data ?? p.data)
-    : payload) as T;
+  return (p?.data ? ((p.data as Record<string, unknown>)?.data ?? p.data) : payload) as T;
 };
 
 const toMentionMember = (m: RawMemberDto): MentionMember | null => {
-  const userObj =
-    typeof m.userId === "object" && m.userId !== null ? m.userId : m.user;
-  const id =
-    userObj?.id ??
-    userObj?._id ??
-    m.id ??
-    m._id ??
-    (typeof m.userId === "string" ? m.userId : undefined);
+  const userObj = typeof m.userId === "object" && m.userId !== null ? m.userId : m.user;
+  const id = userObj?.id ?? userObj?._id ?? m.id ?? m._id ?? (typeof m.userId === "string" ? m.userId : undefined);
   const display = userObj?.fullName || userObj?.email || m.fullName || m.email;
   if (!id || !display) return null;
   return { id, display };
@@ -140,19 +130,13 @@ const buildCommentTree = (flatComments: TaskComment[]): CommentNode[] => {
     }
   });
 
-  const sortFn = (a: CommentNode, b: CommentNode) =>
-    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  const sortFn = (a: CommentNode, b: CommentNode) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
 
   Array.from(map.values()).forEach((node) => node.children.sort(sortFn));
   return roots.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 };
 
-export default function TaskComments({
-  workspaceId,
-  taskId,
-  isArchived,
-  isDeleted = false,
-}: TaskCommentsProps) {
+export default function TaskComments({ workspaceId, taskId, isArchived, isDeleted = false }: TaskCommentsProps) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const currentUserId = user?.id ?? null;
@@ -161,14 +145,8 @@ export default function TaskComments({
   const [editContent, setEditContent] = useState("");
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
 
-  const commentsKey = useMemo(
-    () => ["taskComments", workspaceId, taskId],
-    [workspaceId, taskId],
-  );
-  const membersKey = useMemo(
-    () => ["workspaceMembers", workspaceId],
-    [workspaceId],
-  );
+  const commentsKey = useMemo(() => ["taskComments", workspaceId, taskId], [workspaceId, taskId]);
+  const membersKey = useMemo(() => ["workspaceMembers", workspaceId], [workspaceId]);
 
   const { data: comments = [], isFetching: isLoadingComments } = useQuery({
     queryKey: commentsKey,
@@ -183,21 +161,15 @@ export default function TaskComments({
       const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
       const payload = normalizeResponse<unknown>(response);
       const arr = Array.isArray(payload) ? (payload as RawMemberDto[]) : [];
-      return arr
-        .map(toMentionMember)
-        .filter((m): m is MentionMember => m !== null);
+      return arr.map(toMentionMember).filter((m): m is MentionMember => m !== null);
     },
     enabled: Boolean(workspaceId) && !isDeleted,
     staleTime: 5 * 60_000,
   });
 
   const sortedComments = useMemo(
-    () =>
-      [...comments].sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      ),
-    [comments],
+    () => [...comments].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()),
+    [comments]
   );
 
   const createMutation = useMutation({
@@ -213,11 +185,11 @@ export default function TaskComments({
         authorId: currentUserId ?? "",
         author: user
           ? {
-            id: user.id,
-            fullName: user.fullName,
-            email: user.email,
-            avatar: user.avatar,
-          }
+              id: user.id,
+              fullName: user.fullName,
+              email: user.email,
+              avatar: user.avatar,
+            }
           : null,
         targetType: "task",
         targetId: taskId,
@@ -244,13 +216,7 @@ export default function TaskComments({
   });
 
   const editMutation = useMutation({
-    mutationFn: ({
-      commentId,
-      content,
-    }: {
-      commentId: string;
-      content: string;
-    }) => {
+    mutationFn: ({ commentId, content }: { commentId: string; content: string }) => {
       if (!commentId) throw new Error("Missing comment id");
       return taskService.updateComment(workspaceId, taskId, commentId, content);
     },
@@ -259,21 +225,13 @@ export default function TaskComments({
       const prev = queryClient.getQueryData<TaskComment[]>(commentsKey) ?? [];
       queryClient.setQueryData<TaskComment[]>(
         commentsKey,
-        prev.map((c) =>
-          c.id === commentId
-            ? { ...c, content, editedAt: new Date().toISOString() }
-            : c,
-        ),
+        prev.map((c) => (c.id === commentId ? { ...c, content, editedAt: new Date().toISOString() } : c))
       );
       return { prev };
     },
     onError: (err: any, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
-      toast.error(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to update comment",
-      );
+      toast.error(err?.response?.data?.message || err?.message || "Failed to update comment");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: commentsKey });
@@ -292,17 +250,13 @@ export default function TaskComments({
       const prev = queryClient.getQueryData<TaskComment[]>(commentsKey) ?? [];
       queryClient.setQueryData<TaskComment[]>(
         commentsKey,
-        prev.filter((c) => c.id !== commentId),
+        prev.filter((c) => c.id !== commentId)
       );
       return { prev };
     },
     onError: (err: any, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
-      toast.error(
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to delete comment",
-      );
+      toast.error(err?.response?.data?.message || err?.message || "Failed to delete comment");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: commentsKey });
@@ -339,7 +293,7 @@ export default function TaskComments({
     const authorId = comment.author?.id || comment.authorId;
     setReplyingToId(comment.id);
     setCommentInput(`[@${authorName}](${authorId}) `);
-    document.querySelector<HTMLInputElement>('.tc-m__input')?.focus();
+    document.querySelector<HTMLInputElement>(".tc-m__input")?.focus();
   }, []);
 
   const commentTree = useMemo(() => buildCommentTree(comments), [comments]);
@@ -349,8 +303,7 @@ export default function TaskComments({
     const initials = getAuthorInitials(node.author);
     const isEditing = editingId === node.id;
     const isOwnComment = Boolean(
-      currentUserId &&
-      (node.authorId === currentUserId || node.author?.id === currentUserId),
+      currentUserId && (node.authorId === currentUserId || node.author?.id === currentUserId)
     );
 
     const visualDepth = Math.min(depth, 3);
@@ -368,7 +321,9 @@ export default function TaskComments({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{authorName}</span>
-              <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{formatDateTime(node.createdAt)}</span>
+              <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+                {formatDateTime(node.createdAt)}
+              </span>
               {node.editedAt && <span className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">(edited)</span>}
             </div>
 
@@ -445,9 +400,7 @@ export default function TaskComments({
           </div>
         </div>
         {node.children && node.children.length > 0 && (
-          <div className="mt-2">
-            {node.children.map((child) => renderCommentNode(child, depth + 1))}
-          </div>
+          <div className="mt-2">{node.children.map((child) => renderCommentNode(child, depth + 1))}</div>
         )}
       </div>
     );
@@ -484,10 +437,10 @@ export default function TaskComments({
               {user ? getAuthorInitials(user as any) : "U"}
             </div>
             <div className="flex-1 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
-            <div className="mb-4 text-[0.8125rem] relative z-50">
-              <style
-                dangerouslySetInnerHTML={{
-                  __html: `
+              <div className="mb-4 text-[0.8125rem] relative z-50">
+                <style
+                  dangerouslySetInnerHTML={{
+                    __html: `
                     .tc-m__control{min-height:36px}
                     .tc-m__input{width:100%;outline:none;border:none;background:transparent;color:inherit;font-family:inherit;font-size:inherit}
                     .tc-m__suggestions__list{background:#F9F9F8;border:1px solid #EAEAEA;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);overflow:hidden;z-index:100;position:absolute;min-width:200px;margin-top:4px}
@@ -498,103 +451,93 @@ export default function TaskComments({
                     .dark .tc-m__suggestions__item{color:#E8E8E7}
                     .dark .tc-m__suggestions__item--focused{background:#2A2A2A}
                   `,
-                }}
-              />
-              <MentionsInput
-                value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
-                onKeyDown={(e: React.KeyboardEvent) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                placeholder="Add a comment... (@ to mention)"
-                className="tc-m w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem]"
-                a11ySuggestionsListLabel="Suggested mentions"
-              >
-                <Mention
-                  trigger="@"
-                  data={mentionMembers}
-                  markup="[@__display__](__id__)"
-                  renderSuggestion={(
-                    suggestion,
-                    _search,
-                    highlightedDisplay,
-                  ) => (
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
-                        {suggestion.display?.toString().charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
-                        {highlightedDisplay}
-                      </span>
-                    </div>
-                  )}
-                  className="text-[#2563EB] bg-[#EFF6FF] dark:text-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)]"
-                  displayTransform={(id, display) => `@${display}`}
+                  }}
                 />
-              </MentionsInput>
-            </div>
-
-            {!commentInput && (
-              <div className="flex items-center gap-2">
-                <span
-                  onClick={() =>
-                    setCommentInput("Who is working on this...?")
-                  }
-                  className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer bg-[#F9F9F8] dark:bg-[#252525] px-3 py-1.5 rounded-[4px] transition-colors"
+                <MentionsInput
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  onKeyDown={(e: React.KeyboardEvent) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  placeholder="Add a comment... (@ to mention)"
+                  className="tc-m w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem]"
+                  a11ySuggestionsListLabel="Suggested mentions"
                 >
-                  Who is working on this...?
-                </span>
-                <span
-                  onClick={() => setCommentInput("Status update...")}
-                  className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer bg-[#F9F9F8] dark:bg-[#252525] px-3 py-1.5 rounded-[4px] transition-colors"
-                >
-                  Status update...
-                </span>
+                  <Mention
+                    trigger="@"
+                    data={mentionMembers}
+                    markup="[@__display__](__id__)"
+                    renderSuggestion={(suggestion, _search, highlightedDisplay) => (
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
+                          {suggestion.display?.toString().charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
+                          {highlightedDisplay}
+                        </span>
+                      </div>
+                    )}
+                    className="text-[#2563EB] bg-[#EFF6FF] dark:text-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)]"
+                    displayTransform={(id, display) => `@${display}`}
+                  />
+                </MentionsInput>
               </div>
-            )}
 
-            {commentInput && (
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSubmit}
-                  disabled={createMutation.isPending}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[0.6875rem] font-medium rounded-[4px] transition-colors disabled:opacity-60"
-                >
-                  {createMutation.isPending && (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  )}
-                  Save
-                </button>
-                <button
-                  onClick={() => setCommentInput("")}
-                  className="px-3 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.6875rem] font-medium rounded-[4px] transition-colors"
-                >
-                  Cancel
-                </button>
+              {!commentInput && (
+                <div className="flex items-center gap-2">
+                  <span
+                    onClick={() => setCommentInput("Who is working on this...?")}
+                    className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer bg-[#F9F9F8] dark:bg-[#252525] px-3 py-1.5 rounded-[4px] transition-colors"
+                  >
+                    Who is working on this...?
+                  </span>
+                  <span
+                    onClick={() => setCommentInput("Status update...")}
+                    className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer bg-[#F9F9F8] dark:bg-[#252525] px-3 py-1.5 rounded-[4px] transition-colors"
+                  >
+                    Status update...
+                  </span>
+                </div>
+              )}
+
+              {commentInput && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={createMutation.isPending}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[0.6875rem] font-medium rounded-[4px] transition-colors disabled:opacity-60"
+                  >
+                    {createMutation.isPending && <Loader2 className="h-3 w-3 animate-spin" />}
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setCommentInput("")}
+                    className="px-3 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.6875rem] font-medium rounded-[4px] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+
+              <div className="mt-5 flex items-center justify-between border-t border-[#EAEAEA] dark:border-white/[0.06] pt-3">
+                <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
+                  Pro tip: press{" "}
+                  <span className="font-bold bg-[#F9F9F8] dark:bg-[#252525] px-1.5 py-0.5 rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08]">
+                    Enter
+                  </span>{" "}
+                  to comment
+                </p>
               </div>
-            )}
-
-            <div className="mt-5 flex items-center justify-between border-t border-[#EAEAEA] dark:border-white/[0.06] pt-3">
-              <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
-                Pro tip: press{" "}
-                <span className="font-bold bg-[#F9F9F8] dark:bg-[#252525] px-1.5 py-0.5 rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08]">
-                  Enter
-                </span>{" "}
-                to comment
-              </p>
-            </div>
             </div>
           </div>
         </>
       )}
 
       {commentTree.length > 0 ? (
-        <div className="space-y-2 mt-2">
-          {commentTree.map((node) => renderCommentNode(node, 0))}
-        </div>
+        <div className="space-y-2 mt-2">{commentTree.map((node) => renderCommentNode(node, 0))}</div>
       ) : (
         !isLoadingComments && (
           <div className="rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.08] px-4 py-5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">

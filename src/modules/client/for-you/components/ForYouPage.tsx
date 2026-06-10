@@ -2,16 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  BookOpen,
-  LayoutDashboard,
-  Loader2,
-  Plus,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
-import api from "@/common/services/api.service";
+import { ArrowRight, BookOpen, LayoutDashboard, Loader2, Plus, ShieldCheck, Users } from "lucide-react";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
@@ -34,16 +26,12 @@ type ForYouResponse = {
 };
 
 const workspaceIdOf = (workspace: ForYouWorkspace) => workspace.id || workspace._id || "";
-const workspaceRouteKeyOf = (workspace: ForYouWorkspace) =>
-  workspace.key || workspace.slug || workspaceIdOf(workspace);
+const workspaceRouteKeyOf = (workspace: ForYouWorkspace) => workspace.key || workspace.slug || workspaceIdOf(workspace);
 
 const normalizePayload = (payload: any): ForYouResponse => payload?.data?.data ?? payload?.data ?? payload;
 
 const roleLabel = (workspace: ForYouWorkspace) =>
-  workspace.ownershipLabel ||
-  workspace.relationship ||
-  workspace.role?.replace(/_/g, " ") ||
-  "Workspace";
+  workspace.ownershipLabel || workspace.relationship || workspace.role?.replace(/_/g, " ") || "Workspace";
 
 export default function ForYouPage() {
   const { setWorkspaces } = useWorkspaceStore();
@@ -63,9 +51,7 @@ export default function ForYouPage() {
         if (cancelled) return;
 
         const payload = normalizePayload(response);
-        const nextWorkspaces = Array.isArray(payload)
-          ? payload
-          : payload.workspaces ?? [];
+        const nextWorkspaces = Array.isArray(payload) ? payload : (payload.workspaces ?? []);
 
         setForYouWorkspaces(nextWorkspaces);
         setWorkspaces(nextWorkspaces as any);
@@ -87,9 +73,9 @@ export default function ForYouPage() {
   }, [setWorkspaces]);
 
   const stats = useMemo(() => {
-    const owned = workspaces.filter((workspace) =>
-      ["owner", "owned"].includes((workspace.relationship || "").toLowerCase()) ||
-      workspace.role === "owner",
+    const owned = workspaces.filter(
+      (workspace) =>
+        ["owner", "owned"].includes((workspace.relationship || "").toLowerCase()) || workspace.role === "owner"
     ).length;
     const joined = Math.max(workspaces.length - owned, 0);
     const active = workspaces.filter((workspace) => workspace.status !== "archived").length;
@@ -109,9 +95,7 @@ export default function ForYouPage() {
     <div className="app-page-medium">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
-            Your workspaces
-          </h1>
+          <h1 className="text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">Your workspaces</h1>
         </div>
 
         <Link
@@ -149,9 +133,7 @@ export default function ForYouPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[6px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]">
             <BookOpen className="h-6 w-6" />
           </div>
-          <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-            No workspace yet
-          </h2>
+          <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No workspace yet</h2>
           <p className="mx-auto mt-2 max-w-md text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             Create a workspace to start organizing work, documents, and team collaboration.
           </p>
@@ -168,8 +150,7 @@ export default function ForYouPage() {
           {workspaces.map((workspace) => {
             const routeKey = workspaceRouteKeyOf(workspace);
             const isOwner =
-              ["owner", "owned"].includes((workspace.relationship || "").toLowerCase()) ||
-              workspace.role === "owner";
+              ["owner", "owned"].includes((workspace.relationship || "").toLowerCase()) || workspace.role === "owner";
 
             return (
               <Link

@@ -2,13 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import {
-  BookOpen,
-  LayoutDashboard,
-  Database,
-} from "lucide-react";
+import { BookOpen, LayoutDashboard, Database } from "lucide-react";
 import Link from "next/link";
 
 export interface AdminDashboardProps {
@@ -31,19 +27,14 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
       .then((res) => {
         if (cancelled) return;
         setWorkspaces(res.data);
-        const ws =
-          currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
+        const ws = currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
         if (!ws) {
           setLoading(false);
           return;
         }
         return Promise.all([
-          api
-            .get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`)
-            .catch(() => ({ data: [] })),
-          api
-            .get(apiRoutes.WORKSPACES.BY_ID(ws._id))
-            .catch(() => ({ data: {} })),
+          api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`).catch(() => ({ data: [] })),
+          api.get(apiRoutes.WORKSPACES.BY_ID(ws._id)).catch(() => ({ data: {} })),
         ]);
       })
       .then((results) => {
@@ -148,14 +139,9 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   return (
     <div className={`max-w-5xl mx-auto ${className}`}>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="px-2 text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">
-          Recommended workspaces
-        </h1>
+        <h1 className="px-2 text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">Recommended workspaces</h1>
 
-        <Link
-          href="/spaces"
-          className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]"
-        >
+        <Link href="/spaces" className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]">
           View all
         </Link>
       </div>
@@ -169,9 +155,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
           >
             <div className="flex items-start gap-4">
-              <div
-                className={`w-12 h-12 ${space.color} rounded-[8px] flex items-center justify-center flex-shrink-0`}
-              >
+              <div className={`w-12 h-12 ${space.color} rounded-[8px] flex items-center justify-center flex-shrink-0`}>
                 <space.icon className="w-6 h-6 text-white" />
               </div>
 
@@ -179,9 +163,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
                 <h3 className="font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6]">
                   {space.name}
                 </h3>
-                <p className="text-sm text-[#787774] dark:text-[#9B9A97] mt-1">
-                  {space.description}
-                </p>
+                <p className="text-sm text-[#787774] dark:text-[#9B9A97] mt-1">{space.description}</p>
               </div>
             </div>
           </Link>

@@ -17,7 +17,6 @@ import { clearTokens } from '../services/tokenService';
 import { getMyPermissionsAPI } from '../../permission/services/permissionService';
 import { AUTH_ROUTES } from '../constants/auth-routes';
 import { AuthErrorCode } from '../types/auth.types';
-import { setupAuthInterceptors } from '../services/axiosAuthInterceptor';
 import type {
   LoginRequest,
   RegisterRequest,
@@ -25,8 +24,6 @@ import type {
   UserRole,
   User,
 } from '../types/auth.types';
-
-let interceptorsInitialized = false;
 
 export const useAuth = () => {
   const router = useRouter();
@@ -165,7 +162,7 @@ export const useAuth = () => {
         } else if (errorCode === AuthErrorCode.USER_SUSPENDED) {
           toast.error('Account has been suspended.');
         } else if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED) {
-          toast.error(errorMessage || 'Vui lòng xác thực email trước khi đăng ký');
+          toast.error(errorMessage || 'Vui lòng xác thực email để hoàn tất đăng ký');
           router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
         } else {
           toast.error(errorMessage || 'Registration failed. Please try again later.');
@@ -236,13 +233,6 @@ export const useAuth = () => {
   }, [isInitialized, setUser, setLoading, setInitialized, clearAuth, setGlobalPermissions]);
 
   // --- Auto-initialize on mount -------------------------------------------
-
-  useEffect(() => {
-    if (!interceptorsInitialized) {
-      setupAuthInterceptors();
-      interceptorsInitialized = true;
-    }
-  }, []);
 
   useEffect(() => {
     initializeAuth();

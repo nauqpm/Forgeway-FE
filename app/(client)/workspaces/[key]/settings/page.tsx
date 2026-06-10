@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  FormEvent,
-  KeyboardEvent,
-  MouseEvent,
-  use,
-  useEffect,
-  useState,
-} from "react";
+import { FormEvent, KeyboardEvent, MouseEvent, use, useEffect, useState } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,18 +20,13 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
 import InviteModal from "@/modules/admin/components/common/components/InviteModal";
 import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
-import RoleChanger, {
-  WorkspaceRoleValue,
-} from "@/modules/client/workspaces/components/RoleChanger";
-import {
-  inviteService,
-  PendingInvite,
-} from "@/modules/client/workspaces/services/inviteService";
+import RoleChanger, { WorkspaceRoleValue } from "@/modules/client/workspaces/components/RoleChanger";
+import { inviteService, PendingInvite } from "@/modules/client/workspaces/services/inviteService";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
 type WorkspaceStatus = "active" | "archived";
@@ -79,8 +67,7 @@ const ROLE_LABELS: Record<string, string> = {
   viewer: "Viewer",
 };
 
-const normalizeWorkspace = (payload: any): WorkspaceSettings =>
-  (payload?.data ?? payload) as WorkspaceSettings;
+const normalizeWorkspace = (payload: any): WorkspaceSettings => (payload?.data ?? payload) as WorkspaceSettings;
 
 const normalizeObjectId = (value?: string | null) => {
   if (!value) return "";
@@ -105,11 +92,7 @@ function getMemberInitials(member: WorkspaceMember) {
     .toUpperCase();
 }
 
-export default function WorkspaceSettingsPage({
-  params,
-}: {
-  params: Promise<{ key: string }>;
-}) {
+export default function WorkspaceSettingsPage({ params }: { params: Promise<{ key: string }> }) {
   usePageTitle("Workspace Settings");
   const { key: workspaceKey } = use(params);
   const router = useRouter();
@@ -156,9 +139,7 @@ export default function WorkspaceSettingsPage({
   const currentUserId = normalizeObjectId(user?.id);
   const currentMember = members.find((m) => getMemberUserId(m) === currentUserId);
   const canManageWorkspace =
-    currentMember?.role === "workspace_admin" ||
-    currentMember?.role === "space_admin" ||
-    user?.role === "super_admin";
+    currentMember?.role === "workspace_admin" || currentMember?.role === "space_admin" || user?.role === "super_admin";
 
   useEffect(() => {
     if (!workspaceKey) return;
@@ -240,10 +221,7 @@ export default function WorkspaceSettingsPage({
 
       if (!workspaceApiId) throw new Error("Missing workspace id");
 
-      const res = await api.put(
-        apiRoutes.WORKSPACES.UPDATE(workspaceApiId),
-        payload,
-      );
+      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceApiId), payload);
       const updatedWorkspace = normalizeWorkspace(res.data);
       setWorkspace(updatedWorkspace);
       setForm({
@@ -255,9 +233,7 @@ export default function WorkspaceSettingsPage({
       toast.success("Workspace settings saved.");
     } catch (error: any) {
       console.error("Save failed", error);
-      toast.error(
-        error?.response?.data?.message || "Could not save workspace settings.",
-      );
+      toast.error(error?.response?.data?.message || "Could not save workspace settings.");
     } finally {
       setSaving(false);
     }
@@ -279,9 +255,7 @@ export default function WorkspaceSettingsPage({
       router.push("/workspaces");
     } catch (error: any) {
       console.error("Delete failed", error);
-      toast.error(
-        error?.response?.data?.message || "Could not delete workspace.",
-      );
+      toast.error(error?.response?.data?.message || "Could not delete workspace.");
     } finally {
       setDeleting(false);
     }
@@ -303,10 +277,7 @@ export default function WorkspaceSettingsPage({
       const updated = await inviteService.listInvites(workspaceInviteId);
       setInvites(updated);
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message ||
-          "User is already a member of this workspace.",
-      );
+      toast.error(error?.response?.data?.message || "User is already a member of this workspace.");
     } finally {
       setInviting(false);
     }
@@ -319,18 +290,13 @@ export default function WorkspaceSettingsPage({
       setInvites((prev) => prev.filter((invite) => invite._id !== inviteId));
       toast.success("Invitation canceled.");
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Could not cancel invitation.",
-      );
+      toast.error(error?.response?.data?.message || "Could not cancel invitation.");
     } finally {
       setCancellingId(null);
     }
   };
 
-  const handleOpenMemberMenu = (
-    event: MouseEvent<HTMLDivElement>,
-    member: WorkspaceMember,
-  ) => {
+  const handleOpenMemberMenu = (event: MouseEvent<HTMLDivElement>, member: WorkspaceMember) => {
     if (member.userId?._id === user?.id) return;
     event.preventDefault();
     setMemberMenu({
@@ -340,10 +306,7 @@ export default function WorkspaceSettingsPage({
     });
   };
 
-  const handleClickMember = (
-    event: MouseEvent<HTMLDivElement>,
-    member: WorkspaceMember,
-  ) => {
+  const handleClickMember = (event: MouseEvent<HTMLDivElement>, member: WorkspaceMember) => {
     if (member.userId?._id === user?.id) return;
     setMemberMenu({
       member,
@@ -352,10 +315,7 @@ export default function WorkspaceSettingsPage({
     });
   };
 
-  const handleUpdateMemberRole = async (
-    member: WorkspaceMember,
-    role: InviteRole,
-  ) => {
+  const handleUpdateMemberRole = async (member: WorkspaceMember, role: InviteRole) => {
     const userId = member.userId?._id;
     if (!userId || member.role === role) {
       setMemberMenu(null);
@@ -366,22 +326,12 @@ export default function WorkspaceSettingsPage({
     try {
       if (!workspaceApiId) throw new Error("Missing workspace id");
 
-      await api.put(
-        apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceApiId, userId),
-        { role },
-      );
-      setMembers((prev) =>
-        prev.map((item) =>
-          item.userId?._id === userId ? { ...item, role } : item,
-        ),
-      );
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceApiId, userId), { role });
+      setMembers((prev) => prev.map((item) => (item.userId?._id === userId ? { ...item, role } : item)));
       setMemberMenu(null);
       toast.success("Member permissions updated.");
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message ||
-          "Could not update member permissions.",
-      );
+      toast.error(error?.response?.data?.message || "Could not update member permissions.");
     } finally {
       setUpdatingMemberId(null);
     }
@@ -395,9 +345,7 @@ export default function WorkspaceSettingsPage({
     try {
       if (!workspaceApiId) throw new Error("Missing workspace id");
 
-      await api.delete(
-        apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceApiId, userId),
-      );
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceApiId, userId));
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setMemberMenu(null);
       toast.success("Member removed from workspace.");
@@ -422,27 +370,21 @@ export default function WorkspaceSettingsPage({
       toast.success("Left workspace.");
       router.push("/workspaces");
     } catch (error: any) {
-      toast.error(
-        error?.response?.data?.message || "Could not leave workspace.",
-      );
+      toast.error(error?.response?.data?.message || "Could not leave workspace.");
     } finally {
       setLeaving(false);
       setShowLeaveDialog(false);
     }
   };
 
-  const handleDeleteConfirmKeyDown = (
-    event: KeyboardEvent<HTMLInputElement>,
-  ) => {
+  const handleDeleteConfirmKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter" || deleting) return;
 
     event.preventDefault();
     void handleDelete();
   };
 
-  const handleLeaveConfirmKeyDown = (
-    event: KeyboardEvent<HTMLInputElement>,
-  ) => {
+  const handleLeaveConfirmKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== "Enter" || leaving) return;
 
     event.preventDefault();
@@ -452,11 +394,7 @@ export default function WorkspaceSettingsPage({
   if (loading) return <LoadingSpinner />;
 
   if (!workspace) {
-    return (
-      <div className="p-10 text-center text-[#787774] dark:text-[#9B9A97]">
-        Workspace not found.
-      </div>
-    );
+    return <div className="p-10 text-center text-[#787774] dark:text-[#9B9A97]">Workspace not found.</div>;
   }
 
   if (loadingMembers) return <LoadingSpinner />;
@@ -494,9 +432,7 @@ export default function WorkspaceSettingsPage({
           <ArrowLeft className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">
-            Workspace settings
-          </h1>
+          <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">Workspace settings</h1>
           <p className="text-[#787774] dark:text-[#9B9A97] text-sm mt-0.5">
             {workspace.name}
             <span className="text-[#ABABAB] dark:text-[#6B6B6B] mx-1">-</span>
@@ -640,9 +576,7 @@ function GeneralSettings({
   return (
     <form onSubmit={handleSave} className="space-y-8 max-w-[min(100%,42rem)]">
       <section>
-        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">
-          Basic information
-        </h2>
+        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">Basic information</h2>
         {!canManageWorkspace && (
           <p className="mb-4 rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
             You can view workspace information. Only administrators can edit it.
@@ -656,9 +590,7 @@ function GeneralSettings({
             <input
               type="text"
               value={form.name}
-              onChange={(event) =>
-                setForm({ ...form, name: event.target.value })
-              }
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
               disabled={!canManageWorkspace}
               className="w-full px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
               required
@@ -666,14 +598,10 @@ function GeneralSettings({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
-              Description
-            </label>
+            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Description</label>
             <textarea
               value={form.description}
-              onChange={(event) =>
-                setForm({ ...form, description: event.target.value })
-              }
+              onChange={(event) => setForm({ ...form, description: event.target.value })}
               disabled={!canManageWorkspace}
               className="w-full px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] resize-none"
               rows={3}
@@ -681,9 +609,7 @@ function GeneralSettings({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
-              Workspace key
-            </label>
+            <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">Workspace key</label>
             <input
               type="text"
               value={workspace.key}
@@ -697,9 +623,7 @@ function GeneralSettings({
       <hr className="border-[#EAEAEA] dark:border-white/[0.06]" />
 
       <section>
-        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">
-          Access
-        </h2>
+        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">Access</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { value: "public", label: "Public", icon: Globe },
@@ -718,17 +642,13 @@ function GeneralSettings({
                 name="access"
                 value={option.value}
                 checked={form.access === option.value}
-                onChange={() =>
-                  setForm({ ...form, access: option.value as WorkspaceAccess })
-                }
+                onChange={() => setForm({ ...form, access: option.value as WorkspaceAccess })}
                 disabled={!canManageWorkspace}
                 className="text-[#2563EB] focus:ring-[#2563EB]"
               />
               <div className="flex items-center gap-2">
                 <option.icon className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
-                <span className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">
-                  {option.label}
-                </span>
+                <span className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">{option.label}</span>
               </div>
             </label>
           ))}
@@ -736,9 +656,7 @@ function GeneralSettings({
       </section>
 
       <section>
-        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">
-          Status
-        </h2>
+        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">Status</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             { value: "active", label: "Active" },
@@ -757,15 +675,11 @@ function GeneralSettings({
                 name="status"
                 value={option.value}
                 checked={form.status === option.value}
-                onChange={() =>
-                  setForm({ ...form, status: option.value as WorkspaceStatus })
-                }
+                onChange={() => setForm({ ...form, status: option.value as WorkspaceStatus })}
                 disabled={!canManageWorkspace}
                 className="text-[#2563EB] focus:ring-[#2563EB]"
               />
-              <span className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">
-                {option.label}
-              </span>
+              <span className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">{option.label}</span>
             </label>
           ))}
         </div>
@@ -798,9 +712,7 @@ function GeneralSettings({
 
         {/* Leave workspace */}
         <div className="pb-6 border-b border-red-200 dark:border-red-800">
-          <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
-            Leave workspace
-          </p>
+          <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">Leave workspace</p>
           <p className="text-sm text-red-600 dark:text-red-300 mb-3">
             {canManageWorkspace
               ? "You are the workspace owner. You must delete the workspace before leaving."
@@ -819,12 +731,9 @@ function GeneralSettings({
         {/* Delete workspace */}
         {canManageWorkspace && (
           <div>
-            <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">
-              Delete workspace
-            </p>
+            <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-1">Delete workspace</p>
             <p className="text-sm text-red-600 dark:text-red-300 mb-4">
-              Delete this workspace along with its boards, backlog, and related
-              content. This action cannot be undone.
+              Delete this workspace along with its boards, backlog, and related content. This action cannot be undone.
             </p>
             <button
               type="button"
@@ -849,18 +758,12 @@ function GeneralSettings({
               <div className="w-10 h-10 rounded-full bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] flex items-center justify-center flex-shrink-0">
                 <Trash2 className="w-5 h-5 text-[#9F2F2D] dark:text-[#F87171]" />
               </div>
-              <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">
-                Delete workspace
-              </h2>
+              <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">Delete workspace</h2>
             </div>
             <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4">
               This action will delete workspace{" "}
-              <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                {workspace.name}
-              </span>{" "}
-              and cannot be undone. Enter{" "}
-              <span className="font-mono font-semibold">delete</span> to
-              confirm.
+              <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspace.name}</span> and cannot be
+              undone. Enter <span className="font-mono font-semibold">delete</span> to confirm.
             </p>
             <input
               type="text"
@@ -912,10 +815,8 @@ function GeneralSettings({
                 </div>
                 <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-6">
                   Do you want to delete workspace{" "}
-                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                    {workspace.name}
-                  </span>{" "}
-                  now? This action will delete all data and cannot be undone.
+                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspace.name}</span> now? This
+                  action will delete all data and cannot be undone.
                 </p>
                 <div className="flex justify-end gap-3">
                   <button
@@ -932,11 +833,7 @@ function GeneralSettings({
                       setDeleteConfirm("");
                       setShowDeleteDialog(true);
                       window.setTimeout(() => {
-                        document
-                          .querySelector<HTMLInputElement>(
-                            'input[placeholder="delete"]',
-                          )
-                          ?.focus();
+                        document.querySelector<HTMLInputElement>('input[placeholder="delete"]')?.focus();
                       }, 0);
                     }}
                     className="px-4 py-2 text-sm font-medium text-white bg-[#9F2F2D] hover:bg-[#8F2927] rounded-[6px] transition-colors flex items-center gap-2"
@@ -952,17 +849,12 @@ function GeneralSettings({
                   <div className="w-10 h-10 rounded-full bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] flex items-center justify-center flex-shrink-0">
                     <LogOut className="w-5 h-5 text-[#9F2F2D] dark:text-[#F87171]" />
                   </div>
-                  <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">
-                    Leave workspace
-                  </h2>
+                  <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">Leave workspace</h2>
                 </div>
                 <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4">
                   You will lose access to workspace{" "}
-                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                    {workspace.name}
-                  </span>
-                  . Enter <span className="font-mono font-semibold">leave</span>{" "}
-                  to confirm.
+                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspace.name}</span>. Enter{" "}
+                  <span className="font-mono font-semibold">leave</span> to confirm.
                 </p>
                 <input
                   type="text"
@@ -1046,14 +938,8 @@ function MemberSettings({
   memberMenu: { member: WorkspaceMember; x: number; y: number } | null;
   removingMemberId: string | null;
   updatingMemberId: string | null;
-  handleOpenMemberMenu: (
-    event: MouseEvent<HTMLDivElement>,
-    member: WorkspaceMember,
-  ) => void;
-  handleClickMember: (
-    event: MouseEvent<HTMLDivElement>,
-    member: WorkspaceMember,
-  ) => void;
+  handleOpenMemberMenu: (event: MouseEvent<HTMLDivElement>, member: WorkspaceMember) => void;
+  handleClickMember: (event: MouseEvent<HTMLDivElement>, member: WorkspaceMember) => void;
   handleUpdateMemberRole: (member: WorkspaceMember, role: InviteRole) => void;
   handleRemoveMember: (member: WorkspaceMember) => void;
 }) {
@@ -1098,10 +984,7 @@ function MemberSettings({
         <button
           type="button"
           onClick={() => setMemberSubTab("list")}
-          className={
-            "rounded-md px-3 py-1.5 text-sm font-semibold transition-colors " +
-            listTabClass
-          }
+          className={"rounded-md px-3 py-1.5 text-sm font-semibold transition-colors " + listTabClass}
         >
           List ({members.length})
         </button>
@@ -1109,10 +992,7 @@ function MemberSettings({
           <button
             type="button"
             onClick={() => setMemberSubTab("invites")}
-            className={
-              "rounded-md px-3 py-1.5 text-sm font-semibold transition-colors " +
-              invitesTabClass
-            }
+            className={"rounded-md px-3 py-1.5 text-sm font-semibold transition-colors " + invitesTabClass}
           >
             Invitations ({invites.length})
           </button>
@@ -1134,17 +1014,12 @@ function MemberSettings({
               <div className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06]">
                 {members.map((member) => {
                   const memberUser = member.userId;
-                  const displayName =
-                    memberUser?.fullName || memberUser?.email || "User";
+                  const displayName = memberUser?.fullName || memberUser?.email || "User";
                   const memberId = memberUser?._id;
                   const isSelf = memberId === currentUserId;
-                  const isBusy =
-                    updatingMemberId === memberId ||
-                    removingMemberId === memberId;
+                  const isBusy = updatingMemberId === memberId || removingMemberId === memberId;
                   const normalizedRole: InviteRole =
-                    member.role === "space_admin"
-                      ? "workspace_admin"
-                      : (member.role as InviteRole);
+                    member.role === "space_admin" ? "workspace_admin" : (member.role as InviteRole);
 
                   return (
                     <div
@@ -1214,8 +1089,7 @@ function MemberSettings({
         <section>
           {loadingInvites ? (
             <div className="flex items-center gap-2 py-8 text-sm text-[#ABABAB] dark:text-[#6B6B6B]">
-              <Loader2 className="h-4 w-4 animate-spin" /> Loading
-              invitations...
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading invitations...
             </div>
           ) : invites.length === 0 ? (
             <div className="rounded-[6px] border border-dashed border-[#EAEAEA] p-6 text-center text-sm text-[#787774] dark:border-white/[0.08] dark:text-[#9B9A97]">
@@ -1248,10 +1122,7 @@ function MemberSettings({
                       </td>
                       <td className="px-4 py-3 text-xs text-[#787774] dark:text-[#9B9A97]">
                         {invite.expiresAt
-                          ? "Expires " +
-                            new Date(invite.expiresAt).toLocaleDateString(
-                              "en-US",
-                            )
+                          ? "Expires " + new Date(invite.expiresAt).toLocaleDateString("en-US")
                           : "Pending, no expiration"}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -1279,11 +1150,7 @@ function MemberSettings({
       )}
 
       {canManageWorkspace && (
-        <InviteModal
-          isOpen={showInviteModal}
-          onClose={closeInviteModal}
-          projectId={workspaceInviteId}
-        />
+        <InviteModal isOpen={showInviteModal} onClose={closeInviteModal} projectId={workspaceInviteId} />
       )}
     </div>
   );

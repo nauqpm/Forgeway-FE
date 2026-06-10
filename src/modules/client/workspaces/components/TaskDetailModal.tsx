@@ -31,7 +31,7 @@ import TaskStatusChanger from "./TaskStatusChanger";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
@@ -178,23 +178,17 @@ export default function TaskDetailModal({
 
   const issueKey = issue.key;
   const timeEstimated = issue.timeEstimated || "1d 4h"; // Mock default
-  const assigneeName =
-    issue.assigneeDisplayName ||
-    getUserDisplayName(issue.assignee, issue.assigneeId);
+  const assigneeName = issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const sprintLabel =
-    issue.sprint?.name ||
-    sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name ||
-    "None";
+    issue.sprint?.name || sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name || "None";
   const boardLabel = issue.board?.name || issue.boardId || "None";
   const showSprintField = workspaceTemplate === "scrum";
   const showBoardField = false;
   const storyPointsLabel =
-    issue.storyPoints === null || issue.storyPoints === undefined
-      ? "None"
-      : String(issue.storyPoints);
+    issue.storyPoints === null || issue.storyPoints === undefined ? "None" : String(issue.storyPoints);
   const memberOptions = mapMemberOptions(
-    providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers,
+    providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers
   );
   const detailWorkspaceMembers =
     providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers;
@@ -253,10 +247,7 @@ export default function TaskDetailModal({
     cancelInlineEdit();
   };
 
-  const handleInlineKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
-    field: string,
-  ) => {
+  const handleInlineKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>, field: string) => {
     if (event.key === "Enter") saveInlineEdit(field);
     if (event.key === "Escape") cancelInlineEdit();
   };
@@ -278,7 +269,7 @@ export default function TaskDetailModal({
     field: string,
     displayValue: string,
     rawValue?: string | number | null,
-    type: "text" | "date" | "number" = "text",
+    type: "text" | "date" | "number" = "text"
   ) =>
     canEditTask && editingField === field ? (
       <input
@@ -294,17 +285,15 @@ export default function TaskDetailModal({
       <div
         onDoubleClick={() => startInlineEdit(field, rawValue ?? displayValue)}
         title={canEditTask ? "Double click to edit" : undefined}
-        className={canEditTask ? editableTextClass : "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] p-1.5 -ml-1.5"}
+        className={
+          canEditTask ? editableTextClass : "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] p-1.5 -ml-1.5"
+        }
       >
         {displayValue}
       </div>
     );
 
-  const renderInlineSelect = (
-    field: string,
-    value: string,
-    options: string[],
-  ) =>
+  const renderInlineSelect = (field: string, value: string, options: string[]) =>
     canEditTask && editingField === field ? (
       <select
         autoFocus
@@ -324,7 +313,9 @@ export default function TaskDetailModal({
       <div
         onDoubleClick={() => startInlineEdit(field, value)}
         title={canEditTask ? "Double click to edit" : undefined}
-        className={canEditTask ? editableTextClass : "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] p-1.5 -ml-1.5"}
+        className={
+          canEditTask ? editableTextClass : "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] p-1.5 -ml-1.5"
+        }
       >
         {value}
       </div>
@@ -354,9 +345,7 @@ export default function TaskDetailModal({
 
   const handleUpdateSubtaskStatus = (id: string, newStatus: string) => {
     if (issue.isArchived) return;
-    const updatedSubtasks = subtasks.map((t) =>
-      t.id === id ? { ...t, status: newStatus } : t,
-    );
+    const updatedSubtasks = subtasks.map((t) => (t.id === id ? { ...t, status: newStatus } : t));
     setSubtasks(updatedSubtasks);
     if (onUpdateIssue) {
       onUpdateIssue({ ...issue, subtasks: updatedSubtasks });
@@ -399,32 +388,35 @@ export default function TaskDetailModal({
 
           <div className="flex items-center gap-1">
             {onArchiveIssue && (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowActionMenu((open) => !open)}
-                className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
-                aria-label="Task actions"
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-              {showActionMenu && (
-                <div className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowActionMenu(false);
-                      onArchiveIssue?.(issue);
-                    }}
-                    disabled={!onArchiveIssue || issue.isArchived}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowActionMenu((open) => !open)}
+                  className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
+                  aria-label="Task actions"
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+                {showActionMenu && (
+                  <div
+                    className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
+                    style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
                   >
-                    <Archive className="h-4 w-4" />
-                    Archive
-                  </button>
-                </div>
-              )}
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowActionMenu(false);
+                        onArchiveIssue?.(issue);
+                      }}
+                      disabled={!onArchiveIssue || issue.isArchived}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Archive className="h-4 w-4" />
+                      Archive
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
             <button
               onClick={onClose}
@@ -447,18 +439,21 @@ export default function TaskDetailModal({
         <div className="flex flex-1 overflow-hidden">
           {/* Left Column (Main) */}
           <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] border-r border-[#EAEAEA] dark:border-white/[0.06] space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
-            
             {/* Archived Banner */}
             {issue.isArchived && (
               <div className="flex items-center justify-between bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] border-l-4 border-[#956400]/40 dark:border-[#F59E0B]/40 p-4 rounded-[6px]">
                 <div className="flex items-center">
                   <AlertTriangle className="h-5 w-5 text-[#956400] dark:text-[#F59E0B] mr-2" />
                   <span className="text-[#956400] dark:text-[#F59E0B] text-sm font-medium">
-                    This task was archived by {issue.archivedByUser?.fullName || 'Unknown'} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : 'Unknown Date'}. It is currently read-only.
+                    This task was archived by {issue.archivedByUser?.fullName || "Unknown"} on{" "}
+                    {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : "Unknown Date"}. It is
+                    currently read-only.
                   </span>
                 </div>
-                <button 
-                  onClick={() => { console.log("Restore triggered") }}
+                <button
+                  onClick={() => {
+                    console.log("Restore triggered");
+                  }}
                   className="flex items-center px-3 py-1.5 bg-[#FBF3DB] hover:bg-[#F7F6F3] dark:bg-[rgba(149,100,0,0.12)] dark:hover:bg-[#2E2E2E] text-[#956400] dark:text-[#F59E0B] text-sm font-semibold rounded-[6px] transition-colors"
                 >
                   <ArchiveRestore className="w-4 h-4 mr-1.5" />
@@ -483,8 +478,10 @@ export default function TaskDetailModal({
                 />
               ) : (
                 <h1
-                  onClick={() => { if (canEditTask && !issue.isArchived) setIsEditingTitle(true); }}
-                  className={`text-3xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4 p-2 -ml-2 rounded-[6px] transition-colors ${canEditTask && !issue.isArchived ? 'hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer' : 'opacity-90'}`}
+                  onClick={() => {
+                    if (canEditTask && !issue.isArchived) setIsEditingTitle(true);
+                  }}
+                  className={`text-3xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4 p-2 -ml-2 rounded-[6px] transition-colors ${canEditTask && !issue.isArchived ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer" : "opacity-90"}`}
                 >
                   {localTitle}
                 </h1>
@@ -493,9 +490,7 @@ export default function TaskDetailModal({
 
             {/* Description */}
             <div className="space-y-2">
-              <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                Description
-              </h3>
+              <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Description</h3>
               <TaskDescription
                 initialContent={issue.description || ""}
                 onSave={(newDesc: string) => {
@@ -524,9 +519,7 @@ export default function TaskDetailModal({
             {/* Activity */}
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  Activity
-                </h3>
+                <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h3>
                 <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   <span>Show:</span>
                   <button
@@ -573,9 +566,7 @@ export default function TaskDetailModal({
                 issue={issue}
                 boardColumns={boardColumns}
                 disabled={!canEditTask || issue.isArchived}
-                onChange={({ columnId, status }) =>
-                  onUpdateIssue?.({ ...issue, columnId, status })
-                }
+                onChange={({ columnId, status }) => onUpdateIssue?.({ ...issue, columnId, status })}
               />
             </div>
 
@@ -590,7 +581,11 @@ export default function TaskDetailModal({
                     <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Assignee</div>
                     <div className="col-span-2">
                       <AssigneePicker
-                        users={toAssigneePickerUsers((providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers) as any[])}
+                        users={toAssigneePickerUsers(
+                          (providedWorkspaceMembers.length > 0
+                            ? providedWorkspaceMembers
+                            : fetchedWorkspaceMembers) as any[]
+                        )}
                         value={getIssueAssigneeId(issue) || null}
                         onChange={(uid) => saveInlineEdit("assigneeId", uid ?? "")}
                         placement="auto"
@@ -620,28 +615,18 @@ export default function TaskDetailModal({
 
                   {/* Due date */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
-                      Start date
-                    </div>
-                    <div className="col-span-2">
-                      {renderDateInput("startDate", toDateInputValue(issue.startDate))}
-                    </div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Start date</div>
+                    <div className="col-span-2">{renderDateInput("startDate", toDateInputValue(issue.startDate))}</div>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
-                      Due date
-                    </div>
-                    <div className="col-span-2">
-                      {renderDateInput("dueDate", toDateInputValue(issue.dueDate))}
-                    </div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Due date</div>
+                    <div className="col-span-2">{renderDateInput("dueDate", toDateInputValue(issue.dueDate))}</div>
                   </div>
 
                   {/* Story points */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
-                      Story points
-                    </div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Story points</div>
                     <div className="col-span-2">
                       {renderInlineInput("storyPoints", storyPointsLabel, issue.storyPoints, "number")}
                     </div>
@@ -649,9 +634,7 @@ export default function TaskDetailModal({
 
                   {/* Labels */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
-                      Labels
-                    </div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Labels</div>
                     <div className="col-span-2">
                       <TaskLabelsField
                         workspaceId={workspaceId}
@@ -663,20 +646,14 @@ export default function TaskDetailModal({
 
                   {showSprintField && (
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
-                        Sprint
-                      </div>
-                      <div className="col-span-2">
-                        {renderInlineInput("sprintId", sprintLabel, issue.sprintId)}
-                      </div>
+                      <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Sprint</div>
+                      <div className="col-span-2">{renderInlineInput("sprintId", sprintLabel, issue.sprintId)}</div>
                     </div>
                   )}
 
                   {showBoardField && (
                     <div className="grid grid-cols-3 gap-2">
-                      <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
-                        Board
-                      </div>
+                      <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Board</div>
                       <div className="col-span-2">
                         <div className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1.5 -ml-1.5 rounded-[6px] cursor-pointer transition-colors">
                           {boardLabel}
@@ -687,9 +664,7 @@ export default function TaskDetailModal({
 
                   {/* Priority */}
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">
-                      Priority
-                    </div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Priority</div>
                     <div className="col-span-2">
                       {renderInlineSelect("priority", issue.priority, ["Lowest", "Low", "Medium", "High", "Highest"])}
                     </div>

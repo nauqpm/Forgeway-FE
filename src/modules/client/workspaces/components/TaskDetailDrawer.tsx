@@ -1,16 +1,24 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
   X,
-  MoreHorizontal, Plus, Link as LinkIcon,
-  FileText, ChevronDown, Settings,
-  Zap, User, Archive, AlertTriangle, ArchiveRestore
-} from 'lucide-react';
-import Link from 'next/link';
-import { TaskDetailResponse } from '../types/task-detail.type';
+  MoreHorizontal,
+  Plus,
+  Link as LinkIcon,
+  FileText,
+  ChevronDown,
+  Settings,
+  Zap,
+  User,
+  Archive,
+  AlertTriangle,
+  ArchiveRestore,
+} from "lucide-react";
+import Link from "next/link";
+import { TaskDetailResponse } from "../types/task-detail.type";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -21,7 +29,7 @@ import TaskStatusChanger from "./TaskStatusChanger";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
 import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
@@ -43,15 +51,15 @@ interface TaskDetailDrawerProps {
 }
 
 const getUserDisplayName = (user: any, fallback?: string | null) => {
-  if (typeof user === 'string') return user;
-  return user?.fullName || user?.email || fallback || 'Unassigned';
+  if (typeof user === "string") return user;
+  return user?.fullName || user?.email || fallback || "Unassigned";
 };
 
 const formatDateTime = (value?: string | null) => {
-  if (!value) return 'Unknown';
-  return new Intl.DateTimeFormat('en-US', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
+  if (!value) return "Unknown";
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
   }).format(new Date(value));
 };
 
@@ -121,8 +129,8 @@ export default function TaskDetailDrawer({
   embedded = false,
 }: TaskDetailDrawerProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<'comments' | 'history'>('comments');
-  const [localTitle, setLocalTitle] = useState('');
+  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
+  const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
@@ -154,11 +162,11 @@ export default function TaskDetailDrawer({
     };
     const handleMouseUp = () => setIsResizing(false);
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isResizing]);
 
@@ -176,21 +184,15 @@ export default function TaskDetailDrawer({
   if (!issue) return null;
 
   const issueKey = issue.key;
-  const assigneeName =
-    issue.assigneeDisplayName ||
-    getUserDisplayName(issue.assignee, issue.assigneeId);
+  const assigneeName = issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const sprintLabel =
-    issue.sprint?.name ||
-    sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name ||
-    'None';
+    issue.sprint?.name || sprints.find((sprint) => (sprint._id || sprint.id) === issue.sprintId)?.name || "None";
   const showSprintField = workspaceTemplate === "scrum";
   const storyPointsLabel =
-    issue.storyPoints === null || issue.storyPoints === undefined
-      ? 'None'
-      : String(issue.storyPoints);
+    issue.storyPoints === null || issue.storyPoints === undefined ? "None" : String(issue.storyPoints);
   const memberOptions = mapMemberOptions(
-    providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers,
+    providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers
   );
   const detailWorkspaceMembers =
     providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers;
@@ -249,10 +251,7 @@ export default function TaskDetailDrawer({
     cancelInlineEdit();
   };
 
-  const handleInlineKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>,
-    field: string,
-  ) => {
+  const handleInlineKeyDown = (event: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>, field: string) => {
     if (event.key === "Enter") saveInlineEdit(field);
     if (event.key === "Escape") cancelInlineEdit();
   };
@@ -274,7 +273,7 @@ export default function TaskDetailDrawer({
     field: string,
     displayValue: string,
     rawValue?: string | number | null,
-    type: "text" | "date" | "number" = "text",
+    type: "text" | "date" | "number" = "text"
   ) =>
     canEditTask && editingField === field ? (
       <input
@@ -296,11 +295,7 @@ export default function TaskDetailDrawer({
       </div>
     );
 
-  const renderInlineSelect = (
-    field: string,
-    value: string,
-    options: string[],
-  ) =>
+  const renderInlineSelect = (field: string, value: string, options: string[]) =>
     canEditTask && editingField === field ? (
       <select
         autoFocus
@@ -335,7 +330,7 @@ export default function TaskDetailDrawer({
 
   const panelClasses = embedded
     ? "relative z-0 flex flex-col h-full min-h-0 w-full max-w-none bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] shadow-none border-0 rounded-none overflow-hidden"
-    : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] flex flex-col border-l border-[#EAEAEA] dark:border-white/[0.06] transform ${isResizing ? '' : 'transition-transform duration-300 ease-in-out'} ${
+    : `fixed top-0 right-0 bottom-0 z-[99999] bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] flex flex-col border-l border-[#EAEAEA] dark:border-white/[0.06] transform ${isResizing ? "" : "transition-transform duration-300 ease-in-out"} ${
         isOpen ? "translate-x-0" : "translate-x-full"
       }`;
 
@@ -348,10 +343,10 @@ export default function TaskDetailDrawer({
         />
       )}
 
-      <div className={panelClasses} style={{ width: embedded ? '100%' : `${drawerWidth}px` }}>
+      <div className={panelClasses} style={{ width: embedded ? "100%" : `${drawerWidth}px` }}>
         {!embedded && (
           <div
-            className={`absolute top-0 left-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize z-[100000] hover:bg-[#2563EB]/30 transition-colors ${isResizing ? 'bg-[#2563EB]/50' : 'bg-transparent'}`}
+            className={`absolute top-0 left-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize z-[100000] hover:bg-[#2563EB]/30 transition-colors ${isResizing ? "bg-[#2563EB]/50" : "bg-transparent"}`}
             onMouseDown={(e) => {
               e.preventDefault();
               setIsResizing(true);
@@ -379,35 +374,35 @@ export default function TaskDetailDrawer({
 
           <div className="flex items-center gap-1">
             {onArchiveIssue && (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setShowActionMenu((open) => !open)}
-                className="p-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
-                aria-label="Task actions"
-              >
-                <MoreHorizontal className="w-4 h-4" />
-              </button>
-              {showActionMenu && (
-                <div
-                  className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
-                  style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowActionMenu((open) => !open)}
+                  className="p-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
+                  aria-label="Task actions"
                 >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowActionMenu(false);
-                      onArchiveIssue?.(issue);
-                    }}
-                    disabled={!onArchiveIssue || issue.isArchived}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-40"
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+                {showActionMenu && (
+                  <div
+                    className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
+                    style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
                   >
-                    <Archive className="h-4 w-4 text-[#787774]" />
-                    Archive
-                  </button>
-                </div>
-              )}
-            </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowActionMenu(false);
+                        onArchiveIssue?.(issue);
+                      }}
+                      disabled={!onArchiveIssue || issue.isArchived}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Archive className="h-4 w-4 text-[#787774]" />
+                      Archive
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
             <button
               onClick={onClose}
@@ -429,18 +424,21 @@ export default function TaskDetailDrawer({
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
           <div className="p-4 md:p-6 space-y-8">
-
             {/* Archived Banner */}
             {issue.isArchived && (
               <div className="flex items-center justify-between bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-[6px]">
                 <div className="flex items-center">
                   <AlertTriangle className="h-5 w-5 text-yellow-500 mr-2" />
                   <span className="text-yellow-700 text-[0.8125rem] font-medium">
-                    This task was archived by {issue.archivedByUser?.fullName || 'Unknown'} on {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : 'Unknown Date'}. It is currently read-only.
+                    This task was archived by {issue.archivedByUser?.fullName || "Unknown"} on{" "}
+                    {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : "Unknown Date"}. It is
+                    currently read-only.
                   </span>
                 </div>
                 <button
-                  onClick={() => { console.log("Restore triggered") }}
+                  onClick={() => {
+                    console.log("Restore triggered");
+                  }}
                   className="flex items-center px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-800 text-[0.8125rem] font-semibold rounded-[6px] transition-colors"
                 >
                   <ArchiveRestore className="w-4 h-4 mr-1.5" />
@@ -458,13 +456,17 @@ export default function TaskDetailDrawer({
                   value={localTitle}
                   onChange={(e) => setLocalTitle(e.target.value)}
                   onBlur={handleTitleBlur}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleTitleBlur(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleTitleBlur();
+                  }}
                   className="w-full text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] bg-[#F7F6F3] dark:bg-[#2A2A2A] border-2 border-[#2563EB] rounded-[6px] px-2 py-1 outline-none mb-4"
                 />
               ) : (
                 <h1
-                  onClick={() => { if (canEditTask && !issue.isArchived) setIsEditingTitle(true); }}
-                  className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4 p-2 -ml-2 rounded-[6px] transition-colors ${canEditTask && !issue.isArchived ? 'hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer' : 'opacity-90'}`}
+                  onClick={() => {
+                    if (canEditTask && !issue.isArchived) setIsEditingTitle(true);
+                  }}
+                  className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4 p-2 -ml-2 rounded-[6px] transition-colors ${canEditTask && !issue.isArchived ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer" : "opacity-90"}`}
                 >
                   {localTitle}
                 </h1>
@@ -477,9 +479,7 @@ export default function TaskDetailDrawer({
                 issue={issue}
                 boardColumns={boardColumns}
                 disabled={!canEditTask || issue.isArchived}
-                onChange={({ columnId, status }) =>
-                  onUpdateIssue?.({ ...issue, columnId, status })
-                }
+                onChange={({ columnId, status }) => onUpdateIssue?.({ ...issue, columnId, status })}
               />
             </div>
 
@@ -491,7 +491,9 @@ export default function TaskDetailDrawer({
               <div className="p-4 flex flex-col space-y-2">
                 {/* Assignee */}
                 <div className="flex items-center min-h-8">
-                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Assignee</div>
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">
+                    Assignee
+                  </div>
                   <div className="min-w-0 flex-1 -ml-1">
                     <AssigneePicker
                       users={toAssigneePickerUsers(providedWorkspaceMembers as any[])}
@@ -506,7 +508,9 @@ export default function TaskDetailDrawer({
 
                 {/* Reporter */}
                 <div className="flex items-center min-h-8">
-                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Reporter</div>
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">
+                    Reporter
+                  </div>
                   <div className="flex items-center gap-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors">
                     <div className="w-5 h-5 rounded-full bg-orange-200 dark:bg-orange-800 flex items-center justify-center text-orange-700 dark:text-orange-300 font-bold text-[0.625rem]">
                       {reporterName.substring(0, 2).toUpperCase()}
@@ -517,7 +521,9 @@ export default function TaskDetailDrawer({
 
                 {/* Type */}
                 <div className="flex items-center min-h-8">
-                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Type</div>
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">
+                    Type
+                  </div>
                   <div className="min-w-0 flex-1">
                     {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
                   </div>
@@ -525,7 +531,9 @@ export default function TaskDetailDrawer({
 
                 {/* Priority */}
                 <div className="flex items-center min-h-8">
-                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Priority</div>
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">
+                    Priority
+                  </div>
                   <div className="min-w-0 flex-1">
                     {renderInlineSelect("priority", issue.priority, ["Lowest", "Low", "Medium", "High", "Highest"])}
                   </div>
@@ -533,7 +541,9 @@ export default function TaskDetailDrawer({
 
                 {/* Labels */}
                 <div className="flex items-start min-h-8">
-                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0 pt-1.5">Labels</div>
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0 pt-1.5">
+                    Labels
+                  </div>
                   <div className="min-w-0 flex-1">
                     <TaskLabelsField
                       workspaceId={workspaceId}
@@ -545,7 +555,9 @@ export default function TaskDetailDrawer({
 
                 {/* Start date */}
                 <div className="flex items-center min-h-8">
-                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Start date</div>
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">
+                    Start date
+                  </div>
                   <div className="min-w-0 flex-1">
                     {renderDateInput("startDate", toDateInputValue(issue.startDate))}
                   </div>
@@ -553,24 +565,26 @@ export default function TaskDetailDrawer({
 
                 {/* Due date */}
                 <div className="flex items-center min-h-8">
-                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Due date</div>
-                  <div className="min-w-0 flex-1">
-                    {renderDateInput("dueDate", toDateInputValue(issue.dueDate))}
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">
+                    Due date
                   </div>
+                  <div className="min-w-0 flex-1">{renderDateInput("dueDate", toDateInputValue(issue.dueDate))}</div>
                 </div>
 
                 {showSprintField && (
                   <div className="flex items-center min-h-8">
-                    <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Sprint</div>
-                    <div className="min-w-0 flex-1">
-                      {renderInlineInput("sprintId", sprintLabel, issue.sprintId)}
+                    <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">
+                      Sprint
                     </div>
+                    <div className="min-w-0 flex-1">{renderInlineInput("sprintId", sprintLabel, issue.sprintId)}</div>
                   </div>
                 )}
 
                 {/* Story points */}
                 <div className="flex items-center min-h-8">
-                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Story points</div>
+                  <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">
+                    Story points
+                  </div>
                   <div className="min-w-0 flex-1">
                     {renderInlineInput("storyPoints", storyPointsLabel, issue.storyPoints, "number")}
                   </div>
@@ -583,7 +597,7 @@ export default function TaskDetailDrawer({
               <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Description</h3>
               <div className="pl-1">
                 <TaskDescription
-                  initialContent={issue.description || ''}
+                  initialContent={issue.description || ""}
                   onSave={(newDesc: string) => {
                     if (canEditTask && onUpdateIssue && !issue.isArchived) {
                       onUpdateIssue({ ...issue, description: newDesc });
@@ -611,17 +625,17 @@ export default function TaskDetailDrawer({
                   <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No linked items yet</span>
                 </div>
                 {canEditTask && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <Link
-                    href={`/docs/create?issueId=${issue.id}`}
-                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] text-white text-[0.8125rem] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
-                  >
-                    <Plus className="w-4 h-4" /> Create Document
-                  </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
-                    <LinkIcon className="w-4 h-4 text-[#787774]" /> Link item
-                  </button>
-                </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Link
+                      href={`/docs/create?issueId=${issue.id}`}
+                      className={`inline-flex items-center gap-2 px-3 py-2 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] text-white text-[0.8125rem] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
+                    >
+                      <Plus className="w-4 h-4" /> Create Document
+                    </Link>
+                    <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
+                      <LinkIcon className="w-4 h-4 text-[#787774]" /> Link item
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -632,18 +646,22 @@ export default function TaskDetailDrawer({
                 <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h3>
                 <div className="flex items-center gap-1 text-[0.8125rem] bg-[#F7F6F3] dark:bg-white/5 p-1 rounded-[6px]">
                   <button
-                    onClick={() => setActiveTab('comments')}
-                    className={`px-4 py-1.5 rounded-[4px] font-medium transition-colors ${activeTab === 'comments' ? 'bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]' : 'text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'}`}
-                  >Comments</button>
+                    onClick={() => setActiveTab("comments")}
+                    className={`px-4 py-1.5 rounded-[4px] font-medium transition-colors ${activeTab === "comments" ? "bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]" : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}
+                  >
+                    Comments
+                  </button>
                   <button
-                    onClick={() => setActiveTab('history')}
-                    className={`px-4 py-1.5 rounded-[4px] font-medium transition-colors ${activeTab === 'history' ? 'bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]' : 'text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'}`}
-                  >History</button>
+                    onClick={() => setActiveTab("history")}
+                    className={`px-4 py-1.5 rounded-[4px] font-medium transition-colors ${activeTab === "history" ? "bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]" : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]"}`}
+                  >
+                    History
+                  </button>
                 </div>
               </div>
 
               <div className="pt-2">
-                {activeTab === 'comments' && (
+                {activeTab === "comments" && (
                   <TaskComments
                     workspaceId={workspaceId}
                     taskId={issue.id}
@@ -651,7 +669,7 @@ export default function TaskDetailDrawer({
                     isDeleted={issue.isDeleted ?? false}
                   />
                 )}
-                {activeTab === 'history' && (
+                {activeTab === "history" && (
                   <TaskActivityHistory
                     workspaceId={workspaceId}
                     taskId={issue.id}
@@ -672,19 +690,22 @@ export default function TaskDetailDrawer({
               <span>•</span>
               <span>Updated: {formatDateTime(issue.updatedAt)}</span>
             </div>
-
           </div>
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #EAEAEA; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #C8C7C4; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-      `}} />
+      `,
+        }}
+      />
     </>
   );
 }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, Loader2 } from "lucide-react";
 
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import type { TaskLabel } from "../types/label.type";
 import { labelService } from "../services/labelService";
@@ -150,33 +150,23 @@ const getUserLikeIds = (value: unknown) => {
 };
 
 const getMemberDisplayName = (member: WorkspaceMember) => {
-  return (
-    getUserLikeDisplayName(member.userId) ||
-    getUserLikeDisplayName(member.user) ||
-    getUserLikeDisplayName(member)
-  );
+  return getUserLikeDisplayName(member.userId) || getUserLikeDisplayName(member.user) || getUserLikeDisplayName(member);
 };
 
 const getMemberIds = (member: WorkspaceMember) => {
-  const memberIds = [
-    member._id,
-    member.id,
-    ...getUserLikeIds(member),
-  ].filter(Boolean) as string[];
+  const memberIds = [member._id, member.id, ...getUserLikeIds(member)].filter(Boolean) as string[];
 
-  const userIds =
-    !member.userId
-      ? []
-      : typeof member.userId === "string"
-        ? [member.userId]
-        : getUserLikeIds(member.userId);
+  const userIds = !member.userId
+    ? []
+    : typeof member.userId === "string"
+      ? [member.userId]
+      : getUserLikeIds(member.userId);
 
-  const nestedUserIds =
-    !member.user
-      ? []
-      : typeof member.user === "string"
-        ? [member.user]
-        : getUserLikeIds(member.user);
+  const nestedUserIds = !member.user
+    ? []
+    : typeof member.user === "string"
+      ? [member.user]
+      : getUserLikeIds(member.user);
 
   return [...memberIds, ...userIds, ...nestedUserIds];
 };
@@ -203,7 +193,7 @@ const normalizeMembersPayload = (payload: unknown): WorkspaceMember[] => {
 
 const buildMemberNameMap = (
   members: WorkspaceMember[] = [],
-  knownUsers: Array<{ id?: string | null; name?: string | null; user?: unknown }> = [],
+  knownUsers: Array<{ id?: string | null; name?: string | null; user?: unknown }> = []
 ) => {
   const map = new Map<string, string>();
 
@@ -220,10 +210,7 @@ const buildMemberNameMap = (
     const displayName = knownUser.name || getUserLikeDisplayName(knownUser.user);
     if (!displayName || displayName === "Unassigned") return;
 
-    const ids = [
-      knownUser.id,
-      ...getUserLikeIds(knownUser.user),
-    ].filter(Boolean) as string[];
+    const ids = [knownUser.id, ...getUserLikeIds(knownUser.user)].filter(Boolean) as string[];
 
     ids.forEach((id) => {
       map.set(id, displayName);
@@ -268,10 +255,7 @@ const buildLabelNameMap = (workspaceLabels: TaskLabel[] = [], taskLabels: TaskLa
   return map;
 };
 
-const formatLabelActivityValue = (
-  value: unknown,
-  labelNameMap: Map<string, string>,
-): string => {
+const formatLabelActivityValue = (value: unknown, labelNameMap: Map<string, string>): string => {
   if (Array.isArray(value)) {
     const labelNames = value
       .map((item) => formatLabelActivityValue(item, labelNameMap))
@@ -295,7 +279,7 @@ const formatActivityValue = (
   activity: TaskActivity,
   value: unknown,
   memberNameMap: Map<string, string>,
-  labelNameMap: Map<string, string>,
+  labelNameMap: Map<string, string>
 ) => {
   if (isLabelActivity(activity)) return formatLabelActivityValue(value, labelNameMap);
   if (!isAssigneeActivity(activity)) return formatValue(value);
@@ -408,9 +392,7 @@ export default function TaskActivityHistory({
   useEffect(() => {
     if (!data) return;
     setTotal(data.total);
-    setAllActivities((prev) =>
-      page === 1 ? data.activities : [...prev, ...data.activities],
-    );
+    setAllActivities((prev) => (page === 1 ? data.activities : [...prev, ...data.activities]));
   }, [data, page]);
 
   const handleLoadMore = useCallback(() => {
@@ -457,22 +439,14 @@ export default function TaskActivityHistory({
           <div key={activity.id} className="flex gap-4">
             <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-[0.6875rem] font-bold text-white">
               {activity.actor?.avatar ? (
-                <img
-                  src={activity.actor.avatar}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <img src={activity.actor.avatar} alt="" className="h-full w-full object-cover" />
               ) : (
-                <span className="flex h-full w-full items-center justify-center">
-                  {getInitials(actorName)}
-                </span>
+                <span className="flex h-full w-full items-center justify-center">{getInitials(actorName)}</span>
               )}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  {actorName}
-                </span>
+                <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{actorName}</span>
                 <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   {getActivityMessage(activity)}
                 </span>
@@ -507,9 +481,7 @@ export default function TaskActivityHistory({
             className="flex items-center gap-2 text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6] disabled:opacity-60 transition-colors"
           >
             {isFetching && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isFetching
-              ? "Loading..."
-              : `Load more (${total - allActivities.length} remaining)`}
+            {isFetching ? "Loading..." : `Load more (${total - allActivities.length} remaining)`}
           </button>
         </div>
       )}

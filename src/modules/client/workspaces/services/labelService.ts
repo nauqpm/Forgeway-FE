@@ -1,4 +1,4 @@
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import type { TaskLabel } from "../types/label.type";
 
@@ -21,7 +21,7 @@ export const labelService = {
   async listLabels(workspaceId: string): Promise<TaskLabel[]> {
     const response = await api.get(apiRoutes.WORKSPACES.LABELS(workspaceId));
     const payload = normalizeResponseData<any>(response);
-    const labels: any[] = Array.isArray(payload) ? payload : payload?.labels ?? [];
+    const labels: any[] = Array.isArray(payload) ? payload : (payload?.labels ?? []);
     return labels.map(toLabel).filter((label: TaskLabel) => label.id && !label.isDeleted);
   },
 

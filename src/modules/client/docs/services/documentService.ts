@@ -1,6 +1,6 @@
-import api from "@/common/services/api.service";
-import { apiRoutes } from "@/config/apiRoutes";
-import { DocumentItem } from "../types/document.type";
+import api from '@/lib/axiosIns';
+import { apiRoutes } from '@/config/apiRoutes';
+import { DocumentItem } from '../types/document.type';
 
 const normalize = <T>(res: any): T => res?.data?.data ?? res?.data ?? res;
 
@@ -15,11 +15,11 @@ export const documentService = {
   },
   upload: async (file: File, payload?: { name?: string; workspaceIds?: string[] }) => {
     const formData = new FormData();
-    formData.append("file", file);
-    if (payload?.name) formData.append("name", payload.name);
-    (payload?.workspaceIds ?? []).forEach((id) => formData.append("workspaceIds[]", id));
+    formData.append('file', file);
+    if (payload?.name) formData.append('name', payload.name);
+    (payload?.workspaceIds ?? []).forEach((id) => formData.append('workspaceIds[]', id));
     const res = await api.post(apiRoutes.DOCUMENTS.UPLOAD, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return normalize<DocumentItem>(res);
   },
