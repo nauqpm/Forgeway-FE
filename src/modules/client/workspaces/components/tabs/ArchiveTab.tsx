@@ -4,9 +4,11 @@ import { ArchiveRestore, CheckSquare, FileText, Loader2, Search } from "lucide-r
 import { useMemo, useState } from "react";
 
 import { Issue } from "../../types/issue.type";
+import { BoardColumn } from "../../types/board.type";
 
 type ArchiveTabProps = {
   issues: Issue[];
+  boardColumns?: BoardColumn[];
   isLoading?: boolean;
   isRestoring?: boolean;
   onRestore: (issue: Issue) => void;
@@ -30,6 +32,7 @@ const formatDateTime = (value?: string | null) => {
 
 export default function ArchiveTab({
   issues,
+  boardColumns,
   isLoading = false,
   isRestoring = false,
   onRestore,
@@ -37,6 +40,10 @@ export default function ArchiveTab({
   onLoadMore,
   isLoadingMore = false,
 }: ArchiveTabProps) {
+  const resolveStatus = (status: string) => {
+    if (!boardColumns?.length) return status;
+    return boardColumns.find((c) => c.id === status || c.name === status)?.name ?? status;
+  };
   const [searchTerm, setSearchTerm] = useState("");
 
   const visibleIssues = useMemo(() => {
@@ -131,7 +138,7 @@ export default function ArchiveTab({
                 </td>
                 <td className="px-4 py-3">
                   <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-1 text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97]">
-                    {issue.status}
+                    {resolveStatus(issue.status)}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">

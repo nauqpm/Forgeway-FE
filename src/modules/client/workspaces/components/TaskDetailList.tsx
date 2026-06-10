@@ -24,6 +24,7 @@ import AssigneePicker, {
   toAssigneePickerUsers,
   type AssigneePickerUser,
 } from "@/common/components/AssigneePicker";
+import TypePicker from "@/common/components/TypePicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
@@ -398,6 +399,18 @@ export default function TaskDetailList({
                     placement="auto"
                     size="md"
                     disabled={!canEditTask || issue.isArchived}
+                  />
+                </DetailRow>
+
+                {/* Type */}
+                <DetailRow label="Type">
+                  <TypePicker
+                    value={issue.type ?? "Task"}
+                    onChange={(type) => onUpdateIssue?.({ ...issue, type })}
+                    disabled={!canEditTask || issue.isArchived}
+                    variant="pill"
+                    size="sm"
+                    placement="bottom"
                   />
                 </DetailRow>
 

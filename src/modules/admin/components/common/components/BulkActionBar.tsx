@@ -4,6 +4,7 @@ import AssigneePicker, { AssigneePickerUser } from '../../../../../common/compon
 import StatusPicker from '../../../../../common/components/StatusPicker';
 import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
 import PriorityPicker from '../../../../../common/components/PriorityPicker';
+import TypePicker from '../../../../../common/components/TypePicker';
 
 interface SprintOption {
   id: string;
@@ -119,6 +120,18 @@ export default function BulkActionBar({
             onChange={(priority) => apply({ priority })}
             placement="top"
             variant="default"
+            className={PICKER_CLS}
+          />
+        )}
+
+        {/* Type */}
+        {canEditTask && (
+          <TypePicker
+            value={null}
+            onChange={(type) => apply({ type })}
+            placement="top"
+            variant="default"
+            size="sm"
             className={PICKER_CLS}
           />
         )}

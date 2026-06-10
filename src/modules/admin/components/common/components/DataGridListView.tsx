@@ -13,6 +13,7 @@ import {
   ColumnFiltersState,
 } from '@tanstack/react-table';
 import { MoreHorizontal, FileText, RefreshCcw } from 'lucide-react';
+import TypePicker from '../../../../../common/components/TypePicker';
 import PriorityPicker from '../../../../../common/components/PriorityPicker';
 import BulkActionBar from './BulkActionBar';
 import AssigneePicker, { AssigneePickerMember, getMemberId, getMemberDisplayName, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
@@ -102,6 +103,7 @@ export default function DataGridListView({
   // Footer Inline Create state
   const [isCreating, setIsCreating] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
+  const [newTaskType, setNewTaskType] = useState('Task');
   const [newTaskAssignee, setNewTaskAssignee] = useState('');
   const [newTaskDate, setNewTaskDate] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -113,8 +115,9 @@ export default function DataGridListView({
 
   const handleSubmitInlineCreate = async () => {
     if (!taskTitle.trim() || !onCreateTask) return;
-    await onCreateTask({ title: taskTitle, type: 'Task', assigneeId: newTaskAssignee || null, dueDate: newTaskDate || null });
+    await onCreateTask({ title: taskTitle, type: newTaskType, assigneeId: newTaskAssignee || null, dueDate: newTaskDate || null });
     setTaskTitle('');
+    setNewTaskType('Task');
     setNewTaskAssignee('');
     setNewTaskDate('');
     setIsCreating(false);
@@ -550,6 +553,15 @@ export default function DataGridListView({
               className="flex-1 outline-none py-1 px-2 text-sm bg-transparent text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB]"
             />
             <div className="flex items-center gap-0.5 shrink-0">
+              {/* Type */}
+              <TypePicker
+                value={newTaskType}
+                onChange={setNewTaskType}
+                placement="top"
+                variant="default"
+                size="sm"
+              />
+
               {/* Due date */}
               <div className="w-36">
                 <CustomDatePicker

@@ -38,6 +38,7 @@ import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
 import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
+import TypePicker from "@/common/components/TypePicker";
 
 interface TaskDetailModalProps {
   issue: TaskDetailResponse | any;
@@ -603,10 +604,17 @@ export default function TaskDetailModal({
                   </div>
 
                   {/* Type */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] pt-1.5">Type</div>
+                  <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Type</div>
                     <div className="col-span-2">
-                      {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
+                      <TypePicker
+                        value={issue.type ?? "Task"}
+                        onChange={(type) => onUpdateIssue?.({ ...issue, type })}
+                        disabled={!canEditTask || issue.isArchived}
+                        variant="pill"
+                        size="sm"
+                        placement="bottom"
+                      />
                     </div>
                   </div>
 

@@ -78,7 +78,7 @@ export default function PriorityPicker({
           "border-[#EAEAEA] dark:border-white/[0.08] bg-transparent",
           "text-[#787774] dark:text-[#9B9A97]",
           !isDisabled
-            ? "hover:bg-[#F7F6F3] dark:hover:bg-white/8 hover:border-[#D0D0D0] dark:hover:border-white/[0.18] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer"
+            ? "hover:bg-[#F7F6F3] dark:hover:bg-white/[0.05] hover:border-[#D0D0D0] dark:hover:border-white/[0.18] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer"
             : "cursor-not-allowed opacity-70",
         ].join(" ");
 
@@ -121,7 +121,7 @@ export default function PriorityPicker({
                 className={`flex w-full items-center gap-2.5 px-3 py-2 text-[0.8125rem] text-left transition-colors ${
                   isSelected
                     ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] font-semibold text-[#2563EB] dark:text-[#3B82F6]"
-                    : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+                    : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/[0.05] hover:text-[#111111] dark:hover:text-[#E8E8E7]"
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full shrink-0 ${PRIORITY_DOT[p]}`} />

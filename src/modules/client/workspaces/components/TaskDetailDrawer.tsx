@@ -26,6 +26,7 @@ import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
 import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
+import TypePicker from "@/common/components/TypePicker";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
@@ -521,7 +522,14 @@ export default function TaskDetailDrawer({
                 <div className="flex items-center min-h-8">
                   <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Type</div>
                   <div className="min-w-0 flex-1">
-                    {renderInlineSelect("type", issue.type, ["Task", "Story", "Bug", "Epic"])}
+                    <TypePicker
+                      value={issue.type ?? "Task"}
+                      onChange={(type) => onUpdateIssue?.({ ...issue, type })}
+                      disabled={!canEditTask || issue.isArchived}
+                      variant="pill"
+                      size="sm"
+                      placement="bottom"
+                    />
                   </div>
                 </div>
 

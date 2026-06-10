@@ -1039,6 +1039,7 @@ export default function WorkspaceDetailPage({
         }}
         archiveProps={{
           issues: archivedItems,
+          boardColumns: columns,
           isLoading: isArchivedTasksFetching && archivePage === 1 && archivedItems.length === 0,
           onRestore: handleRestoreIssue,
           total: archiveTotal,
