@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { usePasswordReset } from '../hooks/usePasswordReset';
-import { validateEmailHasNoWhitespace } from '../../shared/utils/emailValidation';
+import { validateEmail } from '../../shared/utils/emailValidation';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -15,7 +15,7 @@ const ForgotPassword = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const emailError = validateEmailHasNoWhitespace(email);
+    const emailError = validateEmail(email);
     if (emailError) {
       toast.error(emailError);
       return;

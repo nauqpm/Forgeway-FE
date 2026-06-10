@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { usePasswordReset } from '../hooks/usePasswordReset';
-import { validateEmailHasNoWhitespace } from '../../shared/utils/emailValidation';
+import { validateEmail } from '../../shared/utils/emailValidation';
 import PasswordPolicyChecklist, {
   validatePassword,
 } from '../security/PasswordPolicyChecklist';
@@ -29,7 +29,7 @@ const ResetPassword = () => {
       return;
     }
 
-    const emailError = validateEmailHasNoWhitespace(email);
+    const emailError = validateEmail(email);
     if (emailError) {
       toast.error(emailError);
       return;

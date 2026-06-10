@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { useSecurityStore } from '../../shared/stores/authStore';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
-import { validateEmailHasNoWhitespace } from '../../shared/utils/emailValidation';
+import { validateEmail } from '../../shared/utils/emailValidation';
 import LockoutAlert from '../security/LockoutAlert';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -41,7 +41,7 @@ function LoginFormInner() {
     e.preventDefault();
     if (lockoutInfo?.isLocked) return;
 
-    const emailError = validateEmailHasNoWhitespace(email);
+    const emailError = validateEmail(email);
     if (emailError) {
       toast.error(emailError);
       return;

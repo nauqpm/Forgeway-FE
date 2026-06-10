@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '../../shared/hooks/useAuth';
-import { validateEmailHasNoWhitespace } from '../../shared/utils/emailValidation';
+import { validateEmail } from '../../shared/utils/emailValidation';
 import PasswordPolicyChecklist, { validatePassword } from '../../password/security/PasswordPolicyChecklist';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
 // import { extractRegisterError } from '../../shared/services/authService';
@@ -20,7 +20,7 @@ export default function RegisterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const emailError = validateEmailHasNoWhitespace(form.email);
+    const emailError = validateEmail(form.email);
     if (emailError) { toast.error(emailError); return; }
 
     const policy = validatePassword(form.password);
