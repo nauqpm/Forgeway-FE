@@ -125,9 +125,12 @@ export default function CalendarView({
     onSelectIssue,
   });
 
-  // Auto-close when all tasks are scheduled
+  // Auto-close only on transition from tasks → no tasks; guards against API rollback reopening issue
+  const prevUnscheduledCount = useRef(unscheduledTasks.length);
   useEffect(() => {
-    if (unscheduledTasks.length === 0) setIsSidebarOpen(false);
+    const prev = prevUnscheduledCount.current;
+    prevUnscheduledCount.current = unscheduledTasks.length;
+    if (prev > 0 && unscheduledTasks.length === 0) setIsSidebarOpen(false);
   }, [unscheduledTasks.length]);
   const assignees = useAssignees(issues);
 
