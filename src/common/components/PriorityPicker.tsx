@@ -36,6 +36,7 @@ export interface PriorityPickerProps {
    */
   variant?: "pill" | "default";
   className?: string;
+  fullWidth?: boolean;
 }
 
 export default function PriorityPicker({
@@ -46,6 +47,7 @@ export default function PriorityPicker({
   disabled,
   variant = "pill",
   className = "",
+  fullWidth = false,
 }: PriorityPickerProps) {
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
@@ -97,10 +99,11 @@ export default function PriorityPicker({
           isDisabled ? "cursor-not-allowed opacity-70" : "",
         ].join(" ")
       : [
-          "inline-flex items-center gap-1.5 rounded-[6px] border font-medium transition-colors",
+          "inline-flex items-center gap-1.5 rounded-[6px] border font-medium transition-colors text-left",
           size === "sm" ? "h-7 px-2.5 text-sm" : "h-8 px-3 text-sm",
           "border-[#EAEAEA] dark:border-white/[0.08] bg-transparent",
           "text-[#787774] dark:text-[#9B9A97]",
+          fullWidth ? "w-full" : "",
           !isDisabled
             ? "hover:bg-[#F7F6F3] dark:hover:bg-white/[0.05] hover:border-[#D0D0D0] dark:hover:border-white/[0.18] hover:text-[#111111] dark:hover:text-[#E8E8E7] cursor-pointer"
             : "cursor-not-allowed opacity-70",
@@ -139,7 +142,7 @@ export default function PriorityPicker({
   return (
     <div
       ref={rootRef}
-      className={`relative inline-flex ${className}`}
+      className={`relative ${fullWidth ? "flex w-full" : "inline-flex"} ${className}`}
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
     >
@@ -153,7 +156,7 @@ export default function PriorityPicker({
         {variant === "default" && (
           <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
         )}
-        <span className="truncate">{label}</span>
+        <span className={`truncate${fullWidth ? " flex-1" : ""}`}>{label}</span>
         {!isDisabled && (
           <ChevronDown className={size === "sm" ? "w-3 h-3 shrink-0" : "w-3.5 h-3.5 shrink-0"} />
         )}

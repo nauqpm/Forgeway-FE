@@ -86,6 +86,7 @@ export default function CreateTaskModal({
                   variant="default"
                   size="md"
                   placement="bottom"
+                  fullWidth
                 />
               </div>
             </div>
@@ -99,6 +100,7 @@ export default function CreateTaskModal({
                   variant="default"
                   size="md"
                   placement="bottom"
+                  fullWidth
                 />
               </div>
             </div>
