@@ -18,6 +18,8 @@ import { useTheme } from "@/hooks/useTheme";
 import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
 
+import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspaces, workspacesLoaded } = useWorkspaceStore();
@@ -364,6 +366,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+      <ChatRealtimeHandler />
     </div>
   );
 }

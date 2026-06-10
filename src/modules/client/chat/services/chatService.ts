@@ -19,7 +19,9 @@ export const getChannelsAPI = async (): Promise<Channel[]> => {
   return data.map(item => ({
     ...item,
     _id: item._id || item.id,
-    unreadCount: item.unreadCount || 0
+    type: item.type === 'public' ? 'general' : item.type,
+    unreadCount: item.unreadCount || 0,
+    description: item.description
   }));
 };
 
