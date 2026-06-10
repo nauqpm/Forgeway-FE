@@ -93,9 +93,9 @@ export default function TypePicker({
       const dropdownH = 180;
       const useTop = placement === "top" || (spaceBelow < dropdownH && rect.top > dropdownH);
       if (useTop) {
-        setDropdownStyle({ top: rect.top + window.scrollY - dropdownH - 4, left: rect.left + window.scrollX });
+        setDropdownStyle({ top: rect.top - dropdownH - 4, left: rect.left });
       } else {
-        setDropdownStyle({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX });
+        setDropdownStyle({ top: rect.bottom + 4, left: rect.left });
       }
     }
     setOpen((p) => !p);
