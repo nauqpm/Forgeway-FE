@@ -21,7 +21,12 @@ interface UseCollaborativePageProps {
   setMode: (mode: "read" | "edit") => void;
   createCollaborativeEditor: (ydoc: Yjs.Doc, awareness: any) => Editor;
   destroyCollaborativeEditor: () => void;
-  setEditTitle: (title: string) => void;
+}
+
+interface EnterEditModeOptions {
+  documentId?: string;
+  initialTitle?: string;
+  initialContent?: string;
 }
 
 export function useCollaborativePage({
@@ -32,9 +37,9 @@ export function useCollaborativePage({
   setMode,
   createCollaborativeEditor,
   destroyCollaborativeEditor,
-  setEditTitle,
 }: UseCollaborativePageProps) {
   const ydocRef = useRef<Yjs.Doc | null>(null);
+  const activeDocumentIdRef = useRef<string | null>(null);
   const awarenessRef = useRef<awarenessProtocol.Awareness | null>(null);
   const syncChannelRef = useRef<BroadcastChannel | null>(null);
   const isSyncingRef = useRef(false);
@@ -45,17 +50,18 @@ export function useCollaborativePage({
 
   // ── Sync offline updates to server ────────────────────────
   const syncOfflineUpdates = useCallback(async () => {
-    if (!selectedDocumentId || isSyncingRef.current) return;
+    const documentId = activeDocumentIdRef.current ?? selectedDocumentId;
+    if (!documentId || isSyncingRef.current) return;
     const socket = realtimeSocketClient.getSocket();
     if (!socket || !socket.connected) return;
 
     isSyncingRef.current = true;
     if (syncChannelRef.current) {
-      syncChannelRef.current.postMessage({ type: "SYNC_START", pageId: selectedDocumentId });
+      syncChannelRef.current.postMessage({ type: "SYNC_START", pageId: documentId });
     }
 
     try {
-      const pending = await editorStorageService.getPendingUpdates(selectedDocumentId);
+      const pending = await editorStorageService.getPendingUpdates(documentId);
       if (pending.length > 0) {
         for (const item of pending) {
           await new Promise<void>((resolve) => {
@@ -66,7 +72,7 @@ export function useCollaborativePage({
                     syncChannelRef.current.postMessage({
                       type: "ACK_RECEIVED",
                       updateId: item.id,
-                      pageId: selectedDocumentId,
+                      pageId: documentId,
                     });
                   }
                 });
@@ -77,14 +83,14 @@ export function useCollaborativePage({
         }
       }
 
-      const remaining = await editorStorageService.getPendingUpdates(selectedDocumentId);
+      const remaining = await editorStorageService.getPendingUpdates(documentId);
       setHasPendingOffline(remaining.length > 0);
     } catch (err) {
       console.error("Failed to sync offline updates:", err);
     } finally {
       isSyncingRef.current = false;
       if (syncChannelRef.current) {
-        syncChannelRef.current.postMessage({ type: "SYNC_COMPLETE", pageId: selectedDocumentId });
+        syncChannelRef.current.postMessage({ type: "SYNC_COMPLETE", pageId: documentId });
       }
     }
   }, [selectedDocumentId]);
@@ -124,8 +130,12 @@ export function useCollaborativePage({
   }, [selectedDocumentId, mode]);
 
   // ── Enter Edit Mode ────────────────────────────────────────
-  const enterEditMode = useCallback(() => {
-    if (!selectedDocumentId) return;
+  const enterEditMode = useCallback((options?: EnterEditModeOptions) => {
+    const activeDocumentId = options?.documentId ?? selectedDocumentId;
+    if (!activeDocumentId) return;
+    activeDocumentIdRef.current = activeDocumentId;
+    const activeInitialTitle = options?.initialTitle ?? initialTitle;
+    const activeInitialContent = options?.initialContent ?? initialContent;
 
     const ydoc = new Yjs.Doc();
     ydocRef.current = ydoc;
@@ -151,7 +161,7 @@ export function useCollaborativePage({
     const joinAndSync = () => {
       realtimeSocketClient.pageManager.join(
         socket,
-        selectedDocumentId,
+        activeDocumentId,
         (response) => {
           if (!response.ok) return;
 
@@ -159,12 +169,12 @@ export function useCollaborativePage({
             Yjs.applyUpdate(ydoc, new Uint8Array(response.yjsState), "remote");
           }
 
-          if (yTitle.length === 0 && (response.title || initialTitle)) {
-            yTitle.insert(0, response.title || initialTitle);
+          if (yTitle.length === 0 && (response.title || activeInitialTitle)) {
+            yTitle.insert(0, response.title || activeInitialTitle);
           }
 
-          if (editor.isEmpty && (response.content || initialContent)) {
-            const contentToSet = response.content || initialContent;
+          if (editor.isEmpty && (response.content || activeInitialContent)) {
+            const contentToSet = response.content || activeInitialContent;
             if (contentToSet) {
               editor
                 .chain()
@@ -186,7 +196,6 @@ export function useCollaborativePage({
     };
 
     const yTitle = ydoc.getText("title");
-    setEditTitle(initialTitle);
 
     if (socket.connected) {
       joinAndSync();
@@ -195,7 +204,7 @@ export function useCollaborativePage({
     }
 
     const handleRemoteYjsUpdate = (data: { pageId: string; update: number[] }) => {
-      if (data.pageId === selectedDocumentId && ydocRef.current) {
+      if (data.pageId === activeDocumentId && ydocRef.current) {
         Yjs.applyUpdate(ydocRef.current, new Uint8Array(data.update), "remote");
       }
     };
@@ -220,7 +229,7 @@ export function useCollaborativePage({
 
     // Awareness remote update handler
     const handleRemoteAwarenessUpdate = (data: { pageId: string; update: number[] }) => {
-      if (data.pageId === selectedDocumentId && awarenessRef.current) {
+      if (data.pageId === activeDocumentId && awarenessRef.current) {
         awarenessProtocol.applyAwarenessUpdate(
           awarenessRef.current,
           new Uint8Array(data.update),
@@ -237,7 +246,7 @@ export function useCollaborativePage({
 
     // Version restored remote update handler
     const handleRemoteVersionRestored = (data: { pageId: string }) => {
-      if (data.pageId === selectedDocumentId) {
+      if (data.pageId === activeDocumentId) {
         toast.success("Phiên bản tài liệu đã được khôi phục bởi người dùng khác. Đang tải lại...", {
           duration: 3000,
         });
@@ -256,7 +265,7 @@ export function useCollaborativePage({
     const handleLocalUpdate = async (update: Uint8Array, origin: unknown) => {
       if (origin === "remote") return;
 
-      const updateId = await editorStorageService.saveUpdate(selectedDocumentId, update);
+      const updateId = await editorStorageService.saveUpdate(activeDocumentId, update);
       setHasPendingOffline(true);
 
       const currentSocket = realtimeSocketClient.getSocket();
@@ -264,7 +273,7 @@ export function useCollaborativePage({
         realtimeSocketClient.pageManager.yjsUpdate(currentSocket, update, updateId, (ok) => {
           if (ok) {
             editorStorageService.removeUpdate(updateId).then(() => {
-              editorStorageService.getPendingUpdates(selectedDocumentId).then((pending) => {
+              editorStorageService.getPendingUpdates(activeDocumentId).then((pending) => {
                 setHasPendingOffline(pending.length > 0);
               });
             });
@@ -272,7 +281,7 @@ export function useCollaborativePage({
               syncChannelRef.current.postMessage({
                 type: "ACK_RECEIVED",
                 updateId,
-                pageId: selectedDocumentId,
+                pageId: activeDocumentId,
               });
             }
           }
@@ -287,13 +296,13 @@ export function useCollaborativePage({
     initialTitle,
     initialContent,
     createCollaborativeEditor,
-    setEditTitle,
     setMode,
     syncOfflineUpdates,
   ]);
 
   // ── Exit Edit Mode ─────────────────────────────────────────
   const exitEditMode = useCallback(() => {
+    activeDocumentIdRef.current = null;
     if (ydocRef.current) {
       ydocRef.current.destroy();
       ydocRef.current = null;

@@ -31,6 +31,7 @@ export function useEditorTitleCollaboration(ydoc: Y.Doc | null, initialTitle: st
   const handleTitleInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const newTitle = e.target.value;
+      setEditTitle(newTitle);
       if (!ydoc) return;
 
       const yTitle = ydoc.getText("title");

@@ -35,8 +35,12 @@ import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 export type EditorMode = "read" | "edit";
 
 export default function TiptapEditor() {
-  const { documents, selectedDocumentId, updateDocument } = useDocsStore();
+  const { documents, selectedDocumentId, updateDocument, saveDocument } = useDocsStore();
   const document = documents.find((d) => d.id === selectedDocumentId);
+  const persistedPageId =
+    selectedDocumentId && !selectedDocumentId.startsWith("temp-")
+      ? selectedDocumentId
+      : undefined;
   const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
   const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
 
@@ -74,11 +78,6 @@ export default function TiptapEditor() {
     }
   }, [readEditor, document?.content, document?.id, mode]);
 
-  const { editTitle, handleTitleInput, setEditTitle } = useEditorTitleCollaboration(
-    null, // Will set below when collaborative session starts
-    document?.title || ""
-  );
-
   const {
     ydoc,
     awareness,
@@ -92,17 +91,15 @@ export default function TiptapEditor() {
     setMode,
     createCollaborativeEditor,
     destroyCollaborativeEditor,
-    setEditTitle,
   });
 
-  // Connect title ydoc observer once collaborative session is active
-  const { handleTitleInput: handleTitleCollabInput } = useEditorTitleCollaboration(
+  const { editTitle, handleTitleInput } = useEditorTitleCollaboration(
     ydoc,
     document?.title || ""
   );
 
   const { status: saveStatus, flushSave } = useAutosavePage({
-    documentId: selectedDocumentId || undefined,
+    documentId: persistedPageId,
     editor: mode === "edit" ? editEditor : null,
     ydoc,
     mode,
@@ -133,8 +130,8 @@ export default function TiptapEditor() {
     resolveComment,
     unresolveComment,
   } = usePageComments({
-    pageId: selectedDocumentId || undefined,
-    enabled: !!selectedDocumentId,
+    pageId: persistedPageId,
+    enabled: !!persistedPageId,
   });
 
   // ── Version History Hook ───────────────────────────────────
@@ -144,8 +141,8 @@ export default function TiptapEditor() {
     createVersion,
     restoreVersion,
   } = useVersionHistory({
-    pageId: selectedDocumentId || undefined,
-    enabled: !!selectedDocumentId,
+    pageId: persistedPageId,
+    enabled: !!persistedPageId,
   });
 
   const handleToggleVersionHistory = useCallback(() => {
@@ -281,6 +278,29 @@ export default function TiptapEditor() {
 
   const activeEditor = mode === "edit" ? editEditor : readEditor;
 
+  const handleToggleMode = useCallback(async () => {
+    if (mode === "edit") {
+      exitEditMode();
+      return;
+    }
+
+    if (!document || !selectedDocumentId) return;
+
+    if (selectedDocumentId.startsWith("temp-")) {
+      const savedDoc = await saveDocument(selectedDocumentId);
+      if (!savedDoc) return;
+
+      enterEditMode({
+        documentId: savedDoc.id,
+        initialTitle: savedDoc.title,
+        initialContent: savedDoc.content,
+      });
+      return;
+    }
+
+    enterEditMode();
+  }, [document, selectedDocumentId, mode, saveDocument, enterEditMode, exitEditMode]);
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden relative">
       <EditorHeader
@@ -292,11 +312,7 @@ export default function TiptapEditor() {
         isPublishing={isPublishing}
         awareness={awareness}
         onToggleMode={() => {
-          if (mode === "read") {
-            enterEditMode();
-          } else {
-            exitEditMode();
-          }
+          void handleToggleMode();
         }}
         onCreateVersion={handleCreateVersion}
         isCommentsOpen={rightSidebarOpen && activeRightSidebar === "comments"}
@@ -330,7 +346,7 @@ export default function TiptapEditor() {
           rightSidebar={
             activeRightSidebar === "comments" ? (
               <CommentsSidebar
-                pageId={selectedDocumentId || undefined}
+                pageId={persistedPageId}
                 editor={mode === "edit" ? editEditor : null}
                 comments={visibleComments}
                 isLoading={commentsLoading}
@@ -366,7 +382,7 @@ export default function TiptapEditor() {
                 <input
                   type="text"
                   value={mode === "edit" ? editTitle : document.title}
-                  onChange={mode === "edit" ? (ydoc ? handleTitleCollabInput : handleTitleInput) : undefined}
+                  onChange={mode === "edit" ? handleTitleInput : undefined}
                   readOnly={mode === "read"}
                   className="w-full text-3xl font-bold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight print:text-black"
                   placeholder="Không có tiêu đề"
