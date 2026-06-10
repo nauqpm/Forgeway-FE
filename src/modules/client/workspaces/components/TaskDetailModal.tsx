@@ -27,7 +27,7 @@ import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
-import TaskStatusChanger from "./TaskStatusChanger";
+import StatusPicker from "@/common/components/StatusPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
@@ -569,12 +569,13 @@ export default function TaskDetailModal({
           {/* Right Column (Sidebar) */}
           <div className="workspace-detail-panel bg-[#F9F9F8] dark:bg-[#252525] p-[var(--workspace-surface-pad)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <div className="flex items-center gap-2 mb-6">
-              <TaskStatusChanger
-                issue={issue}
-                boardColumns={boardColumns}
+              <StatusPicker
+                value={issue.status}
+                columnId={issue.columnId}
+                options={boardColumns.map(col => ({ id: col.id, name: col.name }))}
                 disabled={!canEditTask || issue.isArchived}
-                onChange={({ columnId, status }) =>
-                  onUpdateIssue?.({ ...issue, columnId, status })
+                onChange={(status, option) =>
+                  onUpdateIssue?.({ ...issue, columnId: option.id, status })
                 }
               />
             </div>
