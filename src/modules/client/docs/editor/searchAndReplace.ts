@@ -1,0 +1,144 @@
+// Đây là file định nghĩa extension SearchAndReplace cho editor tài liệu,
+// cho phép người dùng tìm kiếm và thay thế văn bản trong editor.
+import { Extension } from "@tiptap/core";
+import { Decoration, DecorationSet } from "@tiptap/pm/view";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    searchAndReplace: {
+      setSearchTerm: (term: string) => ReturnType;
+      setReplaceTerm: (term: string) => ReturnType;
+      replace: () => ReturnType;
+      replaceAll: () => ReturnType;
+    };
+  }
+}
+
+export interface SearchAndReplaceOptions {
+  searchResultClass: string;
+  caseSensitive: boolean;
+}
+
+export const SearchAndReplace = Extension.create<SearchAndReplaceOptions>({
+  name: "searchAndReplace",
+
+  addOptions() {
+    return {
+      searchResultClass: "search-result bg-yellow-200 text-black dark:bg-yellow-800/80 dark:text-white px-0.5 rounded-sm",
+      caseSensitive: false,
+    };
+  },
+
+  addStorage() {
+    return {
+      searchTerm: "",
+      replaceTerm: "",
+      results: [] as { from: number; to: number }[],
+    };
+  },
+
+  addCommands() {
+    return {
+      setSearchTerm:
+        (term: string) =>
+        ({ view }) => {
+          this.storage.searchTerm = term;
+          view.dispatch(view.state.tr.setMeta("searchAndReplace", true));
+          return true;
+        },
+      setReplaceTerm:
+        (term: string) =>
+        () => {
+          this.storage.replaceTerm = term;
+          return true;
+        },
+      replace:
+        () =>
+        ({ state, dispatch }) => {
+          const { replaceTerm, results } = this.storage;
+          if (results.length === 0) return false;
+
+          const current = results[0];
+          if (current && dispatch) {
+            const tr = state.tr.insertText(replaceTerm || "", current.from, current.to);
+            dispatch(tr);
+            return true;
+          }
+          return false;
+        },
+      replaceAll:
+        () =>
+        ({ state, dispatch }) => {
+          const { replaceTerm, results } = this.storage;
+          if (results.length === 0) return false;
+
+          if (dispatch) {
+            let tr = state.tr;
+            // Sort in reverse order to avoid shifting positions
+            const sortedResults = [...results].sort((a, b) => b.from - a.from);
+            sortedResults.forEach((match) => {
+              tr = tr.insertText(replaceTerm || "", match.from, match.to);
+            });
+            dispatch(tr);
+            return true;
+          }
+          return false;
+        },
+    };
+  },
+
+  addProseMirrorPlugins() {
+    const extension = this;
+
+    return [
+      new Plugin({
+        key: new PluginKey("searchAndReplace"),
+        state: {
+          init() {
+            return DecorationSet.empty;
+          },
+          apply(tr) {
+            const searchTerm = extension.storage.searchTerm;
+            if (!searchTerm) {
+              extension.storage.results = [];
+              return DecorationSet.empty;
+            }
+
+            const { doc } = tr;
+            const decorations: Decoration[] = [];
+            const results: { from: number; to: number }[] = [];
+            const regex = new RegExp(
+              searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
+              extension.options.caseSensitive ? "g" : "gi"
+            );
+
+            doc.descendants((node, pos) => {
+              if (node.isText && node.text) {
+                let match;
+                while ((match = regex.exec(node.text)) !== null) {
+                  const from = pos + match.index;
+                  const to = from + match[0].length;
+                  decorations.push(
+                    Decoration.inline(from, to, {
+                      class: extension.options.searchResultClass,
+                    })
+                  );
+                  results.push({ from, to });
+                }
+              }
+            });
+
+            extension.storage.results = results;
+            return DecorationSet.create(doc, decorations);
+          },
+        },
+        props: {
+          decorations(state) {
+            return this.getState(state);
+          },
+        },
+      }),
+    ];
+  },
+});

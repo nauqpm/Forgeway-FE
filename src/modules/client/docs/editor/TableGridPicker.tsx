@@ -1,3 +1,5 @@
+// Component đại diện cho bảng chọn kích thước khi người dùng muốn chèn một bảng mới vào tài liệu trong editor,
+// cho phép người dùng chọn số hàng và cột của bảng một cách trực quan bằng cách di chuột qua lưới hoặc nhập số hàng/cột tùy chỉnh.
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";

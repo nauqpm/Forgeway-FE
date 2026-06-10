@@ -1,8 +1,4 @@
-/**
- * MOCK DATA — No longer used in production.
- * DocsLayout now fetches real data via pagesService.
- * Kept for reference / local development fallback only.
- */
+// Mock data cho tài liệu trong module docs, bao gồm một số tài liệu mẫu với các trường như id, title, content, parentId, workspaceId, slug, authorId, version, status, labels, versionHistory, createdAt và updatedAt
 import { Document } from "../types/docs.type";
 
 const now = new Date().toISOString();

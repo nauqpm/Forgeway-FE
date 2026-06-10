@@ -66,6 +66,7 @@ export class PageRoomManager {
   yjsUpdate(
     socket: Socket,
     update: Uint8Array,
+    updateId?: string,
     onComplete?: (ok: boolean) => void,
   ): void {
     if (!this.currentId || !socket.connected) return;
@@ -75,12 +76,29 @@ export class PageRoomManager {
       {
         pageId: this.currentId,
         update: Array.from(update),
+        updateId,
       },
-      (response: { ok: boolean }) => {
+      (response?: { ok: boolean }) => {
         if (onComplete) {
           onComplete(response?.ok ?? false);
         }
       },
+    );
+  }
+
+  /** Send a Yjs awareness update (Uint8Array converted to number[]) to the server */
+  awarenessUpdate(
+    socket: Socket,
+    update: Uint8Array,
+  ): void {
+    if (!this.currentId || !socket.connected) return;
+
+    socket.emit(
+      SOCKET_EVENTS.PAGE_AWARENESS_UPDATE,
+      {
+        pageId: this.currentId,
+        update: Array.from(update),
+      }
     );
   }
 

@@ -1,42 +1,36 @@
+// Đây là component chính của editor tài liệu, 
+// quản lý trạng thái chế độ chỉnh sửa/đọc, kết nối cộng tác, lưu tự động, nhận xét và lịch sử phiên bản.
 "use client";
 
-import { useEditor, EditorContent, Editor } from "@tiptap/react";
-import DOMPurify from "dompurify";
-import "highlight.js/styles/github.css";
-
-import { useEffect, useRef, useCallback, useState } from "react";
-import * as Y from "yjs";
+import { useState, useEffect, useCallback } from "react";
 import { useDocsStore } from "../store/docs.store";
-import EditorToolbar from "./EditorToolbar";
 import EditorHeader from "./EditorHeader";
+import EditorToolbar from "./EditorToolbar";
+import ReadOnlyEditor from "./ReadOnlyEditor";
+import CollaborativeEditor from "./CollaborativeEditor";
 import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/workspacePermissions";
 import { useWorkspacePermission } from "@/modules/client/workspaces/hooks/useWorkspacePermission";
-import {
-  getEditorExtensions,
-  getCollaborativeEditorExtensions,
-} from "./editorExtensions";
-import { realtimeSocketClient } from "@/lib/socket/socket.client";
-import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
+import { useEditorConnectionStatus } from "../hooks/useEditorConnectionStatus";
+import { useEditorTitleCollaboration } from "../hooks/useEditorTitleCollaboration";
+import { useEditorLifecycle } from "../hooks/useEditorLifecycle";
+import { useCollaborativePage } from "../hooks/useCollaborativePage";
+import { useAutosavePage } from "../hooks/useAutosavePage";
+import { usePageComments } from "../hooks/usePageComments";
+import { useVersionHistory } from "../hooks/useVersionHistory";
 import { pagesService } from "../services/pages.service";
 import { toast } from "react-hot-toast";
-import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
 
-const DRAFT_CONTENT_SYNC_DELAY = 5000; // Sync derived HTML every 5 seconds
-
-const sanitizeEditorHtml = (html: string) =>
-  DOMPurify.sanitize(html, {
-    USE_PROFILES: { html: true },
-    ADD_ATTR: [
-      "style",
-      "target",
-      "rel",
-      "colspan",
-      "rowspan",
-      "width",
-      "height",
-      "data-align",
-    ],
-  });
+import EditorPageLayout from "./EditorPageLayout";
+import PageCanvas from "./PageCanvas";
+import DocumentOutline from "./DocumentOutline";
+import FindReplacePanel from "./FindReplacePanel";
+import EditorStatusBar from "./EditorStatusBar";
+import TableContextMenu from "./TableContextMenu";
+import LinkBubbleMenu from "./LinkBubbleMenu";
+import CommentsSidebar from "./CommentsSidebar";
+import VersionHistorySidebar from "./VersionHistorySidebar";
+import SuggestionsSidebar from "./SuggestionsSidebar";
+import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 
 export type EditorMode = "read" | "edit";
 
@@ -46,36 +40,32 @@ export default function TiptapEditor() {
   const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
   const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
 
-  // ── Mode state ─────────────────────────────────────────────
   const [mode, setMode] = useState<EditorMode>("read");
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isExportingDocx, setIsExportingDocx] = useState(false);
+  const [isImportingDocx, setIsImportingDocx] = useState(false);
+  const [findReplaceOpen, setFindReplaceOpen] = useState(false);
+  const [tableMenu, setTableMenu] = useState<{ x: number; y: number } | null>(null);
+  
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+  const [activeRightSidebar, setActiveRightSidebar] = useState<"comments" | "versions" | "suggestions">("comments");
+  const [isSuggestionModeActive, setIsSuggestionModeActive] = useState(false);
 
-  // ── Connection status ──────────────────────────────────────
-  const [connectionStatus, setConnectionStatus] =
-    useState<RealtimeStatusSnapshot["status"]>("idle");
+  useEffect(() => {
+    const handleCloseMenu = () => setTableMenu(null);
+    window.addEventListener("click", handleCloseMenu);
+    return () => window.removeEventListener("click", handleCloseMenu);
+  }, []);
 
-  // ── Yjs state ──────────────────────────────────────────────
-  const ydocRef = useRef<Y.Doc | null>(null);
-  const pendingUpdatesRef = useRef<Uint8Array[]>([]);
-  const draftContentTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const remoteUpdateListenerRef = useRef<any>(null);
+  // ── Hooks ──────────────────────────────────────────────────
+  const connectionStatus = useEditorConnectionStatus();
 
-  // ── Title state (collaborative via Y.Text) ─────────────────
-  const [editTitle, setEditTitle] = useState("");
-
-  // ── Read mode editor ───────────────────────────────────────
-  const readEditor = useEditor({
-    immediatelyRender: false,
-    extensions: getEditorExtensions(""),
-    content: document?.content || "",
-    editable: false,
-    editorProps: {
-      attributes: {
-        class:
-          "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
-      },
-    },
-  });
+  const {
+    readEditor,
+    editEditor,
+    createCollaborativeEditor,
+    destroyCollaborativeEditor,
+  } = useEditorLifecycle(document?.content || "");
 
   // Update read editor when document content changes
   useEffect(() => {
@@ -84,319 +74,223 @@ export default function TiptapEditor() {
     }
   }, [readEditor, document?.content, document?.id, mode]);
 
-  // ── Edit mode editor (with Yjs Collaboration) ─────────────
-  const editEditorRef = useRef<ReturnType<typeof useEditor> | null>(null);
-  const [, setEditorUpdateTick] = useState(0);
-
-  // Create collaborative editor when entering edit mode
-  const createCollaborativeEditor = useCallback((ydoc: Y.Doc) => {
-    // We can't use useEditor conditionally, so we'll use the Editor class directly
-    const editor = new Editor({
-      extensions: getCollaborativeEditorExtensions(
-        "Nhập nội dung vào đây...",
-        ydoc,
-      ),
-      editable: true,
-      editorProps: {
-        attributes: {
-          class:
-            "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
-        },
-      },
-    });
-
-    const tick = () => setEditorUpdateTick((t) => t + 1);
-    editor.on("update", tick);
-    editor.on("selectionUpdate", tick);
-
-    editEditorRef.current = editor;
-    setEditorUpdateTick((t) => t + 1);
-    return editor;
-  }, []);
-
-  // ── Enter Edit Mode ────────────────────────────────────────
-  const enterEditMode = useCallback(() => {
-    if (!selectedDocumentId || !document) return;
-
-    // Create a new Y.Doc
-    const ydoc = new Y.Doc();
-    ydocRef.current = ydoc;
-    pendingUpdatesRef.current = [];
-
-    // Local title initialization - we delay this until socket syncs
-    // to avoid CRDT duplication.
-    const yTitle = ydoc.getText("title");
-    setEditTitle(document.title || "");
-
-    // Create the collaborative editor immediately
-    const editor = createCollaborativeEditor(ydoc);
-
-    // Connect socket
-    const socket = realtimeSocketClient.connect();
-    if (!socket) return;
-
-    const joinAndSync = () => {
-      realtimeSocketClient.pageManager.join(
-        socket,
-        selectedDocumentId,
-        (response) => {
-          if (!response.ok) return;
-
-          // Apply server Yjs state if available
-          if (response.yjsState && response.yjsState.length > 0) {
-            Y.applyUpdate(ydoc, new Uint8Array(response.yjsState));
-          }
-
-          // Set title from Y.Text or server response if empty
-          if (yTitle.length === 0 && (response.title || document?.title)) {
-            yTitle.insert(0, response.title || document?.title || "");
-          }
-
-          // If Y.Doc content is empty, initialize from HTML content
-          if (editor.isEmpty && (response.content || document?.content)) {
-            const contentToSet = response.content || document?.content;
-            if (contentToSet) {
-              editor.commands.setContent(contentToSet);
-            }
-          }
-        },
-      );
-    };
-
-    if (socket.connected) {
-      joinAndSync();
-    } else {
-      socket.once(SOCKET_EVENTS.CONNECT, joinAndSync);
-    }
-
-    // Listen for Yjs updates from other clients
-    const handleRemoteYjsUpdate = (data: {
-      pageId: string;
-      update: number[];
-    }) => {
-      if (data.pageId === selectedDocumentId && ydocRef.current) {
-        Y.applyUpdate(ydocRef.current, new Uint8Array(data.update));
-      }
-    };
-    // Remove old listener if exists
-    if (remoteUpdateListenerRef.current) {
-      socket.off(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, remoteUpdateListenerRef.current);
-    }
-    remoteUpdateListenerRef.current = handleRemoteYjsUpdate;
-    socket.on(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, handleRemoteYjsUpdate);
-
-    // Send local Yjs updates to server
-    const handleLocalUpdate = (update: Uint8Array, origin: unknown) => {
-      // Skip updates originated from remote (to avoid echo)
-      if (origin === "remote") return;
-
-      const currentSocket = realtimeSocketClient.getSocket();
-      if (currentSocket && currentSocket.connected) {
-        realtimeSocketClient.pageManager.yjsUpdate(currentSocket, update);
-      } else {
-        // Store in pending queue for later sync
-        pendingUpdatesRef.current.push(update);
-      }
-    };
-    ydoc.on("update", handleLocalUpdate);
-
-    // Observe Y.Text title changes
-    const handleTitleChange = () => {
-      const newT = yTitle.toString();
-      setEditTitle((prev) => (prev !== newT ? newT : prev));
-    };
-    yTitle.observe(handleTitleChange);
-
-    // Periodically sync derived HTML content to server for search/fallback
-    draftContentTimerRef.current = setInterval(() => {
-      const currentSocket = realtimeSocketClient.getSocket();
-      const editor = editEditorRef.current;
-      if (currentSocket?.connected && editor && ydocRef.current) {
-        const html = sanitizeEditorHtml(editor.getHTML());
-        const title = ydocRef.current.getText("title").toString();
-        realtimeSocketClient.pageManager.sendDraftContent(
-          currentSocket,
-          html,
-          title,
-        );
-      }
-    }, DRAFT_CONTENT_SYNC_DELAY);
-
-    setMode("edit");
-  }, [selectedDocumentId, document, createCollaborativeEditor]);
-
-  // ── Exit Edit Mode ─────────────────────────────────────────
-  const exitEditMode = useCallback(() => {
-    // Cleanup Yjs
-    if (ydocRef.current) {
-      ydocRef.current.destroy();
-      ydocRef.current = null;
-    }
-
-    // Cleanup edit editor
-    if (editEditorRef.current) {
-      editEditorRef.current.destroy();
-      editEditorRef.current = null;
-    }
-
-    // Clear draft content sync timer
-    if (draftContentTimerRef.current) {
-      clearInterval(draftContentTimerRef.current);
-      draftContentTimerRef.current = null;
-    }
-
-    // Leave page room
-    const socket = realtimeSocketClient.getSocket();
-    if (socket) {
-      if (remoteUpdateListenerRef.current) {
-        socket.off(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, remoteUpdateListenerRef.current);
-        remoteUpdateListenerRef.current = null;
-      }
-      realtimeSocketClient.pageManager.leave(socket);
-    }
-
-    pendingUpdatesRef.current = [];
-    setMode("read");
-  }, []);
-
-  // ── Handle reconnect — drain pending updates ───────────────
-  useEffect(() => {
-    const unsubReconnect = realtimeSocketClient.onReconnect(() => {
-      if (mode !== "edit" || !ydocRef.current) return;
-
-      const socket = realtimeSocketClient.getSocket();
-      if (!socket || !socket.connected) return;
-
-      // Drain pending updates
-      const pending = pendingUpdatesRef.current;
-      if (pending.length > 0) {
-        for (const update of pending) {
-          realtimeSocketClient.pageManager.yjsUpdate(socket, update);
-        }
-        pendingUpdatesRef.current = [];
-      }
-
-      // Re-join the page room to get latest server state
-      if (selectedDocumentId) {
-        realtimeSocketClient.pageManager.join(
-          socket,
-          selectedDocumentId,
-          (response) => {
-            if (
-              response.ok &&
-              response.yjsState &&
-              response.yjsState.length > 0 &&
-              ydocRef.current
-            ) {
-              Y.applyUpdate(ydocRef.current, new Uint8Array(response.yjsState));
-            }
-          },
-        );
-      }
-    });
-
-    return () => unsubReconnect();
-  }, [mode, selectedDocumentId]);
-
-  // ── Connection status subscription ─────────────────────────
-  useEffect(() => {
-    const unsubStatus = realtimeSocketClient.subscribeStatus((snapshot) => {
-      setConnectionStatus(snapshot.status);
-    });
-    return () => unsubStatus();
-  }, []);
-
-  // ── beforeunload warning ───────────────────────────────────
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (
-        mode === "edit" &&
-        (connectionStatus === "disconnected" || connectionStatus === "error") &&
-        pendingUpdatesRef.current.length > 0
-      ) {
-        e.preventDefault();
-        e.returnValue =
-          "Bạn có thay đổi chưa được đồng bộ. Nếu rời trang, các thay đổi này có thể bị mất.";
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [mode, connectionStatus]);
-
-  // ── Handle title change (collaborative via Y.Text) ─────────
-  const handleTitleInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newTitle = e.target.value;
-      if (!ydocRef.current) return;
-
-      const yTitle = ydocRef.current.getText("title");
-      ydocRef.current.transact(() => {
-        yTitle.delete(0, yTitle.length);
-        yTitle.insert(0, newTitle);
-      });
-    },
-    [],
+  const { editTitle, handleTitleInput, setEditTitle } = useEditorTitleCollaboration(
+    null, // Will set below when collaborative session starts
+    document?.title || ""
   );
 
-  // ── Update (publish) handler ───────────────────────────────
-  const handlePublish = useCallback(async () => {
+  const {
+    ydoc,
+    awareness,
+    enterEditMode,
+    exitEditMode,
+  } = useCollaborativePage({
+    selectedDocumentId: selectedDocumentId || undefined,
+    initialTitle: document?.title || "",
+    initialContent: document?.content || "",
+    mode,
+    setMode,
+    createCollaborativeEditor,
+    destroyCollaborativeEditor,
+    setEditTitle,
+  });
+
+  // Connect title ydoc observer once collaborative session is active
+  const { handleTitleInput: handleTitleCollabInput } = useEditorTitleCollaboration(
+    ydoc,
+    document?.title || ""
+  );
+
+  const { status: saveStatus, flushSave } = useAutosavePage({
+    documentId: selectedDocumentId || undefined,
+    editor: mode === "edit" ? editEditor : null,
+    ydoc,
+    mode,
+    onSaveSuccess: useCallback((updatedDoc: any) => {
+      if (selectedDocumentId) {
+        updateDocument(selectedDocumentId, {
+          title: updatedDoc.title,
+          content: updatedDoc.content,
+        });
+      }
+    }, [selectedDocumentId, updateDocument]),
+  });
+
+  // ── Comments Hook ──────────────────────────────────────────
+  const {
+    comments: visibleComments,
+    isLoading: commentsLoading,
+    activeCommentId,
+    setActiveCommentId,
+    showResolved,
+    setShowResolved,
+    resolvedCount,
+    openCount,
+    addComment,
+    replyToComment,
+    updateComment,
+    deleteComment,
+    resolveComment,
+    unresolveComment,
+  } = usePageComments({
+    pageId: selectedDocumentId || undefined,
+    enabled: !!selectedDocumentId,
+  });
+
+  // ── Version History Hook ───────────────────────────────────
+  const {
+    versions,
+    isLoading: versionsLoading,
+    createVersion,
+    restoreVersion,
+  } = useVersionHistory({
+    pageId: selectedDocumentId || undefined,
+    enabled: !!selectedDocumentId,
+  });
+
+  const handleToggleVersionHistory = useCallback(() => {
+    if (rightSidebarOpen && activeRightSidebar === "versions") {
+      setRightSidebarOpen(false);
+    } else {
+      setActiveRightSidebar("versions");
+      setRightSidebarOpen(true);
+    }
+  }, [rightSidebarOpen, activeRightSidebar]);
+
+  const handleToggleComments = useCallback(() => {
+    if (rightSidebarOpen && activeRightSidebar === "comments") {
+      setRightSidebarOpen(false);
+    } else {
+      setActiveRightSidebar("comments");
+      setRightSidebarOpen(true);
+    }
+  }, [rightSidebarOpen, activeRightSidebar]);
+
+  const handleToggleSuggestions = useCallback(() => {
+    if (rightSidebarOpen && activeRightSidebar === "suggestions") {
+      setRightSidebarOpen(false);
+    } else {
+      setActiveRightSidebar("suggestions");
+      setRightSidebarOpen(true);
+    }
+  }, [rightSidebarOpen, activeRightSidebar]);
+
+  const handleToggleSuggestionMode = useCallback(() => {
+    setIsSuggestionModeActive((prev) => {
+      const next = !prev;
+      if (next) {
+        setActiveRightSidebar("suggestions");
+        setRightSidebarOpen(true);
+      }
+      return next;
+    });
+  }, []);
+
+  // Sync suggestion mode active state and user to the editor commands
+  useEffect(() => {
+    if (editEditor && mode === "edit") {
+      const user = useAuthStore.getState().user;
+      editEditor.commands.setSuggestionMode(isSuggestionModeActive);
+      editEditor.commands.setSuggestionUser({
+        id: user?.id || "anonymous",
+        name: user?.fullName || "Ẩn danh",
+      });
+    }
+  }, [editEditor, isSuggestionModeActive, mode]);
+
+  // ── Legacy Update (publish) handler ──────────────────────────
+  const handleCreateVersion = useCallback(async (label: string) => {
     if (!document || !selectedDocumentId) return;
 
-    const editor = editEditorRef.current;
+    const editor = editEditor;
     if (!editor) return;
 
     setIsPublishing(true);
     try {
-      const html = sanitizeEditorHtml(editor.getHTML());
-      const title =
-        ydocRef.current?.getText("title").toString() || document.title;
+      const title = ydoc?.getText("title").toString() || document.title;
+      const html = editor.getHTML(); // Will be sanitized on backend / store update
 
-      // Step 1: PATCH content and title to main page
+      // Step 1: Flush the latest Yjs/JSON/HTML snapshots before version capture
+      await flushSave();
+
+      // Step 2: Sync content and title to page database
       await pagesService.updatePage(selectedDocumentId, {
         title,
         content: html,
       });
 
-      // Step 2: POST publish
-      await pagesService.publishPage(selectedDocumentId);
+      // Step 3: Create a named version
+      await createVersion(label);
 
       // Update local store
       updateDocument(selectedDocumentId, { title, content: html });
 
-      toast.success("Cập nhật thành công");
+      toast.success("Đã tạo phiên bản thành công");
     } catch (error) {
-      console.error("Failed to publish:", error);
-      toast.error("Cập nhật thất bại");
+      console.error("Failed to create version:", error);
+      toast.error("Tạo phiên bản thất bại");
     } finally {
       setIsPublishing(false);
     }
-  }, [document, selectedDocumentId, updateDocument]);
+  }, [document, selectedDocumentId, editEditor, ydoc, updateDocument, createVersion, flushSave]);
 
-  // ── Cleanup on unmount or document change ──────────────────
-  const modeRef = useRef(mode);
-  modeRef.current = mode;
+  const handleExportDocx = useCallback(async () => {
+    if (!document) return;
+    setIsExportingDocx(true);
+    try {
+      await pagesService.exportDocx(document.id, document.title);
+      toast.success("Xuất file Word thành công");
+    } catch (error) {
+      console.error("Export DOCX failed:", error);
+      toast.error("Xuất file Word thất bại");
+    } finally {
+      setIsExportingDocx(false);
+    }
+  }, [document]);
 
-  useEffect(() => {
-    return () => {
-      if (modeRef.current === "edit") {
-        exitEditMode();
-      }
-    };
-  }, [selectedDocumentId, exitEditMode]);
+  const handleImportDocx = useCallback(async (file: File) => {
+    if (!editEditor) return;
+    
+    const confirm = window.confirm("Nhập file Word sẽ ghi đè toàn bộ nội dung hiện tại của trang. Bạn có muốn tiếp tục?");
+    if (!confirm) return;
+
+    setIsImportingDocx(true);
+    try {
+      const html = await pagesService.importDocx(file);
+      editEditor.commands.setContent(html);
+      toast.success("Nhập file Word thành công");
+    } catch (error) {
+      console.error("Import DOCX failed:", error);
+      toast.error("Nhập file Word thất bại");
+    } finally {
+      setIsImportingDocx(false);
+    }
+  }, [editEditor]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    if (mode !== "edit") return;
+    const target = e.target as HTMLElement;
+    const cell = target.closest("td, th");
+    if (cell && editEditor) {
+      e.preventDefault();
+      setTableMenu({ x: e.clientX, y: e.clientY });
+    }
+  }, [mode, editEditor]);
 
   if (!document) return null;
 
-  const activeEditor = mode === "edit" ? editEditorRef.current : readEditor;
+  const activeEditor = mode === "edit" ? editEditor : readEditor;
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden relative">
       <EditorHeader
         doc={document}
         mode={mode}
         canEdit={canEditPage}
         connectionStatus={connectionStatus}
+        saveStatus={saveStatus}
         isPublishing={isPublishing}
+        awareness={awareness}
         onToggleMode={() => {
           if (mode === "read") {
             enterEditMode();
@@ -404,47 +298,119 @@ export default function TiptapEditor() {
             exitEditMode();
           }
         }}
-        onPublish={handlePublish}
+        onCreateVersion={handleCreateVersion}
+        isCommentsOpen={rightSidebarOpen && activeRightSidebar === "comments"}
+        onToggleComments={handleToggleComments}
+        isVersionHistoryOpen={rightSidebarOpen && activeRightSidebar === "versions"}
+        onToggleVersionHistory={handleToggleVersionHistory}
+        isSuggestionModeActive={isSuggestionModeActive}
+        onToggleSuggestionMode={handleToggleSuggestionMode}
+        isSuggestionsOpen={rightSidebarOpen && activeRightSidebar === "suggestions"}
+        onToggleSuggestions={handleToggleSuggestions}
+        isExportingDocx={isExportingDocx}
+        onExportDocx={handleExportDocx}
+        isImportingDocx={isImportingDocx}
+        onImportDocx={handleImportDocx}
       />
 
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">
-        {/* Toolbar — only in Edit mode */}
-        {mode === "edit" && (
-          <div className="sticky top-0 z-20">
-            <EditorToolbar editor={activeEditor} />
-          </div>
+      <div className="flex-1 relative overflow-hidden">
+        <EditorPageLayout
+          toolbar={
+            mode === "edit" ? (
+              <EditorToolbar
+                editor={activeEditor}
+                onToggleFindReplace={() => setFindReplaceOpen(!findReplaceOpen)}
+              />
+            ) : null
+          }
+          sidebar={<DocumentOutline editor={activeEditor} />}
+          statusBar={<EditorStatusBar editor={activeEditor} />}
+          rightSidebarOpen={rightSidebarOpen}
+          setRightSidebarOpen={setRightSidebarOpen}
+          rightSidebar={
+            activeRightSidebar === "comments" ? (
+              <CommentsSidebar
+                pageId={selectedDocumentId || undefined}
+                editor={mode === "edit" ? editEditor : null}
+                comments={visibleComments}
+                isLoading={commentsLoading}
+                activeCommentId={activeCommentId}
+                showResolved={showResolved}
+                resolvedCount={resolvedCount}
+                openCount={openCount}
+                onSetActiveCommentId={setActiveCommentId}
+                onSetShowResolved={setShowResolved}
+                onAddComment={addComment}
+                onReply={replyToComment}
+                onEdit={updateComment}
+                onDelete={deleteComment}
+                onResolve={resolveComment}
+                onUnresolve={unresolveComment}
+              />
+            ) : activeRightSidebar === "versions" ? (
+              <VersionHistorySidebar
+                versions={versions}
+                isLoading={versionsLoading}
+                onRestore={restoreVersion}
+              />
+            ) : (
+              <SuggestionsSidebar
+                editor={mode === "edit" ? editEditor : null}
+              />
+            )
+          }
+          canvas={
+            <PageCanvas>
+              {/* Title input inside A4 Page canvas */}
+              <div className="mb-8 print:mb-4">
+                <input
+                  type="text"
+                  value={mode === "edit" ? editTitle : document.title}
+                  onChange={mode === "edit" ? (ydoc ? handleTitleCollabInput : handleTitleInput) : undefined}
+                  readOnly={mode === "read"}
+                  className="w-full text-3xl font-bold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight print:text-black"
+                  placeholder="Không có tiêu đề"
+                />
+                <div className="h-px bg-gray-200/60 dark:bg-gray-800 mt-2 print:hidden" />
+              </div>
+
+              {/* Editor content inside A4 Page canvas */}
+              <div 
+                className="min-h-[800px] print:min-h-0 text-gray-900 dark:text-gray-100"
+                onContextMenu={handleContextMenu}
+              >
+                {mode === "read" ? (
+                  <ReadOnlyEditor editor={readEditor} />
+                ) : (
+                  <CollaborativeEditor editor={editEditor} />
+                )}
+              </div>
+            </PageCanvas>
+          }
+        />
+
+        {/* Floating Find & Replace Panel */}
+        {findReplaceOpen && (
+          <FindReplacePanel
+            editor={activeEditor}
+            onClose={() => setFindReplaceOpen(false)}
+          />
         )}
 
-        <div className="mx-auto w-full max-w-[1200px] px-6 py-16 lg:px-10">
-          {/* Title */}
-          <div className="mb-10">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Tiêu đề tài liệu
-            </p>
-            <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
-              <input
-                type="text"
-                value={mode === "edit" ? editTitle : document.title}
-                onChange={mode === "edit" ? handleTitleInput : undefined}
-                readOnly={mode === "read"}
-                className="w-full text-4xl font-extrabold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight"
-                placeholder="Nhập tiêu đề tài liệu..."
-              />
-            </div>
-          </div>
+        {/* Floating Table Context Menu */}
+        {tableMenu && editEditor && mode === "edit" && (
+          <TableContextMenu
+            editor={editEditor}
+            x={tableMenu.x}
+            y={tableMenu.y}
+            onClose={() => setTableMenu(null)}
+          />
+        )}
 
-          {/* Content */}
-          <div className="pb-40">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Nội dung tài liệu
-            </p>
-            <div className="min-h-[600px] rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition focus-within:border-indigo-300 focus-within:ring-2 focus-within:ring-indigo-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus-within:border-indigo-500 dark:focus-within:ring-indigo-900/40">
-              <div className="dark:prose-invert">
-                <EditorContent editor={activeEditor} />
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Floating Link Bubble Menu */}
+        {editEditor && mode === "edit" && (
+          <LinkBubbleMenu editor={editEditor} />
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,9 @@
+// Service quản lý tất cả các tương tác liên quan đến tài liệu trong module docs, bao gồm việc gọi API để lấy danh sách tài liệu, tạo mới, cập nhật nội dung, quản lý phiên bản, xuất/nhập file và các thao tác khác liên quan đến tài liệu,
+// nó cung cấp một giao diện đơn giản để các component khác trong module docs có thể sử dụng mà không cần quan tâm đến chi tiết của API.
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { DocumentItem } from "../types/document.type";
+import type { DocumentVersion } from "../types/docs.type";
 
 const normalize = <T>(res: any): T => res?.data?.data ?? res?.data ?? res;
 
@@ -35,6 +38,43 @@ export const documentService = {
     const res = await api.patch(apiRoutes.DOCUMENTS.CONTENT(id), { content });
     return normalize<DocumentItem>(res);
   },
+  createVersion: async (id: string, label: string): Promise<DocumentVersion> => {
+    const res = await api.post(apiRoutes.DOCUMENTS.VERSIONS(id), { label });
+    return mapDocumentVersion(normalize<any>(res));
+  },
+  getVersions: async (id: string): Promise<DocumentVersion[]> => {
+    const res = await api.get(apiRoutes.DOCUMENTS.VERSIONS(id));
+    return normalize<any[]>(res).map(mapDocumentVersion);
+  },
+  restoreVersion: async (id: string, versionId: string): Promise<DocumentItem> => {
+    const res = await api.post(apiRoutes.DOCUMENTS.VERSION_RESTORE(id, versionId));
+    return normalize<DocumentItem>(res);
+  },
+  exportDocx: async (id: string, title: string): Promise<void> => {
+    const res = await api.get(apiRoutes.DOCUMENTS.EXPORT_DOCX(id), {
+      responseType: "blob",
+    });
+    const blob = new Blob([res.data], {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeTitle = title.replace(/[^a-zA-Z0-9-_]/g, "_") || "document";
+    link.href = url;
+    link.setAttribute("download", `${safeTitle}.docx`);
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode?.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+  importDocx: async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await api.post(apiRoutes.DOCUMENTS.IMPORT_DOCX, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data?.html ?? res.data?.data?.html ?? "";
+  },
   rename: async (id: string, name: string): Promise<DocumentItem> => {
     const res = await api.patch(apiRoutes.DOCUMENTS.BY_ID(id), { name });
     return normalize<DocumentItem>(res);
@@ -59,3 +99,20 @@ export const documentService = {
   previewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.PREVIEW(id)}`,
   downloadUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.DOWNLOAD(id)}`,
 };
+
+function mapDocumentVersion(raw: any): DocumentVersion {
+  return {
+    id: raw._id,
+    pageId: raw.documentId,
+    htmlSnapshot: raw.htmlSnapshot ?? "",
+    label: raw.label,
+    version: raw.version,
+    createdBy: raw.createdBy
+      ? {
+          _id: raw.createdBy._id,
+          fullName: raw.createdBy.fullName || "Anonymous",
+        }
+      : { _id: "", fullName: "Anonymous" },
+    createdAt: raw.createdAt,
+  };
+}

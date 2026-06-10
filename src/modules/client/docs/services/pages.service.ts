@@ -1,3 +1,4 @@
+// Service quản lý tất cả các tương tác liên quan đến trang tài liệu trong module docs, bao gồm việc gọi API để lấy danh sách trang, tạo mới, cập nhật nội dung, quản lý phiên bản, xuất/nhập file và các thao tác khác liên quan đến trang tài liệu,
 import api from '@/common/services/api.service';
 import { apiRoutes } from '@/config/apiRoutes';
 import type {
@@ -5,6 +6,7 @@ import type {
   PageApiResponse,
   CreatePagePayload,
   UpdatePagePayload,
+  DocumentVersion,
 } from '../types/docs.type';
 
 // ──────────────────────────────────────────────────────────────
@@ -86,6 +88,97 @@ async function publishPage(id: string): Promise<Document> {
   return mapPage(raw);
 }
 
+/** Synchronize page state / autosave */
+async function syncPage(
+  id: string,
+  payload: {
+    title?: string;
+    yjsState?: number[];
+    contentJson?: string;
+    content?: string;
+    plainTextSnapshot?: string;
+  },
+): Promise<Document> {
+  const res = await api.patch(apiRoutes.PAGES.SYNC(id), payload);
+  const raw: PageApiResponse = res.data?.data ?? res.data;
+  return mapPage(raw);
+}
+
+function mapVersion(raw: any): DocumentVersion {
+  return {
+    id: raw._id,
+    pageId: raw.pageId,
+    yjsState: raw.yjsState,
+    contentJson: raw.contentJson,
+    htmlSnapshot: raw.htmlSnapshot ?? raw.content ?? "",
+    label: raw.label,
+    version: raw.version,
+    createdBy: raw.createdBy ? {
+      _id: raw.createdBy._id,
+      fullName: raw.createdBy.fullName || "Ẩn danh",
+    } : { _id: "", fullName: "Ẩn danh" },
+    createdAt: raw.createdAt,
+  };
+}
+
+/** Create a named version of the page */
+async function createVersion(id: string, label: string): Promise<DocumentVersion> {
+  const res = await api.post(apiRoutes.PAGES.VERSIONS(id), { label });
+  const raw = res.data?.data ?? res.data;
+  return mapVersion(raw);
+}
+
+/** Get all versions of a page */
+async function getVersions(id: string): Promise<DocumentVersion[]> {
+  const res = await api.get(apiRoutes.PAGES.VERSIONS(id));
+  const data: any[] = res.data?.data ?? res.data;
+  return data.map(mapVersion);
+}
+
+/** Restore a page to a specific version */
+async function restoreVersion(id: string, versionId: string): Promise<Document> {
+  const res = await api.post(apiRoutes.PAGES.VERSION_RESTORE(id, versionId));
+  const raw: PageApiResponse = res.data?.data ?? res.data;
+  return mapPage(raw);
+}
+
+/** Export a page as DOCX */
+async function exportDocx(id: string, title: string): Promise<void> {
+  const res = await api.get(apiRoutes.PAGES.EXPORT_DOCX(id), {
+    responseType: 'blob',
+  });
+  
+  const blob = new Blob([res.data], {
+    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  
+  const safeTitle = title.replace(/[^a-zA-Z0-9-_]/g, '_') || 'document';
+  link.setAttribute('download', `${safeTitle}.docx`);
+  
+  document.body.appendChild(link);
+  link.click();
+  
+  link.parentNode?.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
+
+/** Import DOCX file and get HTML */
+async function importDocx(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  const res = await api.post(apiRoutes.PAGES.IMPORT_DOCX, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  
+  return res.data?.html ?? res.data?.data?.html ?? '';
+}
+
 export const pagesService = {
   getRootPages,
   getChildren,
@@ -94,4 +187,10 @@ export const pagesService = {
   updatePage,
   deletePage,
   publishPage,
+  syncPage,
+  createVersion,
+  getVersions,
+  restoreVersion,
+  exportDocx,
+  importDocx,
 };

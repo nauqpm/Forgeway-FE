@@ -16,6 +16,7 @@ export const SOCKET_COMMANDS = {
   PAGE_LEAVE: 'page:leave',
   PAGE_UPDATE: 'page:update',
   PAGE_YJS_UPDATE: 'page:yjs-update',
+  PAGE_AWARENESS_UPDATE: 'page:awareness-update',
   PAGE_DRAFT_CONTENT: 'page:draft-content',
 } as const;
 
@@ -77,6 +78,8 @@ export const SOCKET_EVENTS = {
   NOTIFICATION_READ_ALL: NOTIFICATION_EVENTS.READ_ALL,
   PAGE_UPDATED: 'page.updated',
   PAGE_YJS_UPDATE_RECEIVED: 'page.yjs-update',
+  PAGE_AWARENESS_UPDATE_RECEIVED: 'page.awareness-update',
+  PAGE_VERSION_RESTORED: 'page.version-restored',
 } as const;
 
 export type SocketEventName =
