@@ -50,3 +50,30 @@ export const addReactionAPI = async (
 ): Promise<void> => {
   await api.post(`/chat/messages/${messageId}/reactions`, { emoji });
 };
+
+export const createDMAPI = async (targetUserId: string): Promise<Channel> => {
+  const response = await api.post('/chat/dm', { targetUserId });
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id,
+    unreadCount: data.unreadCount || 0
+  };
+};
+
+export const getRecentDMsAPI = async (): Promise<Channel[]> => {
+  const response = await api.get('/chat/dm/recent');
+  const data = normalizeArray<any>(response);
+  return data.map(item => ({
+    ...item,
+    _id: item._id || item.id,
+    unreadCount: item.unreadCount || 0
+  }));
+};
+
+export const searchUsersAPI = async (search?: string): Promise<any[]> => {
+  const response = await api.get('/users/all', {
+    params: { search }
+  });
+  return response.data?.data ?? response.data ?? [];
+};
