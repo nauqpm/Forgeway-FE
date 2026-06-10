@@ -18,7 +18,7 @@ import BulkEditDrawer from './BulkEditDrawer';
 import AssigneePicker, { AssigneePickerMember, getMemberId, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
 import TaskLabelsField from '../../../../client/workspaces/components/labels/TaskLabelsField';
-import TaskStatusChanger from '../../../../client/workspaces/components/TaskStatusChanger';
+import StatusPicker from '../../../../../common/components/StatusPicker';
 
 type WorkspaceMember = AssigneePickerMember;
 
@@ -274,14 +274,15 @@ export default function DataGridListView({
       cell: info => {
         const issue = info.row.original;
         return (
-          <TaskStatusChanger
-            issue={issue}
-            boardColumns={boardColumns}
+          <StatusPicker
+            value={issue.status}
+            columnId={issue.columnId}
+            options={(boardColumns || []).map(col => ({ id: col.id, name: col.name }))}
             variant="pill"
             size="sm"
             disabled={!canEditTask}
-            onChange={({ columnId, status }) =>
-              onUpdateIssue?.(issue.id, { columnId, status })
+            onChange={(status, option) =>
+              onUpdateIssue?.(issue.id, { columnId: option.id, status })
             }
           />
         );

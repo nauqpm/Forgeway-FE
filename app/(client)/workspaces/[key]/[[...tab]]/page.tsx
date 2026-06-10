@@ -1056,6 +1056,7 @@ export default function WorkspaceDetailPage({
           setNewIssueForm={setNewIssueForm}
           handleCreateIssue={handleCreateIssue}
           workspace={workspace}
+          boardColumns={columns}
         />
       )}
 

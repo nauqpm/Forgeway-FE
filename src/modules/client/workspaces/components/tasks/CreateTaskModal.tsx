@@ -2,6 +2,8 @@
 
 import { FileText, X } from "lucide-react";
 import { Workspace } from "../../types/workspace.type";
+import StatusPicker from "@/common/components/StatusPicker";
+import { BoardColumn } from "../../types/board.type";
 
 type CreateTaskModalProps = {
   showCreateIssue: boolean;
@@ -10,6 +12,7 @@ type CreateTaskModalProps = {
   setNewIssueForm: any;
   handleCreateIssue: any;
   workspace: Workspace;
+  boardColumns?: BoardColumn[];
 };
 
 const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[0.8125rem] outline-none transition-colors";
@@ -23,6 +26,7 @@ export default function CreateTaskModal({
   setNewIssueForm,
   handleCreateIssue,
   workspace,
+  boardColumns = [],
 }: CreateTaskModalProps) {
   if (!showCreateIssue) return null;
 
@@ -40,8 +44,12 @@ export default function CreateTaskModal({
     })
     .filter((member) => member.id);
 
+  const statusOptions = boardColumns.length > 0 
+    ? boardColumns.map(col => ({ id: col.id, name: col.name }))
+    : ["To Do", "In Progress", "Done"].map(name => ({ id: name.toLowerCase().replace(/\s/g, ""), name }));
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100000] p-4">
       <div
         className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-lg border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
@@ -111,15 +119,13 @@ export default function CreateTaskModal({
 
           <div>
             <label className={labelCls}>Initial status</label>
-            <select
+            <StatusPicker
               value={newIssueForm.status}
-              onChange={(e) => setNewIssueForm({ ...newIssueForm, status: e.target.value })}
-              className={inputCls}
-            >
-              <option value="To Do">To Do</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Done">Done</option>
-            </select>
+              columnId={newIssueForm.columnId}
+              options={statusOptions}
+              variant="input"
+              onChange={(status, option) => setNewIssueForm({ ...newIssueForm, status, columnId: option.id })}
+            />
           </div>
 
           <div>
