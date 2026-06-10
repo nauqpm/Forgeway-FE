@@ -470,11 +470,11 @@ export default function WorkspaceDetailPage({
   }, [user, workspace, workspacePermissions.role]);
   const isWorkspaceAdmin =
     currentWorkspaceRole === "workspace_admin" || user?.role === "super_admin";
-  const canCreateTask = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
-  const canEditTask = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
-  const canDeleteTask = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
-  const canMoveTask = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_MOVE);
-  const canManageSprint = isWorkspaceAdmin && workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.SPRINT_MANAGE);
+  const canCreateTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
+  const canEditTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
+  const canDeleteTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
+  const canMoveTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_MOVE);
+  const canManageSprint = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.SPRINT_MANAGE);
   const canUpdateWorkspace = isWorkspaceAdmin && workspacePermissions.hasPermission(
     WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE,
   );
