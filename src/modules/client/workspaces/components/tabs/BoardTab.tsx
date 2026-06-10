@@ -296,7 +296,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           className="mt-5 inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2 dark:focus:ring-offset-[#202020]"
         >
           Go to backlog
-       
+
         </Link>
       </div>
     );
@@ -345,7 +345,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="workspace-column flex-shrink-0 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] flex flex-col max-h-full border border-[#EAEAEA] dark:border-white/[0.06]"
+                      className="workspace-column flex-shrink-0 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] flex flex-col max-h-full border border-[#EAEAEA] dark:border-white/[0.06] group/column"
                     >
                       <div
                         {...(filters.archived ? {} : provided.dragHandleProps)}
@@ -441,11 +441,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         filters.archived
                                           ? undefined
                                           : {
-                                              ...provided.draggableProps.style,
-                                              ...(snapshot.isDragging
-                                                ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }
-                                                : {}),
-                                            }
+                                            ...provided.draggableProps.style,
+                                            ...(snapshot.isDragging
+                                              ? { boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }
+                                              : {}),
+                                          }
                                       }
                                     >
                                       {issue.cover?.type === "image" && (
@@ -477,9 +477,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                               setActionMenuIssueId((current) => current === issue.id ? null : issue.id);
                                             }}
                                             onMouseDown={(event) => event.stopPropagation()}
-                                            className={`rounded-[6px] bg-white/90 dark:bg-[#202020]/80 p-1 text-[#787774] dark:text-[#9B9A97] opacity-0 transition-all hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] hover:text-[#111111] dark:hover:text-[#E8E8E7] group-hover:opacity-100 ${
-                                              actionMenuIssueId === issue.id ? "opacity-100" : ""
-                                            }`}
+                                            className={`rounded-[6px] bg-white/90 dark:bg-[#202020]/80 p-1 text-[#787774] dark:text-[#9B9A97] opacity-0 transition-all hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] hover:text-[#111111] dark:hover:text-[#E8E8E7] group-hover:opacity-100 ${actionMenuIssueId === issue.id ? "opacity-100" : ""
+                                              }`}
                                             aria-label="Task actions"
                                             title="Task actions"
                                           >
@@ -540,15 +539,22 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                 </Draggable>
                               ))}
                             {provided.placeholder}
-                            {getColumnIssues(column).length === 0 &&
-                              !snapshot.isDraggingOver && (
-                                <div className="h-24 border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] flex items-center justify-center text-[0.8125rem] font-medium text-[#ABABAB] dark:text-[#6B6B6B]">
-                                  {issues.filter((i) => issueMatchesColumn(i, column))
-                                    .length === 0
-                                    ? "Drag tasks here"
-                                    : "No matching tasks"}
-                                </div>
-                              )}
+                            {!filters.archived && canCreateTask && (
+                              <button
+                                onClick={() => {
+                                  setNewIssueForm({
+                                    ...newIssueForm,
+                                    status: column.name,
+                                    columnId: column.id,
+                                    sprintId: activeSprint?._id ?? null,
+                                  });
+                                  setShowCreateIssue(true);
+                                }}
+                                className="w-full mt-2 flex items-center gap-2 py-2 px-3 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] rounded-[6px] text-[#ABABAB] hover:text-[#787774] dark:text-[#6B6B6B] dark:hover:text-[#9B9A97] transition-all duration-200 opacity-0 group-hover/column:opacity-100 text-[0.8125rem] font-medium justify-center"
+                              >
+                                <Plus className="w-4 h-4" /> Add new task
+                              </button>
+                            )}
                           </div>
                         )}
                       </Droppable>
@@ -560,7 +566,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
 
               {/* Add new column */}
               <div
-                className="workspace-column flex-shrink-0 bg-transparent flex flex-col"
+                className="workspace-column flex-shrink-0 bg-transparent flex flex-col group/new-col"
                 ref={columnsEndRef}
               >
                 {canUpdateWorkspace && showCreateColumn ? (
@@ -601,7 +607,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 ) : canUpdateWorkspace ? (
                   <button
                     onClick={() => setShowCreateColumn(true)}
-                    className="flex items-center gap-2 w-full bg-transparent hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] hover:border-[#C8C7C4] dark:hover:border-white/[0.12] rounded-[8px] p-4 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-all text-[0.8125rem] justify-center"
+                    className="flex items-center gap-2 w-full bg-transparent hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.08] hover:border-[#C8C7C4] dark:hover:border-white/[0.12] rounded-[8px] p-4 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-all duration-200 opacity-0 group-hover/new-col:opacity-100 text-[0.8125rem] justify-center"
                   >
                     <Plus className="w-5 h-5" /> Add new column
                   </button>

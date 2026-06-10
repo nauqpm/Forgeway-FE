@@ -40,6 +40,24 @@ const LockoutAlert: React.FC<LockoutAlertProps> = ({ lockoutInfo, className = ''
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const formatUnlockTime = (value?: string): string | null => {
+    if (!value) return null;
+
+    const unlockDate = new Date(value);
+    if (Number.isNaN(unlockDate.getTime())) return null;
+
+    return new Intl.DateTimeFormat(undefined, {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(unlockDate);
+  };
+
+  const unlockTimeLabel = formatUnlockTime(lockoutInfo.lockedUntil);
+
   return (
     <div
       className={`rounded-[8px] border p-4 ${
@@ -64,6 +82,11 @@ const LockoutAlert: React.FC<LockoutAlertProps> = ({ lockoutInfo, className = ''
               ) : (
                 <p className="mt-1">
                   Please try again or use the forgot password flow.
+                </p>
+              )}
+              {unlockTimeLabel && (
+                <p className="mt-1">
+                  Unlock time: <span className="font-semibold">{unlockTimeLabel}</span>
                 </p>
               )}
             </>

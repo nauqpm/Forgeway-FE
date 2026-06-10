@@ -10,7 +10,7 @@ import { Zap, Mail, Loader2 } from 'lucide-react';
 
 const ForgotPassword = () => {
   const router = useRouter();
-  const { loading, error, requestPasswordReset, clearError } = usePasswordReset();
+  const { loading, error, requestPasswordReset, clearError, clearSuccess } = usePasswordReset();
   const [email, setEmail] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,7 +23,7 @@ const ForgotPassword = () => {
 
     try {
       await requestPasswordReset(email);
-      toast.success('OTP has been sent to your email');
+      toast.success('If the email is valid, a password reset OTP has been sent.');
       router.push(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch {
       // Error handled by hook
@@ -66,6 +66,7 @@ const ForgotPassword = () => {
                   onChange={(e) => {
                     setEmail(e.target.value);
                     clearError();
+                    clearSuccess();
                   }}
                   required
                   placeholder="ten@company.com"

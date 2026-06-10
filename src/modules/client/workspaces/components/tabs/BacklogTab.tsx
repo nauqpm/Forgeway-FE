@@ -6,7 +6,7 @@ import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import AssigneePicker from "../../../../../common/components/AssigneePicker";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
-import TaskStatusChanger from "../TaskStatusChanger";
+import StatusPicker from "@/common/components/StatusPicker";
 import { compareIssueRank } from "../../utils/dragUtils";
 import type { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
@@ -513,13 +513,14 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                         title="Story Points"
                                       />
                                     </div>
-                                    <TaskStatusChanger
-                                      issue={issue}
-                                      boardColumns={columns}
+                                    <StatusPicker
+                                      value={issue.status}
+                                      columnId={issue.columnId}
+                                      options={(columns || []).map(col => ({ id: col.id, name: col.name }))}
                                       variant="pill"
                                       size="sm"
-                                      onChange={({ columnId, status }) =>
-                                        updateIssueDirectly(issue.id, { columnId, status })
+                                      onChange={(status, option) =>
+                                        updateIssueDirectly(issue.id, { columnId: option.id, status })
                                       }
                                     />
                                     <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
@@ -709,13 +710,14 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                       title="Story Points"
                                     />
                                   </div>
-                                  <TaskStatusChanger
-                                    issue={issue}
-                                    boardColumns={columns}
+                                  <StatusPicker
+                                    value={issue.status}
+                                    columnId={issue.columnId}
+                                    options={(columns || []).map(col => ({ id: col.id, name: col.name }))}
                                     variant="pill"
                                     size="sm"
-                                    onChange={({ columnId, status }) =>
-                                      updateIssueDirectly(issue.id, { columnId, status })
+                                    onChange={(status, option) =>
+                                      updateIssueDirectly(issue.id, { columnId: option.id, status })
                                     }
                                   />
                                   <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>

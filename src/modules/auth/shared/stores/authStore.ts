@@ -120,7 +120,11 @@ export const useSecurityStore = create<SecurityState & SecurityActions>()(
       suspendedMessage: null,
 
       // ── Actions ──
-      setLockout: (lockoutInfo) => set({ lockoutInfo }),
+      setLockout: (lockoutInfo) =>
+        set({
+          lockoutInfo,
+          failedAttempts: Math.max(0, lockoutInfo.maxAttempts - lockoutInfo.remainingAttempts),
+        }),
 
       /**
        * Increase failed login attempts and update lockout status.

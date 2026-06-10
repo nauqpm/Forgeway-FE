@@ -21,6 +21,11 @@ function LoginFormInner() {
   const { login, isLoading } = useAuth();
   const { lockoutInfo, checkAndResetLockout } = useSecurityStore();
   const searchParams = useSearchParams();
+  const normalizedEmail = email.trim().toLowerCase();
+  const isLockoutForCurrentEmail =
+    !!lockoutInfo &&
+    (!lockoutInfo.email || lockoutInfo.email.trim().toLowerCase() === normalizedEmail);
+  const activeLockout = isLockoutForCurrentEmail ? lockoutInfo : null;
 
   useEffect(() => {
     const error = searchParams.get('error');
@@ -39,7 +44,8 @@ function LoginFormInner() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (lockoutInfo?.isLocked) return;
+    checkAndResetLockout();
+    if (activeLockout?.isLocked) return;
 
     const emailError = validateEmail(email);
     if (emailError) {
@@ -76,11 +82,11 @@ function LoginFormInner() {
             <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Sign in to your SDLC platform account</p>
           </div>
 
-          {lockoutInfo && (lockoutInfo.isLocked || lockoutInfo.remainingAttempts < lockoutInfo.maxAttempts) && (
-            <LockoutAlert lockoutInfo={lockoutInfo} className="mb-6" />
+          {activeLockout && (activeLockout.isLocked || activeLockout.remainingAttempts < activeLockout.maxAttempts) && (
+            <LockoutAlert lockoutInfo={activeLockout} className="mb-6" />
           )}
 
-          <button onClick={initiateGoogleLogin} type="button" disabled={lockoutInfo?.isLocked}
+          <button onClick={initiateGoogleLogin} type="button"
             className="w-full mb-6 py-3 px-4 flex items-center justify-center gap-3 bg-white/50 hover:bg-white/80 border border-white/30 rounded-[6px] hover:border-white transition-all font-medium text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -101,7 +107,7 @@ function LoginFormInner() {
             <div>
               <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Email</label>
               <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="JaneDoe@gmail.com"
-                disabled={lockoutInfo?.isLocked}
+                disabled={activeLockout?.isLocked}
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
             </div>
             <div>
@@ -111,7 +117,7 @@ function LoginFormInner() {
               </div>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required
-                  placeholder="Enter your password" disabled={lockoutInfo?.isLocked}
+                  placeholder="Enter your password" disabled={activeLockout?.isLocked}
                   className="w-full px-4 py-2.5 pr-11 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
@@ -119,7 +125,7 @@ function LoginFormInner() {
                 </button>
               </div>
             </div>
-            <button type="submit" disabled={isLoading || lockoutInfo?.isLocked}
+            <button type="submit" disabled={isLoading || activeLockout?.isLocked}
               className="w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in...</> : 'Sign in'}
             </button>

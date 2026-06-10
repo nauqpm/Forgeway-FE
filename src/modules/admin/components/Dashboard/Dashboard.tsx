@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen, CheckCircle2, Database, LayoutDashboard } from "lucide-react";
+import { BookOpen, CheckCircle2, Database, LayoutDashboard, Loader2 } from "lucide-react";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "react-hot-toast";
+import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
 import { boardService } from "@/modules/client/workspaces/services/boardService";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
 import type { Issue } from "@/modules/client/workspaces/types/issue.type";
@@ -115,6 +117,11 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   const [userStats, setUserStats] = useState<UserDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("assigned");
+
+  const [selectedDashboardTask, setSelectedDashboardTask] = useState<DashboardTask | null>(null);
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState<any>(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -246,6 +253,49 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         ? "The backend records task view audit events but does not have a viewed-items API yet."
         : "No matching tasks.";
 
+  const handleOpenTask = async (task: DashboardTask) => {
+    setSelectedDashboardTask(task);
+    setIsTaskModalOpen(true);
+    setModalLoading(true);
+
+    try {
+      const workspace = workspaces.find(w => workspaceRouteKeyOf(w) === task.workspaceKey);
+      if (!workspace) throw new Error("Workspace not found");
+      const workspaceId = workspaceIdOf(workspace);
+      
+      const taskDetail = await taskService.getBoardTaskDetail(workspaceId, task.key);
+      setSelectedTaskDetail(taskDetail);
+
+      const detailUrl = `/workspaces/${task.workspaceKey}/board/key/${task.key}`;
+      window.history.pushState({ ...window.history.state, as: detailUrl }, "", detailUrl);
+    } catch (err) {
+      toast.error("Failed to load task details");
+      setIsTaskModalOpen(false);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const handleArchiveIssue = async (issue: any) => {
+    try {
+      const workspace = workspaces.find(w => workspaceRouteKeyOf(w) === selectedDashboardTask?.workspaceKey);
+      const workspaceId = workspace ? workspaceIdOf(workspace) : null;
+      if (!workspaceId) return;
+      
+      await taskService.archiveBoardTask(workspaceId, issue.id);
+      toast.success("Work item archived");
+      
+      setAssignedTasks(prev => prev.filter(t => t.id !== selectedDashboardTask?.id));
+      setWorkedTasks(prev => prev.filter(t => t.id !== selectedDashboardTask?.id));
+      
+      setIsTaskModalOpen(false);
+      setSelectedDashboardTask(null);
+      setSelectedTaskDetail(null);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Could not archive work item");
+    }
+  };
+
   if (loading) return null;
 
   return (
@@ -354,10 +404,10 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             </div>
           ) : (
             filteredTasks.map((task) => (
-              <Link
+              <div
                 key={task.id}
-                href={`/workspaces/${task.workspaceKey}/board/key/${task.key}`}
-                className="flex items-center justify-between rounded-[8px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 transition hover:bg-[#F7F6F3] dark:border-white/[0.06] dark:bg-[#202020] dark:hover:bg-white/8"
+                onClick={() => handleOpenTask(task)}
+                className="flex cursor-pointer items-center justify-between rounded-[8px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 transition hover:bg-[#F7F6F3] dark:border-white/[0.06] dark:bg-[#202020] dark:hover:bg-white/8"
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-[4px] bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)]">
@@ -381,11 +431,42 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
                 <span className="ml-3 rounded-[4px] bg-[#EFF6FF] px-3 py-1 text-xs font-medium text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
                   Open
                 </span>
-              </Link>
+              </div>
             ))
           )}
         </div>
       </div>
+
+      {isTaskModalOpen && (
+        modalLoading ? (
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 p-4 md:p-8 animate-in fade-in duration-200">
+            <div className="flex flex-col items-center justify-center bg-white dark:bg-[#202020] rounded-[10px] p-8 shadow-xl">
+              <Loader2 className="h-8 w-8 animate-spin text-[#2563EB] dark:text-[#3B82F6] mb-4" />
+              <p className="text-[#111111] dark:text-[#E8E8E7] font-medium">Loading task...</p>
+            </div>
+          </div>
+        ) : selectedTaskDetail && selectedDashboardTask ? (
+          <TaskDetailModal
+            issue={selectedTaskDetail}
+            workspaceId={workspaces.find(w => workspaceRouteKeyOf(w) === selectedDashboardTask.workspaceKey) ? workspaceIdOf(workspaces.find(w => workspaceRouteKeyOf(w) === selectedDashboardTask.workspaceKey)!) : ""}
+            onClose={() => {
+              setIsTaskModalOpen(false);
+              setSelectedDashboardTask(null);
+              setSelectedTaskDetail(null);
+              window.history.pushState(null, "", "/dashboard");
+            }}
+            onUpdateIssue={async (updatedIssue) => {
+              const workspace = workspaces.find(w => workspaceRouteKeyOf(w) === selectedDashboardTask.workspaceKey);
+              const workspaceId = workspace ? workspaceIdOf(workspace) : null;
+              if (workspaceId && updatedIssue.id) {
+                await taskService.updateBoardTask(workspaceId, updatedIssue.id, updatedIssue);
+                setSelectedTaskDetail({ ...selectedTaskDetail, ...updatedIssue });
+              }
+            }}
+            onArchiveIssue={handleArchiveIssue}
+          />
+        ) : null
+      )}
     </div>
   );
 }
