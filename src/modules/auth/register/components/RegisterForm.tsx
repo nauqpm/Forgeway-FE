@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '../../shared/hooks/useAuth';
+import { validateEmail } from '../../shared/utils/emailValidation';
 import PasswordPolicyChecklist, { validatePassword } from '../../password/security/PasswordPolicyChecklist';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
 // import { extractRegisterError } from '../../shared/services/authService';
@@ -18,6 +19,9 @@ export default function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const emailError = validateEmail(form.email);
+    if (emailError) { toast.error(emailError); return; }
 
     const policy = validatePassword(form.password);
     if (!policy.isValid) { toast.error('Password does not meet the security requirements'); return; }
@@ -71,7 +75,7 @@ export default function RegisterForm() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Work email</label>
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="JaneDoe@gmail.com"
+              <input type="text" inputMode="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="JaneDoe@gmail.com"
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner" />
             </div>
             <div>

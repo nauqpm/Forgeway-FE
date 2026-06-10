@@ -43,16 +43,13 @@ export const usePasswordReset = (): UsePasswordResetReturn => {
       };
       const status = error.response?.status;
       const code = error.response?.data?.code;
-      const backendMessage = error.response?.data?.message?.toLowerCase() || "";
 
       if (code === "RATE_LIMITED" || status === 429) {
         setError("You are acting too quickly. Please try again in a few minutes.");
       } else if (code === "EMAIL_NOT_VERIFIED") {
         setError("Email has not been verified. Please verify your email before resetting your password.");
-      } else if (backendMessage.includes("not found") || backendMessage.includes("khong ton tai")) {
-        setError("Email does not exist in the system.");
       } else if (status === 400 || status === 404) {
-        setError("Could not send OTP. Please check the email again.");
+        setError("Unable to send OTP for an invalid email address.");
       } else {
         setError("Could not send OTP right now. Please try again later.");
       }

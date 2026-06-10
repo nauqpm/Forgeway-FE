@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePasswordReset } from '../hooks/usePasswordReset';
+import { validateEmail } from '../../shared/utils/emailValidation';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -9,14 +10,20 @@ import { Zap, Mail, Loader2 } from 'lucide-react';
 
 const ForgotPassword = () => {
   const router = useRouter();
-  const { loading, error, requestPasswordReset, clearError } = usePasswordReset();
+  const { loading, error, requestPasswordReset, clearError, clearSuccess } = usePasswordReset();
   const [email, setEmail] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const emailError = validateEmail(email);
+    if (emailError) {
+      toast.error(emailError);
+      return;
+    }
+
     try {
       await requestPasswordReset(email);
-      toast.success('OTP has been sent to your email');
+      toast.success('If the email is valid, a password reset OTP has been sent.');
       router.push(`/reset-password?email=${encodeURIComponent(email)}`);
     } catch {
       // Error handled by hook
@@ -52,11 +59,14 @@ const ForgotPassword = () => {
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                 <input
-                  type="email"
+                  type="text"
+                  inputMode="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
                     clearError();
+                    clearSuccess();
                   }}
                   required
                   placeholder="ten@company.com"

@@ -1,171 +1,115 @@
-'use client';
+"use client";
 
 // =============================================================================
 // useAuth HOOK - Main auth orchestration hook
 // =============================================================================
 // Composes authStore + services. This is the primary hook for components.
 
-import { useCallback, useEffect } from 'react';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from '../stores/authStore';
-import { usePermissionStore } from '../../permission/stores/permissionStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { getQueryClient } from '@/common/providers/QueryProvider';
-import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from '../services/authService';
-import { clearTokens } from '../services/tokenService';
-import { getMyPermissionsAPI } from '../../permission/services/permissionService';
-import { AUTH_ROUTES } from '../constants/auth-routes';
-import { AuthErrorCode } from '../types/auth.types';
-import type {
-  LoginRequest,
-  RegisterRequest,
-  AuthApiError,
-  UserRole,
-  User,
-} from '../types/auth.types';
+import { useCallback, useEffect } from "react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from "../stores/authStore";
+import { usePermissionStore } from "../../permission/stores/permissionStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { getQueryClient } from "@/common/providers/QueryProvider";
+import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from "../services/authService";
+import { clearTokens } from "../services/tokenService";
+import { getMyPermissionsAPI } from "../../permission/services/permissionService";
+import { AUTH_ROUTES } from "../constants/auth-routes";
+import { AuthErrorCode } from "../types/auth.types";
+import { validateEmail } from "../utils/emailValidation";
+import type { LoginRequest, RegisterRequest, AuthApiError } from "../types/auth.types";
 
 export const useAuth = () => {
   const router = useRouter();
-  const {
-    user,
-    isAuthenticated,
-    isLoading,
-    isInitialized,
-    setUser,
-    setLoading,
-    setInitialized,
-    clearAuth,
-  } = useAuthStore();
+  const { user, isAuthenticated, isLoading, isInitialized, setUser, setLoading, setInitialized, clearAuth } =
+    useAuthStore();
   const { setMfaChallenge } = useMfaStore();
-  const { incrementFailedAttempts, resetFailedAttempts, setLockout, setSuspendedMessage } =
-    useSecurityStore();
+  const { resetFailedAttempts, setLockout, setSuspendedMessage } = useSecurityStore();
   const { setGlobalPermissions } = usePermissionStore();
 
-  // --- Login ---------------------------------------------------------------
-
-  /**
-   * Login function handling sign-in business logic.
-   */
   const login = useCallback(
     async (data: LoginRequest) => {
-      setLoading(true); // Step 1: start loading
+      const emailError = validateEmail(data.email);
+      if (emailError) {
+        toast.error(emailError);
+        throw new Error(emailError);
+      }
+
+      setLoading(true);
       try {
-        // Step 2: call sign-in API
         const response = await loginAPI(data);
 
-        // Step 3: check MFA requirement from backend, currently skipped
         /*
         if (response.mfaRequired && response.mfaToken && response.mfaMethod) {
           setMfaChallenge(response.mfaToken, response.mfaMethod);
-          router.push(AUTH_ROUTES.MFA); // Redirect to MFA page
+          router.push(AUTH_ROUTES.MFA);
           return response;
         }
         */
 
-        // Step 4: prefer user from response, otherwise call /auth/me
-        const currentUser =
-          response.user ?? (await getCurrentUserAPI().catch(() => null));
+        const currentUser = response.user ?? (await getCurrentUserAPI().catch(() => null));
 
-        if (currentUser) {
-          // Step 5: update user information and reset security errors
-          setUser(currentUser);
-          resetFailedAttempts();
-
-          // Load and update user permissions
-          try {
-            const { permissions } = await getMyPermissionsAPI();
-            setGlobalPermissions(permissions);
-          } catch {
-            // Do not block the main flow if permission loading fails
-          }
-
-          // Check whether the role requires MFA but it is not enabled, currently skipped
-          /*
-          if (needsMfaSetup(currentUser)) {
-            router.push(AUTH_ROUTES.MFA);
-            return response;
-          }
-          */
-
-          // Step 5b: redirect based on role
-          const isSuperAdmin = currentUser.role === 'super_admin';
-          if (isSuperAdmin) {
-            // SUPER_ADMIN goes to admin dashboard (separate admin portal)
-            window.location.href = process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001';
-            return response;
-          }
-
-          router.push(AUTH_ROUTES.HOME);
-        } else {
-          // Return an error if login succeeds but profile cannot be loaded
-          throw new Error('Could not load user information after sign-in.');
+        if (!currentUser) {
+          throw new Error("Could not load user information after sign-in.");
         }
 
+        setUser(currentUser);
+        resetFailedAttempts();
+
+        try {
+          const { permissions } = await getMyPermissionsAPI();
+          setGlobalPermissions(permissions);
+        } catch {
+          // Do not block the main flow if permission loading fails
+        }
+
+        const isSuperAdmin = currentUser.role === "super_admin";
+        if (isSuperAdmin) {
+          window.location.href = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001";
+          return response;
+        }
+
+        router.push(AUTH_ROUTES.HOME);
         return response;
       } catch (error: unknown) {
-        // Step 7: handle backend error types
         const err = error as { response?: { data?: AuthApiError } };
         const errorCode = err.response?.data?.code;
+        const details = err.response?.data?.details;
+        const maxAttempts = Number(details?.maxAttempts ?? 5);
+        const remainingAttempts = Number(details?.remainingAttempts ?? maxAttempts);
+        const lockedUntil = details?.lockedUntil as string | undefined;
 
         if (errorCode === AuthErrorCode.ACCOUNT_LOCKED) {
-          // Account lock error due to too many failed attempts
           setLockout({
+            email: data.email,
             isLocked: true,
-            remainingAttempts: 0,
-            maxAttempts: 5,
-            lockedUntil: err.response?.data?.details?.lockedUntil as string,
+            remainingAttempts,
+            maxAttempts,
+            lockedUntil,
           });
-          toast.error('Account has been temporarily locked due to too many failed attempts.');
-        } else if (
-          errorCode === AuthErrorCode.USER_SUSPENDED ||
-          errorCode === AuthErrorCode.USER_DEACTIVATED
-        ) {
-          // Account locked or suspended error
-          setSuspendedMessage('Account has been locked');
-          toast.error('Account has been locked or suspended.');
+          toast.error("Account has been temporarily locked due to too many failed attempts.");
+        } else if (errorCode === AuthErrorCode.USER_SUSPENDED || errorCode === AuthErrorCode.USER_DEACTIVATED) {
+          setSuspendedMessage("Account has been locked");
+          toast.error("Account has been locked or suspended.");
         } else if (errorCode === AuthErrorCode.INVALID_CREDENTIALS) {
-          // Invalid credentials error; increase failed attempt count
-          incrementFailedAttempts();
-          toast.error('Email or password is incorrect.');
-        } else {
-          toast.error('Sign-in failed. Please try again later.');
-        }
-
-        throw error; // Throw the error so the UI can handle it if needed
-      } finally {
-        setLoading(false); // Step 8: always stop loading
-      }
-    },
-    [router, setUser, setLoading, setMfaChallenge, resetFailedAttempts, incrementFailedAttempts, setLockout, setSuspendedMessage, setGlobalPermissions],
-  );
-
-  // --- Register ------------------------------------------------------------
-
-  const register = useCallback(
-    async (data: RegisterRequest) => {
-      setLoading(true);
-      try {
-        const response = await registerAPI(data);
-        if (!response.success) {
-          throw new Error('Registration failed.');
-        }
-        router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
-        return response;
-      } catch (error: unknown) {
-        const err = error as { response?: { data?: AuthApiError & { error?: string } } };
-        const errorCode = err.response?.data?.code || err.response?.data?.error;
-        const errorMessage = err.response?.data?.message;
-
-        if (errorCode === AuthErrorCode.EMAIL_ALREADY_EXISTS) {
-          toast.error('Email already exists. Please use another email.');
-        } else if (errorCode === AuthErrorCode.USER_SUSPENDED) {
-          toast.error('Account has been suspended.');
+          setLockout({
+            email: data.email,
+            isLocked: false,
+            remainingAttempts,
+            maxAttempts,
+          });
+          toast.error(
+            remainingAttempts > 0
+              ? `Email or password is incorrect. ${remainingAttempts} attempt(s) remaining.`
+              : "Email or password is incorrect."
+          );
         } else if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED) {
-          toast.error(errorMessage || 'Vui lòng xác thực email để hoàn tất đăng ký');
-          router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
+          toast.error("Please verify your email before signing in.");
+        } else if (errorCode === AuthErrorCode.RATE_LIMITED) {
+          toast.error("Too many sign-in attempts. Please wait a moment and try again.");
         } else {
-          toast.error(errorMessage || 'Registration failed. Please try again later.');
+          toast.error("Sign-in failed. Please try again later.");
         }
 
         throw error;
@@ -173,10 +117,61 @@ export const useAuth = () => {
         setLoading(false);
       }
     },
-    [router, setLoading],
+    [
+      router,
+      setUser,
+      setLoading,
+      setMfaChallenge,
+      resetFailedAttempts,
+      setLockout,
+      setSuspendedMessage,
+      setGlobalPermissions,
+    ]
   );
 
-  // --- Logout --------------------------------------------------------------
+  const register = useCallback(
+    async (data: RegisterRequest) => {
+      const emailError = validateEmail(data.email);
+      if (emailError) {
+        toast.error(emailError);
+        throw new Error(emailError);
+      }
+
+      setLoading(true);
+      try {
+        const response = await registerAPI(data);
+        if (!response.success) {
+          throw new Error("Registration failed.");
+        }
+
+        router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
+        return response;
+      } catch (error: unknown) {
+        const err = error as {
+          response?: { data?: AuthApiError & { error?: string } };
+        };
+        const errorCode = err.response?.data?.code || err.response?.data?.error;
+
+        if (errorCode === AuthErrorCode.EMAIL_ALREADY_EXISTS) {
+          toast.error("Email already exists. Please use another email.");
+        } else if (errorCode === AuthErrorCode.USER_SUSPENDED) {
+          toast.error("Account has been suspended.");
+        } else if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED) {
+          toast.error("Please verify your email before registering.");
+          router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
+        } else if (errorCode === AuthErrorCode.RATE_LIMITED) {
+          toast.error("Too many registration attempts. Please wait a moment and try again.");
+        } else {
+          toast.error("Registration failed. Please try again later.");
+        }
+
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router, setLoading]
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -195,29 +190,25 @@ export const useAuth = () => {
     }
   }, [clearAuth, router]);
 
-  // --- Refresh Current User ------------------------------------------------
-
   const refreshUser = useCallback(async () => {
     try {
-      const user = await getCurrentUserAPI();
-      setUser(user);
-      return user;
+      const nextUser = await getCurrentUserAPI();
+      setUser(nextUser);
+      return nextUser;
     } catch {
       clearAuth();
       return null;
     }
   }, [setUser, clearAuth]);
 
-  // --- Initialize Auth (check cookie session) -----------------------------
-
   const initializeAuth = useCallback(async () => {
     if (isInitialized) return;
+
     setLoading(true);
     try {
-      const user = await getCurrentUserAPI();
-      setUser(user);
+      const nextUser = await getCurrentUserAPI();
+      setUser(nextUser);
 
-      // Load global permissions
       try {
         const { permissions } = await getMyPermissionsAPI();
         setGlobalPermissions(permissions);
@@ -225,14 +216,11 @@ export const useAuth = () => {
         // Non-blocking
       }
     } catch {
-      // No valid session - user is not authenticated
       clearAuth();
     } finally {
       setInitialized(true);
     }
   }, [isInitialized, setUser, setLoading, setInitialized, clearAuth, setGlobalPermissions]);
-
-  // --- Auto-initialize on mount -------------------------------------------
 
   useEffect(() => {
     initializeAuth();
