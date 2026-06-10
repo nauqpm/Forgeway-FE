@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { useSecurityStore } from '../../shared/stores/authStore';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
+import { validateEmail } from '../../shared/utils/emailValidation';
 import LockoutAlert from '../security/LockoutAlert';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -40,6 +41,12 @@ function LoginFormInner() {
     e.preventDefault();
     if (lockoutInfo?.isLocked) return;
 
+    const emailError = validateEmail(email);
+    if (emailError) {
+      toast.error(emailError);
+      return;
+    }
+
     try {
       await login({ email, password });
       toast.success('Welcome back!');
@@ -66,7 +73,7 @@ function LoginFormInner() {
               </div>
             </Link>
             <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Welcome back</h1>
-            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Sign in to your AL-TASK account</p>
+            <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Sign in to your SDLC platform account</p>
           </div>
 
           {lockoutInfo && (lockoutInfo.isLocked || lockoutInfo.remainingAttempts < lockoutInfo.maxAttempts) && (
@@ -93,7 +100,7 @@ function LoginFormInner() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="JaneDoe@gmail.com"
+              <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="JaneDoe@gmail.com"
                 disabled={lockoutInfo?.isLocked}
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
             </div>

@@ -56,6 +56,8 @@ type ListTabProps = {
   handleUpdateIssue: (updated: Issue) => void;
   onBulkDeleteIds?: (ids: string[]) => void;
   onCreateTask?: (task: { title: string; type?: string; assigneeId?: string | null; dueDate?: string | null }) => Promise<void>;
+  canEditTask?: boolean;
+  canDeleteTask?: boolean;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -83,6 +85,8 @@ export default function ListTab({
   handleUpdateIssue,
   onBulkDeleteIds,
   onCreateTask,
+  canEditTask = true,
+  canDeleteTask = true,
 }: ListTabProps) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
     if (typeof window !== "undefined") {
@@ -313,7 +317,8 @@ export default function ListTab({
                 setSelectedIssue(null);
                 setListGridDrawerOpen(false);
               }}
-              onUpdateIssue={handleUpdateIssue}
+              onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+              canEditTask={canEditTask}
             />
           </div>
         ) : (
@@ -327,10 +332,13 @@ export default function ListTab({
               columnVisibility={columnVisibility}
               setColumnVisibility={setColumnVisibility}
               onClickTask={(issue) => setSelectedIssue(issue)}
-              onUpdateIssue={(id, updates) => updateIssueDirectly(id, updates)}
+              onUpdateIssue={canEditTask ? (id, updates) => updateIssueDirectly(id, updates) : undefined}
               onCreateTask={onCreateTask}
-              onBulkUpdate={async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates))}
-              onBulkDelete={onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
+              onBulkUpdate={canEditTask ? async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates)) : undefined}
+              onBulkDelete={canDeleteTask && onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
+              hideCreate={!onCreateTask}
+              canEditTask={canEditTask}
+              canDeleteTask={canDeleteTask}
             />
             </div>
           </div>
@@ -490,6 +498,7 @@ export default function ListTab({
               <TaskDetailList
                 issue={selectedIssue}
                 workspaceId={workspaceId}
+                workspaceMembers={members}
                 sprints={sprints}
                 boardColumns={boardColumns}
                 workspaceTemplate={workspaceTemplate}
@@ -498,7 +507,8 @@ export default function ListTab({
                   setSelectedIssue(null);
                   setListGridDrawerOpen(false);
                 }}
-                onUpdateIssue={handleUpdateIssue}
+                onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+                canEditTask={canEditTask}
               />
             ) : (
               <div className="flex flex-1 items-center justify-center p-8 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">

@@ -10,12 +10,15 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from '../stores/authStore';
 import { usePermissionStore } from '../../permission/stores/permissionStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { getQueryClient } from '@/common/providers/QueryProvider';
 import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from '../services/authService';
 import { clearTokens } from '../services/tokenService';
 import { getMyPermissionsAPI } from '../../permission/services/permissionService';
 import { AUTH_ROUTES } from '../constants/auth-routes';
 import { AuthErrorCode } from '../types/auth.types';
 import { setupAuthInterceptors } from '../services/axiosAuthInterceptor';
+import { validateEmail } from '../utils/emailValidation';
 import type {
   LoginRequest,
   RegisterRequest,
@@ -50,6 +53,12 @@ export const useAuth = () => {
    */
   const login = useCallback(
     async (data: LoginRequest) => {
+      const emailError = validateEmail(data.email);
+      if (emailError) {
+        toast.error(emailError);
+        throw new Error(emailError);
+      }
+
       setLoading(true); // Step 1: start loading
       try {
         // Step 2: call sign-in API
@@ -145,6 +154,12 @@ export const useAuth = () => {
 
   const register = useCallback(
     async (data: RegisterRequest) => {
+      const emailError = validateEmail(data.email);
+      if (emailError) {
+        toast.error(emailError);
+        throw new Error(emailError);
+      }
+
       setLoading(true);
       try {
         const response = await registerAPI(data);
@@ -154,15 +169,19 @@ export const useAuth = () => {
         router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
         return response;
       } catch (error: unknown) {
-        const err = error as { response?: { data?: AuthApiError } };
-        const errorCode = err.response?.data?.code;
+        const err = error as { response?: { data?: AuthApiError & { error?: string } } };
+        const errorCode = err.response?.data?.code || err.response?.data?.error;
+        const errorMessage = err.response?.data?.message;
 
         if (errorCode === AuthErrorCode.EMAIL_ALREADY_EXISTS) {
           toast.error('Email already exists. Please use another email.');
         } else if (errorCode === AuthErrorCode.USER_SUSPENDED) {
           toast.error('Account has been suspended.');
+        } else if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED) {
+          toast.error(errorMessage || 'Vui lòng xác thực email trước khi đăng ký');
+          router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
         } else {
-          toast.error('Registration failed. Please try again later.');
+          toast.error(errorMessage || 'Registration failed. Please try again later.');
         }
 
         throw error;
@@ -186,6 +205,8 @@ export const useAuth = () => {
       usePermissionStore.getState().clearPermissions();
       useSessionStore.getState().clearSessionState();
       useSecurityStore.getState().clearSecurityState();
+      useWorkspaceStore.getState().clearWorkspace();
+      getQueryClient()?.clear();
       router.push(AUTH_ROUTES.LOGIN);
     }
   }, [clearAuth, router]);

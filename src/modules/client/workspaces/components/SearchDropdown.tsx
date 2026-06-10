@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { CheckSquare, FolderKanban, Kanban, Search, SlidersHorizontal, Sparkles, Users } from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
 import { Filters, TaskFilters } from "../types/filter.type";
@@ -215,35 +215,38 @@ export default function SearchDropdown({
     return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
 
-  useEffect(() => {
-    const updatePosition = () => {
-      const rect = inputWrapRef.current?.getBoundingClientRect();
-      if (!rect) return;
+  const updatePosition = useCallback(() => {
+    const rect = inputWrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
 
-      const viewportPadding = 24;
-      const left = Math.max(16, rect.left);
-      const availableWidth = window.innerWidth - left - viewportPadding;
-      const width = Math.min(900, Math.max(320, availableWidth));
+    const viewportPadding = 24;
+    const left = Math.max(16, rect.left);
+    const availableWidth = window.innerWidth - left - viewportPadding;
+    const width = Math.min(900, Math.max(320, availableWidth));
 
-      setDropdownStyle({
-        position: "fixed",
-        top: rect.bottom + 8,
-        left,
-        width,
-        zIndex: 9999,
-      });
-    };
+    setDropdownStyle({
+      position: "fixed",
+      top: rect.bottom + 8,
+      left,
+      width,
+      zIndex: 9999,
+    });
+  }, []);
 
-    if (!isOpen) return;
-
+  const handleOpen = useCallback(() => {
     updatePosition();
+    setIsOpen(true);
+  }, [updatePosition]);
+
+  useEffect(() => {
+    if (!isOpen) return;
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
     return () => {
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [isOpen]);
+  }, [isOpen, updatePosition]);
 
   const handleSearchChange = (value: string) => {
     setFilters((prev) => ({
@@ -259,15 +262,15 @@ export default function SearchDropdown({
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <input
             value={filters.search}
-            onFocus={() => setIsOpen(true)}
-            onClick={() => setIsOpen(true)}
+            onFocus={handleOpen}
+            onClick={handleOpen}
             onChange={(event) => handleSearchChange(event.target.value)}
             placeholder="Search"
             className={`${inputClassName} w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#2A2A2A] pl-10 pr-11 font-medium text-[#111111] dark:text-[#E8E8E7] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]`}
           />
           <button
             type="button"
-            onClick={() => setIsOpen((open) => !open)}
+            onClick={() => (isOpen ? setIsOpen(false) : handleOpen())}
             className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-[#ABABAB] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
             aria-label="Open task filters"
           >

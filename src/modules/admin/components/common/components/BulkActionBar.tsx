@@ -58,11 +58,11 @@ export default function BulkActionBar({
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
       <div
-        className="bg-[#202020] text-[#E8E8E7] rounded-[10px] px-4 py-3 flex items-center gap-3 border border-white/8"
+        className="bg-[#202020] text-[#E8E8E7] rounded-[10px] px-4 py-3 flex items-center gap-3 border border-white/[0.12]"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
         {/* Count */}
-        <div className="flex items-center gap-2 pr-3 border-r border-white/8">
+        <div className="flex items-center gap-2 pr-3 border-r border-white/[0.08]">
           <div className="bg-[#2563EB] w-6 h-6 rounded-[4px] flex items-center justify-center text-xs font-bold">
             {selectedCount}
           </div>
@@ -83,7 +83,7 @@ export default function BulkActionBar({
             </button>
             {showStatusMenu && (
               <div
-                className="absolute bottom-full mb-2 left-0 w-40 bg-[#202020] border border-white/8 rounded-[8px] overflow-hidden py-1 animate-in fade-in slide-in-from-bottom-2"
+                className="absolute bottom-full mb-2 left-0 w-40 bg-[#202020] border border-white/[0.08] rounded-[8px] overflow-hidden py-1 animate-in fade-in slide-in-from-bottom-2"
                 style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
               >
                 {['To Do', 'In Progress', 'Done'].map((status) => (
@@ -113,7 +113,7 @@ export default function BulkActionBar({
               </button>
               {showSprintMenu && (
                 <div
-                  className="absolute bottom-full mb-2 left-0 w-52 bg-[#202020] border border-white/8 rounded-[8px] overflow-hidden py-1 animate-in fade-in slide-in-from-bottom-2 max-h-56 overflow-y-auto"
+                  className="absolute bottom-full mb-2 left-0 w-52 bg-[#202020] border border-white/[0.08] rounded-[8px] overflow-hidden py-1 animate-in fade-in slide-in-from-bottom-2 max-h-56 overflow-y-auto"
                   style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
                 >
                   <button
@@ -123,7 +123,7 @@ export default function BulkActionBar({
                     Backlog (no sprint)
                   </button>
                   {sprints && sprints.length > 0 && (
-                    <div className="border-t border-white/8 mt-1 pt-1">
+                    <div className="border-t border-white/[0.08] mt-1 pt-1">
                       {sprints.map((sprint) => (
                         <button
                           key={sprint.id}

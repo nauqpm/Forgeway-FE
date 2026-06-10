@@ -18,6 +18,7 @@ import BulkEditDrawer from './BulkEditDrawer';
 import AssigneePicker, { AssigneePickerMember, getMemberId, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
 import TaskLabelsField from '../../../../client/workspaces/components/labels/TaskLabelsField';
+import TaskStatusChanger from '../../../../client/workspaces/components/TaskStatusChanger';
 
 type WorkspaceMember = AssigneePickerMember;
 
@@ -38,14 +39,6 @@ const PRIORITY_CLS: Record<string, string> = {
   Low:    'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]',
 };
 
-function statusCls(name: string): string {
-  const n = name.toLowerCase();
-  if (n.includes('done') || n.includes('complete')) return 'bg-[#EDF3EC] text-[#346538] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#4ADE80]';
-  if (n.includes('progress')) return 'bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.12)] dark:text-[#F59E0B]';
-  if (n.includes('test') || n.includes('review')) return 'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]';
-  return 'bg-[#F7F6F3] text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]';
-}
-
 interface DataGridListViewProps {
   issues: any[];
   workspaceId?: string;
@@ -62,6 +55,8 @@ interface DataGridListViewProps {
   onBulkUpdate?: (taskIds: string[], updates: any) => Promise<void>;
   onBulkDelete?: (taskIds: string[]) => Promise<void>;
   hideCreate?: boolean;
+  canEditTask?: boolean;
+  canDeleteTask?: boolean;
 }
 
 export default function DataGridListView({
@@ -80,6 +75,8 @@ export default function DataGridListView({
   onBulkUpdate,
   onBulkDelete,
   hideCreate,
+  canEditTask = true,
+  canDeleteTask = true,
 }: DataGridListViewProps) {
   const [columnSizing, setColumnSizing] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -184,29 +181,29 @@ export default function DataGridListView({
   };
 
   const columns = useMemo<ColumnDef<any>[]>(() => [
-    {
+    ...(canEditTask || canDeleteTask ? [{
       id: 'checkbox',
-      header: ({ table }) => (
+      header: ({ table }: any) => (
         <input
           type="checkbox"
           className="w-4 h-4 rounded-[6px] accent-[#2563EB] cursor-pointer"
           checked={table.getIsAllRowsSelected()}
-          ref={input => { if (input) input.indeterminate = table.getIsSomeRowsSelected(); }}
+          ref={(input: HTMLInputElement | null) => { if (input) input.indeterminate = table.getIsSomeRowsSelected(); }}
           onChange={table.getToggleAllRowsSelectedHandler()}
         />
       ),
-      cell: ({ row }) => (
+      cell: ({ row }: any) => (
         <input
           type="checkbox"
           className="w-4 h-4 rounded-[6px] accent-[#2563EB] cursor-pointer"
           checked={row.getIsSelected()}
           onChange={row.getToggleSelectedHandler()}
-          onClick={e => e.stopPropagation()}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
         />
       ),
       size: 40,
       enableResizing: false,
-    },
+    } as ColumnDef<any>] : []),
     {
       accessorKey: 'key',
       header: 'Key',
@@ -221,7 +218,7 @@ export default function DataGridListView({
         const issue = info.row.original;
         const isEditing = editingCell?.rowId === issue.id && editingCell?.col === 'title';
         const typeIcon = issue.type === 'Bug' ? 'text-[#9F2F2D]' : issue.type === 'Story' ? 'text-[#346538]' : 'text-[#1F6C9F]';
-        if (isEditing) {
+        if (canEditTask && isEditing) {
           return (
             <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
               <FileText className={`w-4 h-4 shrink-0 ${typeIcon}`} />
@@ -244,8 +241,16 @@ export default function DataGridListView({
             <FileText className={`w-4 h-4 shrink-0 ${typeIcon}`} />
             <span
               className="truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
-              onClick={e => { e.stopPropagation(); setEditingCell({ rowId: issue.id, col: 'title' }); setEditValue(issue.title || ''); }}
-              title="Click to edit"
+              onClick={e => {
+                e.stopPropagation();
+                if (!canEditTask) {
+                  onClickTask?.(issue);
+                  return;
+                }
+                setEditingCell({ rowId: issue.id, col: 'title' });
+                setEditValue(issue.title || '');
+              }}
+              title={canEditTask ? "Click to edit" : "Open detail"}
             >
               {info.getValue() as string}
             </span>
@@ -266,43 +271,17 @@ export default function DataGridListView({
       size: 150,
       cell: info => {
         const issue = info.row.original;
-        const rawStatus = info.getValue() as string;
-        const resolvedCol = boardColumns?.find(c => c.id === rawStatus);
-        const status = resolvedCol?.name ?? rawStatus;
-        const isOpen = openDropdown?.rowId === issue.id && openDropdown?.col === 'status';
-        const colOptions = boardColumns && boardColumns.length > 0
-          ? boardColumns
-          : [{ id: 'todo', name: 'To Do' }, { id: 'inprogress', name: 'In Progress' }, { id: 'testing', name: 'Testing' }, { id: 'done', name: 'Done' }];
         return (
-          <div className="relative" onClick={e => e.stopPropagation()} ref={isOpen ? dropdownRef : undefined}>
-            <button
-              onClick={() => toggleDropdown(issue.id, 'status')}
-              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold cursor-pointer transition-opacity hover:opacity-80 ${statusCls(status)}`}
-            >
-              {status}
-              <ChevronDown className="w-3 h-3" />
-            </button>
-            {isOpen && (
-              <div className="absolute left-0 top-full mt-1 z-50 min-w-[9.375rem] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/8 rounded-[8px]  overflow-hidden">
-                {colOptions.map(col => {
-                  const isSelected = col.id === rawStatus || col.name === rawStatus;
-                  return (
-                    <button
-                      key={col.id}
-                      onClick={() => {
-                        onUpdateIssue && onUpdateIssue(issue.id, { columnId: col.id, status: col.name });
-                        setOpenDropdown(null);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F9F9F8] dark:hover:bg-white/5 flex items-center gap-2 transition-colors ${isSelected ? 'font-semibold text-[#2563EB] dark:text-[#3B82F6]' : 'text-[#787774] dark:text-[#9B9A97]'}`}
-                    >
-                      {isSelected && <Check className="w-3.5 h-3.5 shrink-0" />}
-                      <span className={isSelected ? '' : 'ml-5'}>{col.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <TaskStatusChanger
+            issue={issue}
+            boardColumns={boardColumns}
+            variant="pill"
+            size="sm"
+            disabled={!canEditTask}
+            onChange={({ columnId, status }) =>
+              onUpdateIssue?.(issue.id, { columnId, status })
+            }
+          />
         );
       },
     },
@@ -318,12 +297,13 @@ export default function DataGridListView({
           <div className="relative" onClick={e => e.stopPropagation()} ref={isOpen ? dropdownRef : undefined}>
             <button
               onClick={() => toggleDropdown(issue.id, 'priority')}
+              disabled={!canEditTask}
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold cursor-pointer hover:opacity-80 transition-opacity ${PRIORITY_CLS[priority] ?? PRIORITY_CLS.Medium}`}
             >
               {priority}
-              <ChevronDown className="w-3 h-3" />
+              {canEditTask && <ChevronDown className="w-3 h-3" />}
             </button>
-            {isOpen && (
+            {canEditTask && isOpen && (
               <div className="absolute left-0 top-full mt-1 z-50 min-w-[7.5rem] bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
                 {PRIORITY_OPTIONS.map(p => (
                   <button
@@ -357,6 +337,7 @@ export default function DataGridListView({
               onChange={uid => onUpdateIssue && onUpdateIssue(issue.id, { assigneeId: uid })}
               placement="bottom"
               size="md"
+              disabled={!canEditTask}
             />
           </div>
         );
@@ -370,7 +351,7 @@ export default function DataGridListView({
         const issue = info.row.original;
         const isEditing = editingCell?.rowId === issue.id && editingCell?.col === 'storyPoints';
         const pts = info.getValue() as number;
-        if (isEditing) {
+        if (canEditTask && isEditing) {
           return (
             <input
               type="number"
@@ -390,9 +371,14 @@ export default function DataGridListView({
         }
         return (
           <span
-            onClick={e => { e.stopPropagation(); setEditingCell({ rowId: issue.id, col: 'storyPoints' }); setEditValue(String(pts ?? 0)); }}
-            className="w-6 h-6 flex items-center justify-center bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-[6px] text-xs font-bold text-[#787774] dark:text-[#9B9A97] cursor-pointer hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.12)] transition-colors"
-            title="Click to edit"
+            onClick={e => {
+              e.stopPropagation();
+              if (!canEditTask) return;
+              setEditingCell({ rowId: issue.id, col: 'storyPoints' });
+              setEditValue(String(pts ?? 0));
+            }}
+            className={`w-6 h-6 flex items-center justify-center bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-[6px] text-xs font-bold text-[#787774] dark:text-[#9B9A97] transition-colors ${canEditTask ? "cursor-pointer hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.12)]" : ""}`}
+            title={canEditTask ? "Click to edit" : undefined}
           >
             {pts || '-'}
           </span>
@@ -411,6 +397,7 @@ export default function DataGridListView({
             <CustomDatePicker
               value={v}
               onChange={nextValue => onUpdateIssue && onUpdateIssue(issue.id, { startDate: nextValue })}
+              disabled={!canEditTask}
               inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent px-2 pl-8"
               popoverPlacement="bottom-start"
               ariaLabel="Task start date"
@@ -432,6 +419,7 @@ export default function DataGridListView({
             <CustomDatePicker
               value={v}
               onChange={nextValue => onUpdateIssue && onUpdateIssue(issue.id, { dueDate: nextValue })}
+              disabled={!canEditTask}
               inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent px-2 pl-8"
               popoverPlacement="bottom-start"
               ariaLabel="Task due date"
@@ -462,6 +450,7 @@ export default function DataGridListView({
                 workspaceId={workspaceId}
                 issue={issue}
                 compact
+                disabled={!canEditTask}
               />
             </div>
           );
@@ -497,7 +486,7 @@ export default function DataGridListView({
         </button>
       ),
     },
-  ], [onClickTask, onUpdateIssue, members, boardColumns, editingCell, editValue, openDropdown]);
+  ], [onClickTask, onUpdateIssue, members, boardColumns, editingCell, editValue, openDropdown, canEditTask, canDeleteTask, workspaceId]);
 
   const table = useReactTable({
     data: issues,
@@ -587,7 +576,7 @@ export default function DataGridListView({
           >
             + Create
           </button>
-        ) : (
+        ) : !hideCreate ? (
           <div className="flex items-center border border-[#2563EB] rounded-[6px] px-2 py-1 flex-1 max-w-[min(100%,var(--app-narrow-content))]  bg-white dark:bg-[#252525] gap-1">
             <input
               ref={inputRef}
@@ -628,7 +617,7 @@ export default function DataGridListView({
               </button>
             </div>
           </div>
-        )}
+        ) : <div />}
 
         <div className="flex items-center gap-4 text-[#787774] dark:text-[#9B9A97] text-sm ml-4">
           <span className="font-medium">{table.getRowModel().rows.length} of {totalCount ?? issues.length}</span>
@@ -650,13 +639,17 @@ export default function DataGridListView({
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
       `}} />
 
-      <BulkActionBar
-        selectedCount={selectedCount}
-        onClear={() => setRowSelection({})}
-        onChangeStatus={handleBulkStatusChange}
-        onEditFields={() => setIsBulkEditDrawerOpen(true)}
-        onDelete={handleBulkDelete}
-      />
+      {(canEditTask || canDeleteTask) && (
+        <BulkActionBar
+          selectedCount={selectedCount}
+          onClear={() => setRowSelection({})}
+          onChangeStatus={handleBulkStatusChange}
+          onEditFields={canEditTask ? () => setIsBulkEditDrawerOpen(true) : undefined}
+          onDelete={handleBulkDelete}
+          canEditTask={canEditTask}
+          canDeleteTask={canDeleteTask}
+        />
+      )}
 
       <BulkEditDrawer
         isOpen={isBulkEditDrawerOpen}

@@ -6,13 +6,16 @@ import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import AssigneePicker from "../../../../../common/components/AssigneePicker";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
+import TaskStatusChanger from "../TaskStatusChanger";
 import { compareIssueRank } from "../../utils/dragUtils";
+import type { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
 
 type BacklogTabProps = {
   data: {
     issues: any[];
     filteredIssues: any[];
+    columns?: BoardColumn[];
     sprints: any[];
     uniqueAssignees: any[];
     selectedTaskIds: string[];
@@ -69,23 +72,6 @@ type BacklogTabProps = {
   };
 };
 
-const statusSelectClasses = (status: string) => {
-  const base =
-    "px-2 py-1 rounded-[4px] text-[0.6875rem] font-bold cursor-pointer outline-none border-none focus:ring-2 focus:ring-[#2563EB]/20 appearance-none disabled:cursor-not-allowed disabled:opacity-60";
-
-  if (status === "Done") {
-    return `${base} bg-[#EDF3EC] text-[#346538] dark:bg-[rgba(52,101,56,0.15)] dark:text-[#6FCF7B]`;
-  }
-
-  if (status === "In Progress") {
-    return `${base} bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.15)] dark:text-[#F0C040]`;
-  }
-
-  return `${base} bg-[#F7F6F3] text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]`;
-};
-
-const statusOptionClass = "bg-white text-[#111111] dark:bg-[#202020] dark:text-[#E8E8E7]";
-
 const getInitials = (value: string) =>
   (value ?? "")
     .split(/\s+/)
@@ -94,6 +80,23 @@ const getInitials = (value: string) =>
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+const normalizeObjectId = (value: unknown): string => {
+  if (!value) return "";
+  if (typeof value === "string") {
+    const objectIdMatch = value.match(/^ObjectId\(['"]?(.+?)['"]?\)$/);
+    return objectIdMatch?.[1] ?? value;
+  }
+  if (typeof value === "object") {
+    const obj = value as { _id?: unknown; id?: unknown; $oid?: unknown; toString?: () => string };
+    if (obj.$oid) return normalizeObjectId(obj.$oid);
+    if (obj._id) return normalizeObjectId(obj._id);
+    if (obj.id) return normalizeObjectId(obj.id);
+    const stringValue = obj.toString?.();
+    if (stringValue && stringValue !== "[object Object]") return normalizeObjectId(stringValue);
+  }
+  return "";
+};
 
 type WorkspaceMemberUser =
   | string
@@ -126,6 +129,7 @@ type AssigneeInfo = {
 export default function BacklogTab({ data, ui, actions, permissions }: BacklogTabProps) {
   const {
     filteredIssues,
+    columns = [],
     sprints,
     uniqueAssignees,
     selectedTaskIds,
@@ -165,10 +169,10 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
       .map((member: WorkspaceMemberItem): AssigneeInfo => {
-        const user = member.userId;
-        const id = typeof user === "string" ? user : user?._id ?? user?.id ?? "";
-        const name = typeof user === "string" ? user : user?.fullName || user?.name || user?.email || id;
+        const user = member.userId as any;
+        const id = typeof user === "string" ? normalizeObjectId(user) : normalizeObjectId(user);
         const email = typeof user === "string" ? "" : user?.email ?? "";
+        const name = typeof user === "string" ? id : user?.fullName || user?.name || email || id;
         const avatar = typeof user === "string" ? undefined : user?.avatar || user?.avatarUrl || user?.image;
 
         return {
@@ -198,6 +202,59 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     });
   }, [uniqueAssignees, workspaceMembers]);
 
+  const getReadonlyAssignee = (issue: any): AssigneeInfo | null => {
+    const assigneeId = normalizeObjectId(issue.assigneeId ?? issue.assignee);
+    if (!assigneeId || assigneeId === "U") return null;
+
+    const member = workspaceMembers.find((item: AssigneeInfo) => {
+      return item.id === assigneeId || item.email === assigneeId;
+    });
+
+    if (member) return member;
+
+    const displayName = issue.assigneeDisplayName && issue.assigneeDisplayName !== assigneeId
+      ? issue.assigneeDisplayName
+      : assigneeId;
+
+    return {
+      id: assigneeId,
+      name: displayName,
+      email: "",
+      avatar: issue.assigneeAvatar,
+      initials: getInitials(displayName) || "?",
+    };
+  };
+
+  const renderReadonlyAssignee = (issue: any) => {
+    const assignee = getReadonlyAssignee(issue);
+
+    if (!assignee) {
+      return (
+        <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+          Unassigned
+        </span>
+      );
+    }
+
+    return (
+      <div
+        className="flex min-w-0 max-w-[10rem] items-center gap-1.5"
+        title={assignee.email ? `${assignee.name} (${assignee.email})` : assignee.name}
+      >
+        <div className={`flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full text-[0.5625rem] font-bold ${assignee.avatar ? "" : "bg-[#2563EB] text-white"}`}>
+          {assignee.avatar ? (
+            <img src={assignee.avatar} alt="" className="h-full w-full object-cover" />
+          ) : (
+            assignee.initials
+          )}
+        </div>
+        <span className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+          {assignee.name}
+        </span>
+      </div>
+    );
+  };
+
   const issuesBySprintId = useMemo(() => {
     const assignedIssueIds = new Set<string>();
     const next = new Map<string | null, any[]>();
@@ -219,7 +276,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     const backlogIssues = filteredIssues
       .filter((issue) => {
         if (assignedIssueIds.has(issue.id)) return false;
-        return issue.sprintId === null;
+        return issue.sprintId == null;
       })
       .sort(compareIssueRank);
 
@@ -406,7 +463,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...(canMoveTask ? provided.dragHandleProps : {})}
-                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-all group`}
+                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-colors group`}
                               style={{
                                 ...provided.draggableProps.style,
                                 ...(snapshot.isDragging
@@ -440,70 +497,48 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 </div>
                               </div>
                               <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-                                {/* Editable Story Points */}
-                                <div className="relative group/pts">
-                                  <input
-                                    type="number"
-                                    value={
-                                      issue.storyPoints === 0
-                                        ? ""
-                                        : issue.storyPoints
-                                    }
-                                    onChange={(e) =>
-                                      updateIssueDirectly(issue.id, {
-                                        storyPoints:
-                                          parseInt(e.target.value) || 0,
-                                      })
-                                    }
-                                    disabled={!canEditTask}
-                                    placeholder="-"
-                                    className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
-                                    title="Story Points"
-                                  />
-                                </div>
-
-                                {/* Editable Status */}
-                                <select
-                                  value={issue.status}
-                                  onChange={(e) =>
-                                    updateIssueDirectly(issue.id, {
-                                      status: e.target.value,
-                                    })
-                                  }
-                                  disabled={!canEditTask}
-                                  className={statusSelectClasses(issue.status)}
-                                >
-                                  <option
-                                    value="To Do"
-                                    className={statusOptionClass}
-                                  >
-                                    To Do
-                                  </option>
-                                  <option
-                                    value="In Progress"
-                                    className={statusOptionClass}
-                                  >
-                                    In Progress
-                                  </option>
-                                  <option
-                                    value="Done"
-                                    className={statusOptionClass}
-                                  >
-                                    Done
-                                  </option>
-                                </select>
-
-                                {/* Assignee */}
-                                <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                                  <AssigneePicker
-                                    users={workspaceMembers}
-                                    value={issue.assigneeId ?? issue.assignee ?? null}
-                                    onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
-                                    placement="auto"
-                                    size="sm"
-                                    disabled={!canEditTask}
-                                  />
-                                </div>
+                                {canEditTask ? (
+                                  <>
+                                    <div className="relative group/pts">
+                                      <input
+                                        type="number"
+                                        value={issue.storyPoints === 0 ? "" : issue.storyPoints}
+                                        onChange={(e) =>
+                                          updateIssueDirectly(issue.id, {
+                                            storyPoints: parseInt(e.target.value) || 0,
+                                          })
+                                        }
+                                        placeholder="-"
+                                        className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
+                                        title="Story Points"
+                                      />
+                                    </div>
+                                    <TaskStatusChanger
+                                      issue={issue}
+                                      boardColumns={columns}
+                                      variant="pill"
+                                      size="sm"
+                                      onChange={({ columnId, status }) =>
+                                        updateIssueDirectly(issue.id, { columnId, status })
+                                      }
+                                    />
+                                    <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                      <AssigneePicker
+                                        users={workspaceMembers}
+                                        value={issue.assigneeId ?? issue.assignee ?? null}
+                                        onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                        placement="auto"
+                                        size="sm"
+                                      />
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span className="text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97]">{issue.storyPoints || "-"}</span>
+                                    <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-1 text-[0.6875rem] font-medium text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">{issue.status}</span>
+                                    {renderReadonlyAssignee(issue)}
+                                  </>
+                                )}
                               </div>
                             </div>
                           )}
@@ -519,7 +554,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                     </div>
                   )}
                 </Droppable>
-                {sprint.status !== "completed" && (
+                {canCreateTask && sprint.status !== "completed" && (
                   <div className="px-3 pb-3 flex flex-col gap-2">
                     <input
                       type="text"
@@ -624,7 +659,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...(canMoveTask ? provided.dragHandleProps : {})}
-                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-all group`}
+                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-colors group`}
                             style={{
                               ...provided.draggableProps.style,
                               ...(snapshot.isDragging
@@ -658,61 +693,48 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               </div>
                             </div>
                             <div className="flex flex-wrap items-center gap-3 lg:justify-end">
-                              {/* Editable Story Points */}
-                              <div className="relative group/pts">
-                                <input
-                                  type="number"
-                                  value={
-                                    issue.storyPoints === 0
-                                      ? ""
-                                      : issue.storyPoints
-                                  }
-                                  onChange={(e) =>
-                                    updateIssueDirectly(issue.id, {
-                                      storyPoints:
-                                        parseInt(e.target.value) || 0,
-                                    })
-                                  }
-                                  disabled={!canEditTask}
-                                  placeholder="-"
-                                  className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
-                                  title="Story Points"
-                                />
-                              </div>
-
-                              {/* Editable Status */}
-                              <select
-                                value={issue.status}
-                                onChange={(e) =>
-                                  updateIssueDirectly(issue.id, {
-                                    status: e.target.value,
-                                  })
-                                }
-                                disabled={!canEditTask}
-                                className={statusSelectClasses(issue.status)}
-                              >
-                                <option value="To Do" className={statusOptionClass}>
-                                  To Do
-                                </option>
-                                <option value="In Progress" className={statusOptionClass}>
-                                  In Progress
-                                </option>
-                                <option value="Done" className={statusOptionClass}>
-                                  Done
-                                </option>
-                              </select>
-
-                              {/* Assignee */}
-                              <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                                <AssigneePicker
-                                  users={workspaceMembers}
-                                  value={issue.assigneeId ?? issue.assignee ?? null}
-                                  onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
-                                  placement="top"
-                                  size="sm"
-                                  disabled={!canEditTask}
-                                />
-                              </div>
+                              {canEditTask ? (
+                                <>
+                                  <div className="relative group/pts">
+                                    <input
+                                      type="number"
+                                      value={issue.storyPoints === 0 ? "" : issue.storyPoints}
+                                      onChange={(e) =>
+                                        updateIssueDirectly(issue.id, {
+                                          storyPoints: parseInt(e.target.value) || 0,
+                                        })
+                                      }
+                                      placeholder="-"
+                                      className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
+                                      title="Story Points"
+                                    />
+                                  </div>
+                                  <TaskStatusChanger
+                                    issue={issue}
+                                    boardColumns={columns}
+                                    variant="pill"
+                                    size="sm"
+                                    onChange={({ columnId, status }) =>
+                                      updateIssueDirectly(issue.id, { columnId, status })
+                                    }
+                                  />
+                                  <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                    <AssigneePicker
+                                      users={workspaceMembers}
+                                      value={issue.assigneeId ?? issue.assignee ?? null}
+                                      onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                      placement="bottom"
+                                      size="sm"
+                                    />
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97]">{issue.storyPoints || "-"}</span>
+                                  <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-1 text-[0.6875rem] font-medium text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">{issue.status}</span>
+                                  {renderReadonlyAssignee(issue)}
+                                </>
+                              )}
                             </div>
                           </div>
                         )}
@@ -722,6 +744,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 </div>
               )}
             </Droppable>
+            {canCreateTask && (
             <div className="relative flex flex-col gap-2 border-t border-[#F0F0EE] dark:border-white/[0.04] bg-[#F9F9F8]/50 dark:bg-[#252525] p-3 sm:flex-row sm:items-center">
               <input
                 type="text"
@@ -746,6 +769,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 Open modal...
               </button>
             </div>
+            )}
           </div>
         </div>
       </DragDropContext>

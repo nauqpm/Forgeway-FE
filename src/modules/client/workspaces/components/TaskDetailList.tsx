@@ -15,11 +15,15 @@ import TaskComments from "./TaskComments";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
 import TaskLabelsField from "./labels/TaskLabelsField";
+import TaskStatusChanger from "./TaskStatusChanger";
 import type { TaskCover } from "../types/task-cover.type";
-import { resolveTaskStatusColumn, type TaskStatusColumn } from "../utils/taskStatusColumns";
+import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
-import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
+import AssigneePicker, {
+  toAssigneePickerUsers,
+  type AssigneePickerUser,
+} from "@/common/components/AssigneePicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
@@ -33,11 +37,18 @@ interface TaskDetailListProps {
   onUpdateIssue?: (updatedIssue: any) => void;
   onArchiveIssue?: (issue: any) => void;
   detailUrl?: string;
+  canEditTask?: boolean;
 }
 
 const getUserDisplayName = (user: any, fallback?: string | null) => {
   if (typeof user === "string") return user;
   return user?.fullName || user?.email || fallback || "Unassigned";
+};
+
+const getIssueAssigneeId = (issue: any) => {
+  if (issue?.assigneeId) return String(issue.assigneeId);
+  if (typeof issue?.assignee === "string") return issue.assignee === "U" ? "" : issue.assignee;
+  return issue?.assignee?._id || issue?.assignee?.id || "";
 };
 
 const formatDateTime = (value?: string | null) => {
@@ -73,12 +84,12 @@ export default function TaskDetailList({
   showBackButton = true,
   onUpdateIssue,
   onArchiveIssue,
+  canEditTask = true,
 }: TaskDetailListProps) {
   const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
@@ -87,7 +98,6 @@ export default function TaskDetailList({
     if (issue) {
       setLocalTitle(issue.title);
       setIsEditingTitle(false);
-      setShowStatusDropdown(false);
       setShowActionMenu(false);
       setLocalCover(issue.cover ?? null);
     }
@@ -96,8 +106,6 @@ export default function TaskDetailList({
   if (!issue) return null;
 
   const issueKey = issue.key;
-  const { statusColumns, currentColumn, displayName: statusDisplayName } =
-    resolveTaskStatusColumn(boardColumns, issue);
   const reporterName = getUserDisplayName(issue.reporter, issue.reporterId);
   const sprintLabel =
     issue.sprint?.name ||
@@ -109,24 +117,39 @@ export default function TaskDetailList({
       ? "None"
       : String(issue.storyPoints);
   const priorityColor = PRIORITY_COLORS[issue.priority] || "text-[#787774] dark:text-[#9B9A97]";
+  const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
+  const currentAssigneeId = getIssueAssigneeId(issue);
+  const currentAssigneeName =
+    issue.assigneeDisplayName ||
+    assigneeUsers.find((candidate) => candidate.id === currentAssigneeId)?.name ||
+    getUserDisplayName(issue.assignee, null);
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
-    if (localTitle !== issue.title && onUpdateIssue) {
+    if (canEditTask && localTitle !== issue.title && onUpdateIssue) {
       onUpdateIssue({ ...issue, title: localTitle });
     }
   };
 
-  const handleStatusChange = (column: TaskStatusColumn) => {
-    setShowStatusDropdown(false);
-    if ((column.id !== issue.columnId || column.name !== issue.status) && onUpdateIssue) {
-      onUpdateIssue({ ...issue, columnId: column.id, status: column.name });
-    }
+  const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
+    if (!canEditTask || !onUpdateIssue || issue.isArchived) return;
+    onUpdateIssue({ ...issue, [field]: nextValue });
   };
 
-  const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
-    if (!onUpdateIssue || issue.isArchived) return;
-    onUpdateIssue({ ...issue, [field]: nextValue });
+  const handleAssigneeChange = (uid: string | null) => {
+    if (!canEditTask || !onUpdateIssue || issue.isArchived) return;
+
+    const selectedUser: AssigneePickerUser | undefined = assigneeUsers.find(
+      (candidate) => candidate.id === uid,
+    );
+
+    onUpdateIssue({
+      ...issue,
+      assigneeId: uid,
+      assignee: uid ?? "U",
+      assigneeDisplayName: uid ? selectedUser?.name ?? uid : "Unassigned",
+      assigneeAvatar: uid ? selectedUser?.avatar : undefined,
+    });
   };
 
 
@@ -169,6 +192,7 @@ export default function TaskDetailList({
         </div>
 
         {/* Actions */}
+        {(onArchiveIssue || canEditTask) && (
         <div className="flex items-center gap-0.5 shrink-0 ml-2">
           <div className="relative">
             <button
@@ -190,6 +214,7 @@ export default function TaskDetailList({
             )}
           </div>
         </div>
+        )}
       </div>
 
       <TaskCoverBanner
@@ -222,7 +247,7 @@ export default function TaskDetailList({
           )}
 
           {/* Title */}
-          {isEditingTitle && !issue.isArchived ? (
+          {canEditTask && isEditingTitle && !issue.isArchived ? (
             <input
               autoFocus
               type="text"
@@ -234,8 +259,8 @@ export default function TaskDetailList({
             />
           ) : (
             <h1
-              onClick={() => { if (!issue.isArchived) setIsEditingTitle(true); }}
-              className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-snug rounded-[6px] px-1 -ml-1 transition-colors ${issue.isArchived ? "opacity-80" : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"}`}
+              onClick={() => { if (canEditTask && !issue.isArchived) setIsEditingTitle(true); }}
+              className={`text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-snug rounded-[6px] px-1 -ml-1 transition-colors ${canEditTask && !issue.isArchived ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer" : "opacity-80"}`}
             >
               {localTitle}
             </h1>
@@ -247,7 +272,7 @@ export default function TaskDetailList({
             <TaskDescription
               initialContent={issue.description || ""}
               onSave={(newDesc: string) => {
-                if (onUpdateIssue && !issue.isArchived) {
+                if (canEditTask && onUpdateIssue && !issue.isArchived) {
                   onUpdateIssue({ ...issue, description: newDesc });
                 }
               }}
@@ -257,7 +282,7 @@ export default function TaskDetailList({
           <TaskAttachmentsPanel
             workspaceId={workspaceId}
             taskId={issue.id}
-            isArchived={issue.isArchived ?? false}
+            isArchived={!canEditTask || (issue.isArchived ?? false)}
             currentUserId={user?.id}
             accessToken={token}
           />
@@ -318,7 +343,16 @@ export default function TaskDetailList({
               />
             )}
             {activeTab === "history" && (
-              <TaskActivityHistory workspaceId={workspaceId} taskId={issue.id} taskKey={issue.key} />
+              <TaskActivityHistory
+                workspaceId={workspaceId}
+                taskId={issue.id}
+                taskKey={issue.key}
+                workspaceMembers={workspaceMembers}
+                assigneeId={currentAssigneeId}
+                assigneeName={currentAssigneeName}
+                assignee={issue.assignee}
+                labels={issue.labels}
+              />
             )}
           </div>
         </div>
@@ -328,32 +362,14 @@ export default function TaskDetailList({
 
           {/* Status + Automations + Improve Task */}
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative">
-              <button
-                onClick={() => { if (!issue.isArchived) setShowStatusDropdown(!showStatusDropdown); }}
-                disabled={issue.isArchived}
-                className={`flex items-center gap-1.5 px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] transition-colors ${issue.isArchived ? "opacity-70 cursor-not-allowed" : "hover:bg-[#EAEAEA] dark:hover:bg-[#333333]"}`}
-              >
-                {statusDisplayName}
-                {!issue.isArchived && <ChevronDown className="w-3.5 h-3.5 text-[#787774] dark:text-[#9B9A97]" />}
-              </button>
-              {showStatusDropdown && (
-                <div className="absolute top-full mt-1 left-0 w-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden z-10 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
-                  {statusColumns.map((column) => (
-                    <button
-                      key={column.id}
-                      onClick={() => handleStatusChange(column)}
-                      className={`w-full text-left px-4 py-2 text-[0.8125rem] transition-colors ${column.id === currentColumn?.id
-                          ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium border-l-2 border-[#2563EB] dark:border-[#3B82F6]"
-                          : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-                        }`}
-                    >
-                      {column.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <TaskStatusChanger
+              issue={issue}
+              boardColumns={boardColumns}
+              disabled={!canEditTask || issue.isArchived}
+              onChange={({ columnId, status }) =>
+                onUpdateIssue?.({ ...issue, columnId, status })
+              }
+            />
           </div>
 
           {/* Details collapsible */}
@@ -375,12 +391,12 @@ export default function TaskDetailList({
                 {/* Assignee */}
                 <DetailRow label="Assignee">
                   <AssigneePicker
-                    users={toAssigneePickerUsers(workspaceMembers)}
-                    value={issue.assigneeId || (typeof issue.assignee === "string" && issue.assignee !== "U" ? issue.assignee : null)}
-                    onChange={(uid) => onUpdateIssue?.({ ...issue, assigneeId: uid, assignee: uid ?? "U" })}
+                    users={assigneeUsers}
+                    value={getIssueAssigneeId(issue) || null}
+                    onChange={handleAssigneeChange}
                     placement="auto"
                     size="md"
-                    disabled={issue.isArchived}
+                    disabled={!canEditTask || issue.isArchived}
                   />
                 </DetailRow>
 
@@ -402,7 +418,7 @@ export default function TaskDetailList({
                   <CustomDatePicker
                     value={issue.startDate}
                     onChange={(nextValue) => handleDateChange("startDate", nextValue)}
-                    disabled={issue.isArchived}
+                    disabled={!canEditTask || issue.isArchived}
                     inputClassName="h-8 bg-transparent dark:bg-transparent"
                     ariaLabel="Task start date"
                   />
@@ -412,7 +428,7 @@ export default function TaskDetailList({
                   <CustomDatePicker
                     value={issue.dueDate}
                     onChange={(nextValue) => handleDateChange("dueDate", nextValue)}
-                    disabled={issue.isArchived}
+                    disabled={!canEditTask || issue.isArchived}
                     inputClassName="h-8 bg-transparent dark:bg-transparent"
                     ariaLabel="Task due date"
                   />
@@ -423,7 +439,7 @@ export default function TaskDetailList({
                   <TaskLabelsField
                     workspaceId={workspaceId}
                     issue={issue}
-                    disabled={issue.isArchived}
+                    disabled={!canEditTask || issue.isArchived}
                     compact
                   />
                 </DetailRow>

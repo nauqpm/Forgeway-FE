@@ -9,6 +9,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
 import { notificationService } from "@/common/services/notification.service";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
+import { useWorkspaceRealtime } from "@/hooks/realtime/use-workspace-realtime";
 import { LayoutDashboard, Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut } from "lucide-react";
 import Image from "next/image";
 import appleIcon from "../apple-icon.png";
@@ -103,6 +104,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     onRead: refreshUnreadNotificationCount,
     onReadAll: refreshUnreadNotificationCount,
   });
+  useWorkspaceRealtime({ enabled: isAuthenticated });
 
   useEffect(() => {
     refreshUnreadNotificationCount();
