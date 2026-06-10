@@ -89,6 +89,14 @@ class ChatSocketClient {
     this.emitStatus();
   }
 
+  joinChannels(channelIds: string[]): void {
+    const socket = this.connect();
+    if (!socket) return;
+
+    this.roomManager.joinMultiple(socket, channelIds);
+    this.emitStatus();
+  }
+
   leaveChannel(): void {
     if (!this.socket) return;
 

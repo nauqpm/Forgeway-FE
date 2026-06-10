@@ -30,6 +30,7 @@ export interface Message {
 export interface Channel {
   _id: string;
   name: string;
+  description?: string;
   type: 'general' | 'announcement' | 'workspace' | 'dm';
   workspaceId?: string;
   unreadCount: number;

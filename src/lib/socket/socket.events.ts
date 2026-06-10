@@ -88,7 +88,7 @@ export const CHAT_EVENTS = {
   USER_TYPING: 'chat.user.typing',
 
   // Đã đọc & Thông báo
-  READ: 'chat.read',
+  READ: 'chat.mark_read',
   UNREAD_UPDATE: 'chat.unread_update',
 
   // Room
