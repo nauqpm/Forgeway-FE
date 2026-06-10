@@ -14,6 +14,7 @@ type CreateTaskModalProps = {
 
 const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] text-[0.8125rem] outline-none transition-colors";
 const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
+const PRIORITY_OPTIONS = ["Highest", "High", "Medium", "Low", "Lowest"];
 
 export default function CreateTaskModal({
   showCreateIssue,
@@ -99,9 +100,11 @@ export default function CreateTaskModal({
                 onChange={(e) => setNewIssueForm({ ...newIssueForm, priority: e.target.value })}
                 className={inputCls}
               >
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
+                {PRIORITY_OPTIONS.map((priority) => (
+                  <option key={priority} value={priority}>
+                    {priority}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

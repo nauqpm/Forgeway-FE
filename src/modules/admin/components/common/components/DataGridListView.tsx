@@ -31,12 +31,14 @@ type BoardColumn = {
 };
 
 
-const PRIORITY_OPTIONS = [ 'High', 'Medium', 'Low'];
+const PRIORITY_OPTIONS = ['Highest', 'High', 'Medium', 'Low', 'Lowest'];
 
 const PRIORITY_CLS: Record<string, string> = {
+  Highest: 'bg-[#FDEBEC] text-[#7F1D1D] dark:bg-[rgba(127,29,29,0.18)] dark:text-[#FCA5A5]',
   High:   'bg-[#FDEBEC] text-[#9F2F2D] dark:bg-[rgba(159,47,45,0.12)] dark:text-[#F87171]',
   Medium: 'bg-[#FBF3DB] text-[#956400] dark:bg-[rgba(149,100,0,0.12)] dark:text-[#F59E0B]',
   Low:    'bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]',
+  Lowest: 'bg-[#EAF6EF] text-[#346538] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#86EFAC]',
 };
 
 interface DataGridListViewProps {
@@ -311,7 +313,17 @@ export default function DataGridListView({
                     onClick={() => { onUpdateIssue && onUpdateIssue(issue.id, { priority: p }); setOpenDropdown(null); }}
                     className={`w-full text-left px-3 py-2 text-sm hover:bg-[#F9F9F8] dark:hover:bg-white/5 flex items-center gap-2 transition-colors ${p === priority ? 'font-semibold' : 'text-[#787774] dark:text-[#9B9A97]'}`}
                   >
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${ p === 'High' ? 'bg-[#9F2F2D]' : p === 'Medium' ? 'bg-[#956400]' : 'bg-[#1F6C9F]'}`} />
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${
+                      p === 'Highest'
+                        ? 'bg-[#7F1D1D]'
+                        : p === 'High'
+                          ? 'bg-[#9F2F2D]'
+                          : p === 'Medium'
+                            ? 'bg-[#956400]'
+                            : p === 'Low'
+                              ? 'bg-[#1F6C9F]'
+                              : 'bg-[#346538]'
+                    }`} />
                     {p}
                     {p === priority && <Check className="w-3.5 h-3.5 ml-auto text-[#2563EB]" />}
                   </button>
