@@ -4,8 +4,10 @@ import { User, Key, AlertCircle, Loader2 } from "lucide-react";
 import { useAppProfile } from "../hooks/useAppProfile";
 import { ProfileInfoForm } from "./ProfileInfoForm";
 import { ChangePasswordForm } from "./ChangePasswordForm";
+import { useAuth } from "@/context/AuthContext";
 
 export function ProfilePage() {
+  const { user } = useAuth();
   const {
     profile,
     loading,
@@ -68,9 +70,15 @@ export function ProfilePage() {
       <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
         <h2 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
           <Key className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
-          Privacy
+          Password
         </h2>
-        <ChangePasswordForm saving={saving} onChangePassword={changePassword} />
+        {user?.ssoProvider === 'google' || (user as any)?.googleId || (profile as any)?.ssoProvider === 'google' || (profile as any)?.googleId ? (
+          <div className="p-3 rounded-[6px] bg-[#F9F9F8] dark:bg-[#2A2A2A] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+            Your account is linked with Google. Password management is handled directly through your Google account.
+          </div>
+        ) : (
+          <ChangePasswordForm saving={saving} onChangePassword={changePassword} />
+        )}
       </div>
     </div>
   );
