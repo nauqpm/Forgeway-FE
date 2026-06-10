@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Check, FileText, Bug, Zap, BookOpen, ChevronDown } from "lucide-react";
 
 export const TASK_TYPES = ["Task", "Bug", "Epic", "Story"] as const;
@@ -65,7 +66,9 @@ export default function TypePicker({
   className = "",
 }: TypePickerProps) {
   const [open, setOpen] = useState(false);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const isDisabled = disabled || !onChange;
 
   useEffect(() => {
@@ -74,8 +77,29 @@ export default function TypePicker({
       if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    const closeOnScroll = () => setOpen(false);
+    window.addEventListener("scroll", closeOnScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      window.removeEventListener("scroll", closeOnScroll, true);
+    };
   }, [open]);
+
+  const handleOpen = () => {
+    if (isDisabled) return;
+    if (!open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const dropdownH = 180;
+      const useTop = placement === "top" || (spaceBelow < dropdownH && rect.top > dropdownH);
+      if (useTop) {
+        setDropdownStyle({ top: rect.top + window.scrollY - dropdownH - 4, left: rect.left + window.scrollX });
+      } else {
+        setDropdownStyle({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX });
+      }
+    }
+    setOpen((p) => !p);
+  };
 
   const resolved = value && TASK_TYPE_CONFIG[value] ? value : "Task";
   const cfg = TASK_TYPE_CONFIG[resolved];
@@ -104,37 +128,11 @@ export default function TypePicker({
             : "cursor-not-allowed opacity-70",
         ].join(" ");
 
-  return (
-    <div
-      ref={rootRef}
-      className={`relative inline-flex ${className}`}
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
-    >
-      <button
-        type="button"
-        disabled={isDisabled}
-        onClick={() => !isDisabled && setOpen((p) => !p)}
-        className={triggerCls}
-      >
-        {variant === "default" && (
-          <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
-        )}
-        {variant === "pill" && value && TASK_TYPE_CONFIG[value] && (
-          <Icon className={`${size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} shrink-0 ${TASK_TYPE_CONFIG[value].pillText}`} />
-        )}
-        <span className="truncate">{label}</span>
-        {!isDisabled && (
-          <ChevronDown className={size === "sm" ? "w-3 h-3 shrink-0" : "w-3.5 h-3.5 shrink-0"} />
-        )}
-      </button>
-
-      {open && (
+  const dropdown = open && typeof document !== "undefined"
+    ? createPortal(
         <div
-          className={`absolute z-50 min-w-[9rem] overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1 ${
-            placement === "top" ? "bottom-full mb-1" : "top-full mt-1"
-          } left-0`}
-          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+          className="fixed z-[9999] min-w-[9rem] overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
+          style={{ ...dropdownStyle, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         >
           {TASK_TYPES.map((t) => {
             const c = TASK_TYPE_CONFIG[t];
@@ -157,8 +155,38 @@ export default function TypePicker({
               </button>
             );
           })}
-        </div>
-      )}
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <div
+      ref={rootRef}
+      className={`relative inline-flex ${className}`}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
+      <button
+        ref={triggerRef}
+        type="button"
+        disabled={isDisabled}
+        onClick={handleOpen}
+        className={triggerCls}
+      >
+        {variant === "default" && (
+          <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
+        )}
+        {variant === "pill" && value && TASK_TYPE_CONFIG[value] && (
+          <Icon className={`${size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} shrink-0 ${TASK_TYPE_CONFIG[value].pillText}`} />
+        )}
+        <span className="truncate">{label}</span>
+        {!isDisabled && (
+          <ChevronDown className={size === "sm" ? "w-3 h-3 shrink-0" : "w-3.5 h-3.5 shrink-0"} />
+        )}
+      </button>
+
+      {dropdown}
     </div>
   );
 }
