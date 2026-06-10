@@ -597,9 +597,9 @@ export default function Sidebar({
                 {/* SUB NAV */}
                 {workspaceOpen && !collapsed && (
                   <div className="ml-6 mt-1 space-y-0.5">
-                    {sidebarVisibleWorkspaces.map((workspace) => (
+                    {sidebarVisibleWorkspaces.map((workspace, idx) => (
                       <Link
-                        key={workspace._id}
+                        key={workspace._id || workspace.id || `ws-vis-${idx}`}
                         href={`/workspaces/${workspace.key}`}
                         className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                       >

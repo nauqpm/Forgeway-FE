@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Send, Smile, Paperclip } from 'lucide-react';
+import { Send, Smile, Paperclip, Bold, Italic, Code } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 
 interface MessageInputProps {
   channelId: string;
+  channelName?: string;
 }
 
-export default function MessageInput({ channelId }: MessageInputProps) {
+export default function MessageInput({ channelId, channelName }: MessageInputProps) {
   const [content, setContent] = useState('');
   const { sendMessage, sendTyping } = useChatRealtime();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -55,7 +56,7 @@ export default function MessageInput({ channelId }: MessageInputProps) {
             value={content}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
+            placeholder={channelName ? `Message into #${channelName}...` : 'Type a message...'}
             rows={1}
             className="w-full bg-transparent border-none outline-none text-[0.875rem] resize-none max-h-[200px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB]"
           />
