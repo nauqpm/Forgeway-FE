@@ -3,7 +3,9 @@
 import React from 'react';
 import { Message } from '@/stores/chatStore';
 import { format } from 'date-fns';
-import { Paperclip } from 'lucide-react';
+import { Paperclip, SmilePlus, Reply, MoreHorizontal } from 'lucide-react';
+
+const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MessageItemProps {
   message: Message;
@@ -13,9 +15,29 @@ interface MessageItemProps {
 
 export default function MessageItem({ message, isSameUserAsPrevious, isMine }: MessageItemProps) {
   const sender = message.senderId;
+  const isDeleted = message.deletedAt !== null;
 
   return (
-    <div className={`group flex gap-4 px-4 py-0.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors ${!isSameUserAsPrevious ? 'mt-4' : ''} flex-row`}>
+    <div className={cn(
+      "group relative flex gap-4 px-4 py-0.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors flex-row",
+      !isSameUserAsPrevious ? 'mt-3' : ''
+    )}>
+      
+      {/* Hover Actions */}
+      {!isDeleted && (
+        <div className="absolute top-0 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] px-1 py-0.5 shadow-none">
+          <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="Add reaction">
+            <SmilePlus className="w-3.5 h-3.5" />
+          </button>
+          <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="Reply">
+            <Reply className="w-3.5 h-3.5" />
+          </button>
+          <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="More">
+            <MoreHorizontal className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Avatar column */}
       <div className="w-10 flex-shrink-0 flex justify-center mt-0.5">
         {!isSameUserAsPrevious ? (
@@ -23,7 +45,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             {sender.avatar ? (
               <img src={sender.avatar} alt={sender.fullName} className="w-full h-full object-cover" />
             ) : (
-              <span>{sender.fullName.charAt(0).toUpperCase()}</span>
+              <span>{sender.fullName?.charAt(0).toUpperCase()}</span>
             )}
           </div>
         ) : (
@@ -46,12 +68,15 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
           </div>
         )}
         
-        <div className="text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] leading-normal break-words whitespace-pre-wrap">
-          {message.content}
+        <div className={cn(
+          "text-[0.875rem] leading-normal break-words whitespace-pre-wrap",
+          isDeleted ? "text-[#ABABAB] dark:text-[#6B6B6B] italic text-[0.8125rem]" : "text-[#111111] dark:text-[#E8E8E7]"
+        )}>
+          {isDeleted ? "[Message deleted]" : message.content}
         </div>
 
         {/* Attachments */}
-        {message.attachments && message.attachments.length > 0 && (
+        {!isDeleted && message.attachments && message.attachments.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2 justify-start">
             {message.attachments.map((file, idx) => (
               <div key={idx} className="max-w-[300px] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden bg-white dark:bg-[#252525]">
@@ -74,7 +99,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
         )}
 
         {/* Reactions */}
-        {message.reactions && Object.keys(message.reactions).length > 0 && (
+        {!isDeleted && message.reactions && Object.keys(message.reactions).length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1 justify-start">
             {Object.entries(message.reactions).map(([emoji, userIds]) => (
               <button 

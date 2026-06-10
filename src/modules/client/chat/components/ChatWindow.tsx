@@ -6,12 +6,13 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { getMessagesAPI } from '@/modules/client/chat/services/chatService';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
-import { Hash, Megaphone, Loader2, Info, Search, Phone, Video } from 'lucide-react';
+import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 
 export default function ChatWindow() {
   const { activeChannelId, channels, messagesByChannel, setMessages, typingUsers, clearOldTyping } = useChatStore();
   const currentUserId = useAuthStore(state => state.user?.id);
+  const userRole = useAuthStore(state => state.user?.role);
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -61,8 +62,8 @@ export default function ChatWindow() {
         <div className="w-16 h-16 bg-[#F0F0EE] dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
           <Hash className="w-8 h-8 opacity-20" />
         </div>
-        <h3 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">Welcome to Chat</h3>
-        <p className="text-sm">Select a channel to start messaging</p>
+        <h3 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">Select a channel to start</h3>
+        <p className="text-sm">Messages will appear here once you select a conversation</p>
       </div>
     );
   }
@@ -70,31 +71,62 @@ export default function ChatWindow() {
   const typingForChannel = typingUsers[activeChannelId] || {};
   const typingUserIds = Object.keys(typingForChannel);
 
+  // Helper to get typing text in English
+  const getTypingText = () => {
+    if (typingUserIds.length === 0) return null;
+    if (typingUserIds.length === 1) {
+      return 'Someone is typing...';
+    }
+    return `${typingUserIds.length} people are typing...`;
+  };
+
   const getSenderId = (msg: any) => {
     if (!msg?.senderId) return null;
     if (typeof msg.senderId === 'string') return msg.senderId;
     return msg.senderId._id || msg.senderId.id;
   };
 
+  const isSuperAdmin = userRole === 'super_admin';
+  const isReadOnly = activeChannel.type === 'announcement' && !isSuperAdmin;
+
   return (
     <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-[#202020]">
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
-        <div className="flex items-center gap-2 min-w-0">
-          {activeChannel.type === 'announcement' ? (
-            <Megaphone className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" />
-          ) : (
-            <Hash className="w-5 h-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+        <div className="flex flex-col items-start justify-center gap-0 min-w-0">
+          <div className="flex items-center gap-2">
+            {activeChannel.type === 'announcement' ? (
+              <Megaphone className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
+            ) : (
+              <Hash className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
+            )}
+            <span className="font-bold text-[#111111] dark:text-[#E8E8E7] truncate">{activeChannel.name}</span>
+          </div>
+          
+          {activeChannel.type !== 'dm' && (
+            <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
+              {activeChannel.description || (
+                <>
+                  {activeChannel.type === 'general' && "Everyone in the organization"}
+                  {activeChannel.type === 'announcement' && "Only admins can post messages here"}
+                  {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
+                </>
+              )}
+            </span>
           )}
-          <span className="font-bold text-[#111111] dark:text-[#E8E8E7] truncate">{activeChannel.name}</span>
         </div>
 
-        <div className="flex items-center gap-4 text-[#787774] dark:text-[#9B9A97]">
-          <button className="hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Phone className="w-4 h-4" /></button>
-          <button className="hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Video className="w-4 h-4" /></button>
-          <div className="w-px h-4 bg-[#EAEAEA] dark:bg-white/[0.06]" />
-          <button className="hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Search className="w-4 h-4" /></button>
-          <button className="hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Info className="w-4 h-4" /></button>
+        <div className="flex items-center gap-3 text-[#787774] dark:text-[#9B9A97]">
+          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Phone className="w-4 h-4" /></button>
+          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Video className="w-4 h-4" /></button>
+          
+          <div className="w-px h-4 bg-[#EAEAEA] dark:bg-white/[0.06] mx-1" />
+          
+          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors" title="View members">
+            <Users className="w-4 h-4" />
+          </button>
+          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Search className="w-4 h-4" /></button>
+          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Info className="w-4 h-4" /></button>
         </div>
       </header>
 
@@ -121,8 +153,8 @@ export default function ChatWindow() {
                 ? (new Date(msg.createdAt).getTime() - new Date(previousMsg.createdAt).getTime()) / 1000 / 60
                 : 10;
               
-              const isMine = currentUserId === currentSenderId;
               const isSameUserAsPrevious = isSameUser && timeDiff < 5;
+              const isMine = currentUserId === currentSenderId;
 
               return (
                 <MessageItem 
@@ -139,16 +171,23 @@ export default function ChatWindow() {
 
       {/* Footer / Input */}
       <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
-        <div className="px-4 h-6 flex items-center">
-          {typingUserIds.length > 0 && (
+        <div className="px-4 h-5 flex items-center">
+          {!isReadOnly && typingUserIds.length > 0 && (
             <div className="text-[10px] text-[#787774] italic animate-pulse">
-              {typingUserIds.length === 1 
-                ? 'Someone is typing...' 
-                : `${typingUserIds.length} people are typing...`}
+              {getTypingText()}
             </div>
           )}
         </div>
-        <MessageInput channelId={activeChannelId} />
+        
+        {isReadOnly ? (
+          <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] font-medium italic">
+              This channel is read-only. Only administrators can post updates.
+            </p>
+          </div>
+        ) : (
+          <MessageInput channelId={activeChannelId} channelName={activeChannel.name} />
+        )}
       </div>
     </div>
   );
