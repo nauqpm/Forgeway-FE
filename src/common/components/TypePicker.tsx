@@ -103,9 +103,9 @@ export default function TypePicker({
     setOpen((p) => !p);
   };
 
-  const resolved = value && TASK_TYPE_CONFIG[value] ? value : "Task";
+  const resolved = TASK_TYPES.find((t) => t.toLowerCase() === (value ?? "").toLowerCase()) ?? "Task";
   const cfg = TASK_TYPE_CONFIG[resolved];
-  const label = value ?? "Type";
+  const label = resolved;
   const Icon = cfg?.Icon ?? FileText;
   const iconColor = cfg?.iconColor ?? "text-[#ABABAB]";
   const dotColor = cfg?.dotColor ?? "bg-[#ABABAB]";
@@ -115,8 +115,8 @@ export default function TypePicker({
       ? [
           "inline-flex items-center gap-1 rounded-full font-semibold transition-opacity",
           size === "sm" ? "px-2 py-0.5 text-[0.6875rem]" : "px-2.5 py-1 text-xs",
-          value && TASK_TYPE_CONFIG[value]
-            ? `${TASK_TYPE_CONFIG[value].pillBg} ${TASK_TYPE_CONFIG[value].pillText} ${!isDisabled ? "hover:opacity-80 cursor-pointer" : ""}`
+          cfg
+            ? `${cfg.pillBg} ${cfg.pillText} ${!isDisabled ? "hover:opacity-80 cursor-pointer" : ""}`
             : `bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] ${!isDisabled ? "hover:bg-[#EAEAEA] dark:hover:bg-[#333333] cursor-pointer" : ""}`,
           isDisabled ? "cursor-not-allowed opacity-70" : "",
         ].join(" ")
@@ -140,7 +140,7 @@ export default function TypePicker({
           {TASK_TYPES.map((t) => {
             const c = TASK_TYPE_CONFIG[t];
             const TypeIcon = c.Icon;
-            const isSelected = t === value;
+            const isSelected = t === resolved;
             return (
               <button
                 key={t}
@@ -180,8 +180,8 @@ export default function TypePicker({
         {variant === "default" && (
           <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`} />
         )}
-        {variant === "pill" && value && TASK_TYPE_CONFIG[value] && (
-          <Icon className={`${size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} shrink-0 ${TASK_TYPE_CONFIG[value].pillText}`} />
+        {variant === "pill" && cfg && (
+          <Icon className={`${size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} shrink-0 ${cfg.pillText}`} />
         )}
         <span className={`truncate${fullWidth ? " flex-1" : ""}`}>{label}</span>
         {!isDisabled && (
