@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { chatSocketClient } from '@/lib/socket/chat.client';
 import { SOCKET_EVENTS } from '@/lib/socket/socket.events';
 import { useChatStore } from '@/stores/chatStore';
 import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
+import toast from 'react-hot-toast';
 
 /**
  * Global component to handle all chat socket events.
@@ -17,8 +18,11 @@ export default function ChatRealtimeHandler() {
     deleteMessage, 
     setTyping, 
     updateChannel,
+    incrementUnread,
     channels
   } = useChatStore();
+
+  const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Automatically join all channels when they are loaded to receive background updates
   useEffect(() => {
@@ -56,14 +60,11 @@ export default function ChatRealtimeHandler() {
     if (isCurrentChannel) {
       markAsRead(message.channelId);
     } else {
-      const channel = channels.find(c => c._id === message.channelId);
-      updateChannel(message.channelId, { 
-        unreadCount: (channel?.unreadCount || 0) + 1
-      });
+      incrementUnread(message.channelId);
     }
     
     updateChannel(message.channelId, { lastMessage: message });
-  }, [addMessage, updateChannel, markAsRead]);
+  }, [addMessage, updateChannel, incrementUnread, markAsRead]);
 
   const handleMessageEdited = useCallback((envelope: any) => {
     const message = envelope.data || envelope;
@@ -95,6 +96,37 @@ export default function ChatRealtimeHandler() {
     updateMessage(data.channelId, data.messageId, { reactions: data.reactions });
   }, [updateMessage]);
 
+  const handleRateLimited = useCallback((payload: { retryAfterMs?: number }) => {
+    if (rateLimitIntervalRef.current) {
+      clearInterval(rateLimitIntervalRef.current);
+    }
+
+    const retryAfterMs = payload?.retryAfterMs ?? 10000;
+    const toastId = "chat-rate-limit-toast";
+    let timeLeft = Math.ceil(retryAfterMs / 1000);
+
+    toast.error(`Bạn đang thao tác quá nhanh. Vui lòng thử lại sau ${timeLeft} giây.`, {
+      id: toastId,
+      duration: retryAfterMs,
+    });
+
+    rateLimitIntervalRef.current = setInterval(() => {
+      timeLeft -= 1;
+      if (timeLeft <= 0) {
+        if (rateLimitIntervalRef.current) {
+          clearInterval(rateLimitIntervalRef.current);
+          rateLimitIntervalRef.current = null;
+        }
+        toast.dismiss(toastId);
+      } else {
+        toast.error(`Bạn đang thao tác quá nhanh. Vui lòng thử lại sau ${timeLeft} giây.`, {
+          id: toastId,
+          duration: timeLeft * 1000,
+        });
+      }
+    }, 1000);
+  }, []);
+
   useEffect(() => {
     const socket = chatSocketClient.connect();
     if (!socket) return;
@@ -105,6 +137,7 @@ export default function ChatRealtimeHandler() {
     socket.on(SOCKET_EVENTS.USER_TYPING, handleUserTyping);
     socket.on(SOCKET_EVENTS.UNREAD_UPDATE, handleUnreadUpdate);
     socket.on(SOCKET_EVENTS.REACTION_UPDATED, handleReactionUpdated);
+    socket.on(SOCKET_EVENTS.RATE_LIMITED, handleRateLimited);
 
     return () => {
       socket.off(SOCKET_EVENTS.SENT, handleNewMessage);
@@ -113,6 +146,12 @@ export default function ChatRealtimeHandler() {
       socket.off(SOCKET_EVENTS.USER_TYPING, handleUserTyping);
       socket.off(SOCKET_EVENTS.UNREAD_UPDATE, handleUnreadUpdate);
       socket.off(SOCKET_EVENTS.REACTION_UPDATED, handleReactionUpdated);
+      socket.off(SOCKET_EVENTS.RATE_LIMITED, handleRateLimited);
+
+      if (rateLimitIntervalRef.current) {
+        clearInterval(rateLimitIntervalRef.current);
+        rateLimitIntervalRef.current = null;
+      }
     };
   }, [
     handleNewMessage, 
@@ -120,7 +159,8 @@ export default function ChatRealtimeHandler() {
     handleMessageDeleted, 
     handleUserTyping, 
     handleUnreadUpdate,
-    handleReactionUpdated
+    handleReactionUpdated,
+    handleRateLimited
   ]);
 
   return null; // This component doesn't render anything
