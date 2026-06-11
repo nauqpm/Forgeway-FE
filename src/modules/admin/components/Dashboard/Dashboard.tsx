@@ -10,7 +10,11 @@ import { toast } from "react-hot-toast";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
 import { boardService } from "@/modules/client/workspaces/services/boardService";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
+import { sprintService } from "@/modules/client/workspaces/services/sprintService";
 import type { Issue } from "@/modules/client/workspaces/types/issue.type";
+import type { Sprint } from "@/modules/client/workspaces/types/sprint.type";
+import type { BoardColumn } from "@/modules/client/workspaces/types/board.type";
+import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export interface AdminDashboardProps {
@@ -120,6 +124,9 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
 
   const [selectedDashboardTask, setSelectedDashboardTask] = useState<DashboardTask | null>(null);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<any>(null);
+  const [selectedBoardColumns, setSelectedBoardColumns] = useState<BoardColumn[]>([]);
+  const [selectedSprints, setSelectedSprints] = useState<Sprint[]>([]);
+  const [selectedWorkspaceMembers, setSelectedWorkspaceMembers] = useState<any[]>([]);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
 
@@ -262,9 +269,24 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
       const workspace = workspaces.find(w => workspaceRouteKeyOf(w) === task.workspaceKey);
       if (!workspace) throw new Error("Workspace not found");
       const workspaceId = workspaceIdOf(workspace);
-      
-      const taskDetail = await taskService.getBoardTaskDetail(workspaceId, task.key);
-      setSelectedTaskDetail(taskDetail);
+      const isScrum = workspace.type === "scrum";
+
+      const [taskDetail, boardData, sprintList, membersRes] = await Promise.all([
+        taskService.getBoardTaskDetail(workspaceId, task.key),
+        boardService.getBoardByWorkspace(workspaceId).catch(() => ({ boardId: "", columns: [] })),
+        isScrum
+          ? sprintService.listSprints(workspaceId).catch(() => [])
+          : Promise.resolve([] as Sprint[]),
+        api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId)).catch(() => ({ data: [] })),
+      ]);
+
+      const members = membersRes?.data?.data ?? membersRes?.data ?? [];
+      const enrichedTask = enrichTaskDetailUsers(taskDetail, members);
+
+      setSelectedTaskDetail(enrichedTask);
+      setSelectedWorkspaceMembers(members);
+      setSelectedBoardColumns(boardData.columns ?? []);
+      setSelectedSprints(sprintList);
 
       const detailUrl = `/workspaces/${task.workspaceKey}/board/key/${task.key}`;
       window.history.pushState({ ...window.history.state, as: detailUrl }, "", detailUrl);
@@ -446,25 +468,36 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             </div>
           </div>
         ) : selectedTaskDetail && selectedDashboardTask ? (
-          <TaskDetailModal
-            issue={selectedTaskDetail}
-            workspaceId={workspaces.find(w => workspaceRouteKeyOf(w) === selectedDashboardTask.workspaceKey) ? workspaceIdOf(workspaces.find(w => workspaceRouteKeyOf(w) === selectedDashboardTask.workspaceKey)!) : ""}
-            onClose={() => {
-              setIsTaskModalOpen(false);
-              setSelectedDashboardTask(null);
-              setSelectedTaskDetail(null);
-              window.history.pushState(null, "", "/dashboard");
-            }}
-            onUpdateIssue={async (updatedIssue) => {
-              const workspace = workspaces.find(w => workspaceRouteKeyOf(w) === selectedDashboardTask.workspaceKey);
-              const workspaceId = workspace ? workspaceIdOf(workspace) : null;
-              if (workspaceId && updatedIssue.id) {
-                await taskService.updateBoardTask(workspaceId, updatedIssue.id, updatedIssue);
-                setSelectedTaskDetail({ ...selectedTaskDetail, ...updatedIssue });
-              }
-            }}
-            onArchiveIssue={handleArchiveIssue}
-          />
+          (() => {
+            const ws = workspaces.find(w => workspaceRouteKeyOf(w) === selectedDashboardTask.workspaceKey);
+            const wsId = ws ? workspaceIdOf(ws) : "";
+            return (
+              <TaskDetailModal
+                issue={selectedTaskDetail}
+                workspaceId={wsId}
+                boardColumns={selectedBoardColumns}
+                sprints={selectedSprints}
+                workspaceMembers={selectedWorkspaceMembers}
+                workspaceTemplate={ws?.type === "scrum" ? "scrum" : "kanban"}
+                onClose={() => {
+                  setIsTaskModalOpen(false);
+                  setSelectedDashboardTask(null);
+                  setSelectedTaskDetail(null);
+                  setSelectedBoardColumns([]);
+                  setSelectedSprints([]);
+                  setSelectedWorkspaceMembers([]);
+                  window.history.pushState(null, "", "/dashboard");
+                }}
+                onUpdateIssue={async (updatedIssue) => {
+                  if (wsId && updatedIssue.id) {
+                    await taskService.updateBoardTask(wsId, updatedIssue.id, updatedIssue);
+                    setSelectedTaskDetail({ ...selectedTaskDetail, ...updatedIssue });
+                  }
+                }}
+                onArchiveIssue={handleArchiveIssue}
+              />
+            );
+          })()
         ) : null
       )}
     </div>
