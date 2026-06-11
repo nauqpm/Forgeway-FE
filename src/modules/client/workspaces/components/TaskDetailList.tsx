@@ -25,6 +25,7 @@ import AssigneePicker, {
   type AssigneePickerUser,
 } from "@/common/components/AssigneePicker";
 import TypePicker from "@/common/components/TypePicker";
+import PriorityPicker from "@/common/components/PriorityPicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
@@ -60,13 +61,6 @@ const formatDateTime = (value?: string | null) => {
   }).format(new Date(value));
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-  High: "text-[#9F2F2D] dark:text-[#F87171]",
-  Medium: "text-[#956400] dark:text-[#F59E0B]",
-  Low: "text-[#1F6C9F] dark:text-[#93C5FD]",
-  Highest: "text-[#9F2F2D] dark:text-[#F87171]",
-  Lowest: "text-[#1F6C9F] dark:text-[#93C5FD]",
-};
 
 type SprintOption = {
   _id?: string;
@@ -117,8 +111,7 @@ export default function TaskDetailList({
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
       : String(issue.storyPoints);
-  const priorityColor = PRIORITY_COLORS[issue.priority] || "text-[#787774] dark:text-[#9B9A97]";
-  const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
+const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
   const currentAssigneeId = getIssueAssigneeId(issue);
   const currentAssigneeName =
     issue.assigneeDisplayName ||
@@ -416,10 +409,14 @@ export default function TaskDetailList({
 
                 {/* Priority */}
                 <DetailRow label="Priority">
-                  <div className={`flex items-center gap-1.5 text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors ${priorityColor}`}>
-                    <span className="inline-block w-2.5 h-2.5 rounded-sm bg-current opacity-80" />
-                    {issue.priority}
-                  </div>
+                  <PriorityPicker
+                    value={issue.priority}
+                    onChange={(p) => onUpdateIssue?.({ ...issue, priority: p })}
+                    disabled={!canEditTask || issue.isArchived}
+                    variant="pill"
+                    size="sm"
+                    placement="bottom"
+                  />
                 </DetailRow>
 
                 {/* Parent */}

@@ -512,7 +512,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                       <TypePicker
                                         value={issue.type ?? "Task"}
                                         onChange={(type) => updateIssueDirectly(issue.id, { type })}
-                                        placement="top"
                                         variant="pill"
                                         size="sm"
                                       />
@@ -530,7 +529,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                       <PriorityPicker
                                         value={issue.priority}
                                         onChange={p => updateIssueDirectly(issue.id, { priority: p })}
-                                        placement="top"
                                         variant="pill"
                                         size="sm"
                                       />
@@ -731,7 +729,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     <TypePicker
                                       value={issue.type ?? "Task"}
                                       onChange={(type) => updateIssueDirectly(issue.id, { type })}
-                                      placement="top"
                                       variant="pill"
                                       size="sm"
                                     />
@@ -749,7 +746,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     <PriorityPicker
                                       value={issue.priority}
                                       onChange={p => updateIssueDirectly(issue.id, { priority: p })}
-                                      placement="top"
                                       variant="pill"
                                       size="sm"
                                     />
