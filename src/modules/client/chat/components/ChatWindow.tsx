@@ -10,7 +10,14 @@ import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'luc
 import { useChatRealtime } from '../hooks/useChatRealtime';
 
 export default function ChatWindow() {
-  const { activeChannelId, channels, messagesByChannel, setMessages, typingUsers, clearOldTyping } = useChatStore();
+  // Use specific selectors to prevent unnecessary re-renders and reference changes
+  const activeChannelId = useChatStore(state => state.activeChannelId);
+  const channels = useChatStore(state => state.channels);
+  const messagesByChannel = useChatStore(state => state.messagesByChannel);
+  const typingUsers = useChatStore(state => state.typingUsers);
+  const clearOldTyping = useChatStore(state => state.clearOldTyping);
+  const setMessages = useChatStore(state => state.setMessages);
+  
   const currentUserId = useAuthStore(state => state.user?.id);
   const userRole = useAuthStore(state => state.user?.role);
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
@@ -29,30 +36,39 @@ export default function ChatWindow() {
   }, [activeChannelId, messagesByChannel]);
 
   useEffect(() => {
-    if (activeChannelId) {
-      setLoading(true);
-      setError(null);
-      getMessagesAPI(activeChannelId)
-        .then(msgs => setMessages(activeChannelId, msgs))
-        .catch(err => {
-          if (err.response?.status === 403) {
-            setError("You don't have permission to view messages in this channel.");
-          } else {
-            setError("Failed to load messages. Please try again.");
-          }
-        })
-        .finally(() => setLoading(false));
-      
-      markAsRead(activeChannelId);
-      joinChannel(activeChannelId);
-    }
+    if (!activeChannelId) return;
+
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+    
+    getMessagesAPI(activeChannelId)
+      .then(msgs => {
+        if (isMounted) {
+          setMessages(activeChannelId, msgs);
+        }
+      })
+      .catch(err => {
+        if (!isMounted) return;
+        if (err.response?.status === 403) {
+          setError("You don't have permission to view messages in this channel.");
+        } else {
+          setError("Failed to load messages. Please try again.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+    
+    markAsRead(activeChannelId);
+    joinChannel(activeChannelId);
 
     return () => {
-      if (activeChannelId) {
-        leaveChannel();
-      }
+      isMounted = false;
+      leaveChannel();
     };
-  }, [activeChannelId, setMessages, markAsRead, joinChannel, leaveChannel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChannelId]); // Strictly ONLY run when activeChannelId changes to prevent polling loops
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -190,7 +206,7 @@ export default function ChatWindow() {
 
               return (
                 <MessageItem
-                  key={msg._id || msg.id}
+                  key={msg._id || (msg as any).id}
                   message={msg}
                   isSameUserAsPrevious={isSameUserAsPrevious}
                 />
