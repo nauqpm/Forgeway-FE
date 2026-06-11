@@ -35,6 +35,7 @@ export interface Channel {
   workspaceId?: string;
   unreadCount: number;
   lastMessage?: Message;
+  members?: ChatUser[]; // Add members field
 }
 
 interface ChatStore {

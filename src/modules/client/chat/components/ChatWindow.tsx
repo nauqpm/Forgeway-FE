@@ -15,6 +15,7 @@ export default function ChatWindow() {
   const userRole = useAuthStore(state => state.user?.role);
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
@@ -30,8 +31,16 @@ export default function ChatWindow() {
   useEffect(() => {
     if (activeChannelId) {
       setLoading(true);
+      setError(null);
       getMessagesAPI(activeChannelId)
         .then(msgs => setMessages(activeChannelId, msgs))
+        .catch(err => {
+          if (err.response?.status === 403) {
+            setError("You don't have permission to view messages in this channel.");
+          } else {
+            setError("Failed to load messages. Please try again.");
+          }
+        })
         .finally(() => setLoading(false));
       
       markAsRead(activeChannelId);
@@ -138,6 +147,15 @@ export default function ChatWindow() {
         {loading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+            <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-3">
+              <Info className="w-6 h-6 text-red-500" />
+            </div>
+            <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic">
+              {error}
+            </p>
           </div>
         ) : (
           <div className="py-4">

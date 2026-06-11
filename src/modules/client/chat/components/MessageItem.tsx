@@ -41,9 +41,22 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
       {/* Avatar column */}
       <div className="w-10 flex-shrink-0 flex justify-center mt-0.5">
         {!isSameUserAsPrevious ? (
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-medium">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-medium shadow-sm">
             {sender.avatar ? (
-              <img src={sender.avatar} alt={sender.fullName} className="w-full h-full object-cover" />
+              <img 
+                src={sender.avatar} 
+                alt={sender.fullName} 
+                className="w-full h-full object-cover" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent) {
+                    const span = document.createElement('span');
+                    span.innerText = sender.fullName?.charAt(0).toUpperCase() || 'U';
+                    parent.appendChild(span);
+                  }
+                }}
+              />
             ) : (
               <span>{sender.fullName?.charAt(0).toUpperCase()}</span>
             )}
