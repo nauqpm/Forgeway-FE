@@ -172,14 +172,12 @@ export default function ChatWindow() {
                 : 10;
               
               const isSameUserAsPrevious = isSameUser && timeDiff < 5;
-              const isMine = currentUserId === currentSenderId;
 
               return (
-                <MessageItem 
-                  key={msg._id} 
-                  message={msg} 
+                <MessageItem
+                  key={msg._id || msg.id}
+                  message={msg}
                   isSameUserAsPrevious={isSameUserAsPrevious}
-                  isMine={isMine}
                 />
               );
             })}

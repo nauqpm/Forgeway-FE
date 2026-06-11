@@ -24,6 +24,7 @@ export interface Message {
   replyToId?: string;
   createdAt: string;
   updatedAt?: string;
+  deletedAt?: string;
   reactions?: Record<string, string[]>; // emoji: [userIds]
 }
 

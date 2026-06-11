@@ -10,10 +10,9 @@ const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filt
 interface MessageItemProps {
   message: Message;
   isSameUserAsPrevious: boolean;
-  isMine: boolean;
 }
 
-export default function MessageItem({ message, isSameUserAsPrevious, isMine }: MessageItemProps) {
+export default function MessageItem({ message, isSameUserAsPrevious }: MessageItemProps) {
   const sender = message.senderId;
   const isDeleted = message.deletedAt !== null;
 

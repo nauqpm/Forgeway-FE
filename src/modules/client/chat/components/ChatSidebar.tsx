@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useChatStore, Channel, ChatUser } from '@/stores/chatStore';
+import { useChatStore, Channel } from '@/stores/chatStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { getChannelsAPI, createDMAPI } from '@/modules/client/chat/services/chatService';
-import { Hash, Megaphone, MessageSquare, Loader2, MessageSquarePlus, User, UserPlus } from 'lucide-react';
+import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
+import { Hash, Megaphone, Loader2 } from 'lucide-react';
 import { getWorkspaceUI } from '@/utils/workSpaceUI';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
@@ -14,7 +14,7 @@ export default function ChatSidebar() {
   const { channels, setChannels, activeChannelId, setActiveChannel } = useChatStore();
   const { workspaces } = useWorkspaceStore();
   const authUser = useAuthStore(state => state.user);
-  const currentUserId = authUser?._id || authUser?.id;
+  const currentUserId = (authUser as any)?._id || authUser?.id;
   const [loading, setLoading] = useState(channels.length === 0);
   const [activeTab, setActiveTab] = useState<'all' | 'channels' | 'dms'>('all');
 
@@ -50,7 +50,7 @@ export default function ChatSidebar() {
     );
   }
 
-  const generalChannels = sortedChannels.filter(c => c.type === 'general' || c.type === 'announcement' || c.type === 'public');
+  const generalChannels = sortedChannels.filter(c => c.type === 'general' || c.type === 'announcement' || (c.type as string) === 'public');
   const dmChannels = sortedChannels.filter(c => c.type === 'dm');
 
   const getWorkspaceUnread = (wsId: string) => {
@@ -63,7 +63,7 @@ export default function ChatSidebar() {
     if (!lastMsg) return "Start a conversation";
     
     const msgSenderId = typeof lastMsg.senderId === 'object' 
-      ? (lastMsg.senderId._id || lastMsg.senderId.id) 
+      ? ((lastMsg.senderId as any)._id || (lastMsg.senderId as any).id) 
       : lastMsg.senderId;
 
     const isMine = String(msgSenderId) === String(currentUserId);
