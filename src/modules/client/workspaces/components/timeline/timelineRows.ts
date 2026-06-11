@@ -1,6 +1,7 @@
 import { addDays, format } from "date-fns";
 import type { Issue } from "../../types/issue.type";
 import type { Sprint } from "../../types/sprint.type";
+import { normalizeDate } from "../../utils/dateUtils";
 
 export type TimelineRowKind = "sprint" | "epic" | "task" | "section";
 
@@ -30,9 +31,6 @@ export interface BuildTimelineRowsInput {
 
 const DATE_FORMAT = "yyyy-MM-dd";
 
-function normalizeDate(value?: string | null): string | undefined {
-  return value ? value.split("T")[0] : undefined;
-}
 
 function addDateDays(dateKey: string, days: number): string {
   return format(addDays(new Date(`${dateKey}T00:00:00`), days), DATE_FORMAT);

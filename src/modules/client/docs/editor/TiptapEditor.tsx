@@ -19,6 +19,7 @@ import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
 import { toast } from "react-hot-toast";
 import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
+import { pagesService } from "../services/pages.service";
 
 const DRAFT_CONTENT_SYNC_DELAY = 5000; // Sync derived HTML every 5 seconds
 
@@ -382,20 +383,28 @@ export default function TiptapEditor() {
       if (socket?.connected) {
         // Happy path: ask the server to flush draft → Page
         await new Promise<void>((resolve, reject) => {
-          realtimeSocketClient.pageManager.publish(socket, (ok) => {
-            if (ok) {
-              // Sync the store so the read-mode editor reflects the latest title
-              const title =
-                ydocRef.current?.getText("title").toString() || document.title;
-              const html = sanitizeEditorHtml(
-                editEditorRef.current?.getHTML() ?? "",
-              );
-              updateDocument(selectedDocumentId, { title, content: html });
-              resolve();
-            } else {
-              reject(new Error("server_publish_failed"));
-            }
-          });
+          realtimeSocketClient.pageManager.publish(
+            socket,
+            {
+              content: editEditorRef.current?.getHTML() ?? "",
+              title: ydocRef.current?.getText("title").toString() || "",
+            },
+            (ok) => {
+              if (ok) {
+                // Sync the store so the read-mode editor reflects the latest title
+                const title =
+                  ydocRef.current?.getText("title").toString() ||
+                  document.title;
+                const html = sanitizeEditorHtml(
+                  editEditorRef.current?.getHTML() ?? "",
+                );
+                updateDocument(selectedDocumentId, { title, content: html });
+                resolve();
+              } else {
+                reject(new Error("server_publish_failed"));
+              }
+            },
+          );
         });
       } else {
         // Offline fallback: the user explicitly hit "Cập nhật" even though
@@ -418,6 +427,22 @@ export default function TiptapEditor() {
       setIsPublishing(false);
     }
   }, [document, selectedDocumentId, updateDocument]);
+
+  // ── Refresh doc ──────────────────────────────────────────────────
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    if (!selectedDocumentId) return;
+    setIsRefreshing(true);
+    try {
+      const doc = await pagesService.getPageById(selectedDocumentId);
+      updateDocument(selectedDocumentId, doc);
+      toast.success("Đã tải lại tài liệu");
+    } catch (error) {
+      toast.error("Tải lại thất bại");
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [selectedDocumentId, updateDocument]);
 
   // ── Cleanup on unmount / document switch ──────────────────────
   const modeRef = useRef(mode);
@@ -443,10 +468,12 @@ export default function TiptapEditor() {
         canEdit={canEditPage}
         connectionStatus={connectionStatus}
         isPublishing={isPublishing}
+        isRefreshing={isRefreshing}
         onToggleMode={() =>
           mode === "read" ? enterEditMode() : exitEditMode()
         }
         onPublish={handlePublish}
+        onRefresh={handleRefresh}
       />
 
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-gray-950">

@@ -47,6 +47,9 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
         <button onClick={() => setActiveTab("pages")} className={TAB_CLS(activeTab === "pages")}>
           Docs
         </button>
+        <button onClick={() => setActiveTab("members")} className={TAB_CLS(activeTab === "members")}>
+          Members
+        </button>
       </div>
     </div>
   );

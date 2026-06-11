@@ -14,7 +14,7 @@ import { CheckSquare, Columns, FileText, MoreHorizontal, Search } from "lucide-r
 
 import { Issue } from "../../../types/issue.type";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
-import TaskStatusChanger from "../../TaskStatusChanger";
+import StatusPicker from "@/common/components/StatusPicker";
 
 type BoardColumn = { id: string; name: string; order: number; mappedStatuses?: string[]; isDone?: boolean };
 
@@ -167,13 +167,14 @@ export default function DataGridListView({
           const issue = info.row.original;
 
           return (
-            <TaskStatusChanger
-              issue={issue}
-              boardColumns={boardColumns}
+            <StatusPicker
+              value={issue.status}
+              columnId={issue.columnId}
+              options={boardColumns.map(col => ({ id: col.id, name: col.name }))}
               variant="pill"
               size="sm"
-              onChange={({ columnId, status }) =>
-                onUpdateIssue(issue.id, { columnId, status })
+              onChange={(status, option) =>
+                onUpdateIssue(issue.id, { columnId: option.id, status })
               }
             />
           );

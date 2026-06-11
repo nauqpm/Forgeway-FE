@@ -154,6 +154,15 @@ export const useTaskHandlers = ({
       );
 
       setSelectedIssue(savedIssue);
+
+      if (savedIssue.key) {
+        queryClient.setQueryData(
+          ["taskDetail", workspaceId, savedIssue.key],
+          (current: Issue | undefined) =>
+            current ? { ...current, ...savedIssue } : savedIssue,
+        );
+      }
+
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
       queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, updatedIssue.id] });
       if (savedIssue.key) {

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { verifyEmailAPI, resendVerifyEmailAPI } from '../../shared/services/authService';
+import { validateEmail } from '../../shared/utils/emailValidation';
 import toast from 'react-hot-toast';
 import { Loader2, MailCheck, ArrowLeft } from 'lucide-react';
 import { AUTH_ROUTES } from '../../shared/constants/auth-routes';
@@ -29,6 +30,11 @@ export default function VerifyEmailForm() {
       toast.error('Could not find the email to verify.');
       return;
     }
+    const emailError = validateEmail(email);
+    if (emailError) {
+      toast.error(emailError);
+      return;
+    }
     if (otp.length < 6) {
       toast.error('OTP must contain at least 6 characters.');
       return;
@@ -50,6 +56,11 @@ export default function VerifyEmailForm() {
   const handleResend = async () => {
     if (!email) {
       toast.error('Could not find the email for resending the code.');
+      return;
+    }
+    const emailError = validateEmail(email);
+    if (emailError) {
+      toast.error(emailError);
       return;
     }
     setIsResending(true);
