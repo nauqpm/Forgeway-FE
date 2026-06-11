@@ -651,7 +651,6 @@ export default function DataGridListView({
           members={normalizedMembers}
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}
-          showDueDate={false}
         />
       )}
     </div>

@@ -53,6 +53,7 @@ import {
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/context/AuthContext";
+import { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
@@ -506,6 +507,10 @@ export default function WorkspaceDetailPage({
   }, [issues, filters, workspace]);
 
   const uniqueAssignees = useAssignees(issues, workspace);
+  const bulkActionMembers = useMemo(
+    () => toAssigneePickerUsers(workspace?.members as any[] | undefined),
+    [workspace?.members],
+  );
   const workspacePermissions = useWorkspacePermission(
     workspaceApiId ?? "",
     workspace,
@@ -997,13 +1002,36 @@ export default function WorkspaceDetailPage({
       ),
     );
     const failedCount = results.filter((result) => result.status === "rejected").length;
+    const savedIssues = results
+      .filter((result): result is PromiseFulfilledResult<Issue> => result.status === "fulfilled")
+      .map((result) => result.value);
 
-    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-    queryClient.invalidateQueries({
-      queryKey: ["tasks-fallback-search", workspaceApiId],
-    });
+    if (savedIssues.length > 0) {
+      const savedById = new Map(savedIssues.map((issue) => [issue.id, issue]));
+      const mergeSavedIssues = (current: Issue[] | undefined) =>
+        Array.isArray(current)
+          ? current.map((issue) => savedById.get(issue.id) ?? issue)
+          : current;
+
+      setIssues((current) => mergeSavedIssues(current) ?? []);
+      setSelectedIssue((current) =>
+        current ? savedById.get(current.id) ?? current : current,
+      );
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: ["tasks", workspaceApiId] },
+        mergeSavedIssues,
+      );
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: ["tasks-fallback-search", workspaceApiId] },
+        mergeSavedIssues,
+      );
+    }
 
     if (failedCount > 0) {
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({
+        queryKey: ["tasks-fallback-search", workspaceApiId],
+      });
       toast.error(`Could not update ${failedCount} work item${failedCount > 1 ? "s" : ""}`);
     }
   };
@@ -1011,9 +1039,6 @@ export default function WorkspaceDetailPage({
   const {
     toggleTaskSelection,
     toggleSprintSelection,
-    handleBulkStatusChange,
-    handleBulkMoveSprint,
-    handleBulkDelete,
   } = useSelectionHandlers({
     workspaceId: workspaceApiId ?? "",
     issues,
@@ -1428,11 +1453,11 @@ export default function WorkspaceDetailPage({
       <BulkActionBar
         selectedCount={selectedTaskIds.length}
         onClear={() => setSelectedTaskIds([])}
-        // @ts-ignore
-        onChangeStatus={handleBulkStatusChange}
-        onDelete={handleBulkDelete}
+        onBulkUpdate={(updates) => handleListBulkUpdate(selectedTaskIds, updates)}
+        onDelete={() => handleListBulkDelete(selectedTaskIds)}
+        members={bulkActionMembers}
         sprints={sprints}
-        onMoveSprint={handleBulkMoveSprint}
+        onMoveSprint={(sprintId) => handleListBulkUpdate(selectedTaskIds, { sprintId })}
         canEditTask={canEditTask}
         canDeleteTask={canDeleteTask}
         canMoveTask={canMoveTask}

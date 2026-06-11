@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { X, Trash2, ChevronUp, ArrowRightCircle } from 'lucide-react';
 import AssigneePicker, { AssigneePickerUser } from '../../../../../common/components/AssigneePicker';
 import StatusPicker from '../../../../../common/components/StatusPicker';
-import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
 import PriorityPicker from '../../../../../common/components/PriorityPicker';
 import TypePicker from '../../../../../common/components/TypePicker';
 
@@ -22,7 +21,6 @@ interface BulkActionBarProps {
   canEditTask?: boolean;
   canDeleteTask?: boolean;
   canMoveTask?: boolean;
-  showDueDate?: boolean;
 }
 
 const STATUS_OPTIONS = ['To Do', 'In Progress', 'Done'];
@@ -51,7 +49,6 @@ export default function BulkActionBar({
   canEditTask = true,
   canDeleteTask = true,
   canMoveTask = true,
-  showDueDate = true,
 }: BulkActionBarProps) {
   const [showSprintMenu, setShowSprintMenu] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
@@ -148,18 +145,6 @@ export default function BulkActionBar({
               placement="top"
             />
           </div>
-        )}
-
-        {/* Due Date */}
-        {canEditTask && showDueDate && (
-          <CustomDatePicker
-            value={null}
-            onChange={(date) => { if (date) apply({ dueDate: date }); }}
-            popoverPlacement="top-start"
-            placeholder="Due date"
-            className="w-36"
-            inputClassName="!h-8 !text-sm !pl-8 !bg-transparent dark:!bg-transparent !border-white/[0.08] !text-[#9B9A97] dark:!text-[#9B9A97] placeholder:!text-[#6B6B6B] hover:!border-white/[0.18] focus:!border-[#3B82F6] focus:!ring-[#3B82F6]/20 !rounded-[6px]"
-          />
         )}
 
         {/* Move sprint */}

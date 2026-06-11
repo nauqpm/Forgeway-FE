@@ -9,6 +9,9 @@ import { apiRoutes } from "@/config/apiRoutes";
 import type { TaskLabel } from "../types/label.type";
 import { labelService } from "../services/labelService";
 import { taskService, TaskActivity } from "../services/taskService";
+import { normalizeDate } from "../utils/dateUtils";
+
+type BoardColumn = { id: string; name: string };
 
 type TaskActivityHistoryProps = {
   workspaceId: string;
@@ -19,6 +22,7 @@ type TaskActivityHistoryProps = {
   assigneeName?: string | null;
   assignee?: unknown;
   labels?: TaskLabel[];
+  boardColumns?: BoardColumn[];
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -113,6 +117,20 @@ const isLabelActivity = (activity: TaskActivity) =>
   activity.metadata?.field === "labelIds" ||
   activity.metadata?.field === "labels" ||
   activity.metadata?.field === "label";
+
+const isColumnActivity = (activity: TaskActivity) =>
+  activity.type === "COLUMN_CHANGED" ||
+  activity.type === "STATUS_CHANGED" ||
+  activity.metadata?.field === "columnId" ||
+  activity.metadata?.field === "status";
+
+const isDueDateActivity = (activity: TaskActivity) =>
+  activity.type === "DUE_DATE_CHANGED" ||
+  activity.metadata?.field === "dueDate";
+
+const isRankActivity = (activity: TaskActivity) =>
+  activity.type === "RANK_CHANGED" ||
+  activity.metadata?.field === "rank";
 
 const getUserLikeDisplayName = (value: unknown) => {
   if (!value || typeof value !== "object") return null;
@@ -255,6 +273,14 @@ const getLabelIds = (value: unknown): string[] => {
   return ids;
 };
 
+const buildColumnNameMap = (columns: BoardColumn[] = []) => {
+  const map = new Map<string, string>();
+  columns.forEach((col) => {
+    if (col.id && col.name) map.set(col.id, col.name);
+  });
+  return map;
+};
+
 const buildLabelNameMap = (workspaceLabels: TaskLabel[] = [], taskLabels: TaskLabel[] = []) => {
   const map = new Map<string, string>();
 
@@ -291,13 +317,37 @@ const formatLabelActivityValue = (
   return labelNameMap.get(fallback) ?? fallback;
 };
 
+const formatDueDateActivityValue = (value: unknown): string => {
+  if (value === null || value === undefined || value === "") return "None";
+
+  if (value instanceof Date) {
+    return normalizeDate(value.toISOString()) ?? formatValue(value);
+  }
+
+  if (typeof value === "string") {
+    return normalizeDate(value) ?? formatValue(value);
+  }
+
+  return formatValue(value);
+};
+
 const formatActivityValue = (
   activity: TaskActivity,
   value: unknown,
   memberNameMap: Map<string, string>,
   labelNameMap: Map<string, string>,
+  columnNameMap: Map<string, string>,
 ) => {
+  if (isDueDateActivity(activity)) return formatDueDateActivityValue(value);
+
   if (isLabelActivity(activity)) return formatLabelActivityValue(value, labelNameMap);
+
+  if (isColumnActivity(activity)) {
+    const fallback = formatValue(value);
+    if (fallback === "None") return fallback;
+    return columnNameMap.get(fallback) ?? fallback;
+  }
+
   if (!isAssigneeActivity(activity)) return formatValue(value);
 
   const directDisplayName = getUserLikeDisplayName(value);
@@ -353,6 +403,7 @@ export default function TaskActivityHistory({
   assigneeName,
   assignee,
   labels = [],
+  boardColumns: providedBoardColumns,
 }: TaskActivityHistoryProps) {
   const [page, setPage] = useState(1);
   const [allActivities, setAllActivities] = useState<TaskActivity[]>([]);
@@ -399,10 +450,26 @@ export default function TaskActivityHistory({
     staleTime: 60_000,
   });
 
+  const { data: fetchedBoardColumns = [] } = useQuery<BoardColumn[]>({
+    queryKey: ["board", workspaceId],
+    queryFn: async () => {
+      const response = await api.get(apiRoutes.WORKSPACES.BOARD(workspaceId));
+      const raw = response.data?.data ?? response.data;
+      const board = Array.isArray(raw) ? raw[0] : raw;
+      return (board?.columns ?? []).map((col: { _id?: string; id?: string; name: string }) => ({
+        id: col._id ?? col.id ?? "",
+        name: col.name,
+      }));
+    },
+    enabled: Boolean(workspaceId) && !providedBoardColumns?.length,
+    staleTime: 60_000,
+  });
+
   const memberNameMap = buildMemberNameMap(workspaceMembers ?? members, [
     { id: assigneeId, name: assigneeName, user: assignee },
   ]);
   const labelNameMap = buildLabelNameMap(workspaceLabels, labels);
+  const columnNameMap = buildColumnNameMap(providedBoardColumns?.length ? providedBoardColumns : fetchedBoardColumns);
 
   // Accumulate pages — replace on page 1 (initial or task change), append on subsequent pages
   useEffect(() => {
@@ -417,6 +484,7 @@ export default function TaskActivityHistory({
     setPage((p) => p + 1);
   }, []);
 
+  const visibleActivities = allActivities.filter((activity) => !isRankActivity(activity));
   const hasMore = allActivities.length < total;
 
   if (isFetching && page === 1 && allActivities.length === 0) {
@@ -436,7 +504,7 @@ export default function TaskActivityHistory({
     );
   }
 
-  if (allActivities.length === 0 && !isFetching) {
+  if (visibleActivities.length === 0 && !isFetching) {
     return (
       <div className="flex items-center gap-2 rounded-[6px] border border-dashed border-[#EAEAEA] dark:border-white/[0.06] px-4 py-5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
         <Clock className="h-4 w-4" />
@@ -447,7 +515,7 @@ export default function TaskActivityHistory({
 
   return (
     <div className="space-y-4 pt-2">
-      {allActivities.map((activity) => {
+      {visibleActivities.map((activity) => {
         const actorName = getActorName(activity);
         const hasChange =
           Object.prototype.hasOwnProperty.call(activity.metadata ?? {}, "from") ||
@@ -485,11 +553,11 @@ export default function TaskActivityHistory({
               {hasChange && (
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                   <span className="rounded-[4px] bg-[#F7F6F3] dark:bg-[#252525] px-2 py-1 font-mono text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                    {formatActivityValue(activity, activity.metadata?.from, memberNameMap, labelNameMap)}
+                    {formatActivityValue(activity, activity.metadata?.from, memberNameMap, labelNameMap, columnNameMap)}
                   </span>
                   <span className="text-[#ABABAB] dark:text-[#6B6B6B]">→</span>
                   <span className="rounded-[4px] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] px-2 py-1 font-mono font-semibold text-[0.6875rem] text-[#1F6C9F] dark:text-[#93C5FD]">
-                    {formatActivityValue(activity, activity.metadata?.to, memberNameMap, labelNameMap)}
+                    {formatActivityValue(activity, activity.metadata?.to, memberNameMap, labelNameMap, columnNameMap)}
                   </span>
                 </div>
               )}
