@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { TaskDetailResponse } from "../types/task-detail.type";
+import type { Issue } from "../types/issue.type";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -37,6 +38,7 @@ interface TaskDetailListProps {
   onClose: () => void;
   showBackButton?: boolean;
   onUpdateIssue?: (updatedIssue: any) => void;
+  onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: any) => void;
   detailUrl?: string;
   canEditTask?: boolean;
@@ -78,6 +80,7 @@ export default function TaskDetailList({
   onClose,
   showBackButton = true,
   onUpdateIssue,
+  onFieldUpdate,
   onArchiveIssue,
   canEditTask = true,
 }: TaskDetailListProps) {
@@ -111,12 +114,22 @@ export default function TaskDetailList({
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
       : String(issue.storyPoints);
-const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
+  const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
   const currentAssigneeId = getIssueAssigneeId(issue);
   const currentAssigneeName =
     issue.assigneeDisplayName ||
     assigneeUsers.find((candidate) => candidate.id === currentAssigneeId)?.name ||
     getUserDisplayName(issue.assignee, null);
+  const canUpdateTask = canEditTask && Boolean(onUpdateIssue || onFieldUpdate);
+
+  const updateIssueFields = (updates: Partial<Issue>) => {
+    if (!canUpdateTask || issue.isArchived) return;
+    if (onFieldUpdate) {
+      onFieldUpdate(issue.id, updates);
+      return;
+    }
+    onUpdateIssue?.({ ...issue, ...updates });
+  };
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -126,19 +139,30 @@ const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
   };
 
   const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
-    if (!canEditTask || !onUpdateIssue || issue.isArchived) return;
-    onUpdateIssue({ ...issue, [field]: nextValue });
+    if (!canUpdateTask || issue.isArchived) return;
+    const nextDate = nextValue ?? "";
+
+    if (field === "startDate") {
+      const dueDateValue = issue.dueDate ? String(issue.dueDate).slice(0, 10) : "";
+      if (nextDate && dueDateValue && nextDate > dueDateValue) return;
+    }
+
+    if (field === "dueDate") {
+      const startDateValue = issue.startDate ? String(issue.startDate).slice(0, 10) : "";
+      if (nextDate && startDateValue && nextDate < startDateValue) return;
+    }
+
+    updateIssueFields({ [field]: nextValue ?? undefined } as Partial<Issue>);
   };
 
   const handleAssigneeChange = (uid: string | null) => {
-    if (!canEditTask || !onUpdateIssue || issue.isArchived) return;
+    if (!canUpdateTask || issue.isArchived) return;
 
     const selectedUser: AssigneePickerUser | undefined = assigneeUsers.find(
       (candidate) => candidate.id === uid,
     );
 
-    onUpdateIssue({
-      ...issue,
+    updateIssueFields({
       assigneeId: uid,
       assignee: uid ?? "U",
       assigneeDisplayName: uid ? selectedUser?.name ?? uid : "Unassigned",
@@ -360,9 +384,9 @@ const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
               value={issue.status}
               columnId={issue.columnId}
               options={boardColumns.map(col => ({ id: col.id, name: col.name }))}
-              disabled={!canEditTask || issue.isArchived}
+              disabled={!canUpdateTask || issue.isArchived}
               onChange={(status, option) =>
-                onUpdateIssue?.({ ...issue, columnId: option.id, status })
+                updateIssueFields({ columnId: option.id, status })
               }
             />
           </div>
@@ -391,7 +415,7 @@ const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
                     onChange={handleAssigneeChange}
                     placement="auto"
                     size="md"
-                    disabled={!canEditTask || issue.isArchived}
+                    disabled={!canUpdateTask || issue.isArchived}
                   />
                 </DetailRow>
 
@@ -399,8 +423,8 @@ const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
                 <DetailRow label="Type">
                   <TypePicker
                     value={issue.type ?? "Task"}
-                    onChange={(type) => onUpdateIssue?.({ ...issue, type })}
-                    disabled={!canEditTask || issue.isArchived}
+                    onChange={(type) => updateIssueFields({ type })}
+                    disabled={!canUpdateTask || issue.isArchived}
                     variant="pill"
                     size="sm"
                     placement="bottom"
@@ -411,8 +435,8 @@ const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
                 <DetailRow label="Priority">
                   <PriorityPicker
                     value={issue.priority}
-                    onChange={(p) => onUpdateIssue?.({ ...issue, priority: p })}
-                    disabled={!canEditTask || issue.isArchived}
+                    onChange={(p) => updateIssueFields({ priority: p })}
+                    disabled={!canUpdateTask || issue.isArchived}
                     variant="pill"
                     size="sm"
                     placement="bottom"
@@ -429,7 +453,7 @@ const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
                   <CustomDatePicker
                     value={issue.startDate}
                     onChange={(nextValue) => handleDateChange("startDate", nextValue)}
-                    disabled={!canEditTask || issue.isArchived}
+                    disabled={!canUpdateTask || issue.isArchived}
                     inputClassName="h-8 bg-transparent dark:bg-transparent"
                     ariaLabel="Task start date"
                   />
@@ -439,7 +463,7 @@ const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
                   <CustomDatePicker
                     value={issue.dueDate}
                     onChange={(nextValue) => handleDateChange("dueDate", nextValue)}
-                    disabled={!canEditTask || issue.isArchived}
+                    disabled={!canUpdateTask || issue.isArchived}
                     inputClassName="h-8 bg-transparent dark:bg-transparent"
                     ariaLabel="Task due date"
                   />

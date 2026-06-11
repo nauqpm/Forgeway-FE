@@ -25,8 +25,9 @@ import { useAuth } from "@/context/AuthContext";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import CustomDatePicker from "@/common/components/CustomDatePicker";
-import AssigneePicker, { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
+import AssigneePicker, { resolveMemberName, toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 import TypePicker from "@/common/components/TypePicker";
+import type { Issue } from "../types/issue.type";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ interface TaskDetailDrawerProps {
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: any) => void;
+  onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: any) => void;
   detailUrl?: string;
   /** Embedded in split list view: no overlay, no fixed positioning */
@@ -119,6 +121,7 @@ export default function TaskDetailDrawer({
   workspaceTemplate = "kanban",
   onClose,
   onUpdateIssue,
+  onFieldUpdate,
   onArchiveIssue,
   embedded = false,
 }: TaskDetailDrawerProps) {
@@ -196,7 +199,17 @@ export default function TaskDetailDrawer({
   );
   const detailWorkspaceMembers =
     providedWorkspaceMembers.length > 0 ? providedWorkspaceMembers : fetchedWorkspaceMembers;
-  const canEditTask = Boolean(onUpdateIssue);
+  const assigneeUsers = toAssigneePickerUsers(detailWorkspaceMembers as any[]);
+  const canEditTask = Boolean(onUpdateIssue || onFieldUpdate);
+
+  const updateIssueFields = (updates: Partial<Issue>) => {
+    if (issue.isArchived) return;
+    if (onFieldUpdate) {
+      onFieldUpdate(issue.id, updates);
+      return;
+    }
+    onUpdateIssue?.({ ...issue, ...updates });
+  };
 
   const startInlineEdit = (field: string, value?: string | number | null) => {
     if (!canEditTask || issue.isArchived) return;
@@ -262,10 +275,33 @@ export default function TaskDetailDrawer({
   const editableTextClass =
     "text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[4px] cursor-pointer transition-colors";
 
+  const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
+    if (!canEditTask || issue.isArchived) return;
+
+    const nextDate = nextValue ?? "";
+    if (field === "startDate") {
+      const dueDateValue = toDateInputValue(issue.dueDate);
+      if (nextDate && dueDateValue && nextDate > dueDateValue) {
+        toast.error("Start date cannot be after due date.");
+        return;
+      }
+    }
+
+    if (field === "dueDate") {
+      const startDateValue = toDateInputValue(issue.startDate);
+      if (nextDate && startDateValue && nextDate < startDateValue) {
+        toast.error("Due date cannot be before start date.");
+        return;
+      }
+    }
+
+    updateIssueFields({ [field]: nextValue ?? undefined } as Partial<Issue>);
+  };
+
   const renderDateInput = (field: "startDate" | "dueDate", rawValue?: string | null) => (
     <CustomDatePicker
       value={rawValue}
-      onChange={(nextValue) => saveInlineEdit(field, nextValue ?? "")}
+      onChange={(nextValue) => handleDateChange(field, nextValue)}
       disabled={!canEditTask || issue.isArchived}
       inputClassName="h-8 bg-transparent dark:bg-transparent"
       ariaLabel={field === "startDate" ? "Task start date" : "Task due date"}
@@ -481,7 +517,7 @@ export default function TaskDetailDrawer({
                 options={boardColumns.map(col => ({ id: col.id, name: col.name }))}
                 disabled={!canEditTask || issue.isArchived}
                 onChange={(status, option) =>
-                  onUpdateIssue?.({ ...issue, columnId: option.id, status })
+                  updateIssueFields({ columnId: option.id, status })
                 }
               />
             </div>
@@ -497,9 +533,17 @@ export default function TaskDetailDrawer({
                   <div className="text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] w-32 shrink-0">Assignee</div>
                   <div className="min-w-0 flex-1 -ml-1">
                     <AssigneePicker
-                      users={toAssigneePickerUsers(providedWorkspaceMembers as any[])}
+                      users={assigneeUsers}
                       value={getIssueAssigneeId(issue) || null}
-                      onChange={(uid) => saveInlineEdit("assigneeId", uid ?? "")}
+                      onChange={(uid) =>
+                        updateIssueFields({
+                          assigneeId: uid,
+                          assignee: uid ?? "U",
+                          assigneeDisplayName:
+                            resolveMemberName(detailWorkspaceMembers as any[], uid ?? undefined) ??
+                            (uid ? uid : "Unassigned"),
+                        })
+                      }
                       placement="auto"
                       size="md"
                       disabled={!canEditTask || issue.isArchived}
@@ -524,7 +568,7 @@ export default function TaskDetailDrawer({
                   <div className="min-w-0 flex-1">
                     <TypePicker
                       value={issue.type ?? "Task"}
-                      onChange={(type) => onUpdateIssue?.({ ...issue, type })}
+                      onChange={(type) => updateIssueFields({ type })}
                       disabled={!canEditTask || issue.isArchived}
                       variant="pill"
                       size="sm"
@@ -539,7 +583,7 @@ export default function TaskDetailDrawer({
                   <div className="min-w-0 flex-1">
                     <PriorityPicker
                       value={issue.priority}
-                      onChange={(p) => onUpdateIssue?.({ ...issue, priority: p })}
+                      onChange={(p) => updateIssueFields({ priority: p })}
                       disabled={!canEditTask || issue.isArchived}
                       variant="pill"
                       size="sm"

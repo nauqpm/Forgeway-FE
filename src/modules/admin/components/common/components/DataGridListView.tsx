@@ -16,7 +16,7 @@ import { MoreHorizontal, FileText, RefreshCcw } from 'lucide-react';
 import TypePicker from '../../../../../common/components/TypePicker';
 import PriorityPicker from '../../../../../common/components/PriorityPicker';
 import BulkActionBar from './BulkActionBar';
-import AssigneePicker, { AssigneePickerMember, getMemberId, getMemberDisplayName, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
+import AssigneePicker, { AssigneePickerMember, toAssigneePickerUsers } from '../../../../../common/components/AssigneePicker';
 import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
 import TaskLabelsField from '../../../../client/workspaces/components/labels/TaskLabelsField';
 import StatusPicker from '../../../../../common/components/StatusPicker';
@@ -221,7 +221,16 @@ export default function DataGridListView({
         }
         return (
           <div className="flex items-center gap-2 group/title">
-            <FileText className={`w-4 h-4 shrink-0 ${typeIcon}`} />
+            <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="shrink-0">
+              <TypePicker
+                value={issue.type ?? 'Task'}
+                onChange={type => onUpdateIssue?.(issue.id, { type })}
+                disabled={!canEditTask}
+                variant="pill"
+                size="sm"
+                placement="bottom"
+              />
+            </div>
             <span
               className="truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
               onClick={e => {
@@ -298,9 +307,17 @@ export default function DataGridListView({
         return (
           <div onClick={e => e.stopPropagation()}>
             <AssigneePicker
-              users={toAssigneePickerUsers(members)}
+              users={normalizedMembers}
               value={assigneeId ?? null}
-              onChange={uid => onUpdateIssue && onUpdateIssue(issue.id, { assigneeId: uid })}
+              onChange={uid => {
+                const selectedUser = normalizedMembers.find(user => user.id === uid);
+                onUpdateIssue?.(issue.id, {
+                  assigneeId: uid,
+                  assignee: uid ?? 'U',
+                  assigneeDisplayName: uid ? selectedUser?.name ?? uid : 'Unassigned',
+                  assigneeAvatar: uid ? selectedUser?.avatar : undefined,
+                });
+              }}
               placement="bottom"
               size="md"
               disabled={!canEditTask}
@@ -452,7 +469,7 @@ export default function DataGridListView({
         </button>
       ),
     },
-  ], [onClickTask, onUpdateIssue, members, boardColumns, editingCell, editValue, canEditTask, canDeleteTask, workspaceId]);
+  ], [onClickTask, onUpdateIssue, normalizedMembers, boardColumns, editingCell, editValue, canEditTask, canDeleteTask, workspaceId]);
 
   const table = useReactTable({
     data: issues,

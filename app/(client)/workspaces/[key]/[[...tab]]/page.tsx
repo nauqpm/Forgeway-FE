@@ -1104,6 +1104,7 @@ export default function WorkspaceDetailPage({
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
           onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+          onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
           detailUrl={detailUrl}
         />

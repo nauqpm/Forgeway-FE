@@ -318,6 +318,7 @@ export default function ListTab({
                 setListGridDrawerOpen(false);
               }}
               onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+              onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
               canEditTask={canEditTask}
             />
           </div>
@@ -508,6 +509,7 @@ export default function ListTab({
                   setListGridDrawerOpen(false);
                 }}
                 onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+                onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
                 canEditTask={canEditTask}
               />
             ) : (

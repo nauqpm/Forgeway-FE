@@ -3,7 +3,7 @@
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
-import AssigneePicker from "../../../../../common/components/AssigneePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "../../../../../common/components/AssigneePicker";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
 import StatusPicker from "@/common/components/StatusPicker";
@@ -169,24 +169,21 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canManageSprint = permissions?.canManageSprint ?? true;
 
   const workspaceMembers = useMemo(() => {
-    return (workspace.members ?? [])
-      .map((member: WorkspaceMemberItem): AssigneeInfo => {
-        const user = member.userId as any;
-        const id = typeof user === "string" ? normalizeObjectId(user) : normalizeObjectId(user);
-        const email = typeof user === "string" ? "" : user?.email ?? "";
-        const name = typeof user === "string" ? id : user?.fullName || user?.name || email || id;
-        const avatar = typeof user === "string" ? undefined : user?.avatar || user?.avatarUrl || user?.image;
+    const rolesByUserId = new Map<string, string | undefined>(
+      (workspace.members ?? []).map((member: WorkspaceMemberItem) => [
+        normalizeObjectId(member.userId),
+        member.role,
+      ]),
+    );
 
-        return {
-          id,
-          name: name || "Member",
-          email,
-          role: member.role,
-          avatar,
-          initials: getInitials(name || email || id || "?") || "?",
-        };
-      })
-      .filter((member: AssigneeInfo) => member.id);
+    return toAssigneePickerUsers(workspace.members ?? []).map((member): AssigneeInfo => ({
+      id: member.id,
+      name: member.name || "Member",
+      email: member.email ?? "",
+      role: rolesByUserId.get(member.id),
+      avatar: member.avatar,
+      initials: member.initials ?? (getInitials(member.name || member.email || member.id || "?") || "?"),
+    }));
   }, [workspace.members]);
 
   const filterAssignees = useMemo(() => {
@@ -519,8 +516,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
                                       <AssigneePicker
                                         users={workspaceMembers}
-                                        value={issue.assigneeId ?? issue.assignee ?? null}
-                                        onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                        value={normalizeObjectId(issue.assigneeId ?? issue.assignee) || null}
+                                        onChange={uid => updateIssueDirectly(issue.id, {
+                                          assigneeId: uid,
+                                          assignee: uid ?? "U",
+                                          assigneeDisplayName: uid ? workspaceMembers.find((m: any) => m.id === uid)?.name ?? uid : "Unassigned",
+                                          assigneeAvatar: uid ? workspaceMembers.find((m: any) => m.id === uid)?.avatar : undefined,
+                                        })}
                                         placement="auto"
                                         size="sm"
                                       />
@@ -736,8 +738,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
                                     <AssigneePicker
                                       users={workspaceMembers}
-                                      value={issue.assigneeId ?? issue.assignee ?? null}
-                                      onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                      value={normalizeObjectId(issue.assigneeId ?? issue.assignee) || null}
+                                      onChange={uid => updateIssueDirectly(issue.id, {
+                                        assigneeId: uid,
+                                        assignee: uid ?? "U",
+                                        assigneeDisplayName: uid ? workspaceMembers.find((m: any) => m.id === uid)?.name ?? uid : "Unassigned",
+                                        assigneeAvatar: uid ? workspaceMembers.find((m: any) => m.id === uid)?.avatar : undefined,
+                                      })}
                                       placement="bottom"
                                       size="sm"
                                     />
