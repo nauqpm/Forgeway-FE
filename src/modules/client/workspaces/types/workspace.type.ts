@@ -47,7 +47,8 @@ export type WorkspaceTab =
   | "calendar"
   | "list"
   | "archive"
-  | "pages";
+  | "pages"
+  | "members";
 
 export const getWorkspaceTemplate = (workspace: Workspace): "kanban" | "scrum" =>
   workspace.template ?? workspace.type ?? "kanban";
