@@ -884,6 +884,48 @@ export default function WorkspaceDetailPage({
     }
   };
 
+  const handleListBulkDelete = async (ids: string[]) => {
+    if (!workspaceApiId || ids.length === 0) return;
+
+    const idsToDelete = new Set(ids);
+    const removeDeletedIssues = (current: Issue[] | undefined) =>
+      Array.isArray(current)
+        ? current.filter((issue) => !idsToDelete.has(issue.id))
+        : current;
+
+    setIssues((current) => removeDeletedIssues(current) ?? []);
+    setSelectedTaskIds((current) => current.filter((id) => !idsToDelete.has(id)));
+    setSelectedIssue((current) =>
+      current && idsToDelete.has(current.id) ? null : current,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks", workspaceApiId] },
+      removeDeletedIssues,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks-fallback-search", workspaceApiId] },
+      removeDeletedIssues,
+    );
+
+    const results = await Promise.allSettled(
+      ids.map((taskId) => taskService.deleteBoardTask(workspaceApiId, taskId)),
+    );
+    const failedCount = results.filter((result) => result.status === "rejected").length;
+
+    resetArchiveList();
+    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+    queryClient.invalidateQueries({
+      queryKey: ["tasks-fallback-search", workspaceApiId],
+    });
+
+    if (failedCount > 0) {
+      toast.error(`Could not delete ${failedCount} work item${failedCount > 1 ? "s" : ""}`);
+      return;
+    }
+
+    toast.success(ids.length === 1 ? "Work item deleted" : "Work items deleted");
+  };
+
   const {
     toggleTaskSelection,
     toggleSprintSelection,
@@ -1185,8 +1227,7 @@ export default function WorkspaceDetailPage({
           setListGridDrawerOpen,
           updateIssueDirectly,
           handleUpdateIssue,
-          onBulkDeleteIds: (ids: string[]) =>
-            setIssues((prev) => prev.filter((i) => !ids.includes(i.id))),
+          onBulkDeleteIds: handleListBulkDelete,
           onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
           canEditTask,
           canDeleteTask,
