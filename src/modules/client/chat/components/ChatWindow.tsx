@@ -98,6 +98,23 @@ export default function ChatWindow() {
   const isSuperAdmin = userRole === 'super_admin';
   const isReadOnly = activeChannel.type === 'announcement' && !isSuperAdmin;
 
+  // Resolve DM display info (the other person)
+  let headerName = activeChannel.name;
+  let headerDescription = activeChannel.description;
+
+  if (activeChannel.type === 'dm') {
+    const members = activeChannel.members || [];
+    const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+    
+    if (otherMember && typeof otherMember === 'object') {
+      headerName = otherMember.fullName || otherMember.email || "Direct Message";
+      headerDescription = otherMember.email || "Direct Message";
+    } else {
+      headerName = activeChannel.name || "Direct Message";
+      headerDescription = "Direct Message";
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-[#202020]">
       {/* Header */}
@@ -109,20 +126,18 @@ export default function ChatWindow() {
             ) : (
               <Hash className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
             )}
-            <span className="font-bold text-[#111111] dark:text-[#E8E8E7] truncate">{activeChannel.name}</span>
+            <span className="font-bold text-[#111111] dark:text-[#E8E8E7] truncate">{headerName}</span>
           </div>
           
-          {activeChannel.type !== 'dm' && (
-            <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
-              {activeChannel.description || (
-                <>
-                  {activeChannel.type === 'general' && "Everyone in the organization"}
-                  {activeChannel.type === 'announcement' && "Only admins can post messages here"}
-                  {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
-                </>
-              )}
-            </span>
-          )}
+          <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
+            {headerDescription || (
+              <>
+                {activeChannel.type === 'general' && "Everyone in the organization"}
+                {activeChannel.type === 'announcement' && "Only admins can post messages here"}
+                {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
+              </>
+            )}
+          </span>
         </div>
 
         <div className="flex items-center gap-3 text-[#787774] dark:text-[#9B9A97]">
