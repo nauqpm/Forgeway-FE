@@ -307,29 +307,7 @@ export default function TaskDetailList({
 
           {/* Subtasks — hidden until backend supports */}
 
-          {/* Linked Work Items */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h2>
-              <button className="p-1 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors">
-                <Plus className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
-              </button>
-            </div>
-            <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4">
-              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-3">No linked items yet</p>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href={`/docs/create?issueId=${issue.id}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] text-white text-[0.8125rem] font-medium rounded-[6px] transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
-                >
-                  <Plus className="w-3.5 h-3.5" /> Create Document
-                </Link>
-                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
-                  <LinkIcon className="w-3.5 h-3.5" /> Link item
-                </button>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Activity */}
           <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-6">

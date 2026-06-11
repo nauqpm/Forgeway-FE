@@ -663,28 +663,7 @@ export default function TaskDetailDrawer({
 
             {/* Subtasks — hidden until backend supports */}
 
-            {/* Linked Work Items */}
-            <div className="space-y-3 pt-2">
-              <h3 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h3>
-              <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No linked items yet</span>
-                </div>
-                {canEditTask && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <Link
-                    href={`/docs/create?issueId=${issue.id}`}
-                    className={`inline-flex items-center gap-2 px-3 py-2 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] text-white text-[0.8125rem] font-semibold rounded-[6px] transition-colors ${issue.isArchived ? 'pointer-events-none opacity-50' : ''}`}
-                  >
-                    <Plus className="w-4 h-4" /> Create Document
-                  </Link>
-                  <button className="inline-flex items-center gap-2 px-3 py-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
-                    <LinkIcon className="w-4 h-4 text-[#787774]" /> Link item
-                  </button>
-                </div>
-                )}
-              </div>
-            </div>
+            
 
             {/* Activity */}
             <div className="space-y-4 pt-6 border-t border-[#EAEAEA] dark:border-white/[0.06]">
