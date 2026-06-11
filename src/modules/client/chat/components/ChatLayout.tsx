@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import ChatSidebar from './ChatSidebar';
 import { SquarePen } from 'lucide-react';
-import NewChatModal from './NewChatModal';
+import NewDMChatModal from './NewDMChatModal';
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
@@ -33,7 +33,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Modals */}
-      <NewChatModal 
+      <NewDMChatModal 
         isOpen={isNewChatOpen} 
         onClose={() => setIsNewChatOpen(false)} 
       />
