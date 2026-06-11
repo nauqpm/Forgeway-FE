@@ -34,6 +34,12 @@ type TaskCommentsProps = {
   isDeleted?: boolean;
 };
 
+type CreateCommentInput = {
+  content: string;
+  mentions: string[];
+  parentId?: string | null;
+};
+
 const normalizeResponse = <T,>(payload: unknown): T => {
   const p = payload as Record<string, unknown>;
   return (p?.data
@@ -121,6 +127,13 @@ const extractMentionIds = (content: string): string[] => {
   return Array.from(ids);
 };
 
+const getReplyAuthorMention = (comment: TaskComment): string => {
+  const authorName = comment.author?.fullName || comment.author?.email || "Unknown";
+  const authorId = comment.author?.id || comment.authorId;
+  if (!authorId) return "";
+  return `[@${authorName}](${authorId}) `;
+};
+
 interface CommentNode extends TaskComment {
   children: CommentNode[];
 }
@@ -160,6 +173,7 @@ export default function TaskComments({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState("");
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
 
   const commentsKey = useMemo(
     () => ["taskComments", workspaceId, taskId],
@@ -201,9 +215,9 @@ export default function TaskComments({
   );
 
   const createMutation = useMutation({
-    mutationFn: ({ content, mentions }: { content: string; mentions: string[] }) =>
-      taskService.createComment(workspaceId, taskId, content, replyingToId, mentions),
-    onMutate: async ({ content, mentions }) => {
+    mutationFn: ({ content, mentions, parentId }: CreateCommentInput) =>
+      taskService.createComment(workspaceId, taskId, content, parentId ?? null, mentions),
+    onMutate: async ({ content, mentions, parentId }) => {
       await queryClient.cancelQueries({ queryKey: commentsKey });
       const prev = queryClient.getQueryData<TaskComment[]>(commentsKey) ?? [];
       const optimistic: TaskComment = {
@@ -221,7 +235,7 @@ export default function TaskComments({
           : null,
         targetType: "task",
         targetId: taskId,
-        parentId: replyingToId || null,
+        parentId: parentId || null,
         mentions,
         isDeleted: false,
         editedAt: null,
@@ -234,8 +248,11 @@ export default function TaskComments({
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
       toast.error("Failed to post comment");
     },
-    onSuccess: () => {
-      setReplyingToId(null);
+    onSuccess: (_data, variables) => {
+      if (variables.parentId) {
+        setReplyingToId(null);
+        setReplyContent("");
+      }
       setCommentInput("");
     },
     onSettled: () => {
@@ -315,9 +332,20 @@ export default function TaskComments({
     createMutation.mutate({
       content: trimmed,
       mentions: extractMentionIds(trimmed),
+      parentId: null,
     });
     setCommentInput("");
   }, [commentInput, isArchived, createMutation]);
+
+  const handleReplySubmit = useCallback((parentId: string) => {
+    const trimmed = replyContent.trim();
+    if (!trimmed || isArchived || createMutation.isPending) return;
+    createMutation.mutate({
+      content: trimmed,
+      mentions: extractMentionIds(trimmed),
+      parentId,
+    });
+  }, [replyContent, isArchived, createMutation]);
 
   const handleEditSave = useCallback(() => {
     if (!editingId || !editContent.trim() || editMutation.isPending) return;
@@ -335,14 +363,26 @@ export default function TaskComments({
   }, []);
 
   const handleReplyStart = useCallback((comment: TaskComment) => {
-    const authorName = comment.author?.fullName || comment.author?.email || "Unknown";
-    const authorId = comment.author?.id || comment.authorId;
     setReplyingToId(comment.id);
-    setCommentInput(`[@${authorName}](${authorId}) `);
-    document.querySelector<HTMLInputElement>('.tc-m__input')?.focus();
+    setReplyContent(getReplyAuthorMention(comment));
+  }, []);
+
+  const handleReplyCancel = useCallback(() => {
+    setReplyingToId(null);
+    setReplyContent("");
   }, []);
 
   const commentTree = useMemo(() => buildCommentTree(comments), [comments]);
+  const currentUserName = user?.fullName || user?.email || "Current user";
+  const renderCurrentUserAvatar = (className = "w-8 h-8") => (
+    <div className={`${className} rounded-full flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden ${user?.avatar ? "" : "bg-[#2563EB] dark:bg-[#3B82F6] text-white"}`}>
+      {user?.avatar ? (
+        <img src={user.avatar} alt={currentUserName} className="w-full h-full object-cover" />
+      ) : (
+        user ? getAuthorInitials(user as any) : "U"
+      )}
+    </div>
+  );
 
   const renderCommentNode = (node: CommentNode, depth: number = 0) => {
     const authorName = node.author?.fullName || node.author?.email || "Unknown";
@@ -374,20 +414,45 @@ export default function TaskComments({
 
             {isEditing ? (
               <div className="space-y-2">
-                <textarea
-                  autoFocus
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  rows={3}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleEditSave();
-                    }
-                    if (e.key === "Escape") handleEditCancel();
-                  }}
-                  className="w-full border border-[#2563EB] rounded-[6px] px-2 py-1.5 text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] outline-none resize-none"
-                />
+                <div className="border border-[#2563EB] rounded-[6px] px-2 py-1.5 text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]">
+                  <MentionsInput
+                    autoFocus
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    onKeyDown={(e: React.KeyboardEvent) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleEditSave();
+                      }
+                      if (e.key === "Escape") handleEditCancel();
+                    }}
+                    placeholder="Edit comment... (@ to mention)"
+                    className="tc-m w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem]"
+                    a11ySuggestionsListLabel="Suggested mentions"
+                  >
+                    <Mention
+                      trigger="@"
+                      data={mentionMembers}
+                      markup="[@__display__](__id__)"
+                      renderSuggestion={(
+                        suggestion,
+                        _search,
+                        highlightedDisplay,
+                      ) => (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
+                            {suggestion.display?.toString().charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
+                            {highlightedDisplay}
+                          </span>
+                        </div>
+                      )}
+                      className="text-[#2563EB] bg-[#EFF6FF] dark:text-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)]"
+                      displayTransform={(id, display) => `@${display}`}
+                    />
+                  </MentionsInput>
+                </div>
                 <div className="flex gap-2">
                   <button
                     onClick={handleEditSave}
@@ -440,6 +505,70 @@ export default function TaskComments({
                     </>
                   )}
                 </div>
+                {replyingToId === node.id && (
+                  <div className="mt-3 flex gap-3 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] p-3">
+                    {renderCurrentUserAvatar("w-7 h-7")}
+                    <div className="min-w-0 flex-1">
+                      <MentionsInput
+                        autoFocus
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        onKeyDown={(e: React.KeyboardEvent) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleReplySubmit(node.id);
+                          }
+                          if (e.key === "Escape") handleReplyCancel();
+                        }}
+                        placeholder={`Reply to ${authorName}... (@ to mention)`}
+                        className="tc-m w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem]"
+                        a11ySuggestionsListLabel="Suggested mentions"
+                      >
+                        <Mention
+                          trigger="@"
+                          data={mentionMembers}
+                          markup="[@__display__](__id__)"
+                          renderSuggestion={(
+                            suggestion,
+                            _search,
+                            highlightedDisplay,
+                          ) => (
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
+                                {suggestion.display?.toString().charAt(0).toUpperCase()}
+                              </div>
+                              <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
+                                {highlightedDisplay}
+                              </span>
+                            </div>
+                          )}
+                          className="text-[#2563EB] bg-[#EFF6FF] dark:text-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)]"
+                          displayTransform={(id, display) => `@${display}`}
+                        />
+                      </MentionsInput>
+                      {replyContent && (
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            onClick={() => handleReplySubmit(node.id)}
+                            disabled={createMutation.isPending}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[0.6875rem] font-medium rounded-[4px] transition-colors disabled:opacity-60"
+                          >
+                            {createMutation.isPending && (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            )}
+                            Reply
+                          </button>
+                          <button
+                            onClick={handleReplyCancel}
+                            className="px-2.5 py-1 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.6875rem] font-medium rounded-[4px] transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -468,21 +597,8 @@ export default function TaskComments({
     <div className="space-y-4">
       {!isArchived && (
         <>
-          {replyingToId && (
-            <div className="flex items-center justify-between bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.08)] px-3 py-1.5 rounded-[4px] text-[0.6875rem] text-[#1F6C9F] dark:text-[#93C5FD] font-medium mb-2">
-              <span>Replying to comment...</span>
-              <button
-                onClick={() => setReplyingToId(null)}
-                className="hover:bg-[#DBEAFE] dark:hover:bg-[rgba(37,99,235,0.15)] p-0.5 rounded transition-colors"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-          )}
           <div className="flex gap-4 pt-2">
-            <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
-              {user ? getAuthorInitials(user as any) : "U"}
-            </div>
+            {renderCurrentUserAvatar()}
             <div className="flex-1 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
             <div className="mb-4 text-[0.8125rem] relative z-50">
               <style
