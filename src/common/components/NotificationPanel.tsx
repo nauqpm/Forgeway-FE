@@ -41,7 +41,8 @@ interface NotificationViewModel {
     inviteId?: string;
     workspaceKey?: string;
     workspaceName: string;
-    message: string;
+    message?: string;
+    statusMessage?: string;
     status?: string;
     role?: string;
   };
@@ -165,6 +166,13 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
   const storedInviteState = notification.type === "WORKSPACE_INVITED"
     ? getStoredInviteNotificationState(notification.id)
     : undefined;
+  const inviteRole = typeof metadata.role === "string" ? metadata.role : undefined;
+  const rawInviteMessage = typeof notification.message === "string" ? notification.message.trim() : "";
+  const normalizedInviteMessage = rawInviteMessage.toLowerCase();
+  const messageLooksLikeRole = normalizedInviteMessage.startsWith("role:");
+  const pendingInviteMessage = rawInviteMessage && !messageLooksLikeRole
+    ? rawInviteMessage
+    : undefined;
 
   return {
     id: notification.id,
@@ -191,9 +199,10 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
           inviteId: typeof metadata.inviteId === "string" ? metadata.inviteId : notification.entityId,
           workspaceKey: typeof metadata.workspaceKey === "string" ? metadata.workspaceKey : undefined,
           workspaceName,
-          message: storedInviteState?.message ?? notification.message ?? "You have a pending workspace invite.",
+          message: pendingInviteMessage,
+          statusMessage: storedInviteState?.message,
           status: storedInviteState?.status ?? (typeof metadata.status === "string" ? metadata.status : undefined),
-          role: typeof metadata.role === "string" ? metadata.role : undefined,
+          role: inviteRole,
         }
       : undefined,
   };
@@ -355,7 +364,7 @@ export default function NotificationPanel({
               inviteData: {
                 ...item.inviteData,
                 status,
-                message,
+                statusMessage: message,
               },
             }
           : item,
@@ -614,9 +623,11 @@ export default function NotificationPanel({
                               {notification.type === "INVITE" && notification.inviteData && (
                                 <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] p-3">
                                   <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.inviteData.workspaceName}</p>
-                                  <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">{notification.inviteData.message}</p>
                                   {notification.inviteData.role && (
-                                    <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1">Role: {notification.inviteData.role}</p>
+                                    <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">Role: {notification.inviteData.role}</p>
+                                  )}
+                                  {isPendingInvite && notification.inviteData.message && (
+                                    <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1">{notification.inviteData.message}</p>
                                   )}
                                   {isPendingInvite ? (
                                     <div className="mt-3 flex items-center gap-2" onClick={(event) => event.stopPropagation()}>
@@ -641,7 +652,7 @@ export default function NotificationPanel({
                                     </div>
                                   ) : (
                                     <p className="mt-2 text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
-                                      {notification.inviteData.message || `Invitation ${inviteStatus ?? "processed"}.`}
+                                      {notification.inviteData.statusMessage || `Invitation ${inviteStatus ?? "processed"}.`}
                                     </p>
                                   )}
                                 </div>
