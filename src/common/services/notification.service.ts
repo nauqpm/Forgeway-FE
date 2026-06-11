@@ -31,6 +31,7 @@ export interface AppNotification {
     taskTitle?: string;
     commentId?: string;
     workspaceId?: string;
+    workspaceKey?: string;
     workspaceName?: string;
     inviteId?: string;
     role?: string;

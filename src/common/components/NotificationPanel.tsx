@@ -67,6 +67,10 @@ function actionText(type: NotificationType): string {
 }
 
 function buildNotificationHref(notification: AppNotification): string | undefined {
+  if (notification.type === "WORKSPACE_INVITED") {
+    return "/workspaces";
+  }
+
   const metadata = notification.metadata ?? {};
   const taskKey = typeof metadata.taskKey === "string" ? metadata.taskKey : undefined;
   const workspaceRouteKey =
