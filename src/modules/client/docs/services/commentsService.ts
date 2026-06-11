@@ -1,6 +1,6 @@
-// Service quản lý tất cả các tương tác liên quan đến nhận xét trên một trang tài liệu,
-// bao gồm việc gọi API để lấy danh sách nhận xét, tạo mới, trả lời, chỉnh sửa, xóa và giải quyết nhận xét,
-// nó cung cấp một giao diện đơn giản để các component khác trong module docs có thể sử dụng mà không cần quan tâm đến chi tiết của API.
+// Service managing all interactions related to document page comments,
+// including API calls to fetch, create, reply, edit, delete, and resolve comments,
+// providing a simple interface for components without direct API handling.
 import api from '@/common/services/api.service';
 import { apiRoutes } from '@/config/apiRoutes';
 

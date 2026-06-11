@@ -1,4 +1,4 @@
-// Mock data cho tài liệu trong module docs, bao gồm một số tài liệu mẫu với các trường như id, title, content, parentId, workspaceId, slug, authorId, version, status, labels, versionHistory, createdAt và updatedAt
+// Mock data for the docs module, including sample documents with metadata fields.
 import { Document } from "../types/docs.type";
 
 const now = new Date().toISOString();

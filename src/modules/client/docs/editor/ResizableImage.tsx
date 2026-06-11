@@ -1,5 +1,5 @@
-// Đây là file định nghĩa extension ResizableImage cho editor tài liệu,
-// cho phép người dùng chèn hình ảnh vào tài liệu và chỉnh sửa kích thước, căn lề, chú thích và alt text của hình ảnh đó.
+// File defining the ResizableImage extension for the document editor,
+// allowing users to insert images, resize, align, caption, and edit alt text.
 "use client";
 
 import Image from "@tiptap/extension-image";
@@ -168,7 +168,7 @@ function ResizableImageView({ node, selected, updateAttributes, deleteNode, edit
             <div className="absolute inset-0 flex items-center justify-center bg-white/50 dark:bg-gray-950/50 backdrop-blur-[1px] rounded-sm">
               <div className="flex items-center gap-2 px-3 py-2 bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-150 dark:border-gray-800">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-500" />
-                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300">Đang tải lên...</span>
+                <span className="text-[10px] font-bold text-gray-600 dark:text-gray-300">Uploading...</span>
               </div>
             </div>
           )}
@@ -192,7 +192,7 @@ function ResizableImageView({ node, selected, updateAttributes, deleteNode, edit
               type="text"
               value={node.attrs.caption || ""}
               onChange={(e) => updateAttributes({ caption: e.target.value })}
-              placeholder="Thêm chú thích cho ảnh..."
+              placeholder="Add caption for image..."
               className="w-full text-center text-xs mt-1.5 border-none outline-none focus:ring-0 bg-transparent text-gray-400 dark:text-gray-500 placeholder:text-gray-300 dark:placeholder:text-gray-800 print:placeholder:hidden"
             />
           ) : (

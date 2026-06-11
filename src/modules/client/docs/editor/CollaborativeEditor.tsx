@@ -1,6 +1,6 @@
-// Component dùng để hiển thị nội dung của editor,
-// nó nhận một prop là editor (đối tượng Editor từ tiptap) 
-// và sử dụng EditorContent để render nội dung của editor.
+// Component to render editor content,
+// it receives an editor prop (Editor instance from Tiptap) 
+// and uses EditorContent to render the editor content.
 "use client";
 
 import { EditorContent, Editor } from "@tiptap/react";

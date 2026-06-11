@@ -1,4 +1,4 @@
-// Service quản lý tất cả các tương tác liên quan đến trang tài liệu trong module docs, bao gồm việc gọi API để lấy danh sách trang, tạo mới, cập nhật nội dung, quản lý phiên bản, xuất/nhập file và các thao tác khác liên quan đến trang tài liệu,
+// Service managing document page interactions, including API calls to get list, create, update content, version history, export/import, and other operations,
 import api from '@/common/services/api.service';
 import { apiRoutes } from '@/config/apiRoutes';
 import type {
@@ -115,8 +115,8 @@ function mapVersion(raw: any): DocumentVersion {
     version: raw.version,
     createdBy: raw.createdBy ? {
       _id: raw.createdBy._id,
-      fullName: raw.createdBy.fullName || "Ẩn danh",
-    } : { _id: "", fullName: "Ẩn danh" },
+      fullName: raw.createdBy.fullName || "Anonymous",
+    } : { _id: "", fullName: "Anonymous" },
     createdAt: raw.createdAt,
   };
 }

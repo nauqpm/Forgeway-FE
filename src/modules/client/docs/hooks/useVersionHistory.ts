@@ -1,6 +1,6 @@
-// Hook quản lý lịch sử phiên bản của tài liệu trong editor tài liệu,
-// nó cung cấp các chức năng để lấy danh sách các phiên bản đã lưu, tạo mới phiên bản và khôi phục tài liệu về một phiên bản cụ thể,
-// đồng thời theo dõi trạng thái tải và xử lý lỗi khi tương tác với API liên quan đến lịch sử phiên bản.
+// Hook managing document version history in the editor,
+// providing functions to fetch saved versions, create a new version, and restore to a specific version,
+// while tracking loading state and handling errors when interacting with version history API.
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
@@ -25,7 +25,7 @@ export function useVersionHistory({ pageId, enabled = true }: UseVersionHistoryP
       setVersions(data);
     } catch (error) {
       console.error("Failed to fetch page versions:", error);
-      toast.error("Không thể tải lịch sử phiên bản");
+      toast.error("Failed to load version history");
     } finally {
       setIsLoading(false);
     }
@@ -36,12 +36,12 @@ export function useVersionHistory({ pageId, enabled = true }: UseVersionHistoryP
       if (!pageId) return null;
       try {
         const newVer = await pagesService.createVersion(pageId, label);
-        toast.success(`Đã tạo phiên bản: "${label}"`);
+        toast.success(`Version created: "${label}"`);
         setVersions((prev) => [newVer, ...prev]);
         return newVer;
       } catch (error) {
         console.error("Failed to create version:", error);
-        toast.error("Không thể tạo phiên bản mới");
+        toast.error("Failed to create new version");
         throw error;
       }
     },
@@ -53,7 +53,7 @@ export function useVersionHistory({ pageId, enabled = true }: UseVersionHistoryP
       if (!pageId) return null;
       try {
         const restoredDoc = await pagesService.restoreVersion(pageId, versionId);
-        toast.success("Khôi phục phiên bản thành công! Đang tải lại...");
+        toast.success("Version restored successfully! Reloading...");
         // Reload page to re-initialize editor with restored state
         setTimeout(() => {
           window.location.reload();
@@ -61,7 +61,7 @@ export function useVersionHistory({ pageId, enabled = true }: UseVersionHistoryP
         return restoredDoc;
       } catch (error) {
         console.error("Failed to restore version:", error);
-        toast.error("Không thể khôi phục phiên bản");
+        toast.error("Failed to restore version");
         throw error;
       }
     },

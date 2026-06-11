@@ -1,5 +1,5 @@
-// Component đại diện cho sidebar hiển thị danh sách các đề xuất chỉnh sửa trong editor tài liệu,
-// cho phép người dùng xem, chấp nhận hoặc từ chối các đề xuất đó.
+// Component representing the sidebar displaying suggested changes in the document editor,
+// allowing users to view, accept, or reject suggestions.
 "use client";
 
 import React, { useMemo } from "react";
@@ -123,7 +123,7 @@ export default function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) 
       <div className="p-4 border-b border-gray-200/60 dark:border-gray-800 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-1.5">
           <FileText className="w-4.5 h-4.5 text-emerald-500" />
-          <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Đề xuất sửa đổi</h3>
+          <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Suggested Changes</h3>
           {suggestions.length > 0 && (
             <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold">
               {suggestions.length}
@@ -134,7 +134,7 @@ export default function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) 
 
       {/* Info Banner */}
       <div className="p-3 mx-3 mt-3 bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100/50 dark:border-emerald-900/30 rounded-lg text-xs text-emerald-600 dark:text-emerald-400">
-        Xem các thay đổi được đề xuất và chấp nhận hoặc từ chối để áp dụng vào tài liệu gốc.
+        Review suggested changes and accept or reject to apply them to the original document.
       </div>
 
       {/* List content */}
@@ -145,10 +145,10 @@ export default function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) 
               <FileText className="w-6 h-6 text-slate-300 dark:text-slate-700" />
             </div>
             <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 mb-1">
-              Chưa có đề xuất nào
+              No suggestions yet
             </p>
             <p className="text-[10px] text-slate-400 dark:text-slate-500 max-w-[180px]">
-              Chuyển sang chế độ Đề xuất ở thanh tiêu đề và thực hiện chỉnh sửa để tạo đề xuất.
+              Switch to Suggesting mode in the header and make edits to create suggestions.
             </p>
           </div>
         ) : (
@@ -165,7 +165,7 @@ export default function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) 
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-slate-700 dark:text-slate-300 truncate leading-tight">
-                    {item.userName || "Ẩn danh"}
+                    {item.userName || "Anonymous"}
                   </p>
                   <p className="text-[9px] opacity-75">{formatTime(item.createdAt)}</p>
                 </div>
@@ -176,7 +176,7 @@ export default function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) 
                       : "bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400"
                   }`}
                 >
-                  {item.type === "insert" ? "Thêm" : "Xóa"}
+                  {item.type === "insert" ? "Insert" : "Delete"}
                 </span>
               </div>
 
@@ -200,14 +200,14 @@ export default function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) 
                   className="py-1 px-2.5 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 rounded-lg text-[10px] font-semibold hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors flex items-center gap-1"
                 >
                   <X className="w-3 h-3" />
-                  <span>Từ chối</span>
+                  <span>Reject</span>
                 </button>
                 <button
                   onClick={(e) => handleAccept(e, item.id)}
                   className="py-1 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-semibold shadow-sm transition-all duration-200 flex items-center gap-1"
                 >
                   <Check className="w-3 h-3" />
-                  <span>Đồng ý</span>
+                  <span>Accept</span>
                 </button>
               </div>
             </div>

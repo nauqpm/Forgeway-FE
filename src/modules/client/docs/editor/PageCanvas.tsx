@@ -1,5 +1,5 @@
-// Component đại diện cho canvas của trang tài liệu trong editor, 
-// nơi người dùng có thể chỉnh sửa nội dung của tài liệu.
+// Component representing document page canvas in the editor, 
+// where users edit document content.
 "use client";
 
 import React from "react";

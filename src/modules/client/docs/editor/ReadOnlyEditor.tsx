@@ -1,5 +1,5 @@
-// Component đại diện cho editor tài liệu ở chế độ chỉ đọc,
-// hiển thị nội dung của tài liệu mà không cho phép người dùng chỉnh sửa.
+// Component representing document editor in read-only mode,
+// displaying content without allowing any edits.
 "use client";
 
 import { EditorContent, Editor } from "@tiptap/react";

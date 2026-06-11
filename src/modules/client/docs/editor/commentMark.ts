@@ -1,4 +1,4 @@
-// Đây là một custom mark được tạo ra để đánh dấu các phần của văn bản có chứa comment trong editor.
+// Custom mark created to highlight text segments containing comments in the editor.
 import { Mark, mergeAttributes } from "@tiptap/core";
 
 export interface CommentOptions {

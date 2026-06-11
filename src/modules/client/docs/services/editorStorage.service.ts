@@ -1,6 +1,6 @@
-// Service quản lý lưu trữ các cập nhật Yjs của editor tài liệu khi người dùng đang làm việc offline,
-// nó sử dụng IndexedDB để lưu trữ các cập nhật này một cách bền vững trên trình duyệt, cho phép đồng bộ lại với server khi kết nối được khôi phục,
-// service cung cấp các phương thức để lưu, truy xuất và xóa các cập nhật Yjs dựa trên documentId, đảm bảo rằng các cập nhật được áp dụng theo đúng thứ tự thời gian để tránh xung đột dữ liệu.
+// Service managing IndexedDB storage of Yjs updates for offline document editing,
+// caches edits securely on browser and syncs back to server on reconnection,
+// provides methods to save, retrieve, and delete updates to maintain chronologically consistent state.
 "use client";
 
 export interface PendingYjsUpdate {

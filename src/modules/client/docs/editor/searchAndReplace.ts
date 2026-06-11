@@ -1,5 +1,5 @@
-// Đây là file định nghĩa extension SearchAndReplace cho editor tài liệu,
-// cho phép người dùng tìm kiếm và thay thế văn bản trong editor.
+// Defines SearchAndReplace extension for the document editor,
+// enabling search and replace functionality.
 import { Extension } from "@tiptap/core";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 import { Plugin, PluginKey } from "@tiptap/pm/state";

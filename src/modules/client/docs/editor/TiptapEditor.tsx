@@ -1,5 +1,5 @@
-// Đây là component chính của editor tài liệu, 
-// quản lý trạng thái chế độ chỉnh sửa/đọc, kết nối cộng tác, lưu tự động, nhận xét và lịch sử phiên bản.
+// Main component of the document editor, 
+// managing edit/read modes, collaboration connection, auto-save, comments, and version history.
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -190,7 +190,7 @@ export default function TiptapEditor() {
       editEditor.commands.setSuggestionMode(isSuggestionModeActive);
       editEditor.commands.setSuggestionUser({
         id: user?.id || "anonymous",
-        name: user?.fullName || "Ẩn danh",
+        name: user?.fullName || "Anonymous",
       });
     }
   }, [editEditor, isSuggestionModeActive, mode]);
@@ -222,10 +222,10 @@ export default function TiptapEditor() {
       // Update local store
       updateDocument(selectedDocumentId, { title, content: html });
 
-      toast.success("Đã tạo phiên bản thành công");
+      toast.success("Version created successfully");
     } catch (error) {
       console.error("Failed to create version:", error);
-      toast.error("Tạo phiên bản thất bại");
+      toast.error("Failed to create version");
     } finally {
       setIsPublishing(false);
     }
@@ -236,10 +236,10 @@ export default function TiptapEditor() {
     setIsExportingDocx(true);
     try {
       await pagesService.exportDocx(document.id, document.title);
-      toast.success("Xuất file Word thành công");
+      toast.success("Word file exported successfully");
     } catch (error) {
       console.error("Export DOCX failed:", error);
-      toast.error("Xuất file Word thất bại");
+      toast.error("Failed to export Word file");
     } finally {
       setIsExportingDocx(false);
     }
@@ -248,17 +248,17 @@ export default function TiptapEditor() {
   const handleImportDocx = useCallback(async (file: File) => {
     if (!editEditor) return;
     
-    const confirm = window.confirm("Nhập file Word sẽ ghi đè toàn bộ nội dung hiện tại của trang. Bạn có muốn tiếp tục?");
+    const confirm = window.confirm("Importing a Word file will overwrite all current page content. Do you want to continue?");
     if (!confirm) return;
 
     setIsImportingDocx(true);
     try {
       const html = await pagesService.importDocx(file);
       editEditor.commands.setContent(html);
-      toast.success("Nhập file Word thành công");
+      toast.success("Word file imported successfully");
     } catch (error) {
       console.error("Import DOCX failed:", error);
-      toast.error("Nhập file Word thất bại");
+      toast.error("Failed to import Word file");
     } finally {
       setIsImportingDocx(false);
     }
@@ -385,7 +385,7 @@ export default function TiptapEditor() {
                   onChange={mode === "edit" ? handleTitleInput : undefined}
                   readOnly={mode === "read"}
                   className="w-full text-3xl font-bold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight print:text-black"
-                  placeholder="Không có tiêu đề"
+                  placeholder="Untitled"
                 />
                 <div className="h-px bg-gray-200/60 dark:bg-gray-800 mt-2 print:hidden" />
               </div>

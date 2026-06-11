@@ -1,5 +1,5 @@
-// Service quản lý tất cả các tương tác liên quan đến tài liệu trong module docs, bao gồm việc gọi API để lấy danh sách tài liệu, tạo mới, cập nhật nội dung, quản lý phiên bản, xuất/nhập file và các thao tác khác liên quan đến tài liệu,
-// nó cung cấp một giao diện đơn giản để các component khác trong module docs có thể sử dụng mà không cần quan tâm đến chi tiết của API.
+// Service managing all document-related interactions, including fetching, creating, updating, versions, export/import, and file uploads,
+// providing a simplified interface for other modules without exposing direct API details.
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import { DocumentItem } from "../types/document.type";

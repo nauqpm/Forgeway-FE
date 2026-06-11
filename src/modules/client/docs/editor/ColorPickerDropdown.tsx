@@ -1,8 +1,8 @@
-// Component dùng cho việc chọn màu sắc cho text và highlight trong editor, 
-// có hỗ trợ lưu lại 8 màu gần đây nhất sử dụng localStorage.
-// Giao diện được thiết kế tương tự như Google Docs với 2 tab riêng biệt cho text color và highlight color, 
-// mỗi tab sẽ hiển thị một bảng màu khác nhau. 
-// Người dùng cũng có thể nhập mã màu tùy chỉnh hoặc xóa màu đã áp dụng để trở về mặc định.  
+// Component to select text and highlight colors in the editor, 
+// supports saving the 8 most recent colors using localStorage.
+// UI designed similarly to Google Docs with 2 distinct tabs for text and highlight color, 
+// each displaying a different color palette. 
+// Users can input a custom hex code or clear formatting to reset to default.  
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";

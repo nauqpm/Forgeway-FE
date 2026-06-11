@@ -1,4 +1,4 @@
-// Đây là file định nghĩa extension FontSize cho editor tài liệu, cho phép người dùng thay đổi kích thước font chữ của văn bản trong editor.
+// Defines FontSize extension for the document editor, letting users change font sizes.
 import { Extension } from "@tiptap/core";
 
 declare module "@tiptap/core" {

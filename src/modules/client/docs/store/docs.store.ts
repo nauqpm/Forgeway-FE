@@ -1,8 +1,8 @@
-// Store quản lý trạng thái của tài liệu trong module docs, 
-// bao gồm danh sách tài liệu, tài liệu đang chọn, trạng thái mở rộng của cây tài liệu,
-// truy vấn tìm kiếm, trạng thái lưu và tải, 
-// danh sách tài liệu gần đây và 
-// các phương thức để tương tác với API liên quan đến tài liệu như tạo mới, cập nhật, lưu, xóa và đổi tên tài liệu,
+// Store managing document state in the docs module, 
+// including document list, selected document, expanded state of tree structure,
+// search queries, save and loading states, 
+// recent documents list, 
+// and methods to interact with APIs (create, update, save, delete, rename).
 
 import { create } from "zustand";
 import { toast } from "react-hot-toast";

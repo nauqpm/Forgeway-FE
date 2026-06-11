@@ -1,5 +1,5 @@
-// Component đại diện cho toolbar của editor tài liệu, 
-// bao gồm các nút và dropdown để định dạng văn bản, chèn hình ảnh, tạo bảng, căn chỉnh đoạn văn, v.v.
+// Component representing the document editor toolbar, 
+// including buttons and dropdowns to format text, insert images, create tables, align paragraphs, etc.
 "use client";
 
 import { ReactNode, useCallback, useRef, useState } from "react";
@@ -49,10 +49,10 @@ const FONT_FAMILIES = [DEFAULT_FONT_FAMILY, "Times New Roman", "Courier New", "I
 const DEFAULT_FONT_SIZE = "16px";
 const FONT_SIZES = ["12px", "14px", DEFAULT_FONT_SIZE, "18px", "20px", "24px", "32px"];
 const BLOCK_TYPES = [
-  { value: "p", label: "Văn bản thường", fontSize: "0.75rem", fontWeight: 400 },
-  { value: "h1", label: "Tiêu đề 1", fontSize: "1rem", fontWeight: 700 },
-  { value: "h2", label: "Tiêu đề 2", fontSize: "0.875rem", fontWeight: 700 },
-  { value: "h3", label: "Tiêu đề 3", fontSize: "0.8125rem", fontWeight: 700 },
+  { value: "p", label: "Normal text", fontSize: "0.75rem", fontWeight: 400 },
+  { value: "h1", label: "Heading 1", fontSize: "1rem", fontWeight: 700 },
+  { value: "h2", label: "Heading 2", fontSize: "0.875rem", fontWeight: 700 },
+  { value: "h3", label: "Heading 3", fontSize: "0.8125rem", fontWeight: 700 },
 ] as const;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -338,25 +338,25 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
 
         <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
 
-        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={toolbarState.bulletList} title="Danh sách dấu chấm">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={toolbarState.bulletList} title="Bullet list">
           <List className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={toolbarState.orderedList} title="Danh sách số">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={toolbarState.orderedList} title="Numbered list">
           <ListOrdered className="h-4 w-4" />
         </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={toolbarState.taskList} title="Checklist">
           <ListTodo className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={toolbarState.blockquote} title="Trích dẫn">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={toolbarState.blockquote} title="Blockquote">
           <Quote className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().indent().run()} title="Tăng lề (Indent)">
+        <ToolbarButton onClick={() => editor.chain().focus().indent().run()} title="Increase indent">
           <Indent className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().outdent().run()} title="Giảm lề (Outdent)">
+        <ToolbarButton onClick={() => editor.chain().focus().outdent().run()} title="Decrease indent">
           <Outdent className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title="Xóa định dạng">
+        <ToolbarButton onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title="Clear formatting">
           <RemoveFormatting className="h-4 w-4" />
         </ToolbarButton>
 
@@ -391,7 +391,7 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
           }}
           defaultValue="default"
         >
-          <option value="default" className={optionCls}>Giản dòng</option>
+          <option value="default" className={optionCls}>Line height</option>
           <option value="1" className={optionCls}>1.0</option>
           <option value="1.15" className={optionCls}>1.15</option>
           <option value="1.5" className={optionCls}>1.5</option>
@@ -479,7 +479,7 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
 
         <div className="flex items-center gap-1">
           {onToggleFindReplace && (
-            <ToolbarButton onClick={onToggleFindReplace} title="Tìm kiếm & Thay thế" useUndoBoundary={false}>
+            <ToolbarButton onClick={onToggleFindReplace} title="Find & Replace" useUndoBoundary={false}>
               <Search className="h-4 w-4" />
             </ToolbarButton>
           )}

@@ -1,6 +1,6 @@
-// Component định nghĩa layout chính của trang editor tài liệu, bao gồm các khu vực như toolbar, sidebar (outline), canvas (nội dung editor), status bar và một optional right sidebar (dành cho comment).
-// Layout này sử dụng flexbox để sắp xếp các khu vực một cách linh hoạt và responsive, 
-// đồng thời có các nút điều khiển để ẩn/hiện sidebar và right sidebar khi cần thiết.
+// Component defining the main layout of the document editor page, including toolbar, outline, canvas, status bar, and optional comments sidebar.
+// Layout uses flexbox to arrange sections flexibly and responsively, 
+// and has controls to show/hide outline and comments sidebars as needed.
 "use client";
 
 import React, { useState } from "react";
@@ -61,7 +61,7 @@ export default function EditorPageLayout({
             style={{
               left: sidebarOpen ? "240px" : "0px",
             }}
-            title={sidebarOpen ? "Ẩn mục lục" : "Hiện mục lục"}
+            title={sidebarOpen ? "Hide outline" : "Show outline"}
           >
             {sidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
@@ -84,7 +84,7 @@ export default function EditorPageLayout({
               <button
                 onClick={() => setIsRightOpen(false)}
                 className="absolute top-3 right-3 z-10 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400 hover:text-gray-600 transition-colors"
-                title="Ẩn thanh bên"
+                title="Hide sidebar"
               >
                 <X className="w-3.5 h-3.5" />
               </button>

@@ -1,5 +1,5 @@
-// Đây là file định nghĩa extension Suggestion cho editor tài liệu,
-// cho phép người dùng đề xuất chỉnh sửa nội dung tài liệu, bao gồm thêm mới hoặc xóa bỏ văn bản, và quản lý các đề xuất đó.
+// Defines Suggestion extension for the document editor,
+// allowing users to suggest text insertions/deletions and manage suggestions.
 import { Extension, Mark } from "@tiptap/core";
 import { Plugin, PluginKey, EditorState, Transaction } from "@tiptap/pm/state";
 

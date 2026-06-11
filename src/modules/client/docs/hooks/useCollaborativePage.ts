@@ -1,6 +1,6 @@
-// Hook quản lý trạng thái và logic cộng tác của trang tài liệu,
-// nó thiết lập kết nối Yjs và awareness để đồng bộ nội dung và trạng thái người dùng giữa các client,
-// đồng thời xử lý việc vào/ra chế độ chỉnh sửa, đồng bộ các cập nhật offline và phản hồi các sự kiện liên quan đến cộng tác.
+// Hook managing collaborative state and logic of document page,
+// sets up Yjs and awareness connection to sync content and user awareness across clients,
+// handles entering/exiting edit mode, syncing offline updates, and responding to collaboration events.
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -149,7 +149,7 @@ export function useCollaborativePage({
       return colors[Math.floor(Math.random() * colors.length)];
     };
     awareness.setLocalStateField("user", {
-      name: user?.fullName || user?.email || "Ẩn danh",
+      name: user?.fullName || user?.email || "Anonymous",
       color: getRandomColor(),
     });
 
@@ -247,7 +247,7 @@ export function useCollaborativePage({
     // Version restored remote update handler
     const handleRemoteVersionRestored = (data: { pageId: string }) => {
       if (data.pageId === activeDocumentId) {
-        toast.success("Phiên bản tài liệu đã được khôi phục bởi người dùng khác. Đang tải lại...", {
+        toast.success("Document version has been restored by another user. Reloading...", {
           duration: 3000,
         });
         setTimeout(() => {

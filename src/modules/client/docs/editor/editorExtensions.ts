@@ -1,7 +1,7 @@
-// Đây là file định nghĩa các extension được sử dụng trong editor của tài liệu.
-// Các extension này bao gồm các tính năng cơ bản như định dạng văn bản, tạo bảng, danh sách công việc, 
-// cũng như các tính năng nâng cao hơn như cộng tác thời gian thực, đánh dấu comment, đề xuất chỉnh sửa, v.v.
-// Việc tách riêng phần cấu hình extension giúp mã nguồn của editor trở nên gọn gàng và dễ bảo trì hơn.
+// Defines extensions used in the document editor.
+// These include basic formatting, tables, task lists, 
+// as well as collaborative editing, comment highlighting, suggestions, etc.
+// Splitting extension configs keeps the editor code clean and maintainable.
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
@@ -28,7 +28,9 @@ import { ResizableImage } from "./ResizableImage";
 import { CommentMark } from "./commentMark";
 import { SuggestInsert, SuggestDelete, SuggestionExtension } from "./suggestionExtension";
 import { UndoCaptureBoundary } from "./undoCaptureBoundary";
-import type { Doc as YDoc } from "yjs";
+import { Doc as YDoc, UndoManager } from "yjs";
+import { ySyncPluginKey } from "@tiptap/y-tiptap";
+
 
 const lowlight = createLowlight(common);
 
@@ -149,7 +151,10 @@ export const getCollaborativeEditorExtensions = (
     Collaboration.configure({
       document: ydoc,
       yUndoOptions: {
-        captureTimeout: 300,
+        undoManager: new UndoManager(ydoc.getXmlFragment("default"), {
+          captureTimeout: 300,
+          trackedOrigins: new Set([ySyncPluginKey]),
+        }),
       },
     }),
     CodeBlockLowlight.configure({

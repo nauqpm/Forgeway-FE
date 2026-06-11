@@ -1,6 +1,6 @@
-// Component đại diện cho phần header của trang editor tài liệu, bao gồm breadcrumbs hiển thị đường dẫn thư mục của tài liệu hiện tại,
-// danh sách cộng tác viên đang hoạt động, trạng thái kết nối thời gian thực, trạng thái lưu tự động,
-// và các nút điều khiển để chuyển đổi giữa chế độ xem và chỉnh sửa, mở lịch sử phiên bản, bật/tắt chế độ đề xuất sửa đổi, v.v.
+// Component representing the header of the document editor page, including breadcrumbs showing directory path,
+// list of active collaborators, real-time connection status, auto-save status,
+// and control buttons to switch between view/edit modes, open version history, toggle suggestions mode, etc.
 "use client";
 
 import { useDocsStore } from "../store/docs.store";
@@ -92,7 +92,7 @@ function CollaboratorsList({ awareness }: { awareness: any }) {
       })}
       {extraCount > 0 && (
         <div
-          title={`${extraCount} người khác`}
+          title={`${extraCount} others`}
           className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gray-150 border-2 border-white text-[9px] font-extrabold text-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-950 z-0"
         >
           +{extraCount}
@@ -111,7 +111,7 @@ function ConnectionIndicator({ status }: { status: RealtimeStatusSnapshot["statu
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
         </span>
-        Đang cộng tác
+        Collaborating
       </span>
     );
   }
@@ -123,7 +123,7 @@ function ConnectionIndicator({ status }: { status: RealtimeStatusSnapshot["statu
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
           <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
         </span>
-        Đang kết nối...
+        Connecting...
       </span>
     );
   }
@@ -134,7 +134,7 @@ function ConnectionIndicator({ status }: { status: RealtimeStatusSnapshot["statu
         <span className="relative flex h-2 w-2">
           <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
         </span>
-        Mất kết nối
+        Disconnected
       </span>
     );
   }
@@ -148,25 +148,25 @@ function SaveStatusIndicator({ status }: { status: "saving" | "saved" | "error" 
     return (
       <span className="flex items-center gap-1 text-[11px] font-medium text-gray-500 dark:text-gray-400">
         <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-500" />
-        Đang lưu...
+        Saving...
       </span>
     );
   }
 
   if (status === "saved") {
     return (
-      <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400" title="Tất cả thay đổi đã được lưu">
+      <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400" title="All changes saved">
         <Cloud className="h-3.5 w-3.5" />
-        Đã lưu
+        Saved
       </span>
     );
   }
 
   if (status === "error") {
     return (
-      <span className="flex items-center gap-1 text-[11px] font-medium text-rose-600 dark:text-rose-400" title="Không thể lưu tự động. Kiểm tra kết nối mạng.">
+      <span className="flex items-center gap-1 text-[11px] font-medium text-rose-600 dark:text-rose-400" title="Could not autosave. Check network connection.">
         <AlertCircle className="h-3.5 w-3.5" />
-        Lỗi lưu tự động
+        Autosave error
       </span>
     );
   }
@@ -174,7 +174,7 @@ function SaveStatusIndicator({ status }: { status: "saving" | "saved" | "error" 
   return (
     <span className="flex items-center gap-1 text-[11px] font-medium text-gray-400 dark:text-gray-500">
       <Check className="h-3.5 w-3.5" />
-      Đã lưu
+      Saved
     </span>
   );
 }
@@ -208,7 +208,7 @@ export default function EditorHeader({
   const [versionLabel, setVersionLabel] = useState("");
 
   const handleOpenVersionModal = () => {
-    setVersionLabel(`Bản thảo v${doc.version}`);
+    setVersionLabel(`Draft v${doc.version}`);
     setShowVersionModal(true);
   };
 
@@ -282,7 +282,7 @@ export default function EditorHeader({
           {/* Disconnected warning banner (Edit mode only) */}
           {mode === "edit" && (connectionStatus === "disconnected" || connectionStatus === "error") && (
             <span className="hidden sm:inline-flex items-center text-[10px] text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">
-              Thay đổi được lưu cục bộ. Đang kết nối lại...
+              Changes saved locally. Reconnecting...
             </span>
           )}
 
@@ -295,7 +295,7 @@ export default function EditorHeader({
                   ? "bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-900/60 dark:text-indigo-400"
                   : "bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
-              title="Bình luận"
+              title="Comments"
             >
               <MessageSquare className="h-4 w-4" />
             </button>
@@ -310,7 +310,7 @@ export default function EditorHeader({
                   ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:text-emerald-400"
                   : "bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
               }`}
-              title="Đề xuất sửa đổi"
+              title="Suggest changes"
             >
               <FileText className="h-4 w-4" />
             </button>
@@ -324,7 +324,7 @@ export default function EditorHeader({
                 ? "bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-900/60 dark:text-indigo-400"
                 : "bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
             }`}
-            title="Lịch sử phiên bản"
+            title="Version history"
           >
             <History className="h-4 w-4" />
           </button>
@@ -333,7 +333,7 @@ export default function EditorHeader({
           <button
             onClick={() => window.print()}
             className="hidden"
-            title="In tài liệu / Xuất PDF"
+            title="Print / Export PDF"
           >
             <span className="h-4.5 w-4.5" />
           </button>
@@ -343,7 +343,7 @@ export default function EditorHeader({
             onClick={onExportDocx}
             disabled={isExportingDocx}
             className="inline-flex items-center justify-center p-1.25 rounded-md border bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all disabled:opacity-50"
-            title="Xuất file Word (.docx)"
+            title="Export Word (.docx)"
           >
             {isExportingDocx ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -356,7 +356,7 @@ export default function EditorHeader({
           {mode === "edit" && canEdit && (
             <label
               className="inline-flex items-center justify-center p-1.25 rounded-md border bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all cursor-pointer"
-              title="Nhập file Word (.docx)"
+              title="Import Word (.docx)"
             >
               {isImportingDocx ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -388,10 +388,10 @@ export default function EditorHeader({
                   ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
                   : "bg-gray-100 border-transparent text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               }`}
-              title={isSuggestionModeActive ? "Chuyển sang Chỉnh sửa trực tiếp" : "Chuyển sang Đề xuất sửa đổi"}
+              title={isSuggestionModeActive ? "Switch to direct editing" : "Switch to suggesting changes"}
             >
               <Bookmark className="h-3.5 w-3.5" />
-              {isSuggestionModeActive ? "Chế độ: Đề xuất" : "Chế độ: Chỉnh sửa"}
+              {isSuggestionModeActive ? "Mode: Suggesting" : "Mode: Editing"}
             </button>
           )}
 
@@ -408,12 +408,12 @@ export default function EditorHeader({
               {mode === "edit" ? (
                 <>
                   <Eye className="h-3.5 w-3.5" />
-                  Xem
+                  View
                 </>
               ) : (
                 <>
                   <Pencil className="h-3.5 w-3.5" />
-                  Chỉnh sửa
+                  Edit
                 </>
               )}
             </button>
@@ -429,12 +429,12 @@ export default function EditorHeader({
               {isPublishing ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Đang tạo...
+                  Creating...
                 </>
               ) : (
                 <>
                   <Bookmark className="h-3.5 w-3.5" />
-                  Tạo phiên bản
+                  Create version
                 </>
               )}
             </button>
@@ -450,14 +450,14 @@ export default function EditorHeader({
             className="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xl w-full max-w-sm animate-scale-up"
           >
             <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1.5">
-              Tạo phiên bản có tên
+              Create named version
             </h4>
             <p className="text-[11px] text-slate-500 mb-4">
-              Lưu trạng thái hiện tại của tài liệu để dễ dàng so sánh và khôi phục sau này.
+              Save the current state of the document to easily compare and restore later.
             </p>
             <div className="mb-4">
               <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
-                Tên phiên bản
+                Version name
               </label>
               <input
                 type="text"
@@ -465,7 +465,7 @@ export default function EditorHeader({
                 maxLength={100}
                 value={versionLabel}
                 onChange={(e) => setVersionLabel(e.target.value)}
-                placeholder="Nhập tên phiên bản (ví dụ: Bản thảo lần 1...)"
+                placeholder="Enter version name (e.g. Draft 1...)"
                 className="w-full text-xs px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-950 text-slate-800 dark:text-slate-200"
               />
             </div>
@@ -476,7 +476,7 @@ export default function EditorHeader({
                 onClick={() => setShowVersionModal(false)}
                 className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-gray-900 dark:hover:bg-gray-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors"
               >
-                Hủy bỏ
+                Cancel
               </button>
               <button
                 type="submit"
@@ -486,10 +486,10 @@ export default function EditorHeader({
                 {isPublishing ? (
                   <>
                     <Loader2 className="h-3 w-3 animate-spin" />
-                    <span>Đang tạo...</span>
+                    <span>Creating...</span>
                   </>
                 ) : (
-                  <span>Tạo bản mới</span>
+                  <span>Create new</span>
                 )}
               </button>
             </div>

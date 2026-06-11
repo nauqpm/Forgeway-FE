@@ -1,6 +1,6 @@
-// Hook quản lý vòng đời của editor tài liệu, bao gồm việc tạo và hủy editor khi cần thiết,
-// nó cung cấp hai instance editor: một cho chế độ chỉ đọc (readEditor) và một cho chế độ chỉnh sửa cộng tác (editEditor),
-// cùng với các hàm để tạo và hủy editor chỉnh sửa cộng tác dựa trên kết nối Yjs và awareness.
+// Hook managing document editor lifecycle, including creating and destroying editor instance,
+// provides read-only (readEditor) and collaborative editing (editEditor) instances,
+// and functions to create/destroy collaborative editor based on Yjs connection.
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -35,11 +35,11 @@ const uploadAndInsertImage = async (view: EditorView, file: File) => {
   const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
   if (file.size > MAX_IMAGE_SIZE) {
-    toast.error("Kích thước ảnh tối đa là 5MB");
+    toast.error("Max image size is 5MB");
     return;
   }
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    toast.error("Định dạng ảnh không hợp lệ");
+    toast.error("Invalid image format");
     return;
   }
 
@@ -91,7 +91,7 @@ const uploadAndInsertImage = async (view: EditorView, file: File) => {
         return false;
       }
     });
-    toast.error("Tải ảnh lên thất bại");
+    toast.error("Image upload failed");
   } finally {
     URL.revokeObjectURL(localUrl);
   }
@@ -123,7 +123,7 @@ export function useEditorLifecycle(initialContent: string) {
     try {
       editor = new Editor({
         extensions: getCollaborativeEditorExtensions(
-          "Nhập nội dung vào đây...",
+          "Type content here...",
           ydoc,
           awareness,
         ),

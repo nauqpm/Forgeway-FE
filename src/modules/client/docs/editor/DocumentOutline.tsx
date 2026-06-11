@@ -1,6 +1,6 @@
-// Component hiển thị mục lục của tài liệu dựa trên các heading (H1, H2, H3) có trong nội dung editor.
-// Nó tự động cập nhật khi nội dung editor thay đổi hoặc khi người dùng di chuyển con trỏ đến một heading khác.
-// Người dùng có thể click vào một mục trong outline để cuộn đến vị trí tương ứng trong tài liệu.
+// Component to display the document outline based on headings (H1, H2, H3) present in the editor.
+// Updates automatically when editor content changes or cursor moves to another heading.
+// Users can click on an outline item to scroll to the corresponding position in the document.
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -59,12 +59,12 @@ export default function DocumentOutline({ editor }: { editor: Editor | null }) {
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 p-5 overflow-y-auto custom-scrollbar shrink-0">
       <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4 shrink-0">
         <List className="w-3.5 h-3.5" />
-        Mục lục
+        Outline
       </div>
 
       {headings.length === 0 ? (
         <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-          Không tìm thấy tiêu đề nào trong tài liệu. Hãy thêm Heading (H1, H2, H3) để hiển thị mục lục.
+          No headings found in the document. Add headings (H1, H2, H3) to display the outline.
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
@@ -79,7 +79,7 @@ export default function DocumentOutline({ editor }: { editor: Editor | null }) {
               }}
               title={h.text}
             >
-              {h.text || "Tiêu đề trống"}
+              {h.text || "Empty Heading"}
             </button>
           ))}
         </div>

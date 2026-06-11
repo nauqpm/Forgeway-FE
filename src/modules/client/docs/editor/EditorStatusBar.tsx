@@ -1,5 +1,5 @@
-// Component hiển thị thanh trạng thái của editor, bao gồm số lượng từ và ký tự trong tài liệu.
-// Thanh trạng thái này được cập nhật tự động khi nội dung của editor thay đổi hoặc khi người dùng di chuyển con trỏ đến một vị trí khác trong tài liệu.
+// Component displaying the status bar of the editor, including word count and character count.
+// Updates automatically when editor content changes or cursor moves.
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -38,12 +38,12 @@ export default function EditorStatusBar({ editor }: EditorStatusBarProps) {
   return (
     <div className="flex items-center gap-4 text-xs font-semibold text-gray-500 dark:text-gray-400 print:hidden select-none">
       <div className="flex items-center gap-1">
-        <span>Số từ:</span>
+        <span>Words:</span>
         <span className="text-gray-800 dark:text-gray-200">{wordCount}</span>
       </div>
       <span className="w-1.5 h-1.5 rounded-full bg-gray-200 dark:bg-gray-800" />
       <div className="flex items-center gap-1">
-        <span>Ký tự:</span>
+        <span>Characters:</span>
         <span className="text-gray-800 dark:text-gray-200">{charCount}</span>
       </div>
     </div>

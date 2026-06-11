@@ -1,6 +1,6 @@
-// Hook quản lý trạng thái của toolbar trong editor tài liệu,
-// nó theo dõi các trạng thái định dạng văn bản (in đậm, nghiêng, gạch chân, gạch ngang), kiểu khối (đoạn văn, tiêu đề 1-3) và căn chỉnh văn bản,
-// đồng thời cập nhật trạng thái toolbar khi người dùng thay đổi lựa chọn hoặc thực hiện các hành động trong editor.
+// Hook managing toolbar state in the document editor,
+// monitors active text format (bold, italic, underline, strike), block type, and alignment,
+// and updates toolbar indicators when selection or text changes.
 "use client";
 
 import type { Editor } from "@tiptap/react";

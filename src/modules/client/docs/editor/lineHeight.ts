@@ -1,5 +1,5 @@
-// Đây là file định nghĩa extension LineHeight cho editor tài liệu, 
-// cho phép người dùng thay đổi khoảng cách dòng của văn bản trong editor.
+// Defines LineHeight extension for the document editor, 
+// allowing users to change line spacing in the editor.
 import { Extension } from "@tiptap/core";
 
 declare module "@tiptap/core" {

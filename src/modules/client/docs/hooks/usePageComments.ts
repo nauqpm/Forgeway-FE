@@ -1,5 +1,5 @@
-// Hook quản lý tất cả các tương tác liên quan đến nhận xét trên một trang tài liệu, 
-// bao gồm việc lấy danh sách nhận xét, tạo mới, trả lời, chỉnh sửa, xóa và giải quyết nhận xét,
+// Hook managing comment interactions on a document page, 
+// including fetching, creating, replying, editing, deleting, and resolving comments,
 "use client";
 
 import { useCallback, useEffect, useState, useRef } from "react";

@@ -1,5 +1,5 @@
-// Đây là file định nghĩa extension Indent cho editor tài liệu,
-// cho phép người dùng thụt lề hoặc giảm thụt lề của các đoạn văn, heading và task item trong editor.
+// Defines Indent extension for the document editor,
+// allowing users to increase or decrease text indentation.
 import { Extension } from "@tiptap/core";
 
 declare module "@tiptap/core" {

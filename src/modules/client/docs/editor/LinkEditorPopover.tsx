@@ -1,5 +1,5 @@
-// Component đại diện cho popover chỉnh sửa liên kết,
-// hiển thị khi người dùng chọn một đoạn văn bản có liên kết hoặc khi họ muốn thêm liên kết mới trong editor tài liệu.
+// Component representing link editor popover,
+// shown when editing an existing link or inserting a new link in the document.
 "use client";
 
 import { Editor } from "@tiptap/react";

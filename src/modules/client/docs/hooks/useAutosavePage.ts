@@ -1,6 +1,6 @@
-// Hook quản lý tính năng lưu tự động của editor tài liệu,
-// nó theo dõi các thay đổi trong editor và tự động lưu nội dung tài liệu sau một khoảng thời gian nhất định khi người dùng chỉnh sửa,
-// đồng thời cung cấp trạng thái lưu và cho phép flush (lưu ngay lập tức) khi cần thiết, ví dụ khi người dùng chuyển sang một tài liệu khác hoặc đóng trình duyệt.
+// Hook managing document editor auto-save,
+// monitors changes and automatically saves document content after inactivity,
+// provides saving state and allows flushing updates immediately when needed.
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";

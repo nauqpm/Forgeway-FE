@@ -1,5 +1,5 @@
-// Component dùng để dừng việc ghi lại các thao tác vào undo stack của Yjs,
-// giúp tránh việc undo bị lộn xộn khi có nhiều thao tác liên tiếp được thực hiện.
+// Component to pause recording history to Yjs undo stack,
+// preventing history clutter during batch updates.
 import { Extension } from "@tiptap/core";
 import { Plugin } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";

@@ -1,5 +1,5 @@
-// Hook quản lý trạng thái tiêu đề của tài liệu trong editor tài liệu khi có tính năng cộng tác,
-// nó sử dụng Yjs để đồng bộ tiêu đề giữa các client, cho phép người dùng chỉnh sửa tiêu đề và tự động cập nhật tiêu đề trên tất cả các client đang kết nối.
+// Hook managing collaborative document title status in the editor,
+// syncs title changes across clients using Yjs.
 "use client";
 
 import { useCallback, useEffect, useState } from "react";

@@ -1,7 +1,7 @@
-// Component đại diện cho một chuỗi bình luận (comment thread) trong tài liệu,
-// bao gồm bình luận gốc và các phản hồi (nếu có). 
-// Mỗi comment thread sẽ hiển thị thông tin tác giả, thời gian tạo, nội dung bình luận, 
-// và các hành động như trả lời, chỉnh sửa, xóa, hoàn tất hoặc mở lại bình luận.
+// Component representing a comment thread in the document,
+// including the root comment and replies (if any). 
+// Each comment thread displays author info, creation time, comment content, 
+// and actions such as reply, edit, delete, resolve, or reopen comment.
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -34,10 +34,10 @@ function timeAgo(dateStr?: string): string {
   const d = new Date(dateStr);
   const now = Date.now();
   const diff = Math.floor((now - d.getTime()) / 1000);
-  if (diff < 60) return "vừa xong";
-  if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
   return d.toLocaleDateString("vi-VN");
 }
 
@@ -79,7 +79,7 @@ function CommentBubble({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isOwner = comment.authorId === currentUserId;
-  const authorName = comment.author?.fullName || "Ẩn danh";
+  const authorName = comment.author?.fullName || "Anonymous";
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -121,7 +121,7 @@ function CommentBubble({
           </span>
           <span className="text-[10px] text-gray-400 dark:text-gray-500 shrink-0">
             {timeAgo(comment.createdAt)}
-            {comment.editedAt && " (đã sửa)"}
+            {comment.editedAt && " (edited)"}
           </span>
         </div>
 
@@ -139,7 +139,7 @@ function CommentBubble({
                 onClick={handleSaveEdit}
                 className="px-2 py-0.5 text-[10px] font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
               >
-                Lưu
+                Save
               </button>
               <button
                 onClick={() => {
@@ -148,7 +148,7 @@ function CommentBubble({
                 }}
                 className="px-2 py-0.5 text-[10px] font-medium text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
-                Hủy
+                Cancel
               </button>
             </div>
           </div>
@@ -178,7 +178,7 @@ function CommentBubble({
                 }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <Pencil className="w-3 h-3" /> Chỉnh sửa
+                <Pencil className="w-3 h-3" /> Edit
               </button>
               <button
                 onClick={() => {
@@ -187,7 +187,7 @@ function CommentBubble({
                 }}
                 className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
-                <Trash2 className="w-3 h-3" /> Xóa
+                <Trash2 className="w-3 h-3" /> Delete
               </button>
             </div>
           )}
@@ -287,7 +287,7 @@ export default function CommentThread({
               }}
               className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-colors"
             >
-              <CornerDownRight className="w-3 h-3" /> Trả lời
+              <CornerDownRight className="w-3 h-3" /> Reply
             </button>
             <button
               onClick={(e) => {
@@ -296,7 +296,7 @@ export default function CommentThread({
               }}
               className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-gray-500 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-md transition-colors"
             >
-              <Check className="w-3 h-3" /> Hoàn tất
+              <Check className="w-3 h-3" /> Resolve
             </button>
           </>
         ) : (
@@ -307,7 +307,7 @@ export default function CommentThread({
             }}
             className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-gray-500 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-md transition-colors"
           >
-            <RotateCcw className="w-3 h-3" /> Mở lại
+            <RotateCcw className="w-3 h-3" /> Reopen
           </button>
         )}
       </div>
@@ -321,7 +321,7 @@ export default function CommentThread({
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Nhập phản hồi..."
+              placeholder="Reply..."
               className="flex-1 text-[12px] px-2.5 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 resize-none placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-indigo-400 transition-colors"
               rows={1}
             />
@@ -339,7 +339,7 @@ export default function CommentThread({
       {/* Resolved badge */}
       {comment.isResolved && (
         <div className="absolute -top-2 -right-2 flex items-center gap-0.5 px-1.5 py-0.5 bg-emerald-500 text-white rounded-full text-[9px] font-bold shadow-sm">
-          <Check className="w-2.5 h-2.5" /> Đã hoàn tất
+          <Check className="w-2.5 h-2.5" /> Resolved
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
-// Hook quản lý trạng thái kết nối của editor tài liệu với server thông qua realtime socket,
-// nó theo dõi trạng thái kết nối và cập nhật giao diện người dùng tương ứng, ví dụ hiển thị trạng thái "Đang kết nối...", "Đã kết nối", "Mất kết nối" hoặc "Lỗi kết nối" dựa trên trạng thái thực tế của socket.
+// Hook managing real-time socket connection status of the document editor with the server,
+// monitors connection status and updates UI text appropriately.
 "use client";
 
 import { useEffect, useState } from "react";
