@@ -392,22 +392,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             )}
-                            {canCreateTask && (
-                              <button
-                                onClick={() => {
-                                  setNewIssueForm({
-                                    ...newIssueForm,
-                                    status: column.name,
-                                    columnId: column.id,
-                                    sprintId: activeSprint?._id ?? null,
-                                  });
-                                  setShowCreateIssue(true);
-                                }}
-                                className="p-1 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
-                              >
-                                <Plus className="w-4 h-4" />
-                              </button>
-                            )}
+                            
                           </div>
                         )}
                       </div>
