@@ -27,6 +27,7 @@ import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/servic
 
 import { filterTasks } from "@/modules/client/workspaces/utils/filterTasks";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
+import { removeRestoredArchiveItem } from "@/modules/client/workspaces/utils/archiveListState";
 import {
   handleBoardDragEnd,
   handleBacklogDragEnd,
@@ -731,7 +732,13 @@ export default function WorkspaceDetailPage({
           ? current.map((item) => item.id === restoredIssue.id ? restoredIssue : item)
           : [...current, restoredIssue],
       );
-      resetArchiveList();
+      const nextArchive = removeRestoredArchiveItem({
+        items: archivedItems,
+        total: archiveTotal,
+        restoredId: restoredIssue.id,
+      });
+      setArchivedItems(nextArchive.items);
+      setArchiveTotal(nextArchive.total);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item restored");
     } catch (error: any) {
