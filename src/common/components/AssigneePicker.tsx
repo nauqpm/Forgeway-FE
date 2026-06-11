@@ -156,6 +156,7 @@ export default function AssigneePicker({
   const dropdown = open ? (
     <div
       ref={menuRef}
+      data-assignee-picker-menu="true"
       style={{ ...menuStyle, boxShadow: "0 4px 20px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.06)" }}
       className="max-h-52 overflow-y-auto bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[8px]"
     >

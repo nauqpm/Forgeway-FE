@@ -54,6 +54,7 @@ type ListTabProps = {
   setListGridDrawerOpen: (open: boolean) => void;
   updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
   handleUpdateIssue: (updated: Issue) => void;
+  onBulkUpdateIds?: (ids: string[], updates: Partial<Issue>) => Promise<void>;
   onBulkDeleteIds?: (ids: string[]) => void | Promise<void>;
   onCreateTask?: (task: { title: string; type?: string; assigneeId?: string | null; dueDate?: string | null }) => Promise<void>;
   canEditTask?: boolean;
@@ -83,6 +84,7 @@ export default function ListTab({
   setListGridDrawerOpen,
   updateIssueDirectly,
   handleUpdateIssue,
+  onBulkUpdateIds,
   onBulkDeleteIds,
   onCreateTask,
   canEditTask = true,
@@ -335,7 +337,7 @@ export default function ListTab({
               onClickTask={(issue) => setSelectedIssue(issue)}
               onUpdateIssue={canEditTask ? (id, updates) => updateIssueDirectly(id, updates) : undefined}
               onCreateTask={onCreateTask}
-              onBulkUpdate={canEditTask ? async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates)) : undefined}
+              onBulkUpdate={canEditTask ? onBulkUpdateIds : undefined}
               onBulkDelete={canDeleteTask && onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
               hideCreate={!onCreateTask}
               canEditTask={canEditTask}

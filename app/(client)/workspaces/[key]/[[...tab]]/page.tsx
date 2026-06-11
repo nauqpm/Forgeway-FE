@@ -926,6 +926,88 @@ export default function WorkspaceDetailPage({
     toast.success(ids.length === 1 ? "Work item deleted" : "Work items deleted");
   };
 
+  const handleListBulkUpdate = async (ids: string[], updates: Partial<Issue>) => {
+    if (!workspaceApiId || ids.length === 0) return;
+
+    const idsToUpdate = new Set(ids);
+    const assigneeId =
+      Object.prototype.hasOwnProperty.call(updates, "assigneeId")
+        ? updates.assigneeId ?? null
+        : undefined;
+    const selectedMember = assigneeId
+      ? (workspace?.members ?? []).find((member: any) => {
+          const memberUser = getUserObject(member);
+          return getUserId(memberUser) === assigneeId;
+        })
+      : null;
+    const selectedMemberUser = selectedMember
+      ? getUserObject(selectedMember)
+      : null;
+    const assigneeName =
+      assigneeId && selectedMemberUser && typeof selectedMemberUser !== "string"
+        ? selectedMemberUser.fullName ||
+          selectedMemberUser.name ||
+          selectedMemberUser.email ||
+          assigneeId
+        : assigneeId
+          ? assigneeId
+          : "Unassigned";
+    const assigneeAvatar =
+      assigneeId && selectedMemberUser && typeof selectedMemberUser !== "string"
+        ? selectedMemberUser.avatar ||
+          selectedMemberUser.avatarUrl ||
+          selectedMemberUser.image
+        : undefined;
+
+    const normalizedUpdates: Partial<Issue> =
+      assigneeId !== undefined
+        ? {
+            ...updates,
+            assigneeId,
+            assignee: assigneeId ?? "U",
+            assigneeDisplayName: assigneeName,
+            assigneeAvatar,
+          }
+        : updates;
+    const applyUpdates = (current: Issue[] | undefined) =>
+      Array.isArray(current)
+        ? current.map((issue) =>
+            idsToUpdate.has(issue.id) ? { ...issue, ...normalizedUpdates } : issue,
+          )
+        : current;
+
+    setIssues((current) => applyUpdates(current) ?? []);
+    setSelectedIssue((current) =>
+      current && idsToUpdate.has(current.id)
+        ? { ...current, ...normalizedUpdates }
+        : current,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks", workspaceApiId] },
+      applyUpdates,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks-fallback-search", workspaceApiId] },
+      applyUpdates,
+    );
+
+    const results = await Promise.allSettled(
+      ids.map((taskId) =>
+        taskService.updateBoardTask(workspaceApiId, taskId, normalizedUpdates),
+      ),
+    );
+    const failedCount = results.filter((result) => result.status === "rejected").length;
+
+    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+    queryClient.invalidateQueries({
+      queryKey: ["tasks-fallback-search", workspaceApiId],
+    });
+
+    if (failedCount > 0) {
+      toast.error(`Could not update ${failedCount} work item${failedCount > 1 ? "s" : ""}`);
+    }
+  };
+
   const {
     toggleTaskSelection,
     toggleSprintSelection,
@@ -1227,6 +1309,7 @@ export default function WorkspaceDetailPage({
           setListGridDrawerOpen,
           updateIssueDirectly,
           handleUpdateIssue,
+          onBulkUpdateIds: handleListBulkUpdate,
           onBulkDeleteIds: handleListBulkDelete,
           onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
           canEditTask,

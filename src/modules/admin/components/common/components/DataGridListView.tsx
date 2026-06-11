@@ -146,7 +146,8 @@ export default function DataGridListView({
       const target = e.target as Element;
       const insideGrid = containerRef.current?.contains(target);
       const insideBar = !!target.closest('[data-bulk-action-bar]');
-      if (!insideGrid && !insideBar) setRowSelection({});
+      const insidePickerMenu = !!target.closest('[data-assignee-picker-menu]');
+      if (!insideGrid && !insideBar && !insidePickerMenu) setRowSelection({});
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
