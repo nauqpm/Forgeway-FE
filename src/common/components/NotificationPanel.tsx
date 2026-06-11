@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
+import { isAxiosError } from "axios";
+import toast from "react-hot-toast";
 import { Bell, Check, FileText, Loader2, MoreHorizontal, X } from "lucide-react";
 import {
   AppNotification,
@@ -16,6 +18,14 @@ interface NotificationPanelProps {
 }
 
 type NotificationCategory = "DIRECT" | "WATCHING";
+type InviteActionStatus = "accepted" | "declined" | "expired" | "unavailable";
+
+const INVITE_NOTIFICATION_STATE_KEY = "sdlc.inviteNotificationState";
+
+interface StoredInviteNotificationState {
+  status: InviteActionStatus;
+  message: string;
+}
 
 interface NotificationViewModel {
   id: string;
@@ -27,7 +37,14 @@ interface NotificationViewModel {
   isRead: boolean;
   category: NotificationCategory;
   type: "STANDARD" | "INVITE";
-  inviteData?: { workspaceName: string; message: string };
+  inviteData?: {
+    inviteId?: string;
+    workspaceKey?: string;
+    workspaceName: string;
+    message: string;
+    status?: string;
+    role?: string;
+  };
 }
 
 const DIRECT_TYPES: NotificationType[] = [
@@ -66,6 +83,59 @@ function actionText(type: NotificationType): string {
   }
 }
 
+function readStoredInviteNotificationState(): Record<string, StoredInviteNotificationState> {
+  if (typeof window === "undefined") return {};
+
+  try {
+    const raw = window.sessionStorage.getItem(INVITE_NOTIFICATION_STATE_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as Record<string, StoredInviteNotificationState>;
+  } catch {
+    return {};
+  }
+}
+
+function getStoredInviteNotificationState(notificationId: string): StoredInviteNotificationState | undefined {
+  return readStoredInviteNotificationState()[notificationId];
+}
+
+function persistInviteNotificationState(
+  notificationId: string,
+  state: StoredInviteNotificationState,
+): void {
+  if (typeof window === "undefined") return;
+
+  const current = readStoredInviteNotificationState();
+  current[notificationId] = state;
+  window.sessionStorage.setItem(INVITE_NOTIFICATION_STATE_KEY, JSON.stringify(current));
+}
+
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (!isAxiosError(error)) return fallback;
+
+  const message = error.response?.data?.message;
+  if (Array.isArray(message)) return message[0] ?? fallback;
+  if (typeof message === "string" && message.trim()) return message;
+  return fallback;
+}
+
+function getInviteFailureState(
+  error: unknown,
+  fallback: string,
+): { message: string; status?: InviteActionStatus } {
+  const message = getApiErrorMessage(error, fallback);
+  if (!isAxiosError(error) || error.response?.status !== 410) {
+    return { message };
+  }
+
+  const normalized = message.toLowerCase();
+  if (normalized.includes("accepted")) return { message, status: "accepted" };
+  if (normalized.includes("declined")) return { message, status: "declined" };
+  if (normalized.includes("expired")) return { message, status: "expired" };
+  return { message, status: "unavailable" };
+}
+
+
 function buildNotificationHref(notification: AppNotification): string | undefined {
   if (notification.type === "WORKSPACE_INVITED") {
     return "/workspaces";
@@ -92,6 +162,9 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
   const taskTitle = typeof metadata.taskTitle === "string" ? metadata.taskTitle : notification.message;
   const workspaceName =
     typeof metadata.workspaceName === "string" ? metadata.workspaceName : notification.message || "Workspace";
+  const storedInviteState = notification.type === "WORKSPACE_INVITED"
+    ? getStoredInviteNotificationState(notification.id)
+    : undefined;
 
   return {
     id: notification.id,
@@ -115,8 +188,12 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
     type: notification.type === "WORKSPACE_INVITED" ? "INVITE" : "STANDARD",
     inviteData: notification.type === "WORKSPACE_INVITED"
       ? {
+          inviteId: typeof metadata.inviteId === "string" ? metadata.inviteId : notification.entityId,
+          workspaceKey: typeof metadata.workspaceKey === "string" ? metadata.workspaceKey : undefined,
           workspaceName,
-          message: notification.message || "You have a pending workspace invite.",
+          message: storedInviteState?.message ?? notification.message ?? "You have a pending workspace invite.",
+          status: storedInviteState?.status ?? (typeof metadata.status === "string" ? metadata.status : undefined),
+          role: typeof metadata.role === "string" ? metadata.role : undefined,
         }
       : undefined,
   };
@@ -152,6 +229,7 @@ export default function NotificationPanel({
   const [showMenu, setShowMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [inviteActionId, setInviteActionId] = useState<string | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -262,6 +340,29 @@ export default function NotificationPanel({
     }
   };
 
+  const updateInviteNotification = (
+    id: string,
+    status: InviteActionStatus,
+    message: string,
+  ) => {
+    persistInviteNotificationState(id, { status, message });
+    setNotifications((items) =>
+      items.map((item) =>
+        item.id === id && item.inviteData
+          ? {
+              ...item,
+              isRead: true,
+              inviteData: {
+                ...item.inviteData,
+                status,
+                message,
+              },
+            }
+          : item,
+      ),
+    );
+  };
+
   const handleNotificationClick = async (notification: NotificationViewModel) => {
     await markAsRead(notification.id);
 
@@ -269,6 +370,88 @@ export default function NotificationPanel({
 
     onClose();
     router.push(notification.href);
+  };
+
+  const handleNotificationKeyDown = (
+    event: ReactKeyboardEvent<HTMLDivElement>,
+    notification: NotificationViewModel,
+  ) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    handleNotificationClick(notification);
+  };
+
+  const handleAcceptInvite = async (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    notification: NotificationViewModel,
+  ) => {
+    event.stopPropagation();
+    const inviteId = notification.inviteData?.inviteId;
+    if (!inviteId) {
+      toast.error("Invitation is missing.");
+      return;
+    }
+
+    setInviteActionId(`${notification.id}:accept`);
+    try {
+      await notificationService.acceptWorkspaceInvite(inviteId);
+      updateInviteNotification(notification.id, "accepted", "Invitation accepted.");
+      if (!notification.isRead) {
+        await notificationService.markAsRead(notification.id);
+      }
+      await refreshUnreadCount();
+      toast.success("Workspace invitation accepted.");
+      onClose();
+      const workspaceKey = notification.inviteData?.workspaceKey;
+      router.push(workspaceKey ? `/workspaces/${encodeURIComponent(workspaceKey)}` : "/workspaces");
+    } catch (error) {
+      const failure = getInviteFailureState(error, "Could not accept invitation.");
+      if (failure.status) {
+        updateInviteNotification(notification.id, failure.status, failure.message);
+        if (!notification.isRead) {
+          await notificationService.markAsRead(notification.id);
+          await refreshUnreadCount();
+        }
+      }
+      toast.error(failure.message);
+    } finally {
+      setInviteActionId(null);
+    }
+  };
+
+  const handleDeclineInvite = async (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    notification: NotificationViewModel,
+  ) => {
+    event.stopPropagation();
+    const inviteId = notification.inviteData?.inviteId;
+    if (!inviteId) {
+      toast.error("Invitation is missing.");
+      return;
+    }
+
+    setInviteActionId(`${notification.id}:decline`);
+    try {
+      await notificationService.declineWorkspaceInvite(inviteId);
+      updateInviteNotification(notification.id, "declined", "Invitation declined.");
+      if (!notification.isRead) {
+        await notificationService.markAsRead(notification.id);
+      }
+      await refreshUnreadCount();
+      toast.success("Workspace invitation declined.");
+    } catch (error) {
+      const failure = getInviteFailureState(error, "Could not decline invitation.");
+      if (failure.status) {
+        updateInviteNotification(notification.id, failure.status, failure.message);
+        if (!notification.isRead) {
+          await notificationService.markAsRead(notification.id);
+          await refreshUnreadCount();
+        }
+      }
+      toast.error(failure.message);
+    } finally {
+      setInviteActionId(null);
+    }
   };
 
   const filteredNotifications = useMemo(() => {
@@ -386,50 +569,90 @@ export default function NotificationPanel({
                 <div key={group}>
                   <h3 className="text-[0.6875rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider mb-2 px-1">{group}</h3>
                   <div className="space-y-0.5">
-                    {items.map((notification) => (
-                      <button
-                        key={notification.id}
-                        onClick={() => handleNotificationClick(notification)}
-                        className={`w-full text-left relative p-3 rounded-[8px] transition-all group hover:bg-[#F9F9F8] dark:hover:bg-[#252525] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 ${!notification.isRead ? "bg-[#EFF6FF]/30 dark:bg-[rgba(37,99,235,0.06)]" : ""}`}
-                      >
-                        {!notification.isRead && (
-                          <span className="absolute top-3.5 right-3 w-2 h-2 bg-[#2563EB] dark:bg-[#3B82F6] rounded-full" />
-                        )}
+                    {items.map((notification) => {
+                      const inviteStatus = notification.inviteData?.status?.toLowerCase();
+                      const isPendingInvite = notification.type === "INVITE" && (!inviteStatus || inviteStatus === "pending");
+                      const isAccepting = inviteActionId === `${notification.id}:accept`;
+                      const isDeclining = inviteActionId === `${notification.id}:decline`;
+                      const isInviteBusy = isAccepting || isDeclining;
 
-                        <div className="flex items-start gap-3 pr-5">
-                          <div className="w-7 h-7 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.6875rem] font-bold flex-shrink-0 overflow-hidden">
-                            {notification.actor.avatar?.startsWith("http") ? (
-                              <img src={notification.actor.avatar} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              notification.actor.avatar
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-snug">
-                              <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.actor.name}</span>{" "}{notification.actionText}
-                            </p>
+                      return (
+                        <div
+                          key={notification.id}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => handleNotificationClick(notification)}
+                          onKeyDown={(event) => handleNotificationKeyDown(event, notification)}
+                          className={`w-full text-left relative p-3 rounded-[8px] transition-all group hover:bg-[#F9F9F8] dark:hover:bg-[#252525] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 ${!notification.isRead ? "bg-[#EFF6FF]/30 dark:bg-[rgba(37,99,235,0.06)]" : ""}`}
+                        >
+                          {!notification.isRead && (
+                            <span className="absolute top-3.5 right-3 w-2 h-2 bg-[#2563EB] dark:bg-[#3B82F6] rounded-full" />
+                          )}
 
-                            {notification.type === "STANDARD" && notification.target && (
-                              <div className="mt-1.5 flex items-center gap-1.5 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] p-1.5 w-fit max-w-full hover:border-[#2563EB]/40 transition-colors">
-                                <FileText className="w-3.5 h-3.5 text-[#2563EB] dark:text-[#3B82F6] flex-shrink-0" />
-                                <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
-                                  {notification.target.key ? `${notification.target.key}: ` : ""}{notification.target.title}
-                                </span>
-                              </div>
-                            )}
+                          <div className="flex items-start gap-3 pr-5">
+                            <div className="w-7 h-7 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.6875rem] font-bold flex-shrink-0 overflow-hidden">
+                              {notification.actor.avatar?.startsWith("http") ? (
+                                <img src={notification.actor.avatar} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                notification.actor.avatar
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-snug">
+                                <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.actor.name}</span>{" "}{notification.actionText}
+                              </p>
 
-                            {notification.type === "INVITE" && notification.inviteData && (
-                              <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] p-3">
-                                <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.inviteData.workspaceName}</p>
-                                <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">{notification.inviteData.message}</p>
-                              </div>
-                            )}
+                              {notification.type === "STANDARD" && notification.target && (
+                                <div className="mt-1.5 flex items-center gap-1.5 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] p-1.5 w-fit max-w-full hover:border-[#2563EB]/40 transition-colors">
+                                  <FileText className="w-3.5 h-3.5 text-[#2563EB] dark:text-[#3B82F6] flex-shrink-0" />
+                                  <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
+                                    {notification.target.key ? `${notification.target.key}: ` : ""}{notification.target.title}
+                                  </span>
+                                </div>
+                              )}
 
-                            <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1.5">{formatTime(notification.createdAt)}</p>
+                              {notification.type === "INVITE" && notification.inviteData && (
+                                <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] p-3">
+                                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.inviteData.workspaceName}</p>
+                                  <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">{notification.inviteData.message}</p>
+                                  {notification.inviteData.role && (
+                                    <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1">Role: {notification.inviteData.role}</p>
+                                  )}
+                                  {isPendingInvite ? (
+                                    <div className="mt-3 flex items-center gap-2" onClick={(event) => event.stopPropagation()}>
+                                      <button
+                                        type="button"
+                                        onClick={(event) => handleAcceptInvite(event, notification)}
+                                        disabled={isInviteBusy || !notification.inviteData.inviteId}
+                                        className="inline-flex items-center justify-center rounded-[6px] bg-[#2563EB] px-3 py-1.5 text-[0.75rem] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-60"
+                                      >
+                                        {isAccepting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                                        Accept
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={(event) => handleDeclineInvite(event, notification)}
+                                        disabled={isInviteBusy || !notification.inviteData.inviteId}
+                                        className="inline-flex items-center justify-center rounded-[6px] border border-[#EAEAEA] px-3 py-1.5 text-[0.75rem] font-semibold text-[#787774] transition-colors hover:bg-white dark:border-white/[0.08] dark:text-[#C9C9C7] dark:hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-60"
+                                      >
+                                        {isDeclining ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+                                        Decline
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <p className="mt-2 text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
+                                      {notification.inviteData.message || `Invitation ${inviteStatus ?? "processed"}.`}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
+                              <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1.5">{formatTime(notification.createdAt)}</p>
+                            </div>
                           </div>
                         </div>
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
