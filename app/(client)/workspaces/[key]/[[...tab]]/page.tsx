@@ -1258,6 +1258,11 @@ export default function WorkspaceDetailPage({
           onLoadMore: handleLoadMoreArchive,
           isLoadingMore: isArchivedTasksFetching && archivePage > 1,
         }}
+        membersProps={{
+          workspaceId: workspace._id,
+          currentUserId: user?.id,
+          isAdmin: isWorkspaceAdmin,
+        }}
       />
 
       {/* Create Issue Modal */}
