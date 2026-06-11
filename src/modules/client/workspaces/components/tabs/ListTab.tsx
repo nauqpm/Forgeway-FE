@@ -62,7 +62,7 @@ type ListTabProps = {
 };
 
 const COLUMN_LABELS: Record<string, string> = {
-  key: "Key", title: "Work", status: "Status", priority: "Priority",
+  key: "Key", title: "Work", type: "Type", status: "Status", priority: "Priority",
   assigneeId: "Assignee", storyPoints: "Story Points", startDate: "Start Date",
   dueDate: "Due Date", updatedAt: "Updated", labels: "Labels",
 };
@@ -95,7 +95,7 @@ export default function ListTab({
       const saved = localStorage.getItem("list_visible_columns");
       if (saved) return JSON.parse(saved);
     }
-    return { key: true, title: true, status: true, priority: true, assigneeId: true, storyPoints: true, dueDate: true, updatedAt: true, labels: true };
+    return { key: true, title: true, type: true, status: true, priority: true, assigneeId: true, storyPoints: true, dueDate: true, updatedAt: true, labels: true };
   });
   useEffect(() => {
     localStorage.setItem("list_visible_columns", JSON.stringify(columnVisibility));

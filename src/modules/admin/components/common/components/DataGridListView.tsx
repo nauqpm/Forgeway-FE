@@ -201,11 +201,10 @@ export default function DataGridListView({
       cell: info => {
         const issue = info.row.original;
         const isEditing = editingCell?.rowId === issue.id && editingCell?.col === 'title';
-        const typeIcon = issue.type === 'Bug' ? 'text-[#9F2F2D]' : issue.type === 'Story' ? 'text-[#346538]' : 'text-[#1F6C9F]';
         if (canEditTask && isEditing) {
           return (
             <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-              <FileText className={`w-4 h-4 shrink-0 ${typeIcon}`} />
+              <FileText className="w-4 h-4 shrink-0 text-[#1F6C9F]" />
               <input
                 autoFocus
                 value={editValue}
@@ -222,16 +221,7 @@ export default function DataGridListView({
         }
         return (
           <div className="flex items-center gap-2 group/title">
-            <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()} className="shrink-0">
-              <TypePicker
-                value={issue.type ?? 'Task'}
-                onChange={type => onUpdateIssue?.(issue.id, { type })}
-                disabled={!canEditTask}
-                variant="pill"
-                size="sm"
-                placement="bottom"
-              />
-            </div>
+            <FileText className="w-4 h-4 shrink-0 text-[#1F6C9F]" />
             <span
               className="truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
               onClick={e => {
@@ -254,6 +244,26 @@ export default function DataGridListView({
             >
               <MoreHorizontal className="w-3.5 h-3.5" />
             </button>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'type',
+      header: 'Type',
+      size: 120,
+      cell: info => {
+        const issue = info.row.original;
+        return (
+          <div onClick={e => e.stopPropagation()}>
+            <TypePicker
+              value={issue.type ?? 'Task'}
+              onChange={type => onUpdateIssue?.(issue.id, { type })}
+              disabled={!canEditTask}
+              variant="pill"
+              size="sm"
+              placement="bottom"
+            />
           </div>
         );
       },
@@ -641,6 +651,7 @@ export default function DataGridListView({
           members={normalizedMembers}
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}
+          showDueDate={false}
         />
       )}
     </div>

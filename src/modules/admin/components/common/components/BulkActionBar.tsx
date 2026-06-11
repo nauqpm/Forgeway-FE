@@ -22,6 +22,7 @@ interface BulkActionBarProps {
   canEditTask?: boolean;
   canDeleteTask?: boolean;
   canMoveTask?: boolean;
+  showDueDate?: boolean;
 }
 
 const STATUS_OPTIONS = ['To Do', 'In Progress', 'Done'];
@@ -50,6 +51,7 @@ export default function BulkActionBar({
   canEditTask = true,
   canDeleteTask = true,
   canMoveTask = true,
+  showDueDate = true,
 }: BulkActionBarProps) {
   const [showSprintMenu, setShowSprintMenu] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
@@ -149,7 +151,7 @@ export default function BulkActionBar({
         )}
 
         {/* Due Date */}
-        {canEditTask && (
+        {canEditTask && showDueDate && (
           <CustomDatePicker
             value={null}
             onChange={(date) => { if (date) apply({ dueDate: date }); }}
