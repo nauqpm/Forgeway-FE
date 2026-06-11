@@ -200,6 +200,7 @@ export default function TaskDetailList({
               }
             }}
             titleSize="2xl"
+            boardColumns={boardColumns}
           />
         </div>
 

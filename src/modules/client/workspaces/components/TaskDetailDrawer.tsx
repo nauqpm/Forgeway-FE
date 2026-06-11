@@ -249,6 +249,7 @@ export default function TaskDetailDrawer({
                 }
               }}
               titleSize="2xl"
+              boardColumns={boardColumns}
               afterTitle={
                 <div className="space-y-6">
                   {/* Status */}

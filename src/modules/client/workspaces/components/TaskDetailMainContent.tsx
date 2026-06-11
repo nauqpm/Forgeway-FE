@@ -7,6 +7,7 @@ import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskComments from "./TaskComments";
 import TaskActivityHistory from "./TaskActivityHistory";
 import { getIssueAssigneeId } from "./task-detail-shared";
+import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 
 interface TaskDetailMainContentProps {
   issue: any;
@@ -28,6 +29,7 @@ interface TaskDetailMainContentProps {
   titleSize?: "2xl" | "3xl";
   /** Slot rendered between Title and Description — used by Drawer to inject Status + Details */
   afterTitle?: React.ReactNode;
+  boardColumns?: TaskStatusColumn[];
 }
 
 export default function TaskDetailMainContent({
@@ -48,6 +50,7 @@ export default function TaskDetailMainContent({
   onSaveDescription,
   titleSize = "3xl",
   afterTitle,
+  boardColumns,
 }: TaskDetailMainContentProps) {
   const titleTextClass =
     titleSize === "3xl"
@@ -181,6 +184,7 @@ export default function TaskDetailMainContent({
             assigneeName={assigneeName}
             assignee={issue.assignee}
             labels={issue.labels}
+            boardColumns={boardColumns}
           />
         )}
       </div>
