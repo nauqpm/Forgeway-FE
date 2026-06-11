@@ -15,6 +15,7 @@ export const apiRoutes = {
         BASE: '/workspaces',
         BY_ID: (workspaceId: string) => `/workspaces/${workspaceId}`,
         UPDATE: (workspaceId: string) => `/workspaces/${workspaceId}`,
+        AVATAR_SAMPLES: '/workspaces/avatar-samples',
         MEMBERS: (workspaceId: string) => `/workspaces/${workspaceId}/members`,
         ADD_MEMBER: (workspaceId: string) => `/workspaces/${workspaceId}/members`,
         LEAVE: (workspaceId: string) => `/workspaces/${workspaceId}/members/me`,

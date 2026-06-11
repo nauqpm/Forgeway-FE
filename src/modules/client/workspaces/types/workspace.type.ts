@@ -20,6 +20,8 @@ export interface Workspace {
     role: string;
   }[];
   description?: string;
+  avatar?: string;
+  access?: "private" | "public";
   visibility: "private" | "public";
   template?: "kanban" | "scrum";
   type?: "kanban" | "scrum";

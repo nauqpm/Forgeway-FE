@@ -178,7 +178,7 @@ export default function WorkspaceDetailPage({
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const workspaceApiId = workspace?._id;
-  const { setCurrentWorkspace } = useWorkspaceStore();
+  const { setCurrentWorkspace, updateWorkspaceAvatar } = useWorkspaceStore();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(
     initialTab || "board",
@@ -552,6 +552,17 @@ export default function WorkspaceDetailPage({
   const canUpdateWorkspace =
     isWorkspaceAdmin &&
     workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE);
+
+  const handleWorkspaceUpdated = useCallback(
+    (updatedWorkspace: Workspace) => {
+      setWorkspace(updatedWorkspace);
+      setCurrentWorkspace(updatedWorkspace as any);
+      if (updatedWorkspace._id && updatedWorkspace.avatar) {
+        updateWorkspaceAvatar(updatedWorkspace._id, updatedWorkspace.avatar);
+      }
+    },
+    [setCurrentWorkspace, updateWorkspaceAvatar],
+  );
 
   const {
     handleCreateIssue,
@@ -1157,6 +1168,7 @@ export default function WorkspaceDetailPage({
         setShowCreateIssue={handleOpenGlobalCreateIssue}
         canCreateTask={canCreateTask}
         canUpdateWorkspace={canUpdateWorkspace}
+        onWorkspaceUpdated={handleWorkspaceUpdated}
       />
 
       {/* Tabs */}
