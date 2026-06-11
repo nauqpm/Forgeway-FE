@@ -126,7 +126,7 @@ export default function ChatSidebar() {
 
         {type === 'dm' ? (
           <div className="relative flex-shrink-0 mt-0.5">
-            <div className={cn("w-5 h-5 rounded-full text-white flex items-center justify-center shadow-sm overflow-hidden", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
+            <div className={cn("w-9 h-9 rounded-full text-white flex items-center justify-center shadow-sm overflow-hidden", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
               {displayAvatar ? (
                 <img 
                   src={displayAvatar} 
@@ -138,36 +138,37 @@ export default function ChatSidebar() {
                     if (parent && !parent.querySelector('span')) {
                       const span = document.createElement('span');
                       span.innerText = displayName?.charAt(0).toUpperCase() || 'U';
-                      span.className = "text-[8px] font-bold";
+                      span.className = "text-[13px] font-bold";
                       parent.appendChild(span);
                     }
                   }}
                 />
               ) : (
-                <span className="text-[8px] font-bold">{displayName?.charAt(0).toUpperCase()}</span>
+                <span className="text-[13px] font-bold">{displayName?.charAt(0).toUpperCase()}</span>
               )}
             </div>
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#FBFBFA] dark:border-[#252525] bg-[#D1D5DB]" />
+            {/* Status indicator temporarily hidden as per user request */}
+            {/* <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#FBFBFA] dark:border-[#252525] bg-[#D1D5DB]" /> */}
           </div>
         ) : type === 'workspace' ? (
-          <div className={cn("w-5 h-5 rounded-[6px] text-white flex items-center justify-center text-[0.625rem] font-bold flex-shrink-0 shadow-sm mt-0.5", avatarBg)}>
+          <div className={cn("w-7 h-7 rounded-[6px] text-white flex items-center justify-center text-[0.75rem] font-bold flex-shrink-0 shadow-sm mt-0.5", avatarBg)}>
             {name?.charAt(0)}
           </div>
         ) : (
-          <Icon className={cn("w-4 h-4 flex-shrink-0 transition-colors mt-0.5", iconColorClass)} />
+          <Icon className={cn("w-5 h-5 flex-shrink-0 transition-colors mt-1", iconColorClass)} />
         )}
 
-        <div className="flex-1 min-w-0 flex flex-col items-start">
+        <div className="flex-1 min-w-0 flex flex-col items-start justify-center min-h-[36px]">
           <span className={cn(
-            "truncate w-full text-left text-[0.8125rem] transition-all", 
-            isUnread ? "font-bold text-[#111111] dark:text-[#E8E8E7]" : "font-normal"
+            "truncate w-full text-left text-base transition-all", 
+            isUnread ? "font-bold text-[#111111] dark:text-[#E8E8E7]" : "font-medium"
           )}>
             {displayName}
           </span>
           {channel && (
             <div className={cn(
-              "text-[11px] truncate w-full text-left",
-              isUnread ? "text-[#111111] dark:text-[#E8E8E7] font-medium" : "text-[#ABABAB]"
+              "text-xs truncate w-full text-left mt-[1px]",
+              isUnread ? "text-[#111111] dark:text-[#E8E8E7] font-semibold" : "text-[#ABABAB]"
             )}>
               {getLastMessagePreview(channel)}
             </div>
