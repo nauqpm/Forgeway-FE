@@ -110,7 +110,7 @@ export default function VersionHistorySidebar({
                   className="flex-1 py-1.5 px-2 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-900 transition-colors flex items-center justify-center gap-1"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  <span>Xem</span>
+                  <span>Preview</span>
                 </button>
                 <button
                   onClick={() => setConfirmRestoreId(ver.id)}

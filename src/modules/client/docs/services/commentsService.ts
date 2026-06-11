@@ -32,6 +32,7 @@ export interface PageComment {
   createdAt?: string;
   updatedAt?: string;
   replies?: PageComment[];
+  anchorStatus?: string;
 }
 
 export interface CreatePageCommentPayload {
