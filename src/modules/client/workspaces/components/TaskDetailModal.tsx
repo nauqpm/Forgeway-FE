@@ -203,6 +203,7 @@ export default function TaskDetailModal({
                 }
               }}
               titleSize="3xl"
+              boardColumns={boardColumns}
             />
           </div>
 
