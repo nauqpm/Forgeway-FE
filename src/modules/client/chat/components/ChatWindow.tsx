@@ -1,29 +1,52 @@
-'use client';
+"use client";
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { useChatStore } from '@/stores/chatStore';
-import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { getMessagesAPI } from '@/modules/client/chat/services/chatService';
-import MessageItem from './MessageItem';
-import MessageInput from './MessageInput';
-import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
-import { useChatRealtime } from '../hooks/useChatRealtime';
+import Link from "next/link";
+import React, { useEffect, useRef, useState, useMemo } from "react";
+import { useChatStore } from "@/stores/chatStore";
+import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
+import { getMessagesAPI } from "@/modules/client/chat/services/chatService";
+import MessageItem from "./MessageItem";
+import MessageInput from "./MessageInput";
+import MeetingBanner from "./MeetingBanner";
+import {
+  Hash,
+  Megaphone,
+  Loader2,
+  Info,
+  Search,
+  Phone,
+  Video,
+  Users,
+} from "lucide-react";
+import { useChatRealtime } from "../hooks/useChatRealtime";
+import toast from "react-hot-toast";
+import { MeetingType } from "../types/webrtc.types";
 
 export default function ChatWindow() {
-  const { activeChannelId, channels, messagesByChannel, setMessages, typingUsers, clearOldTyping } = useChatStore();
-  const currentUserId = useAuthStore(state => state.user?.id);
-  const userRole = useAuthStore(state => state.user?.role);
+  const {
+    activeChannelId,
+    channels,
+    messagesByChannel,
+    setMessages,
+    typingUsers,
+    clearOldTyping,
+  } = useChatStore();
+  const currentUserId = useAuthStore((state) => state.user?.id);
+  const userRole = useAuthStore((state) => state.user?.role);
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const activeChannel = channels.find(c => c._id === activeChannelId);
-  
+  const activeChannel = channels.find((c) => c._id === activeChannelId);
+
   const messages = useMemo(() => {
-    const rawMessages = activeChannelId ? messagesByChannel[activeChannelId] || [] : [];
+    const rawMessages = activeChannelId
+      ? messagesByChannel[activeChannelId] || []
+      : [];
     // Ensure chronological order (oldest to newest)
-    return [...rawMessages].sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    return [...rawMessages].sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
   }, [activeChannelId, messagesByChannel]);
 
@@ -31,9 +54,9 @@ export default function ChatWindow() {
     if (activeChannelId) {
       setLoading(true);
       getMessagesAPI(activeChannelId)
-        .then(msgs => setMessages(activeChannelId, msgs))
+        .then((msgs) => setMessages(activeChannelId, msgs))
         .finally(() => setLoading(false));
-      
+
       markAsRead(activeChannelId);
       joinChannel(activeChannelId);
     }
@@ -62,8 +85,12 @@ export default function ChatWindow() {
         <div className="w-16 h-16 bg-[#F0F0EE] dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
           <Hash className="w-8 h-8 opacity-20" />
         </div>
-        <h3 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">Select a channel to start</h3>
-        <p className="text-sm">Messages will appear here once you select a conversation</p>
+        <h3 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          Select a channel to start
+        </h3>
+        <p className="text-sm">
+          Messages will appear here once you select a conversation
+        </p>
       </div>
     );
   }
@@ -75,19 +102,21 @@ export default function ChatWindow() {
   const getTypingText = () => {
     if (typingUserIds.length === 0) return null;
     if (typingUserIds.length === 1) {
-      return 'Someone is typing...';
+      return "Someone is typing...";
     }
     return `${typingUserIds.length} people are typing...`;
   };
 
   const getSenderId = (msg: any) => {
     if (!msg?.senderId) return null;
-    if (typeof msg.senderId === 'string') return msg.senderId;
+    if (typeof msg.senderId === "string") return msg.senderId;
     return msg.senderId._id || msg.senderId.id;
   };
 
-  const isSuperAdmin = userRole === 'super_admin';
-  const isReadOnly = activeChannel.type === 'announcement' && !isSuperAdmin;
+  const isSuperAdmin = userRole === "super_admin";
+  const isReadOnly = activeChannel.type === "announcement" && !isSuperAdmin;
+
+  // handleStartMeeting has been replaced by Next.js Link targeting /meeting/init
 
   return (
     <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-[#202020]">
@@ -95,21 +124,26 @@ export default function ChatWindow() {
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex flex-col items-start justify-center gap-0 min-w-0">
           <div className="flex items-center gap-2">
-            {activeChannel.type === 'announcement' ? (
+            {activeChannel.type === "announcement" ? (
               <Megaphone className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
             ) : (
               <Hash className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
             )}
-            <span className="font-bold text-[#111111] dark:text-[#E8E8E7] truncate">{activeChannel.name}</span>
+            <span className="font-bold text-[#111111] dark:text-[#E8E8E7] truncate">
+              {activeChannel.name}
+            </span>
           </div>
-          
-          {activeChannel.type !== 'dm' && (
+
+          {activeChannel.type !== "dm" && (
             <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
               {activeChannel.description || (
                 <>
-                  {activeChannel.type === 'general' && "Everyone in the organization"}
-                  {activeChannel.type === 'announcement' && "Only admins can post messages here"}
-                  {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
+                  {activeChannel.type === "general" &&
+                    "Everyone in the organization"}
+                  {activeChannel.type === "announcement" &&
+                    "Only admins can post messages here"}
+                  {activeChannel.type === "workspace" &&
+                    `Channel for workspace · ${activeChannel.name}`}
                 </>
               )}
             </span>
@@ -117,24 +151,47 @@ export default function ChatWindow() {
         </div>
 
         <div className="flex items-center gap-3 text-[#787774] dark:text-[#9B9A97]">
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Phone className="w-4 h-4" /></button>
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Video className="w-4 h-4" /></button>
-          
+          <Link
+            href={`/meeting/init?channel=${activeChannelId}&type=voice`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+            title="Start voice meeting"
+          >
+            <Phone className="w-4 h-4" />
+          </Link>
+          <Link
+            href={`/meeting/init?channel=${activeChannelId}&type=video`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+            title="Start video meeting"
+          >
+            <Video className="w-4 h-4" />
+          </Link>
+
           <div className="w-px h-4 bg-[#EAEAEA] dark:bg-white/[0.06] mx-1" />
-          
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors" title="View members">
+
+          <button
+            className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+            title="View members"
+          >
             <Users className="w-4 h-4" />
           </button>
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Search className="w-4 h-4" /></button>
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Info className="w-4 h-4" /></button>
+          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors">
+            <Search className="w-4 h-4" />
+          </button>
+          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors">
+            <Info className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
+      {/* Active Meeting Banner */}
+      <MeetingBanner channelId={activeChannelId} />
+
       {/* Messages area */}
-      <div 
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto min-h-0"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
         {loading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
@@ -145,21 +202,27 @@ export default function ChatWindow() {
               const previousMsg = messages[idx - 1];
               const currentSenderId = getSenderId(msg);
               const previousSenderId = getSenderId(previousMsg);
-              
-              const isSameUser = previousSenderId && currentSenderId && previousSenderId === currentSenderId;
-              
+
+              const isSameUser =
+                previousSenderId &&
+                currentSenderId &&
+                previousSenderId === currentSenderId;
+
               // Only group if within 5 minutes
-              const timeDiff = previousMsg 
-                ? (new Date(msg.createdAt).getTime() - new Date(previousMsg.createdAt).getTime()) / 1000 / 60
+              const timeDiff = previousMsg
+                ? (new Date(msg.createdAt).getTime() -
+                    new Date(previousMsg.createdAt).getTime()) /
+                  1000 /
+                  60
                 : 10;
-              
+
               const isSameUserAsPrevious = isSameUser && timeDiff < 5;
               const isMine = currentUserId === currentSenderId;
 
               return (
-                <MessageItem 
-                  key={msg._id} 
-                  message={msg} 
+                <MessageItem
+                  key={msg._id}
+                  message={msg}
                   isSameUserAsPrevious={isSameUserAsPrevious}
                   isMine={isMine}
                 />
@@ -178,7 +241,7 @@ export default function ChatWindow() {
             </div>
           )}
         </div>
-        
+
         {isReadOnly ? (
           <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
             <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] font-medium italic">
@@ -186,7 +249,10 @@ export default function ChatWindow() {
             </p>
           </div>
         ) : (
-          <MessageInput channelId={activeChannelId} channelName={activeChannel.name} />
+          <MessageInput
+            channelId={activeChannelId}
+            channelName={activeChannel.name}
+          />
         )}
       </div>
     </div>
