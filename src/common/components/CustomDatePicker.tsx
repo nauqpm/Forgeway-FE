@@ -202,6 +202,7 @@ export default function CustomDatePicker({
       className={`rounded-[8px] border ${panelThemeClass}`}
       role="dialog"
       aria-label="Date picker calendar"
+      onMouseDown={(e) => e.preventDefault()}
     >
       <div className="flex items-center justify-between border-b border-[#EAEAEA] px-4 py-3 dark:border-white/8">
         <button

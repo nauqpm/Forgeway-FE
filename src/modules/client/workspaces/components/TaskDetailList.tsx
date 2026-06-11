@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { TaskDetailResponse } from "../types/task-detail.type";
+import type { Issue } from "../types/issue.type";
 import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
 import TaskActivityHistory from "./TaskActivityHistory";
 import TaskComments from "./TaskComments";
@@ -25,6 +26,7 @@ import AssigneePicker, {
   type AssigneePickerUser,
 } from "@/common/components/AssigneePicker";
 import TypePicker from "@/common/components/TypePicker";
+import PriorityPicker from "@/common/components/PriorityPicker";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
@@ -36,6 +38,7 @@ interface TaskDetailListProps {
   onClose: () => void;
   showBackButton?: boolean;
   onUpdateIssue?: (updatedIssue: any) => void;
+  onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: any) => void;
   detailUrl?: string;
   canEditTask?: boolean;
@@ -60,13 +63,6 @@ const formatDateTime = (value?: string | null) => {
   }).format(new Date(value));
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-  High: "text-[#9F2F2D] dark:text-[#F87171]",
-  Medium: "text-[#956400] dark:text-[#F59E0B]",
-  Low: "text-[#1F6C9F] dark:text-[#93C5FD]",
-  Highest: "text-[#9F2F2D] dark:text-[#F87171]",
-  Lowest: "text-[#1F6C9F] dark:text-[#93C5FD]",
-};
 
 type SprintOption = {
   _id?: string;
@@ -84,6 +80,7 @@ export default function TaskDetailList({
   onClose,
   showBackButton = true,
   onUpdateIssue,
+  onFieldUpdate,
   onArchiveIssue,
   canEditTask = true,
 }: TaskDetailListProps) {
@@ -117,13 +114,22 @@ export default function TaskDetailList({
     issue.storyPoints === null || issue.storyPoints === undefined
       ? "None"
       : String(issue.storyPoints);
-  const priorityColor = PRIORITY_COLORS[issue.priority] || "text-[#787774] dark:text-[#9B9A97]";
   const assigneeUsers = toAssigneePickerUsers(workspaceMembers);
   const currentAssigneeId = getIssueAssigneeId(issue);
   const currentAssigneeName =
     issue.assigneeDisplayName ||
     assigneeUsers.find((candidate) => candidate.id === currentAssigneeId)?.name ||
     getUserDisplayName(issue.assignee, null);
+  const canUpdateTask = canEditTask && Boolean(onUpdateIssue || onFieldUpdate);
+
+  const updateIssueFields = (updates: Partial<Issue>) => {
+    if (!canUpdateTask || issue.isArchived) return;
+    if (onFieldUpdate) {
+      onFieldUpdate(issue.id, updates);
+      return;
+    }
+    onUpdateIssue?.({ ...issue, ...updates });
+  };
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -133,19 +139,30 @@ export default function TaskDetailList({
   };
 
   const handleDateChange = (field: "startDate" | "dueDate", nextValue: string | null) => {
-    if (!canEditTask || !onUpdateIssue || issue.isArchived) return;
-    onUpdateIssue({ ...issue, [field]: nextValue });
+    if (!canUpdateTask || issue.isArchived) return;
+    const nextDate = nextValue ?? "";
+
+    if (field === "startDate") {
+      const dueDateValue = issue.dueDate ? String(issue.dueDate).slice(0, 10) : "";
+      if (nextDate && dueDateValue && nextDate > dueDateValue) return;
+    }
+
+    if (field === "dueDate") {
+      const startDateValue = issue.startDate ? String(issue.startDate).slice(0, 10) : "";
+      if (nextDate && startDateValue && nextDate < startDateValue) return;
+    }
+
+    updateIssueFields({ [field]: nextValue ?? undefined } as Partial<Issue>);
   };
 
   const handleAssigneeChange = (uid: string | null) => {
-    if (!canEditTask || !onUpdateIssue || issue.isArchived) return;
+    if (!canUpdateTask || issue.isArchived) return;
 
     const selectedUser: AssigneePickerUser | undefined = assigneeUsers.find(
       (candidate) => candidate.id === uid,
     );
 
-    onUpdateIssue({
-      ...issue,
+    updateIssueFields({
       assigneeId: uid,
       assignee: uid ?? "U",
       assigneeDisplayName: uid ? selectedUser?.name ?? uid : "Unassigned",
@@ -290,29 +307,7 @@ export default function TaskDetailList({
 
           {/* Subtasks — hidden until backend supports */}
 
-          {/* Linked Work Items */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Linked work items</h2>
-              <button className="p-1 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors">
-                <Plus className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
-              </button>
-            </div>
-            <div className="bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-4">
-              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-3">No linked items yet</p>
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href={`/docs/create?issueId=${issue.id}`}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] dark:bg-[#3B82F6] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] text-white text-[0.8125rem] font-medium rounded-[6px] transition-colors ${issue.isArchived ? "pointer-events-none opacity-50" : ""}`}
-                >
-                  <Plus className="w-3.5 h-3.5" /> Create Document
-                </Link>
-                <button className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] font-medium rounded-[6px] transition-colors">
-                  <LinkIcon className="w-3.5 h-3.5" /> Link item
-                </button>
-              </div>
-            </div>
-          </div>
+          
 
           {/* Activity */}
           <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] pt-6">
@@ -367,9 +362,9 @@ export default function TaskDetailList({
               value={issue.status}
               columnId={issue.columnId}
               options={boardColumns.map(col => ({ id: col.id, name: col.name }))}
-              disabled={!canEditTask || issue.isArchived}
+              disabled={!canUpdateTask || issue.isArchived}
               onChange={(status, option) =>
-                onUpdateIssue?.({ ...issue, columnId: option.id, status })
+                updateIssueFields({ columnId: option.id, status })
               }
             />
           </div>
@@ -398,7 +393,7 @@ export default function TaskDetailList({
                     onChange={handleAssigneeChange}
                     placement="auto"
                     size="md"
-                    disabled={!canEditTask || issue.isArchived}
+                    disabled={!canUpdateTask || issue.isArchived}
                   />
                 </DetailRow>
 
@@ -406,8 +401,8 @@ export default function TaskDetailList({
                 <DetailRow label="Type">
                   <TypePicker
                     value={issue.type ?? "Task"}
-                    onChange={(type) => onUpdateIssue?.({ ...issue, type })}
-                    disabled={!canEditTask || issue.isArchived}
+                    onChange={(type) => updateIssueFields({ type })}
+                    disabled={!canUpdateTask || issue.isArchived}
                     variant="pill"
                     size="sm"
                     placement="bottom"
@@ -416,10 +411,14 @@ export default function TaskDetailList({
 
                 {/* Priority */}
                 <DetailRow label="Priority">
-                  <div className={`flex items-center gap-1.5 text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] p-1 -ml-1 rounded-[6px] cursor-pointer transition-colors ${priorityColor}`}>
-                    <span className="inline-block w-2.5 h-2.5 rounded-sm bg-current opacity-80" />
-                    {issue.priority}
-                  </div>
+                  <PriorityPicker
+                    value={issue.priority}
+                    onChange={(p) => updateIssueFields({ priority: p })}
+                    disabled={!canUpdateTask || issue.isArchived}
+                    variant="pill"
+                    size="sm"
+                    placement="bottom"
+                  />
                 </DetailRow>
 
                 {/* Parent */}
@@ -432,7 +431,7 @@ export default function TaskDetailList({
                   <CustomDatePicker
                     value={issue.startDate}
                     onChange={(nextValue) => handleDateChange("startDate", nextValue)}
-                    disabled={!canEditTask || issue.isArchived}
+                    disabled={!canUpdateTask || issue.isArchived}
                     inputClassName="h-8 bg-transparent dark:bg-transparent"
                     ariaLabel="Task start date"
                   />
@@ -442,7 +441,7 @@ export default function TaskDetailList({
                   <CustomDatePicker
                     value={issue.dueDate}
                     onChange={(nextValue) => handleDateChange("dueDate", nextValue)}
-                    disabled={!canEditTask || issue.isArchived}
+                    disabled={!canUpdateTask || issue.isArchived}
                     inputClassName="h-8 bg-transparent dark:bg-transparent"
                     ariaLabel="Task due date"
                   />

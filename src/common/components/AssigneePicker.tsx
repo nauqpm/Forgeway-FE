@@ -65,12 +65,13 @@ export function toAssigneePickerUsers(
         typeof m.userId === "object"
           ? m.userId?.avatar || m.userId?.avatarUrl
           : undefined;
+      const email = typeof m.userId === "object" ? m.userId?.email : undefined;
       const parts = name.trim().split(/\s+/).filter(Boolean);
       const initials =
         parts.length >= 2
           ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
           : name.substring(0, 2).toUpperCase();
-      return { id, name, initials, avatar };
+      return { id, name, initials, avatar, email };
     })
     .filter((u) => u.id);
 }

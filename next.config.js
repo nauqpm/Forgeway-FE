@@ -22,13 +22,14 @@ const nextConfig = {
     ],
   },
   outputFileTracingRoot: path.join(__dirname),
+  output: "standalone",
 };
 
 const serverUrl = process.env.NEXT_PUBLIC_API_URL;
 
-// if (!serverUrl?.startsWith("http")) {
-//   throw new Error("NEXT_PUBLIC_API_URL must start with http:// or https://");
-// }
+if (!serverUrl?.startsWith("http")) {
+  console.log("Server backend URL: " + serverUrl);
+}
 
 // Add rewrites dynamically
 nextConfig.rewrites = async () => {

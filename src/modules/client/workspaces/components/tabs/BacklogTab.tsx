@@ -3,7 +3,7 @@
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
-import AssigneePicker from "../../../../../common/components/AssigneePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "../../../../../common/components/AssigneePicker";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
 import StatusPicker from "@/common/components/StatusPicker";
@@ -169,24 +169,21 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
   const canManageSprint = permissions?.canManageSprint ?? true;
 
   const workspaceMembers = useMemo(() => {
-    return (workspace.members ?? [])
-      .map((member: WorkspaceMemberItem): AssigneeInfo => {
-        const user = member.userId as any;
-        const id = typeof user === "string" ? normalizeObjectId(user) : normalizeObjectId(user);
-        const email = typeof user === "string" ? "" : user?.email ?? "";
-        const name = typeof user === "string" ? id : user?.fullName || user?.name || email || id;
-        const avatar = typeof user === "string" ? undefined : user?.avatar || user?.avatarUrl || user?.image;
+    const rolesByUserId = new Map<string, string | undefined>(
+      (workspace.members ?? []).map((member: WorkspaceMemberItem) => [
+        normalizeObjectId(member.userId),
+        member.role,
+      ]),
+    );
 
-        return {
-          id,
-          name: name || "Member",
-          email,
-          role: member.role,
-          avatar,
-          initials: getInitials(name || email || id || "?") || "?",
-        };
-      })
-      .filter((member: AssigneeInfo) => member.id);
+    return toAssigneePickerUsers(workspace.members ?? []).map((member): AssigneeInfo => ({
+      id: member.id,
+      name: member.name || "Member",
+      email: member.email ?? "",
+      role: rolesByUserId.get(member.id),
+      avatar: member.avatar,
+      initials: member.initials ?? (getInitials(member.name || member.email || member.id || "?") || "?"),
+    }));
   }, [workspace.members]);
 
   const filterAssignees = useMemo(() => {
@@ -344,8 +341,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 key={sprint._id}
                 className="bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden group/sprint"
               >
-                <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-4 xl:flex-row xl:items-center xl:justify-between">
-                  <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                <div className="flex items-center justify-between gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-4">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <input
                       type="checkbox"
                       checked={isAllSelected}
@@ -354,10 +351,10 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       ref={(input) => {
                         if (input) input.indeterminate = isSomeSelected;
                       }}
-                      className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer"
+                      className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer shrink-0"
                     />
                     <h3
-                      className="flex min-w-0 flex-wrap items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer"
+                      className="flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer whitespace-nowrap"
                       onClick={() => {
                         if (sprint.status === "completed") return;
                         setEditingSprint(sprint);
@@ -371,49 +368,32 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                         </span>
                       )}
                     </h3>
-                    <p className="flex flex-wrap gap-2 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                      <span>
-                        {sprint.startDate
-                          ? `${new Date(sprint.startDate).toLocaleDateString('en-US')} - ${new Date(sprint.endDate!).toLocaleDateString('en-US')}`
-                          : "No date"}
-                      </span>
-                      <span>&middot;</span>
-                      <span>{sprintIssues.length} issues</span>
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 xl:justify-end">
-                    <div className="flex gap-2 items-center group relative cursor-help">
+                    <div className="flex gap-1.5 items-center group relative cursor-help shrink-0">
                       <span className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] font-bold flex items-center justify-center">
-                        {
-                          sprintIssues.filter((i) => i.status === "To Do")
-                            .length
-                        }
+                        {sprintIssues.filter((i) => i.status === "To Do").length}
                       </span>
                       <span className="w-6 h-6 rounded-full bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] text-[#956400] dark:text-[#F0C040] text-[0.6875rem] font-bold flex items-center justify-center">
-                        {
-                          sprintIssues.filter((i) => i.status === "In Progress")
-                            .length
-                        }
+                        {sprintIssues.filter((i) => i.status === "In Progress").length}
                       </span>
                       <span className="w-6 h-6 rounded-full bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.15)] text-[#346538] dark:text-[#6FCF7B] text-[0.6875rem] font-bold flex items-center justify-center">
                         {sprintIssues.filter((i) => i.status === "Done").length}
                       </span>
-
-                      {/* Tooltip for Story Points */}
-                      <div className="absolute top-full mt-2 right-0 bg-[#111111] dark:bg-[#2A2A2A] text-[#E8E8E7] text-[0.6875rem] px-3 py-2 rounded-[6px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                      <div className="absolute top-full mt-2 left-0 bg-[#111111] dark:bg-[#2A2A2A] text-[#E8E8E7] text-[0.6875rem] px-3 py-2 rounded-[6px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                         Progress: {donePoints} / {totalPoints} story points
                       </div>
                     </div>
                     {canManageSprint && (
-                    <button
-                      onClick={() => handleEditSprint(sprint)}
-                      disabled={sprint.status === "completed"}
-                      className="p-1 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] rounded-[4px] transition-colors"
-                      title="Edit sprint"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
+                      <button
+                        onClick={() => handleEditSprint(sprint)}
+                        disabled={sprint.status === "completed"}
+                        className="p-1 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] rounded-[4px] transition-colors shrink-0"
+                        title="Edit sprint"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
                     )}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
                     {canManageSprint && sprint.status === "planning" && (
                       <button
                         onClick={() => handleDeleteSprint(sprint._id)}
@@ -424,21 +404,21 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       </button>
                     )}
                     {canManageSprint && (
-                    <button
-                      onClick={() =>
-                        sprint.status === "active"
-                          ? handleCompleteSprint(sprint._id)
-                          : handleStartSprint(sprint._id)
-                      }
-                      disabled={isStarting || isCompleting || sprint.status === "completed" || sprint._id.startsWith("temp-")}
-                      className="px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F0F0EE] dark:hover:bg-[#333333] transition-colors disabled:opacity-40"
-                    >
-                      {sprint.status === "active"
-                        ? "Complete Sprint"
-                        : sprint.status === "completed"
-                          ? "Completed"
-                          : "Start Sprint"}
-                    </button>
+                      <button
+                        onClick={() =>
+                          sprint.status === "active"
+                            ? handleCompleteSprint(sprint._id)
+                            : handleStartSprint(sprint._id)
+                        }
+                        disabled={isStarting || isCompleting || sprint.status === "completed" || sprint._id.startsWith("temp-")}
+                        className="px-3 py-1.5 bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F0F0EE] dark:hover:bg-[#333333] transition-colors disabled:opacity-40"
+                      >
+                        {sprint.status === "active"
+                          ? "Complete Sprint"
+                          : sprint.status === "completed"
+                            ? "Completed"
+                            : "Start Sprint"}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -529,7 +509,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                       <TypePicker
                                         value={issue.type ?? "Task"}
                                         onChange={(type) => updateIssueDirectly(issue.id, { type })}
-                                        placement="top"
                                         variant="pill"
                                         size="sm"
                                       />
@@ -537,8 +516,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
                                       <AssigneePicker
                                         users={workspaceMembers}
-                                        value={issue.assigneeId ?? issue.assignee ?? null}
-                                        onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                        value={normalizeObjectId(issue.assigneeId ?? issue.assignee) || null}
+                                        onChange={uid => updateIssueDirectly(issue.id, {
+                                          assigneeId: uid,
+                                          assignee: uid ?? "U",
+                                          assigneeDisplayName: uid ? workspaceMembers.find((m: any) => m.id === uid)?.name ?? uid : "Unassigned",
+                                          assigneeAvatar: uid ? workspaceMembers.find((m: any) => m.id === uid)?.avatar : undefined,
+                                        })}
                                         placement="auto"
                                         size="sm"
                                       />
@@ -547,7 +531,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                       <PriorityPicker
                                         value={issue.priority}
                                         onChange={p => updateIssueDirectly(issue.id, { priority: p })}
-                                        placement="top"
                                         variant="pill"
                                         size="sm"
                                       />
@@ -580,11 +563,11 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                   )}
                 </Droppable>
                 {canCreateTask && sprint.status !== "completed" && (
-                  <div className="px-3 pb-3 flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 border-t border-[#F0F0EE] dark:border-white/[0.04] bg-[#F9F9F8]/50 dark:bg-[#252525] p-3 sm:flex-row sm:items-center">
                     <input
                       type="text"
-                      placeholder="Quick-create task... (Enter to save)"
-                      className="w-full py-1.5 px-3 text-[0.8125rem] bg-transparent border border-dashed border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[#787774] dark:text-[#9B9A97] placeholder:text-[#ABABAB] focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-all"
+                      placeholder="What do you need to do next?"
+                      className="flex-1 py-1.5 px-3 bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[0.8125rem] focus:border-[#2563EB] outline-none transition-colors"
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && e.currentTarget.value.trim()) {
                           const title = e.currentTarget.value.trim();
@@ -602,9 +585,9 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                         setShowCreateIssue(true);
                       }}
                       disabled={!canCreateTask}
-                      className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)] disabled:opacity-40 disabled:hover:bg-transparent p-1.5 px-3 rounded-[6px] flex items-center gap-1 transition-colors w-fit"
+                      className="text-[0.8125rem] font-medium bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] hover:text-[#111111] dark:hover:text-[#E8E8E7] disabled:opacity-40 px-3 py-1.5 rounded-[6px] transition-colors whitespace-nowrap"
                     >
-                      <Plus className="w-4 h-4" /> Create task (full form)
+                      Open modal...
                     </button>
                   </div>
                 )}
@@ -748,7 +731,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     <TypePicker
                                       value={issue.type ?? "Task"}
                                       onChange={(type) => updateIssueDirectly(issue.id, { type })}
-                                      placement="top"
                                       variant="pill"
                                       size="sm"
                                     />
@@ -756,8 +738,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
                                     <AssigneePicker
                                       users={workspaceMembers}
-                                      value={issue.assigneeId ?? issue.assignee ?? null}
-                                      onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid, assigneeDisplayName: workspaceMembers.find((m: any) => m.id === uid)?.name ?? '' })}
+                                      value={normalizeObjectId(issue.assigneeId ?? issue.assignee) || null}
+                                      onChange={uid => updateIssueDirectly(issue.id, {
+                                        assigneeId: uid,
+                                        assignee: uid ?? "U",
+                                        assigneeDisplayName: uid ? workspaceMembers.find((m: any) => m.id === uid)?.name ?? uid : "Unassigned",
+                                        assigneeAvatar: uid ? workspaceMembers.find((m: any) => m.id === uid)?.avatar : undefined,
+                                      })}
                                       placement="bottom"
                                       size="sm"
                                     />
@@ -766,7 +753,6 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                     <PriorityPicker
                                       value={issue.priority}
                                       onChange={p => updateIssueDirectly(issue.id, { priority: p })}
-                                      placement="top"
                                       variant="pill"
                                       size="sm"
                                     />

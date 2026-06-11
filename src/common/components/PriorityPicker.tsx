@@ -112,7 +112,7 @@ export default function PriorityPicker({
   const dropdown = open && typeof document !== "undefined"
     ? createPortal(
         <div
-          className="fixed z-[200000] min-w-[9rem] overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
+          className="fixed z-[999999] min-w-[9rem] overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
           style={{ ...dropdownStyle, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         >
           {PRIORITIES.map((p) => {
