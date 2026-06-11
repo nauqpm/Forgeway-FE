@@ -4,6 +4,7 @@ import { useEffect, useCallback } from 'react';
 import { chatSocketClient } from '@/lib/socket/chat.client';
 import { SOCKET_EVENTS } from '@/lib/socket/socket.events';
 import { useChatStore } from '@/stores/chatStore';
+import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
 
 /**
  * Global component to handle all chat socket events.
@@ -41,8 +42,16 @@ export default function ChatRealtimeHandler() {
     
     addMessage(message.channelId, message);
     
-    const { activeChannelId, channels } = useChatStore.getState();
+    const { activeChannelId, channels, setChannels } = useChatStore.getState();
     const isCurrentChannel = activeChannelId === message.channelId;
+    const channelExists = channels.some(c => c._id === message.channelId);
+
+    // If it's a new DM channel not in our list, refresh the whole channel list
+    if (!channelExists) {
+      getChannelsAPI().then(allChannels => {
+        setChannels(allChannels);
+      });
+    }
 
     if (isCurrentChannel) {
       markAsRead(message.channelId);

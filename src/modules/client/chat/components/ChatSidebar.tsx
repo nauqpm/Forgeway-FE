@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
-import { useChatStore, Channel } from '@/stores/chatStore';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useChatStore, Channel, ChatUser } from '@/stores/chatStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
+import { getChannelsAPI, createDMAPI } from '@/modules/client/chat/services/chatService';
 import { Hash, Megaphone, MessageSquare, Loader2, MessageSquarePlus, User, UserPlus } from 'lucide-react';
 import { getWorkspaceUI } from '@/utils/workSpaceUI';
 
@@ -13,20 +13,31 @@ const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filt
 export default function ChatSidebar() {
   const { channels, setChannels, activeChannelId, setActiveChannel } = useChatStore();
   const { workspaces } = useWorkspaceStore();
-  const currentUserId = useAuthStore(state => state.user?.id);
+  const authUser = useAuthStore(state => state.user);
+  const currentUserId = authUser?._id || authUser?.id;
   const [loading, setLoading] = useState(channels.length === 0);
   const [activeTab, setActiveTab] = useState<'all' | 'channels' | 'dms'>('all');
 
-  useEffect(() => {
-    getChannelsAPI()
-      .then(setChannels)
-      .finally(() => setLoading(false));
+  const fetchSidebarData = useCallback(async () => {
+    try {
+      const allChannels = await getChannelsAPI();
+      setChannels(allChannels);
+    } catch (error) {
+      console.error("Failed to fetch channels", error);
+    } finally {
+      setLoading(false);
+    }
   }, [setChannels]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchSidebarData();
+  }, [fetchSidebarData]);
 
   const sortedChannels = useMemo(() => {
     return [...(channels || [])].sort((a, b) => {
-      const timeA = new Date(a.lastMessage?.createdAt || 0).getTime();
-      const timeB = new Date(b.lastMessage?.createdAt || 0).getTime();
+      const timeA = new Date(a.lastMessage?.createdAt || (a as any).updatedAt || (a as any).createdAt || 0).getTime();
+      const timeB = new Date(b.lastMessage?.createdAt || (b as any).updatedAt || (b as any).createdAt || 0).getTime();
       return timeB - timeA;
     });
   }, [channels]);
@@ -51,7 +62,11 @@ export default function ChatSidebar() {
     const lastMsg = channel.lastMessage;
     if (!lastMsg) return "Start a conversation";
     
-    const isMine = (lastMsg.senderId as any)?._id === currentUserId || lastMsg.senderId === currentUserId;
+    const msgSenderId = typeof lastMsg.senderId === 'object' 
+      ? (lastMsg.senderId._id || lastMsg.senderId.id) 
+      : lastMsg.senderId;
+
+    const isMine = String(msgSenderId) === String(currentUserId);
     const senderName = (lastMsg.senderId as any)?.fullName || "User";
     
     if (isMine) return `You: ${lastMsg.content}`;
@@ -68,6 +83,24 @@ export default function ChatSidebar() {
     const iconColorClass = isActive ? "text-[#2563EB] dark:text-[#93C5FD]" : "text-[#ABABAB] dark:text-[#6B6B6B]";
     let avatarBg = "bg-[#2563EB] dark:bg-[#3B82F6]";
 
+    let displayName = name;
+    let displayAvatar = null;
+
+    // For DMs, resolve the other member's details
+    if (type === 'dm' && channel) {
+      const members = channel.members || [];
+      const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+      
+      if (otherMember && typeof otherMember === 'object') {
+        displayName = otherMember.fullName || otherMember.email || "Direct Message";
+        displayAvatar = otherMember.avatar;
+      } else {
+        displayName = name || "Direct Message";
+      }
+    } else if (!displayName) {
+      displayName = "Channel";
+    }
+
     if (type === 'announcement') {
       Icon = Megaphone;
     } else if (type === 'workspace') {
@@ -81,21 +114,38 @@ export default function ChatSidebar() {
         key={id}
         onClick={() => setActiveChannel(id)}
         className={cn(
-          "w-full flex items-start gap-2 px-2 py-2 rounded-[6px] transition-colors group relative",
+          "w-full flex items-start gap-2 px-2 py-2 rounded-[6px] transition-colors group relative text-left",
           isActive 
             ? "bg-[#2563EB]/10 text-[#2563EB] dark:bg-[#2563EB]/20 dark:text-[#60A5FA] ring-1 ring-[#2563EB]/20" 
             : "text-[#787774] hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:bg-white/5 dark:hover:text-[#E8E8E7]"
         )}
       >
-        {/* Unread dot indicator */}
         {isUnread && !isActive && (
           <div className="absolute left-[-2px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-[#2563EB] shadow-[0_0_8px_rgba(37,99,235,0.6)]" />
         )}
 
         {type === 'dm' ? (
           <div className="relative flex-shrink-0 mt-0.5">
-            <div className={cn("w-5 h-5 rounded-full text-white flex items-center justify-center shadow-sm", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
-              <User className="w-3 h-3" />
+            <div className={cn("w-5 h-5 rounded-full text-white flex items-center justify-center shadow-sm overflow-hidden", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
+              {displayAvatar ? (
+                <img 
+                  src={displayAvatar} 
+                  alt={displayName} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent && !parent.querySelector('span')) {
+                      const span = document.createElement('span');
+                      span.innerText = displayName?.charAt(0).toUpperCase() || 'U';
+                      span.className = "text-[8px] font-bold";
+                      parent.appendChild(span);
+                    }
+                  }}
+                />
+              ) : (
+                <span className="text-[8px] font-bold">{displayName?.charAt(0).toUpperCase()}</span>
+              )}
             </div>
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#FBFBFA] dark:border-[#252525] bg-[#D1D5DB]" />
           </div>
@@ -112,7 +162,7 @@ export default function ChatSidebar() {
             "truncate w-full text-left text-[0.8125rem] transition-all", 
             isUnread ? "font-bold text-[#111111] dark:text-[#E8E8E7]" : "font-normal"
           )}>
-            {name}
+            {displayName}
           </span>
           {channel && (
             <div className={cn(
@@ -137,7 +187,6 @@ export default function ChatSidebar() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[#FBFBFA] dark:bg-[#252525]">
-      {/* Tab Bar */}
       <div className="flex items-center px-[10px] pt-2 gap-[2px] border-b border-[#EAEAEA] dark:border-white/[0.06]">
         <button 
           onClick={() => setActiveTab('all')}
@@ -151,7 +200,7 @@ export default function ChatSidebar() {
           All ({totalCount})
         </button>
         <button 
-          onClick={() => setActiveTab('channels')} // Internal name remains 'channels' for logic but label is Workspaces
+          onClick={() => setActiveTab('channels')}
           className={cn(
             "flex-1 px-2 py-1.5 text-[0.75rem] transition-all rounded-t-[4px]",
             activeTab === 'channels' 
@@ -214,3 +263,5 @@ export default function ChatSidebar() {
     </div>
   );
 }
+
+
