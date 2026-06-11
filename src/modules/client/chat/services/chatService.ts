@@ -80,24 +80,6 @@ export const createDMAPI = async (targetUserId: string): Promise<Channel> => {
   };
 };
 
-export const getAllUsersAPI = async (): Promise<any[]> => {
-  try {
-    const response = await api.get('/users/all', { 
-      params: getCacheBustParam() 
-    });
-    return normalizeUsers(normalizeArray<any>(response));
-  } catch (error: any) {
-    try {
-      const fallback = await api.get('/chat/users/search', {
-        params: { q: '', ...getCacheBustParam() }
-      });
-      return normalizeUsers(normalizeArray<any>(fallback));
-    } catch (fError) {
-      return [];
-    }
-  }
-};
-
 export const searchUsersAPI = async (search?: string): Promise<any[]> => {
   try {
     const response = await api.get('/chat/users/search', {

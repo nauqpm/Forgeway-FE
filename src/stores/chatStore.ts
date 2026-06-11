@@ -47,6 +47,7 @@ interface ChatStore {
   
   setChannels: (channels: Channel[]) => void;
   updateChannel: (channelId: string, updates: Partial<Channel>) => void;
+  incrementUnread: (channelId: string) => void;
   setActiveChannel: (channelId: string | null) => void;
   
   setMessages: (channelId: string, messages: Message[]) => void;
@@ -69,6 +70,12 @@ export const useChatStore = create<ChatStore>((set) => ({
   
   updateChannel: (channelId, updates) => set((state) => ({
     channels: state.channels.map((c) => c._id === channelId ? { ...c, ...updates } : c)
+  })),
+
+  incrementUnread: (channelId) => set((state) => ({
+    channels: state.channels.map((c) =>
+      c._id === channelId ? { ...c, unreadCount: (c.unreadCount || 0) + 1 } : c
+    )
   })),
 
   setActiveChannel: (activeChannelId) => set({ activeChannelId }),

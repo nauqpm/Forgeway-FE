@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Search, User, Loader2, Users } from 'lucide-react';
-import { createDMAPI, searchUsersAPI, getAllUsersAPI } from '../services/chatService';
+import { createDMAPI, searchUsersAPI } from '../services/chatService';
 import { useChatStore } from '@/stores/chatStore';
 
 interface UserData {
@@ -25,11 +25,11 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
   const [creating, setCreating] = useState(false);
   const { setActiveChannel, setChannels, channels } = useChatStore();
 
-  // Load all users on mount or when modal opens
+  // Load suggested users on mount or when modal opens
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
-      getAllUsersAPI()
+      searchUsersAPI('')
         .then(data => setSuggestedUsers(Array.isArray(data) ? data : []))
         .finally(() => setLoading(false));
     }
