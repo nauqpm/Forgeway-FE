@@ -24,13 +24,6 @@ export default function ChatRealtimeHandler() {
 
   const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Automatically join all channels when they are loaded to receive background updates
-  useEffect(() => {
-    if (channels && channels.length > 0) {
-      const channelIds = channels.map(c => c._id);
-      chatSocketClient.joinChannels(channelIds);
-    }
-  }, [channels]); // Runs whenever the channel list changes (e.g., after getChannelsAPI)
 
   const markAsRead = useCallback((channelId: string) => {
     const socket = chatSocketClient.getSocket();
@@ -87,7 +80,20 @@ export default function ChatRealtimeHandler() {
   const handleUnreadUpdate = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.channelId) return;
-    updateChannel(data.channelId, { unreadCount: data.unreadCount });
+
+    const { channels, setChannels } = useChatStore.getState();
+    const channelExists = channels.some(c => c._id === data.channelId);
+
+    if (!channelExists) {
+      getChannelsAPI().then(allChannels => {
+        setChannels(allChannels);
+      });
+    } else {
+      updateChannel(data.channelId, { 
+        unreadCount: data.unreadCount,
+        ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
+      });
+    }
   }, [updateChannel]);
 
   const handleReactionUpdated = useCallback((envelope: any) => {
