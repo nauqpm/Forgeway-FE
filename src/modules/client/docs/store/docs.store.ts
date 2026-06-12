@@ -247,7 +247,6 @@ export const useDocsStore = create<DocsState>((set, get) => ({
     try {
       await pagesService.updatePage(id, { title: newTitle });
     } catch (error) {
-      console.error(`Failed to rename document ${id}:`, error);
       toast.error(getErrorMessage(error, "Could not rename page"));
       set((current) => ({
         documents: current.documents.map((doc) => (doc.id === id ? oldDoc : doc)),

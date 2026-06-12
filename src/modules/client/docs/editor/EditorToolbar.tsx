@@ -83,6 +83,97 @@ const getTextStyleAttributes = (editor: Editor | null) => {
   };
 };
 
+const serializeStoredMarks = (editor: Editor) => {
+  const { storedMarks } = editor.state;
+
+  if (storedMarks === null) {
+    return "__inherit__";
+  }
+
+  if (storedMarks.length === 0) {
+    return "__empty__";
+  }
+
+  return storedMarks
+    .map((mark) => `${mark.type.name}:${JSON.stringify(mark.attrs)}`)
+    .join("|");
+};
+
+const getNonWhitespaceSegments = (editor: Editor, from: number, to: number, markName: "underline" | "strike") => {
+  const segments: Array<{ from: number; to: number; marked: boolean }> = [];
+
+  editor.state.doc.nodesBetween(from, to, (node, pos) => {
+    if (!node.isText || !node.text) {
+      return;
+    }
+
+    const start = Math.max(from, pos);
+    const end = Math.min(to, pos + node.nodeSize);
+
+    if (start >= end) {
+      return;
+    }
+
+    const textStart = start - pos;
+    const textEnd = end - pos;
+    const textSlice = node.text.slice(textStart, textEnd);
+    const marked = node.marks.some((mark) => mark.type.name === markName);
+    const nonWhitespaceRegex = /\S+/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = nonWhitespaceRegex.exec(textSlice)) !== null) {
+      const segmentFrom = start + match.index;
+      const segmentTo = segmentFrom + match[0].length;
+      segments.push({
+        from: segmentFrom,
+        to: segmentTo,
+        marked,
+      });
+    }
+  });
+
+  return segments;
+};
+
+const toggleInlineMarkSkippingSpaces = (editor: Editor, markName: "underline" | "strike") => {
+  editor.commands.focus();
+
+  const { selection, schema, tr } = editor.state;
+  const targetMark = schema.marks[markName];
+
+  if (!targetMark) {
+    return false;
+  }
+
+  if (selection.empty) {
+    return markName === "underline"
+      ? editor.chain().focus().toggleUnderline().run()
+      : editor.chain().focus().toggleStrike().run();
+  }
+
+  const segments = getNonWhitespaceSegments(editor, selection.from, selection.to, markName);
+
+  if (segments.length === 0) {
+    return true;
+  }
+
+  const shouldUnset = segments.every((segment) => segment.marked);
+
+  if (shouldUnset) {
+    editor.view.dispatch(tr.removeMark(selection.from, selection.to, targetMark).scrollIntoView());
+    return true;
+  }
+
+  let nextTr = tr.removeMark(selection.from, selection.to, targetMark);
+
+  for (const segment of segments) {
+    nextTr = nextTr.addMark(segment.from, segment.to, targetMark.create());
+  }
+
+  editor.view.dispatch(nextTr.scrollIntoView());
+  return true;
+};
+
 const toImageUrl = (url: string) => {
   if (!url) return "";
   if (/^https?:\/\//i.test(url)) return url;
@@ -104,10 +195,7 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
       return {
         from: currentEditor.state.selection.from,
         to: currentEditor.state.selection.to,
-        storedMarks:
-          currentEditor.state.storedMarks
-            ?.map((mark) => `${mark.type.name}:${JSON.stringify(mark.attrs)}`)
-            .join("|") ?? "",
+        storedMarks: serializeStoredMarks(currentEditor),
         docSize: currentEditor.state.doc.content.size,
       };
     },
@@ -343,10 +431,10 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
         <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={toolbarState.italic} title="Italic">
           <Italic className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={toolbarState.underline} title="Underline">
+        <ToolbarButton onClick={() => toggleInlineMarkSkippingSpaces(editor, "underline")} isActive={toolbarState.underline} title="Underline">
           <Underline className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={toolbarState.strike} title="Strikethrough">
+        <ToolbarButton onClick={() => toggleInlineMarkSkippingSpaces(editor, "strike")} isActive={toolbarState.strike} title="Strikethrough">
           <Strikethrough className="h-4 w-4" />
         </ToolbarButton>
 

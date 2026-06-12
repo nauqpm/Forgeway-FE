@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -34,6 +34,7 @@ export default function CreateOnlineDocumentPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -45,7 +46,22 @@ export default function CreateOnlineDocumentPage() {
           "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
       },
     },
+    onUpdate: () => setIsDirty(true),
   });
+
+  const hasUnsavedChanges = isDirty || loading;
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -58,6 +74,7 @@ export default function CreateOnlineDocumentPage() {
         title.trim(),
         content,
       );
+      setIsDirty(false);
       toast.success("Document created successfully");
       router.push("/documents");
     } catch (error) {
@@ -97,7 +114,10 @@ export default function CreateOnlineDocumentPage() {
               type="text"
               required
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setIsDirty(true);
+              }}
               placeholder="Enter document title"
               className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2.5 text-sm text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
             />

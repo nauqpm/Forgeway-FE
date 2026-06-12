@@ -72,6 +72,9 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
       attributes: {
         class:
           "tiptap-content prose m-5 max-w-none px-2 pb-32 text-[#111111] focus:outline-none dark:prose-invert dark:text-[#E8E8E7] prose-strong:text-[#111111] dark:prose-strong:text-[#E8E8E7]",
+        spellcheck: "false",
+        autocorrect: "off",
+        autocapitalize: "off",
       },
       transformPastedHTML: cleanPastedHTML,
     },
@@ -83,6 +86,8 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
     if (status === "saved") return "Saved";
     return "Unsaved";
   }, [status]);
+
+  const hasUnsavedChanges = open && !loading && status !== "saved";
 
   const loadContent = useCallback(async () => {
     if (!editor) return;
@@ -230,6 +235,18 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, saveContent]);
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   if (!open) return null;
 

@@ -8,6 +8,7 @@ import { Editor } from "@tiptap/react";
 import DOMPurify from "dompurify";
 import * as Yjs from "yjs";
 import { pagesService } from "../services/pages.service";
+import type { Document as WorkspaceDocument } from "../types/docs.type";
 
 const sanitizeEditorHtml = (html: string) =>
   DOMPurify.sanitize(html, {
@@ -29,7 +30,7 @@ interface UseAutosavePageProps {
   editor: Editor | null;
   ydoc: Yjs.Doc | null;
   mode: "read" | "edit";
-  onSaveSuccess?: (updatedDoc: any) => void;
+  onSaveSuccess?: (updatedDoc: WorkspaceDocument) => void;
 }
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
@@ -43,20 +44,19 @@ export function useAutosavePage({
 }: UseAutosavePageProps) {
   const [status, setStatus] = useState<SaveStatus>("idle");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasPendingChangesRef = useRef(false);
 
   const performSave = useCallback(async () => {
     if (!documentId || !editor || !ydoc || editor.isDestroyed || ydoc.isDestroyed) return;
 
     setStatus("saving");
     try {
-      const title = ydoc.getText("title").toString();
       const html = sanitizeEditorHtml(editor.getHTML());
       const json = JSON.stringify(editor.getJSON());
       const plainText = editor.getText();
       const yjsState = Array.from(Yjs.encodeStateAsUpdate(ydoc));
 
       const updatedDoc = await pagesService.syncPage(documentId, {
-        title,
         content: html,
         contentJson: json,
         plainTextSnapshot: plainText,
@@ -67,6 +67,8 @@ export function useAutosavePage({
       if (onSaveSuccess) {
         onSaveSuccess(updatedDoc);
       }
+
+      hasPendingChangesRef.current = false;
     } catch (err) {
       console.error("Autosave sync failed:", err);
       setStatus("error");
@@ -74,10 +76,14 @@ export function useAutosavePage({
   }, [documentId, editor, ydoc, onSaveSuccess]);
 
   const scheduleSave = useCallback(() => {
+    hasPendingChangesRef.current = true;
+    setStatus("saving");
+
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     saveTimeoutRef.current = setTimeout(() => {
+      saveTimeoutRef.current = null;
       void performSave();
     }, 3000);
   }, [performSave]);
@@ -87,6 +93,11 @@ export function useAutosavePage({
       clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = null;
     }
+
+    if (!hasPendingChangesRef.current) {
+      return;
+    }
+
     await performSave();
   }, [performSave]);
 
@@ -125,6 +136,17 @@ export function useAutosavePage({
       }
     };
   }, [documentId, mode, performSave]);
+
+  useEffect(() => {
+    if (mode !== "edit") {
+      hasPendingChangesRef.current = false;
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = null;
+      }
+      setStatus("idle");
+    }
+  }, [mode, documentId]);
 
   return { status, flushSave };
 }

@@ -18,6 +18,7 @@ import { useAutosavePage } from "../hooks/useAutosavePage";
 import { usePageComments } from "../hooks/usePageComments";
 import { useVersionHistory } from "../hooks/useVersionHistory";
 import { pagesService } from "../services/pages.service";
+import type { Document as WorkspaceDocument } from "../types/docs.type";
 import { toast } from "react-hot-toast";
 
 import EditorPageLayout from "./EditorPageLayout";
@@ -33,6 +34,16 @@ import SuggestionsSidebar from "./SuggestionsSidebar";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 
 export type EditorMode = "read" | "edit";
+
+const normalizeTitle = (value: string) => value.trim().toLocaleLowerCase();
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error && typeof error === "object" && "response" in error) {
+    const res = (error as { response?: { data?: { message?: string; error?: string } } }).response;
+    return res?.data?.message || res?.data?.error || fallback;
+  }
+  return fallback;
+};
 
 export default function TiptapEditor() {
   const { documents, selectedDocumentId, updateDocument, saveDocument } = useDocsStore();
@@ -54,6 +65,9 @@ export default function TiptapEditor() {
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
   const [activeRightSidebar, setActiveRightSidebar] = useState<"comments" | "versions" | "suggestions">("comments");
   const [isSuggestionModeActive, setIsSuggestionModeActive] = useState(false);
+  const [workspacePages, setWorkspacePages] = useState<{ id: string; title: string }[]>([]);
+  const [titleError, setTitleError] = useState<string | null>(null);
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
 
   useEffect(() => {
     const handleCloseMenu = () => setTableMenu(null);
@@ -92,9 +106,87 @@ export default function TiptapEditor() {
     destroyCollaborativeEditor,
   });
 
-  const { editTitle, handleTitleInput } = useEditorTitleCollaboration(
+  const { editTitle, handleTitleInput, setEditTitle } = useEditorTitleCollaboration(
     ydoc,
     document?.title || ""
+  );
+
+  useEffect(() => {
+    if (!document?.workspaceId) {
+      setWorkspacePages([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadWorkspacePages = async () => {
+      try {
+        const pages = await pagesService.getWorkspacePages(document.workspaceId);
+        if (!cancelled) {
+          setWorkspacePages(
+            pages.map((page) => ({ id: page.id, title: page.title })),
+          );
+        }
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Failed to load workspace pages:", error);
+        }
+      }
+    };
+
+    void loadWorkspacePages();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [document?.workspaceId]);
+
+  useEffect(() => {
+    if (!document) {
+      setTitleError(null);
+      return;
+    }
+
+    const nextTitle = editTitle.trim();
+    if (!nextTitle) {
+      setTitleError(null);
+      return;
+    }
+
+    const isDuplicate = workspacePages.some(
+      (page) =>
+        page.id !== document.id &&
+        normalizeTitle(page.title) === normalizeTitle(nextTitle),
+    );
+
+    if (isDuplicate) {
+      setTitleError("A document with this name already exists in this workspace");
+      return;
+    }
+
+    setTitleError(null);
+  }, [document, editTitle, workspacePages]);
+
+  const resetTitleToSaved = useCallback(
+    (message?: string) => {
+      const savedTitle = document?.title || "";
+
+      if (ydoc) {
+        const yTitle = ydoc.getText("title");
+        ydoc.transact(() => {
+          yTitle.delete(0, yTitle.length);
+          yTitle.insert(0, savedTitle);
+        });
+      } else {
+        setEditTitle(savedTitle);
+      }
+
+      setTitleError(null);
+      if (message) {
+        toast.error(message);
+      }
+    },
+    [document?.title, setEditTitle, ydoc],
   );
 
   const { status: saveStatus, flushSave } = useAutosavePage({
@@ -102,7 +194,7 @@ export default function TiptapEditor() {
     editor: mode === "edit" ? editEditor : null,
     ydoc,
     mode,
-    onSaveSuccess: useCallback((updatedDoc: any) => {
+    onSaveSuccess: useCallback((updatedDoc: WorkspaceDocument) => {
       if (selectedDocumentId) {
         updateDocument(selectedDocumentId, {
           title: updatedDoc.title,
@@ -195,7 +287,7 @@ export default function TiptapEditor() {
   }, [editEditor, isSuggestionModeActive, mode]);
 
   // ── Legacy Update (publish) handler ──────────────────────────
-  const handleCreateVersion = useCallback(async (label: string) => {
+  const handleCreateVersion = async (label: string) => {
     if (!document || !selectedDocumentId) return;
 
     const editor = editEditor;
@@ -205,6 +297,11 @@ export default function TiptapEditor() {
     try {
       const title = ydoc?.getText("title").toString() || document.title;
       const html = editor.getHTML(); // Will be sanitized on backend / store update
+
+      const titleSaved = await saveTitle();
+      if (!titleSaved) {
+        return;
+      }
 
       // Step 1: Flush the latest Yjs/JSON/HTML snapshots before version capture
       await flushSave();
@@ -218,40 +315,6 @@ export default function TiptapEditor() {
       // Step 3: Create a named version
       await createVersion(label);
 
-      if (socket?.connected) {
-        // Happy path: ask the server to flush draft → Page
-        await new Promise<void>((resolve, reject) => {
-          realtimeSocketClient.pageManager.publish(
-            socket,
-            {
-              content: editEditorRef.current?.getHTML() ?? "",
-              title: ydocRef.current?.getText("title").toString() || "",
-            },
-            (ok) => {
-              if (ok) {
-                // Sync the store so the read-mode editor reflects the latest title
-                const title =
-                  ydocRef.current?.getText("title").toString() ||
-                  document.title;
-                const html = sanitizeEditorHtml(
-                  editEditorRef.current?.getHTML() ?? "",
-                );
-                updateDocument(selectedDocumentId, { title, content: html });
-                resolve();
-              } else {
-                reject(new Error("server_publish_failed"));
-              }
-            },
-          );
-        });
-      } else {
-        // Offline fallback: the user explicitly hit "Cập nhật" even though
-        // the socket is down.  We cannot guarantee the server Y.Doc has all
-        // our edits, so we surface a clear error rather than silently writing
-        // a potentially stale snapshot.
-        throw new Error("offline");
-      }
-
       toast.success("Version created successfully");
     } catch (error) {
       console.error("Failed to create version:", error);
@@ -259,7 +322,7 @@ export default function TiptapEditor() {
     } finally {
       setIsPublishing(false);
     }
-  }, [document, selectedDocumentId, editEditor, ydoc, updateDocument, createVersion, flushSave]);
+  };
 
   const handleExportDocx = useCallback(async () => {
     if (!document) return;
@@ -304,12 +367,66 @@ export default function TiptapEditor() {
     }
   }, [mode, editEditor]);
 
-  if (!document) return null;
+  async function saveTitle() {
+    if (!document || !persistedPageId) return true;
 
-  const activeEditor = mode === "edit" ? editEditor : readEditor;
+    const nextTitle = editTitle.trim() || "Untitled Document";
+    if (nextTitle === document.title) {
+      setTitleError(null);
+      return true;
+    }
 
-  const handleToggleMode = useCallback(async () => {
+    const isDuplicate = workspacePages.some(
+      (page) =>
+        page.id !== document.id &&
+        normalizeTitle(page.title) === normalizeTitle(nextTitle),
+    );
+
+    if (isDuplicate) {
+      resetTitleToSaved(
+        "A document with this name already exists in this workspace",
+      );
+      return false;
+    }
+
+    setIsSavingTitle(true);
+    try {
+      const updatedDoc = await pagesService.updatePage(persistedPageId, {
+        title: nextTitle,
+      });
+
+      updateDocument(document.id, { title: updatedDoc.title });
+      setWorkspacePages((current) => {
+        const next = current.filter((page) => page.id !== updatedDoc.id);
+        next.push({ id: updatedDoc.id, title: updatedDoc.title });
+        return next;
+      });
+      setTitleError(null);
+      return true;
+    } catch (error) {
+      const message = getErrorMessage(
+        error,
+        "Could not rename page",
+      );
+
+      if (message.includes("already exists")) {
+        resetTitleToSaved(message);
+        return false;
+      }
+
+      setTitleError(message);
+      toast.error(message);
+      return false;
+    } finally {
+      setIsSavingTitle(false);
+    }
+  }
+
+  const handleToggleMode = async () => {
     if (mode === "edit") {
+      const saved = await saveTitle();
+      if (!saved) return;
+
       exitEditMode();
       return;
     }
@@ -329,7 +446,34 @@ export default function TiptapEditor() {
     }
 
     enterEditMode();
-  }, [document, selectedDocumentId, mode, saveDocument, enterEditMode, exitEditMode]);
+  };
+
+  const handleEditorTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      handleTitleInput(e);
+    },
+    [handleTitleInput],
+  );
+
+  const handleEditorTitleBlur = () => {
+    void saveTitle();
+  };
+
+  const handleEditorTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      void saveTitle();
+      return;
+    }
+
+    if (e.key === "Escape" && ydoc) {
+      resetTitleToSaved();
+    }
+  };
+
+  if (!document) return null;
+
+  const activeEditor = mode === "edit" ? editEditor : readEditor;
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden relative">
@@ -412,11 +556,28 @@ export default function TiptapEditor() {
                 <input
                   type="text"
                   value={mode === "edit" ? editTitle : document.title}
-                  onChange={mode === "edit" ? handleTitleInput : undefined}
+                  onChange={mode === "edit" ? handleEditorTitleChange : undefined}
+                  onBlur={mode === "edit" ? handleEditorTitleBlur : undefined}
+                  onKeyDown={mode === "edit" ? handleEditorTitleKeyDown : undefined}
                   readOnly={mode === "read"}
-                  className="w-full text-3xl font-bold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight print:text-black"
+                  className={`w-full text-3xl font-bold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight print:text-black ${
+                    titleError ? "text-rose-600 dark:text-rose-400" : ""
+                  }`}
                   placeholder="Untitled"
                 />
+                {mode === "edit" && (
+                  <div className="mt-1 min-h-[1.25rem] text-xs">
+                    {titleError ? (
+                      <span className="text-rose-600 dark:text-rose-400">
+                        {titleError}
+                      </span>
+                    ) : isSavingTitle ? (
+                      <span className="text-slate-500 dark:text-slate-400">
+                        Saving title...
+                      </span>
+                    ) : null}
+                  </div>
+                )}
                 <div className="h-px bg-gray-200/60 dark:bg-gray-800 mt-2 print:hidden" />
               </div>
 

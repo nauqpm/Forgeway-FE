@@ -49,6 +49,13 @@ async function getRootPages(workspaceKey: string): Promise<Document[]> {
   return data.map(mapPage);
 }
 
+/** Fetch all pages in a workspace */
+async function getWorkspacePages(workspaceId: string): Promise<Document[]> {
+  const res = await api.get(apiRoutes.PAGES.BY_WORKSPACE(workspaceId));
+  const data: PageApiResponse[] = res.data?.data ?? res.data;
+  return data.map(mapPage);
+}
+
 /** Fetch direct children of a page (lazy tree) */
 async function getChildren(parentId: string): Promise<Document[]> {
   const res = await api.get(apiRoutes.PAGES.CHILDREN(parentId));
@@ -108,7 +115,20 @@ async function syncPage(
   return mapPage(raw);
 }
 
-function mapVersion(raw: any): DocumentVersion {
+interface RawDocumentVersion {
+  _id: string;
+  pageId: string;
+  yjsState?: number[];
+  contentJson?: string;
+  htmlSnapshot?: string;
+  content?: string;
+  label: string;
+  version: number;
+  createdBy?: { _id: string; fullName?: string } | null;
+  createdAt: string;
+}
+
+function mapVersion(raw: RawDocumentVersion): DocumentVersion {
   return {
     id: raw._id,
     pageId: raw.pageId,
@@ -135,7 +155,7 @@ async function createVersion(id: string, label: string): Promise<DocumentVersion
 /** Get all versions of a page */
 async function getVersions(id: string): Promise<DocumentVersion[]> {
   const res = await api.get(apiRoutes.PAGES.VERSIONS(id));
-  const data: any[] = res.data?.data ?? res.data;
+  const data: RawDocumentVersion[] = res.data?.data ?? res.data;
   return data.map(mapVersion);
 }
 
@@ -184,6 +204,7 @@ async function importDocx(file: File): Promise<string> {
 }
 
 export const pagesService = {
+  getWorkspacePages,
   getRootPages,
   getChildren,
   getPageById,

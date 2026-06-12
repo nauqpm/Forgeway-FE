@@ -591,16 +591,20 @@ export default function Sidebar({
                 {/* SUB NAV */}
                 {workspaceOpen && !collapsed && (
                   <div className="ml-6 mt-1 space-y-0.5">
-                    {sidebarVisibleWorkspaces.map((workspace) => (
-                      <Link
-                        key={workspace._id}
-                        href={`/workspaces/${workspace.key}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
-                      >
-                        <WorkspaceAvatar workspace={workspace} size="xs" />
-                        <span className="truncate">{workspace.name}</span>
-                      </Link>
-                    ))}
+                    {sidebarVisibleWorkspaces.map((workspace) => {
+                      const routeKey = workspace.key || workspace.slug || workspace.id || workspace._id;
+
+                      return (
+                        <Link
+                          key={workspace.id || workspace._id || routeKey}
+                          href={`/workspaces/${routeKey}`}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+                        >
+                          <WorkspaceAvatar workspace={workspace} size="xs" />
+                          <span className="truncate">{workspace.name}</span>
+                        </Link>
+                      );
+                    })}
 
                     {hiddenSidebarWorkspaces.length > 0 && (
                       <button

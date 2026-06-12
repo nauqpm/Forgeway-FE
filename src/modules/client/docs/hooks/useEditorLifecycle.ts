@@ -107,6 +107,9 @@ export function useEditorLifecycle(initialContent: string) {
       attributes: {
         class:
           "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
+        spellcheck: "false",
+        autocorrect: "off",
+        autocapitalize: "off",
       },
     },
   });
@@ -132,6 +135,9 @@ export function useEditorLifecycle(initialContent: string) {
           attributes: {
             class:
               "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
+            spellcheck: "false",
+            autocorrect: "off",
+            autocapitalize: "off",
           },
           transformPastedHTML: cleanPastedHTML,
           handleDrop: (view, event) => {
