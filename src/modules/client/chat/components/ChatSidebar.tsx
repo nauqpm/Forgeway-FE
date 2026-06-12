@@ -36,8 +36,20 @@ export default function ChatSidebar() {
 
   const sortedChannels = useMemo(() => {
     return [...(channels || [])].sort((a, b) => {
-      const timeA = new Date(a.lastMessage?.createdAt || (a as any).updatedAt || (a as any).createdAt || 0).getTime();
-      const timeB = new Date(b.lastMessage?.createdAt || (b as any).updatedAt || (b as any).createdAt || 0).getTime();
+      const timeA = new Date(
+        a.lastMessage?.createdAt || 
+        (a.lastMessage as any)?.sentAt || 
+        (a as any).updatedAt || 
+        (a as any).createdAt || 
+        0
+      ).getTime();
+      const timeB = new Date(
+        b.lastMessage?.createdAt || 
+        (b.lastMessage as any)?.sentAt || 
+        (b as any).updatedAt || 
+        (b as any).createdAt || 
+        0
+      ).getTime();
       return timeB - timeA;
     });
   }, [channels]);

@@ -20,18 +20,15 @@ interface NewChatModalProps {
 export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<UserData[]>([]);
-  const [suggestedUsers, setSuggestedUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
-  const { setActiveChannel, setChannels, channels } = useChatStore();
+  const { setActiveChannel, addChannel } = useChatStore();
 
-  // Load suggested users on mount or when modal opens
+  // Reset state when modal is opened/closed
   useEffect(() => {
-    if (isOpen) {
-      setLoading(true);
-      searchUsersAPI('')
-        .then(data => setSuggestedUsers(Array.isArray(data) ? data : []))
-        .finally(() => setLoading(false));
+    if (!isOpen) {
+      setSearch('');
+      setUsers([]);
     }
   }, [isOpen]);
 
@@ -41,7 +38,6 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
         setLoading(true);
         searchUsersAPI(search)
           .then(data => {
-            // Ensure data is an array
             setUsers(Array.isArray(data) ? data : []);
           })
           .finally(() => setLoading(false));
@@ -64,10 +60,8 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
         console.warn('Backend returned DM channel without populated members!');
       }
 
-      // Update local channels list if not already present
-      if (!channels.some(c => c._id === channel._id)) {
-        setChannels([...channels, channel]);
-      }
+      // Add to store dynamically without full refetch
+      addChannel(channel);
       
       setActiveChannel(channel._id);
       onClose();
@@ -80,8 +74,6 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
   };
 
   if (!isOpen) return null;
-
-  const displayUsers = search ? users : suggestedUsers;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -112,25 +104,23 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto max-h-[350px] p-2">
-          {!search && suggestedUsers.length > 0 && (
-            <div className="px-2 py-1.5 mb-1 flex items-center gap-2 text-[0.625rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider">
-              <Users className="w-3 h-3" />
-              Suggested Users
-            </div>
-          )}
-
           {loading ? (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-[#787774]">
               <Loader2 className="w-6 h-6 animate-spin" />
               <p className="text-xs">Loading...</p>
             </div>
-          ) : displayUsers.length === 0 ? (
+          ) : !search ? (
+            <div className="py-12 text-center text-[#787774] flex flex-col items-center justify-center gap-2">
+              <Users className="w-8 h-8 opacity-30 text-[#ABABAB] mb-1" />
+              <p className="text-sm font-medium">Gõ tên hoặc email để tìm kiếm</p>
+            </div>
+          ) : users.length === 0 ? (
             <div className="py-10 text-center text-[#787774]">
-              <p className="text-sm italic">{search ? `No users found matching "${search}"` : 'No users found'}</p>
+              <p className="text-sm italic">No users found matching "{search}"</p>
             </div>
           ) : (
             <div className="space-y-0.5">
-              {displayUsers.map((user, idx) => (
+              {users.map((user, idx) => (
                 <button
                   key={user._id || (user as any).id || `u-${idx}`}
                   disabled={creating}
