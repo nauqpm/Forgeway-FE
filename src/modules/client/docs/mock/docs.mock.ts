@@ -1,8 +1,4 @@
-/**
- * MOCK DATA — No longer used in production.
- * DocsLayout now fetches real data via pagesService.
- * Kept for reference / local development fallback only.
- */
+// Mock data for the docs module, including sample documents with metadata fields.
 import { Document } from "../types/docs.type";
 
 const now = new Date().toISOString();

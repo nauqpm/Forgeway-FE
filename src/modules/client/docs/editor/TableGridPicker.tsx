@@ -1,3 +1,5 @@
+// Table grid picker component to select rows and columns when inserting a table,
+// allowing users to choose table size visually by hovering over grid or entering custom dimensions.
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
