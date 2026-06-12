@@ -209,7 +209,7 @@ body {
   }
 
   .workspace-board-height {
-    min-height: max(420px, var(--app-board-h));
+    height: max(420px, var(--app-board-h));
   }
 
   .workspace-list-height {

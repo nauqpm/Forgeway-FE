@@ -86,7 +86,7 @@ export default function ChatSidebar() {
     return `${senderName}: ${lastMsg.content}`;
   };
 
-  const renderChannelLink = (id: string, name: string, type: string, unreadCount: number = 0, lastMessage?: any) => {
+  const renderChannelLink = (id: string, name: string, type: string, unreadCount: number = 0, lastMessage?: any, workspaceData?: any) => {
     const isActive = activeChannelId === id;
     const isUnread = unreadCount > 0;
     const channel = channels.find(c => c._id === id);
@@ -159,12 +159,29 @@ export default function ChatSidebar() {
                 <span className="text-[13px] font-bold">{displayName?.charAt(0).toUpperCase()}</span>
               )}
             </div>
-            {/* Status indicator temporarily hidden as per user request */}
-            {/* <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#FBFBFA] dark:border-[#252525] bg-[#D1D5DB]" /> */}
           </div>
         ) : type === 'workspace' ? (
-          <div className={cn("w-7 h-7 rounded-[6px] text-white flex items-center justify-center text-[0.75rem] font-bold flex-shrink-0 shadow-sm mt-0.5", avatarBg)}>
-            {name?.charAt(0)}
+          <div className="relative flex-shrink-0 mt-0.5">
+            <div className={cn("w-7 h-7 rounded-[6px] text-white flex items-center justify-center shadow-sm overflow-hidden text-[0.75rem] font-bold", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
+              {workspaceData?.avatar ? (
+                <img 
+                  src={workspaceData.avatar} 
+                  alt={name} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent && !parent.querySelector('span')) {
+                      const span = document.createElement('span');
+                      span.innerText = name?.charAt(0).toUpperCase() || 'W';
+                      parent.appendChild(span);
+                    }
+                  }}
+                />
+              ) : (
+                <span>{name?.charAt(0).toUpperCase()}</span>
+              )}
+            </div>
           </div>
         ) : (
           <Icon className={cn("w-5 h-5 flex-shrink-0 transition-colors mt-1", iconColorClass)} />
@@ -252,7 +269,7 @@ export default function ChatSidebar() {
             <div className="space-y-0.5">
               {workspaces.map((ws, idx) => {
                 const wsId = ws._id || (ws as any).id || `ws-${idx}`;
-                return renderChannelLink(wsId, ws.name, 'workspace', getWorkspaceUnread(wsId));
+                return renderChannelLink(wsId, ws.name, 'workspace', getWorkspaceUnread(wsId), null, ws);
               })}
             </div>
           </div>

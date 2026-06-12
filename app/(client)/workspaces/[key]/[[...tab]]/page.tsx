@@ -1160,8 +1160,9 @@ export default function WorkspaceDetailPage({
     );
 
   return (
-    <div className="workspace-surface pb-12">
-      {/* Header */}
+    <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)]">
+      <div className="workspace-surface pb-12">
+        {/* Header */}
       <Header
         workspace={workspace}
         workspaceId={workspaceKey}
@@ -1474,6 +1475,7 @@ export default function WorkspaceDetailPage({
         canDeleteTask={canDeleteTask}
         canMoveTask={canMoveTask}
       />
+      </div>
     </div>
   );
 }

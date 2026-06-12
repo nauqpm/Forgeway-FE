@@ -621,7 +621,7 @@ export default function Sidebar({
                 )}
               </div>
               {/* Documents */}
-              <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+              <NavItem item={mainNav.find((n) => n.label === "Documents")!} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
           </div>
 
           {/* Admin Section */}

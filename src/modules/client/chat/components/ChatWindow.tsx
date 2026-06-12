@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { getMessagesAPI } from '@/modules/client/chat/services/chatService';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
@@ -18,6 +19,7 @@ export default function ChatWindow() {
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
   const setMessages = useChatStore(state => state.setMessages);
   
+  const { workspaces } = useWorkspaceStore();
   const currentUserId = useAuthStore(state => state.user?.id);
   const userRole = useAuthStore(state => state.user?.role);
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
@@ -27,6 +29,11 @@ export default function ChatWindow() {
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
   
+  const activeWorkspace = useMemo(() => {
+    if (activeChannel?.type !== 'workspace') return null;
+    return workspaces.find(w => (w._id || (w as any).id) === activeChannelId);
+  }, [activeChannel, activeChannelId, workspaces]);
+
   const messages = useMemo(() => {
     const rawMessages = activeChannelId ? messagesByChannel[activeChannelId] || [] : [];
     // Ensure chronological order (oldest to newest)
@@ -139,6 +146,27 @@ export default function ChatWindow() {
           <div className="flex items-center gap-2">
             {activeChannel.type === 'announcement' ? (
               <Megaphone className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
+            ) : activeWorkspace ? (
+              <div className="w-5 h-5 rounded-[4px] overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] text-white font-bold text-[9px] shadow-sm">
+                {activeWorkspace?.avatar ? (
+                  <img 
+                    src={activeWorkspace.avatar} 
+                    alt={headerName} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const parent = (e.target as HTMLImageElement).parentElement;
+                      if (parent && !parent.querySelector('span')) {
+                        const span = document.createElement('span');
+                        span.innerText = headerName?.charAt(0).toUpperCase() || 'W';
+                        parent.appendChild(span);
+                      }
+                    }}
+                  />
+                ) : (
+                  <span>{headerName?.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
             ) : (
               <Hash className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
             )}
