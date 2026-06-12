@@ -94,10 +94,19 @@ export default function ChatRealtimeHandler() {
         console.error("Failed to fetch new channel details", err);
       });
     } else {
-      updateChannel(data.channelId, { 
-        unreadCount: data.unreadCount,
-        ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
-      });
+      if (data.unreadCount !== undefined) {
+        updateChannel(data.channelId, { 
+          unreadCount: data.unreadCount,
+          ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
+        });
+      } else if (data.increment) {
+        const existingChannel = channels.find(c => c._id === data.channelId);
+        const currentCount = existingChannel?.unreadCount || 0;
+        updateChannel(data.channelId, { 
+          unreadCount: currentCount + data.increment,
+          ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
+        });
+      }
     }
   }, [updateChannel, addChannel]);
 
