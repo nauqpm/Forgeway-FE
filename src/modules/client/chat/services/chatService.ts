@@ -43,6 +43,18 @@ export const getChannelsAPI = async (): Promise<Channel[]> => {
   }));
 };
 
+export const getChannelAPI = async (channelId: string): Promise<Channel> => {
+  const response = await api.get(`/chat/${channelId}`);
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id,
+    type: data.type === 'public' ? 'general' : data.type,
+    unreadCount: data.unreadCount || 0,
+    description: data.description
+  };
+};
+
 export const getMessagesAPI = async (
   channelId: string,
   params?: { limit?: number; cursor?: string }

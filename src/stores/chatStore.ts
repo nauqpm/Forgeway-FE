@@ -46,6 +46,7 @@ interface ChatStore {
   typingUsers: Record<string, Record<string, number>>; // channelId: { userId: timestamp }
   
   setChannels: (channels: Channel[]) => void;
+  addChannel: (channel: Channel) => void;
   updateChannel: (channelId: string, updates: Partial<Channel>) => void;
   incrementUnread: (channelId: string) => void;
   setActiveChannel: (channelId: string | null) => void;
@@ -67,6 +68,11 @@ export const useChatStore = create<ChatStore>((set) => ({
   typingUsers: {},
 
   setChannels: (channels) => set({ channels }),
+  
+  addChannel: (channel) => set((state) => {
+    if (state.channels.some((c) => c._id === channel._id)) return state;
+    return { channels: [...state.channels, channel] };
+  }),
   
   updateChannel: (channelId, updates) => set((state) => ({
     channels: state.channels.map((c) => c._id === channelId ? { ...c, ...updates } : c)

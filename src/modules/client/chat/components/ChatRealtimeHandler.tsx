@@ -4,7 +4,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { chatSocketClient } from '@/lib/socket/chat.client';
 import { SOCKET_EVENTS } from '@/lib/socket/socket.events';
 import { useChatStore } from '@/stores/chatStore';
-import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
+import { getChannelsAPI, getChannelAPI } from '@/modules/client/chat/services/chatService';
 import toast from 'react-hot-toast';
 
 /**
@@ -19,7 +19,8 @@ export default function ChatRealtimeHandler() {
     setTyping, 
     updateChannel,
     incrementUnread,
-    channels
+    channels,
+    addChannel
   } = useChatStore();
 
   const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -39,14 +40,16 @@ export default function ChatRealtimeHandler() {
     
     addMessage(message.channelId, message);
     
-    const { activeChannelId, channels, setChannels } = useChatStore.getState();
+    const { activeChannelId, channels } = useChatStore.getState();
     const isCurrentChannel = activeChannelId === message.channelId;
     const channelExists = channels.some(c => c._id === message.channelId);
 
-    // If it's a new DM channel not in our list, refresh the whole channel list
+    // If it's a new DM channel not in our list, fetch and add it
     if (!channelExists) {
-      getChannelsAPI().then(allChannels => {
-        setChannels(allChannels);
+      getChannelAPI(message.channelId).then(channel => {
+        addChannel(channel);
+      }).catch(err => {
+        console.error("Failed to fetch new channel details", err);
       });
     }
 
@@ -57,7 +60,7 @@ export default function ChatRealtimeHandler() {
     }
     
     updateChannel(message.channelId, { lastMessage: message });
-  }, [addMessage, updateChannel, incrementUnread, markAsRead]);
+  }, [addMessage, updateChannel, incrementUnread, markAsRead, addChannel]);
 
   const handleMessageEdited = useCallback((envelope: any) => {
     const message = envelope.data || envelope;
@@ -81,12 +84,14 @@ export default function ChatRealtimeHandler() {
     const data = envelope.data || envelope;
     if (!data?.channelId) return;
 
-    const { channels, setChannels } = useChatStore.getState();
+    const { channels } = useChatStore.getState();
     const channelExists = channels.some(c => c._id === data.channelId);
 
     if (!channelExists) {
-      getChannelsAPI().then(allChannels => {
-        setChannels(allChannels);
+      getChannelAPI(data.channelId).then(channel => {
+        addChannel(channel);
+      }).catch(err => {
+        console.error("Failed to fetch new channel details", err);
       });
     } else {
       updateChannel(data.channelId, { 
@@ -94,7 +99,7 @@ export default function ChatRealtimeHandler() {
         ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
       });
     }
-  }, [updateChannel]);
+  }, [updateChannel, addChannel]);
 
   const handleReactionUpdated = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
