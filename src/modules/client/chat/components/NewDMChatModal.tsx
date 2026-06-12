@@ -112,7 +112,7 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
           ) : !search ? (
             <div className="py-12 text-center text-[#787774] flex flex-col items-center justify-center gap-2">
               <Users className="w-8 h-8 opacity-30 text-[#ABABAB] mb-1" />
-              <p className="text-sm font-medium">Gõ tên hoặc email để tìm kiếm</p>
+              <p className="text-sm font-medium">Search by name, email, or phone</p>
             </div>
           ) : users.length === 0 ? (
             <div className="py-10 text-center text-[#787774]">
