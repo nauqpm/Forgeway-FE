@@ -33,14 +33,14 @@ import TableGridPicker from "./TableGridPicker";
 
 const DEFAULT_FONT_FAMILY = "Arial";
 const FONT_FAMILIES = [
-  DEFAULT_FONT_FAMILY,
+  "Arial",
   "Times New Roman",
   "Courier New",
   "Inter",
   "Georgia",
 ];
-const DEFAULT_FONT_SIZE = "16";
-const FONT_SIZES = ["12", "14", DEFAULT_FONT_SIZE, "18", "20", "24", "32"];
+const DEFAULT_FONT_SIZE = "16px";
+const FONT_SIZES = ["12px", "14px", "16px", "18px", "20px", "24px", "32px"];
 const COLORS = [
   "#111827",
   "#EF4444",
@@ -198,14 +198,17 @@ export default function EditorToolbar({ editor }: Props) {
   const selectedFontFamily = activeTextStyle.fontFamily || DEFAULT_FONT_FAMILY;
   const selectedFontSize = activeTextStyle.fontSize || DEFAULT_FONT_SIZE;
 
-  const selectCls = "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[0.6875rem] text-[#111111] dark:text-[#E8E8E7] outline-none";
+  const selectCls =
+    "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[0.6875rem] text-[#111111] dark:text-[#E8E8E7] outline-none";
 
   return (
     <>
       {editor && (
         <BubbleMenu
           editor={editor}
-          shouldShow={({ editor: e }) => e.isActive("link")}
+          shouldShow={({ editor: currentEditor }) =>
+            currentEditor.isActive("link")
+          }
           options={{ placement: "top", offset: 8 }}
         >
           <div
@@ -233,8 +236,10 @@ export default function EditorToolbar({ editor }: Props) {
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
-              className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[0.6875rem] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
+              onClick={() =>
+                editor.chain().focus().extendMarkRange("link").unsetLink().run()
+              }
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
             >
               <Unlink className="h-3.5 w-3.5" />
               Remove
@@ -243,7 +248,7 @@ export default function EditorToolbar({ editor }: Props) {
         </BubbleMenu>
       )}
 
-      <div className="flex items-center gap-1 px-6 py-2 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/[0.06] overflow-x-auto no-scrollbar flex-shrink-0">
+      <div className="flex items-center gap-1 px-6 py-2 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 overflow-x-auto no-scrollbar flex-shrink-0">
         <input
           ref={imageInputRef}
           type="file"
@@ -251,37 +256,51 @@ export default function EditorToolbar({ editor }: Props) {
           className="hidden"
           onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) await uploadLocalImage(file);
+            if (file) {
+              await uploadLocalImage(file);
+            }
             e.target.value = "";
           }}
         />
 
         <select
-          className={selectCls}
-          style={{ fontFamily: selectedFontFamily }}
-          value={selectedFontFamily}
+          className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
+          value={activeTextStyle.fontFamily}
           onChange={(e) => {
             const value = e.target.value;
-            setActiveTextStyle((c) => ({ ...c, fontFamily: value }));
+            setActiveTextStyle((current) => ({
+              ...current,
+              fontFamily: value,
+            }));
+            if (!value) {
+              editor.chain().focus().unsetFontFamily().run();
+              return;
+            }
             editor.chain().focus().setFontFamily(value).run();
           }}
         >
+          <option value="">Font</option>
           {FONT_FAMILIES.map((font) => (
-            <option key={font} value={font} style={{ fontFamily: font }}>
+            <option key={font} value={font}>
               {font}
             </option>
           ))}
         </select>
 
         <select
-          className={selectCls}
-          value={selectedFontSize}
+          className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
+          value={activeTextStyle.fontSize}
           onChange={(e) => {
             const value = e.target.value;
-            setActiveTextStyle((c) => ({ ...c, fontSize: value }));
+            setActiveTextStyle((current) => ({ ...current, fontSize: value }));
+            if (!value) {
+              editor.chain().focus().unsetFontSize().run();
+              return;
+            }
             editor.chain().focus().setFontSize(value).run();
           }}
         >
+          <option value="">Size</option>
           {FONT_SIZES.map((size) => (
             <option key={size} value={size}>
               {size}
@@ -322,18 +341,21 @@ export default function EditorToolbar({ editor }: Props) {
           <button
             key={color}
             type="button"
-            title={`Color ${color}`}
+            title={`Màu ${color}`}
             onClick={() => editor.chain().focus().setColor(color).run()}
-            className="h-5 w-5 rounded-[3px] border border-[#EAEAEA] dark:border-white/[0.06] transition-opacity hover:opacity-80"
+            className="h-5 w-5 rounded border border-gray-200"
             style={{ backgroundColor: color }}
           />
         ))}
 
-        <ToolbarButton onClick={() => editor.chain().focus().unsetColor().run()} title="Reset text color">
-          <span className="text-[0.6875rem] font-bold">A</span>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().unsetColor().run()}
+          title="Reset text color"
+        >
+          <span className="text-xs">A</span>
         </ToolbarButton>
 
-        <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
+        <div className="h-4 w-px bg-gray-200 dark:bg-gray-800" />
 
         <ToolbarButton
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
@@ -364,17 +386,20 @@ export default function EditorToolbar({ editor }: Props) {
           <AlignJustify className="h-4 w-4" />
         </ToolbarButton>
 
-        <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
+        <div className="h-4 w-px bg-gray-200 dark:bg-gray-800" />
 
         <button
           ref={linkButtonRef}
           onClick={openLinkPopover}
           title="Set up or edit link"
-          className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+          className={`
+          p-2 rounded-lg transition-all flex items-center justify-center
+          ${
             editor.isActive("link") || linkPopoverOpen
-              ? "bg-[#F7F6F3] dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6] font-bold"
-              : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
-          }`}
+              ? "bg-gray-100 dark:bg-gray-900 text-[#0052CC] dark:text-blue-400 font-bold"
+              : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-700 dark:hover:text-gray-200"
+          }
+        `}
           type="button"
         >
           <LinkIcon className="h-4 w-4" />
@@ -411,11 +436,14 @@ export default function EditorToolbar({ editor }: Props) {
           ref={tableButtonRef}
           onClick={toggleTablePicker}
           title="Insert table"
-          className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+          className={`
+          p-2 rounded-lg transition-all flex items-center justify-center
+          ${
             tablePickerOpen
-              ? "bg-[#F7F6F3] dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6] font-bold"
-              : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
-          }`}
+              ? "bg-gray-100 dark:bg-gray-900 text-[#0052CC] dark:text-blue-400 font-bold"
+              : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-900 hover:text-gray-700 dark:hover:text-gray-200"
+          }
+        `}
           type="button"
         >
           <TableIcon className="h-4 w-4" />
@@ -470,7 +498,7 @@ export default function EditorToolbar({ editor }: Props) {
               onClick={() => editor.chain().focus().deleteTable().run()}
               title="Delete table"
             >
-              <Trash2 className="h-4 w-4 text-[#9F2F2D]" />
+              <Trash2 className="h-4 w-4 text-red-500" />
             </ToolbarButton>
           </>
         )}

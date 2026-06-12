@@ -20,6 +20,17 @@ import { Filters } from "@/modules/client/workspaces/types/filter.type";
 
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
 
+type SearchAssigneeUser = {
+  _id?: string;
+  id?: string;
+  fullName?: string;
+  name?: string;
+  email?: string;
+  avatar?: string;
+  avatarUrl?: string;
+  image?: string;
+};
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspaces, workspacesLoaded } = useWorkspaceStore();
@@ -69,14 +80,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const searchAssignees = (currentWorkspace?.members ?? [])
     .filter((member) => member && member.userId)
     .map((member) => {
+      const memberUser = member.userId;
+      const memberUserProfile = typeof memberUser === "string" ? null : (memberUser as SearchAssigneeUser);
       const memberId =
-        typeof member.userId === "string"
-          ? member.userId
-          : member.userId?._id || member.userId?.id || "member";
+        typeof memberUser === "string"
+          ? memberUser
+          : memberUserProfile?._id || memberUserProfile?.id || "member";
+      const memberName =
+        typeof memberUser === "string"
+          ? memberUser
+          : memberUserProfile?.fullName || memberUserProfile?.name || memberUserProfile?.email || memberId;
+      const memberAvatar =
+        typeof memberUser === "string"
+          ? undefined
+          : memberUserProfile?.avatar || memberUserProfile?.avatarUrl || memberUserProfile?.image;
 
       return {
         id: memberId,
-        name: memberId === user?.id ? user?.fullName || user?.email || "You" : memberId,
+        name: memberId === user?.id ? user?.fullName || user?.email || memberName : memberName,
+        avatar: memberAvatar,
       };
     });
 

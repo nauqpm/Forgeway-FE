@@ -34,7 +34,7 @@ export default function UnscheduledSidebar({ tasks, isOpen, onClose }: Unschedul
     });
 
     return () => draggable.destroy();
-  }, [isOpen]);
+  }, [isOpen, tasks]);
 
   if (!isOpen) return null;
 

@@ -2,10 +2,12 @@ import { create } from 'zustand';
 
 interface Workspace {
     _id: string;
+    id?: string;
     name: string;
     key?: string;
     slug: string;
     description?: string;
+    avatar?: string;
     ownerId: string | { _id?: string; id?: string };
     members: { userId: string | { _id?: string; id?: string }; role: string }[];
 }
@@ -27,6 +29,7 @@ interface WorkspaceStore {
     workspacesLoaded: boolean;
     setWorkspaces: (workspaces: Workspace[]) => void;
     setCurrentWorkspace: (workspace: Workspace | null) => void;
+    updateWorkspaceAvatar: (workspaceId: string, avatar: string) => void;
     setProjects: (projects: Project[]) => void;
     setCurrentProject: (project: Project | null) => void;
     clearWorkspace: () => void;
@@ -46,6 +49,15 @@ export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
         }
     },
     setCurrentWorkspace: (workspace) => set({ currentWorkspace: workspace }),
+    updateWorkspaceAvatar: (workspaceId, avatar) => set((state) => ({
+        workspaces: state.workspaces.map((workspace) =>
+            workspace._id === workspaceId ? { ...workspace, avatar } : workspace,
+        ),
+        currentWorkspace:
+            state.currentWorkspace?._id === workspaceId
+                ? { ...state.currentWorkspace, avatar }
+                : state.currentWorkspace,
+    })),
     setProjects: (projects) => set({ projects }),
     setCurrentProject: (project) => set({ currentProject: project }),
     clearWorkspace: () => set({

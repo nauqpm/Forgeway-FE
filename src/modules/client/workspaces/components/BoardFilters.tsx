@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Filters } from "../types/filter.type";
 import { Search, X, Filter } from "lucide-react";
+import {
+  filterBoardAssignees,
+  getBoardFilterAssigneeLabel,
+} from "./boardFilterAssignees";
 
 type BoardFiltersProps = {
   filters: Filters;
@@ -10,6 +14,7 @@ type BoardFiltersProps = {
 };
 
 const searchInputCls = "w-full pl-9 pr-4 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#2563EB] dark:focus:border-[#3B82F6] outline-none transition-colors";
+const PRIORITY_OPTIONS = ["Highest", "High", "Medium", "Low", "Lowest"];
 
 export default function BoardFilters({
   filters,
@@ -93,18 +98,12 @@ export default function BoardFilters({
   const allStatuses = ["To Do", "In Progress", "Testing", "Done"];
   const filteredStatuses = allStatuses.filter(s => s.toLowerCase().includes(statusSearch.toLowerCase()));
 
-  const filteredAssignees = uniqueAssignees.filter((u) => {
-    const search = assigneeSearch.toLowerCase();
-    return (
-      String(u.name ?? "").toLowerCase().includes(search) ||
-      String(u.id ?? "").toLowerCase().includes(search)
-    );
-  });
+  const filteredAssignees = filterBoardAssignees(uniqueAssignees, assigneeSearch);
 
   const allTypes = ["Task", "Bug", "Story"];
   const filteredTypes = allTypes.filter(t => t.toLowerCase().includes(typeSearch.toLowerCase()));
 
-  const allPriorities = ["High", "Medium", "Low"];
+  const allPriorities = PRIORITY_OPTIONS;
   const filteredPriorities = allPriorities.filter(p => p.toLowerCase().includes(prioritySearch.toLowerCase()));
 
   return (
@@ -194,12 +193,16 @@ export default function BoardFilters({
                   <input type="text" placeholder="Search assignees..." value={assigneeSearch} onChange={(e) => setAssigneeSearch(e.target.value)} className={searchInputCls} />
                 </div>
                 <div className="flex flex-col gap-0.5">
-                  {filteredAssignees.map((user) => (
-                    <label key={user.id} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
-                      <input type="checkbox" checked={filters.assignees.includes(user.id)} onChange={() => toggleArrayFilter("assignees", user.id)} className="rounded accent-[#2563EB] w-3.5 h-3.5" />
-                      <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{user.name ?? user.id}</span>
-                    </label>
-                  ))}
+                  {filteredAssignees.map((user) => {
+                    const label = getBoardFilterAssigneeLabel(user);
+
+                    return (
+                      <label key={user.id} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
+                        <input type="checkbox" checked={filters.assignees.includes(user.id)} onChange={() => toggleArrayFilter("assignees", user.id)} className="rounded accent-[#2563EB] w-3.5 h-3.5" />
+                        <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{label}</span>
+                      </label>
+                    );
+                  })}
                   {filteredAssignees.length === 0 && <p className="text-[0.8125rem] text-[#ABABAB] text-center py-4">No assignees found</p>}
                 </div>
               </>

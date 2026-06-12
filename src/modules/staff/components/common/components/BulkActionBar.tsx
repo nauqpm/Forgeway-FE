@@ -1,97 +1,121 @@
-import React, { useEffect, useState } from 'react';
-import { X, CheckSquare, Trash2, Edit2, ChevronUp } from 'lucide-react';
+import React, { useEffect, useRef } from 'react';
+import { X, Trash2 } from 'lucide-react';
+import AssigneePicker, { AssigneePickerUser } from '../../../../../common/components/AssigneePicker';
+import StatusPicker from '../../../../../common/components/StatusPicker';
+import CustomDatePicker from '../../../../../common/components/CustomDatePicker';
+import PriorityPicker from '../../../../../common/components/PriorityPicker';
 
 interface BulkActionBarProps {
   selectedCount: number;
   onClear: () => void;
-  onChangeStatus: (status: string) => void;
-  onEditFields?: () => void;
+  onBulkUpdate: (updates: Record<string, any>) => Promise<void>;
   onDelete: () => void;
+  members?: AssigneePickerUser[];
 }
 
-export default function BulkActionBar({ selectedCount, onClear, onChangeStatus, onEditFields, onDelete }: BulkActionBarProps) {
-  const [showStatusMenu, setShowStatusMenu] = useState(false);
+const STATUS_OPTIONS = ['To Do', 'In Progress', 'Done'];
+
+const PICKER_CLS =
+  '[&>button]:!h-8 [&>button]:!py-0 [&>button]:!flex [&>button]:!items-center [&>button]:!text-sm [&>button]:!font-medium [&>button]:!bg-transparent [&>button]:!border-white/[0.08] [&>button]:!text-[#9B9A97] [&>button]:hover:!bg-white/8 [&>button]:hover:!text-[#E8E8E7] [&>button]:hover:!border-white/[0.18] [&>button]:!rounded-[6px]';
+
+export default function BulkActionBar({
+  selectedCount,
+  onClear,
+  onBulkUpdate,
+  onDelete,
+  members = [],
+}: BulkActionBarProps) {
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedCount > 0) {
-        onClear();
-      }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedCount > 0) onClear();
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
   }, [selectedCount, onClear]);
+
+  const apply = (updates: Record<string, any>) => onBulkUpdate(updates);
 
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+    <div
+      data-bulk-action-bar="true"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300"
+      ref={barRef}
+    >
       <div
-        className="bg-[#202020] text-[#E8E8E7] rounded-[10px] px-4 py-3 flex items-center gap-4 border border-white/8"
-        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+        className="bg-[#202020] text-[#E8E8E7] rounded-[10px] px-3 py-2 flex items-center gap-2 border border-white/[0.12]"
+        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)' }}
       >
-        <div className="flex items-center gap-2 pr-4 border-r border-white/8">
-          <div className="bg-[#2563EB] w-6 h-6 rounded-[4px] flex items-center justify-center text-xs font-bold">
+        {/* Badge */}
+        <div className="flex items-center gap-2 pr-3 border-r border-white/[0.08] shrink-0 h-8">
+          <div className="bg-[#2563EB] min-w-[1.5rem] h-6 px-1 rounded-[4px] flex items-center justify-center text-xs font-bold">
             {selectedCount}
           </div>
-          <span className="text-sm font-medium text-[#9B9A97]">selected</span>
+          <span className="text-sm font-medium text-[#9B9A97] whitespace-nowrap">selected</span>
         </div>
 
-        <div className="flex items-center gap-2 relative">
-          <button 
-            onClick={() => setShowStatusMenu(!showStatusMenu)}
-            className="flex items-center gap-2 hover:bg-white/8 px-3 py-1.5 rounded-[6px] text-sm font-medium transition-colors"
-          >
-            <Edit2 className="w-4 h-4 text-[#3B82F6]" />
-            Change status
-            <ChevronUp className="w-3 h-3 text-[#6B6B6B] ml-1" />
-          </button>
+        {/* Status */}
+        <StatusPicker
+          value={null}
+          placeholder="Status"
+          placement="top"
+          options={STATUS_OPTIONS}
+          onChange={(status) => apply({ status })}
+          size="sm"
+          variant="default"
+          className={PICKER_CLS}
+        />
 
-          {showStatusMenu && (
-            <div
-              className="absolute bottom-full mb-2 left-0 w-40 bg-[#202020] border border-white/8 rounded-[8px] overflow-hidden py-1 animate-in fade-in slide-in-from-bottom-2"
-              style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
-            >
-              {['To Do', 'In Progress', 'Done'].map(status => (
-                <button
-                  key={status}
-                  onClick={() => {
-                    onChangeStatus(status);
-                    setShowStatusMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-2 text-sm text-[#9B9A97] hover:bg-white/8 hover:text-[#E8E8E7] transition-colors"
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-          )}
+        {/* Priority */}
+        <PriorityPicker
+          value={null}
+          onChange={(priority) => apply({ priority })}
+          placement="top"
+          variant="default"
+          className={PICKER_CLS}
+        />
 
-          {onEditFields && (
-            <button 
-              onClick={onEditFields}
-              className="flex items-center gap-2 hover:bg-white/8 px-3 py-1.5 rounded-[6px] text-sm font-medium transition-colors text-[#9B9A97] hover:text-[#E8E8E7]"
-            >
-              <Edit2 className="w-4 h-4" />
-              Edit fields
-            </button>
-          )}
-
-          <button 
-            onClick={onDelete}
-            className="flex items-center gap-2 hover:bg-[rgba(159,47,45,0.12)] text-[#F87171] hover:text-[#FCA5A5] px-3 py-1.5 rounded-[6px] text-sm font-medium transition-colors"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
+        {/* Assignee */}
+        <div className="[&_button]:!h-8 [&_button]:!py-0 [&_button]:!flex [&_button]:!items-center [&_button]:!text-sm [&_button]:!font-medium [&_button]:!w-auto [&_button]:!rounded-[6px] [&_button]:!border [&_button]:!border-white/[0.08] [&_button]:hover:!border-white/[0.18] [&_button]:!px-3 [&_button]:hover:!bg-white/8">
+          <AssigneePicker
+            users={members}
+            value={null}
+            onChange={(uid) => apply({ assigneeId: uid })}
+            placement="top"
+          />
         </div>
 
-        <button 
-          onClick={onClear}
-          className="ml-2 p-1.5 hover:bg-white/8 rounded-[6px] text-[#6B6B6B] hover:text-[#E8E8E7] transition-colors"
-          title="Deselect (Esc)"
+        {/* Due Date */}
+        <CustomDatePicker
+          value={null}
+          onChange={(date) => { if (date) apply({ dueDate: date }); }}
+          popoverPlacement="top-start"
+          placeholder="Due date"
+          className="w-36"
+          inputClassName="!h-8 !text-sm !pl-8 !bg-transparent dark:!bg-transparent !border-white/[0.08] !text-[#9B9A97] dark:!text-[#9B9A97] placeholder:!text-[#6B6B6B] hover:!border-white/[0.18] focus:!border-[#3B82F6] focus:!ring-[#3B82F6]/20 !rounded-[6px]"
+        />
+
+        <div className="w-px h-5 bg-white/[0.08] mx-0.5 shrink-0" />
+
+        {/* Delete */}
+        <button
+          onClick={onDelete}
+          className="h-8 flex items-center gap-1.5 px-3 rounded-[6px] text-sm font-medium text-[#F87171] hover:text-[#FCA5A5] hover:bg-[rgba(159,47,45,0.12)] transition-colors"
         >
-          <X className="w-5 h-5" />
+          <Trash2 className="w-3.5 h-3.5 shrink-0" />
+          Delete
+        </button>
+
+        {/* Deselect all */}
+        <button
+          onClick={onClear}
+          className="h-8 w-8 flex items-center justify-center hover:bg-white/8 rounded-[6px] text-[#6B6B6B] hover:text-[#E8E8E7] transition-colors shrink-0"
+          title="Deselect all (Esc)"
+        >
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>

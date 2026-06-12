@@ -95,12 +95,16 @@ export class PageRoomManager {
   /**
    * Tell the server to flush the current draft into the main Page document.
    */
-  publish(socket: Socket, onComplete?: (ok: boolean) => void): void {
+  publish(
+    socket: Socket,
+    payload: { content: string; title: string },
+    onComplete?: (ok: boolean) => void,
+  ): void {
     if (!this.currentId || !socket.connected) return;
 
     socket.emit(
       SOCKET_COMMANDS.PAGE_PUBLISH_DRAFT,
-      { pageId: this.currentId },
+      { pageId: this.currentId, ...payload },
       (res: { ok: boolean }) => onComplete?.(res?.ok ?? false),
     );
   }

@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
+import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
 import {
   LayoutDashboard,
   BookOpen,
@@ -570,13 +571,16 @@ export default function Sidebar({
         {/* Bottom: Workspace + Settings */}
         <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] p-3 space-y-1">
           {!collapsed && currentWorkspace && (
-            <div className="px-3 py-2 bg-[#F9F9F8] dark:bg-white/5 rounded-[6px] mb-2">
-              <p className="text-[0.625rem] text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] font-semibold">
-                Workspaces
-              </p>
-              <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
-                {currentWorkspace.name}
-              </p>
+            <div className="mb-2 flex items-center gap-2 rounded-[6px] bg-[#F9F9F8] px-3 py-2 dark:bg-white/5">
+              <WorkspaceAvatar workspace={currentWorkspace} size="sm" />
+              <div className="min-w-0">
+                <p className="text-[0.625rem] font-semibold uppercase tracking-[0.06em] text-[#ABABAB] dark:text-[#6B6B6B]">
+                  Workspaces
+                </p>
+                <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
+                  {currentWorkspace.name}
+                </p>
+              </div>
             </div>
           )}
           <Link

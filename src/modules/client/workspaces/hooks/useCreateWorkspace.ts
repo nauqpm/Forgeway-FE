@@ -6,6 +6,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 interface CreateWorkspaceInput {
   name: string;
   description?: string;
+  avatar?: string;
   key?: string;
   type?: "kanban" | "scrum";
   access?: "private" | "public";
@@ -20,6 +21,7 @@ export function useCreateWorkspace() {
       const res = await api.post(apiRoutes.WORKSPACES.BASE, {
         name: input.name,
         description: input.description || undefined,
+        avatar: input.avatar || undefined,
         key: input.key || undefined,
         type: input.type || "kanban",
         access: input.access || "public",

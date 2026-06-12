@@ -2,15 +2,20 @@ import React, { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  Repeat,
-  Columns,
   Lock,
   Globe,
   Settings,
   Plus,
+  Camera,
+  X,
 } from "lucide-react";
-import { getWorkspaceTemplate, Workspace } from "../../types/workspace.type";
+import toast from "react-hot-toast";
+import { Workspace } from "../../types/workspace.type";
 import InviteModal from "@/modules/admin/components/common/components/InviteModal";
+import { workspaceService } from "../../services/workspaceService";
+import type { WorkspaceSampleAvatar } from "../../utils/workspaceAvatar";
+import WorkspaceAvatar from "./WorkspaceAvatar";
+import WorkspaceAvatarPicker from "./WorkspaceAvatarPicker";
 
 interface HeaderProps {
   workspace: Workspace;
@@ -18,6 +23,7 @@ interface HeaderProps {
   setShowCreateIssue: (value: boolean) => void;
   canCreateTask?: boolean;
   canUpdateWorkspace?: boolean;
+  onWorkspaceUpdated?: (workspace: Workspace) => void;
 }
 
 const Header = ({
@@ -26,9 +32,49 @@ const Header = ({
   setShowCreateIssue,
   canCreateTask = false,
   canUpdateWorkspace = false,
+  onWorkspaceUpdated,
 }: HeaderProps) => {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const template = getWorkspaceTemplate(workspace);
+  const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+  const [avatarSamples, setAvatarSamples] = useState<WorkspaceSampleAvatar[]>([]);
+  const [loadingAvatars, setLoadingAvatars] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(workspace.avatar);
+  const [savingAvatar, setSavingAvatar] = useState(false);
+
+  const openAvatarPicker = async () => {
+    if (!canUpdateWorkspace) return;
+    setSelectedAvatar(workspace.avatar);
+    setIsAvatarPickerOpen(true);
+    if (avatarSamples.length > 0) return;
+
+    setLoadingAvatars(true);
+    try {
+      const samples = await workspaceService.listAvatarSamples();
+      setAvatarSamples(samples);
+      setSelectedAvatar(workspace.avatar || samples[0]?.url);
+    } catch {
+      toast.error("Unable to load workspace avatars.");
+    } finally {
+      setLoadingAvatars(false);
+    }
+  };
+
+  const handleSaveAvatar = async () => {
+    if (!selectedAvatar) return;
+    setSavingAvatar(true);
+    try {
+      const updatedWorkspace = await workspaceService.updateWorkspace(workspace._id, {
+        avatar: selectedAvatar,
+      });
+      onWorkspaceUpdated?.({ ...workspace, ...updatedWorkspace });
+      setIsAvatarPickerOpen(false);
+      toast.success("Workspace avatar updated.");
+    } catch {
+      toast.error("Unable to update workspace avatar.");
+    } finally {
+      setSavingAvatar(false);
+    }
+  };
 
   return (
     <div className="mb-3 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
@@ -39,19 +85,20 @@ const Header = ({
         >
           <ArrowRight className="w-5 h-5 text-[#787774] dark:text-[#9B9A97] rotate-180" />
         </Link>
-        <div
-          className={`hidden h-14 w-14 shrink-0 rounded-[10px] sm:flex items-center justify-center ${
-            template === "scrum"
-              ? "bg-[#2563EB] dark:bg-[#3B82F6]"
-              : "bg-[#2563EB] dark:bg-[#3B82F6]"
-          }`}
-        >
-          {template === "scrum" ? (
-            <Repeat className="w-7 h-7 text-white" />
-          ) : (
-            <Columns className="w-7 h-7 text-white" />
-          )}
-        </div>
+        {canUpdateWorkspace ? (
+          <button
+            type="button"
+            onClick={openAvatarPicker}
+            className="group relative hidden shrink-0 rounded-[10px] sm:inline-flex"
+          >
+            <WorkspaceAvatar workspace={workspace} size="xl" />
+            <span className="absolute inset-0 flex items-center justify-center rounded-[10px] bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
+              <Camera className="h-5 w-5 text-white" />
+            </span>
+          </button>
+        ) : (
+          <WorkspaceAvatar workspace={workspace} size="xl" className="hidden sm:inline-flex" />
+        )}
         <div className="min-w-0">
           <div className="mb-1 flex flex-wrap items-center gap-2">
             <span className="px-2 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.6875rem] font-mono font-bold">
@@ -77,12 +124,14 @@ const Header = ({
           </div>
           <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             <span className="min-w-0 break-words">{workspace.name}</span>
-            <Link
-              href={`/workspaces/${workspaceId}/settings`}
-              className="shrink-0 p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]"
-            >
-              <Settings className="w-5 h-5" />
-            </Link>
+            {canUpdateWorkspace && (
+              <Link
+                href={`/workspaces/${workspaceId}/settings`}
+                className="shrink-0 p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+            )}
           </h1>
         </div>
       </div>
@@ -110,6 +159,51 @@ const Header = ({
         onClose={() => setIsInviteModalOpen(false)}
         projectId={workspace._id ?? workspaceId}
       />
+
+      {isAvatarPickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-[10px] border border-[#EAEAEA] bg-white p-5 shadow-2xl dark:border-white/[0.08] dark:bg-[#202020]">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <WorkspaceAvatar workspace={{ ...workspace, avatar: selectedAvatar }} size="lg" />
+                <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                  Workspace avatar
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAvatarPickerOpen(false)}
+                className="rounded-[6px] p-1.5 text-[#787774] transition-colors hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:bg-[#2E2E2E] dark:hover:text-[#E8E8E7]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <WorkspaceAvatarPicker
+              avatars={avatarSamples}
+              selectedAvatar={selectedAvatar}
+              isLoading={loadingAvatars}
+              onSelect={setSelectedAvatar}
+            />
+            <div className="mt-5 flex justify-end gap-3 border-t border-[#EAEAEA] pt-4 dark:border-white/[0.06]">
+              <button
+                type="button"
+                onClick={() => setIsAvatarPickerOpen(false)}
+                className="rounded-[6px] border border-[#EAEAEA] px-4 py-2 text-sm font-medium text-[#111111] transition-colors hover:bg-[#F7F6F3] dark:border-white/[0.08] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveAvatar}
+                disabled={!selectedAvatar || savingAvatar}
+                className="rounded-[6px] bg-[#2563EB] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8] disabled:opacity-50 dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
+              >
+                {savingAvatar ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
