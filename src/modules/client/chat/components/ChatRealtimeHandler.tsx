@@ -6,6 +6,7 @@ import { SOCKET_EVENTS } from '@/lib/socket/socket.events';
 import { useChatStore } from '@/stores/chatStore';
 import { getChannelsAPI, getChannelAPI } from '@/modules/client/chat/services/chatService';
 import toast from 'react-hot-toast';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
 const fetchingChannels = new Set<string>();
 
@@ -16,6 +17,7 @@ const fetchAndAddChannel = (channelId: string, addChannelAction: (channel: any) 
   getChannelAPI(channelId)
     .then(channel => {
       addChannelAction(channel);
+      chatSocketClient.joinChannel(channelId);
     })
     .catch(err => {
       console.error("Failed to fetch new channel details", err);
@@ -40,6 +42,22 @@ export default function ChatRealtimeHandler() {
     channels,
     addChannel
   } = useChatStore();
+
+  const user = useAuthStore(state => state.user);
+  const setChannels = useChatStore(state => state.setChannels);
+
+  useEffect(() => {
+    if (!user) return;
+    getChannelsAPI()
+      .then(allChannels => {
+        setChannels(allChannels);
+        const channelIds = allChannels.map(c => c._id);
+        chatSocketClient.joinChannels(channelIds);
+      })
+      .catch(err => {
+        console.error("Failed to load channels in background", err);
+      });
+  }, [user, setChannels]);
 
   const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 

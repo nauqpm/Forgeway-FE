@@ -9,6 +9,7 @@ import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
+import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
 
 export default function ChatWindow() {
   // Use specific selectors to prevent unnecessary re-renders and reference changes
@@ -30,9 +31,9 @@ export default function ChatWindow() {
   const activeChannel = channels.find(c => c._id === activeChannelId);
   
   const activeWorkspace = useMemo(() => {
-    if (activeChannel?.type !== 'workspace') return null;
-    return workspaces.find(w => (w._id || (w as any).id) === activeChannelId);
-  }, [activeChannel, activeChannelId, workspaces]);
+    if (activeChannel?.type !== 'workspace' || !activeChannel?.workspaceId) return null;
+    return workspaces.find(w => String(w._id || (w as any).id) === String(activeChannel.workspaceId));
+  }, [activeChannel, workspaces]);
 
   const messages = useMemo(() => {
     const rawMessages = activeChannelId ? messagesByChannel[activeChannelId] || [] : [];
@@ -142,46 +143,67 @@ export default function ChatWindow() {
     <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-[#202020]">
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
-        <div className="flex flex-col items-start justify-center gap-0 min-w-0">
-          <div className="flex items-center gap-2">
-            {activeChannel.type === 'announcement' ? (
-              <Megaphone className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
-            ) : activeWorkspace ? (
-              <div className="w-5 h-5 rounded-[4px] overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] text-white font-bold text-[9px] shadow-sm">
-                {activeWorkspace?.avatar ? (
-                  <img 
-                    src={activeWorkspace.avatar} 
-                    alt={headerName} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      const parent = (e.target as HTMLImageElement).parentElement;
-                      if (parent && !parent.querySelector('span')) {
-                        const span = document.createElement('span');
-                        span.innerText = headerName?.charAt(0).toUpperCase() || 'W';
-                        parent.appendChild(span);
-                      }
-                    }}
-                  />
-                ) : (
-                  <span>{headerName?.charAt(0).toUpperCase()}</span>
-                )}
-              </div>
-            ) : (
-              <Hash className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
-            )}
-            <span className="font-bold text-[#111111] dark:text-[#E8E8E7] truncate">{headerName}</span>
+        <div className="flex items-center gap-3 min-w-0">
+          {activeChannel.type === 'announcement' ? (
+            <Megaphone className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" />
+          ) : activeWorkspace ? (
+            <div className="w-9 h-9 rounded-[6px] overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] text-white font-bold text-sm shadow-sm">
+              <img 
+                src={getWorkspaceAvatarUrl(activeWorkspace)} 
+                alt={headerName} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent && !parent.querySelector('span')) {
+                    const span = document.createElement('span');
+                    span.innerText = headerName?.charAt(0).toUpperCase() || 'W';
+                    parent.appendChild(span);
+                  }
+                }}
+              />
+            </div>
+          ) : activeChannel.type === 'dm' ? (
+            (() => {
+              const members = activeChannel.members || [];
+              const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+              const displayAvatar = otherMember?.avatar;
+              const initials = (otherMember?.fullName || otherMember?.email || "DM").charAt(0).toUpperCase();
+              return (
+                <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white font-bold text-sm shadow-sm">
+                  {displayAvatar ? (
+                    <img src={displayAvatar} alt={headerName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                </div>
+              );
+            })()
+          ) : (
+            <Hash className="w-5 h-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+          )}
+
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-sm truncate leading-snug">{headerName}</span>
+              {activeWorkspace && activeWorkspace.key && (
+                <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
+                  {activeWorkspace.key}
+                </span>
+              )}
+            </div>
+            
+            <span className="text-[11px] text-[#787774] dark:text-[#9B9A97] truncate leading-none mt-0.5">
+              {activeWorkspace?.description || headerDescription || (
+                <>
+                  {activeChannel.type === 'general' && "Everyone in the organization"}
+                  {activeChannel.type === 'announcement' && "Only admins can post messages here"}
+                  {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
+                  {activeChannel.type === 'dm' && "Direct conversation"}
+                </>
+              )}
+            </span>
           </div>
-          
-          <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
-            {headerDescription || (
-              <>
-                {activeChannel.type === 'general' && "Everyone in the organization"}
-                {activeChannel.type === 'announcement' && "Only admins can post messages here"}
-                {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
-              </>
-            )}
-          </span>
         </div>
 
         <div className="flex items-center gap-3 text-[#787774] dark:text-[#9B9A97]">

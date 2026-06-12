@@ -7,6 +7,9 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
 import { Hash, Megaphone, Loader2 } from 'lucide-react';
 import { getWorkspaceUI } from '@/utils/workSpaceUI';
+import { useSearchParams } from 'next/navigation';
+import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
+import { chatSocketClient } from '@/lib/socket/chat.client';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -18,10 +21,25 @@ export default function ChatSidebar() {
   const [loading, setLoading] = useState(channels.length === 0);
   const [activeTab, setActiveTab] = useState<'all' | 'channels' | 'dms'>('all');
 
+  const searchParams = useSearchParams();
+  const paramWorkspaceId = searchParams.get('workspaceId');
+
+  useEffect(() => {
+    if (paramWorkspaceId && channels.length > 0) {
+      const wsChannel = channels.find(
+        c => c.type === 'workspace' && String(c.workspaceId) === String(paramWorkspaceId)
+      );
+      if (wsChannel && activeChannelId !== wsChannel._id) {
+        setActiveChannel(wsChannel._id);
+      }
+    }
+  }, [paramWorkspaceId, channels, activeChannelId, setActiveChannel]);
+
   const fetchSidebarData = useCallback(async () => {
     try {
       const allChannels = await getChannelsAPI();
       setChannels(allChannels);
+      chatSocketClient.joinChannels(allChannels.map(c => c._id));
     } catch (error) {
       console.error("Failed to fetch channels", error);
     } finally {
@@ -66,7 +84,7 @@ export default function ChatSidebar() {
   const dmChannels = sortedChannels.filter(c => c.type === 'dm');
 
   const getWorkspaceUnread = (wsId: string) => {
-    const ch = channels.find(c => c._id === wsId);
+    const ch = channels.find(c => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
     return ch ? ch.unreadCount : 0;
   };
 
@@ -163,24 +181,20 @@ export default function ChatSidebar() {
         ) : type === 'workspace' ? (
           <div className="relative flex-shrink-0 mt-0.5">
             <div className={cn("w-7 h-7 rounded-[6px] text-white flex items-center justify-center shadow-sm overflow-hidden text-[0.75rem] font-bold", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
-              {workspaceData?.avatar ? (
-                <img 
-                  src={workspaceData.avatar} 
-                  alt={name} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    const parent = (e.target as HTMLImageElement).parentElement;
-                    if (parent && !parent.querySelector('span')) {
-                      const span = document.createElement('span');
-                      span.innerText = name?.charAt(0).toUpperCase() || 'W';
-                      parent.appendChild(span);
-                    }
-                  }}
-                />
-              ) : (
-                <span>{name?.charAt(0).toUpperCase()}</span>
-              )}
+              <img 
+                src={getWorkspaceAvatarUrl(workspaceData)} 
+                alt={name} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent && !parent.querySelector('span')) {
+                    const span = document.createElement('span');
+                    span.innerText = name?.charAt(0).toUpperCase() || 'W';
+                    parent.appendChild(span);
+                  }
+                }}
+              />
             </div>
           </div>
         ) : (
@@ -269,7 +283,10 @@ export default function ChatSidebar() {
             <div className="space-y-0.5">
               {workspaces.map((ws, idx) => {
                 const wsId = ws._id || (ws as any).id || `ws-${idx}`;
-                return renderChannelLink(wsId, ws.name, 'workspace', getWorkspaceUnread(wsId), null, ws);
+                const wsChannel = channels.find(c => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
+                const targetChannelId = wsChannel ? wsChannel._id : wsId;
+                const unreadCount = wsChannel ? wsChannel.unreadCount : 0;
+                return renderChannelLink(targetChannelId, ws.name, 'workspace', unreadCount, wsChannel?.lastMessage, ws);
               })}
             </div>
           </div>
