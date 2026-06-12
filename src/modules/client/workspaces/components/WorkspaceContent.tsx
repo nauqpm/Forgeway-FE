@@ -40,6 +40,10 @@ const DocsLayout = dynamic(
     loading: tabLoading,
   },
 );
+const MembersTab = dynamic(() => import("./tabs/MembersTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
 
 type WorkspaceContentProps = {
   activeTab: string;
@@ -54,6 +58,11 @@ type WorkspaceContentProps = {
   summaryProps: any;
   calendarProps: any;
   archiveProps: any;
+  membersProps: {
+    workspaceId: string;
+    currentUserId?: string;
+    isAdmin: boolean;
+  };
 };
 
 export default function WorkspaceContent({
@@ -67,6 +76,7 @@ export default function WorkspaceContent({
   summaryProps,
   calendarProps,
   archiveProps,
+  membersProps,
 }: WorkspaceContentProps) {
   return (
     <div
@@ -95,6 +105,8 @@ export default function WorkspaceContent({
       {activeTab === "archive" && <ArchiveTab {...archiveProps} />}
 
       {activeTab === "summary" && <SummaryTab {...summaryProps} />}
+
+      {activeTab === "members" && <MembersTab {...membersProps} />}
     </div>
   );
 }

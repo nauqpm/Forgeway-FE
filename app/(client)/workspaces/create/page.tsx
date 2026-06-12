@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useCreateWorkspace } from "@/modules/client/workspaces/hooks/useCreateWorkspace";
 import { ArrowLeft, Columns, Repeat, Lock, Globe } from "lucide-react";
 import Link from "next/link";
+import WorkspaceAvatarPicker from "@/modules/client/workspaces/components/common/WorkspaceAvatarPicker";
+import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
+import {
+  DEFAULT_WORKSPACE_AVATAR_URL,
+  selectRandomWorkspaceAvatar,
+  WorkspaceSampleAvatar,
+} from "@/modules/client/workspaces/utils/workspaceAvatar";
 
 export default function CreateWorkspacePage() {
   const router = useRouter();
@@ -15,10 +23,43 @@ export default function CreateWorkspacePage() {
     name: "",
     key: "",
     description: "",
+    avatar: DEFAULT_WORKSPACE_AVATAR_URL,
     visibility: "public" as "public" | "private",
     template: "kanban" as "kanban" | "scrum"
   });
   const [error, setError] = useState("");
+  const [avatarSamples, setAvatarSamples] = useState<WorkspaceSampleAvatar[]>([]);
+  const [loadingAvatars, setLoadingAvatars] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+
+    workspaceService
+      .listAvatarSamples()
+      .then((samples) => {
+        if (!mounted) return;
+        setAvatarSamples(samples);
+        setForm((current) => ({
+          ...current,
+          avatar: current.avatar || selectRandomWorkspaceAvatar(samples),
+        }));
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setAvatarSamples([]);
+        setForm((current) => ({
+          ...current,
+          avatar: current.avatar || DEFAULT_WORKSPACE_AVATAR_URL,
+        }));
+      })
+      .finally(() => {
+        if (mounted) setLoadingAvatars(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,6 +69,7 @@ export default function CreateWorkspacePage() {
         name: form.name,
         key: form.key,
         description: form.description,
+        avatar: form.avatar,
         type: form.template,
         access: form.visibility === "public" ? "public" : "private",
       });
@@ -98,6 +140,31 @@ export default function CreateWorkspacePage() {
 
         <hr className="border-[#EAEAEA] dark:border-white/[0.06]" />
 
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <WorkspaceAvatar
+              workspace={{ name: form.name || "Workspace", key: form.key, avatar: form.avatar }}
+              size="lg"
+            />
+            <div>
+              <label className="block text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                Workspace avatar
+              </label>
+              <p className="text-xs text-[#787774] dark:text-[#9B9A97]">
+                Sample image library
+              </p>
+            </div>
+          </div>
+          <WorkspaceAvatarPicker
+            avatars={avatarSamples}
+            selectedAvatar={form.avatar}
+            isLoading={loadingAvatars}
+            onSelect={(avatar) => setForm({ ...form, avatar })}
+          />
+        </div>
+
+        <hr className="border-[#EAEAEA] dark:border-white/[0.06]" />
+
         {/* Workspace Type / Template */}
         <div>
           <label className="block text-sm font-semibold text-[#111111] dark:text-[#E8E8E7] mb-3">Choose workspace type (template) *</label>
@@ -128,8 +195,8 @@ export default function CreateWorkspacePage() {
 
         <hr className="border-[#EAEAEA] dark:border-white/[0.06]" />
 
-        {/* Visibility */}
-        <div>
+        {/* Visibility
+        /*<div>
           <label className="block text-sm font-semibold text-[#111111] dark:text-[#E8E8E7] mb-3">Access</label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
@@ -153,6 +220,7 @@ export default function CreateWorkspacePage() {
             ))}
           </div>
         </div>
+         */}
 
         <div className="flex justify-end gap-3 pt-6 border-t border-[#EAEAEA] dark:border-white/[0.06]">
           <Link href="/workspaces" className="px-6 py-2.5 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] font-medium transition-colors">Cancel</Link>

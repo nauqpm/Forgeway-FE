@@ -106,7 +106,8 @@ export const useColumnHandlers = ({
       if (context?.previousColumns) {
         setColumns(context.previousColumns);
       }
-      toast.error("Error deleting column: " + err.message);
+      const serverMessage = (err as any)?.response?.data?.message;
+      toast.error(serverMessage || "Failed to delete column");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });

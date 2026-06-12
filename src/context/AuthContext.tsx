@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   createContext,
@@ -21,6 +21,7 @@ interface User {
   permissions: Permission[];
   fullName?: string;
   avatar?: string;
+  ssoProvider?: "google" | null;
 }
 
 interface AuthContextType {
@@ -40,7 +41,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const normalizeUser = (
-  user: AuthUser | (Partial<AuthUser> & { id?: string; _id?: string }),
+  user: AuthUser | (Partial<AuthUser> & { id?: string; _id?: string; googleId?: string }),
   permissions: Permission[] = [],
 ): User => ({
   id: user.id || ("_id" in user ? user._id || "" : ""),
@@ -48,6 +49,7 @@ const normalizeUser = (
   role: (user.role || "user") as UserRole,
   fullName: user.fullName,
   avatar: user.avatar,
+  ssoProvider: (user as any).googleId ? "google" : user.ssoProvider,
   permissions: permissions.length ? permissions : user.permissions || [],
 });
 

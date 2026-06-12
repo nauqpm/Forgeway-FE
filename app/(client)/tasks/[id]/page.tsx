@@ -10,6 +10,7 @@ import LoadingSpinner from "@/modules/admin/components/common/components/Loading
 import Link from "next/link";
 import { AlertCircle, ArrowLeft, User, Tag, Calendar, Flag, MessageSquare, Paperclip, Send, Edit3 } from "lucide-react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+import StatusPicker from "@/common/components/StatusPicker";
 
 interface Task {
   _id: string; key: string; title: string; description?: string; type: string;
@@ -185,11 +186,12 @@ export default function TaskDetailPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Status</label>
-                <select value={task.status} onChange={(e) => handleStatusChange(e.target.value)} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500">
-                  {["todo", "inprogress", "review", "done"].map((s) => (
-                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1).replace(/([A-Z])/g, ' $1')}</option>
-                  ))}
-                </select>
+                <StatusPicker
+                  value={task.status}
+                  onChange={(status) => handleStatusChange(status)}
+                  variant="input"
+                  options={["To Do", "In Progress", "Review", "Done"].map(name => ({ id: name.toLowerCase().replace(/\s/g, ""), name }))}
+                />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Priority</label>

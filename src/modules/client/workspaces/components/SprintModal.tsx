@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { toast } from "react-hot-toast";
+import CustomDatePicker from '@/common/components/CustomDatePicker';
 
 interface SprintModalProps {
   isOpen: boolean;
@@ -72,8 +73,11 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
     });
   };
 
-  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const startStr = e.target.value;
+  const handleStartDateChange = (startStr: string | null) => {
+    if (!startStr) {
+      setFormData({ ...formData, startDate: '' });
+      return;
+    }
     const start = new Date(startStr);
 
     let days = 0;
@@ -170,22 +174,22 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className={labelCls}>Start date</label>
-              <input
-                type="date"
-                disabled={isRestricted}
-                value={formData.startDate}
+              <CustomDatePicker
+                value={formData.startDate || null}
                 onChange={handleStartDateChange}
-                className={inputCls}
+                disabled={isRestricted}
+                placeholder="DD/MM/YYYY"
+                ariaLabel="Sprint start date"
               />
             </div>
             <div>
               <label className={labelCls}>End date</label>
-              <input
-                type="date"
+              <CustomDatePicker
+                value={formData.endDate || null}
+                onChange={(val) => setFormData({ ...formData, endDate: val || '', duration: 'custom' })}
                 disabled={isRestricted}
-                value={formData.endDate}
-                onChange={(e) => setFormData({ ...formData, endDate: e.target.value, duration: 'custom' })}
-                className={inputCls}
+                placeholder="DD/MM/YYYY"
+                ariaLabel="Sprint end date"
               />
             </div>
           </div>

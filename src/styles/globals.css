@@ -513,6 +513,9 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .fc .fc-daygrid-day-top {
   position: relative;
   z-index: 8;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
   padding: 2px 3px 0;
 }
 .al-calendar-day-head {
@@ -569,10 +572,12 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   z-index: 3;
   margin-top: 4px;
   min-height: 104px;
+  pointer-events: none;
 }
 .fc .fc-daygrid-more-link {
   position: relative;
   z-index: 20;
+  pointer-events: auto;
   display: inline-flex;
   margin-top: 2px;
   padding: 1px 6px;
@@ -590,9 +595,12 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   display: block;
   min-height: 22px;
   height: 22px;
+  width: calc(100% - 12px);
   margin-top: 4px;
+  margin-inline: 6px;
   cursor: grab;
   user-select: none;
+  pointer-events: auto;
 }
 .fc .fc-daygrid-event:active {
   cursor: grabbing;

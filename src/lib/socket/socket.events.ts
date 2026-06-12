@@ -1,10 +1,10 @@
 export const SOCKET_LIFECYCLE = {
-  CONNECT: 'connect',
-  CONNECT_ERROR: 'connect_error',
-  DISCONNECT: 'disconnect',
-  RECONNECT: 'reconnect',
-  RECONNECT_ATTEMPT: 'reconnect_attempt',
-  RATE_LIMITED: 'rate_limited',
+  CONNECT: "connect",
+  CONNECT_ERROR: "connect_error",
+  DISCONNECT: "disconnect",
+  RECONNECT: "reconnect",
+  RECONNECT_ATTEMPT: "reconnect_attempt",
+  RATE_LIMITED: "rate_limited",
 } as const;
 
 export const SOCKET_COMMANDS = {
@@ -21,37 +21,53 @@ export const SOCKET_COMMANDS = {
 } as const;
 
 export const TASK_EVENTS = {
-  CREATED: 'task.created',
-  UPDATED: 'task.updated',
-  MOVED: 'task.moved',
-  REORDERED: 'task.reordered',
-  ARCHIVED: 'task.archived',
-  RESTORED: 'task.restored',
-  DELETED: 'task.deleted',
+  CREATED: "task.created",
+  UPDATED: "task.updated",
+  MOVED: "task.moved",
+  REORDERED: "task.reordered",
+  ARCHIVED: "task.archived",
+  RESTORED: "task.restored",
+  DELETED: "task.deleted",
 } as const;
 
 export const SPRINT_EVENTS = {
   CREATED: 'sprint.created',
+  UPDATED: 'sprint.updated',
+  DELETED: 'sprint.deleted',
+  STARTED: 'sprint.started',
+  COMPLETED: 'sprint.completed',
+} as const;
+
+export const WORKSPACE_EVENTS = {
+  CREATED: 'workspace.created',
+  UPDATED: 'workspace.updated',
+  ARCHIVED: 'workspace.archived',
+  RESTORED: 'workspace.restored',
+  DELETED: 'workspace.deleted',
+  MEMBER_ADDED: 'workspace.member.joined',
+  MEMBER_REMOVED: 'workspace.member.removed',
+  MEMBER_ROLE_UPDATED: 'workspace.member.role_updated',
+  INVITE_CREATED: 'workspace.invite.created',
 } as const;
 
 export const TASK_DETAIL_EVENTS = {
-  COMMENT_CREATED: 'task.comment.created',
-  COMMENT_UPDATED: 'task.comment.updated',
-  COMMENT_DELETED: 'task.comment.deleted',
-  ATTACHMENT_ADDED: 'task.attachment.added',
-  ATTACHMENT_DELETED: 'task.attachment.deleted',
-  LABELS_UPDATED: 'task.labels.updated',
-  COVER_UPDATED: 'task.cover.updated',
-  ACTIVITY_CREATED: 'task.activity.created',
+  COMMENT_CREATED: "task.comment.created",
+  COMMENT_UPDATED: "task.comment.updated",
+  COMMENT_DELETED: "task.comment.deleted",
+  ATTACHMENT_ADDED: "task.attachment.added",
+  ATTACHMENT_DELETED: "task.attachment.deleted",
+  LABELS_UPDATED: "task.labels.updated",
+  COVER_UPDATED: "task.cover.updated",
+  ACTIVITY_CREATED: "task.activity.created",
 } as const;
 export const NOTIFICATION_EVENTS = {
-  CREATED: 'notification.created',
-  READ: 'notification.read',
-  READ_ALL: 'notification.read_all',
+  CREATED: "notification.created",
+  READ: "notification.read",
+  READ_ALL: "notification.read_all",
 } as const;
 
 export const LEGACY_EVENTS = {
-  BOARD_DELTA: 'board:delta',
+  BOARD_DELTA: "board:delta",
 } as const;
 
 export const SOCKET_EVENTS = {
@@ -65,6 +81,19 @@ export const SOCKET_EVENTS = {
   TASK_RESTORED: TASK_EVENTS.RESTORED,
   TASK_DELETED: TASK_EVENTS.DELETED,
   SPRINT_CREATED: SPRINT_EVENTS.CREATED,
+  SPRINT_UPDATED: SPRINT_EVENTS.UPDATED,
+  SPRINT_DELETED: SPRINT_EVENTS.DELETED,
+  SPRINT_STARTED: SPRINT_EVENTS.STARTED,
+  SPRINT_COMPLETED: SPRINT_EVENTS.COMPLETED,
+  WORKSPACE_CREATED: WORKSPACE_EVENTS.CREATED,
+  WORKSPACE_UPDATED: WORKSPACE_EVENTS.UPDATED,
+  WORKSPACE_ARCHIVED: WORKSPACE_EVENTS.ARCHIVED,
+  WORKSPACE_RESTORED: WORKSPACE_EVENTS.RESTORED,
+  WORKSPACE_DELETED: WORKSPACE_EVENTS.DELETED,
+  WORKSPACE_MEMBER_ADDED: WORKSPACE_EVENTS.MEMBER_ADDED,
+  WORKSPACE_MEMBER_REMOVED: WORKSPACE_EVENTS.MEMBER_REMOVED,
+  WORKSPACE_MEMBER_ROLE_UPDATED: WORKSPACE_EVENTS.MEMBER_ROLE_UPDATED,
+  WORKSPACE_INVITE_CREATED: WORKSPACE_EVENTS.INVITE_CREATED,
   TASK_COMMENT_CREATED: TASK_DETAIL_EVENTS.COMMENT_CREATED,
   TASK_COMMENT_UPDATED: TASK_DETAIL_EVENTS.COMMENT_UPDATED,
   TASK_COMMENT_DELETED: TASK_DETAIL_EVENTS.COMMENT_DELETED,

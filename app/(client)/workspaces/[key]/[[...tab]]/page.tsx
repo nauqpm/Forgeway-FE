@@ -27,9 +27,11 @@ import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/servic
 
 import { filterTasks } from "@/modules/client/workspaces/utils/filterTasks";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
+import { removeRestoredArchiveItem } from "@/modules/client/workspaces/utils/archiveListState";
 import {
   handleBoardDragEnd,
   handleBacklogDragEnd,
+  compareIssueRank,
   TaskReorderSyncInput,
 } from "@/modules/client/workspaces/utils/dragUtils";
 
@@ -44,9 +46,14 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
 import { useSprintRealtime } from "@/hooks/realtime/use-sprint-realtime";
 import { sprintIdOf } from "@/hooks/realtime/sprint-realtime-cache.utils";
-import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
+import {
+  sortIssuesByRank,
+  taskIdOf,
+} from "@/hooks/realtime/task-realtime-cache.utils";
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
+import { useAuth } from "@/context/AuthContext";
+import { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
@@ -87,12 +94,15 @@ const BulkActionBar = dynamic(
 const getRouteStateFromPath = (pathname: string) => {
   const segments = pathname.split("/").filter(Boolean);
   const rawTabSegment = segments[2];
-  const tabSegment = rawTabSegment === "key" ? undefined : rawTabSegment as WorkspaceTab | undefined;
+  const tabSegment =
+    rawTabSegment === "key"
+      ? undefined
+      : (rawTabSegment as WorkspaceTab | undefined);
   const taskKey =
     rawTabSegment === "key"
-      ? segments[3] ?? null
+      ? (segments[3] ?? null)
       : tabSegment && segments[3] === "key"
-        ? segments[4] ?? null
+        ? (segments[4] ?? null)
         : null;
 
   return { tabSegment, taskKey };
@@ -104,6 +114,47 @@ const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
 const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) =>
   tabName === "summary";
 
+const clearOptimisticIssueOrder = (issue: Issue): Issue => {
+  const { optimisticOrder, optimisticScope, ...rest } = issue;
+  return rest;
+};
+
+const normalizeRole = (role?: string | null) =>
+  role
+    ?.trim()
+    .toLowerCase()
+    .replace(/[-\s]+/g, "_") ?? null;
+
+const getUserObject = (member: any) =>
+  member?.userId ?? member?.user ?? member?.member ?? member;
+
+const normalizeObjectId = (value: string) => {
+  const trimmed = value.trim();
+  const objectIdMatch = trimmed.match(
+    /^ObjectId\(['"]?([a-f0-9]{24})['"]?\)$/i,
+  );
+  return objectIdMatch?.[1] ?? trimmed;
+};
+
+const getUserId = (value: any) => {
+  if (!value) return "";
+  if (typeof value === "string") return normalizeObjectId(value);
+  const id = value._id ?? value.id ?? value.userId ?? value.$oid;
+  if (id) return normalizeObjectId(String(id));
+  const stringValue = value.toString?.();
+  return stringValue && stringValue !== "[object Object]"
+    ? normalizeObjectId(stringValue)
+    : "";
+};
+
+const getUserEmail = (value: any) => {
+  if (!value || typeof value === "string") return "";
+  return value.email ?? "";
+};
+
+const sameNonEmpty = (left?: string | null, right?: string | null) =>
+  Boolean(left && right && left === right);
+
 export default function WorkspaceDetailPage({
   params,
 }: {
@@ -111,17 +162,27 @@ export default function WorkspaceDetailPage({
 }) {
   const { key: workspaceKey, tab } = use(params);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const tabFromUrl = tab?.[0];
-  const routeInitialTab = tabFromUrl === "key" ? null : (tabFromUrl as WorkspaceTab) || null;
-  const initialTab = isHiddenWorkspaceTab(routeInitialTab) ? null : routeInitialTab;
+  const routeInitialTab =
+    tabFromUrl === "key" ? null : (tabFromUrl as WorkspaceTab) || null;
+  const initialTab = isHiddenWorkspaceTab(routeInitialTab)
+    ? null
+    : routeInitialTab;
   const initialTaskKey =
-    tabFromUrl === "key" ? tab?.[1] ?? null : tabFromUrl && tab?.[1] === "key" ? tab?.[2] ?? null : null;
+    tabFromUrl === "key"
+      ? (tab?.[1] ?? null)
+      : tabFromUrl && tab?.[1] === "key"
+        ? (tab?.[2] ?? null)
+        : null;
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const workspaceApiId = workspace?._id;
-  const { setCurrentWorkspace } = useWorkspaceStore();
+  const { setCurrentWorkspace, updateWorkspaceAvatar } = useWorkspaceStore();
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>(initialTab || "board");
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>(
+    initialTab || "board",
+  );
 
   const pageTitle = workspace?.name
     ? `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} - ${workspace.name}`
@@ -134,7 +195,8 @@ export default function WorkspaceDetailPage({
   );
 
   const getTaskDetailUrl = useCallback(
-    (tabName: WorkspaceTab, taskKey: string) => `${getWorkspaceTabUrl(tabName)}/key/${taskKey}`,
+    (tabName: WorkspaceTab, taskKey: string) =>
+      `${getWorkspaceTabUrl(tabName)}/key/${taskKey}`,
     [getWorkspaceTabUrl],
   );
 
@@ -148,9 +210,13 @@ export default function WorkspaceDetailPage({
 
   useEffect(() => {
     const handlePopState = () => {
-      const { tabSegment, taskKey } = getRouteStateFromPath(window.location.pathname);
+      const { tabSegment, taskKey } = getRouteStateFromPath(
+        window.location.pathname,
+      );
       if (isHiddenWorkspaceTab(tabSegment)) {
-        const defaultTab = workspace ? getDefaultWorkspaceTab(workspace) : "board";
+        const defaultTab = workspace
+          ? getDefaultWorkspaceTab(workspace)
+          : "board";
         setActiveTab(defaultTab);
         window.history.replaceState(null, "", getWorkspaceTabUrl(defaultTab));
       } else if (tabSegment) {
@@ -192,13 +258,20 @@ export default function WorkspaceDetailPage({
     columnId: null,
   });
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
-  const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(initialTaskKey);
+  const [selectedTaskKey, setSelectedTaskKey] = useState<string | null>(
+    initialTaskKey,
+  );
 
-  const { filters, setFilters, taskFilters } = useTaskFilters(workspaceApiId ?? "");
-  const fallbackTaskFilters = useMemo(() => ({
-    ...taskFilters,
-    search: undefined,
-  }), [taskFilters]);
+  const { filters, setFilters, taskFilters } = useTaskFilters(
+    workspaceApiId ?? "",
+  );
+  const fallbackTaskFilters = useMemo(
+    () => ({
+      ...taskFilters,
+      search: undefined,
+    }),
+    [taskFilters],
+  );
   const [density, setDensity] = useState<"default" | "compact">("default");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -238,30 +311,33 @@ export default function WorkspaceDetailPage({
     !isTasksFetching &&
     Array.isArray(tasksData) &&
     tasksData.length === 0;
-  const { data: fallbackTasksData, isFetching: isFallbackTasksFetching } = useQuery({
-    queryKey: ["tasks-fallback-search", workspaceApiId, fallbackTaskFilters],
-    queryFn: () => taskService.getBoardTasks(workspaceApiId!, fallbackTaskFilters),
-    enabled: shouldUseFallbackTaskSearch,
-    staleTime: 30_000,
-  });
+  const { data: fallbackTasksData, isFetching: isFallbackTasksFetching } =
+    useQuery({
+      queryKey: ["tasks-fallback-search", workspaceApiId, fallbackTaskFilters],
+      queryFn: () =>
+        taskService.getBoardTasks(workspaceApiId!, fallbackTaskFilters),
+      enabled: shouldUseFallbackTaskSearch,
+      staleTime: 30_000,
+    });
   const isTaskBoardFetching = isTasksFetching || isFallbackTasksFetching;
 
   const [archivePage, setArchivePage] = useState(1);
   const [archivedItems, setArchivedItems] = useState<Issue[]>([]);
   const [archiveTotal, setArchiveTotal] = useState(0);
 
-  const { data: archivePageData, isFetching: isArchivedTasksFetching } = useQuery({
-    queryKey: ["archivedTasks", workspaceApiId, archivePage],
-    queryFn: () =>
-      taskService.getArchivedTasks(workspaceApiId!, {
-        page: archivePage,
-        limit: 20,
-        sortBy: "archivedAt",
-        sortOrder: "desc",
-      }),
-    enabled: !!workspaceApiId && activeTab === "archive",
-    staleTime: 30_000,
-  });
+  const { data: archivePageData, isFetching: isArchivedTasksFetching } =
+    useQuery({
+      queryKey: ["archivedTasks", workspaceApiId, archivePage],
+      queryFn: () =>
+        taskService.getArchivedTasks(workspaceApiId!, {
+          page: archivePage,
+          limit: 20,
+          sortBy: "archivedAt",
+          sortOrder: "desc",
+        }),
+      enabled: !!workspaceApiId && activeTab === "archive",
+      staleTime: 30_000,
+    });
 
   useEffect(() => {
     if (!archivePageData) return;
@@ -283,11 +359,10 @@ export default function WorkspaceDetailPage({
     setArchivePage((p) => p + 1);
   }, []);
 
-  const {
-    data: selectedTaskDetail,
-  } = useQuery({
+  const { data: selectedTaskDetail } = useQuery({
     queryKey: ["taskDetail", workspaceApiId, selectedTaskKey],
-    queryFn: () => taskService.getBoardTaskDetail(workspaceApiId!, selectedTaskKey!),
+    queryFn: () =>
+      taskService.getBoardTaskDetail(workspaceApiId!, selectedTaskKey!),
     enabled: !!workspaceApiId && !!selectedTaskKey,
     staleTime: 30_000,
   });
@@ -303,33 +378,55 @@ export default function WorkspaceDetailPage({
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
-  const handleRealtimeTaskUpserted = useCallback((issue: Issue) => {
-    const nextIssueId = taskIdOf(issue);
+  const patchSelectedTaskView = useCallback(
+    (issue: Issue) => {
+      const nextIssueId = taskIdOf(issue);
 
-    setIssues((current) => {
-      const next = current.some((item) => taskIdOf(item) === nextIssueId)
-        ? current.map((item) =>
-            taskIdOf(item) === nextIssueId ? { ...item, ...issue } : item,
-          )
-        : [...current, issue];
+      setSelectedIssue((current) =>
+        current && taskIdOf(current) === nextIssueId
+          ? { ...current, ...issue }
+          : current,
+      );
 
-      // Skip re-sort during active drag — changing Draggable indices mid-drag
-      // causes @hello-pangea/dnd to use stale source.index vs current position.
-      return isDraggingIssueRef.current ? next : sortIssuesByRank(next);
-    });
-    setSelectedIssue((current) =>
-      current && taskIdOf(current) === nextIssueId
-        ? { ...current, ...issue }
-        : current,
-    );
-  }, []);
+      if (!workspaceApiId || !issue.key) return;
+
+      queryClient.setQueryData(
+        ["taskDetail", workspaceApiId, issue.key],
+        (current: Issue | undefined) =>
+          current ? { ...current, ...issue } : current,
+      );
+    },
+    [queryClient, workspaceApiId],
+  );
+
+  const handleRealtimeTaskUpserted = useCallback(
+    (issue: Issue) => {
+      const nextIssueId = taskIdOf(issue);
+
+      setIssues((current) => {
+        const next = current.some((item) => taskIdOf(item) === nextIssueId)
+          ? current.map((item) =>
+              taskIdOf(item) === nextIssueId ? { ...item, ...issue } : item,
+            )
+          : [...current, issue];
+
+        // Skip re-sort during active drag — changing Draggable indices mid-drag
+        // causes @hello-pangea/dnd to use stale source.index vs current position.
+        return isDraggingIssueRef.current ? next : sortIssuesByRank(next);
+      });
+      patchSelectedTaskView(issue);
+    },
+    [patchSelectedTaskView],
+  );
 
   const handleRealtimeTaskRemoved = useCallback((taskId: string) => {
     setIssues((current) =>
       current.filter((issue) => issue.id !== taskId && issue._id !== taskId),
     );
     setSelectedIssue((current) =>
-      current && (current.id === taskId || current._id === taskId) ? null : current,
+      current && (current.id === taskId || current._id === taskId)
+        ? null
+        : current,
     );
     setSelectedTaskIds((current) => current.filter((id) => id !== taskId));
   }, []);
@@ -350,6 +447,12 @@ export default function WorkspaceDetailPage({
     });
   }, []);
 
+  const handleRealtimeSprintDeleted = useCallback((sprintId: string) => {
+    setSprints((current) =>
+      current.filter((sprint) => sprintIdOf(sprint) !== sprintId),
+    );
+  }, []);
+
   useWorkspaceSocket(workspaceApiId);
   useTaskRealtime(workspaceApiId, {
     onTaskRemoved: handleRealtimeTaskRemoved,
@@ -357,6 +460,9 @@ export default function WorkspaceDetailPage({
   });
   useSprintRealtime(workspaceApiId, {
     onSprintCreated: handleRealtimeSprintCreated,
+    onSprintUpdated: handleRealtimeSprintCreated,
+    onSprintStarted: handleRealtimeSprintCreated,
+    onSprintDeleted: handleRealtimeSprintDeleted,
   });
 
   useEffect(() => {
@@ -370,20 +476,28 @@ export default function WorkspaceDetailPage({
   }, [sprintsData]);
 
   useEffect(() => {
-    const nextTasksData = shouldUseFallbackTaskSearch && fallbackTasksData
-      ? fallbackTasksData
-      : tasksData;
+    const nextTasksData =
+      shouldUseFallbackTaskSearch && fallbackTasksData
+        ? fallbackTasksData
+        : tasksData;
 
     if (!nextTasksData) return;
     if (isDraggingIssueRef.current) return;
 
     setIssues(nextTasksData);
     if (selectedTaskKey && !selectedIssue) {
-      const matchingIssue = nextTasksData.find((issue) => issue.key === selectedTaskKey);
+      const matchingIssue = nextTasksData.find(
+        (issue) => issue.key === selectedTaskKey,
+      );
       if (matchingIssue) setSelectedIssue(matchingIssue);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fallbackTasksData, selectedTaskKey, shouldUseFallbackTaskSearch, tasksData]); // isDraggingIssue intentionally omitted: firing on drag-end would overwrite optimistic state with stale server data
+  }, [
+    fallbackTasksData,
+    selectedTaskKey,
+    shouldUseFallbackTaskSearch,
+    tasksData,
+  ]); // isDraggingIssue intentionally omitted: firing on drag-end would overwrite optimistic state with stale server data
 
   const [listViewMode, setListViewMode] = useState<"grid" | "split">("grid");
   const [listGridDrawerOpen, setListGridDrawerOpen] = useState(false);
@@ -392,15 +506,62 @@ export default function WorkspaceDetailPage({
     return filterTasks(issues, filters, workspace);
   }, [issues, filters, workspace]);
 
-  const uniqueAssignees = useAssignees(issues);
-  const workspacePermissions = useWorkspacePermission(workspaceApiId ?? "", workspace);
-  const canCreateTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_CREATE);
-  const canEditTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_EDIT);
-  const canDeleteTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_DELETE);
-  const canMoveTask = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.TASK_MOVE);
-  const canManageSprint = workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.SPRINT_MANAGE);
-  const canUpdateWorkspace = workspacePermissions.hasPermission(
-    WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE,
+  const uniqueAssignees = useAssignees(issues, workspace);
+  const bulkActionMembers = useMemo(
+    () => toAssigneePickerUsers(workspace?.members as any[] | undefined),
+    [workspace?.members],
+  );
+  const workspacePermissions = useWorkspacePermission(
+    workspaceApiId ?? "",
+    workspace,
+  );
+  const currentWorkspaceRole = useMemo(() => {
+    if (!user || !workspace) return workspacePermissions.role;
+    const currentMember = (workspace.members ?? []).find((member: any) => {
+      const memberUser = getUserObject(member);
+      const memberId = getUserId(memberUser);
+      const memberEmail = getUserEmail(memberUser);
+      return (
+        sameNonEmpty(memberId, user.id) ||
+        sameNonEmpty(memberId, user.email) ||
+        sameNonEmpty(memberEmail, user.email)
+      );
+    });
+
+    return (
+      normalizeRole((currentMember as any)?.role) ?? workspacePermissions.role
+    );
+  }, [user, workspace, workspacePermissions.role]);
+  const isWorkspaceAdmin =
+    currentWorkspaceRole === "workspace_admin" || user?.role === "super_admin";
+  const canCreateTask = workspacePermissions.hasPermission(
+    WORKSPACE_PERMISSIONS.TASK_CREATE,
+  );
+  const canEditTask = workspacePermissions.hasPermission(
+    WORKSPACE_PERMISSIONS.TASK_EDIT,
+  );
+  const canDeleteTask = workspacePermissions.hasPermission(
+    WORKSPACE_PERMISSIONS.TASK_DELETE,
+  );
+  const canMoveTask = workspacePermissions.hasPermission(
+    WORKSPACE_PERMISSIONS.TASK_MOVE,
+  );
+  const canManageSprint = workspacePermissions.hasPermission(
+    WORKSPACE_PERMISSIONS.SPRINT_MANAGE,
+  );
+  const canUpdateWorkspace =
+    isWorkspaceAdmin &&
+    workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE);
+
+  const handleWorkspaceUpdated = useCallback(
+    (updatedWorkspace: Workspace) => {
+      setWorkspace(updatedWorkspace);
+      setCurrentWorkspace(updatedWorkspace as any);
+      if (updatedWorkspace._id && updatedWorkspace.avatar) {
+        updateWorkspaceAvatar(updatedWorkspace._id, updatedWorkspace.avatar);
+      }
+    },
+    [setCurrentWorkspace, updateWorkspaceAvatar],
   );
 
   const {
@@ -420,18 +581,25 @@ export default function WorkspaceDetailPage({
     setSelectedIssue,
   });
 
-  const openTaskDetail = useCallback((issue: Issue) => {
-    if (!issue.key) {
-      toast.error("Task key not found");
-      return;
-    }
+  const openTaskDetail = useCallback(
+    (issue: Issue) => {
+      if (!issue.key) {
+        toast.error("Task key not found");
+        return;
+      }
 
-    setSelectedIssue(issue);
-    setSelectedTaskKey(issue.key);
+      setSelectedIssue(issue);
+      setSelectedTaskKey(issue.key);
 
-    const detailUrl = getTaskDetailUrl(activeTab, issue.key);
-    window.history.pushState({ ...window.history.state, as: detailUrl }, "", detailUrl);
-  }, [activeTab, getTaskDetailUrl]);
+      const detailUrl = getTaskDetailUrl(activeTab, issue.key);
+      window.history.pushState(
+        { ...window.history.state, as: detailUrl },
+        "",
+        detailUrl,
+      );
+    },
+    [activeTab, getTaskDetailUrl],
+  );
 
   const closeTaskDetail = useCallback(() => {
     const shouldResetUrl = Boolean(selectedTaskKey);
@@ -442,7 +610,11 @@ export default function WorkspaceDetailPage({
 
     if (shouldResetUrl) {
       const baseUrl = getWorkspaceTabUrl(activeTab);
-      window.history.pushState({ ...window.history.state, as: baseUrl }, "", baseUrl);
+      window.history.pushState(
+        { ...window.history.state, as: baseUrl },
+        "",
+        baseUrl,
+      );
     }
   }, [activeTab, getWorkspaceTabUrl, selectedTaskKey]);
 
@@ -450,14 +622,17 @@ export default function WorkspaceDetailPage({
     ? getTaskDetailUrl(activeTab, activeIssueDetail.key)
     : undefined;
 
-  const handleListTaskSelection = useCallback((issue: Issue | null) => {
-    if (issue) {
-      openTaskDetail(issue);
-      return;
-    }
+  const handleListTaskSelection = useCallback(
+    (issue: Issue | null) => {
+      if (issue) {
+        openTaskDetail(issue);
+        return;
+      }
 
-    closeTaskDetail();
-  }, [closeTaskDetail, openTaskDetail]);
+      closeTaskDetail();
+    },
+    [closeTaskDetail, openTaskDetail],
+  );
 
   const isNoopReorderError = (error: any) => {
     const message = error?.response?.data?.message;
@@ -471,7 +646,15 @@ export default function WorkspaceDetailPage({
   const syncTaskReorder = useCallback(
     (input: TaskReorderSyncInput) => {
       if (!workspaceApiId) return;
-      const { taskId, columnId, status, sprintId, rankScope, beforeTaskId, afterTaskId } = input;
+      const {
+        taskId,
+        columnId,
+        status,
+        sprintId,
+        rankScope,
+        beforeTaskId,
+        afterTaskId,
+      } = input;
 
       if (reorderInFlightRef.current.has(taskId)) {
         pendingReorderRef.current.set(taskId, input);
@@ -491,19 +674,28 @@ export default function WorkspaceDetailPage({
         })
         .then((updatedTask) => {
           const hasQueuedReorder = pendingReorderRef.current.has(taskId);
+          patchSelectedTaskView(updatedTask);
 
           if (!hasQueuedReorder) {
             setIssues((current) =>
-              current.map((issue) =>
-                issue.id === updatedTask.id ? updatedTask : issue,
+              sortIssuesByRank(
+                current.map((issue) =>
+                  issue.id === updatedTask.id
+                    ? updatedTask
+                    : clearOptimisticIssueOrder(issue),
+                ),
               ),
             );
             queryClient.setQueriesData<Issue[]>(
               { queryKey: ["tasks", workspaceApiId] },
               (current) =>
                 Array.isArray(current)
-                  ? current.map((issue) =>
-                      issue.id === updatedTask.id ? updatedTask : issue,
+                  ? sortIssuesByRank(
+                      current.map((issue) =>
+                        issue.id === updatedTask.id
+                          ? updatedTask
+                          : clearOptimisticIssueOrder(issue),
+                      ),
                     )
                   : current,
             );
@@ -514,10 +706,21 @@ export default function WorkspaceDetailPage({
           });
         })
         .catch((error) => {
-          if (isNoopReorderError(error)) return;
+          setIssues((current) => current.map(clearOptimisticIssueOrder));
 
-          queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-          toast.error(error?.response?.data?.message || "Could not update task position");
+          if (isNoopReorderError(error)) {
+            queryClient.invalidateQueries({
+              queryKey: ["tasks", workspaceApiId],
+            });
+            return;
+          }
+
+          queryClient.invalidateQueries({
+            queryKey: ["tasks", workspaceApiId],
+          });
+          toast.error(
+            error?.response?.data?.message || "Could not update task position",
+          );
         })
         .finally(() => {
           reorderInFlightRef.current.delete(taskId);
@@ -529,15 +732,16 @@ export default function WorkspaceDetailPage({
           }
         });
     },
-    [queryClient, workspaceApiId],
+    [patchSelectedTaskView, queryClient, workspaceApiId],
   );
 
-  const activeSprint = sprints.find(s => s.status === "active") ?? null;
+  const activeSprint = sprints.find((s) => s.status === "active") ?? null;
 
   const handleOpenGlobalCreateIssue = useCallback(() => {
+    if (!canCreateTask) return;
     if (activeTab === "board" && workspace?.type === "scrum" && activeSprint) {
       const firstColumn = columns[0];
-      setNewIssueForm(prev => ({
+      setNewIssueForm((prev) => ({
         ...prev,
         sprintId: activeSprint._id,
         columnId: firstColumn?.id ?? null,
@@ -545,7 +749,7 @@ export default function WorkspaceDetailPage({
       }));
     }
     setShowCreateIssue(true);
-  }, [activeTab, workspace, activeSprint, columns]);
+  }, [activeTab, workspace, activeSprint, columns, canCreateTask]);
 
   const {
     handleAddColumn,
@@ -593,19 +797,30 @@ export default function WorkspaceDetailPage({
       onTaskReorder: syncTaskReorder,
       onSprintAssign: (taskId, sprintId) => {
         if (workspaceApiId) {
-          taskService.updateBoardTask(workspaceApiId, taskId, { sprintId: sprintId ?? undefined })
-            .then(() => {
-              queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+          taskService
+            .updateBoardTask(workspaceApiId, taskId, {
+              sprintId: sprintId ?? undefined,
+            })
+            .then((updatedTask) => {
+              patchSelectedTaskView(updatedTask);
+              queryClient.invalidateQueries({
+                queryKey: ["taskActivities", workspaceApiId, taskId],
+              });
             })
             .catch((error) => {
-              queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-              toast.error(error?.response?.data?.message || "Could not update task sprint");
+              queryClient.invalidateQueries({
+                queryKey: ["tasks", workspaceApiId],
+              });
+              toast.error(
+                error?.response?.data?.message ||
+                  "Could not update task sprint",
+              );
             });
         }
       },
     });
     isDraggingIssueRef.current = false;
-    setIssues((current) => sortIssuesByRank(current));
+    setIssues((current) => [...current].sort(compareIssueRank));
   };
 
   const handleArchiveIssue = async (issue: Issue) => {
@@ -622,7 +837,9 @@ export default function WorkspaceDetailPage({
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item archived");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not archive work item");
+      toast.error(
+        error?.response?.data?.message || "Could not archive work item",
+      );
     }
   };
 
@@ -633,17 +850,30 @@ export default function WorkspaceDetailPage({
     }
 
     try {
-      const restoredIssue = await taskService.restoreBoardTask(workspaceApiId, issue.id);
+      const restoredIssue = await taskService.restoreBoardTask(
+        workspaceApiId,
+        issue.id,
+      );
       setIssues((current) =>
         current.some((item) => item.id === restoredIssue.id)
-          ? current.map((item) => item.id === restoredIssue.id ? restoredIssue : item)
+          ? current.map((item) =>
+              item.id === restoredIssue.id ? restoredIssue : item,
+            )
           : [...current, restoredIssue],
       );
-      resetArchiveList();
+      const nextArchive = removeRestoredArchiveItem({
+        items: archivedItems,
+        total: archiveTotal,
+        restoredId: restoredIssue.id,
+      });
+      setArchivedItems(nextArchive.items);
+      setArchiveTotal(nextArchive.total);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item restored");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not restore work item");
+      toast.error(
+        error?.response?.data?.message || "Could not restore work item",
+      );
     }
   };
 
@@ -657,21 +887,169 @@ export default function WorkspaceDetailPage({
       await taskService.deleteBoardTask(workspaceApiId, issue.id);
       setIssues((current) => current.filter((item) => item.id !== issue.id));
       setSelectedTaskIds((current) => current.filter((id) => id !== issue.id));
-      setSelectedIssue((current) => current?.id === issue.id ? null : current);
+      setSelectedIssue((current) =>
+        current?.id === issue.id ? null : current,
+      );
       resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item deleted");
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not delete work item");
+      toast.error(
+        error?.response?.data?.message || "Could not delete work item",
+      );
+    }
+  };
+
+  const handleListBulkDelete = async (ids: string[]) => {
+    if (!workspaceApiId || ids.length === 0) return;
+
+    const idsToDelete = new Set(ids);
+    const removeDeletedIssues = (current: Issue[] | undefined) =>
+      Array.isArray(current)
+        ? current.filter((issue) => !idsToDelete.has(issue.id))
+        : current;
+
+    setIssues((current) => removeDeletedIssues(current) ?? []);
+    setSelectedTaskIds((current) => current.filter((id) => !idsToDelete.has(id)));
+    setSelectedIssue((current) =>
+      current && idsToDelete.has(current.id) ? null : current,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks", workspaceApiId] },
+      removeDeletedIssues,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks-fallback-search", workspaceApiId] },
+      removeDeletedIssues,
+    );
+
+    const results = await Promise.allSettled(
+      ids.map((taskId) => taskService.deleteBoardTask(workspaceApiId, taskId)),
+    );
+    const failedCount = results.filter((result) => result.status === "rejected").length;
+
+    resetArchiveList();
+    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+    queryClient.invalidateQueries({
+      queryKey: ["tasks-fallback-search", workspaceApiId],
+    });
+
+    if (failedCount > 0) {
+      toast.error(`Could not delete ${failedCount} work item${failedCount > 1 ? "s" : ""}`);
+      return;
+    }
+
+    toast.success(ids.length === 1 ? "Work item deleted" : "Work items deleted");
+  };
+
+  const handleListBulkUpdate = async (ids: string[], updates: Partial<Issue>) => {
+    if (!workspaceApiId || ids.length === 0) return;
+
+    const idsToUpdate = new Set(ids);
+    const assigneeId =
+      Object.prototype.hasOwnProperty.call(updates, "assigneeId")
+        ? updates.assigneeId ?? null
+        : undefined;
+    const selectedMember = assigneeId
+      ? (workspace?.members ?? []).find((member: any) => {
+          const memberUser = getUserObject(member);
+          return getUserId(memberUser) === assigneeId;
+        })
+      : null;
+    const selectedMemberUser = selectedMember
+      ? getUserObject(selectedMember)
+      : null;
+    const assigneeName =
+      assigneeId && selectedMemberUser && typeof selectedMemberUser !== "string"
+        ? selectedMemberUser.fullName ||
+          selectedMemberUser.name ||
+          selectedMemberUser.email ||
+          assigneeId
+        : assigneeId
+          ? assigneeId
+          : "Unassigned";
+    const assigneeAvatar =
+      assigneeId && selectedMemberUser && typeof selectedMemberUser !== "string"
+        ? selectedMemberUser.avatar ||
+          selectedMemberUser.avatarUrl ||
+          selectedMemberUser.image
+        : undefined;
+
+    const normalizedUpdates: Partial<Issue> =
+      assigneeId !== undefined
+        ? {
+            ...updates,
+            assigneeId,
+            assignee: assigneeId ?? "U",
+            assigneeDisplayName: assigneeName,
+            assigneeAvatar,
+          }
+        : updates;
+    const applyUpdates = (current: Issue[] | undefined) =>
+      Array.isArray(current)
+        ? current.map((issue) =>
+            idsToUpdate.has(issue.id) ? { ...issue, ...normalizedUpdates } : issue,
+          )
+        : current;
+
+    setIssues((current) => applyUpdates(current) ?? []);
+    setSelectedIssue((current) =>
+      current && idsToUpdate.has(current.id)
+        ? { ...current, ...normalizedUpdates }
+        : current,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks", workspaceApiId] },
+      applyUpdates,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks-fallback-search", workspaceApiId] },
+      applyUpdates,
+    );
+
+    const results = await Promise.allSettled(
+      ids.map((taskId) =>
+        taskService.updateBoardTask(workspaceApiId, taskId, normalizedUpdates),
+      ),
+    );
+    const failedCount = results.filter((result) => result.status === "rejected").length;
+    const savedIssues = results
+      .filter((result): result is PromiseFulfilledResult<Issue> => result.status === "fulfilled")
+      .map((result) => result.value);
+
+    if (savedIssues.length > 0) {
+      const savedById = new Map(savedIssues.map((issue) => [issue.id, issue]));
+      const mergeSavedIssues = (current: Issue[] | undefined) =>
+        Array.isArray(current)
+          ? current.map((issue) => savedById.get(issue.id) ?? issue)
+          : current;
+
+      setIssues((current) => mergeSavedIssues(current) ?? []);
+      setSelectedIssue((current) =>
+        current ? savedById.get(current.id) ?? current : current,
+      );
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: ["tasks", workspaceApiId] },
+        mergeSavedIssues,
+      );
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: ["tasks-fallback-search", workspaceApiId] },
+        mergeSavedIssues,
+      );
+    }
+
+    if (failedCount > 0) {
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({
+        queryKey: ["tasks-fallback-search", workspaceApiId],
+      });
+      toast.error(`Could not update ${failedCount} work item${failedCount > 1 ? "s" : ""}`);
     }
   };
 
   const {
     toggleTaskSelection,
     toggleSprintSelection,
-    handleBulkStatusChange,
-    handleBulkMoveSprint,
-    handleBulkDelete,
   } = useSelectionHandlers({
     workspaceId: workspaceApiId ?? "",
     issues,
@@ -698,8 +1076,13 @@ export default function WorkspaceDetailPage({
         let workspaceMembers = nextWorkspace.members ?? [];
 
         try {
-          const membersResponse = await api.get(apiRoutes.WORKSPACES.MEMBERS(nextWorkspace._id));
-          workspaceMembers = membersResponse.data?.data ?? membersResponse.data ?? workspaceMembers;
+          const membersResponse = await api.get(
+            apiRoutes.WORKSPACES.MEMBERS(nextWorkspace._id),
+          );
+          workspaceMembers =
+            membersResponse.data?.data ??
+            membersResponse.data ??
+            workspaceMembers;
         } catch {
           workspaceMembers = nextWorkspace.members ?? [];
         }
@@ -721,7 +1104,7 @@ export default function WorkspaceDetailPage({
           window.history.replaceState(null, "", nextUrl);
         }
       })
-      .catch(() => { })
+      .catch(() => {})
       .finally(() => {
         if (isActive) setLoading(false);
       });
@@ -729,7 +1112,14 @@ export default function WorkspaceDetailPage({
     return () => {
       isActive = false;
     };
-  }, [getTaskDetailUrl, getWorkspaceTabUrl, initialTab, initialTaskKey, setCurrentWorkspace, workspaceKey]);
+  }, [
+    getTaskDetailUrl,
+    getWorkspaceTabUrl,
+    initialTab,
+    initialTaskKey,
+    setCurrentWorkspace,
+    workspaceKey,
+  ]);
 
   if (loading || isBoardLoading) return <LoadingSpinner />;
 
@@ -737,14 +1127,21 @@ export default function WorkspaceDetailPage({
     const errorData = (tasksError as any).response?.data;
     const status = (tasksError as any).response?.status;
     let errorMessage = "An error occurred while loading board data";
-    if (status === 401) errorMessage = "Your session has expired. Please sign in again.";
-    if (status === 403) errorMessage = "You do not have permission to access this workspace.";
+    if (status === 401)
+      errorMessage = "Your session has expired. Please sign in again.";
+    if (status === 403)
+      errorMessage = "You do not have permission to access this workspace.";
     if (status === 404) errorMessage = "Workspace does not exist.";
     if (status === 400) errorMessage = "Invalid filters.";
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <p className="text-red-500 mb-4">{errorMessage}</p>
-        <button onClick={() => window.location.reload()} className="text-indigo-600 hover:text-indigo-800">Reload page</button>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-indigo-600 hover:text-indigo-800"
+        >
+          Reload page
+        </button>
       </div>
     );
   }
@@ -752,10 +1149,11 @@ export default function WorkspaceDetailPage({
   if (!workspace)
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-gray-500 mb-4">
-          Workspace not found
-        </p>
-        <Link href="/workspaces" className="text-indigo-600 hover:text-indigo-800">
+        <p className="text-gray-500 mb-4">Workspace not found</p>
+        <Link
+          href="/workspaces"
+          className="text-indigo-600 hover:text-indigo-800"
+        >
           Back to workspace list
         </Link>
       </div>
@@ -770,12 +1168,15 @@ export default function WorkspaceDetailPage({
         setShowCreateIssue={handleOpenGlobalCreateIssue}
         canCreateTask={canCreateTask}
         canUpdateWorkspace={canUpdateWorkspace}
+        onWorkspaceUpdated={handleWorkspaceUpdated}
       />
 
-
-
       {/* Tabs */}
-      <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={handleTabChange} />
+      <Tabs
+        workspace={workspace}
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+      />
 
       {/* Content Area */}
       <WorkspaceContent
@@ -808,7 +1209,9 @@ export default function WorkspaceDetailPage({
             setShowCreateIssue,
             setShowCreateColumn,
             setNewColumnName,
-            handleBoardDragStart: () => { isDraggingIssueRef.current = true; },
+            handleBoardDragStart: () => {
+              isDraggingIssueRef.current = true;
+            },
             handleBoardDragEnd: (result: any) => {
               if (!canMoveTask) return;
               handleBoardDragEnd({
@@ -821,14 +1224,28 @@ export default function WorkspaceDetailPage({
                 onTaskReorder: syncTaskReorder,
                 onColumnChange: (taskId, columnId) => {
                   if (workspaceApiId) {
-                    taskService.moveBoardTask(workspaceApiId, taskId, { columnId })
-                      .then(() => {
-                        queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceApiId, taskId] });
+                    taskService
+                      .moveBoardTask(workspaceApiId, taskId, { columnId })
+                      .then((updatedTask) => {
+                        patchSelectedTaskView(updatedTask);
+                        queryClient.invalidateQueries({
+                          queryKey: ["taskActivities", workspaceApiId, taskId],
+                        });
                       })
                       .catch((error) => {
-                        if (isNoopReorderError(error)) return;
-                        queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-                        toast.error(error?.response?.data?.message || "Could not update task position");
+                        if (isNoopReorderError(error)) {
+                          queryClient.invalidateQueries({
+                            queryKey: ["tasks", workspaceApiId],
+                          });
+                          return;
+                        }
+                        queryClient.invalidateQueries({
+                          queryKey: ["tasks", workspaceApiId],
+                        });
+                        toast.error(
+                          error?.response?.data?.message ||
+                            "Could not update task position",
+                        );
                       });
                   }
                 },
@@ -857,6 +1274,7 @@ export default function WorkspaceDetailPage({
           data: {
             issues,
             filteredIssues,
+            columns,
             sprints,
             uniqueAssignees,
             selectedTaskIds,
@@ -869,7 +1287,9 @@ export default function WorkspaceDetailPage({
             newIssueForm,
           },
           actions: {
-            handleBacklogDragStart: () => { isDraggingIssueRef.current = true; },
+            handleBacklogDragStart: () => {
+              isDraggingIssueRef.current = true;
+            },
             handleBacklogDragEnd: handleBacklogDragEndWithSync,
             setIssues,
             setDensity,
@@ -906,7 +1326,10 @@ export default function WorkspaceDetailPage({
         }}
         listProps={{
           filteredIssues,
-          selectedIssue: activeTab === "list" ? (activeIssueDetail as Issue | null) : selectedIssue,
+          selectedIssue:
+            activeTab === "list"
+              ? (activeIssueDetail as Issue | null)
+              : selectedIssue,
           workspaceKey: workspace.key,
           workspaceId: workspace._id,
           sprints,
@@ -923,8 +1346,11 @@ export default function WorkspaceDetailPage({
           setListGridDrawerOpen,
           updateIssueDirectly,
           handleUpdateIssue,
-          onBulkDeleteIds: (ids: string[]) => setIssues(prev => prev.filter(i => !ids.includes(i.id))),
+          onBulkUpdateIds: handleListBulkUpdate,
+          onBulkDeleteIds: handleListBulkDelete,
           onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
+          canEditTask,
+          canDeleteTask,
         }}
         summaryProps={{
           issues,
@@ -936,15 +1362,26 @@ export default function WorkspaceDetailPage({
           sprints,
           handleUpdateIssueDate,
           setSelectedIssue: openTaskDetail,
-          onQuickCreateTask: canCreateTask ? handleQuickCreateCalendarTask : undefined,
+          onQuickCreateTask: canCreateTask
+            ? handleQuickCreateCalendarTask
+            : undefined,
         }}
         archiveProps={{
           issues: archivedItems,
-          isLoading: isArchivedTasksFetching && archivePage === 1 && archivedItems.length === 0,
+          boardColumns: columns,
+          isLoading:
+            isArchivedTasksFetching &&
+            archivePage === 1 &&
+            archivedItems.length === 0,
           onRestore: handleRestoreIssue,
           total: archiveTotal,
           onLoadMore: handleLoadMoreArchive,
           isLoadingMore: isArchivedTasksFetching && archivePage > 1,
+        }}
+        membersProps={{
+          workspaceId: workspace._id,
+          currentUserId: user?.id,
+          isAdmin: isWorkspaceAdmin,
         }}
       />
 
@@ -957,6 +1394,7 @@ export default function WorkspaceDetailPage({
           setNewIssueForm={setNewIssueForm}
           handleCreateIssue={handleCreateIssue}
           workspace={workspace}
+          boardColumns={columns}
         />
       )}
 
@@ -992,7 +1430,8 @@ export default function WorkspaceDetailPage({
       )}
 
       {/* Issue detail modal/drawer */}
-      {activeIssueDetail && (activeTab === "timeline" || activeTab === "calendar") ? (
+      {activeIssueDetail &&
+      (activeTab === "timeline" || activeTab === "calendar") ? (
         <TaskDetailDrawer
           isOpen={!!activeIssueDetail}
           issue={activeIssueDetail}
@@ -1002,7 +1441,8 @@ export default function WorkspaceDetailPage({
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
-          onUpdateIssue={handleUpdateIssue}
+          onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+          onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
           detailUrl={detailUrl}
         />
@@ -1015,7 +1455,7 @@ export default function WorkspaceDetailPage({
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
-          onUpdateIssue={handleUpdateIssue}
+          onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
           onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
           detailUrl={detailUrl}
         />
@@ -1025,10 +1465,11 @@ export default function WorkspaceDetailPage({
       <BulkActionBar
         selectedCount={selectedTaskIds.length}
         onClear={() => setSelectedTaskIds([])}
-        onChangeStatus={handleBulkStatusChange}
-        onDelete={handleBulkDelete}
+        onBulkUpdate={(updates) => handleListBulkUpdate(selectedTaskIds, updates)}
+        onDelete={() => handleListBulkDelete(selectedTaskIds)}
+        members={bulkActionMembers}
         sprints={sprints}
-        onMoveSprint={handleBulkMoveSprint}
+        onMoveSprint={(sprintId) => handleListBulkUpdate(selectedTaskIds, { sprintId })}
         canEditTask={canEditTask}
         canDeleteTask={canDeleteTask}
         canMoveTask={canMoveTask}

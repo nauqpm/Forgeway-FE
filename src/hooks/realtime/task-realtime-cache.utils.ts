@@ -5,11 +5,35 @@ export type TaskCacheQuery = [QueryKey, Issue[] | undefined];
 
 export const taskIdOf = (issue: Issue) => issue.id || issue._id;
 
-const compareRank = (a?: string, b?: string) => {
-  if (!a && !b) return 0;
-  if (!a) return 1;
-  if (!b) return -1;
-  return a.localeCompare(b);
+const RANK_ALPHABET =
+  '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+const MIN_RANK_DIGIT = 0;
+
+const getRankDigit = (rank: string, index: number, fallback: number) => {
+  if (index >= rank.length) return fallback;
+
+  const digit = RANK_ALPHABET.indexOf(rank[index]);
+  return digit === -1 ? fallback : digit;
+};
+
+const compareRank = (left?: string, right?: string) => {
+  if (left && !right) return -1;
+  if (!left && right) return 1;
+  if (!left && !right) return 0;
+
+  const leftRank = left!;
+  const rightRank = right!;
+  const maxLength = Math.max(leftRank.length, rightRank.length);
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const diff =
+      getRankDigit(leftRank, index, MIN_RANK_DIGIT) -
+      getRankDigit(rightRank, index, MIN_RANK_DIGIT);
+
+    if (diff !== 0) return diff;
+  }
+
+  return leftRank.length - rightRank.length;
 };
 
 export const sortIssuesByRank = (issues: Issue[]) => {

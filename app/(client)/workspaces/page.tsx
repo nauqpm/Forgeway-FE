@@ -8,6 +8,9 @@ import Link from "next/link";
 import { BookOpen, Plus, Globe, Lock, ChevronRight, Columns, Repeat } from "lucide-react";
 import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
 import type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
+import { realtimeSocketClient } from "@/lib/socket/socket.client";
+import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
+import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
 
 const getWorkspaceType = (workspace: Workspace) =>
   workspace.template ?? workspace.type ?? "kanban";
@@ -46,27 +49,57 @@ export default function WorkspacesPage() {
 
   useEffect(() => {
     if (!workspacesLoaded) return;
-    if (!currentWorkspace) {
-      setLoading(false);
-      return;
-    }
+    
     setLoading(true);
     workspaceService.listMine()
       .then((nextWorkspaces) => setWorkspacesList(nextWorkspaces))
       .catch(() => setWorkspacesList([]))
       .finally(() => setLoading(false));
-  }, [currentWorkspace, workspacesLoaded]);
+  }, [workspacesLoaded]);
+
+  useEffect(() => {
+    const socket = realtimeSocketClient.getSocket();
+    if (!socket) return;
+
+    const handleWorkspaceCreated = (payload: any) => {
+      if (payload.type === SOCKET_EVENTS.WORKSPACE_CREATED) {
+        const newWorkspace = payload.data?.workspace;
+        if (newWorkspace) {
+          setWorkspacesList((prev) => {
+            // Avoid duplicates
+            if (prev.some((w) => w._id === newWorkspace.id || w._id === newWorkspace._id)) return prev;
+            // The event payload has id instead of _id, we normalize it
+            const normalizedWorkspace = { ...newWorkspace, _id: newWorkspace.id } as Workspace;
+            return [normalizedWorkspace, ...prev];
+          });
+        }
+      }
+    };
+
+    const handleWorkspaceDeleted = (payload: any) => {
+      const workspaceId = payload.data?.workspaceId ?? payload.workspaceId;
+      if (workspaceId) {
+        setWorkspacesList((prev) => prev.filter((w) => w._id !== workspaceId));
+      }
+    };
+
+    socket.on(SOCKET_EVENTS.WORKSPACE_CREATED, handleWorkspaceCreated);
+    socket.on(SOCKET_EVENTS.WORKSPACE_DELETED, handleWorkspaceDeleted);
+
+    return () => {
+      socket.off(SOCKET_EVENTS.WORKSPACE_CREATED, handleWorkspaceCreated);
+      socket.off(SOCKET_EVENTS.WORKSPACE_DELETED, handleWorkspaceDeleted);
+    };
+  }, []);
 
   if (loading) return <LoadingSpinner />;
-
-  if (!currentWorkspace) return <div className="app-main text-center text-[#787774] dark:text-[#9B9A97]">Select a workspace first</div>;
 
   return (
     <div className="app-page-wide">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-1">Workspaces</h1>
-          <p className="text-[#787774] dark:text-[#9B9A97] text-sm">Showing {workspaces.length} Workspaces in {currentWorkspace.name}</p>
+          <p className="text-[#787774] dark:text-[#9B9A97] text-sm">Showing {workspaces.length} Workspace{workspaces.length !== 1 ? 's' : ''}{currentWorkspace ? ` (Current: ${currentWorkspace.name})` : ''}</p>
         </div>
         <Link href="/workspaces/create" className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-5 py-2.5 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-sm transition-colors shadow-sm">
           <Plus className="w-4 h-4" /> Create New Workspace
@@ -99,9 +132,7 @@ export default function WorkspacesPage() {
                 {/* Header Card */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex gap-3 items-center">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-inner ${workspaceType === 'scrum' ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
-                      {workspaceType === 'scrum' ? <Repeat className="w-6 h-6 text-white" /> : <Columns className="w-6 h-6 text-white" />}
-                    </div>
+                    <WorkspaceAvatar workspace={workspace} size="lg" className="shadow-inner" />
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         {workspace.visibility === "public" ? (
@@ -114,6 +145,11 @@ export default function WorkspacesPage() {
                       <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-lg group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-colors line-clamp-1">{workspace.name}</h3>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-[#EFF6FF] px-2 py-0.5 text-xs font-semibold capitalize text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
+                          {workspaceType === "scrum" ? (
+                            <Repeat className="mr-1 inline h-3 w-3" />
+                          ) : (
+                            <Columns className="mr-1 inline h-3 w-3" />
+                          )}
                           {workspaceType}
                         </span>
                         <span className={`rounded-md px-2 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ${getStatusClassName(workspaceStatus)}`}>

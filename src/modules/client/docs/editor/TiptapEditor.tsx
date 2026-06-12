@@ -71,7 +71,6 @@ export default function TiptapEditor() {
     destroyCollaborativeEditor,
   } = useEditorLifecycle(document?.content || "");
 
-  // Update read editor when document content changes
   useEffect(() => {
     if (readEditor && document?.id && mode === "read") {
       readEditor.commands.setContent(document.content || "");
@@ -219,8 +218,39 @@ export default function TiptapEditor() {
       // Step 3: Create a named version
       await createVersion(label);
 
-      // Update local store
-      updateDocument(selectedDocumentId, { title, content: html });
+      if (socket?.connected) {
+        // Happy path: ask the server to flush draft → Page
+        await new Promise<void>((resolve, reject) => {
+          realtimeSocketClient.pageManager.publish(
+            socket,
+            {
+              content: editEditorRef.current?.getHTML() ?? "",
+              title: ydocRef.current?.getText("title").toString() || "",
+            },
+            (ok) => {
+              if (ok) {
+                // Sync the store so the read-mode editor reflects the latest title
+                const title =
+                  ydocRef.current?.getText("title").toString() ||
+                  document.title;
+                const html = sanitizeEditorHtml(
+                  editEditorRef.current?.getHTML() ?? "",
+                );
+                updateDocument(selectedDocumentId, { title, content: html });
+                resolve();
+              } else {
+                reject(new Error("server_publish_failed"));
+              }
+            },
+          );
+        });
+      } else {
+        // Offline fallback: the user explicitly hit "Cập nhật" even though
+        // the socket is down.  We cannot guarantee the server Y.Doc has all
+        // our edits, so we surface a clear error rather than silently writing
+        // a potentially stale snapshot.
+        throw new Error("offline");
+      }
 
       toast.success("Version created successfully");
     } catch (error) {

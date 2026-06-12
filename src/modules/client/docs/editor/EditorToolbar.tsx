@@ -86,7 +86,7 @@ const getTextStyleAttributes = (editor: Editor | null) => {
 const toImageUrl = (url: string) => {
   if (!url) return "";
   if (/^https?:\/\//i.test(url)) return url;
-  const base = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SERVER_URL || "";
+  const base = process.env.NEXT_PUBLIC_API_URL || "";
   return `${base}${url}`;
 };
 
@@ -171,8 +171,14 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
   };
 
   const uploadLocalImage = async (file: File) => {
-    if (file.size > MAX_IMAGE_SIZE) { toast.error("Max image size not over 5MB"); return; }
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) { toast.error("Invalid image format"); return; }
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast.error("Max image size not over 5MB");
+      return;
+    }
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      toast.error("Invalid image format");
+      return;
+    }
     try {
       const result = await imageService.uploadImage(file, true);
       const imageUrl = toImageUrl(result.imageUrl || result.url || "");
@@ -208,12 +214,17 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
       {editor && (
         <BubbleMenu
           editor={editor}
-          shouldShow={({ editor: e }) => e.isActive("link")}
+          shouldShow={({ editor: currentEditor }) =>
+            currentEditor.isActive("link")
+          }
           options={{ placement: "top", offset: 8 }}
         >
           <div
             className="flex items-center gap-1 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-1"
-            style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)" }}
+            style={{
+              boxShadow:
+                "0 4px 12px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)",
+            }}
           >
             <button
               type="button"
@@ -255,7 +266,9 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
           className="hidden"
           onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) await uploadLocalImage(file);
+            if (file) {
+              await uploadLocalImage(file);
+            }
             e.target.value = "";
           }}
         />
@@ -270,6 +283,7 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
             });
           }}
         >
+          <option value="">Font</option>
           {FONT_FAMILIES.map((font) => (
             <option key={font} value={font} className={optionCls} style={{ fontFamily: font }}>{font}</option>
           ))}
@@ -309,8 +323,8 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
         </select>
 
         <select
-          className={selectCls}
-          value={selectedFontSize}
+          className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
+          value={activeTextStyle.fontSize}
           onChange={(e) => {
             const value = e.target.value;
             runWithUndoBoundary(() => {
@@ -318,6 +332,7 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
             });
           }}
         >
+          <option value="">Size</option>
           {FONT_SIZES.map((size) => (
             <option key={size} value={size} className={optionCls}>{size.replace("px", "")}</option>
           ))}
@@ -417,9 +432,18 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
           <LinkIcon className="h-4 w-4" />
         </button>
         {linkPopoverOpen && (
-          <LinkEditorPopover editor={editor} anchorEl={linkButtonRef.current} onClose={closeLinkPopover} />
+          <LinkEditorPopover
+            editor={editor}
+            anchorEl={linkButtonRef.current}
+            onClose={closeLinkPopover}
+          />
         )}
-        <ToolbarButton onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()} title="Remove link">
+        <ToolbarButton
+          onClick={() =>
+            editor.chain().focus().extendMarkRange("link").unsetLink().run()
+          }
+          title="Remove link"
+        >
           <Unlink className="h-4 w-4" />
         </ToolbarButton>
 
@@ -438,7 +462,9 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
             toggleTablePicker();
           }}
           title="Insert table"
-          className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+          className={`
+          p-2 rounded-lg transition-all flex items-center justify-center
+          ${
             tablePickerOpen
               ? "bg-[#DBEAFE] text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(37,99,235,0.10)] dark:bg-[rgba(59,130,246,0.22)] dark:text-[#BFDBFE] dark:shadow-[inset_0_0_0_1px_rgba(147,197,253,0.18)] font-bold"
               : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
@@ -448,31 +474,56 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
           <TableIcon className="h-4 w-4" />
         </button>
         {tablePickerOpen && (
-          <TableGridPicker anchorEl={tableButtonRef.current} onClose={closeTablePicker} onSelect={insertTable} />
+          <TableGridPicker
+            anchorEl={tableButtonRef.current}
+            onClose={closeTablePicker}
+            onSelect={insertTable}
+          />
         )}
 
         {inTable && (
           <>
-            <ToolbarButton onClick={() => editor.chain().focus().addRowBefore().run()} title="Add row above">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addRowBefore().run()}
+              title="Add row above"
+            >
               <ArrowUp className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().addRowAfter().run()} title="Add row below">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addRowAfter().run()}
+              title="Add row below"
+            >
               <ArrowDown className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().addColumnBefore().run()} title="Add column to the left">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addColumnBefore().run()}
+              title="Add column to the left"
+            >
               <ArrowLeft className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().addColumnAfter().run()} title="Add column to the right">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().addColumnAfter().run()}
+              title="Add column to the right"
+            >
               <ArrowRight className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().deleteRow().run()} title="Delete row">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteRow().run()}
+              title="Delete row"
+            >
               <Trash2 className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().deleteColumn().run()} title="Delete column">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteColumn().run()}
+              title="Delete column"
+            >
               <Trash2 className="h-4 w-4" />
             </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().deleteTable().run()} title="Delete table">
-              <Trash2 className="h-4 w-4 text-[#9F2F2D]" />
+            <ToolbarButton
+              onClick={() => editor.chain().focus().deleteTable().run()}
+              title="Delete table"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
             </ToolbarButton>
           </>
         )}

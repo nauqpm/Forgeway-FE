@@ -103,7 +103,11 @@ function CollaboratorsList({ awareness }: { awareness: any }) {
 }
 
 // ── Connection status indicator ──────────────────────────────
-function ConnectionIndicator({ status }: { status: RealtimeStatusSnapshot["status"] }) {
+function ConnectionIndicator({
+  status,
+}: {
+  status: RealtimeStatusSnapshot["status"];
+}) {
   if (status === "connected") {
     return (
       <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">

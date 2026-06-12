@@ -1,11 +1,11 @@
-import type { Socket } from 'socket.io-client';
+import type { Socket } from "socket.io-client";
 
-import { SOCKET_EVENTS } from './socket.events';
+import { SOCKET_COMMANDS, SOCKET_EVENTS } from "./socket.events";
 
 export interface PageJoinResponse {
   ok: boolean;
   yjsState?: number[];
-  content?: string;
+  stateVector?: number[];
   title?: string;
 }
 
@@ -16,53 +16,68 @@ export class PageRoomManager {
     return this.currentId;
   }
 
+  /**
+   * Join a new page room.  If a different page is already joined it is
+   * left first.  onJoin is called once the server ACKs with { ok: true }.
+   */
   join(
     socket: Socket,
-    newPageId: string,
-    onJoinSuccess?: (response: PageJoinResponse) => void,
+    pageId: string,
+    onJoin?: (response: PageJoinResponse) => void,
   ): void {
-    if (this.currentId === newPageId) {
-      return;
-    }
+    // Already in this room — skip (caller should use sync() to re-fetch state)
+    if (this.currentId === pageId) return;
 
     if (this.currentId && socket.connected) {
-      socket.emit(SOCKET_EVENTS.PAGE_LEAVE, {
-        pageId: this.currentId,
-      });
+      socket.emit(SOCKET_EVENTS.PAGE_LEAVE, { pageId: this.currentId });
     }
 
-    this.currentId = newPageId;
+    this.currentId = pageId;
+
     if (socket.connected) {
       socket.emit(
         SOCKET_EVENTS.PAGE_JOIN,
-        { pageId: newPageId },
-        (response: PageJoinResponse) => {
-          if (response.ok && onJoinSuccess) {
-            onJoinSuccess(response);
-          }
+        { pageId },
+        (res: PageJoinResponse) => {
+          if (res?.ok) onJoin?.(res);
         },
       );
     }
+    // If not yet connected the caller is responsible for re-invoking
+    // once the CONNECT event fires (see enterEditMode in TiptapEditor).
   }
 
-  rejoin(socket: Socket): void {
+  /**
+   * Re-join after a reconnect.  Unlike join() this always emits and
+   * always waits for the ACK so the caller can apply missed updates.
+   */
+  rejoin(
+    socket: Socket,
+    onRejoin?: (response: PageJoinResponse) => void,
+  ): void {
     if (!this.currentId) return;
 
-    socket.emit(SOCKET_EVENTS.PAGE_JOIN, {
-      pageId: this.currentId,
-    });
+    socket.emit(
+      SOCKET_EVENTS.PAGE_JOIN,
+      { pageId: this.currentId },
+      (res: PageJoinResponse) => {
+        if (res?.ok) onRejoin?.(res);
+      },
+    );
   }
 
   leave(socket: Socket): void {
     if (!this.currentId) return;
-
-    socket.emit(SOCKET_EVENTS.PAGE_LEAVE, {
-      pageId: this.currentId,
-    });
+    if (socket.connected) {
+      socket.emit(SOCKET_EVENTS.PAGE_LEAVE, { pageId: this.currentId });
+    }
     this.currentId = undefined;
   }
 
-  /** Send a Yjs incremental update (binary as number[]) to the server */
+  /**
+   * Send an incremental Yjs update to the server.
+   * onComplete receives true/false based on server ACK.
+   */
   yjsUpdate(
     socket: Socket,
     update: Uint8Array,
@@ -120,22 +135,15 @@ export class PageRoomManager {
   /** Legacy update method — kept for backward compatibility */
   update(
     socket: Socket,
-    content: string,
-    onUpdateComplete?: (ok: boolean) => void,
+    payload: { content: string; title: string },
+    onComplete?: (ok: boolean) => void,
   ): void {
     if (!this.currentId || !socket.connected) return;
 
     socket.emit(
-      SOCKET_EVENTS.PAGE_UPDATE,
-      {
-        pageId: this.currentId,
-        content,
-      },
-      (response: { ok: boolean }) => {
-        if (onUpdateComplete) {
-          onUpdateComplete(response?.ok ?? false);
-        }
-      },
+      SOCKET_COMMANDS.PAGE_PUBLISH_DRAFT,
+      { pageId: this.currentId, ...payload },
+      (res: { ok: boolean }) => onComplete?.(res?.ok ?? false),
     );
   }
 

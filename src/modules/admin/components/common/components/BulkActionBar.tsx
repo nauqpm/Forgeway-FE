@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { X, Trash2, Edit2, ChevronUp, ArrowRightCircle } from 'lucide-react';
+import { X, Trash2, ChevronUp, ArrowRightCircle } from 'lucide-react';
+import AssigneePicker, { AssigneePickerUser } from '../../../../../common/components/AssigneePicker';
+import StatusPicker from '../../../../../common/components/StatusPicker';
+import PriorityPicker from '../../../../../common/components/PriorityPicker';
+import TypePicker from '../../../../../common/components/TypePicker';
 
 interface SprintOption {
   id: string;
@@ -9,9 +13,9 @@ interface SprintOption {
 interface BulkActionBarProps {
   selectedCount: number;
   onClear: () => void;
-  onChangeStatus: (status: string) => void;
+  onBulkUpdate: (updates: Record<string, any>) => Promise<void>;
   onDelete: () => void;
-  onEditFields?: () => void;
+  members?: AssigneePickerUser[];
   sprints?: SprintOption[];
   onMoveSprint?: (sprintId: string | null) => void;
   canEditTask?: boolean;
@@ -19,157 +23,188 @@ interface BulkActionBarProps {
   canMoveTask?: boolean;
 }
 
+const STATUS_OPTIONS = ['To Do', 'In Progress', 'Done'];
+
+const PICKER_CLS =
+  '[&>button]:!h-8 [&>button]:!py-0 [&>button]:!flex [&>button]:!items-center [&>button]:!text-sm [&>button]:!font-medium [&>button]:!bg-transparent [&>button]:!border-white/[0.08] [&>button]:!text-[#9B9A97] [&>button]:hover:!bg-white/8 [&>button]:hover:!text-[#E8E8E7] [&>button]:hover:!border-white/[0.18] [&>button]:!rounded-[6px]';
+
+const menuCls =
+  'absolute bottom-full mb-2 left-0 min-w-[9rem] bg-[#2A2A2A] border border-white/[0.08] rounded-[8px] py-1 z-10';
+const menuShadow = { boxShadow: '0 8px 32px rgba(0,0,0,0.32)' };
+const menuItemCls =
+  'w-full text-left px-4 py-[7px] text-sm text-[#9B9A97] hover:bg-white/8 hover:text-[#E8E8E7] transition-colors';
+
+const BTN = 'h-8 flex items-center gap-1.5 px-3 rounded-[6px] text-sm font-medium transition-colors border';
+const BTN_DEFAULT = `${BTN} border-white/[0.08] text-[#9B9A97] hover:bg-white/8 hover:text-[#E8E8E7] hover:border-white/[0.18]`;
+const BTN_ACTIVE  = `${BTN} bg-white/10 text-[#E8E8E7] border-white/[0.18]`;
+
 export default function BulkActionBar({
   selectedCount,
   onClear,
-  onChangeStatus,
+  onBulkUpdate,
   onDelete,
-  onEditFields,
+  members = [],
   sprints,
   onMoveSprint,
   canEditTask = true,
   canDeleteTask = true,
   canMoveTask = true,
 }: BulkActionBarProps) {
-  const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [showSprintMenu, setShowSprintMenu] = useState(false);
-  const statusRef = useRef<HTMLDivElement>(null);
-  const sprintRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedCount > 0) onClear();
+    const handler = (e: MouseEvent) => {
+      if (barRef.current && !barRef.current.contains(e.target as Node)) {
+        setShowSprintMenu(false);
+      }
     };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [selectedCount, onClear]);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (statusRef.current && !statusRef.current.contains(e.target as Node)) setShowStatusMenu(false);
-      if (sprintRef.current && !sprintRef.current.contains(e.target as Node)) setShowSprintMenu(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (showSprintMenu) setShowSprintMenu(false);
+      else if (selectedCount > 0) onClear();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [showSprintMenu, selectedCount, onClear]);
+
+  const apply = async (updates: Record<string, any>) => {
+    setShowSprintMenu(false);
+    await onBulkUpdate(updates);
+  };
 
   if (selectedCount === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+    <div
+      data-bulk-action-bar="true"
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-300"
+      ref={barRef}
+    >
       <div
-        className="bg-[#202020] text-[#E8E8E7] rounded-[10px] px-4 py-3 flex items-center gap-3 border border-white/8"
-        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+        className="bg-[#202020] text-[#E8E8E7] rounded-[10px] px-3 py-2 flex items-center gap-2 border border-white/[0.12]"
+        style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)' }}
       >
-        {/* Count */}
-        <div className="flex items-center gap-2 pr-3 border-r border-white/8">
-          <div className="bg-[#2563EB] w-6 h-6 rounded-[4px] flex items-center justify-center text-xs font-bold">
+        {/* Badge */}
+        <div className="flex items-center gap-2 pr-3 border-r border-white/[0.08] shrink-0 h-8">
+          <div className="bg-[#2563EB] min-w-[1.5rem] h-6 px-1 rounded-[4px] flex items-center justify-center text-xs font-bold">
             {selectedCount}
           </div>
-          <span className="text-sm font-medium text-[#9B9A97]">selected</span>
+          <span className="text-sm font-medium text-[#9B9A97] whitespace-nowrap">selected</span>
         </div>
 
-        <div className="flex items-center gap-1">
-          {/* Status dropdown */}
-          {canEditTask && (
-          <div ref={statusRef} className="relative">
+        {/* Status */}
+        {canEditTask && (
+          <StatusPicker
+            value={null}
+            placeholder="Status"
+            placement="top"
+            options={STATUS_OPTIONS}
+            onChange={(status) => apply({ status })}
+            size="sm"
+            variant="default"
+            className={PICKER_CLS}
+          />
+        )}
+
+        {/* Priority */}
+        {canEditTask && (
+          <PriorityPicker
+            value={null}
+            onChange={(priority) => apply({ priority })}
+            placement="top"
+            variant="default"
+            className={PICKER_CLS}
+          />
+        )}
+
+        {/* Type */}
+        {canEditTask && (
+          <TypePicker
+            value={null}
+            onChange={(type) => apply({ type })}
+            placement="top"
+            variant="default"
+            size="sm"
+            className={PICKER_CLS}
+          />
+        )}
+
+        {/* Assignee */}
+        {canEditTask && (
+          <div className="[&_button]:!h-8 [&_button]:!py-0 [&_button]:!flex [&_button]:!items-center [&_button]:!text-sm [&_button]:!font-medium [&_button]:!w-auto [&_button]:!rounded-[6px] [&_button]:!border [&_button]:!border-white/[0.08] [&_button]:hover:!border-white/[0.18] [&_button]:!px-3 [&_button]:hover:!bg-white/8">
+            <AssigneePicker
+              users={members}
+              value={null}
+              onChange={(uid) => apply({ assigneeId: uid })}
+              placement="top"
+            />
+          </div>
+        )}
+
+        {/* Move sprint */}
+        {canMoveTask && onMoveSprint && (
+          <div className="relative">
             <button
-              onClick={() => { setShowStatusMenu(!showStatusMenu); setShowSprintMenu(false); }}
-              className="flex items-center gap-2 hover:bg-white/8 px-3 py-1.5 rounded-[6px] text-sm font-medium transition-colors"
+              onClick={() => setShowSprintMenu((p) => !p)}
+              className={showSprintMenu ? BTN_ACTIVE : BTN_DEFAULT}
             >
-              <Edit2 className="w-4 h-4 text-[#3B82F6]" />
-              Change status
-              <ChevronUp className="w-3 h-3 text-[#6B6B6B] ml-1" />
+              <ArrowRightCircle className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" />
+              <span>Move sprint</span>
+              <ChevronUp className="w-3 h-3 text-[#6B6B6B]" />
             </button>
-            {showStatusMenu && (
-              <div
-                className="absolute bottom-full mb-2 left-0 w-40 bg-[#202020] border border-white/8 rounded-[8px] overflow-hidden py-1 animate-in fade-in slide-in-from-bottom-2"
-                style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
-              >
-                {['To Do', 'In Progress', 'Done'].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => { onChangeStatus(status); setShowStatusMenu(false); }}
-                    className="w-full text-left px-4 py-2 text-sm text-[#9B9A97] hover:bg-white/8 hover:text-[#E8E8E7] transition-colors"
-                  >
-                    {status}
-                  </button>
-                ))}
+            {showSprintMenu && (
+              <div className={`${menuCls} min-w-[13rem] max-h-56 overflow-y-auto`} style={menuShadow}>
+                <button
+                  onClick={() => { onMoveSprint(null); setShowSprintMenu(false); }}
+                  className={`${menuItemCls} italic text-[#6B6B6B] hover:text-[#9B9A97]`}
+                >
+                  Backlog (no sprint)
+                </button>
+                {sprints && sprints.length > 0 && (
+                  <>
+                    <div className="border-t border-white/[0.08] my-1" />
+                    {sprints.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => { onMoveSprint(s.id); setShowSprintMenu(false); }}
+                        className={menuItemCls}
+                      >
+                        {s.name}
+                      </button>
+                    ))}
+                  </>
+                )}
               </div>
             )}
           </div>
-          )}
+        )}
 
-          {/* Move to sprint dropdown */}
-          {onMoveSprint && canMoveTask && (
-            <div ref={sprintRef} className="relative">
-              <button
-                onClick={() => { setShowSprintMenu(!showSprintMenu); setShowStatusMenu(false); }}
-                className="flex items-center gap-2 hover:bg-white/8 px-3 py-1.5 rounded-[6px] text-sm font-medium transition-colors text-[#9B9A97] hover:text-[#E8E8E7]"
-              >
-                <ArrowRightCircle className="w-4 h-4 text-[#3B82F6]" />
-                Move sprint
-                <ChevronUp className="w-3 h-3 text-[#6B6B6B] ml-1" />
-              </button>
-              {showSprintMenu && (
-                <div
-                  className="absolute bottom-full mb-2 left-0 w-52 bg-[#202020] border border-white/8 rounded-[8px] overflow-hidden py-1 animate-in fade-in slide-in-from-bottom-2 max-h-56 overflow-y-auto"
-                  style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
-                >
-                  <button
-                    onClick={() => { onMoveSprint(null); setShowSprintMenu(false); }}
-                    className="w-full text-left px-4 py-2 text-sm text-[#6B6B6B] hover:bg-white/8 hover:text-[#E8E8E7] transition-colors italic"
-                  >
-                    Backlog (no sprint)
-                  </button>
-                  {sprints && sprints.length > 0 && (
-                    <div className="border-t border-white/8 mt-1 pt-1">
-                      {sprints.map((sprint) => (
-                        <button
-                          key={sprint.id}
-                          onClick={() => { onMoveSprint(sprint.id); setShowSprintMenu(false); }}
-                          className="w-full text-left px-4 py-2 text-sm text-[#9B9A97] hover:bg-white/8 hover:text-[#E8E8E7] transition-colors"
-                        >
-                          {sprint.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+        <div className="w-px h-5 bg-white/[0.08] mx-0.5 shrink-0" />
 
-          {/* Edit fields (optional) */}
-          {onEditFields && (
-            <button
-              onClick={onEditFields}
-              className="flex items-center gap-2 hover:bg-white/8 px-3 py-1.5 rounded-[6px] text-sm font-medium transition-colors text-[#9B9A97] hover:text-[#E8E8E7]"
-            >
-              <Edit2 className="w-4 h-4" />
-              Edit fields
-            </button>
-          )}
+        {/* Delete */}
+        {canDeleteTask && (
+          <button
+            onClick={onDelete}
+            className="h-8 flex items-center gap-1.5 px-3 rounded-[6px] text-sm font-medium text-[#F87171] hover:text-[#FCA5A5] hover:bg-[rgba(159,47,45,0.12)] transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5 shrink-0" />
+            Delete
+          </button>
+        )}
 
-          {/* Delete */}
-          {canDeleteTask && (
-            <button
-              onClick={onDelete}
-              className="flex items-center gap-2 hover:bg-[rgba(159,47,45,0.12)] text-[#F87171] hover:text-[#FCA5A5] px-3 py-1.5 rounded-[6px] text-sm font-medium transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-              Delete
-            </button>
-          )}
-        </div>
-
-        {/* Dismiss */}
+        {/* Deselect all */}
         <button
           onClick={onClear}
-          className="ml-1 p-1.5 hover:bg-white/8 rounded-[6px] text-[#6B6B6B] hover:text-[#E8E8E7] transition-colors"
-          title="Deselect (Esc)"
+          className="h-8 w-8 flex items-center justify-center hover:bg-white/8 rounded-[6px] text-[#6B6B6B] hover:text-[#E8E8E7] transition-colors shrink-0"
+          title="Deselect all (Esc)"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>

@@ -119,33 +119,34 @@ export const useDocsStore = create<DocsState>((set, get) => ({
   },
 
   createDocument: async (workspaceId: string, parentId: string | null = null) => {
-    const now = new Date().toISOString();
-    const tempId = `temp-${Date.now()}`;
-    const tempDoc: Document = {
-      id: tempId,
-      title: "",
-      content: "",
-      parentId,
-      workspaceId,
-      slug: `untitled-document-${Date.now()}`,
-      authorId: "",
-      version: 1,
-      status: "draft",
-      labels: [],
-      versionHistory: [],
-      createdAt: now,
-      updatedAt: now,
-    };
+    set({ isSaving: true });
+    try {
+      const newDoc = await pagesService.createPage({
+        workspaceId,
+        parentId: parentId ?? undefined,
+        title: "Untitled Document",
+        content: "",
+        slug: `untitled-document-${Date.now()}`,
+        status: "draft",
+        labels: [],
+      });
 
-    set((state) => ({
-      documents: [...state.documents, tempDoc],
-      expandedNodes:
-        parentId && !state.expandedNodes.includes(parentId)
-          ? [...state.expandedNodes, parentId]
-          : state.expandedNodes,
-    }));
+      set((state) => ({
+        documents: [...state.documents, newDoc],
+        expandedNodes:
+          parentId && !state.expandedNodes.includes(parentId)
+            ? [...state.expandedNodes, parentId]
+            : state.expandedNodes,
+        isSaving: false,
+      }));
 
-    return tempDoc;
+      return newDoc;
+    } catch (error) {
+      console.error("Failed to create document:", error);
+      toast.error(getErrorMessage(error, "Could not create document"));
+      set({ isSaving: false });
+      return null;
+    }
   },
 
   updateDocument: async (id, updates) => {

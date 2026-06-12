@@ -107,16 +107,20 @@ export function useTaskFilters(workspaceKey: string) {
     }
   }, [filters, pathname]);
 
-  const taskFilters = useMemo<TaskFilters>(() => ({
-    search: filters.search.trim() || undefined,
-    status: filters.statuses,
-    type: filters.types,
-    priority: filters.priorities,
-    assigneeId: filters.assignees.length > 0 ? filters.assignees : filters.assigneeId ?? undefined,
-    reporterId: filters.reporterId ?? undefined,
-    backlog: filters.backlog,
-    archived: filters.archived,
-  }), [filters]);
+  const taskFilters = useMemo<TaskFilters>(() => {
+    const assignees = filters.assignees.length > 0 ? filters.assignees : filters.assigneeId ? [filters.assigneeId] : [];
+
+    return {
+      search: filters.search.trim() || undefined,
+      status: filters.statuses,
+      type: filters.types.length <= 1 ? filters.types : undefined,
+      priority: filters.priorities.length <= 1 ? filters.priorities : undefined,
+      assigneeId: assignees.length === 1 && assignees[0] !== "U" ? assignees[0] : undefined,
+      reporterId: filters.reporterId ?? undefined,
+      backlog: filters.backlog,
+      archived: filters.archived,
+    };
+  }, [filters]);
 
   return { filters, setFilters, taskFilters };
 }

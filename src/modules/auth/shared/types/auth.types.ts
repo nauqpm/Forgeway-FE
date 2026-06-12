@@ -204,6 +204,7 @@ export interface TimezonePreference {
 // ─── Security / Lockout ──────────────────────────────────────────────────────
 
 export interface LockoutInfo {
+  email?: string;
   isLocked: boolean;
   lockedUntil?: string; // ISO UTC string
   remainingAttempts: number;
