@@ -81,21 +81,59 @@ export class PageRoomManager {
   yjsUpdate(
     socket: Socket,
     update: Uint8Array,
+    updateId?: string,
     onComplete?: (ok: boolean) => void,
   ): void {
     if (!this.currentId || !socket.connected) return;
 
     socket.emit(
       SOCKET_EVENTS.PAGE_YJS_UPDATE,
-      { pageId: this.currentId, update: Array.from(update) },
-      (res: { ok: boolean }) => onComplete?.(res?.ok ?? false),
+      {
+        pageId: this.currentId,
+        update: Array.from(update),
+        updateId,
+      },
+      (response?: { ok: boolean }) => {
+        if (onComplete) {
+          onComplete(response?.ok ?? false);
+        }
+      },
     );
   }
 
-  /**
-   * Tell the server to flush the current draft into the main Page document.
-   */
-  publish(
+  /** Send a Yjs awareness update (Uint8Array converted to number[]) to the server */
+  awarenessUpdate(
+    socket: Socket,
+    update: Uint8Array,
+  ): void {
+    if (!this.currentId || !socket.connected) return;
+
+    socket.emit(
+      SOCKET_EVENTS.PAGE_AWARENESS_UPDATE,
+      {
+        pageId: this.currentId,
+        update: Array.from(update),
+      }
+    );
+  }
+
+  /** Send derived HTML content + title to server for search/fallback storage */
+  sendDraftContent(
+    socket: Socket,
+    content: string,
+    title: string,
+  ): void {
+    if (!this.currentId || !socket.connected) return;
+
+    socket.emit(SOCKET_EVENTS.PAGE_DRAFT_CONTENT, {
+      pageId: this.currentId,
+      content,
+      title,
+    });
+  }
+
+  /** Legacy update method — kept for backward compatibility */
+  update(
     socket: Socket,
     payload: { content: string; title: string },
     onComplete?: (ok: boolean) => void,

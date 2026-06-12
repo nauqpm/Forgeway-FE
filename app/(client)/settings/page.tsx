@@ -44,11 +44,10 @@ export default function SettingsPage() {
 
       {message && (
         <div
-          className={`mb-4 rounded-[6px] border p-4 text-sm ${
-            message.includes("success")
+          className={`mb-4 rounded-[6px] border p-4 text-sm ${message.includes("success")
               ? "border-[#C3DFC1] bg-[#EDF3EC] text-[#346538] dark:border-[rgba(52,101,56,0.18)] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#6DB374]"
               : "border-[#F5C6C7] bg-[#FDEBEC] text-[#9F2F2D] dark:border-[rgba(159,47,45,0.18)] dark:bg-[rgba(159,47,45,0.12)] dark:text-[#F87171]"
-          }`}
+            }`}
         >
           {message}
         </div>
@@ -118,22 +117,28 @@ export default function SettingsPage() {
       <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
         <h2 className="mb-4 flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7]">
           <Shield className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
-          Security
+          Password
         </h2>
-        <button className="flex w-full items-center justify-between rounded-[6px] bg-[#F9F9F8] p-4 transition-colors hover:bg-[#F7F6F3] dark:bg-[#2A2A2A] dark:hover:bg-white/5">
-          <div className="flex items-center gap-3">
-            <Key className="h-5 w-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
-            <div className="text-left">
-              <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">
-                Change Password
-              </p>
-              <p className="text-xs text-[#787774] dark:text-[#9B9A97]">
-                Update your account password
-              </p>
-            </div>
+        {user?.ssoProvider === 'google' || (user as any)?.googleId ? (
+          <div className="rounded-[6px] bg-[#F9F9F8] p-4 text-sm text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">
+            Your account is linked with Google. Password management is handled directly through your Google account.
           </div>
-          <span className="text-[#ABABAB] dark:text-[#6B6B6B]">-&gt;</span>
-        </button>
+        ) : (
+          <button className="flex w-full items-center justify-between rounded-[6px] bg-[#F9F9F8] p-4 transition-colors hover:bg-[#F7F6F3] dark:bg-[#2A2A2A] dark:hover:bg-white/5">
+            <div className="flex items-center gap-3">
+              <Key className="h-5 w-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+              <div className="text-left">
+                <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7]">
+                  Change Password
+                </p>
+                <p className="text-xs text-[#787774] dark:text-[#9B9A97]">
+                  Update your account password
+                </p>
+              </div>
+            </div>
+            <span className="text-[#ABABAB] dark:text-[#6B6B6B]">-&gt;</span>
+          </button>
+        )}
       </div>
 
       <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">

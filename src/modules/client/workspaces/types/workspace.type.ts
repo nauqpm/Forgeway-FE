@@ -20,6 +20,8 @@ export interface Workspace {
     role: string;
   }[];
   description?: string;
+  avatar?: string;
+  access?: "private" | "public";
   visibility: "private" | "public";
   template?: "kanban" | "scrum";
   type?: "kanban" | "scrum";
@@ -47,7 +49,8 @@ export type WorkspaceTab =
   | "calendar"
   | "list"
   | "archive"
-  | "pages";
+  | "pages"
+  | "members";
 
 export const getWorkspaceTemplate = (workspace: Workspace): "kanban" | "scrum" =>
   workspace.template ?? workspace.type ?? "kanban";

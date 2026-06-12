@@ -65,12 +65,13 @@ export function toAssigneePickerUsers(
         typeof m.userId === "object"
           ? m.userId?.avatar || m.userId?.avatarUrl
           : undefined;
+      const email = typeof m.userId === "object" ? m.userId?.email : undefined;
       const parts = name.trim().split(/\s+/).filter(Boolean);
       const initials =
         parts.length >= 2
           ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
           : name.substring(0, 2).toUpperCase();
-      return { id, name, initials, avatar };
+      return { id, name, initials, avatar, email };
     })
     .filter((u) => u.id);
 }
@@ -115,14 +116,16 @@ export default function AssigneePicker({
         placement === "top" ||
         (placement === "auto" && spaceBelow < MENU_MAX_H && spaceAbove > spaceBelow);
 
-      const top = shouldOpenUp
-        ? Math.max(8, rect.top - MENU_MAX_H - 4)
-        : rect.bottom + 4;
-
       const rawLeft = size === "sm" ? rect.right - MENU_MIN_W : rect.left;
       const left = Math.max(8, Math.min(rawLeft, window.innerWidth - MENU_MIN_W - 8));
 
-      setMenuStyle({ position: "fixed", top, left, minWidth: MENU_MIN_W, zIndex: 999999 });
+      // When opening upward, anchor the dropdown's bottom edge just above the trigger
+      // (not top, which would leave a gap equal to MENU_MAX_H minus actual content height)
+      const style: React.CSSProperties = shouldOpenUp
+        ? { position: "fixed", bottom: window.innerHeight - rect.top + 4, left, minWidth: MENU_MIN_W, zIndex: 999999 }
+        : { position: "fixed", top: rect.bottom + 4, left, minWidth: MENU_MIN_W, zIndex: 999999 };
+
+      setMenuStyle(style);
     }
     setOpen(true);
   };
@@ -153,6 +156,7 @@ export default function AssigneePicker({
   const dropdown = open ? (
     <div
       ref={menuRef}
+      data-assignee-picker-menu="true"
       style={{ ...menuStyle, boxShadow: "0 4px 20px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.06)" }}
       className="max-h-52 overflow-y-auto bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[8px]"
     >

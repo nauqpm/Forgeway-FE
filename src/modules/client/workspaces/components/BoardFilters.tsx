@@ -14,6 +14,7 @@ type BoardFiltersProps = {
 };
 
 const searchInputCls = "w-full pl-9 pr-4 py-1.5 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#2563EB] dark:focus:border-[#3B82F6] outline-none transition-colors";
+const PRIORITY_OPTIONS = ["Highest", "High", "Medium", "Low", "Lowest"];
 
 export default function BoardFilters({
   filters,
@@ -102,7 +103,7 @@ export default function BoardFilters({
   const allTypes = ["Task", "Bug", "Story"];
   const filteredTypes = allTypes.filter(t => t.toLowerCase().includes(typeSearch.toLowerCase()));
 
-  const allPriorities = ["High", "Medium", "Low"];
+  const allPriorities = PRIORITY_OPTIONS;
   const filteredPriorities = allPriorities.filter(p => p.toLowerCase().includes(prioritySearch.toLowerCase()));
 
   return (

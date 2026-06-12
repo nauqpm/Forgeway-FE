@@ -1,7 +1,9 @@
+// Component representing the document editor toolbar, 
+// including buttons and dropdowns to format text, insert images, create tables, align paragraphs, etc.
 "use client";
 
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { Editor } from "@tiptap/react";
+import { ReactNode, useCallback, useRef, useState } from "react";
+import { Editor, useEditorState } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import {
   ArrowLeft,
@@ -13,6 +15,7 @@ import {
   Link as LinkIcon,
   Unlink,
   Undo,
+  Redo,
   Image as ImageIcon,
   AlignLeft,
   AlignCenter,
@@ -25,40 +28,38 @@ import {
   Trash2,
   ArrowDown,
   ArrowRight,
+  Indent,
+  Outdent,
+  List,
+  ListOrdered,
+  Quote,
+  RemoveFormatting,
+  Search,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import imageService from "@/common/services/imageService";
+import { useToolbarState } from "../hooks/useToolbarState";
 import LinkEditorPopover from "./LinkEditorPopover";
 import TableGridPicker from "./TableGridPicker";
+import ColorPickerDropdown from "./ColorPickerDropdown";
+import { stopUndoCapturing } from "./undoCapture";
 
 const DEFAULT_FONT_FAMILY = "Arial";
-const FONT_FAMILIES = [
-  DEFAULT_FONT_FAMILY,
-  "Times New Roman",
-  "Courier New",
-  "Inter",
-  "Georgia",
-];
-const DEFAULT_FONT_SIZE = "16";
-const FONT_SIZES = ["12", "14", DEFAULT_FONT_SIZE, "18", "20", "24", "32"];
-const COLORS = [
-  "#111827",
-  "#EF4444",
-  "#2563EB",
-  "#059669",
-  "#D97706",
-  "#7C3AED",
-];
-const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-];
+const FONT_FAMILIES = [DEFAULT_FONT_FAMILY, "Times New Roman", "Courier New", "Inter", "Georgia"];
+const DEFAULT_FONT_SIZE = "16px";
+const FONT_SIZES = ["12px", "14px", DEFAULT_FONT_SIZE, "18px", "20px", "24px", "32px"];
+const BLOCK_TYPES = [
+  { value: "p", label: "Normal text", fontSize: "0.75rem", fontWeight: 400 },
+  { value: "h1", label: "Heading 1", fontSize: "1rem", fontWeight: 700 },
+  { value: "h2", label: "Heading 2", fontSize: "0.875rem", fontWeight: 700 },
+  { value: "h3", label: "Heading 3", fontSize: "0.8125rem", fontWeight: 700 },
+] as const;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 type Props = {
   editor: Editor | null;
+  onToggleFindReplace?: () => void;
 };
 
 type ToolbarButtonProps = {
@@ -67,23 +68,20 @@ type ToolbarButtonProps = {
   disabled?: boolean;
   children: ReactNode;
   title: string;
+  useUndoBoundary?: boolean;
 };
 
 const getTextStyleAttributes = (editor: Editor | null) => {
   const attributes = editor?.getAttributes("textStyle") ?? {};
+  let fontSize = typeof attributes.fontSize === "string" ? attributes.fontSize : "";
+  if (fontSize && !/[a-zA-Z%]/.test(fontSize)) {
+    fontSize = `${fontSize}px`;
+  }
   return {
-    fontFamily:
-      typeof attributes.fontFamily === "string" ? attributes.fontFamily : "",
-    fontSize:
-      typeof attributes.fontSize === "string" ? attributes.fontSize : "",
+    fontFamily: typeof attributes.fontFamily === "string" ? attributes.fontFamily : "",
+    fontSize,
   };
 };
-
-const areTextStyleAttributesEqual = (
-  first: ReturnType<typeof getTextStyleAttributes>,
-  second: ReturnType<typeof getTextStyleAttributes>,
-) =>
-  first.fontFamily === second.fontFamily && first.fontSize === second.fontSize;
 
 const toImageUrl = (url: string) => {
   if (!url) return "";
@@ -92,39 +90,40 @@ const toImageUrl = (url: string) => {
   return `${base}${url}`;
 };
 
-export default function EditorToolbar({ editor }: Props) {
+export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const linkButtonRef = useRef<HTMLButtonElement | null>(null);
   const tableButtonRef = useRef<HTMLButtonElement | null>(null);
-  const [activeTextStyle, setActiveTextStyle] = useState(() =>
-    getTextStyleAttributes(editor),
-  );
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [tablePickerOpen, setTablePickerOpen] = useState(false);
+  useEditorState({
+    editor,
+    selector: ({ editor: currentEditor }) => {
+      if (!currentEditor) return null;
+
+      return {
+        from: currentEditor.state.selection.from,
+        to: currentEditor.state.selection.to,
+        storedMarks:
+          currentEditor.state.storedMarks
+            ?.map((mark) => `${mark.type.name}:${JSON.stringify(mark.attrs)}`)
+            .join("|") ?? "",
+        docSize: currentEditor.state.doc.content.size,
+      };
+    },
+  });
+  const activeTextStyle = getTextStyleAttributes(editor);
+  const toolbarState = useToolbarState(editor);
   const closeLinkPopover = useCallback(() => setLinkPopoverOpen(false), []);
   const closeTablePicker = useCallback(() => setTablePickerOpen(false), []);
-
-  useEffect(() => {
-    if (!editor) {
-      setActiveTextStyle(getTextStyleAttributes(null));
-      return;
-    }
-    const updateActiveTextStyle = () => {
-      const nextTextStyle = getTextStyleAttributes(editor);
-      setActiveTextStyle((currentTextStyle) =>
-        areTextStyleAttributesEqual(currentTextStyle, nextTextStyle)
-          ? currentTextStyle
-          : nextTextStyle,
-      );
-    };
-    updateActiveTextStyle();
-    editor.on("selectionUpdate", updateActiveTextStyle);
-    editor.on("transaction", updateActiveTextStyle);
-    return () => {
-      editor.off("selectionUpdate", updateActiveTextStyle);
-      editor.off("transaction", updateActiveTextStyle);
-    };
-  }, [editor]);
+  const runWithUndoBoundary = useCallback(
+    (action: () => void) => {
+      stopUndoCapturing(editor);
+      action();
+      stopUndoCapturing(editor);
+    },
+    [editor],
+  );
 
   if (!editor) return null;
 
@@ -134,14 +133,25 @@ export default function EditorToolbar({ editor }: Props) {
     disabled,
     children,
     title,
+    useUndoBoundary = true,
   }: ToolbarButtonProps) => (
     <button
-      onClick={onClick}
+      onMouseDown={(event) => {
+        event.preventDefault();
+        if (!disabled) {
+          if (useUndoBoundary) {
+            runWithUndoBoundary(onClick);
+          } else {
+            onClick();
+          }
+        }
+      }}
       disabled={disabled}
       title={title}
+      aria-pressed={Boolean(isActive)}
       className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
         isActive
-          ? "bg-[#F7F6F3] dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6] font-bold"
+          ? "bg-[#DBEAFE] text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(37,99,235,0.10)] dark:bg-[rgba(59,130,246,0.22)] dark:text-[#BFDBFE] dark:shadow-[inset_0_0_0_1px_rgba(147,197,253,0.18)] font-bold"
           : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
       } ${disabled ? "opacity-20 cursor-not-allowed" : "cursor-pointer"}`}
       type="button"
@@ -172,11 +182,10 @@ export default function EditorToolbar({ editor }: Props) {
     try {
       const result = await imageService.uploadImage(file, true);
       const imageUrl = toImageUrl(result.imageUrl || result.url || "");
-      if (!imageUrl) {
-        toast.error("Failed to get image URL after upload");
-        return;
-      }
-      editor.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
+      if (!imageUrl) { toast.error("Failed to get image URL after upload"); return; }
+      runWithUndoBoundary(() => {
+        editor.chain().focus().setImage({ src: imageUrl, alt: file.name }).run();
+      });
       toast.success("Image inserted successfully");
     } catch {
       toast.error("Failed to upload image");
@@ -186,26 +195,28 @@ export default function EditorToolbar({ editor }: Props) {
   const insertImage = () => imageInputRef.current?.click();
   const toggleTablePicker = () => setTablePickerOpen((c) => !c);
   const insertTable = (rows: number, cols: number) => {
-    editor
-      .chain()
-      .focus()
-      .insertTable({ rows, cols, withHeaderRow: true })
-      .run();
+    runWithUndoBoundary(() => {
+      editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    });
     closeTablePicker();
   };
 
-  const inTable = editor.isActive("table");
+  const inTable = toolbarState.table;
   const selectedFontFamily = activeTextStyle.fontFamily || DEFAULT_FONT_FAMILY;
   const selectedFontSize = activeTextStyle.fontSize || DEFAULT_FONT_SIZE;
+  const selectedBlockType = toolbarState.blockType;
 
-  const selectCls = "h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-2 text-[0.6875rem] text-[#111111] dark:text-[#E8E8E7] outline-none";
+  const selectCls = "h-8 max-w-[160px] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.10] bg-white dark:bg-[#252525] px-2 text-[0.6875rem] font-medium text-[#111111] dark:text-[#E8E8E7] outline-none transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2A2A2A] focus:border-[#2563EB] dark:focus:border-[#3B82F6] dark:[color-scheme:dark]";
+  const optionCls = "bg-white text-[#111111] dark:bg-[#252525] dark:text-[#E8E8E7]";
 
   return (
     <>
       {editor && (
         <BubbleMenu
           editor={editor}
-          shouldShow={({ editor: e }) => e.isActive("link")}
+          shouldShow={({ editor: currentEditor }) =>
+            currentEditor.isActive("link")
+          }
           options={{ placement: "top", offset: 8 }}
         >
           <div
@@ -233,7 +244,11 @@ export default function EditorToolbar({ editor }: Props) {
             </button>
             <button
               type="button"
-              onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
+              onClick={() => {
+                runWithUndoBoundary(() => {
+                  editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                });
+              }}
               className="inline-flex items-center gap-1 rounded-[4px] px-2 py-1.5 text-[0.6875rem] font-semibold text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
             >
               <Unlink className="h-3.5 w-3.5" />
@@ -243,7 +258,7 @@ export default function EditorToolbar({ editor }: Props) {
         </BubbleMenu>
       )}
 
-      <div className="flex items-center gap-1 px-6 py-2 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/[0.06] overflow-x-auto no-scrollbar flex-shrink-0">
+      <div className="flex flex-wrap items-center gap-x-1 gap-y-1.5 px-4 py-2 lg:px-6 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/[0.06] overflow-visible flex-shrink-0">
         <input
           ref={imageInputRef}
           type="file"
@@ -251,128 +266,165 @@ export default function EditorToolbar({ editor }: Props) {
           className="hidden"
           onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) await uploadLocalImage(file);
+            if (file) {
+              await uploadLocalImage(file);
+            }
             e.target.value = "";
           }}
         />
 
         <select
           className={selectCls}
-          style={{ fontFamily: selectedFontFamily }}
           value={selectedFontFamily}
           onChange={(e) => {
             const value = e.target.value;
-            setActiveTextStyle((c) => ({ ...c, fontFamily: value }));
-            editor.chain().focus().setFontFamily(value).run();
+            runWithUndoBoundary(() => {
+              editor.chain().focus().setFontFamily(value).run();
+            });
           }}
         >
+          <option value="">Font</option>
           {FONT_FAMILIES.map((font) => (
-            <option key={font} value={font} style={{ fontFamily: font }}>
-              {font}
-            </option>
+            <option key={font} value={font} className={optionCls} style={{ fontFamily: font }}>{font}</option>
           ))}
         </select>
 
         <select
           className={selectCls}
-          value={selectedFontSize}
+          value={selectedBlockType}
           onChange={(e) => {
-            const value = e.target.value;
-            setActiveTextStyle((c) => ({ ...c, fontSize: value }));
-            editor.chain().focus().setFontSize(value).run();
+            const val = e.target.value;
+            runWithUndoBoundary(() => {
+              if (val === "p") {
+                editor.chain().focus().setParagraph().run();
+              } else if (val === "h1") {
+                editor.chain().focus().toggleHeading({ level: 1 }).run();
+              } else if (val === "h2") {
+                editor.chain().focus().toggleHeading({ level: 2 }).run();
+              } else if (val === "h3") {
+                editor.chain().focus().toggleHeading({ level: 3 }).run();
+              }
+            });
           }}
         >
-          {FONT_SIZES.map((size) => (
-            <option key={size} value={size}>
-              {size}
+          {BLOCK_TYPES.map((blockType) => (
+            <option
+              key={blockType.value}
+              value={blockType.value}
+              className={optionCls}
+              style={{
+                fontSize: blockType.fontSize,
+                fontWeight: blockType.fontWeight,
+              }}
+            >
+              {blockType.label}
             </option>
           ))}
         </select>
 
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          isActive={editor.isActive("bold")}
-          title="Bold"
+        <select
+          className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
+          value={activeTextStyle.fontSize}
+          onChange={(e) => {
+            const value = e.target.value;
+            runWithUndoBoundary(() => {
+              editor.chain().focus().setFontSize(value).run();
+            });
+          }}
         >
+          <option value="">Size</option>
+          {FONT_SIZES.map((size) => (
+            <option key={size} value={size} className={optionCls}>{size.replace("px", "")}</option>
+          ))}
+        </select>
+
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={toolbarState.bold} title="Bold">
           <Bold className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          isActive={editor.isActive("italic")}
-          title="Italic"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={toolbarState.italic} title="Italic">
           <Italic className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          isActive={editor.isActive("underline")}
-          title="Underline"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={toolbarState.underline} title="Underline">
           <Underline className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          isActive={editor.isActive("strike")}
-          title="Strikethrough"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={toolbarState.strike} title="Strikethrough">
           <Strikethrough className="h-4 w-4" />
-        </ToolbarButton>
-
-        {COLORS.map((color) => (
-          <button
-            key={color}
-            type="button"
-            title={`Color ${color}`}
-            onClick={() => editor.chain().focus().setColor(color).run()}
-            className="h-5 w-5 rounded-[3px] border border-[#EAEAEA] dark:border-white/[0.06] transition-opacity hover:opacity-80"
-            style={{ backgroundColor: color }}
-          />
-        ))}
-
-        <ToolbarButton onClick={() => editor.chain().focus().unsetColor().run()} title="Reset text color">
-          <span className="text-[0.6875rem] font-bold">A</span>
         </ToolbarButton>
 
         <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
 
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-          isActive={editor.isActive({ textAlign: "left" })}
-          title="Align left"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={toolbarState.bulletList} title="Bullet list">
+          <List className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={toolbarState.orderedList} title="Numbered list">
+          <ListOrdered className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={toolbarState.taskList} title="Checklist">
+          <ListTodo className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={toolbarState.blockquote} title="Blockquote">
+          <Quote className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().indent().run()} title="Increase indent">
+          <Indent className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().outdent().run()} title="Decrease indent">
+          <Outdent className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title="Clear formatting">
+          <RemoveFormatting className="h-4 w-4" />
+        </ToolbarButton>
+
+        <ColorPickerDropdown editor={editor} />
+
+        <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
+
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("left").run()} isActive={toolbarState.textAlign === "left"} title="Align left">
           <AlignLeft className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-          isActive={editor.isActive({ textAlign: "center" })}
-          title="Align center"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("center").run()} isActive={toolbarState.textAlign === "center"} title="Align center">
           <AlignCenter className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign("right").run()}
-          isActive={editor.isActive({ textAlign: "right" })}
-          title="Align right"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("right").run()} isActive={toolbarState.textAlign === "right"} title="Align right">
           <AlignRight className="h-4 w-4" />
         </ToolbarButton>
-        <ToolbarButton
-          onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-          isActive={editor.isActive({ textAlign: "justify" })}
-          title="Justify"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign("justify").run()} isActive={toolbarState.textAlign === "justify"} title="Justify">
           <AlignJustify className="h-4 w-4" />
         </ToolbarButton>
+
+        <select
+          className={selectCls}
+          onChange={(e) => {
+            const val = e.target.value;
+            runWithUndoBoundary(() => {
+              if (val === "default") {
+                editor.chain().focus().unsetLineHeight().run();
+              } else {
+                editor.chain().focus().setLineHeight(val).run();
+              }
+            });
+          }}
+          defaultValue="default"
+        >
+          <option value="default" className={optionCls}>Line height</option>
+          <option value="1" className={optionCls}>1.0</option>
+          <option value="1.15" className={optionCls}>1.15</option>
+          <option value="1.5" className={optionCls}>1.5</option>
+          <option value="2" className={optionCls}>2.0</option>
+        </select>
 
         <div className="h-4 w-px bg-[#EAEAEA] dark:bg-white/8" />
 
         <button
           ref={linkButtonRef}
-          onClick={openLinkPopover}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            openLinkPopover();
+          }}
           title="Set up or edit link"
           className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
-            editor.isActive("link") || linkPopoverOpen
-              ? "bg-[#F7F6F3] dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6] font-bold"
+            toolbarState.link || linkPopoverOpen
+              ? "bg-[#DBEAFE] text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(37,99,235,0.10)] dark:bg-[rgba(59,130,246,0.22)] dark:text-[#BFDBFE] dark:shadow-[inset_0_0_0_1px_rgba(147,197,253,0.18)] font-bold"
               : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
           }`}
           type="button"
@@ -395,25 +447,26 @@ export default function EditorToolbar({ editor }: Props) {
           <Unlink className="h-4 w-4" />
         </ToolbarButton>
 
-        <ToolbarButton onClick={insertImage} title="Insert image">
+        <ToolbarButton onClick={insertImage} title="Insert image" useUndoBoundary={false}>
           <ImageIcon className="h-4 w-4" />
         </ToolbarButton>
 
-        <ToolbarButton
-          onClick={() => editor.chain().focus().toggleTaskList().run()}
-          isActive={editor.isActive("taskList")}
-          title="Checklist"
-        >
+        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={toolbarState.taskList} title="Checklist">
           <ListTodo className="h-4 w-4" />
         </ToolbarButton>
 
         <button
           ref={tableButtonRef}
-          onClick={toggleTablePicker}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            toggleTablePicker();
+          }}
           title="Insert table"
-          className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+          className={`
+          p-2 rounded-lg transition-all flex items-center justify-center
+          ${
             tablePickerOpen
-              ? "bg-[#F7F6F3] dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6] font-bold"
+              ? "bg-[#DBEAFE] text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(37,99,235,0.10)] dark:bg-[rgba(59,130,246,0.22)] dark:text-[#BFDBFE] dark:shadow-[inset_0_0_0_1px_rgba(147,197,253,0.18)] font-bold"
               : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
           }`}
           type="button"
@@ -470,18 +523,22 @@ export default function EditorToolbar({ editor }: Props) {
               onClick={() => editor.chain().focus().deleteTable().run()}
               title="Delete table"
             >
-              <Trash2 className="h-4 w-4 text-[#9F2F2D]" />
+              <Trash2 className="h-4 w-4 text-red-500" />
             </ToolbarButton>
           </>
         )}
 
-        <div className="ml-auto flex items-center gap-1">
-          <ToolbarButton
-            onClick={() => editor.chain().focus().undo().run()}
-            disabled={!editor.can().undo()}
-            title="Undo"
-          >
+        <div className="flex items-center gap-1">
+          {onToggleFindReplace && (
+            <ToolbarButton onClick={onToggleFindReplace} title="Find & Replace" useUndoBoundary={false}>
+              <Search className="h-4 w-4" />
+            </ToolbarButton>
+          )}
+          <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo" useUndoBoundary={false}>
             <Undo className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo" useUndoBoundary={false}>
+            <Redo className="h-4 w-4" />
           </ToolbarButton>
         </div>
       </div>

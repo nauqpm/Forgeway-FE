@@ -54,14 +54,15 @@ type ListTabProps = {
   setListGridDrawerOpen: (open: boolean) => void;
   updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
   handleUpdateIssue: (updated: Issue) => void;
-  onBulkDeleteIds?: (ids: string[]) => void;
+  onBulkUpdateIds?: (ids: string[], updates: Partial<Issue>) => Promise<void>;
+  onBulkDeleteIds?: (ids: string[]) => void | Promise<void>;
   onCreateTask?: (task: { title: string; type?: string; assigneeId?: string | null; dueDate?: string | null }) => Promise<void>;
   canEditTask?: boolean;
   canDeleteTask?: boolean;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
-  key: "Key", title: "Work", status: "Status", priority: "Priority",
+  key: "Key", title: "Work", type: "Type", status: "Status", priority: "Priority",
   assigneeId: "Assignee", storyPoints: "Story Points", startDate: "Start Date",
   dueDate: "Due Date", updatedAt: "Updated", labels: "Labels",
 };
@@ -83,6 +84,7 @@ export default function ListTab({
   setListGridDrawerOpen,
   updateIssueDirectly,
   handleUpdateIssue,
+  onBulkUpdateIds,
   onBulkDeleteIds,
   onCreateTask,
   canEditTask = true,
@@ -93,7 +95,7 @@ export default function ListTab({
       const saved = localStorage.getItem("list_visible_columns");
       if (saved) return JSON.parse(saved);
     }
-    return { key: true, title: true, status: true, priority: true, assigneeId: true, storyPoints: true, dueDate: true, updatedAt: true, labels: true };
+    return { key: true, title: true, type: true, status: true, priority: true, assigneeId: true, storyPoints: true, dueDate: true, updatedAt: true, labels: true };
   });
   useEffect(() => {
     localStorage.setItem("list_visible_columns", JSON.stringify(columnVisibility));
@@ -318,6 +320,7 @@ export default function ListTab({
                 setListGridDrawerOpen(false);
               }}
               onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+              onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
               canEditTask={canEditTask}
             />
           </div>
@@ -334,7 +337,7 @@ export default function ListTab({
               onClickTask={(issue) => setSelectedIssue(issue)}
               onUpdateIssue={canEditTask ? (id, updates) => updateIssueDirectly(id, updates) : undefined}
               onCreateTask={onCreateTask}
-              onBulkUpdate={canEditTask ? async (ids, updates) => ids.forEach(id => updateIssueDirectly(id, updates)) : undefined}
+              onBulkUpdate={canEditTask ? onBulkUpdateIds : undefined}
               onBulkDelete={canDeleteTask && onBulkDeleteIds ? async (ids) => onBulkDeleteIds(ids) : undefined}
               hideCreate={!onCreateTask}
               canEditTask={canEditTask}
@@ -508,6 +511,7 @@ export default function ListTab({
                   setListGridDrawerOpen(false);
                 }}
                 onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
+                onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
                 canEditTask={canEditTask}
               />
             ) : (

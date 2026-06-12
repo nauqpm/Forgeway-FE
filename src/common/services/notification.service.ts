@@ -31,9 +31,11 @@ export interface AppNotification {
     taskTitle?: string;
     commentId?: string;
     workspaceId?: string;
+    workspaceKey?: string;
     workspaceName?: string;
     inviteId?: string;
     role?: string;
+    status?: string;
     [key: string]: unknown;
   };
   readAt?: string | Date | null;
@@ -69,5 +71,13 @@ export const notificationService = {
   async markAllAsRead(): Promise<{ modifiedCount: number }> {
     const response = await api.patch<{ modifiedCount: number }>(apiRoutes.NOTIFICATIONS.READ_ALL);
     return response.data;
+  },
+
+  async acceptWorkspaceInvite(inviteId: string): Promise<void> {
+    await api.post(apiRoutes.WORKSPACES.ACCEPT_INVITE_BY_ID(inviteId));
+  },
+
+  async declineWorkspaceInvite(inviteId: string): Promise<void> {
+    await api.post(apiRoutes.WORKSPACES.DECLINE_INVITE_BY_ID(inviteId));
   },
 };

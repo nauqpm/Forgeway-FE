@@ -205,7 +205,7 @@ export default function BoardTaskActionMenu({
         </button>
         {canEditTask && (
           <>
-            <button
+            {/*<button
               type="button"
               onClick={() => {
                 // TODO: Wire to flag API when task flags are available.
@@ -215,7 +215,7 @@ export default function BoardTaskActionMenu({
             >
               <Flag className="h-4 w-4" />
               Add flag
-            </button>
+            </button>*/}
             {onOpenLabels && (
               <button
                 type="button"

@@ -513,6 +513,9 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .fc .fc-daygrid-day-top {
   position: relative;
   z-index: 8;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
   padding: 2px 3px 0;
 }
 .al-calendar-day-head {
@@ -569,10 +572,12 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   z-index: 3;
   margin-top: 4px;
   min-height: 104px;
+  pointer-events: none;
 }
 .fc .fc-daygrid-more-link {
   position: relative;
   z-index: 20;
+  pointer-events: auto;
   display: inline-flex;
   margin-top: 2px;
   padding: 1px 6px;
@@ -590,9 +595,12 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   display: block;
   min-height: 22px;
   height: 22px;
+  width: calc(100% - 12px);
   margin-top: 4px;
+  margin-inline: 6px;
   cursor: grab;
   user-select: none;
+  pointer-events: auto;
 }
 .fc .fc-daygrid-event:active {
   cursor: grabbing;
@@ -687,10 +695,50 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   color: #111111;
   font-family: Arial, sans-serif;
   font-size: 16px;
+  --tw-prose-body: #111111;
+  --tw-prose-headings: #111111;
+  --tw-prose-lead: #3f3f46;
+  --tw-prose-links: #1d4ed8;
+  --tw-prose-bold: #111111;
+  --tw-prose-counters: #52525b;
+  --tw-prose-bullets: #52525b;
+  --tw-prose-hr: #e4e4e7;
+  --tw-prose-quotes: #111111;
+  --tw-prose-quote-borders: #d4d4d8;
+  --tw-prose-captions: #71717a;
+  --tw-prose-code: #111111;
+  --tw-prose-pre-code: #f4f4f5;
+  --tw-prose-pre-bg: #18181b;
+  --tw-prose-th-borders: #d4d4d8;
+  --tw-prose-td-borders: #e4e4e7;
 }
 
 .dark .tiptap-content {
   color: #E8E8E7;
+  --tw-prose-body: #E8E8E7;
+  --tw-prose-headings: #F4F4F5;
+  --tw-prose-lead: #D4D4D8;
+  --tw-prose-links: #93C5FD;
+  --tw-prose-bold: #F4F4F5;
+  --tw-prose-counters: #A1A1AA;
+  --tw-prose-bullets: #A1A1AA;
+  --tw-prose-hr: rgba(255, 255, 255, 0.12);
+  --tw-prose-quotes: #E8E8E7;
+  --tw-prose-quote-borders: rgba(255, 255, 255, 0.18);
+  --tw-prose-captions: #A1A1AA;
+  --tw-prose-code: #F4F4F5;
+  --tw-prose-pre-code: #E8E8E7;
+  --tw-prose-pre-bg: #18181B;
+  --tw-prose-th-borders: rgba(255, 255, 255, 0.16);
+  --tw-prose-td-borders: rgba(255, 255, 255, 0.10);
+}
+
+.tiptap-content :where(h1, h2, h3, h4, h5, h6, strong, b, em, i, u, s, blockquote, li, p) {
+  color: inherit;
+}
+
+.dark .tiptap-content :where(h1, h2, h3, h4, h5, h6) {
+  color: #F4F4F5;
 }
 
 .tiptap-content a {
@@ -728,11 +776,24 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   border: 1px solid #d1d5db;
   padding: 0.5rem 0.625rem;
   vertical-align: top;
+  position: relative;
 }
 
 .dark .tiptap-content th,
 .dark .tiptap-content td {
   border-color: rgba(255, 255, 255, 0.10);
+}
+
+.tiptap-content .selectedCell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(37, 99, 235, 0.14);
+  pointer-events: none;
+}
+
+.dark .tiptap-content .selectedCell::after {
+  background: rgba(96, 165, 250, 0.22);
 }
 
 .tiptap-content ul[data-type="taskList"] {
@@ -785,4 +846,122 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 }
 .fc .fc-event-resizer-end::after {
   right: 2px;
+}
+
+/* ── Tiptap Collaboration Cursors ── */
+.tiptap-content .collaboration-cursor__caret {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 2px solid;
+  border-right: 2px solid;
+  border-color: currentColor;
+  word-break: normal;
+  pointer-events: none;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+.tiptap-content .collaboration-cursor__label {
+  position: absolute;
+  top: -1.4em;
+  left: -2px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: normal;
+  user-select: none;
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 3px 3px 3px 0;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+@keyframes cursor-blink {
+  from, to { border-color: transparent }
+  50% { border-color: currentColor }
+}
+
+/* ── Inline Comment Marks ── */
+.tiptap-content span[data-comment-id] {
+  background-color: rgba(251, 191, 36, 0.20);
+  border-bottom: 2px solid rgba(245, 158, 11, 0.50);
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.tiptap-content span[data-comment-id]:hover {
+  background-color: rgba(251, 191, 36, 0.35);
+  border-bottom-color: rgba(245, 158, 11, 0.70);
+}
+
+.tiptap-content span[data-comment-id].comment-active {
+  background-color: rgba(251, 191, 36, 0.45);
+  border-bottom-color: #F59E0B;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.30);
+}
+
+.dark .tiptap-content span[data-comment-id] {
+  background-color: rgba(120, 80, 0, 0.25);
+  border-bottom-color: rgba(245, 158, 11, 0.40);
+}
+
+.dark .tiptap-content span[data-comment-id]:hover {
+  background-color: rgba(120, 80, 0, 0.40);
+  border-bottom-color: rgba(245, 158, 11, 0.60);
+}
+
+.dark .tiptap-content span[data-comment-id].comment-active {
+  background-color: rgba(120, 80, 0, 0.50);
+  border-bottom-color: #F59E0B;
+}
+
+/* ── Print Styles (A4 Page Layout and PDF Export) ── */
+@media print {
+  html, body, #__next, #root, [class*="h-full"], [class*="min-h-full"] {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  .flex, .flex-col, .flex-1 {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  .custom-scrollbar, [class*="overflow-y-auto"] {
+    overflow: visible !important;
+    height: auto !important;
+    position: static !important;
+  }
+
+  /* Force light mode styles on printing */
+  .dark {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  .dark .tiptap-content {
+    color: black !important;
+    --tw-prose-body: black;
+    --tw-prose-headings: black;
+    --tw-prose-links: black;
+    --tw-prose-bold: black;
+    --tw-prose-quotes: black;
+    --tw-prose-pre-code: black;
+    --tw-prose-pre-bg: white;
+    --tw-prose-th-borders: #d4d4d8;
+    --tw-prose-td-borders: #e4e4e7;
+  }
+
+  /* Standard A4 print margins */
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
 }
