@@ -53,6 +53,7 @@ import {
 import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/context/AuthContext";
+import { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
@@ -177,7 +178,7 @@ export default function WorkspaceDetailPage({
 
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const workspaceApiId = workspace?._id;
-  const { setCurrentWorkspace } = useWorkspaceStore();
+  const { setCurrentWorkspace, updateWorkspaceAvatar } = useWorkspaceStore();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(
     initialTab || "board",
@@ -506,6 +507,10 @@ export default function WorkspaceDetailPage({
   }, [issues, filters, workspace]);
 
   const uniqueAssignees = useAssignees(issues, workspace);
+  const bulkActionMembers = useMemo(
+    () => toAssigneePickerUsers(workspace?.members as any[] | undefined),
+    [workspace?.members],
+  );
   const workspacePermissions = useWorkspacePermission(
     workspaceApiId ?? "",
     workspace,
@@ -547,6 +552,17 @@ export default function WorkspaceDetailPage({
   const canUpdateWorkspace =
     isWorkspaceAdmin &&
     workspacePermissions.hasPermission(WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE);
+
+  const handleWorkspaceUpdated = useCallback(
+    (updatedWorkspace: Workspace) => {
+      setWorkspace(updatedWorkspace);
+      setCurrentWorkspace(updatedWorkspace as any);
+      if (updatedWorkspace._id && updatedWorkspace.avatar) {
+        updateWorkspaceAvatar(updatedWorkspace._id, updatedWorkspace.avatar);
+      }
+    },
+    [setCurrentWorkspace, updateWorkspaceAvatar],
+  );
 
   const {
     handleCreateIssue,
@@ -926,12 +942,114 @@ export default function WorkspaceDetailPage({
     toast.success(ids.length === 1 ? "Work item deleted" : "Work items deleted");
   };
 
+  const handleListBulkUpdate = async (ids: string[], updates: Partial<Issue>) => {
+    if (!workspaceApiId || ids.length === 0) return;
+
+    const idsToUpdate = new Set(ids);
+    const assigneeId =
+      Object.prototype.hasOwnProperty.call(updates, "assigneeId")
+        ? updates.assigneeId ?? null
+        : undefined;
+    const selectedMember = assigneeId
+      ? (workspace?.members ?? []).find((member: any) => {
+          const memberUser = getUserObject(member);
+          return getUserId(memberUser) === assigneeId;
+        })
+      : null;
+    const selectedMemberUser = selectedMember
+      ? getUserObject(selectedMember)
+      : null;
+    const assigneeName =
+      assigneeId && selectedMemberUser && typeof selectedMemberUser !== "string"
+        ? selectedMemberUser.fullName ||
+          selectedMemberUser.name ||
+          selectedMemberUser.email ||
+          assigneeId
+        : assigneeId
+          ? assigneeId
+          : "Unassigned";
+    const assigneeAvatar =
+      assigneeId && selectedMemberUser && typeof selectedMemberUser !== "string"
+        ? selectedMemberUser.avatar ||
+          selectedMemberUser.avatarUrl ||
+          selectedMemberUser.image
+        : undefined;
+
+    const normalizedUpdates: Partial<Issue> =
+      assigneeId !== undefined
+        ? {
+            ...updates,
+            assigneeId,
+            assignee: assigneeId ?? "U",
+            assigneeDisplayName: assigneeName,
+            assigneeAvatar,
+          }
+        : updates;
+    const applyUpdates = (current: Issue[] | undefined) =>
+      Array.isArray(current)
+        ? current.map((issue) =>
+            idsToUpdate.has(issue.id) ? { ...issue, ...normalizedUpdates } : issue,
+          )
+        : current;
+
+    setIssues((current) => applyUpdates(current) ?? []);
+    setSelectedIssue((current) =>
+      current && idsToUpdate.has(current.id)
+        ? { ...current, ...normalizedUpdates }
+        : current,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks", workspaceApiId] },
+      applyUpdates,
+    );
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: ["tasks-fallback-search", workspaceApiId] },
+      applyUpdates,
+    );
+
+    const results = await Promise.allSettled(
+      ids.map((taskId) =>
+        taskService.updateBoardTask(workspaceApiId, taskId, normalizedUpdates),
+      ),
+    );
+    const failedCount = results.filter((result) => result.status === "rejected").length;
+    const savedIssues = results
+      .filter((result): result is PromiseFulfilledResult<Issue> => result.status === "fulfilled")
+      .map((result) => result.value);
+
+    if (savedIssues.length > 0) {
+      const savedById = new Map(savedIssues.map((issue) => [issue.id, issue]));
+      const mergeSavedIssues = (current: Issue[] | undefined) =>
+        Array.isArray(current)
+          ? current.map((issue) => savedById.get(issue.id) ?? issue)
+          : current;
+
+      setIssues((current) => mergeSavedIssues(current) ?? []);
+      setSelectedIssue((current) =>
+        current ? savedById.get(current.id) ?? current : current,
+      );
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: ["tasks", workspaceApiId] },
+        mergeSavedIssues,
+      );
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: ["tasks-fallback-search", workspaceApiId] },
+        mergeSavedIssues,
+      );
+    }
+
+    if (failedCount > 0) {
+      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({
+        queryKey: ["tasks-fallback-search", workspaceApiId],
+      });
+      toast.error(`Could not update ${failedCount} work item${failedCount > 1 ? "s" : ""}`);
+    }
+  };
+
   const {
     toggleTaskSelection,
     toggleSprintSelection,
-    handleBulkStatusChange,
-    handleBulkMoveSprint,
-    handleBulkDelete,
   } = useSelectionHandlers({
     workspaceId: workspaceApiId ?? "",
     issues,
@@ -1050,6 +1168,7 @@ export default function WorkspaceDetailPage({
         setShowCreateIssue={handleOpenGlobalCreateIssue}
         canCreateTask={canCreateTask}
         canUpdateWorkspace={canUpdateWorkspace}
+        onWorkspaceUpdated={handleWorkspaceUpdated}
       />
 
       {/* Tabs */}
@@ -1227,6 +1346,7 @@ export default function WorkspaceDetailPage({
           setListGridDrawerOpen,
           updateIssueDirectly,
           handleUpdateIssue,
+          onBulkUpdateIds: handleListBulkUpdate,
           onBulkDeleteIds: handleListBulkDelete,
           onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
           canEditTask,
@@ -1345,11 +1465,11 @@ export default function WorkspaceDetailPage({
       <BulkActionBar
         selectedCount={selectedTaskIds.length}
         onClear={() => setSelectedTaskIds([])}
-        // @ts-ignore
-        onChangeStatus={handleBulkStatusChange}
-        onDelete={handleBulkDelete}
+        onBulkUpdate={(updates) => handleListBulkUpdate(selectedTaskIds, updates)}
+        onDelete={() => handleListBulkDelete(selectedTaskIds)}
+        members={bulkActionMembers}
         sprints={sprints}
-        onMoveSprint={handleBulkMoveSprint}
+        onMoveSprint={(sprintId) => handleListBulkUpdate(selectedTaskIds, { sprintId })}
         canEditTask={canEditTask}
         canDeleteTask={canDeleteTask}
         canMoveTask={canMoveTask}

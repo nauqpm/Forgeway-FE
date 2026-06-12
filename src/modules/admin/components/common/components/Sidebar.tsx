@@ -11,6 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
+import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
 import {
   LayoutDashboard,
   BookOpen,
@@ -273,9 +274,7 @@ const PopoverNavItem = ({
                               onMobileClose?.();
                             }}
                           >
-                            <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-xs font-bold">
-                              {workspace.name?.charAt(0) || "W"}
-                            </div>
+                            <WorkspaceAvatar workspace={workspace} size="sm" />
                             <div className="min-w-0">
                               <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors">
                                 {workspace.name}
@@ -592,18 +591,20 @@ export default function Sidebar({
                 {/* SUB NAV */}
                 {workspaceOpen && !collapsed && (
                   <div className="ml-6 mt-1 space-y-0.5">
-                    {sidebarVisibleWorkspaces.map((workspace) => (
-                      <Link
-                        key={workspace._id}
-                        href={`/workspaces/${workspace.key}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
-                      >
-                        <div className="w-4 h-4 rounded-[3px] bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.625rem] font-bold flex-shrink-0">
-                          {workspace.name?.charAt(0)}
-                        </div>
-                        <span className="truncate">{workspace.name}</span>
-                      </Link>
-                    ))}
+                    {sidebarVisibleWorkspaces.map((workspace) => {
+                      const routeKey = workspace.key || workspace.slug || workspace.id || workspace._id;
+
+                      return (
+                        <Link
+                          key={workspace.id || workspace._id || routeKey}
+                          href={`/workspaces/${routeKey}`}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+                        >
+                          <WorkspaceAvatar workspace={workspace} size="xs" />
+                          <span className="truncate">{workspace.name}</span>
+                        </Link>
+                      );
+                    })}
 
                     {hiddenSidebarWorkspaces.length > 0 && (
                       <button
@@ -669,13 +670,16 @@ export default function Sidebar({
         {/* Bottom: Workspace + Settings */}
         <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] p-3 space-y-1">
           {!collapsed && currentWorkspace && (
-            <div className="px-3 py-2 bg-[#F9F9F8] dark:bg-white/5 rounded-[6px] mb-2">
-              <p className="text-[0.625rem] text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em] font-semibold">
-                Workspace
-              </p>
-              <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
-                {currentWorkspace.name}
-              </p>
+            <div className="mb-2 flex items-center gap-2 rounded-[6px] bg-[#F9F9F8] px-3 py-2 dark:bg-white/5">
+              <WorkspaceAvatar workspace={currentWorkspace} size="sm" />
+              <div className="min-w-0">
+                <p className="text-[0.625rem] font-semibold uppercase tracking-[0.06em] text-[#ABABAB] dark:text-[#6B6B6B]">
+                  Workspace
+                </p>
+                <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
+                  {currentWorkspace.name}
+                </p>
+              </div>
             </div>
           )}
           <Link
@@ -766,9 +770,7 @@ export default function Sidebar({
                             : navInactiveClass
                         }`}
                       >
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-[#111111] dark:bg-[#E8E8E7] text-xs font-bold text-white dark:text-[#111111]">
-                          {workspace.name?.charAt(0) || workspace.key?.charAt(0) || "W"}
-                        </div>
+                        <WorkspaceAvatar workspace={workspace} size="md" />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[0.8125rem] font-semibold">{workspace.name || "Untitled workspace"}</p>
                           <p className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{workspace.key || workspace.slug || "Workspace"}</p>

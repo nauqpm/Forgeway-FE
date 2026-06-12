@@ -1,4 +1,5 @@
-﻿import { Extension } from "@tiptap/core";
+// Defines FontSize extension for the document editor, letting users change font sizes.
+import { Extension } from "@tiptap/core";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -24,8 +25,10 @@ export const FontSize = Extension.create({
               if (!attributes.fontSize) {
                 return {};
               }
-
-              return { style: `font-size: ${attributes.fontSize}` };
+              const fontSize = attributes.fontSize;
+              const hasUnit = /[a-zA-Z%]/.test(fontSize);
+              const normalizedFontSize = hasUnit ? fontSize : `${fontSize}px`;
+              return { style: `font-size: ${normalizedFontSize}` };
             },
           },
         },

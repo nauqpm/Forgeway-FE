@@ -114,3 +114,16 @@ export interface DocsState {
   deleteDocument: (id: string) => Promise<void>;
   renameDocument: (id: string, newTitle: string) => Promise<void>;
 }
+
+export interface DocumentVersion {
+  id: string;
+  pageId: string;
+  yjsState?: number[];
+  contentJson?: string;
+  htmlSnapshot: string;
+  label: string;
+  version: number;
+  createdBy: { _id: string; fullName: string };
+  createdAt: string;
+}
+

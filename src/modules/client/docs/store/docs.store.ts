@@ -1,3 +1,9 @@
+// Store managing document state in the docs module, 
+// including document list, selected document, expanded state of tree structure,
+// search queries, save and loading states, 
+// recent documents list, 
+// and methods to interact with APIs (create, update, save, delete, rename).
+
 import { create } from "zustand";
 import { toast } from "react-hot-toast";
 import { DocsState, Document } from "../types/docs.type";
@@ -241,7 +247,6 @@ export const useDocsStore = create<DocsState>((set, get) => ({
     try {
       await pagesService.updatePage(id, { title: newTitle });
     } catch (error) {
-      console.error(`Failed to rename document ${id}:`, error);
       toast.error(getErrorMessage(error, "Could not rename page"));
       set((current) => ({
         documents: current.documents.map((doc) => (doc.id === id ? oldDoc : doc)),
