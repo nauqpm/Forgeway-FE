@@ -7,6 +7,24 @@ import { useChatStore } from '@/stores/chatStore';
 import { getChannelsAPI, getChannelAPI } from '@/modules/client/chat/services/chatService';
 import toast from 'react-hot-toast';
 
+const fetchingChannels = new Set<string>();
+
+const fetchAndAddChannel = (channelId: string, addChannelAction: (channel: any) => void) => {
+  if (fetchingChannels.has(channelId)) return;
+  fetchingChannels.add(channelId);
+
+  getChannelAPI(channelId)
+    .then(channel => {
+      addChannelAction(channel);
+    })
+    .catch(err => {
+      console.error("Failed to fetch new channel details", err);
+    })
+    .finally(() => {
+      fetchingChannels.delete(channelId);
+    });
+};
+
 /**
  * Global component to handle all chat socket events.
  * This should be placed in a high-level layout to ensure listeners are always active.
@@ -46,11 +64,7 @@ export default function ChatRealtimeHandler() {
 
     // If it's a new DM channel not in our list, fetch and add it
     if (!channelExists) {
-      getChannelAPI(message.channelId).then(channel => {
-        addChannel(channel);
-      }).catch(err => {
-        console.error("Failed to fetch new channel details", err);
-      });
+      fetchAndAddChannel(message.channelId, addChannel);
     }
 
     if (isCurrentChannel) {
@@ -88,11 +102,7 @@ export default function ChatRealtimeHandler() {
     const channelExists = channels.some(c => c._id === data.channelId);
 
     if (!channelExists) {
-      getChannelAPI(data.channelId).then(channel => {
-        addChannel(channel);
-      }).catch(err => {
-        console.error("Failed to fetch new channel details", err);
-      });
+      fetchAndAddChannel(data.channelId, addChannel);
     } else {
       if (data.unreadCount !== undefined) {
         updateChannel(data.channelId, { 
