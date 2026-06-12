@@ -18,8 +18,6 @@ import type { WorkspaceSampleAvatar } from "../../utils/workspaceAvatar";
 import WorkspaceAvatar from "./WorkspaceAvatar";
 import WorkspaceAvatarPicker from "./WorkspaceAvatarPicker";
 import { useChatStore } from "@/stores/chatStore";
-import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
-import { getChannelsAPI } from "@/modules/client/chat/services/chatService";
 
 interface HeaderProps {
   workspace: Workspace;
@@ -47,19 +45,6 @@ const Header = ({
     );
     return ch ? ch.unreadCount || 0 : 0;
   }, [channels, workspace._id, workspaceId]);
-
-  React.useEffect(() => {
-    const user = useAuthStore.getState().user;
-    if (channels.length === 0 && user) {
-      getChannelsAPI()
-        .then((allChannels) => {
-          useChatStore.getState().setChannels(allChannels);
-        })
-        .catch((err) => {
-          console.error("Failed to load channels in Workspace Header", err);
-        });
-    }
-  }, [channels.length]);
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useChatStore, Channel } from '@/stores/chatStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
@@ -24,16 +24,21 @@ export default function ChatSidebar() {
   const searchParams = useSearchParams();
   const paramWorkspaceId = searchParams.get('workspaceId');
 
+  const lastWorkspaceIdRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (paramWorkspaceId && channels.length > 0) {
-      const wsChannel = channels.find(
-        c => c.type === 'workspace' && String(c.workspaceId) === String(paramWorkspaceId)
-      );
-      if (wsChannel && activeChannelId !== wsChannel._id) {
-        setActiveChannel(wsChannel._id);
+      if (lastWorkspaceIdRef.current !== paramWorkspaceId) {
+        const wsChannel = channels.find(
+          c => c.type === 'workspace' && String(c.workspaceId) === String(paramWorkspaceId)
+        );
+        if (wsChannel) {
+          setActiveChannel(wsChannel._id);
+          lastWorkspaceIdRef.current = paramWorkspaceId;
+        }
       }
     }
-  }, [paramWorkspaceId, channels, activeChannelId, setActiveChannel]);
+  }, [paramWorkspaceId, channels, setActiveChannel]);
 
   const fetchSidebarData = useCallback(async () => {
     try {

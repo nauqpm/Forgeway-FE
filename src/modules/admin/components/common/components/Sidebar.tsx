@@ -10,8 +10,6 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 import { useChatStore } from "@/stores/chatStore";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
-import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
-import { getChannelsAPI } from "@/modules/client/chat/services/chatService";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
@@ -436,19 +434,6 @@ export default function Sidebar({
   const totalUnreadCount = useMemo(() => {
     return channels.reduce((sum, ch) => sum + (ch.unreadCount || 0), 0);
   }, [channels]);
-
-  useEffect(() => {
-    const authUser = useAuthStore.getState().user;
-    if (channels.length === 0 && authUser) {
-      getChannelsAPI()
-        .then((allChannels) => {
-          useChatStore.getState().setChannels(allChannels);
-        })
-        .catch((err) => {
-          console.error("Failed to load channels in Sidebar", err);
-        });
-    }
-  }, [channels.length]);
 
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
