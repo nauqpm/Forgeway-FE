@@ -323,8 +323,8 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
         </select>
 
         <select
-          className="h-8 rounded border border-gray-200 bg-white px-2 text-xs dark:border-gray-700 dark:bg-gray-900"
-          value={activeTextStyle.fontSize}
+          className={selectCls}
+          value={selectedFontSize}
           onChange={(e) => {
             const value = e.target.value;
             runWithUndoBoundary(() => {
@@ -332,7 +332,6 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
             });
           }}
         >
-          <option value="">Size</option>
           {FONT_SIZES.map((size) => (
             <option key={size} value={size} className={optionCls}>{size.replace("px", "")}</option>
           ))}
