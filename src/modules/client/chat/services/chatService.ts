@@ -1,4 +1,4 @@
-import api from '@/config/api';
+import api from '@/lib/axiosIns';
 import type { Channel, Message } from '@/stores/chatStore';
 
 const normalizeArray = <T>(res: any): T[] => {

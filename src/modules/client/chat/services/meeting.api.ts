@@ -1,4 +1,4 @@
-import api from '@/config/api';
+import api from '@/lib/axiosIns';
 import axios from 'axios';
 import { MeetingType } from '../types/webrtc.types';
 
