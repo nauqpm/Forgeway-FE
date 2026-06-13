@@ -345,7 +345,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="workspace-column flex-shrink-0 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] flex flex-col max-h-full border border-[#EAEAEA] dark:border-white/[0.06] group/column"
+                      className="workspace-column flex-shrink-0 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] flex flex-col max-h-full border border-[#EAEAEA] dark:border-white/[0.06] group/column overflow-hidden"
                     >
                       <div
                         {...(filters.archived ? {} : provided.dragHandleProps)}
@@ -402,7 +402,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 flex-1 overflow-visible space-y-3 min-h-[9.375rem] transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
+                            className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[9.375rem] transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
                           >
                             {getColumnIssues(column)
                               .map((issue, issueIndex) => (

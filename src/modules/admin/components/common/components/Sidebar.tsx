@@ -8,6 +8,7 @@ import appleIcon from "../../../../../../app/apple-icon.png";
 import Image from "next/image";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
+import { useChatStore } from "@/stores/chatStore";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import api from '@/lib/axiosIns';
 import { apiRoutes } from "@/config/apiRoutes";
@@ -33,7 +34,8 @@ import {
   Columns,
   FolderOpen,
   Sparkles,
-} from 'lucide-react';
+  MessageCircle,
+} from "lucide-react";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -43,10 +45,11 @@ interface SidebarProps {
 }
 
 const mainNav = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
-  { icon: Sparkles, label: 'For You', href: '/for-you' },
-  { icon: Clock7, label: 'Recent', href: '/recent' },
-  { icon: Star, label: 'Starred', href: '/starred' },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: MessageCircle, label: "Chat", href: "/chat" },
+  { icon: Sparkles, label: "For You", href: "/for-you" },
+  { icon: Clock7, label: "Recent", href: "/recent" },
+  { icon: Star, label: "Starred", href: "/starred" },
   {
     icon: BookOpen,
     label: 'Workspaces',
@@ -86,12 +89,14 @@ const NavItem = ({
   pathname,
   onMobileClose,
   collapsed,
+  badgeContent,
 }: {
   item: (typeof mainNav)[0];
   showBadge?: boolean;
   pathname: string;
   onMobileClose: () => void;
   collapsed: boolean;
+  badgeContent?: React.ReactNode;
 }) => {
   const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
   return (
@@ -108,12 +113,19 @@ const NavItem = ({
       {!collapsed && (
         <>
           <span className="text-[0.8125rem] font-medium flex-1 text-left">{item.label}</span>
-          {showBadge && item.badge && (
-            <span className="text-[0.625rem] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
-              {item.badge}
-            </span>
+          {badgeContent ? (
+            badgeContent
+          ) : (
+            showBadge && item.badge && (
+              <span className="text-[0.625rem] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
+                {item.badge}
+              </span>
+            )
           )}
         </>
+      )}
+      {collapsed && badgeContent && (
+        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#EF4444] rounded-full border border-white dark:border-[#202020]" />
       )}
       {isActive && (
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-r-full" />
@@ -634,7 +646,20 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const pathname = usePathname();
   const { currentWorkspace, workspaces: sidebarWorkspaces } = useWorkspaceStore();
   const { user } = useAuth();
-  const [adminOpen, setAdminOpen] = useState(pathname.startsWith('/dashboard'));
+  const channels = useChatStore((state) => state.channels);
+
+  const getWorkspaceUnread = (wsId: string) => {
+    const ch = channels.find(
+      (c) => c.type === "workspace" && String(c.workspaceId) === String(wsId)
+    );
+    return ch ? ch.unreadCount : 0;
+  };
+
+  const totalUnreadCount = useMemo(() => {
+    return channels.reduce((sum, ch) => sum + (ch.unreadCount || 0), 0);
+  }, [channels]);
+
+  const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
   const [forYouWorkspaces, setForYouWorkspaces] = useState<any[]>([]);
@@ -787,13 +812,28 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
             {/* Dashboard */}
             <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
 
-            {/* Workspaces */}
-            <div>
-              <button
-                onClick={() => setWorkspaceOpen(!workspaceOpen)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors ${collapsed ? 'justify-center' : ''}`}
-              >
-                <BookOpen className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
+              {/* Chat */}
+              <NavItem 
+                item={mainNav[1]} 
+                pathname={pathname} 
+                onMobileClose={onMobileClose} 
+                collapsed={collapsed}
+                badgeContent={
+                  totalUnreadCount > 0 ? (
+                    <span className="flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full leading-none shrink-0">
+                      {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
+                    </span>
+                  ) : undefined
+                }
+              />
+
+              {/* Workspaces */}
+              <div>
+                <button
+                  onClick={() => setWorkspaceOpen(!workspaceOpen)}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors ${collapsed ? "justify-center" : ""}`}
+                >
+                  <BookOpen className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
 
                   {!collapsed && (
                     <>
@@ -1060,32 +1100,39 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
               ) : (
                 <div className="space-y-0.5">
                   {visibleMoreWorkspaces.map((workspace) => {
-                    const routeKey = workspace.key || workspace.slug || workspace._id || workspace.id;
+                    const routeKey = workspace.key || workspace.slug || workspace._id || (workspace as any).id;
                     const isActiveWorkspace =
                       currentWorkspace?._id === workspace._id ||
                       currentWorkspace?.key === workspace.key ||
                       currentWorkspace?.slug === workspace.slug;
+                    const wsId = workspace._id || (workspace as any).id;
+                    const hasUnread = getWorkspaceUnread(wsId) > 0;
 
                     return (
                       <Link
-                        key={workspace._id || workspace.id || routeKey}
+                        key={workspace._id || (workspace as any).id || routeKey}
                         href={`/workspaces/${routeKey}`}
                         onClick={() => {
                           setActivePopover(null);
                           setMoreWorkspaceSearch("");
                           onMobileClose();
                         }}
-                        className={`flex w-full items-center gap-3 rounded-[6px] p-2 text-left transition-colors ${
+                        className={`flex w-full items-center justify-between rounded-[6px] p-2 text-left transition-colors ${
                           isActiveWorkspace
                             ? navActiveClass
                             : navInactiveClass
                         }`}
                       >
-                        <WorkspaceAvatar workspace={workspace} size="md" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[0.8125rem] font-semibold">{workspace.name || "Untitled workspace"}</p>
-                          <p className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{workspace.key || workspace.slug || "Workspace"}</p>
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <WorkspaceAvatar workspace={workspace} size="md" />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-[0.8125rem] font-semibold">{workspace.name || "Untitled workspace"}</p>
+                            <p className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{workspace.key || workspace.slug || "Workspace"}</p>
+                          </div>
                         </div>
+                        {hasUnread && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] shrink-0 ml-2 mr-1" />
+                        )}
                       </Link>
                     );
                   })}

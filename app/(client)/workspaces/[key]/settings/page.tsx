@@ -423,7 +423,8 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
   }
 
   return (
-    <div className="workspace-surface max-w-[min(100%,64rem)] pb-12">
+    <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)]">
+      <div className="workspace-surface max-w-[min(100%,64rem)] pb-12">
       <div className="flex items-center gap-3 mb-6">
         <Link
           href={`/workspaces/${workspaceKey}`}
@@ -525,6 +526,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
             />
           )}
         </div>
+      </div>
       </div>
     </div>
   );

@@ -20,14 +20,14 @@ const getMemberUser = (member: WorkspaceMember) => {
     return { id: user, name: user };
   }
 
-  const id = user._id ?? user.id ?? "";
-  const name = user.fullName || user.name || user.email || id;
+  const id = user?._id ?? user?.id ?? "";
+  const name = user?.fullName || user?.name || user?.email || id;
 
   return {
     id,
     name,
-    email: user.email,
-    avatar: user.avatar || user.avatarUrl || user.image,
+    email: user?.email,
+    avatar: user?.avatar || user?.avatarUrl || user?.image,
   };
 };
 

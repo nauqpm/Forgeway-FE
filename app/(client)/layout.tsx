@@ -10,13 +10,25 @@ import NotificationPanel from "@/modules/admin/components/common/components/Noti
 import { notificationService } from "@/common/services/notification.service";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 import { useWorkspaceRealtime } from "@/hooks/realtime/use-workspace-realtime";
-import { LayoutDashboard, Loader2, Menu, Sun, Moon, Monitor, User, Settings, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Loader2,
+  Menu,
+  Sun,
+  Moon,
+  Monitor,
+  User,
+  Settings,
+  LogOut,
+} from "lucide-react";
 import Image from "next/image";
 import appleIcon from "../apple-icon.png";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "@/hooks/useTheme";
 import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
+
+import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
 
 type SearchAssigneeUser = {
   _id?: string;
@@ -31,7 +43,13 @@ type SearchAssigneeUser = {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
-  const { setCurrentWorkspace, currentWorkspace, setWorkspaces, workspaces, workspacesLoaded } = useWorkspaceStore();
+  const {
+    setCurrentWorkspace,
+    currentWorkspace,
+    setWorkspaces,
+    workspaces,
+    workspacesLoaded,
+  } = useWorkspaceStore();
   const { theme, setTheme } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -42,8 +60,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
   const pathname = usePathname();
-  const workspaceKey = pathname?.startsWith("/workspaces/") ? pathname.split("/")[2] : "";
-  const activeWorkspaceKey = workspaceKey || currentWorkspace?.key || currentWorkspace?.slug || "AL";
+  const workspaceKey = pathname?.startsWith("/workspaces/")
+    ? pathname.split("/")[2]
+    : "";
+  const activeWorkspaceKey =
+    workspaceKey || currentWorkspace?.key || currentWorkspace?.slug || "AL";
   const [taskSearchFilters, setTaskSearchFilters] = useState<Filters>({
     search: "",
     assigneeId: null,
@@ -64,7 +85,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isTaskSearchReady, setIsTaskSearchReady] = useState(false);
   const taskSearchHydrationPathRef = useRef<string | null>(null);
 
-  const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
+  const searchProjects = (
+    workspaces.length > 0
+      ? workspaces
+      : currentWorkspace
+        ? [currentWorkspace]
+        : []
+  )
     .filter(Boolean)
     .map((workspace) => {
       const id = workspace._id || (workspace as { id?: string }).id;
@@ -77,7 +104,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     .filter((member) => member && member.userId)
     .map((member) => {
       const memberUser = member.userId;
-      const memberUserProfile = typeof memberUser === "string" ? null : (memberUser as SearchAssigneeUser);
+      const memberUserProfile =
+        typeof memberUser === "string"
+          ? null
+          : (memberUser as SearchAssigneeUser);
       const memberId =
         typeof memberUser === "string"
           ? memberUser
@@ -85,22 +115,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const memberName =
         typeof memberUser === "string"
           ? memberUser
-          : memberUserProfile?.fullName || memberUserProfile?.name || memberUserProfile?.email || memberId;
+          : memberUserProfile?.fullName ||
+            memberUserProfile?.name ||
+            memberUserProfile?.email ||
+            memberId;
       const memberAvatar =
         typeof memberUser === "string"
           ? undefined
-          : memberUserProfile?.avatar || memberUserProfile?.avatarUrl || memberUserProfile?.image;
+          : memberUserProfile?.avatar ||
+            memberUserProfile?.avatarUrl ||
+            memberUserProfile?.image;
 
       return {
         id: memberId,
-        name: memberId === user?.id ? user?.fullName || user?.email || memberName : memberName,
+        name:
+          memberId === user?.id
+            ? user?.fullName || user?.email || memberName
+            : memberName,
         avatar: memberAvatar,
       };
     });
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target as Node)
+      ) {
         setShowUserMenu(false);
       }
     };
@@ -172,7 +213,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       ...prev,
       workspaceKey,
       workspaceKeys:
-        csv(params.get("workspaceKeys")).length > 0 ? csv(params.get("workspaceKeys")) : defaultSearchWorkspaceKeys,
+        csv(params.get("workspaceKeys")).length > 0
+          ? csv(params.get("workspaceKeys"))
+          : defaultSearchWorkspaceKeys,
       search: params.get("search") || "",
       taskKey: params.get("taskKey"),
       statuses: csv(params.get("status")).map((item) => {
@@ -190,24 +233,34 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }));
     taskSearchHydrationPathRef.current = hydrationPath;
     setIsTaskSearchReady(true);
-  }, [pathname, workspaceKey, workspacesLoaded, defaultSearchWorkspaceKeys.join(",")]);
+  }, [
+    pathname,
+    workspaceKey,
+    workspacesLoaded,
+    defaultSearchWorkspaceKeys.join(","),
+  ]);
 
   useEffect(() => {
-    if (!workspaceKey || !isTaskSearchReady || typeof window === "undefined") return;
+    if (!workspaceKey || !isTaskSearchReady || typeof window === "undefined")
+      return;
 
     const params = new URLSearchParams(window.location.search);
     const setOrDelete = (key: string, value?: string | null) => {
       if (value) params.set(key, value);
       else params.delete(key);
     };
-    const normalize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "");
+    const normalize = (value: string) =>
+      value.trim().toLowerCase().replace(/\s+/g, "");
 
     setOrDelete("search", taskSearchFilters.search.trim());
     setOrDelete("taskKey", taskSearchFilters.taskKey);
     params.delete("workspaceKeys");
     setOrDelete("status", taskSearchFilters.statuses.map(normalize).join(","));
     setOrDelete("type", taskSearchFilters.types.map(normalize).join(","));
-    setOrDelete("priority", taskSearchFilters.priorities.map(normalize).join(","));
+    setOrDelete(
+      "priority",
+      taskSearchFilters.priorities.map(normalize).join(","),
+    );
     setOrDelete("assigneeId", taskSearchFilters.assignees.join(","));
     setOrDelete("reporterId", taskSearchFilters.reporterId);
     setOrDelete("lastUpdated", taskSearchFilters.lastUpdated);
@@ -217,8 +270,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     else params.delete("archived");
 
     const query = params.toString();
-    window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
-    window.dispatchEvent(new CustomEvent("taskFiltersChanged", { detail: taskSearchFilters }));
+    window.history.replaceState(
+      null,
+      "",
+      query ? `${pathname}?${query}` : pathname,
+    );
+    window.dispatchEvent(
+      new CustomEvent("taskFiltersChanged", { detail: taskSearchFilters }),
+    );
   }, [isTaskSearchReady, pathname, taskSearchFilters, workspaceKey]);
 
   if (isLoading) {
@@ -226,7 +285,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-[#F2FAFF] dark:bg-[#202020]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
-          <p className="text-sm text-[#787774] dark:text-[#9B9A97]">Authenticating...</p>
+          <p className="text-sm text-[#787774] dark:text-[#9B9A97]">
+            Authenticating...
+          </p>
         </div>
       </div>
     );
@@ -235,7 +296,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-[#F2FAFF] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">
+    <div className="h-screen overflow-hidden bg-[#F2FAFF] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">
       <Sidebar
         collapsed={sidebarCollapsed}
         onCollapse={setSidebarCollapsed}
@@ -245,7 +306,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <div
         data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"}
-        className="app-shell-offset transition-all duration-300"
+        className="app-shell-offset transition-all duration-300 flex flex-col h-full"
       >
         <header className="app-header bg-white dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -260,7 +321,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* Logo in topbar — desktop only, slides in when sidebar is collapsed */}
             <div
               className={`hidden lg:flex items-center gap-2 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
-                sidebarCollapsed ? "max-w-[16.25rem] opacity-100" : "max-w-0 opacity-0 pointer-events-none"
+                sidebarCollapsed
+                  ? "max-w-[16.25rem] opacity-100"
+                  : "max-w-0 opacity-0 pointer-events-none"
               }`}
             >
               <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1">
@@ -296,7 +359,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             {/* Theme toggle */}
             <button
-              onClick={() => setTheme(theme === "light" ? "dark" : theme === "dark" ? "system" : "light")}
+              onClick={() =>
+                setTheme(
+                  theme === "light"
+                    ? "dark"
+                    : theme === "dark"
+                      ? "system"
+                      : "light",
+                )
+              }
               className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
               title={`Theme: ${theme}`}
             >
@@ -329,7 +400,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </svg>
               {unreadNotificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[#9F2F2D] text-white text-[0.625rem] leading-5 rounded-full text-center font-semibold">
-                  {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+                  {unreadNotificationCount > 99
+                    ? "99+"
+                    : unreadNotificationCount}
                 </span>
               )}
             </button>
@@ -341,9 +414,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 className="w-9 h-9 rounded-full overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] hover:ring-2 hover:ring-[#2563EB]/25 transition flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white text-sm font-medium"
               >
                 {user?.avatar ? (
-                  <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+                  <img
+                    src={user.avatar}
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <span>{user?.fullName?.charAt(0).toUpperCase() ?? user?.email?.charAt(0).toUpperCase() ?? "U"}</span>
+                  <span>
+                    {user?.fullName?.charAt(0).toUpperCase() ??
+                      user?.email?.charAt(0).toUpperCase() ??
+                      "U"}
+                  </span>
                 )}
               </button>
 
@@ -353,7 +434,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
                       {user?.fullName ?? "User"}
                     </p>
-                    <p className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">{user?.email}</p>
+                    <p className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">
+                      {user?.email}
+                    </p>
                   </div>
                   <button
                     onClick={() => {
@@ -405,8 +488,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           />
         )}
 
-        <main className="app-main">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+          {children}
+        </main>
       </div>
+      <ChatRealtimeHandler />
     </div>
   );
 }
