@@ -50,8 +50,7 @@ export const useAuth = () => {
     clearAuth,
   } = useAuthStore();
   const { setMfaChallenge } = useMfaStore();
-  const { resetFailedAttempts, setLockout, setSuspendedMessage } =
-    useSecurityStore();
+  const { resetFailedAttempts } = useSecurityStore();
   const { setGlobalPermissions } = usePermissionStore();
 
   const login = useCallback(
@@ -102,44 +101,18 @@ export const useAuth = () => {
       } catch (error: unknown) {
         const err = error as { response?: { data?: AuthApiError } };
         const errorCode = err.response?.data?.code;
-        const details = err.response?.data?.details;
-        const maxAttempts = Number(details?.maxAttempts ?? 5);
-        const remainingAttempts = Number(details?.remainingAttempts ?? maxAttempts);
-        const lockedUntil = details?.lockedUntil as string | undefined;
 
-        if (errorCode === AuthErrorCode.ACCOUNT_LOCKED) {
-          setLockout({
-            email: data.email,
-            isLocked: true,
-            remainingAttempts,
-            maxAttempts,
-            lockedUntil,
-          });
-          toast.error(
-            'Account has been temporarily locked due to too many failed attempts.',
-          );
-        } else if (
-          errorCode === AuthErrorCode.USER_SUSPENDED ||
-          errorCode === AuthErrorCode.USER_DEACTIVATED
-        ) {
-          setSuspendedMessage('Account has been locked');
-          toast.error('Account has been locked or suspended.');
-        } else if (errorCode === AuthErrorCode.INVALID_CREDENTIALS) {
-          setLockout({
-            email: data.email,
-            isLocked: false,
-            remainingAttempts,
-            maxAttempts,
-          });
-          toast.error(
-            remainingAttempts > 0
-              ? `Email or password is incorrect. ${remainingAttempts} attempt(s) remaining.`
-              : 'Email or password is incorrect.',
-          );
-        } else if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED) {
+        if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED) {
           toast.error('Please verify your email before signing in.');
         } else if (errorCode === AuthErrorCode.RATE_LIMITED) {
           toast.error('Too many sign-in attempts. Please wait a moment and try again.');
+        } else if (
+          errorCode === AuthErrorCode.INVALID_CREDENTIALS ||
+          errorCode === AuthErrorCode.ACCOUNT_LOCKED ||
+          errorCode === AuthErrorCode.USER_SUSPENDED ||
+          errorCode === AuthErrorCode.USER_DEACTIVATED
+        ) {
+          toast.error('Email or password is incorrect.');
         } else {
           toast.error('Sign-in failed. Please try again later.');
         }
@@ -155,8 +128,6 @@ export const useAuth = () => {
       setLoading,
       setMfaChallenge,
       resetFailedAttempts,
-      setLockout,
-      setSuspendedMessage,
       setGlobalPermissions,
     ],
   );
@@ -182,25 +153,40 @@ export const useAuth = () => {
         return response;
       } catch (error: unknown) {
         const err = error as {
-          response?: { data?: AuthApiError & { error?: string } };
+          response?: { data?: AuthApiError & { error?: string; message?: string | string[] } };
         };
         const errorCode = err.response?.data?.code || err.response?.data?.error;
+        const rawMessage = err.response?.data?.message;
+        const apiMessage = Array.isArray(rawMessage)
+          ? rawMessage[0]
+          : typeof rawMessage === 'string'
+            ? rawMessage
+            : undefined;
 
         if (errorCode === AuthErrorCode.EMAIL_ALREADY_EXISTS) {
           toast.error('Email already exists. Please use another email.');
-        } else if (errorCode === AuthErrorCode.USER_SUSPENDED) {
-          toast.error('Account has been suspended.');
+        } else if (errorCode === AuthErrorCode.ACCOUNT_LOCKED) {
+          toast.error(
+            apiMessage ||
+              'Account has been temporarily locked due to too many failed attempts.',
+          );
+        } else if (
+          errorCode === AuthErrorCode.USER_SUSPENDED ||
+          errorCode === AuthErrorCode.USER_DEACTIVATED
+        ) {
+          toast.error(apiMessage || 'Account has been suspended.');
         } else if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED) {
-          toast.error('Please verify your email before registering.');
+          toast.error(apiMessage || 'Please verify your email before registering.');
           router.push(
             `${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`,
           );
         } else if (errorCode === AuthErrorCode.RATE_LIMITED) {
           toast.error(
-            'Too many registration attempts. Please wait a moment and try again.',
+            apiMessage ||
+              'Too many registration attempts. Please wait a moment and try again.',
           );
         } else {
-          toast.error('Registration failed. Please try again later.');
+          toast.error(apiMessage || 'Registration failed. Please try again later.');
         }
 
         throw error;

@@ -24,6 +24,7 @@ export interface Message {
   replyToId?: string;
   createdAt: string;
   updatedAt?: string;
+  deletedAt?: string;
   reactions?: Record<string, string[]>; // emoji: [userIds]
 }
 
@@ -35,6 +36,7 @@ export interface Channel {
   workspaceId?: string;
   unreadCount: number;
   lastMessage?: Message;
+  members?: ChatUser[]; // Add members field
 }
 
 interface ChatStore {
@@ -44,7 +46,9 @@ interface ChatStore {
   typingUsers: Record<string, Record<string, number>>; // channelId: { userId: timestamp }
   
   setChannels: (channels: Channel[]) => void;
+  addChannel: (channel: Channel) => void;
   updateChannel: (channelId: string, updates: Partial<Channel>) => void;
+  incrementUnread: (channelId: string) => void;
   setActiveChannel: (channelId: string | null) => void;
   
   setMessages: (channelId: string, messages: Message[]) => void;
@@ -65,8 +69,19 @@ export const useChatStore = create<ChatStore>((set) => ({
 
   setChannels: (channels) => set({ channels }),
   
+  addChannel: (channel) => set((state) => {
+    if (state.channels.some((c) => c._id === channel._id)) return state;
+    return { channels: [...state.channels, channel] };
+  }),
+  
   updateChannel: (channelId, updates) => set((state) => ({
     channels: state.channels.map((c) => c._id === channelId ? { ...c, ...updates } : c)
+  })),
+
+  incrementUnread: (channelId) => set((state) => ({
+    channels: state.channels.map((c) =>
+      c._id === channelId ? { ...c, unreadCount: (c.unreadCount || 0) + 1 } : c
+    )
   })),
 
   setActiveChannel: (activeChannelId) => set({ activeChannelId }),

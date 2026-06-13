@@ -1,3 +1,5 @@
+// Component representing link editor popover,
+// shown when editing an existing link or inserting a new link in the document.
 "use client";
 
 import { Editor } from "@tiptap/react";
@@ -5,6 +7,7 @@ import { ExternalLink, Link as LinkIcon, Trash2, X } from "lucide-react";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "react-hot-toast";
+import { stopUndoCapturing } from "./undoCapture";
 
 type LinkEditorPopoverProps = {
   editor: Editor;
@@ -24,6 +27,9 @@ const VIEWPORT_MARGIN = 12;
 const normalizeLinkUrl = (raw: string) => {
   const input = raw.trim();
   if (!input) return "";
+  if (/^(javascript:|data:)/i.test(input)) {
+    return "";
+  }
   if (/^(mailto:|tel:)/i.test(input)) return input;
   const withProtocol = /^https?:\/\//i.test(input) ? input : `https://${input}`;
   try {
@@ -92,7 +98,9 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
   }, [anchorEl, onClose, updatePosition]);
 
   const removeLink = () => {
+    stopUndoCapturing(editor);
     editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    stopUndoCapturing(editor);
     onClose();
   };
 
@@ -112,16 +120,22 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
     const { empty } = editor.state.selection;
 
     if (empty && !editor.isActive("link")) {
+      stopUndoCapturing(editor);
       editor.chain().focus().insertContent({ type: "text", text: label, marks: [{ type: "link", attrs }] }).run();
+      stopUndoCapturing(editor);
       onClose();
       return;
     }
     if (!empty && displayText.trim()) {
+      stopUndoCapturing(editor);
       editor.chain().focus().deleteSelection().insertContent({ type: "text", text: label, marks: [{ type: "link", attrs }] }).run();
+      stopUndoCapturing(editor);
       onClose();
       return;
     }
+    stopUndoCapturing(editor);
     editor.chain().focus().extendMarkRange("link").setLink(attrs).run();
+    stopUndoCapturing(editor);
     onClose();
   };
 

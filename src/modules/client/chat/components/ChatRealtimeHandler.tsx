@@ -1,9 +1,31 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { chatSocketClient } from '@/lib/socket/chat.client';
 import { SOCKET_EVENTS } from '@/lib/socket/socket.events';
 import { useChatStore } from '@/stores/chatStore';
+import { getChannelsAPI, getChannelAPI } from '@/modules/client/chat/services/chatService';
+import toast from 'react-hot-toast';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+
+const fetchingChannels = new Set<string>();
+
+const fetchAndAddChannel = (channelId: string, addChannelAction: (channel: any) => void) => {
+  if (fetchingChannels.has(channelId)) return;
+  fetchingChannels.add(channelId);
+
+  getChannelAPI(channelId)
+    .then(channel => {
+      addChannelAction(channel);
+      chatSocketClient.joinChannel(channelId);
+    })
+    .catch(err => {
+      console.error("Failed to fetch new channel details", err);
+    })
+    .finally(() => {
+      fetchingChannels.delete(channelId);
+    });
+};
 
 /**
  * Global component to handle all chat socket events.
@@ -16,16 +38,29 @@ export default function ChatRealtimeHandler() {
     deleteMessage, 
     setTyping, 
     updateChannel,
-    channels
+    incrementUnread,
+    channels,
+    addChannel
   } = useChatStore();
 
-  // Automatically join all channels when they are loaded to receive background updates
+  const user = useAuthStore(state => state.user);
+  const setChannels = useChatStore(state => state.setChannels);
+
   useEffect(() => {
-    if (channels && channels.length > 0) {
-      const channelIds = channels.map(c => c._id);
-      chatSocketClient.joinChannels(channelIds);
-    }
-  }, [channels]); // Runs whenever the channel list changes (e.g., after getChannelsAPI)
+    if (!user) return;
+    getChannelsAPI()
+      .then(allChannels => {
+        setChannels(allChannels);
+        const channelIds = allChannels.map(c => c._id);
+        chatSocketClient.joinChannels(channelIds);
+      })
+      .catch(err => {
+        console.error("Failed to load channels in background", err);
+      });
+  }, [user, setChannels]);
+
+  const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
 
   const markAsRead = useCallback((channelId: string) => {
     const socket = chatSocketClient.getSocket();
@@ -43,18 +78,21 @@ export default function ChatRealtimeHandler() {
     
     const { activeChannelId, channels } = useChatStore.getState();
     const isCurrentChannel = activeChannelId === message.channelId;
+    const channelExists = channels.some(c => c._id === message.channelId);
+
+    // If it's a new DM channel not in our list, fetch and add it
+    if (!channelExists) {
+      fetchAndAddChannel(message.channelId, addChannel);
+    }
 
     if (isCurrentChannel) {
       markAsRead(message.channelId);
     } else {
-      const channel = channels.find(c => c._id === message.channelId);
-      updateChannel(message.channelId, { 
-        unreadCount: (channel?.unreadCount || 0) + 1
-      });
+      incrementUnread(message.channelId);
     }
     
     updateChannel(message.channelId, { lastMessage: message });
-  }, [addMessage, updateChannel, markAsRead]);
+  }, [addMessage, updateChannel, incrementUnread, markAsRead, addChannel]);
 
   const handleMessageEdited = useCallback((envelope: any) => {
     const message = envelope.data || envelope;
@@ -77,14 +115,65 @@ export default function ChatRealtimeHandler() {
   const handleUnreadUpdate = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.channelId) return;
-    updateChannel(data.channelId, { unreadCount: data.unreadCount });
-  }, [updateChannel]);
+
+    const { channels } = useChatStore.getState();
+    const channelExists = channels.some(c => c._id === data.channelId);
+
+    if (!channelExists) {
+      fetchAndAddChannel(data.channelId, addChannel);
+    } else {
+      if (data.unreadCount !== undefined) {
+        updateChannel(data.channelId, { 
+          unreadCount: data.unreadCount,
+          ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
+        });
+      } else if (data.increment) {
+        const existingChannel = channels.find(c => c._id === data.channelId);
+        const currentCount = existingChannel?.unreadCount || 0;
+        updateChannel(data.channelId, { 
+          unreadCount: currentCount + data.increment,
+          ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
+        });
+      }
+    }
+  }, [updateChannel, addChannel]);
 
   const handleReactionUpdated = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.messageId || !data?.channelId) return;
     updateMessage(data.channelId, data.messageId, { reactions: data.reactions });
   }, [updateMessage]);
+
+  const handleRateLimited = useCallback((payload: { retryAfterMs?: number }) => {
+    if (rateLimitIntervalRef.current) {
+      clearInterval(rateLimitIntervalRef.current);
+    }
+
+    const retryAfterMs = payload?.retryAfterMs ?? 10000;
+    const toastId = "chat-rate-limit-toast";
+    let timeLeft = Math.ceil(retryAfterMs / 1000);
+
+    toast.error(`Bạn đang thao tác quá nhanh. Vui lòng thử lại sau ${timeLeft} giây.`, {
+      id: toastId,
+      duration: retryAfterMs,
+    });
+
+    rateLimitIntervalRef.current = setInterval(() => {
+      timeLeft -= 1;
+      if (timeLeft <= 0) {
+        if (rateLimitIntervalRef.current) {
+          clearInterval(rateLimitIntervalRef.current);
+          rateLimitIntervalRef.current = null;
+        }
+        toast.dismiss(toastId);
+      } else {
+        toast.error(`Bạn đang thao tác quá nhanh. Vui lòng thử lại sau ${timeLeft} giây.`, {
+          id: toastId,
+          duration: timeLeft * 1000,
+        });
+      }
+    }, 1000);
+  }, []);
 
   useEffect(() => {
     const socket = chatSocketClient.connect();
@@ -96,6 +185,7 @@ export default function ChatRealtimeHandler() {
     socket.on(SOCKET_EVENTS.USER_TYPING, handleUserTyping);
     socket.on(SOCKET_EVENTS.UNREAD_UPDATE, handleUnreadUpdate);
     socket.on(SOCKET_EVENTS.REACTION_UPDATED, handleReactionUpdated);
+    socket.on(SOCKET_EVENTS.RATE_LIMITED, handleRateLimited);
 
     return () => {
       socket.off(SOCKET_EVENTS.SENT, handleNewMessage);
@@ -104,6 +194,12 @@ export default function ChatRealtimeHandler() {
       socket.off(SOCKET_EVENTS.USER_TYPING, handleUserTyping);
       socket.off(SOCKET_EVENTS.UNREAD_UPDATE, handleUnreadUpdate);
       socket.off(SOCKET_EVENTS.REACTION_UPDATED, handleReactionUpdated);
+      socket.off(SOCKET_EVENTS.RATE_LIMITED, handleRateLimited);
+
+      if (rateLimitIntervalRef.current) {
+        clearInterval(rateLimitIntervalRef.current);
+        rateLimitIntervalRef.current = null;
+      }
     };
   }, [
     handleNewMessage, 
@@ -111,7 +207,8 @@ export default function ChatRealtimeHandler() {
     handleMessageDeleted, 
     handleUserTyping, 
     handleUnreadUpdate,
-    handleReactionUpdated
+    handleReactionUpdated,
+    handleRateLimited
   ]);
 
   return null; // This component doesn't render anything

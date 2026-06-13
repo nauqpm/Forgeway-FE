@@ -10,6 +10,7 @@ import { workspaceService } from "@/modules/client/workspaces/services/workspace
 import type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
+import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
 
 const getWorkspaceType = (workspace: Workspace) =>
   workspace.template ?? workspace.type ?? "kanban";
@@ -94,7 +95,8 @@ export default function WorkspacesPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="app-page-wide">
+    <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">
+      <div className="app-page-wide">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-1">Workspaces</h1>
@@ -131,9 +133,7 @@ export default function WorkspacesPage() {
                 {/* Header Card */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex gap-3 items-center">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-inner ${workspaceType === 'scrum' ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'}`}>
-                      {workspaceType === 'scrum' ? <Repeat className="w-6 h-6 text-white" /> : <Columns className="w-6 h-6 text-white" />}
-                    </div>
+                    <WorkspaceAvatar workspace={workspace} size="lg" className="shadow-inner" />
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         {workspace.visibility === "public" ? (
@@ -146,6 +146,11 @@ export default function WorkspacesPage() {
                       <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-lg group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-colors line-clamp-1">{workspace.name}</h3>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-[#EFF6FF] px-2 py-0.5 text-xs font-semibold capitalize text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
+                          {workspaceType === "scrum" ? (
+                            <Repeat className="mr-1 inline h-3 w-3" />
+                          ) : (
+                            <Columns className="mr-1 inline h-3 w-3" />
+                          )}
                           {workspaceType}
                         </span>
                         <span className={`rounded-md px-2 py-0.5 text-xs font-semibold capitalize ring-1 ring-inset ${getStatusClassName(workspaceStatus)}`}>
@@ -179,6 +184,7 @@ export default function WorkspacesPage() {
           })}
         </div>
       )}
+    </div>
     </div>
   );
 }

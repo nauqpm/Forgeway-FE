@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import ChatSidebar from './ChatSidebar';
 import { SquarePen } from 'lucide-react';
-import NewChatModal from './NewChatModal';
+import NewDMChatModal from './NewDMChatModal';
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
 
   return (
-    <div className="flex-1 flex min-h-0 overflow-hidden bg-white dark:bg-[#202020] rounded-[12px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-sm m-4 relative">
+    <div className="h-full flex min-h-0 overflow-hidden bg-white dark:bg-[#202020] rounded-[12px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-sm relative m-4">
       {/* Sidebar - fixed width */}
       <div className="w-64 flex-shrink-0 border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA] dark:bg-[#252525] flex flex-col">
         {/* Messages Header */}
@@ -24,7 +24,9 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           </button>
         </header>
 
-        <ChatSidebar />
+        <div className="flex-1 min-h-0">
+          <ChatSidebar />
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -33,7 +35,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Modals */}
-      <NewChatModal 
+      <NewDMChatModal 
         isOpen={isNewChatOpen} 
         onClose={() => setIsNewChatOpen(false)} 
       />

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Search, User, Loader2 } from 'lucide-react';
+import { X, Search, User, Loader2, Users } from 'lucide-react';
 import { createDMAPI, searchUsersAPI } from '../services/chatService';
 import { useChatStore } from '@/stores/chatStore';
 
@@ -17,40 +17,57 @@ interface NewChatModalProps {
   onClose: () => void;
 }
 
-export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
+export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
   const [search, setSearch] = useState('');
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
-  const { setActiveChannel, setChannels, channels } = useChatStore();
+  const { setActiveChannel, addChannel } = useChatStore();
+
+  // Reset state when modal is opened/closed
+  useEffect(() => {
+    if (!isOpen) {
+      setSearch('');
+      setUsers([]);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && search) {
       const timer = setTimeout(() => {
         setLoading(true);
         searchUsersAPI(search)
-          .then(data => setUsers(data))
+          .then(data => {
+            setUsers(Array.isArray(data) ? data : []);
+          })
           .finally(() => setLoading(false));
       }, 300); // Debounce search to optimize performance
 
       return () => clearTimeout(timer);
+    } else if (!search) {
+      setUsers([]);
     }
   }, [isOpen, search]);
 
   const handleStartChat = async (targetUserId: string) => {
+    if (!targetUserId) return;
     setCreating(true);
     try {
       const channel = await createDMAPI(targetUserId);
+      console.log('DM Channel Created/Retrieved:', channel);
       
-      // Update local channels list if not already present
-      if (!channels.some(c => c._id === channel._id)) {
-        setChannels([...channels, channel]);
+      if (!channel.members || channel.members.length === 0) {
+        console.warn('Backend returned DM channel without populated members!');
       }
+
+      // Add to store dynamically without full refetch
+      addChannel(channel);
       
       setActiveChannel(channel._id);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create DM:', error);
+      alert(`Error starting chat: ${error.response?.data?.message || error.message}`);
     } finally {
       setCreating(false);
     }
@@ -90,24 +107,42 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-[#787774]">
               <Loader2 className="w-6 h-6 animate-spin" />
-              <p className="text-xs">Searching users...</p>
+              <p className="text-xs">Loading...</p>
+            </div>
+          ) : !search ? (
+            <div className="py-12 text-center text-[#787774] flex flex-col items-center justify-center gap-2">
+              <Users className="w-8 h-8 opacity-30 text-[#ABABAB] mb-1" />
+              <p className="text-sm font-medium">Search by name, email, or phone</p>
             </div>
           ) : users.length === 0 ? (
             <div className="py-10 text-center text-[#787774]">
-              <p className="text-sm italic">{search ? `No users found matching "${search}"` : 'Type to search for someone'}</p>
+              <p className="text-sm italic">No users found matching "{search}"</p>
             </div>
           ) : (
             <div className="space-y-0.5">
-              {users.map(user => (
+              {users.map((user, idx) => (
                 <button
-                  key={user._id}
+                  key={user._id || (user as any).id || `u-${idx}`}
                   disabled={creating}
-                  onClick={() => handleStartChat(user._id)}
+                  onClick={() => handleStartChat(user._id || (user as any).id)}
                   className="w-full flex items-center gap-3 p-2.5 rounded-[8px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors group text-left disabled:opacity-50"
                 >
                   <div className="w-10 h-10 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-bold shadow-sm overflow-hidden">
                     {user.avatar ? (
-                      <img src={user.avatar} alt={user.fullName} className="w-full h-full object-cover" />
+                      <img 
+                        src={user.avatar} 
+                        alt={user.fullName} 
+                        className="w-full h-full object-cover" 
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                          const parent = (e.target as HTMLImageElement).parentElement;
+                          if (parent && !parent.querySelector('span')) {
+                            const span = document.createElement('span');
+                            span.innerText = user.fullName?.charAt(0).toUpperCase() || 'U';
+                            parent.appendChild(span);
+                          }
+                        }}
+                      />
                     ) : (
                       <User className="w-5 h-5" />
                     )}

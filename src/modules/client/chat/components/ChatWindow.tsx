@@ -1,43 +1,41 @@
 "use client";
 
-import Link from "next/link";
-import React, { useEffect, useRef, useState, useMemo } from "react";
-import { useChatStore } from "@/stores/chatStore";
-import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
-import { getMessagesAPI } from "@/modules/client/chat/services/chatService";
-import MessageItem from "./MessageItem";
-import MessageInput from "./MessageInput";
-import MeetingBanner from "./MeetingBanner";
-import {
-  Hash,
-  Megaphone,
-  Loader2,
-  Info,
-  Search,
-  Phone,
-  Video,
-  Users,
-} from "lucide-react";
-import { useChatRealtime } from "../hooks/useChatRealtime";
-import toast from "react-hot-toast";
-import { MeetingType } from "../types/webrtc.types";
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { useChatStore } from '@/stores/chatStore';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { getMessagesAPI } from '@/modules/client/chat/services/chatService';
+import MessageItem from './MessageItem';
+import MessageInput from './MessageInput';
+import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
+import { useChatRealtime } from '../hooks/useChatRealtime';
+import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
+import MeetingBanner from './MeetingBanner';
+import Link from 'next/link';
 
 export default function ChatWindow() {
-  const {
-    activeChannelId,
-    channels,
-    messagesByChannel,
-    setMessages,
-    typingUsers,
-    clearOldTyping,
-  } = useChatStore();
-  const currentUserId = useAuthStore((state) => state.user?.id);
-  const userRole = useAuthStore((state) => state.user?.role);
+  // Use specific selectors to prevent unnecessary re-renders and reference changes
+  const activeChannelId = useChatStore(state => state.activeChannelId);
+  const channels = useChatStore(state => state.channels);
+  const messagesByChannel = useChatStore(state => state.messagesByChannel);
+  const typingUsers = useChatStore(state => state.typingUsers);
+  const clearOldTyping = useChatStore(state => state.clearOldTyping);
+  const setMessages = useChatStore(state => state.setMessages);
+  
+  const { workspaces } = useWorkspaceStore();
+  const currentUserId = useAuthStore(state => state.user?.id);
+  const userRole = useAuthStore(state => state.user?.role);
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const activeChannel = channels.find((c) => c._id === activeChannelId);
+  const activeChannel = channels.find(c => c._id === activeChannelId);
+  
+  const activeWorkspace = useMemo(() => {
+    if (activeChannel?.type !== 'workspace' || !activeChannel?.workspaceId) return null;
+    return workspaces.find(w => String(w._id || (w as any).id) === String(activeChannel.workspaceId));
+  }, [activeChannel, workspaces]);
 
   const messages = useMemo(() => {
     const rawMessages = activeChannelId
@@ -51,22 +49,39 @@ export default function ChatWindow() {
   }, [activeChannelId, messagesByChannel]);
 
   useEffect(() => {
-    if (activeChannelId) {
-      setLoading(true);
-      getMessagesAPI(activeChannelId)
-        .then((msgs) => setMessages(activeChannelId, msgs))
-        .finally(() => setLoading(false));
+    if (!activeChannelId) return;
 
-      markAsRead(activeChannelId);
-      joinChannel(activeChannelId);
-    }
+    let isMounted = true;
+    setLoading(true);
+    setError(null);
+    
+    getMessagesAPI(activeChannelId)
+      .then(msgs => {
+        if (isMounted) {
+          setMessages(activeChannelId, msgs);
+        }
+      })
+      .catch(err => {
+        if (!isMounted) return;
+        if (err.response?.status === 403) {
+          setError("You don't have permission to view messages in this channel.");
+        } else {
+          setError("Failed to load messages. Please try again.");
+        }
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+    
+    markAsRead(activeChannelId);
+    joinChannel(activeChannelId);
 
     return () => {
-      if (activeChannelId) {
-        leaveChannel();
-      }
+      isMounted = false;
+      leaveChannel();
     };
-  }, [activeChannelId, setMessages, markAsRead, joinChannel, leaveChannel]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChannelId]); // Strictly ONLY run when activeChannelId changes to prevent polling loops
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -118,36 +133,88 @@ export default function ChatWindow() {
 
   // handleStartMeeting has been replaced by Next.js Link targeting /meeting/init
 
+  // Resolve DM display info (the other person)
+  let headerName = activeChannel.name;
+  let headerDescription = activeChannel.description;
+
+  if (activeChannel.type === 'dm') {
+    const members = activeChannel.members || [];
+    const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+    
+    if (otherMember && typeof otherMember === 'object') {
+      headerName = otherMember.fullName || otherMember.email || "Direct Message";
+      headerDescription = otherMember.email || "Direct Message";
+    } else {
+      headerName = activeChannel.name || "Direct Message";
+      headerDescription = "Direct Message";
+    }
+  }
+
   return (
     <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-[#202020]">
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
-        <div className="flex flex-col items-start justify-center gap-0 min-w-0">
-          <div className="flex items-center gap-2">
-            {activeChannel.type === "announcement" ? (
-              <Megaphone className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
-            ) : (
-              <Hash className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
-            )}
-            <span className="font-bold text-[#111111] dark:text-[#E8E8E7] truncate">
-              {activeChannel.name}
-            </span>
-          </div>
+        <div className="flex items-center gap-3 min-w-0">
+          {activeChannel.type === 'announcement' ? (
+            <Megaphone className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" />
+          ) : activeWorkspace ? (
+            <div className="w-9 h-9 rounded-[6px] overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] text-white font-bold text-sm shadow-sm">
+              <img 
+                src={getWorkspaceAvatarUrl(activeWorkspace)} 
+                alt={headerName} 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent && !parent.querySelector('span')) {
+                    const span = document.createElement('span');
+                    span.innerText = headerName?.charAt(0).toUpperCase() || 'W';
+                    parent.appendChild(span);
+                  }
+                }}
+              />
+            </div>
+          ) : activeChannel.type === 'dm' ? (
+            (() => {
+              const members = activeChannel.members || [];
+              const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+              const displayAvatar = otherMember?.avatar;
+              const initials = (otherMember?.fullName || otherMember?.email || "DM").charAt(0).toUpperCase();
+              return (
+                <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white font-bold text-sm shadow-sm">
+                  {displayAvatar ? (
+                    <img src={displayAvatar} alt={headerName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span>{initials}</span>
+                  )}
+                </div>
+              );
+            })()
+          ) : (
+            <Hash className="w-5 h-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+          )}
 
-          {activeChannel.type !== "dm" && (
-            <span className="text-[11px] text-[#787774] dark:text-[#9B9A97]">
-              {activeChannel.description || (
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-sm truncate leading-snug">{headerName}</span>
+              {activeWorkspace && activeWorkspace.key && (
+                <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
+                  {activeWorkspace.key}
+                </span>
+              )}
+            </div>
+            
+            <span className="text-[11px] text-[#787774] dark:text-[#9B9A97] truncate leading-none mt-0.5">
+              {activeWorkspace?.description || headerDescription || (
                 <>
-                  {activeChannel.type === "general" &&
-                    "Everyone in the organization"}
-                  {activeChannel.type === "announcement" &&
-                    "Only admins can post messages here"}
-                  {activeChannel.type === "workspace" &&
-                    `Channel for workspace · ${activeChannel.name}`}
+                  {activeChannel.type === 'general' && "Everyone in the organization"}
+                  {activeChannel.type === 'announcement' && "Only admins can post messages here"}
+                  {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
+                  {activeChannel.type === 'dm' && "Direct conversation"}
                 </>
               )}
             </span>
-          )}
+          </div>
         </div>
 
         <div className="flex items-center gap-3 text-[#787774] dark:text-[#9B9A97]">
@@ -196,6 +263,15 @@ export default function ChatWindow() {
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
           </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+            <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-3">
+              <Info className="w-6 h-6 text-red-500" />
+            </div>
+            <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic">
+              {error}
+            </p>
+          </div>
         ) : (
           <div className="py-4">
             {messages.map((msg, idx) => {
@@ -217,14 +293,12 @@ export default function ChatWindow() {
                 : 10;
 
               const isSameUserAsPrevious = isSameUser && timeDiff < 5;
-              const isMine = currentUserId === currentSenderId;
 
               return (
                 <MessageItem
-                  key={msg._id}
+                  key={msg._id || (msg as any).id}
                   message={msg}
                   isSameUserAsPrevious={isSameUserAsPrevious}
-                  isMine={isMine}
                 />
               );
             })}
