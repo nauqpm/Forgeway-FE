@@ -1,18 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, MouseEvent } from "react";
-import {
-  Users,
-  UserPlus,
-  Search,
-  X,
-  Loader2,
-  ChevronDown,
-  Trash2,
-  ShieldCheck,
-} from "lucide-react";
+import { Users, UserPlus, Search, X, Loader2, ChevronDown, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
-import api from "@/config/api";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
 import { WORKSPACE_PERMISSIONS } from "../constants/workspacePermissions";
@@ -35,16 +26,11 @@ const ROLES = [
 ];
 
 const ROLE_BADGE: Record<string, string> = {
-  space_admin:
-    "bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]",
-  workspace_admin:
-    "bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]",
-  super_admin:
-    "bg-[#FDEBEC] text-[#9F2F2D] dark:bg-[rgba(159,47,45,0.12)] dark:text-[#F87171]",
-  viewer:
-    "bg-[#F7F6F3] text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]",
-  member:
-    "bg-[#EDF3EC] text-[#346538] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#4ADE80]",
+  space_admin: "bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]",
+  workspace_admin: "bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]",
+  super_admin: "bg-[#FDEBEC] text-[#9F2F2D] dark:bg-[rgba(159,47,45,0.12)] dark:text-[#F87171]",
+  viewer: "bg-[#F7F6F3] text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]",
+  member: "bg-[#EDF3EC] text-[#346538] dark:bg-[rgba(52,101,56,0.12)] dark:text-[#4ADE80]",
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -66,13 +52,7 @@ function MemberAvatar({ user }: { user: WorkspaceMember["userId"] }) {
     : (user.email?.[0]?.toUpperCase() ?? "?");
 
   if (user.avatar) {
-    return (
-      <img
-        src={user.avatar}
-        alt={user.fullName}
-        className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-      />
-    );
+    return <img src={user.avatar} alt={user.fullName} className="w-9 h-9 rounded-full object-cover flex-shrink-0" />;
   }
   return (
     <span className="w-9 h-9 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white text-[0.6875rem] font-bold flex items-center justify-center flex-shrink-0">
@@ -88,12 +68,7 @@ type InviteFormProps = {
   onSuccess: () => void;
 };
 
-function InviteForm({
-  workspaceId,
-  workspaceMongoId,
-  onClose,
-  onSuccess,
-}: InviteFormProps) {
+function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: InviteFormProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [submitting, setSubmitting] = useState(false);
@@ -110,17 +85,12 @@ function InviteForm({
     setEmailError("");
     setSubmitting(true);
     try {
-      await api.post(
-        apiRoutes.WORKSPACES.INVITES(workspaceMongoId ?? workspaceId),
-        { email, role },
-      );
+      await api.post(apiRoutes.WORKSPACES.INVITES(workspaceMongoId ?? workspaceId), { email, role });
       toast.success(`Invitation sent to ${email}.`);
       onSuccess();
       onClose();
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message ??
-        "User is already a member of this workspace.";
+      const msg = err?.response?.data?.message ?? "User is already a member of this workspace.";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -130,9 +100,7 @@ function InviteForm({
   return (
     <div className="border border-[#2563EB]/20 dark:border-[#3B82F6]/20 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.06)] rounded-[8px] p-4 mb-4">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[0.8125rem] font-semibold text-[#1F6C9F] dark:text-[#93C5FD]">
-          Invite to workspace
-        </p>
+        <p className="text-[0.8125rem] font-semibold text-[#1F6C9F] dark:text-[#93C5FD]">Invite to workspace</p>
         <button
           type="button"
           onClick={onClose}
@@ -159,9 +127,7 @@ function InviteForm({
                 : "border-[#EAEAEA] dark:border-white/[0.08] focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
             }`}
           />
-          {emailError && (
-            <p className="text-[0.6875rem] text-[#9F2F2D] mt-1">{emailError}</p>
-          )}
+          {emailError && <p className="text-[0.6875rem] text-[#9F2F2D] mt-1">{emailError}</p>}
         </div>
 
         <div className="relative flex-shrink-0">
@@ -197,15 +163,10 @@ type WorkspaceMembersPanelProps = {
   workspaceMongoId?: string;
 };
 
-export default function WorkspaceMembersPanel({
-  workspaceId,
-  workspaceMongoId,
-}: WorkspaceMembersPanelProps) {
+export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }: WorkspaceMembersPanelProps) {
   const { user: authUser } = useAuth();
   const { hasPermission } = useWorkspacePermission(workspaceId);
-  const canManageMembers = hasPermission(
-    WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE,
-  );
+  const canManageMembers = hasPermission(WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE);
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -247,10 +208,7 @@ export default function WorkspaceMembersPanel({
     };
   }, []);
 
-  const handleOpenContextMenu = (
-    event: MouseEvent<HTMLDivElement>,
-    member: WorkspaceMember,
-  ) => {
+  const handleOpenContextMenu = (event: MouseEvent<HTMLDivElement>, member: WorkspaceMember) => {
     event.preventDefault();
     if (!canManageMembers || member.userId?._id === authUser?.id) return;
     setContextMenu({
@@ -260,10 +218,7 @@ export default function WorkspaceMembersPanel({
     });
   };
 
-  const handleOpenMemberMenu = (
-    event: MouseEvent<HTMLDivElement>,
-    member: WorkspaceMember,
-  ) => {
+  const handleOpenMemberMenu = (event: MouseEvent<HTMLDivElement>, member: WorkspaceMember) => {
     if (!canManageMembers || member.userId?._id === authUser?.id) return;
     setContextMenu({
       member,
@@ -272,10 +227,7 @@ export default function WorkspaceMembersPanel({
     });
   };
 
-  const handleUpdateMemberRole = async (
-    member: WorkspaceMember,
-    role: string,
-  ) => {
+  const handleUpdateMemberRole = async (member: WorkspaceMember, role: string) => {
     const userId = member.userId?._id;
     if (!userId || member.role === role) {
       setContextMenu(null);
@@ -287,17 +239,11 @@ export default function WorkspaceMembersPanel({
       await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceId, userId), {
         role,
       });
-      setMembers((prev) =>
-        prev.map((item) =>
-          item.userId?._id === userId ? { ...item, role } : item,
-        ),
-      );
+      setMembers((prev) => prev.map((item) => (item.userId?._id === userId ? { ...item, role } : item)));
       setContextMenu(null);
       toast.success("Member permissions updated.");
     } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message ?? "Could not update member permissions.",
-      );
+      toast.error(err?.response?.data?.message ?? "Could not update member permissions.");
     } finally {
       setUpdatingMemberId(null);
     }
@@ -309,12 +255,7 @@ export default function WorkspaceMembersPanel({
 
     setRemovingMemberId(userId);
     try {
-      await api.delete(
-        apiRoutes.WORKSPACES.REMOVE_MEMBER(
-          workspaceMongoId ?? workspaceId,
-          userId,
-        ),
-      );
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceMongoId ?? workspaceId, userId));
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setContextMenu(null);
       toast.success("Member removed from workspace.");
@@ -342,14 +283,8 @@ export default function WorkspaceMembersPanel({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
-          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-            Members
-          </h3>
-          {!loading && (
-            <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
-              ({members.length})
-            </span>
-          )}
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Members</h3>
+          {!loading && <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">({members.length})</span>}
         </div>
         <button
           onClick={() => setShowInvite((v) => !v)}
@@ -417,13 +352,9 @@ export default function WorkspaceMembersPanel({
                   <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
                     {user.fullName || user.email}
                   </p>
-                  <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] truncate">
-                    {user.email}
-                  </p>
+                  <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] truncate">{user.email}</p>
                 </div>
-                <span
-                  className={`text-[0.6875rem] font-medium px-2 py-0.5 rounded-[4px] flex-shrink-0 ${badgeClass}`}
-                >
+                <span className={`text-[0.6875rem] font-medium px-2 py-0.5 rounded-[4px] flex-shrink-0 ${badgeClass}`}>
                   {roleLabel}
                 </span>
               </div>
@@ -451,9 +382,7 @@ export default function WorkspaceMembersPanel({
             <button
               key={role.value}
               type="button"
-              onClick={() =>
-                handleUpdateMemberRole(contextMenu.member, role.value)
-              }
+              onClick={() => handleUpdateMemberRole(contextMenu.member, role.value)}
               disabled={updatingMemberId === contextMenu.member.userId?._id}
               className={`w-full flex items-center gap-2 px-3 py-2 text-left text-[0.8125rem] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50 transition-colors ${
                 contextMenu.member.role === role.value

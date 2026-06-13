@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { BookOpen, CheckCircle2, Database, LayoutDashboard, Loader2 } from "lucide-react";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-hot-toast";
@@ -55,8 +55,7 @@ const normalizePayload = <T,>(payload: any): T => payload?.data?.data ?? payload
 
 const workspaceIdOf = (workspace: ForYouWorkspace) => workspace.id || workspace._id || "";
 
-const workspaceRouteKeyOf = (workspace: ForYouWorkspace) =>
-  workspace.key || workspace.slug || workspaceIdOf(workspace);
+const workspaceRouteKeyOf = (workspace: ForYouWorkspace) => workspace.key || workspace.slug || workspaceIdOf(workspace);
 
 const SHOW_STARRED_DASHBOARD_TAB = false;
 
@@ -68,20 +67,14 @@ const toWorkspaceCard = (workspace: ForYouWorkspace, index: number) => {
     ...workspace,
     id: workspaceIdOf(workspace),
     routeKey: workspaceRouteKeyOf(workspace),
-    description:
-      workspace.ownershipLabel ||
-      workspace.relationship ||
-      workspace.role ||
-      workspace.type ||
-      "Workspace",
+    description: workspace.ownershipLabel || workspace.relationship || workspace.role || workspace.type || "Workspace",
     icon: icons[index % icons.length],
     color: colors[index % colors.length],
   };
 };
 
 const isIdLike = (s?: string) =>
-  /^[0-9a-f]{24}$/i.test(s ?? "") ||
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s ?? "");
+  /^[0-9a-f]{24}$/i.test(s ?? "") || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s ?? "");
 
 const resolveStatusLabel = (issue: Issue, columnMap: Record<string, string> = {}): string => {
   if (issue.status && columnMap[issue.status]) return columnMap[issue.status];
@@ -95,7 +88,7 @@ const toDashboardTask = (
   issue: Issue,
   workspace: ForYouWorkspace,
   type: "assigned" | "worked",
-  columnMap: Record<string, string> = {},
+  columnMap: Record<string, string> = {}
 ): DashboardTask => {
   const workspaceId = workspaceIdOf(workspace);
   const workspaceKey = workspaceRouteKeyOf(workspace);
@@ -147,7 +140,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         const forYouPayload = normalizePayload<any>(forYouResponse);
         const nextWorkspaces: ForYouWorkspace[] = Array.isArray(forYouPayload)
           ? forYouPayload
-          : forYouPayload?.workspaces ?? [];
+          : (forYouPayload?.workspaces ?? []);
         const nextUserStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
 
         setDashboardWorkspaces(nextWorkspaces);
@@ -185,7 +178,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             }
 
             return { tasks, columnMap, workspace };
-          }),
+          })
         );
 
         if (cancelled) return;
@@ -196,7 +189,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         }
 
         const assignedGroups = workspaceDataList.map(({ tasks, workspace }) =>
-          (tasks as Issue[]).map((task) => toDashboardTask(task, workspace, "assigned", globalColumnMap)),
+          (tasks as Issue[]).map((task) => toDashboardTask(task, workspace, "assigned", globalColumnMap))
         );
 
         const rawWorked: any[] = Array.isArray(nextUserStats?.recentActivity)
@@ -210,10 +203,8 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             const rawWsId =
               typeof activity.workspaceId === "string"
                 ? activity.workspaceId
-                : activity.workspaceId?._id ?? activity.workspaceId?.id ?? "";
-            const workspace =
-              nextWorkspaces.find((item) => workspaceIdOf(item) === rawWsId) ||
-              nextWorkspaces[0];
+                : (activity.workspaceId?._id ?? activity.workspaceId?.id ?? "");
+            const workspace = nextWorkspaces.find((item) => workspaceIdOf(item) === rawWsId) || nextWorkspaces[0];
             if (!workspace) return null;
             const proxy = {
               id: activity._id ?? activity.id ?? "",
@@ -247,12 +238,8 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     { label: "Viewed", key: "viewed" },
   ].filter((tab) => SHOW_STARRED_DASHBOARD_TAB || tab.key !== "starred");
 
-  const displayWorkspaces = useMemo(
-    () => workspaces.slice(0, 4).map(toWorkspaceCard),
-    [workspaces],
-  );
-  const filteredTasks =
-    activeTab === "assigned" ? assignedTasks : activeTab === "worked" ? workedTasks : [];
+  const displayWorkspaces = useMemo(() => workspaces.slice(0, 4).map(toWorkspaceCard), [workspaces]);
+  const filteredTasks = activeTab === "assigned" ? assignedTasks : activeTab === "worked" ? workedTasks : [];
   const emptyMessage =
     activeTab === "starred"
       ? "The backend does not have an API for starred items yet."
@@ -323,15 +310,10 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   return (
     <div className={`app-page-medium ${className}`}>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="px-2 text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">
-          Recommended workspaces
-        </h1>
+        <h1 className="px-2 text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">Recommended workspaces</h1>
 
-        <Link
-          href="/workspaces"
-          className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]"
-        >
-              View all
+        <Link href="/workspaces" className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]">
+          View all
         </Link>
       </div>
 
@@ -359,9 +341,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
                   <h3 className="truncate font-semibold text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#3B82F6]">
                     {workspace.name}
                   </h3>
-                  <p className="mt-1 truncate text-sm text-[#787774] dark:text-[#9B9A97]">
-                    {workspace.description}
-                  </p>
+                  <p className="mt-1 truncate text-sm text-[#787774] dark:text-[#9B9A97]">{workspace.description}</p>
                 </div>
               </div>
             </Link>
@@ -372,10 +352,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
       <div className="mt-10">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">For you</h2>
-          <Link
-            href="/for-you"
-            className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]"
-          >
+          <Link href="/for-you" className="text-sm font-medium text-[#2563EB] hover:text-[#1D4ED8]">
             View all for you items
           </Link>
         </div>
@@ -383,21 +360,15 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
             <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Assigned tasks</p>
-            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
-              {assignedTasks.length}
-            </p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{assignedTasks.length}</p>
           </div>
           <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
             <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recently completed</p>
-            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
-              {workedTasks.length}
-            </p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{workedTasks.length}</p>
           </div>
           <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
             <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recommended workspaces</p>
-            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
-              {workspaces.length}
-            </p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspaces.length}</p>
           </div>
         </div>
 
@@ -441,12 +412,8 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
                   </div>
 
                   <div className="min-w-0">
-                    <p className="truncate font-medium text-[#111111] dark:text-[#E8E8E7]">
-                      {task.title}
-                    </p>
-                    <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">
-                      {task.meta}
-                    </p>
+                    <p className="truncate font-medium text-[#111111] dark:text-[#E8E8E7]">{task.title}</p>
+                    <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">{task.meta}</p>
                   </div>
                 </div>
 

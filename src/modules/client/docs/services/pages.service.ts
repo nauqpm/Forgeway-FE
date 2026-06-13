@@ -1,5 +1,5 @@
 // Service managing document page interactions, including API calls to get list, create, update content, version history, export/import, and other operations,
-import api from '@/common/services/api.service';
+import api from '@/lib/axiosIns';
 import { apiRoutes } from '@/config/apiRoutes';
 import type {
   Document,
@@ -24,15 +24,14 @@ function mapPage(raw: PageApiResponse): Document {
     lastEditedBy: raw.lastEditedBy
       ? {
           _id: raw.lastEditedBy._id,
-          fullName:
-            raw.lastEditedBy.fullName ?? raw.lastEditedBy.fullName ?? "Unknown",
+          fullName: raw.lastEditedBy.fullName ?? raw.lastEditedBy.fullName ?? 'Unknown',
         }
       : null,
     version: raw.version,
     status: raw.status,
     labels: raw.labels ?? [],
     versionHistory: raw.versionHistory ?? [],
-    source: "docs",
+    source: 'docs',
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };
@@ -78,10 +77,7 @@ async function createPage(payload: CreatePagePayload): Promise<Document> {
 }
 
 /** Partially update a page (title, content, status, labels) */
-async function updatePage(
-  id: string,
-  payload: UpdatePagePayload,
-): Promise<Document> {
+async function updatePage(id: string, payload: UpdatePagePayload): Promise<Document> {
   const res = await api.patch(apiRoutes.PAGES.BY_ID(id), payload);
   const raw: PageApiResponse = res.data?.data ?? res.data;
   return mapPage(raw);

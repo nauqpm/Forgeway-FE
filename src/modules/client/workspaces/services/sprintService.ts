@@ -1,4 +1,4 @@
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import {
   Sprint,
@@ -8,8 +8,7 @@ import {
   CompleteSprintResult,
 } from "../types/sprint.type";
 
-const normalize = <T>(payload: any): T =>
-  payload?.data?.data ?? payload?.data ?? payload;
+const normalize = <T>(payload: any): T => payload?.data?.data ?? payload?.data ?? payload;
 
 const toSprint = (raw: any): Sprint => ({
   ...raw,
@@ -38,27 +37,17 @@ export const sprintService = {
     await api.delete(apiRoutes.WORKSPACES.SPRINT(workspaceId, sprintId));
   },
 
-  async startSprint(
-    workspaceId: string,
-    sprintId: string,
-    input: StartSprintInput,
-  ): Promise<Sprint> {
-    const res = await api.post(
-      apiRoutes.WORKSPACES.SPRINT_START(workspaceId, sprintId),
-      input,
-    );
+  async startSprint(workspaceId: string, sprintId: string, input: StartSprintInput): Promise<Sprint> {
+    const res = await api.post(apiRoutes.WORKSPACES.SPRINT_START(workspaceId, sprintId), input);
     return toSprint(normalize(res));
   },
 
   async completeSprint(
     workspaceId: string,
     sprintId: string,
-    input: { moveToSprintId?: string } = {},
+    input: { moveToSprintId?: string } = {}
   ): Promise<CompleteSprintResult> {
-    const res = await api.post(
-      apiRoutes.WORKSPACES.SPRINT_COMPLETE(workspaceId, sprintId),
-      input,
-    );
+    const res = await api.post(apiRoutes.WORKSPACES.SPRINT_COMPLETE(workspaceId, sprintId), input);
     const data = normalize<any>(res);
     return {
       ...data,
@@ -69,7 +58,7 @@ export const sprintService = {
 
   async getCompleteSprintPreview(
     workspaceId: string,
-    sprintId: string,
+    sprintId: string
   ): Promise<{
     sprintId: string;
     sprintName: string;
@@ -78,9 +67,7 @@ export const sprintService = {
     incompleteTasks: number;
     incompleteTaskList: any[];
   }> {
-    const res = await api.get(
-      apiRoutes.WORKSPACES.SPRINT_COMPLETE_PREVIEW(workspaceId, sprintId),
-    );
+    const res = await api.get(apiRoutes.WORKSPACES.SPRINT_COMPLETE_PREVIEW(workspaceId, sprintId));
     return normalize(res);
   },
 

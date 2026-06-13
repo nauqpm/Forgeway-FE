@@ -1,4 +1,4 @@
-import api from '@/common/services/api.service';
+import api from '@/lib/axiosIns';
 import { apiRoutes } from '@/config/apiRoutes';
 
 export interface InviteDto {
@@ -56,6 +56,5 @@ export const inviteService = {
     return res.data.data;
   },
 
-  acceptInvite: (token: string) =>
-    api.post(apiRoutes.WORKSPACES.ACCEPT_INVITE(token)),
+  acceptInvite: (token: string) => api.post(apiRoutes.WORKSPACES.ACCEPT_INVITE(token)),
 };

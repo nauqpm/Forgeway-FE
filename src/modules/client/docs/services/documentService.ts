@@ -1,6 +1,6 @@
 // Service managing all document-related interactions, including fetching, creating, updating, versions, export/import, and file uploads,
 // providing a simplified interface for other modules without exposing direct API details.
-import api from "@/common/services/api.service";
+import api from '@/lib/axiosIns';
 import { apiRoutes } from "@/config/apiRoutes";
 import { DocumentItem } from "../types/document.type";
 import type { DocumentVersion } from "../types/docs.type";
@@ -18,11 +18,11 @@ export const documentService = {
   },
   upload: async (file: File, payload?: { name?: string; workspaceIds?: string[] }) => {
     const formData = new FormData();
-    formData.append("file", file);
-    if (payload?.name) formData.append("name", payload.name);
-    (payload?.workspaceIds ?? []).forEach((id) => formData.append("workspaceIds[]", id));
+    formData.append('file', file);
+    if (payload?.name) formData.append('name', payload.name);
+    (payload?.workspaceIds ?? []).forEach((id) => formData.append('workspaceIds[]', id));
     const res = await api.post(apiRoutes.DOCUMENTS.UPLOAD, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return normalize<DocumentItem>(res);
   },

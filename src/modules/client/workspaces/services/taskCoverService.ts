@@ -1,10 +1,6 @@
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import type {
-  TaskCover,
-  UpdateTaskCoverPayload,
-  UpdateTaskCoverResponse,
-} from "../types/task-cover.type";
+import type { TaskCover, UpdateTaskCoverPayload, UpdateTaskCoverResponse } from "../types/task-cover.type";
 
 const normalizeResponseData = <T>(payload: any): T => {
   return payload?.data?.data ?? payload?.data ?? payload;
@@ -16,15 +12,8 @@ export const taskCoverService = {
     return normalizeResponseData<TaskCover | null>(response);
   },
 
-  async updateCover(
-    workspaceId: string,
-    taskId: string,
-    payload: UpdateTaskCoverPayload,
-  ): Promise<TaskCover | null> {
-    const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK_COVER(workspaceId, taskId),
-      payload,
-    );
+  async updateCover(workspaceId: string, taskId: string, payload: UpdateTaskCoverPayload): Promise<TaskCover | null> {
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_COVER(workspaceId, taskId), payload);
     return normalizeResponseData<UpdateTaskCoverResponse>(response).cover;
   },
 

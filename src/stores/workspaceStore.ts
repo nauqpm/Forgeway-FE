@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface Workspace {
     _id: string;
@@ -13,12 +13,12 @@ interface Workspace {
 }
 
 interface Project {
-    _id: string;
-    name: string;
-    key: string;
-    type: 'scrum' | 'kanban';
-    workspaceId: string;
-    status: string;
+  _id: string;
+  name: string;
+  key: string;
+  type: "scrum" | "kanban";
+  workspaceId: string;
+  status: string;
 }
 
 interface WorkspaceStore {
