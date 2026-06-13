@@ -83,9 +83,7 @@ const getRouteStateFromPath = (pathname: string) => {
   const taskKey =
     rawTabSegment === "key"
       ? (segments[3] ?? null)
-      ? (segments[3] ?? null)
       : tabSegment && segments[3] === "key"
-        ? (segments[4] ?? null)
         ? (segments[4] ?? null)
         : null;
 
@@ -103,10 +101,6 @@ const clearOptimisticIssueOrder = (issue: Issue): Issue => {
 };
 
 const normalizeRole = (role?: string | null) =>
-  role
-    ?.trim()
-    .toLowerCase()
-    .replace(/[-\s]+/g, "_") ?? null;
   role
     ?.trim()
     .toLowerCase()
@@ -338,7 +332,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   }, []);
 
   const { data: selectedTaskDetail } = useQuery({
-  const { data: selectedTaskDetail } = useQuery({
     queryKey: ["taskDetail", workspaceApiId, selectedTaskKey],
     queryFn: () =>
       taskService.getBoardTaskDetail(workspaceApiId!, selectedTaskKey!),
@@ -357,9 +350,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   const [columns, setColumns] = useState<BoardColumn[]>([]);
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
-  const patchSelectedTaskView = useCallback(
-    (issue: Issue) => {
-      const nextIssueId = taskIdOf(issue);
   const patchSelectedTaskView = useCallback(
     (issue: Issue) => {
       const nextIssueId = taskIdOf(issue);
@@ -382,9 +372,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     [queryClient, workspaceApiId],
   );
 
-  const handleRealtimeTaskUpserted = useCallback(
-    (issue: Issue) => {
-      const nextIssueId = taskIdOf(issue);
   const handleRealtimeTaskUpserted = useCallback(
     (issue: Issue) => {
       const nextIssueId = taskIdOf(issue);
@@ -567,12 +554,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
         toast.error("Task key not found");
         return;
       }
-  const openTaskDetail = useCallback(
-    (issue: Issue) => {
-      if (!issue.key) {
-        toast.error("Task key not found");
-        return;
-      }
 
       setSelectedIssue(issue);
       setSelectedTaskKey(issue.key);
@@ -608,12 +589,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
 
   const detailUrl = activeIssueDetail?.key ? getTaskDetailUrl(activeTab, activeIssueDetail.key) : undefined;
 
-  const handleListTaskSelection = useCallback(
-    (issue: Issue | null) => {
-      if (issue) {
-        openTaskDetail(issue);
-        return;
-      }
   const handleListTaskSelection = useCallback(
     (issue: Issue | null) => {
       if (issue) {
@@ -720,13 +695,11 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   );
 
   const activeSprint = sprints.find((s) => s.status === "active") ?? null;
-  const activeSprint = sprints.find((s) => s.status === "active") ?? null;
 
   const handleOpenGlobalCreateIssue = useCallback(() => {
     if (!canCreateTask) return;
     if (activeTab === "board" && workspace?.type === "scrum" && activeSprint) {
       const firstColumn = columns[0];
-      setNewIssueForm((prev) => ({
       setNewIssueForm((prev) => ({
         ...prev,
         sprintId: activeSprint._id,
@@ -1194,9 +1167,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
             handleBoardDragStart: () => {
               isDraggingIssueRef.current = true;
             },
-            handleBoardDragStart: () => {
-              isDraggingIssueRef.current = true;
-            },
             handleBoardDragEnd: (result: any) => {
               if (!canMoveTask) return;
               handleBoardDragEnd({
@@ -1274,9 +1244,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
             newIssueForm,
           },
           actions: {
-            handleBacklogDragStart: () => {
-              isDraggingIssueRef.current = true;
-            },
             handleBacklogDragStart: () => {
               isDraggingIssueRef.current = true;
             },
