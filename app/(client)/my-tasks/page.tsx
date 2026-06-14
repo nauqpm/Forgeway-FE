@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import api from "@/common/services/api.service";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import {
   CheckSquare, Filter, ArrowUpDown, Calendar, AlertCircle, Search,

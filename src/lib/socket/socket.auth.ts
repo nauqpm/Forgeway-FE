@@ -30,24 +30,16 @@ export const refreshSocketAuth = async (): Promise<void> => {
   return refreshPromise;
 };
 
+/**
+ * Get authentication payload for socket connection.
+ * 
+ * For cookie-based auth (httpOnly), the socket auth is handled server-side.
+ * This function returns an empty object as the token is sent via cookies automatically.
+ */
 export const getSocketAuthPayload = (): Record<string, string> => {
-  const state = useAuthStore.getState() as { accessToken?: string | null };
-  if (state.accessToken) {
-    return { token: state.accessToken };
-  }
-
-  // Legacy fallback. Remove this after auth store fully owns client-side tokens,
-  // or after the backend socket auth relies only on httpOnly cookies.
-  if (typeof window !== 'undefined') {
-    const legacyToken =
-      window.localStorage.getItem('token') ||
-      window.localStorage.getItem('accessToken');
-
-    if (legacyToken) {
-      return { token: legacyToken };
-    }
-  }
-
+  // Token-based auth via httpOnly cookies is handled automatically by the socket.io server
+  // when the client connects with withCredentials: true
+  // No need to manually pass tokens
   return {};
 };
 

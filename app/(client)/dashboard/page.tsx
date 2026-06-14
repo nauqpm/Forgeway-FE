@@ -1,4 +1,4 @@
-import { AdminDashboard } from "@/modules/admin";
+import { AdminDashboard } from "@/modules/shared";
 
 export const metadata = { title: 'Dashboard' };
 

@@ -30,24 +30,19 @@ export const withPermission = (
         try {
           // Check authentication first
           if (!isAuthenticated) {
-            console.log("🔒 User not authenticated, redirecting to login...");
             router.replace("/login");
             setIsLoading(false);
             return;
           }
 
-          console.log(`🔍 Checking access to ${resource}:${action}`);
-
           // Wait for user data to be loaded
           if (!user) {
-            console.log("⏳ User data not loaded yet, waiting...");
             setIsLoading(true);
             return;
           }
 
           // Admin has all permissions
           if ((user.role as string) === "super_admin" || (user.role as string) === "admin") {
-            console.log("✅ User is admin, granting access");
             setHasAccess(true);
             setIsLoading(false);
             return;
@@ -58,30 +53,20 @@ export const withPermission = (
             (!user.permissions || user.permissions.length === 0) &&
             !isLoadingPermissions
           ) {
-            console.log("🔄 No permissions found, fetching from API...");
             await fetchUserPermissions();
             return; // Will trigger useEffect again when user.permissions are updated
           }
 
           // Wait until permissions are loaded
           if (isLoadingPermissions) {
-            console.log("⏳ Permissions are still loading...");
             return;
           }
 
           // Check permission directly with resource and action
           const hasRequiredPermission = hasPermission(resource, action);
-          console.log(
-            `Permission check result: ${
-              hasRequiredPermission ? "Granted ✅" : "Denied ❌"
-            }`
-          );
           setHasAccess(hasRequiredPermission);
 
           if (!hasRequiredPermission) {
-            console.log(
-              `⛔ Access denied for ${resource}:${action}, redirecting...`
-            );
             router.replace("/unauthorized");
           }
 

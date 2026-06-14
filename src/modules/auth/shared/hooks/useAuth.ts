@@ -27,15 +27,12 @@ import { clearTokens } from '../services/tokenService';
 import { getMyPermissionsAPI } from '../../permission/services/permissionService';
 import { AUTH_ROUTES } from '../constants/auth-routes';
 import { AuthErrorCode } from '../types/auth.types';
-import { setupAuthInterceptors } from '../services/axiosAuthInterceptor';
 import { validateEmail } from '../utils/emailValidation';
 import type {
   LoginRequest,
   RegisterRequest,
   AuthApiError,
 } from '../types/auth.types';
-
-let interceptorsInitialized = false;
 
 export const useAuth = () => {
   const router = useRouter();
@@ -252,13 +249,6 @@ export const useAuth = () => {
     clearAuth,
     setGlobalPermissions,
   ]);
-
-  useEffect(() => {
-    if (!interceptorsInitialized) {
-      setupAuthInterceptors();
-      interceptorsInitialized = true;
-    }
-  }, []);
 
   useEffect(() => {
     initializeAuth();

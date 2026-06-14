@@ -3,9 +3,28 @@
 import { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-let _queryClient: QueryClient | null = null;
+// Singleton pattern - same instance across the app
+let _queryClient: QueryClient | undefined = undefined;
 
-export function getQueryClient(): QueryClient | null {
+function createQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60_000,
+        refetchOnWindowFocus: false,
+        retry: 1,
+      },
+      mutations: {
+        retry: 0,
+      },
+    },
+  });
+}
+
+export function getQueryClient(): QueryClient {
+  if (!_queryClient) {
+    _queryClient = createQueryClient();
+  }
   return _queryClient;
 }
 
@@ -15,16 +34,10 @@ export default function QueryProvider({
   children: React.ReactNode;
 }) {
   const [queryClient] = useState(() => {
-    const client = new QueryClient({
-      defaultOptions: {
-        queries: {
-          staleTime: 60_000,
-          refetchOnWindowFocus: false,
-        },
-      },
-    });
-    _queryClient = client;
-    return client;
+    if (!_queryClient) {
+      _queryClient = createQueryClient();
+    }
+    return _queryClient;
   });
 
   return (

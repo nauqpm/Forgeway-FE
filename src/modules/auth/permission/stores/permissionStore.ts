@@ -11,6 +11,20 @@ interface PermissionActions {
   clearPermissions: () => void;
 }
 
+/**
+ * Check if a permission matches a resource/action pair.
+ * Supports wildcard (*) for both resource and action.
+ */
+function matchesPermission(
+  permission: Permission,
+  resource: string,
+  action: string
+): boolean {
+  const resourceMatches = permission.resource === resource || permission.resource === '*';
+  const actionMatches = permission.action === action || permission.action === '*';
+  return resourceMatches && actionMatches;
+}
+
 export const usePermissionStore = create<PermissionState & PermissionActions>(
   (set, get) => ({
     globalPermissions: [],
@@ -20,8 +34,8 @@ export const usePermissionStore = create<PermissionState & PermissionActions>(
 
     can: (resource, action) => {
       const state = get();
-      return state.globalPermissions.some(
-        (p) => p.resource === resource && p.action === action,
+      return state.globalPermissions.some((p) =>
+        matchesPermission(p, resource, action)
       );
     },
 

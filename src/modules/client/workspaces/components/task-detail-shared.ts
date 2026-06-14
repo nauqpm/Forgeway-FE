@@ -22,9 +22,22 @@ export type SprintOption = {
   name?: string;
 };
 
-export const getUserDisplayName = (user: any, fallback?: string | null): string => {
+export type UserLike = {
+  fullName?: string;
+  email?: string;
+  _id?: string;
+  id?: string;
+};
+
+export type IssueLike = {
+  assigneeId?: string | null;
+  assignee?: UserLike | string | null;
+};
+
+export const getUserDisplayName = (user: UserLike | string | null | undefined, fallback?: string | null): string => {
   if (typeof user === "string") return user;
-  return user?.fullName || user?.email || fallback || "Unassigned";
+  if (!user) return fallback || "Unassigned";
+  return user.fullName || user.email || fallback || "Unassigned";
 };
 
 export const formatDateTime = (value?: string | null): string => {
@@ -40,10 +53,11 @@ export const toDateInputValue = (value?: string | null): string => {
   return String(value).slice(0, 10);
 };
 
-export const getIssueAssigneeId = (issue: any): string => {
+export const getIssueAssigneeId = (issue: IssueLike): string => {
   if (issue?.assigneeId) return String(issue.assigneeId);
   if (typeof issue?.assignee === "string") return issue.assignee === "U" ? "" : issue.assignee;
-  return issue?.assignee?._id || issue?.assignee?.id || "";
+  const assignee = issue?.assignee as UserLike | null;
+  return assignee?._id || assignee?.id || "";
 };
 
 export const mapMemberOptions = (

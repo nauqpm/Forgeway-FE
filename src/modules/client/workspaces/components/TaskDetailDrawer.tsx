@@ -35,9 +35,9 @@ interface TaskDetailDrawerProps {
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
-  onUpdateIssue?: (updatedIssue: any) => void;
+  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
-  onArchiveIssue?: (issue: any) => void;
+  onArchiveIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   /** Embedded in split list view: no overlay, no fixed positioning */
   embedded?: boolean;

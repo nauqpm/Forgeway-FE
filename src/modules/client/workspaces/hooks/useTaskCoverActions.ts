@@ -3,6 +3,7 @@ import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { taskCoverService } from "../services/taskCoverService";
 import type { TaskCover } from "../types/task-cover.type";
+import { extractApiError } from "@/common/utils/apiError";
 
 type CoverableIssue = {
   id: string;
@@ -47,9 +48,9 @@ export function useTaskCoverActions<TIssue extends CoverableIssue>({
         onCoverChange(savedCover ?? cover);
         onSettledCover?.(savedCover ?? cover);
         invalidateCoverCaches();
-      } catch (error: any) {
+      } catch (error) {
         onCoverChange(previousCover);
-        toast.error(error?.response?.data?.message || "Could not update task cover");
+        toast.error(extractApiError(error, "Could not update task cover"));
       } finally {
         setSaving(false);
       }
@@ -68,9 +69,9 @@ export function useTaskCoverActions<TIssue extends CoverableIssue>({
       await taskCoverService.removeCover(workspaceId, issue.id);
       onSettledCover?.(null);
       invalidateCoverCaches();
-    } catch (error: any) {
+    } catch (error) {
       onCoverChange(previousCover);
-      toast.error(error?.response?.data?.message || "Could not remove task cover");
+      toast.error(extractApiError(error, "Could not remove task cover"));
     } finally {
       setSaving(false);
     }

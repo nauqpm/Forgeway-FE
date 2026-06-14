@@ -9,11 +9,12 @@ import { apiRoutes } from "@/config/apiRoutes";
 import RoleChanger, {
   WorkspaceRoleValue,
 } from "@/modules/client/workspaces/components/RoleChanger";
-import InviteModal from "@/modules/admin/components/common/components/InviteModal";
+import InviteModal from "@/modules/shared/components/common/components/InviteModal";
 import {
   inviteService,
   PendingInvite,
 } from "@/modules/client/workspaces/services/inviteService";
+import { extractApiError } from "@/common/utils/apiError";
 
 interface MemberUser {
   _id: string;
@@ -112,9 +113,9 @@ export default function MembersTab({
         ),
       );
       toast.success("Member permissions updated.");
-    } catch (error: any) {
+    } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Could not update member permissions.",
+        extractApiError(error, "Could not update member permissions."),
       );
     } finally {
       setUpdatingId(null);
@@ -133,9 +134,9 @@ export default function MembersTab({
         (prev) => (prev ?? []).filter((m) => m.userId?._id !== userId),
       );
       toast.success("Member removed from workspace.");
-    } catch (error: any) {
+    } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Could not remove member.",
+        extractApiError(error, "Could not remove member."),
       );
     } finally {
       setRemovingId(null);
@@ -151,9 +152,9 @@ export default function MembersTab({
         (prev) => (prev ?? []).filter((i) => i._id !== inviteId),
       );
       toast.success("Invitation cancelled.");
-    } catch (error: any) {
+    } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Could not cancel invitation.",
+        extractApiError(error, "Could not cancel invitation."),
       );
     } finally {
       setCancelingId(null);

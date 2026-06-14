@@ -14,7 +14,7 @@ import { Issue } from "../../types/issue.type";
 import { Filters } from "../../types/filter.type";
 import { VisibilityState } from "@tanstack/react-table";
 import { Sprint } from "../../types/sprint.type";
-import DataGridListView from "@/modules/admin/components/common/components/DataGridListView";
+import DataGridListView from "@/modules/shared/components/common/components/DataGridListView";
 import TaskDetailList from "../TaskDetailList";
 import BoardFilters from "../BoardFilters";
 

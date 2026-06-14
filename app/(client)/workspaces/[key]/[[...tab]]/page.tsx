@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, use, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -87,7 +87,7 @@ const TaskDetailList = dynamic(
   { ssr: false },
 );
 const BulkActionBar = dynamic(
-  () => import("@/modules/admin/components/common/components/BulkActionBar"),
+  () => import("@/modules/shared/components/common/components/BulkActionBar"),
   { ssr: false },
 );
 

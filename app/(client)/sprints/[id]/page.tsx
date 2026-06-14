@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import api from "@/common/services/api.service";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import {
   ArrowLeft, CheckSquare, Clock, Target, TrendingUp, Users,
   Calendar, AlertTriangle, Play, Pause, Flag, BarChart3, Zap

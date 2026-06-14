@@ -13,7 +13,6 @@ export const useAuth = () => {
         setError(null);
         try {
             const response = await axios.post(`${API_URL}/register`, { email, password });
-            console.log("Registration successful:", response.data);
         } catch (err: any) {
             setError(err.response?.data?.message || "An error occurred.");
         } finally {

@@ -1,54 +1,9 @@
-import axios from 'axios';
+/**
+ * @deprecated Use @/config/api instead. This file re-exports the unified API instance.
+ * The unified API instance uses httpOnly cookies for auth and has proper 401 handling.
+ */
+import api from '@/config/api';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5512';
-
-const api = axios.create({
-    baseURL: BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    withCredentials: true,
-});
-
-api.interceptors.request.use(
-    (config) => {
-        config.withCredentials = true;
-        return config;
-    },
-    (error) => Promise.reject(error)
-);
-
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
-
-        if (
-            error.response?.status === 401 &&
-            originalRequest &&
-            !originalRequest._retry &&
-            !originalRequest.url?.includes('/auth/refresh')
-        ) {
-            originalRequest._retry = true;
-            try {
-                await api.post('/auth/refresh', {});
-                return api(originalRequest);
-            } catch {
-                if (typeof window !== 'undefined') {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('workspace-storage');
-                    window.location.href = '/login';
-                }
-            }
-        } else if (error.response?.status === 401) {
-            if (typeof window !== 'undefined') {
-                localStorage.removeItem('token');
-                localStorage.removeItem('workspace-storage');
-                window.location.href = '/login';
-            }
-        }
-        return Promise.reject(error);
-    }
-);
-
+// Re-export everything from the unified API
 export default api;
+export { API_URL, API_HEADERS, getAuthHeaders, buildApiUrl, API_TIMEOUT } from '@/config/api';
