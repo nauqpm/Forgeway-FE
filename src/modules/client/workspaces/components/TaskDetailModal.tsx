@@ -31,8 +31,8 @@ interface TaskDetailModalProps {
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
-  onUpdateIssue?: (updatedIssue: any) => void;
-  onArchiveIssue?: (issue: any) => void;
+  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
+  onArchiveIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
 }
 

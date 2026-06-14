@@ -33,17 +33,11 @@ import VersionHistorySidebar from "./VersionHistorySidebar";
 import SuggestionsSidebar from "./SuggestionsSidebar";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 
+import { extractApiError } from "@/common/utils/apiError";
+
 export type EditorMode = "read" | "edit";
 
 const normalizeTitle = (value: string) => value.trim().toLocaleLowerCase();
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (error && typeof error === "object" && "response" in error) {
-    const res = (error as { response?: { data?: { message?: string; error?: string } } }).response;
-    return res?.data?.message || res?.data?.error || fallback;
-  }
-  return fallback;
-};
 
 export default function TiptapEditor() {
   const { documents, selectedDocumentId, updateDocument, saveDocument } = useDocsStore();
@@ -404,7 +398,7 @@ export default function TiptapEditor() {
       setTitleError(null);
       return true;
     } catch (error) {
-      const message = getErrorMessage(
+      const message = extractApiError(
         error,
         "Could not rename page",
       );
