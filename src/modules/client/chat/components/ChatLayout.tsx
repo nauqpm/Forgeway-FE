@@ -25,7 +25,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
           </button>
         </header>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
           <ChatSidebar />
         </div>
       </div>
