@@ -112,7 +112,6 @@ export function useAppProfile() {
           return false;
         }
         if (!avatarUrl.startsWith("http") && !avatarUrl.startsWith("https")) {
-          // @ts-expect-error -- avatarUrl may be a relative path from server
           avatarUrl = (process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:5512") + avatarUrl;
         }
 

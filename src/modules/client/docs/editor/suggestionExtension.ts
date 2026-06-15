@@ -308,7 +308,6 @@ export const SuggestionExtension = Extension.create({
           },
         },
         appendTransaction(transactions, oldState, newState) {
-          const storage = extensionThis.storage;
           if (!storage.active || !storage.user.id) return null;
 
           // Avoid processing our own appended transactions recursively
