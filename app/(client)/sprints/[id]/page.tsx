@@ -118,7 +118,8 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
   const daysLeft = sprint.endDate ? Math.max(0, Math.ceil((new Date(sprint.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
 
   return (
-    <div className="app-page-narrow">
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/sprints" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
           <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
@@ -218,6 +219,7 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
             </p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

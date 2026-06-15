@@ -30,7 +30,8 @@ export default function CreateProjectPage() {
   if (!currentWorkspace) return <div className="app-main text-center text-gray-500">Select a workspace first</div>;
 
   return (
-    <div className="app-page-narrow">
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="flex items-center gap-3 mb-6">
         <Link href="/projects" className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Project</h1>
@@ -70,6 +71,7 @@ export default function CreateProjectPage() {
           <button type="submit" disabled={loading} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium disabled:opacity-50">{loading ? "Creating..." : "Create Project"}</button>
         </div>
       </form>
+      </div>
     </div>
   );
 }

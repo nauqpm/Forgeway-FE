@@ -85,7 +85,8 @@ export default function SprintsPage() {
   );
 
   return (
-    <div className="app-page-narrow">
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sprints</h1>
@@ -106,6 +107,7 @@ export default function SprintsPage() {
           {render(sprints.filter(s => s.status === "completed"), "Completed")}
         </>
       )}
+      </div>
     </div>
   );
 }

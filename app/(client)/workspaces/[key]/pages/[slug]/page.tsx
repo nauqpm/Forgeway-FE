@@ -34,7 +34,8 @@ export default function PageViewPage() {
   if (!page) return <div className="app-main text-center text-gray-500">Page not found</div>;
 
   return (
-    <div className="app-page-narrow">
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link href={`/workspaces/${workspaceKey}/docs`} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"><ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" /></Link>
@@ -63,6 +64,7 @@ export default function PageViewPage() {
 
         <div className="prose prose-gray max-w-none" dangerouslySetInnerHTML={{ __html: page.content || '<p class="text-gray-400 italic">No content yet. Click Edit to add content.</p>' }} />
       </article>
+      </div>
     </div>
   );
 }

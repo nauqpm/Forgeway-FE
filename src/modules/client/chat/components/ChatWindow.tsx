@@ -274,7 +274,6 @@ export default function ChatWindow() {
             <Users className="w-4 h-4" />
           </button>
           <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Search className="w-4 h-4" /></button>
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Info className="w-4 h-4" /></button>
         </div>
       </header>
 

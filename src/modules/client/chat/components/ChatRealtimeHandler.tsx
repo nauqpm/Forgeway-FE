@@ -166,7 +166,7 @@ export default function ChatRealtimeHandler() {
     const toastId = "chat-rate-limit-toast";
     let timeLeft = Math.ceil(retryAfterMs / 1000);
 
-    toast.error(`You are performing actions too quickly. Please try again in ${timeLeft} seconds.`, {
+    toast.error(`Please slow down. Try again in ${timeLeft} seconds.`, {
       id: toastId,
       duration: retryAfterMs,
     });
@@ -180,7 +180,7 @@ export default function ChatRealtimeHandler() {
         }
         toast.dismiss(toastId);
       } else {
-        toast.error(`You are performing actions too quickly. Please try again in ${timeLeft} seconds.`, {
+        toast.error(`Please slow down. Try again in ${timeLeft} seconds.`, {
           id: toastId,
           duration: timeLeft * 1000,
         });

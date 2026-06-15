@@ -37,10 +37,11 @@ export default function SettingsPage() {
     "U";
 
   return (
-    <div className="app-page-narrow">
-      <h1 className="mb-6 text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
-        Settings
-      </h1>
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-narrow py-8 pb-12 px-4">
+        <h1 className="mb-6 text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
+          Settings
+        </h1>
 
       {message && (
         <div
@@ -164,6 +165,7 @@ export default function SettingsPage() {
 
       <div className="mb-6">
         <FontSizeControl />
+      </div>
       </div>
     </div>
   );
