@@ -30,9 +30,9 @@ export function useChatRealtime() {
     const socket = chatSocketClient.getSocket();
     if (socket?.connected) {
       socket.emit(SOCKET_EVENTS.READ, { channelId });
+      // Reset local unread count
+      updateChannel(channelId, { unreadCount: 0 });
     }
-    // Reset local unread count
-    updateChannel(channelId, { unreadCount: 0 });
   }, [updateChannel]);
 
   const joinChannel = useCallback((channelId: string) => {

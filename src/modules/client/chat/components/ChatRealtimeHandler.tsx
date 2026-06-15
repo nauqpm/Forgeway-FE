@@ -66,8 +66,8 @@ export default function ChatRealtimeHandler() {
     const socket = chatSocketClient.getSocket();
     if (socket?.connected) {
       socket.emit(SOCKET_EVENTS.READ, { channelId });
+      updateChannel(channelId, { unreadCount: 0 });
     }
-    updateChannel(channelId, { unreadCount: 0 });
   }, [updateChannel]);
 
   const handleNewMessage = useCallback((envelope: any) => {
@@ -88,11 +88,19 @@ export default function ChatRealtimeHandler() {
     if (isCurrentChannel) {
       markAsRead(message.channelId);
     } else {
-      incrementUnread(message.channelId);
+      const senderIdStr = typeof message.senderId === 'object' && message.senderId
+        ? (message.senderId._id || message.senderId.id)
+        : message.senderId;
+      const currentUserId = (user as any)?._id || user?.id;
+      const isMyOwnMessage = senderIdStr && currentUserId && senderIdStr.toString() === currentUserId.toString();
+
+      if (!isMyOwnMessage) {
+        incrementUnread(message.channelId);
+      }
     }
     
     updateChannel(message.channelId, { lastMessage: message });
-  }, [addMessage, updateChannel, incrementUnread, markAsRead, addChannel]);
+  }, [addMessage, updateChannel, incrementUnread, markAsRead, addChannel, user]);
 
   const handleMessageEdited = useCallback((envelope: any) => {
     const message = envelope.data || envelope;
@@ -132,7 +140,7 @@ export default function ChatRealtimeHandler() {
           unreadCount: data.unreadCount,
           ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
         });
-      } else if (data.increment) {
+      } else if (data.increment !== undefined) {
         const existingChannel = channels.find(c => c._id === data.channelId);
         const currentCount = existingChannel?.unreadCount || 0;
         updateChannel(data.channelId, { 
