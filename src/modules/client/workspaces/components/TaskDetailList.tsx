@@ -28,6 +28,7 @@ import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
 
 interface TaskDetailListProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issue: TaskDetailResponse | any;
   workspaceId: string;
   workspaceMembers?: WorkspaceMember[];
@@ -36,6 +37,7 @@ interface TaskDetailListProps {
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   showBackButton?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdateIssue?: (updatedIssue: any) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: TaskDetailResponse) => void;

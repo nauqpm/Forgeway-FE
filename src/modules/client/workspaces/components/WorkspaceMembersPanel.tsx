@@ -89,6 +89,7 @@ function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: Invit
       toast.success(`Invitation sent to ${email}.`);
       onSuccess();
       onClose();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? "User is already a member of this workspace.";
       toast.error(msg);
@@ -242,6 +243,7 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
       setMembers((prev) => prev.map((item) => (item.userId?._id === userId ? { ...item, role } : item)));
       setContextMenu(null);
       toast.success("Member permissions updated.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? "Could not update member permissions.");
     } finally {
@@ -259,6 +261,7 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setContextMenu(null);
       toast.success("Member removed from workspace.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? "Could not remove member.");
     } finally {

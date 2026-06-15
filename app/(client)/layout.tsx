@@ -25,7 +25,7 @@ import Image from "next/image";
 import appleIcon from "../apple-icon.png";
 import { usePathname, useRouter } from "next/navigation";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
-import AppHeader from "@/modules/client/common/layout/AppHeader";
+
 import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
@@ -64,7 +64,6 @@ const DEFAULT_FILTERS: Filters = {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const {
-    setCurrentWorkspace,
     currentWorkspace,
     setWorkspaces,
     workspaces,

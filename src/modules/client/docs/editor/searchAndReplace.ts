@@ -89,7 +89,8 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions>({
   },
 
   addProseMirrorPlugins() {
-    const extension = this;
+    const storage = this.storage;
+    const options = this.options;
 
     return [
       new Plugin({
@@ -99,9 +100,9 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions>({
             return DecorationSet.empty;
           },
           apply(tr) {
-            const searchTerm = extension.storage.searchTerm;
+            const searchTerm = storage.searchTerm;
             if (!searchTerm) {
-              extension.storage.results = [];
+              storage.results = [];
               return DecorationSet.empty;
             }
 
@@ -110,7 +111,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions>({
             const results: { from: number; to: number }[] = [];
             const regex = new RegExp(
               searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
-              extension.options.caseSensitive ? "g" : "gi"
+              options.caseSensitive ? "g" : "gi"
             );
 
             doc.descendants((node, pos) => {
@@ -121,7 +122,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions>({
                   const to = from + match[0].length;
                   decorations.push(
                     Decoration.inline(from, to, {
-                      class: extension.options.searchResultClass,
+                      class: options.searchResultClass,
                     })
                   );
                   results.push({ from, to });
@@ -129,7 +130,7 @@ export const SearchAndReplace = Extension.create<SearchAndReplaceOptions>({
               }
             });
 
-            extension.storage.results = results;
+            storage.results = results;
             return DecorationSet.create(doc, decorations);
           },
         },

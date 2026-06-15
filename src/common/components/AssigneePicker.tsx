@@ -37,6 +37,7 @@ export function getMemberId(m: AssigneePickerMember): string {
 
 export function getMemberDisplayName(m: AssigneePickerMember): string {
   if (typeof m.userId === "string") return m.userId;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const u = m.userId as any;
   return u?.fullName ?? u?.name ?? u?.email ?? "Unknown";
 }

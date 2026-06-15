@@ -107,7 +107,8 @@ export default function TypePicker({
   const cfg = TASK_TYPE_CONFIG[resolved];
   const label = resolved;
   const Icon = cfg?.Icon ?? FileText;
-  const iconColor = cfg?.iconColor ?? "text-[#ABABAB]";
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _iconColor = cfg?.iconColor ?? "text-[#ABABAB]";
   const dotColor = cfg?.dotColor ?? "bg-[#ABABAB]";
 
   const triggerCls =

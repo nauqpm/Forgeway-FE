@@ -117,6 +117,7 @@ export function useEditorLifecycle(initialContent: string) {
   const editEditorRef = useRef<Editor | null>(null);
   const [, setEditorUpdateTick] = useState(0);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const createCollaborativeEditor = useCallback((ydoc: Y.Doc, awareness?: any) => {
     if (editEditorRef.current) {
       editEditorRef.current.destroy();
@@ -171,6 +172,7 @@ export function useEditorLifecycle(initialContent: string) {
           },
         },
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       console.error("DEBUG - createCollaborativeEditor threw error:", e);
       if (e.stack) {

@@ -10,19 +10,11 @@ import Link from "next/link";
 import {
   CheckSquare,
   Filter,
-  ArrowUpDown,
-  Calendar,
-  AlertCircle,
   Search,
-  ChevronDown,
-  User,
-  FolderKanban,
-  LayoutGrid,
-  List,
+  Calendar,
   ArrowRight,
   Plus,
   SortAsc,
-  Clock,
 } from "lucide-react";
 
 interface Task {
@@ -98,7 +90,7 @@ export default function MyTasksPage() {
 
   const priorityOrder: Record<string, number> = { highest: 0, high: 1, medium: 2, low: 3, lowest: 4 };
 
-  let filtered = tasks.filter((t) => {
+  const filtered = tasks.filter((t) => {
     const matchSearch =
       !search ||
       t.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -242,6 +234,7 @@ export default function MyTasksPage() {
             <SortAsc className="w-4 h-4 text-gray-400" />
             <select
               value={sortBy}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onChange={(e) => setSortBy(e.target.value as any)}
               className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
             >

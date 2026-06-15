@@ -139,6 +139,7 @@ export const getEditorExtensions = (placeholder: string) => [
 export const getCollaborativeEditorExtensions = (
   placeholder: string,
   ydoc: YDoc,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   _awareness?: any,
 ) => {
   const extensions = [

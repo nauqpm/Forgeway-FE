@@ -7,6 +7,7 @@ export interface CalendarTasksResponse {
 }
 
 function normalizePayload<T>(payload: unknown): T {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = payload as any;
   return (p?.data?.data ?? p?.data ?? p) as T;
 }

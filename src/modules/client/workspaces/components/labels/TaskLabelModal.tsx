@@ -262,7 +262,7 @@ export default function TaskLabelModal({
                     <h4 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Delete label</h4>
                     <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                       Delete{" "}
-                      <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">"{labelToDelete.name}"</span>?
+                      <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">&quot;{labelToDelete.name}&quot;</span>?
                       {" "}This will remove it from all tasks.
                     </p>
                   </div>

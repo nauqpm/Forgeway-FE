@@ -25,6 +25,7 @@ export default function FindReplacePanel({ editor, onClose }: FindReplacePanelPr
     editor.view.dispatch(editor.view.state.tr);
 
     // Get number of results from storage
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results = (editor.storage as any).searchAndReplace?.results || [];
     setMatchCount(results.length);
   }, [searchTerm, replaceTerm, editor]);
@@ -52,6 +53,7 @@ export default function FindReplacePanel({ editor, onClose }: FindReplacePanelPr
     editor.commands.replace();
     // Recalculate results count
     setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const results = (editor.storage as any).searchAndReplace?.results || [];
       setMatchCount(results.length);
     }, 50);

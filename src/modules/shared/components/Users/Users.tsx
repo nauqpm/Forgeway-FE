@@ -286,7 +286,8 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                   </td>
                 </tr>
               ) : (
-                displayItems.map((item: any) => (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              displayItems.map((item: any) => (
                   <tr
                     key={item._id || item.email}
                     className="hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"

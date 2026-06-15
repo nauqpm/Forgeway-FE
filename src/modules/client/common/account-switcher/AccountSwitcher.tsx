@@ -161,7 +161,6 @@ export default function AccountSwitcherList({
               >
                 <div className="grid h-7 w-7 shrink-0 place-items-center overflow-hidden rounded-full bg-[#2563EB] text-[11px] font-semibold text-white dark:bg-[#3B82F6]">
                   {acc.avatar ? (
-                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={acc.avatar}
                       alt=""

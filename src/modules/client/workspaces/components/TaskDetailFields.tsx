@@ -18,11 +18,13 @@ import {
 } from "./task-detail-shared";
 
 interface TaskDetailFieldsProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issue: any;
   workspaceId: string;
   canEditTask: boolean;
   sprints?: SprintOption[];
   showSprintField?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   workspaceMembers: any[];
   /** Called with the partial update when any field changes */
   onUpdate: (updates: Record<string, unknown>) => void;
@@ -179,6 +181,7 @@ export default function TaskDetailFields({
               assigneeId: uid,
               assignee: uid ?? "U",
               assigneeDisplayName:
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 resolveMemberName(workspaceMembers as any[], uid ?? undefined) ??
                 (uid ? uid : "Unassigned"),
             })

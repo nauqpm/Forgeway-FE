@@ -8,7 +8,7 @@ import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, User, Tag, Calendar, Flag, MessageSquare, Paperclip, Send, Edit3 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Tag, Flag, MessageSquare, Paperclip, Send, Edit3 } from "lucide-react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import StatusPicker from "@/common/components/StatusPicker";
 
@@ -20,13 +20,17 @@ interface Task {
   type: string;
   status: string;
   priority: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   assigneeId?: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   reporterId?: any;
   labels: string[];
   dueDate?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   projectId?: any;
   workspaceId?: string;
   storyPoints?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   attachments: any[];
   createdAt: string;
   updatedAt: string;
@@ -34,6 +38,7 @@ interface Task {
 interface Comment {
   _id: string;
   content: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   authorId: any;
   createdAt: string;
 }

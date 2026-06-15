@@ -14,7 +14,7 @@ import {
   User,
   X,
 } from "lucide-react";
-import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
+import { ADMIN_URL } from "@/lib/admin-url";
 import { useAccountSwitcherStore } from "@/common/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 

@@ -18,6 +18,7 @@ export interface WorkspaceSettingsProps {
 
 export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsProps) {
   const { currentWorkspace, setCurrentWorkspace, setWorkspaces } = useWorkspaceStore();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [workspace, setWorkspace] = useState<any>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +76,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
     } catch {}
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const roleIcons: Record<string, any> = { owner: Crown, admin: Shield, member: User, viewer: User };
   const roleColors: Record<string, string> = {
     owner: "text-[#956400] dark:text-[#F59E0B]",

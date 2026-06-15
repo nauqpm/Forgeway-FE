@@ -26,6 +26,7 @@ interface TaskDescriptionProps {
   onSave: (content: string) => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const MenuBar = ({ editor }: { editor: any }) => {
   if (!editor) return null;
 

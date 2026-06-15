@@ -9,6 +9,7 @@ import {
   DeleteColumnDto,
 } from "../types/board.type";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeResponseData = <T>(payload: any): T => {
   return payload?.data?.data ?? payload?.data ?? payload;
 };
@@ -16,6 +17,7 @@ const normalizeResponseData = <T>(payload: any): T => {
 export const boardService = {
   async getBoardByWorkspace(workspaceId: string): Promise<{ boardId: string; columns: BoardColumn[] }> {
     const response = await api.get(apiRoutes.WORKSPACES.BOARD(workspaceId));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = normalizeResponseData<any>(response);
     const board = Array.isArray(data) ? data[0] : data;
 
@@ -23,6 +25,7 @@ export const boardService = {
       throw new Error("Board not found for this workspace");
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const columns = (board.columns || []).map((col: any) => ({
       ...col,
       id: col._id ?? col.id,

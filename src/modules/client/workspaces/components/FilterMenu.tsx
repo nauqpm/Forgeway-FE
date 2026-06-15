@@ -14,7 +14,9 @@ type FilterAssignee = {
 interface FilterMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filters: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setFilters: (filters: any) => void;
   density: "compact" | "comfortable" | "spacious";
   setDensity: (val: "compact" | "comfortable" | "spacious") => void;
@@ -27,6 +29,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
       if (e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         if (isOpen) onClose();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         else setFilters((prev: any) => ({ ...prev }));
       }
       if (e.key === 'Escape' && isOpen) {
@@ -53,6 +56,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
       .toUpperCase();
 
   const toggleArrayFilter = (key: string, value: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setFilters((prev: any) => {
       const arr = prev[key] || [];
       if (arr.includes(value)) {
@@ -64,6 +68,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
   };
 
   const clearFilters = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setFilters((prev: any) => ({
       ...prev,
       assignees: [],

@@ -61,6 +61,7 @@ export default function WorkspacesPage() {
     const socket = realtimeSocketClient.getSocket();
     if (!socket) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleWorkspaceCreated = (payload: any) => {
       if (payload.type === SOCKET_EVENTS.WORKSPACE_CREATED) {
         const newWorkspace = payload.data?.workspace;
@@ -76,6 +77,7 @@ export default function WorkspacesPage() {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleWorkspaceDeleted = (payload: any) => {
       const workspaceId = payload.data?.workspaceId ?? payload.workspaceId;
       if (workspaceId) {

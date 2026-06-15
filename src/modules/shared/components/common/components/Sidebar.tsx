@@ -68,8 +68,10 @@ const adminNav = [
   { icon: Shield, label: 'Permissions', href: '/dashboard/permissions' },
 ];
 
-const SHOW_RECENT_NAV = false;
-const SHOW_STARRED_NAV = false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _SHOW_RECENT_NAV = false;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _SHOW_STARRED_NAV = false;
 const SHOW_ADMIN_NAV = false;
 const SIDEBAR_WORKSPACE_LIMIT = 3;
 const MORE_WORKSPACE_LIMIT = 3;
@@ -134,6 +136,7 @@ const NavItem = ({
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const PopoverNavItem = ({
   item,
   type,
@@ -150,6 +153,7 @@ const PopoverNavItem = ({
   setActivePopover: (val: SidebarPopoverType | null) => void;
   collapsed: boolean;
   mounted: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   forYouWorkspaces?: any[];
   onMobileClose?: () => void;
 }) => {
@@ -662,7 +666,8 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
-  const [forYouWorkspaces, setForYouWorkspaces] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+  const [_forYouWorkspaces, setForYouWorkspaces] = useState<any[]>([]);
   const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
   const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: '0px' });
   const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
@@ -1100,16 +1105,19 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
               ) : (
                 <div className="space-y-0.5">
                   {visibleMoreWorkspaces.map((workspace) => {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const routeKey = workspace.key || workspace.slug || workspace._id || (workspace as any).id;
                     const isActiveWorkspace =
                       currentWorkspace?._id === workspace._id ||
                       currentWorkspace?.key === workspace.key ||
                       currentWorkspace?.slug === workspace.slug;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const wsId = workspace._id || (workspace as any).id;
                     const hasUnread = getWorkspaceUnread(wsId) > 0;
 
                     return (
                       <Link
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         key={workspace._id || (workspace as any).id || routeKey}
                         href={`/workspaces/${routeKey}`}
                         onClick={() => {

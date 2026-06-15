@@ -23,6 +23,7 @@ export interface TimelineHierarchy {
 }
 
 function normalizePayload<T>(payload: unknown): T {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = payload as any;
   return (p?.data?.data ?? p?.data ?? p) as T;
 }
@@ -44,6 +45,7 @@ export const timelineService = {
   async getWorkspaceDependencies(workspaceId: string): Promise<TaskDependency[]> {
     const response = await api.get(apiRoutes.TASKS.WORKSPACE_DEPENDENCIES(workspaceId));
     const raw = normalizePayload<TaskDependency[] | { items: TaskDependency[] }>(response);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return Array.isArray(raw) ? raw : ((raw as any).items ?? []);
   },
 

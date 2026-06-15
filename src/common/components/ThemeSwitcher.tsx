@@ -41,6 +41,7 @@ export default function ThemeSwitcher() {
         {options.map((option) => (
           <button
             key={option.id}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onClick={() => setTheme(option.id as any)}
             className={`flex flex-col items-center justify-center p-4 rounded-[8px] border-2 transition-all duration-200 ${
               theme === option.id

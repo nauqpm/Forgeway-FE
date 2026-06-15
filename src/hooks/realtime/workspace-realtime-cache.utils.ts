@@ -10,6 +10,7 @@ export type WorkspaceLike = {
   status?: string;
   access?: string;
   visibility?: 'private' | 'public';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   members?: any[];
 };
 

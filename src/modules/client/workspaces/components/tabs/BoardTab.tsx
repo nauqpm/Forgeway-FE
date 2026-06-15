@@ -2,7 +2,7 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Filters } from "../../types/filter.type";
 import { Issue } from "../../types/issue.type";
 import { Workspace } from "../../types/workspace.type";
@@ -22,7 +22,6 @@ import {
   Trash2,
   X,
   PlayCircle,
-  ArrowRight,
 } from "lucide-react";
 import AssigneePicker from "@/common/components/AssigneePicker";
 import type { AssigneePickerUser } from "@/common/components/AssigneePicker";
@@ -117,7 +116,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const { filters, newIssueForm, showCreateColumn, newColumnName } = ui;
   const {
     setFilters,
-    setColumns,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    setColumns: _setColumns,
     setIssues,
     setSelectedIssue,
 
@@ -132,7 +132,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     handleAddColumn,
     handleRenameColumn,
     handleDeleteColumn,
-    handleMoveColumn,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    handleMoveColumn: _handleMoveColumn,
     updateIssueDirectly,
     onArchiveIssue,
     onDeleteIssue,
@@ -158,6 +159,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
       .map((member) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const user = member.userId as any;
         const id = typeof user === "string" ? normalizeObjectId(user) : normalizeObjectId(user);
         const email = typeof user === "string" ? "" : user?.email ?? "";

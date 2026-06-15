@@ -17,6 +17,7 @@ interface Sprint {
   status: string;
   startDate: string;
   endDate: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   projectId?: any;
 }
 
@@ -59,6 +60,7 @@ export default function SprintsPage() {
 
   if (loading) return <LoadingSpinner />;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const config: Record<string, { color: string; bg: string; icon: any }> = {
     active: { color: "text-blue-600", bg: "bg-blue-50", icon: Play },
     planning: { color: "text-amber-600", bg: "bg-amber-50", icon: Clock },

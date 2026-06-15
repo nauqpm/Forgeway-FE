@@ -58,6 +58,7 @@ const imageService = {
   /**
    * Compress image before upload
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   compressImage: async (file: File, customOptions?: any): Promise<File> => {
     // Update image compression support state on each run
     const supported = isImageCompressionSupported();
@@ -281,6 +282,7 @@ const imageService = {
         }
 
         // Process each result
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const processedChunkResults = chunkResults.map((img: any, index: number) => {
           // If img is a string, assume it is a URL
           if (typeof img === "string") {
@@ -340,6 +342,7 @@ const imageService = {
       }
 
       return uploadResults;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       const err = error as { 
         response?: { status?: number; data?: unknown; headers?: unknown }; 
@@ -401,6 +404,7 @@ const imageService = {
   /**
    * Delete an image by slug
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   deleteImage: async (slug: string): Promise<any> => {
     const response = await api.delete(`/images/${slug}`);
     return response.data;

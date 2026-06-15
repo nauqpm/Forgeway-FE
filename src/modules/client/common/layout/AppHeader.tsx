@@ -35,8 +35,10 @@ export default function AppHeader({
   onMobileOpen,
   taskSearchFilters,
   setTaskSearchFilters,
-  isTaskSearchReady,
-  defaultSearchWorkspaceKeys,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isTaskSearchReady: _isTaskSearchReady,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  defaultSearchWorkspaceKeys: _defaultSearchWorkspaceKeys,
   workspaceKey,
 }: AppHeaderProps) {
   const { user } = useAuth();

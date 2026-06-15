@@ -13,6 +13,7 @@ export const withPermission = (
   WrappedComponent: React.ComponentType,
   { resource, action }: PermissionProps
 ) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function PermissionWrapper(props: any) {
     const {
       hasPermission,

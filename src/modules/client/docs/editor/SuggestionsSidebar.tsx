@@ -3,7 +3,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Check, X, FileText, User, Calendar, MessageSquare } from "lucide-react";
+import { Check, X, FileText } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 
 interface SuggestionsSidebarProps {

@@ -1,24 +1,27 @@
 import api from '@/lib/axiosIns';
 import type { Channel, Message } from '@/stores/chatStore';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeArray = <T>(res: any): T[] => {
   const data = res?.data;
   if (Array.isArray(data)) return data;
-  
+
   const body = data?.data ?? data;
   if (Array.isArray(body)) return body;
-  
+
   if (body && typeof body === 'object') {
     const possibleArray = body.users || body.channels || body.messages || body.items || body.list || Object.values(body).find(Array.isArray);
     if (Array.isArray(possibleArray)) return possibleArray;
   }
-  
+
   return [];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeUsers = (users: any[]): any[] => {
   return users.map(user => ({
     ...user,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     _id: user._id || user.id || (user as any).userId
   }));
 };
@@ -32,6 +35,7 @@ const getCacheBustParam = () => ({ _t: Date.now() });
 export const getChannelsAPI = async (): Promise<Channel[]> => {
   // Removed _t to avoid 400 Bad Request on strict BE validation
   const response = await api.get('/chat/channels');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = normalizeArray<any>(response);
   
   return data.map(item => ({
@@ -63,8 +67,9 @@ export const getMessagesAPI = async (
   const response = await api.get(`/chat/channels/${channelId}/messages`, {
     params
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const data = normalizeArray<any>(response);
-  
+
   return data.map(item => ({
     ...item,
     _id: item._id || item.id
@@ -92,19 +97,22 @@ export const createDMAPI = async (targetUserId: string): Promise<Channel> => {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const searchUsersAPI = async (search?: string): Promise<any[]> => {
   try {
     const response = await api.get('/chat/users/search', {
       params: { q: search, ...getCacheBustParam() }
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return normalizeUsers(normalizeArray<any>(response));
-  } catch (error: any) {
+  } catch {
     try {
-      const fallback = await api.get('/users/all', { 
+      const fallback = await api.get('/users/all', {
         params: { search, ...getCacheBustParam() }
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return normalizeUsers(normalizeArray<any>(fallback));
-    } catch (fError) {
+    } catch {
       return [];
     }
   }

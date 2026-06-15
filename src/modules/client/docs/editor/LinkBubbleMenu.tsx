@@ -1,7 +1,7 @@
 // Component representing bubble menu shown when a link is selected in the editor.
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { Copy, Check, Pencil, Unlink, ExternalLink, Loader2 } from "lucide-react";

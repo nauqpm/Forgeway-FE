@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { createMeetingAPI, getActiveMeetingAPI } from '@/modules/client/chat/services/meeting.api';
 import { MeetingType } from '@/modules/client/chat/types/webrtc.types';
 import toast from 'react-hot-toast';

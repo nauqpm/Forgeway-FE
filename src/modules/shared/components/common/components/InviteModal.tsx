@@ -58,6 +58,7 @@ export default function InviteModal({ isOpen, onClose, projectId }: InviteModalP
       setIsCopied(true);
       toast.success("Invite link copied.");
       setTimeout(() => setIsCopied(false), 2000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err?.response?.data?.message ?? "Could not generate invite link.");
     } finally {

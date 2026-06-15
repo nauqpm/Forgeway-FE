@@ -7,10 +7,6 @@ import type {
   TaskDto,
   TaskComment,
   CreateTaskInput,
-  TaskActivity,
-  PaginatedActivitiesResponse,
-  PaginatedTasksResponse,
-  ReorderTaskInput,
 } from "./taskTypes";
 
 // Constants
@@ -36,6 +32,7 @@ const STATUS_BY_COLUMN: Record<string, string> = {
 // Helper functions
 export const normalizeResponseData = <T>(payload: unknown): T => {
   const res = payload as { data?: { data?: T } | T };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return ((res?.data as any)?.data ?? res?.data ?? payload) as T;
 };
 

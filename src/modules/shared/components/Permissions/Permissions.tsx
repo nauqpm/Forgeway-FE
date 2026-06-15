@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, Check, X, Users, Save, Edit3 } from "lucide-react";
+import { Shield, Check, X, Users, Save } from "lucide-react";
 
 const roles = [
   { id: "admin", name: "Administrator", desc: "Full system control" },
@@ -202,7 +202,7 @@ export default function Permissions() {
       </div>
 
       <p className="text-center text-xs text-[#ABABAB] dark:text-[#6B6B6B] mt-8">
-        Click a cell to toggle a permission. Changes apply after clicking "Save changes"
+        Click a cell to toggle a permission. Changes apply after clicking &quot;Save changes&quot;
       </p>
     </div>
   );

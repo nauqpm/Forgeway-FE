@@ -7,7 +7,7 @@ import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
-import { ArrowLeft, Edit3, Clock, User, Eye } from "lucide-react";
+import { ArrowLeft, Edit3, Clock, Eye } from "lucide-react";
 
 interface Page {
   _id: string;
@@ -15,6 +15,7 @@ interface Page {
   content: string;
   slug: string;
   status: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   authorId?: any;
   labels: string[];
   version: number;

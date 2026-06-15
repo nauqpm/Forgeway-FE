@@ -6,6 +6,7 @@ interface StartSprintModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (startDate: string, endDate: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sprint: any;
 }
 

@@ -2,7 +2,6 @@
 
 import {
   DndContext,
-  closestCorners,
   pointerWithin,
   rectIntersection,
   DragEndEvent,

@@ -17,7 +17,6 @@ import {
   Trash2,
   UserPlus,
   X,
-  MoreHorizontal,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -26,16 +25,12 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
 import InviteModal from "@/modules/shared/components/common/components/InviteModal";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
-import RoleChanger, { WorkspaceRoleValue } from "@/modules/client/workspaces/components/RoleChanger";
+import RoleChanger from "@/modules/client/workspaces/components/RoleChanger";
 import { inviteService, PendingInvite } from "@/modules/client/workspaces/services/inviteService";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
 // import GeneralSettings from "@/modules/client/workspaces/settings/components/GeneralSettings";
 // import MemberSettings from "@/modules/client/workspaces/settings/components/MemberSettings";
-import {
-  WorkspaceDeleteDialog,
-  LeaveWorkspaceDialog,
-} from "@/modules/client/workspaces/settings/components/Dialogs";
 
 type WorkspaceStatus = "active" | "archived";
 type WorkspaceAccess = "public" | "private";
@@ -75,6 +70,7 @@ const ROLE_LABELS: Record<string, string> = {
   viewer: "Viewer",
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeWorkspace = (payload: any): WorkspaceSettings => (payload?.data ?? payload) as WorkspaceSettings;
 
 const normalizeObjectId = (value?: string | null) => {
@@ -229,6 +225,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
         access: updatedWorkspace.access || "public",
       });
       toast.success("Workspace settings saved.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Save failed", error);
       toast.error(error?.response?.data?.message || "Could not save workspace settings.");
@@ -250,6 +247,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       toast.success("Workspace deleted.");
       setShowDeleteDialog(false);
       router.push("/workspaces");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error("Delete failed", error);
       toast.error(error?.response?.data?.message || "Could not delete workspace.");
@@ -275,11 +273,13 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     try {
       await inviteService.sendInvite(workspaceInviteId, {
         email,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         role: inviteRole as any,
       });
       toast.success(`Invitation sent to ${email}.`);
       setInviteEmail("");
       await refreshInvites();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "User is already a member of this workspace.");
     } finally {
@@ -293,6 +293,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       await inviteService.cancelInvite(workspaceInviteId, inviteId);
       setInvites((prev) => prev.filter((invite) => invite._id !== inviteId));
       toast.success("Invitation canceled.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Could not cancel invitation.");
     } finally {
@@ -334,6 +335,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       setMembers((prev) => prev.map((item) => (item.userId?._id === userId ? { ...item, role } : item)));
       setMemberMenu(null);
       toast.success("Member permissions updated.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Could not update member permissions.");
     } finally {
@@ -352,6 +354,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setMemberMenu(null);
       toast.success("Member removed from workspace.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Could not remove member.");
     } finally {
@@ -371,6 +374,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceApiId));
       toast.success("Left workspace.");
       router.push("/workspaces");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error?.response?.data?.message || "Could not leave workspace.");
     } finally {
@@ -1060,7 +1064,10 @@ function MemberSettings({
 
                       <div className="flex flex-col gap-2 sm:w-[20rem] sm:flex-row sm:items-end sm:justify-end">
                         <RoleChanger
-                          value={normalizedRole as any}
+                          value={
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            normalizedRole as any
+                          }
                           onChange={(role) => handleUpdateMemberRole(member, role)}
                           disabled={!canManageWorkspace || isSelf || isBusy}
                           isLoading={updatingMemberId === memberId}

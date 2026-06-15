@@ -19,6 +19,7 @@ interface UseCollaborativePageProps {
   initialContent: string;
   mode: "read" | "edit";
   setMode: (mode: "read" | "edit") => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createCollaborativeEditor: (ydoc: Yjs.Doc, awareness: any) => Editor;
   destroyCollaborativeEditor: () => void;
 }
@@ -44,8 +45,11 @@ export function useCollaborativePage({
   const syncChannelRef = useRef<BroadcastChannel | null>(null);
   const isSyncingRef = useRef(false);
   const [hasPendingOffline, setHasPendingOffline] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const remoteUpdateListenerRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const remoteAwarenessListenerRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const remoteVersionRestoredListenerRef = useRef<any>(null);
 
   // ── Sync offline updates to server ────────────────────────
@@ -216,7 +220,8 @@ export function useCollaborativePage({
     socket.on(SOCKET_EVENTS.PAGE_YJS_UPDATE_RECEIVED, handleRemoteYjsUpdate);
 
     // Awareness local update handler
-    const handleLocalAwarenessUpdate = ({ added, updated, removed }: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    const handleLocalAwarenessUpdate = ({ added: _added, updated: _updated, removed: _removed }: any) => {
       const currentSocket = realtimeSocketClient.getSocket();
       if (currentSocket && currentSocket.connected) {
         const update = awarenessProtocol.encodeAwarenessUpdate(awareness, [

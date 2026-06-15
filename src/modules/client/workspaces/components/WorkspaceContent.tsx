@@ -48,15 +48,23 @@ const MembersTab = dynamic(() => import("./tabs/MembersTab"), {
 type WorkspaceContentProps = {
   activeTab: string;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   workspace: any;
   workspaceId: string;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   boardProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   backlogProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   timelineProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   listProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   summaryProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   calendarProps: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   archiveProps: any;
   membersProps: {
     workspaceId: string;
@@ -67,7 +75,8 @@ type WorkspaceContentProps = {
 
 export default function WorkspaceContent({
   activeTab,
-  workspace,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  workspace: _workspace,
   workspaceId,
   boardProps,
   backlogProps,

@@ -1,8 +1,7 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useState } from "react";
+import { FormEvent } from "react";
 import { Loader2, Save, Globe, Lock, ShieldAlert, Trash2, LogOut } from "lucide-react";
-import toast from "react-hot-toast";
 
 interface WorkspaceSettingsForm {
   name: string;

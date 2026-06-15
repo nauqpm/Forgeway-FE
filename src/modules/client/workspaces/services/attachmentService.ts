@@ -8,6 +8,7 @@ import {
   TaskAttachment,
 } from "../types/attachment.type";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeResponseData = <T>(payload: any): T => payload?.data?.data ?? payload?.data ?? payload;
 
 const authConfig = (accessToken?: string | null) =>
@@ -20,6 +21,7 @@ const authConfig = (accessToken?: string | null) =>
     : undefined;
 
 const getErrorMessage = (error: unknown, fallback: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const message = (error as any)?.response?.data?.message || (error as any)?.message;
   return typeof message === "string" && message.trim() ? message : fallback;
 };

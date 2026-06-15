@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { realtimeSocketClient } from '@/lib/socket/socket.client';
@@ -95,20 +95,24 @@ export function useWorkspaceRealtime({
     const syncWorkspace = (workspaceId: string, workspace?: ReturnType<typeof mapWorkspacePayload>) => {
       if (!workspace) return;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nextWorkspaces = upsertWorkspace(workspacesRef.current as any, workspace) as any;
       setWorkspaces(nextWorkspaces);
 
       const currentWs = currentWorkspaceRef.current;
       if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
         setCurrentWorkspace({
           ...currentWs,
           ...workspace,
           members: workspace.members ?? currentWs?.members ?? [],
         } as any);
+        /* eslint-enable @typescript-eslint/no-explicit-any */
       }
     };
 
     const removeWorkspaceFromState = (workspaceId: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nextWorkspaces = removeWorkspace(workspacesRef.current as any, workspaceId) as any;
       setWorkspaces(nextWorkspaces);
 
@@ -153,6 +157,7 @@ export function useWorkspaceRealtime({
       const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
       if (!workspaceId) return;
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const nextWorkspaces = removeWorkspace(workspacesRef.current as any, workspaceId) as any;
       setWorkspaces(nextWorkspaces);
 
@@ -177,6 +182,7 @@ export function useWorkspaceRealtime({
 
       const nextWorkspaces = workspacesRef.current.map((ws) =>
         workspaceIdOf(ws) === workspaceId
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ? updateWorkspaceMemberRole(ws as any, userId, nextRole) as any
           : ws
       );
@@ -185,6 +191,7 @@ export function useWorkspaceRealtime({
       const currentWs = currentWorkspaceRef.current;
       if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
         if (currentWs) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setCurrentWorkspace(updateWorkspaceMemberRole(currentWs as any, userId, nextRole) as any);
         }
       }

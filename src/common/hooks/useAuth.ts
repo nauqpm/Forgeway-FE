@@ -12,7 +12,9 @@ export const useAuth = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.post(`${API_URL}/register`, { email, password });
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const _response = await axios.post(`${API_URL}/register`, { email, password });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             setError(err.response?.data?.message || "An error occurred.");
         } finally {

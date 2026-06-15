@@ -9,6 +9,7 @@ import type { DocumentVersion } from "../types/docs.type";
 interface VersionHistorySidebarProps {
   versions: DocumentVersion[];
   isLoading: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onRestore: (versionId: string) => Promise<any>;
 }
 

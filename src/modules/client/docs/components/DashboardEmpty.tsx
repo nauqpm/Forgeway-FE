@@ -13,7 +13,7 @@ export default function DashboardEmpty({ onClearFilters }: DashboardEmptyProps) 
         <Search className="w-10 h-10" />
       </div>
       <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No documents found</h3>
-      <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mt-2 max-w-xs mx-auto">We couldn't find any documents matching your current search or filters.</p>
+      <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mt-2 max-w-xs mx-auto">We couldn&apos;t find any documents matching your current search or filters.</p>
       <button
         onClick={onClearFilters}
         className="mt-6 text-[0.8125rem] text-[#2563EB] dark:text-[#3B82F6] font-semibold hover:underline"

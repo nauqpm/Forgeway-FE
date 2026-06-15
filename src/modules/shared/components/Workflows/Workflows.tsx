@@ -10,6 +10,7 @@ import { BarChart3, ArrowRight } from "lucide-react";
 interface Workflow {
   _id: string;
   name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   projectId?: any;
   statuses: { id: string; name: string; color: string }[];
 }
@@ -57,6 +58,7 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
       .then((results) => {
         if (cancelled || !results) return;
         const wfs: Workflow[] = [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         results.forEach((wfRes: any) => {
           if (wfRes?.data) wfs.push(wfRes.data);
         });

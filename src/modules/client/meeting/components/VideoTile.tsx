@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MicOff, Mic, VideoOff, User } from 'lucide-react';
+import { MicOff, Mic, User } from 'lucide-react';
 
 interface VideoTileProps {
   stream: MediaStream | null;

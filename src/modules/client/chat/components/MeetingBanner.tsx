@@ -11,7 +11,6 @@ import {
   unwrapSocketPayload,
 } from "../types/webrtc.types";
 import { Loader2, Video } from "lucide-react";
-import toast from "react-hot-toast";
 
 interface MeetingBannerProps {
   channelId: string;
@@ -104,7 +103,8 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
     if (!activeMeeting?._id) return;
 
     const meetingUrl = `/meeting/${activeMeeting._id}`;
-    const opened = window.open(meetingUrl, "_blank", "noopener,noreferrer");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _opened = window.open(meetingUrl, "_blank", "noopener,noreferrer");
 
     // if (!opened) {
     //   toast.error('Popup blocked. Opening the meeting in this tab.');

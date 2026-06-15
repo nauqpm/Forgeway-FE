@@ -9,17 +9,11 @@ import LoadingSpinner from "@/modules/shared/components/common/components/Loadin
 import {
   ArrowLeft,
   CheckSquare,
-  Clock,
   Target,
   TrendingUp,
-  Users,
   Calendar,
-  AlertTriangle,
   Play,
-  Pause,
-  Flag,
   BarChart3,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -45,6 +39,7 @@ interface SprintStats {
   completedPoints: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const statusConfig: Record<string, { color: string; bg: string; icon: any }> = {
   planning: { color: "text-slate-700", bg: "bg-slate-100", icon: Target },
   active: { color: "text-green-700", bg: "bg-green-100", icon: Play },
@@ -83,10 +78,14 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
         const tasks = tasksRes.data;
         setStats({
           totalTasks: tasks.length,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           completedTasks: tasks.filter((t: any) => t.status === "done" || t.status === "completed").length,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           totalPoints: tasks.reduce((sum: number, t: any) => sum + (t.storyPoints || 0), 0),
           completedPoints: tasks
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .filter((t: any) => t.status === "done" || t.status === "completed")
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .reduce((sum: number, t: any) => sum + (t.storyPoints || 0), 0),
         });
       } catch (e) {

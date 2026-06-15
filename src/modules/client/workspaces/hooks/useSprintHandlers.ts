@@ -30,7 +30,8 @@ export const useSprintHandlers = ({
   setSprints,
   setEditingSprint,
   setIsSprintModalOpen,
-  setIssues,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setIssues: _setIssues,
 }: UseSprintHandlersProps) => {
   const queryClient = useQueryClient();
   const [startSprintTarget, setStartSprintTarget] = useState<Sprint | null>(null);

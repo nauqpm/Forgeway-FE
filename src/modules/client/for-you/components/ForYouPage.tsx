@@ -28,6 +28,7 @@ type ForYouResponse = {
 const workspaceIdOf = (workspace: ForYouWorkspace) => workspace.id || workspace._id || "";
 const workspaceRouteKeyOf = (workspace: ForYouWorkspace) => workspace.key || workspace.slug || workspaceIdOf(workspace);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizePayload = (payload: any): ForYouResponse => payload?.data?.data ?? payload?.data ?? payload;
 
 const roleLabel = (workspace: ForYouWorkspace) =>
@@ -54,6 +55,7 @@ export default function ForYouPage() {
         const nextWorkspaces = Array.isArray(payload) ? payload : (payload.workspaces ?? []);
 
         setForYouWorkspaces(nextWorkspaces);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setWorkspaces(nextWorkspaces as any);
       } catch {
         if (!cancelled) {

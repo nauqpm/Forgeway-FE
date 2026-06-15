@@ -135,6 +135,7 @@ export const useTaskAttachments = ({
             return null;
           })
           .finally(() => {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { [queueItem.id]: _removed, ...remaining } = uploadControllersRef.current;
             uploadControllersRef.current = remaining;
           });
@@ -160,6 +161,7 @@ export const useTaskAttachments = ({
 
   const clearQueueItem = useCallback((id: string) => {
     uploadControllersRef.current[id]?.abort();
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { [id]: _removed, ...remaining } = uploadControllersRef.current;
     uploadControllersRef.current = remaining;
     setQueueSafely((current) => current.filter((item) => item.id !== id));

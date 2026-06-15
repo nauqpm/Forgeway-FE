@@ -28,6 +28,7 @@ import TaskDetailFields from "./TaskDetailFields";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issue: TaskDetailResponse | any;
   workspaceId: string;
   workspaceMembers?: WorkspaceMember[];

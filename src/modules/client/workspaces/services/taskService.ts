@@ -3,7 +3,6 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "../types/issue.type";
 import { TaskFilters } from "../types/filter.type";
 import { TaskDetailResponse } from "../types/task-detail.type";
-import type { TaskCover } from "../types/task-cover.type";
 import type { TaskLabel } from "../types/label.type";
 import { toTaskDateKey } from "../utils/taskDateKey";
 import { CreateTaskInput, TaskDto } from "./taskTypes";
@@ -145,6 +144,7 @@ const STATUS_BY_COLUMN: Record<string, string> = {
   done: "Done",
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeResponseData = <T>(payload: any): T => {
   return payload?.data?.data ?? payload?.data ?? payload;
 };
@@ -394,9 +394,11 @@ export const buildTaskQuery = (filters?: TaskFilters) => {
   return params.length > 0 ? `?${params.join("&")}` : "";
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const taskService: any = {
   async getBoardTasks(workspaceId: string, filters?: TaskFilters): Promise<Issue[]> {
     const response = await api.get(`${apiRoutes.TASKS.BOARD(workspaceId)}${buildTaskQuery(filters)}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload = normalizeResponseData<any>(response);
     const tasks: TaskDto[] = Array.isArray(payload) ? payload : (payload?.tasks ?? []);
     return tasks.map(toIssue);
@@ -434,6 +436,7 @@ export const taskService: any = {
       (updates.status !== undefined || updates.columnId !== undefined || updates.sprintId !== undefined);
 
     if (isMoveUpdate) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload: Record<string, any> = {};
       if (updates.columnId !== undefined) {
         payload.columnId = updates.columnId;

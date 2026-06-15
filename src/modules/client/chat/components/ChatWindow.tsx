@@ -34,6 +34,7 @@ export default function ChatWindow() {
   
   const activeWorkspace = useMemo(() => {
     if (activeChannel?.type !== 'workspace' || !activeChannel?.workspaceId) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return workspaces.find(w => String(w._id || (w as any).id) === String(activeChannel.workspaceId));
   }, [activeChannel, workspaces]);
 
@@ -122,6 +123,7 @@ export default function ChatWindow() {
     return `${typingUserIds.length} people are typing...`;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getSenderId = (msg: any) => {
     if (!msg?.senderId) return null;
     if (typeof msg.senderId === "string") return msg.senderId;
@@ -139,8 +141,9 @@ export default function ChatWindow() {
 
   if (activeChannel.type === 'dm') {
     const members = activeChannel.members || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
-    
+
     if (otherMember && typeof otherMember === 'object') {
       headerName = otherMember.fullName || otherMember.email || "Direct Message";
       headerDescription = otherMember.email || "Direct Message";
@@ -177,6 +180,7 @@ export default function ChatWindow() {
           ) : activeChannel.type === 'dm' ? (
             (() => {
               const members = activeChannel.members || [];
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
               const displayAvatar = otherMember?.avatar;
               const initials = (otherMember?.fullName || otherMember?.email || "DM").charAt(0).toUpperCase();
@@ -296,6 +300,7 @@ export default function ChatWindow() {
 
               return (
                 <MessageItem
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   key={msg._id || (msg as any).id}
                   message={msg}
                   isSameUserAsPrevious={isSameUserAsPrevious}

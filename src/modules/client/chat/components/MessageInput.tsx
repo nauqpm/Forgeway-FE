@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Send, Smile, Paperclip, Bold, Italic, Code } from 'lucide-react';
+import { Send, Smile, Paperclip } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 
 interface MessageInputProps {

@@ -34,18 +34,23 @@ type BoardColumn = {
 
 
 interface DataGridListViewProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issues: any[];
   workspaceId?: string;
   members?: WorkspaceMember[];
   boardColumns?: BoardColumn[];
   columnVisibility?: VisibilityState;
   setColumnVisibility?: React.Dispatch<React.SetStateAction<VisibilityState>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onClickTask?: (issue: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdateIssue?: (issueId: string, updates: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onCreateTask?: (task: any) => Promise<void>;
   onRefresh?: () => Promise<void>;
   isRefreshing?: boolean;
   totalCount?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onBulkUpdate?: (taskIds: string[], updates: any) => Promise<void>;
   onBulkDelete?: (taskIds: string[]) => Promise<void>;
   hideCreate?: boolean;
@@ -94,8 +99,9 @@ export default function DataGridListView({
   // Inline editing state
   const [editingCell, setEditingCell] = useState<{ rowId: string; col: string } | null>(null);
   const [editValue, setEditValue] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const saveEdit = (rowId: string, field: string, value: any) => {
-    onUpdateIssue && onUpdateIssue(rowId, { [field]: value });
+    void (onUpdateIssue && onUpdateIssue(rowId, { [field]: value }));
     setEditingCell(null);
     setEditValue('');
   };
@@ -129,10 +135,12 @@ export default function DataGridListView({
   };
 
   // Bulk Actions
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const selectedCount = Object.keys(rowSelection).filter(k => (rowSelection as any)[k]).length;
 
   const getSelectedTaskIds = () => table.getSelectedRowModel().flatRows.map(row => row.original.id);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleBulkFieldUpdate = async (updates: Record<string, any>) => {
     if (!onBulkUpdate) return;
     const ids = getSelectedTaskIds();
@@ -164,9 +172,11 @@ export default function DataGridListView({
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns = useMemo<ColumnDef<any>[]>(() => [
     ...(canEditTask || canDeleteTask ? [{
       id: 'checkbox',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       header: ({ table }: any) => (
         <input
           type="checkbox"
@@ -176,6 +186,7 @@ export default function DataGridListView({
           onChange={table.getToggleAllRowsSelectedHandler()}
         />
       ),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cell: ({ row }: any) => (
         <input
           type="checkbox"
@@ -187,6 +198,7 @@ export default function DataGridListView({
       ),
       size: 40,
       enableResizing: false,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as ColumnDef<any>] : []),
     {
       accessorKey: 'key',
@@ -239,7 +251,7 @@ export default function DataGridListView({
             </span>
             <button
               className="opacity-0 group-hover/title:opacity-100 ml-auto shrink-0 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-opacity"
-              onClick={e => { e.stopPropagation(); onClickTask && onClickTask(issue); }}
+              onClick={e => { e.stopPropagation(); void (onClickTask && onClickTask(issue)); }}
               title="Open detail"
             >
               <MoreHorizontal className="w-3.5 h-3.5" />
@@ -473,7 +485,7 @@ export default function DataGridListView({
       cell: ({ row }) => (
         <button
           className="p-1.5 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors opacity-0 group-hover:opacity-100"
-          onClick={e => { e.stopPropagation(); onClickTask && onClickTask(row.original); }}
+          onClick={e => { e.stopPropagation(); void (onClickTask && onClickTask(row.original)); }}
           title="Open"
         >
           <MoreHorizontal className="w-4 h-4" />

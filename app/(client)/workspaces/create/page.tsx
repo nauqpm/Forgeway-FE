@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useCreateWorkspace } from "@/modules/client/workspaces/hooks/useCreateWorkspace";
-import { ArrowLeft, Columns, Repeat, Lock, Globe } from "lucide-react";
+import { ArrowLeft, Columns, Repeat } from "lucide-react";
 import Link from "next/link";
 import WorkspaceAvatarPicker from "@/modules/client/workspaces/components/common/WorkspaceAvatarPicker";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";

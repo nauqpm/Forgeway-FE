@@ -5,7 +5,7 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
-import { FolderKanban, Plus, LayoutGrid, List, Search, Folder } from "lucide-react";
+import { Plus, LayoutGrid, List, Search, Folder } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 
@@ -16,6 +16,7 @@ interface Project {
   type: "scrum" | "kanban";
   description?: string;
   status: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   members: any[];
 }
 

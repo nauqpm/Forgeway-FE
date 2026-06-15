@@ -7,7 +7,7 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
-import { Plus, ArrowLeft, Settings, GripVertical } from "lucide-react";
+import { Plus, ArrowLeft, GripVertical } from "lucide-react";
 import Link from "next/link";
 
 interface Project {
@@ -51,7 +51,7 @@ export default function ProjectBoardPage() {
   usePageTitle("Project");
   const params = useParams();
   const projectId = params.id as string;
-  const { currentWorkspace } = useWorkspaceStore();
+  useWorkspaceStore();
   const [project, setProject] = useState<Project | null>(null);
   const [board, setBoard] = useState<Board | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);

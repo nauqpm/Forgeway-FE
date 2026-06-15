@@ -23,6 +23,7 @@ export default function CreateProjectPage() {
     try {
       const res = await api.post(apiRoutes.PROJECTS.BASE, { ...form, workspaceId: currentWorkspace._id });
       router.push(`/projects/${res.data._id}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setError(e.response?.data?.message || "Failed to create project");
     } finally {

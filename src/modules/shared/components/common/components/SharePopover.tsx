@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Share2, Link as LinkIcon, Globe, Lock, Search, Check, Users, X } from 'lucide-react';
+import { Link as LinkIcon, Globe, Lock, Check, X } from 'lucide-react';
 
 // Mock data for search
 const MOCK_USERS = [
@@ -184,6 +184,7 @@ export default function SharePopover() {
                 <div>
                   <select 
                     value={workspaceAccess}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     onChange={(e) => handleWorkspaceAccessChange(e.target.value as any)}
                     className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] bg-transparent dark:bg-transparent outline-none cursor-pointer hover:underline mb-0.5"
                   >

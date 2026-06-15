@@ -565,7 +565,7 @@ export default function NotificationPanel({
             <div className="w-14 h-14 bg-[#F7F6F3] dark:bg-[#252525] rounded-full flex items-center justify-center mb-3">
               <Bell className="w-7 h-7 text-[#ABABAB] dark:text-[#6B6B6B]" />
             </div>
-            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">You're all caught up!</p>
+            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">You&apos;re all caught up!</p>
             <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">No notifications here.</p>
           </div>
         ) : (

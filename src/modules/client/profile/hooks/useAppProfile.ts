@@ -40,6 +40,7 @@ export function useAppProfile() {
         setProfile(res.data?.data ?? res.data);
         return { success: true };
       } catch (e: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const errData = (e as any)?.response?.data;
         if (errData && Array.isArray(errData.message)) {
           const fieldErrors: Record<string, string> = {};
@@ -111,7 +112,7 @@ export function useAppProfile() {
           return false;
         }
         if (!avatarUrl.startsWith("http") && !avatarUrl.startsWith("https")) {
-          // @ts-ignore
+          // @ts-expect-error -- avatarUrl may be a relative path from server
           avatarUrl = (process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:5512") + avatarUrl;
         }
 
@@ -129,7 +130,7 @@ export function useAppProfile() {
           setError(msg);
           return false;
         }
-      } catch (e: unknown) {
+      } catch {
         setError("Image upload failed");
         return false;
       } finally {
@@ -156,6 +157,7 @@ export function useAppProfile() {
         });
         return { success: true };
       } catch (e: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const errData = (e as any)?.response?.data;
         if (errData && Array.isArray(errData.message)) {
           const fieldErrors: Record<string, string> = {};

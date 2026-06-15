@@ -13,7 +13,6 @@ import {
   RotateCcw,
   Send,
   Trash2,
-  X,
 } from "lucide-react";
 import type { PageComment } from "../services/commentsService";
 
@@ -22,6 +21,7 @@ interface CommentThreadProps {
   currentUserId: string;
   isActive: boolean;
   onActivate: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onReply: (parentId: string, content: string) => Promise<any>;
   onEdit: (commentId: string, content: string) => Promise<void>;
   onDelete: (commentId: string) => Promise<void>;

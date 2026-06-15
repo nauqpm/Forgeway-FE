@@ -46,7 +46,9 @@ type ListTabProps = {
   listViewMode: "grid" | "split";
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   uniqueAssignees: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   members?: any[];
   boardColumns?: { id: string; name: string; order: number; mappedStatuses?: string[]; isDone?: boolean }[];
   setSelectedIssue: (issue: Issue | null) => void;

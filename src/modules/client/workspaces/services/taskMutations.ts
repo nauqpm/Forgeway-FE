@@ -7,10 +7,10 @@ import type { ReorderTaskInput } from "./taskTypes";
 import {
   normalizeResponseData,
   toIssue,
-  toTaskDetail,
   toUpdatePayload,
   toColumnId,
   toTaskComment,
+  toCreatePayload,
 } from "./taskNormalizer";
 import type { TaskDto, TaskComment } from "./taskTypes";
 
@@ -21,7 +21,6 @@ export async function createBoardTask(
   workspaceId: string,
   input: CreateTaskInput,
 ): Promise<Issue> {
-  const { toCreatePayload } = require("./taskNormalizer");
   const response = await api.post(
     apiRoutes.TASKS.BOARD(workspaceId),
     toCreatePayload(input),

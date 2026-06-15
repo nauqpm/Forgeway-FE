@@ -8,8 +8,10 @@ import {
   CompleteSprintResult,
 } from "../types/sprint.type";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalize = <T>(payload: any): T => payload?.data?.data ?? payload?.data ?? payload;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const toSprint = (raw: any): Sprint => ({
   ...raw,
   _id: raw._id,
@@ -19,6 +21,7 @@ const toSprint = (raw: any): Sprint => ({
 export const sprintService = {
   async listSprints(workspaceId: string): Promise<Sprint[]> {
     const res = await api.get(apiRoutes.WORKSPACES.SPRINTS(workspaceId));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = normalize<any[]>(res);
     return (Array.isArray(data) ? data : []).map(toSprint);
   },
@@ -48,6 +51,7 @@ export const sprintService = {
     input: { moveToSprintId?: string } = {}
   ): Promise<CompleteSprintResult> {
     const res = await api.post(apiRoutes.WORKSPACES.SPRINT_COMPLETE(workspaceId, sprintId), input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = normalize<any>(res);
     return {
       ...data,
@@ -65,6 +69,7 @@ export const sprintService = {
     totalTasks: number;
     completedTasks: number;
     incompleteTasks: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     incompleteTaskList: any[];
   }> {
     const res = await api.get(apiRoutes.WORKSPACES.SPRINT_COMPLETE_PREVIEW(workspaceId, sprintId));
@@ -74,6 +79,7 @@ export const sprintService = {
   async getActiveSprint(workspaceId: string): Promise<Sprint | null> {
     try {
       const res = await api.get(apiRoutes.WORKSPACES.ACTIVE_SPRINT(workspaceId));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = normalize<any>(res);
       return data ? toSprint(data) : null;
     } catch {

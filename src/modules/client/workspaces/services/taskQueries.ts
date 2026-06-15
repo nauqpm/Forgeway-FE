@@ -9,10 +9,8 @@ import {
   toIssue,
   toTaskDetail,
   toTaskComment,
-  toColumnId,
 } from "./taskNormalizer";
 import type { TaskDto, TaskComment, TaskActivity, PaginatedActivitiesResponse, PaginatedTasksResponse } from "./taskTypes";
-import type { ReorderTaskInput } from "./taskTypes";
 
 /**
  * Build query string from filters

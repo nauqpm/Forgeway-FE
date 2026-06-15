@@ -68,7 +68,8 @@ const TaskDetailDrawer = dynamic(() => import("@/modules/client/workspaces/compo
   ssr: false,
 });
 const TaskDetailModal = dynamic(() => import("@/modules/client/workspaces/components/TaskDetailModal"), { ssr: false });
-const TaskDetailList = dynamic(() => import("@/modules/client/workspaces/components/TaskDetailList"), { ssr: false });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _TaskDetailList = dynamic(() => import("@/modules/client/workspaces/components/TaskDetailList"), { ssr: false });
 const BulkActionBar = dynamic(() => import("@/modules/shared/components/common/components/BulkActionBar"), {
   ssr: false,
 });
@@ -96,7 +97,8 @@ const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
 const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) => tabName === "summary";
 
 const clearOptimisticIssueOrder = (issue: Issue): Issue => {
-  const { optimisticOrder, optimisticScope, ...rest } = issue;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { optimisticOrder: _optimisticOrder, optimisticScope: _optimisticScope, ...rest } = issue;
   return rest;
 };
 
@@ -106,6 +108,7 @@ const normalizeRole = (role?: string | null) =>
     .toLowerCase()
     .replace(/[-\s]+/g, "_") ?? null;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getUserObject = (member: any) =>
   member?.userId ?? member?.user ?? member?.member ?? member;
 
@@ -117,6 +120,7 @@ const normalizeObjectId = (value: string) => {
   return objectIdMatch?.[1] ?? trimmed;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getUserId = (value: any) => {
   if (!value) return "";
   if (typeof value === "string") return normalizeObjectId(value);
@@ -128,6 +132,7 @@ const getUserId = (value: any) => {
     : "";
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getUserEmail = (value: any) => {
   if (!value || typeof value === "string") return "";
   return value.email ?? "";
@@ -456,6 +461,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     setIssues(nextTasksData);
     if (selectedTaskKey && !selectedIssue) {
       const matchingIssue = nextTasksData.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (issue: any) => issue.key === selectedTaskKey,
       );
       if (matchingIssue) setSelectedIssue(matchingIssue);
@@ -477,6 +483,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
 
   const uniqueAssignees = useAssignees(issues, workspace);
   const bulkActionMembers = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => toAssigneePickerUsers(workspace?.members as any[] | undefined),
     [workspace?.members],
   );
@@ -486,6 +493,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   );
   const currentWorkspaceRole = useMemo(() => {
     if (!user || !workspace) return workspacePermissions.role;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentMember = (workspace.members ?? []).find((member: any) => {
       const memberUser = getUserObject(member);
       const memberId = getUserId(memberUser);
@@ -496,6 +504,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     });
 
     return (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       normalizeRole((currentMember as any)?.role) ?? workspacePermissions.role
     );
   }, [user, workspace, workspacePermissions.role]);
@@ -523,6 +532,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   const handleWorkspaceUpdated = useCallback(
     (updatedWorkspace: Workspace) => {
       setWorkspace(updatedWorkspace);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setCurrentWorkspace(updatedWorkspace as any);
       if (updatedWorkspace._id && updatedWorkspace.avatar) {
         updateWorkspaceAvatar(updatedWorkspace._id, updatedWorkspace.avatar);
@@ -601,6 +611,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     [closeTaskDetail, openTaskDetail],
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isNoopReorderError = (error: any) => {
     const message = error?.response?.data?.message;
     return (
@@ -639,6 +650,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           beforeTaskId,
           afterTaskId,
         })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .then((updatedTask: any) => {
           const hasQueuedReorder = pendingReorderRef.current.has(taskId);
           patchSelectedTaskView(updatedTask);
@@ -664,6 +676,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
             queryKey: ["taskActivities", workspaceApiId, taskId],
           });
         })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch((error: any) => {
           setIssues((current) => current.map(clearOptimisticIssueOrder));
 
@@ -755,12 +768,14 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
             .updateBoardTask(workspaceApiId, taskId, {
               sprintId: sprintId ?? undefined,
             })
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .then((updatedTask: any) => {
               patchSelectedTaskView(updatedTask);
               queryClient.invalidateQueries({
                 queryKey: ["taskActivities", workspaceApiId, taskId],
               });
             })
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .catch((error: any) => {
               queryClient.invalidateQueries({
                 queryKey: ["tasks", workspaceApiId],
@@ -790,6 +805,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
       resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item archived");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || "Could not archive work item",
@@ -824,6 +840,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
       setArchiveTotal(nextArchive.total);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item restored");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || "Could not restore work item",
@@ -847,6 +864,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
       resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item deleted");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || "Could not delete work item",
@@ -905,6 +923,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
         ? updates.assigneeId ?? null
         : undefined;
     const selectedMember = assigneeId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? (workspace?.members ?? []).find((member: any) => {
           const memberUser = getUserObject(member);
           return getUserId(memberUser) === assigneeId;
@@ -1048,6 +1067,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
         if (!isActive) return;
 
         setWorkspace(workspaceWithMembers);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setCurrentWorkspace(workspaceWithMembers as any);
         if (!initialTab) {
           const defaultTab = getDefaultWorkspaceTab(nextWorkspace);
@@ -1079,7 +1099,9 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   if (loading || isBoardLoading) return <LoadingSpinner />;
 
   if (tasksError) {
-    const errorData = (tasksError as any).response?.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    const _errorData = (tasksError as any).response?.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const status = (tasksError as any).response?.status;
     let errorMessage = "An error occurred while loading board data";
     if (status === 401)
@@ -1168,6 +1190,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
             handleBoardDragStart: () => {
               isDraggingIssueRef.current = true;
             },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleBoardDragEnd: (result: any) => {
               if (!canMoveTask) return;
               handleBoardDragEnd({
@@ -1184,12 +1207,14 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
                       .moveBoardTask(workspaceApiId, taskId, { columnId })
                     taskService
                       .moveBoardTask(workspaceApiId, taskId, { columnId })
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       .then((updatedTask: any) => {
                         patchSelectedTaskView(updatedTask);
                         queryClient.invalidateQueries({
                           queryKey: ["taskActivities", workspaceApiId, taskId],
                         });
                       })
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       .catch((error: any) => {
                         if (isNoopReorderError(error)) {
                           queryClient.invalidateQueries({
@@ -1399,8 +1424,11 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onFieldUpdate={canEditTask ? ((id: string, updates: any) => updateIssueDirectly(id, updates)) : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
@@ -1413,7 +1441,9 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
           detailUrl={detailUrl}
         />

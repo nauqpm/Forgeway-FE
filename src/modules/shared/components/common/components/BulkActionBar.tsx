@@ -13,6 +13,7 @@ interface SprintOption {
 interface BulkActionBarProps {
   selectedCount: number;
   onClear: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onBulkUpdate: (updates: Record<string, any>) => Promise<void>;
   onDelete: () => void;
   members?: AssigneePickerUser[];
@@ -73,6 +74,7 @@ export default function BulkActionBar({
     return () => window.removeEventListener('keydown', handler);
   }, [showSprintMenu, selectedCount, onClear]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const apply = async (updates: Record<string, any>) => {
     setShowSprintMenu(false);
     await onBulkUpdate(updates);

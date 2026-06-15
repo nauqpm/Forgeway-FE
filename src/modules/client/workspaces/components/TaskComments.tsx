@@ -246,6 +246,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       );
       return { prev };
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (err: any, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
       toast.error(err?.response?.data?.message || err?.message || "Failed to update comment");
@@ -271,6 +272,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       );
       return { prev };
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (err: any, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
       toast.error(err?.response?.data?.message || err?.message || "Failed to delete comment");
@@ -333,6 +335,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       {user?.avatar ? (
         <img src={user.avatar} alt={currentUserName} className="w-full h-full object-cover" />
       ) : (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         user ? getAuthorInitials(user as any) : "U"
       )}
     </div>

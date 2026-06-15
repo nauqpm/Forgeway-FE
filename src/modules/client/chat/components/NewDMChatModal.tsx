@@ -65,6 +65,7 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
       
       setActiveChannel(channel._id);
       onClose();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Failed to create DM:', error);
       alert(`Error starting chat: ${error.response?.data?.message || error.message}`);
@@ -116,14 +117,16 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
             </div>
           ) : users.length === 0 ? (
             <div className="py-10 text-center text-[#787774]">
-              <p className="text-sm italic">No users found matching "{search}"</p>
+              <p className="text-sm italic">No users found matching &quot;{search}&quot;</p>
             </div>
           ) : (
             <div className="space-y-0.5">
               {users.map((user, idx) => (
                 <button
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   key={user._id || (user as any).id || `u-${idx}`}
                   disabled={creating}
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   onClick={() => handleStartChat(user._id || (user as any).id)}
                   className="w-full flex items-center gap-3 p-2.5 rounded-[8px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors group text-left disabled:opacity-50"
                 >

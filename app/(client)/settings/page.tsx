@@ -24,6 +24,7 @@ export default function SettingsPage() {
     try {
       await api.put("/users/profile", profile);
       setMessage("Profile updated successfully!");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setMessage(e.response?.data?.message || "Failed to update");
     } finally {
@@ -102,6 +103,7 @@ export default function SettingsPage() {
           <Shield className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
           Password
         </h2>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {user?.ssoProvider === 'google' || (user as any)?.googleId ? (
           <div className="rounded-[6px] bg-[#F9F9F8] p-4 text-sm text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">
             Your account is linked with Google. Password management is handled directly through your Google account.
