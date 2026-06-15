@@ -121,3 +121,9 @@ export const deleteMessageAPI = async (messageId: string): Promise<void> => {
   await api.delete(`/chat/messages/${messageId}`);
 };
 
+export const getChannelMembersAPI = async (channelId: string): Promise<any[]> => {
+  const response = await api.get(`/chat/channels/${channelId}/members`);
+  const data = response.data?.data ?? response.data;
+  return Array.isArray(data) ? data : [];
+};
+

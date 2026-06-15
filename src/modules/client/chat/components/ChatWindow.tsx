@@ -7,6 +7,7 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { getMessagesAPI } from '@/modules/client/chat/services/chatService';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
+import MemberPanel from './MemberPanel';
 import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
@@ -26,6 +27,7 @@ export default function ChatWindow() {
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -187,7 +189,8 @@ export default function ChatWindow() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-white dark:bg-[#202020]">
+    <div className="flex-1 flex min-w-0 min-h-0 overflow-hidden bg-white dark:bg-[#202020]">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -259,7 +262,15 @@ export default function ChatWindow() {
           
           <div className="w-px h-4 bg-[#EAEAEA] dark:bg-white/[0.06] mx-1" />
           
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors" title="View members">
+          <button 
+            className={`p-1 transition-colors rounded-md ${
+              showMembers 
+                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
+                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+            }`}
+            title="View members"
+            onClick={() => setShowMembers(!showMembers)}
+          >
             <Users className="w-4 h-4" />
           </button>
           <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Search className="w-4 h-4" /></button>
@@ -353,6 +364,17 @@ export default function ChatWindow() {
           <MessageInput channelId={activeChannelId} channelName={activeChannel.name} />
         )}
       </div>
+    </div>
+
+    {/* Member Panel */}
+    {showMembers && activeChannelId && (
+      <MemberPanel
+        channelId={activeChannelId}
+        channelName={headerName}
+        channelType={activeChannel.type}
+        onClose={() => setShowMembers(false)}
+      />
+    )}
     </div>
   );
 }
