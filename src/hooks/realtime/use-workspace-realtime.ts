@@ -92,29 +92,25 @@ export function useWorkspaceRealtime({
       redirectTimerRef.current = null;
     };
 
-    // Use functional updates to always get latest state
     const syncWorkspace = (workspaceId: string, workspace?: ReturnType<typeof mapWorkspacePayload>) => {
       if (!workspace) return;
 
-      setWorkspaces((currentWorkspaces) => {
-        const nextWorkspaces = upsertWorkspace(currentWorkspaces, workspace);
-        return nextWorkspaces;
-      });
+      const nextWorkspaces = upsertWorkspace(workspacesRef.current as any, workspace) as any;
+      setWorkspaces(nextWorkspaces);
 
       const currentWs = currentWorkspaceRef.current;
       if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
-        setCurrentWorkspace((currentWs) => ({
+        setCurrentWorkspace({
           ...currentWs,
           ...workspace,
           members: workspace.members ?? currentWs?.members ?? [],
-        }));
+        } as any);
       }
     };
 
     const removeWorkspaceFromState = (workspaceId: string) => {
-      setWorkspaces((currentWorkspaces) => {
-        return removeWorkspace(currentWorkspaces, workspaceId);
-      });
+      const nextWorkspaces = removeWorkspace(workspacesRef.current as any, workspaceId) as any;
+      setWorkspaces(nextWorkspaces);
 
       const currentWs = currentWorkspaceRef.current;
       if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
@@ -157,9 +153,8 @@ export function useWorkspaceRealtime({
       const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
       if (!workspaceId) return;
 
-      setWorkspaces((currentWorkspaces) => {
-        return removeWorkspace(currentWorkspaces, workspaceId);
-      });
+      const nextWorkspaces = removeWorkspace(workspacesRef.current as any, workspaceId) as any;
+      setWorkspaces(nextWorkspaces);
 
       const currentWs = currentWorkspaceRef.current;
       if (workspaceIdOf(currentWs ?? {}) !== workspaceId) return;
@@ -180,20 +175,18 @@ export function useWorkspaceRealtime({
       const nextRole = envelope.data.nextRole ?? envelope.data.member?.role;
       if (!workspaceId || !userId || !nextRole) return;
 
-      setWorkspaces((currentWorkspaces) => {
-        return currentWorkspaces.map((workspace) =>
-          workspaceIdOf(workspace) === workspaceId
-            ? updateWorkspaceMemberRole(workspace, userId, nextRole)
-            : workspace,
-        );
-      });
+      const nextWorkspaces = workspacesRef.current.map((ws) =>
+        workspaceIdOf(ws) === workspaceId
+          ? updateWorkspaceMemberRole(ws as any, userId, nextRole) as any
+          : ws
+      );
+      setWorkspaces(nextWorkspaces);
 
       const currentWs = currentWorkspaceRef.current;
       if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
-        setCurrentWorkspace((currentWs) => {
-          if (!currentWs) return null;
-          return updateWorkspaceMemberRole(currentWs, userId, nextRole);
-        });
+        if (currentWs) {
+          setCurrentWorkspace(updateWorkspaceMemberRole(currentWs as any, userId, nextRole) as any);
+        }
       }
     };
 

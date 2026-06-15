@@ -4,17 +4,13 @@
 // Tokens are stored in httpOnly cookies (backend-managed).
 // This service handles refresh calls and token expiry checks.
 
-import api from '@/config/api';
+import api from '@/lib/axiosIns';
 import type { RefreshTokenResponse } from '../types/auth.types';
 
 // ─── Refresh Token ───────────────────────────────────────────────────────────
 
 export const refreshTokenAPI = async (): Promise<RefreshTokenResponse> => {
-  const response = await api.post<RefreshTokenResponse>(
-    '/auth/refresh',
-    {},
-    { withCredentials: true },
-  );
+  const response = await api.post<RefreshTokenResponse>('/auth/refresh', {}, { withCredentials: true });
   return response.data;
 };
 
@@ -33,5 +29,4 @@ export const clearTokens = (): void => {
 
 // ─── Token Refresh Interval ──────────────────────────────────────────────────
 
-export const TOKEN_REFRESH_INTERVAL_MS =
-  Number(process.env.NEXT_PUBLIC_TOKEN_REFRESH_INTERVAL_MS) || 4 * 60 * 1000; // 4 minutes
+export const TOKEN_REFRESH_INTERVAL_MS = Number(process.env.NEXT_PUBLIC_TOKEN_REFRESH_INTERVAL_MS) || 4 * 60 * 1000; // 4 minutes

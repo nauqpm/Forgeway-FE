@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { Key, LogOut, Shield, User } from "lucide-react";
 import ThemeSwitcher from "@/common/components/ThemeSwitcher";
 import FontSizeControl from "@/common/components/FontSizeControl";
@@ -31,16 +31,11 @@ export default function SettingsPage() {
     }
   };
 
-  const initial =
-    user?.fullName?.charAt(0).toUpperCase() ||
-    user?.email?.charAt(0).toUpperCase() ||
-    "U";
+  const initial = user?.fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
 
   return (
     <div className="app-page-narrow">
-      <h1 className="mb-6 text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
-        Settings
-      </h1>
+      <h1 className="mb-6 text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7]">Settings</h1>
 
       {message && (
         <div
@@ -64,42 +59,30 @@ export default function SettingsPage() {
               {initial}
             </div>
             <div>
-              <p className="font-medium text-[#111111] dark:text-[#E8E8E7]">
-                {user?.fullName || "User"}
-              </p>
-              <p className="text-sm text-[#787774] dark:text-[#9B9A97]">
-                {user?.email}
-              </p>
+              <p className="font-medium text-[#111111] dark:text-[#E8E8E7]">{user?.fullName || "User"}</p>
+              <p className="text-sm text-[#787774] dark:text-[#9B9A97]">{user?.email}</p>
             </div>
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">
-              Full Name
-            </label>
+            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">Full Name</label>
             <input
               type="text"
               value={profile.fullName}
-              onChange={(event) =>
-                setProfile({ ...profile, fullName: event.target.value })
-              }
+              onChange={(event) => setProfile({ ...profile, fullName: event.target.value })}
               className="w-full rounded-[6px] border border-[#EAEAEA] bg-white px-4 py-2.5 text-[#111111] outline-none transition-colors focus:border-[#2563EB] dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">
-              Email
-            </label>
+            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">Email</label>
             <input
               type="email"
               value={profile.email}
               className="w-full cursor-not-allowed rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-2.5 text-[#ABABAB] dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#6B6B6B]"
               disabled
             />
-            <p className="mt-1 text-xs text-[#ABABAB] dark:text-[#6B6B6B]">
-              Email cannot be changed
-            </p>
+            <p className="mt-1 text-xs text-[#ABABAB] dark:text-[#6B6B6B]">Email cannot be changed</p>
           </div>
 
           <div className="flex justify-end">

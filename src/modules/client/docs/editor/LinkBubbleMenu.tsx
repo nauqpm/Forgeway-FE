@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
 import { Copy, Check, Pencil, Unlink, ExternalLink, Loader2 } from "lucide-react";
-import api from "@/common/services/api.service";
+import api from '@/lib/axiosIns';
 import { toast } from "react-hot-toast";
 
 interface LinkBubbleMenuProps {

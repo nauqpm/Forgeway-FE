@@ -8,6 +8,7 @@ import {
   Plus,
   Camera,
   X,
+  MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Workspace } from "../../types/workspace.type";
@@ -16,6 +17,7 @@ import { workspaceService } from "../../services/workspaceService";
 import type { WorkspaceSampleAvatar } from "../../utils/workspaceAvatar";
 import WorkspaceAvatar from "./WorkspaceAvatar";
 import WorkspaceAvatarPicker from "./WorkspaceAvatarPicker";
+import { useChatStore } from "@/stores/chatStore";
 
 interface HeaderProps {
   workspace: Workspace;
@@ -34,6 +36,16 @@ const Header = ({
   canUpdateWorkspace = false,
   onWorkspaceUpdated,
 }: HeaderProps) => {
+  const channels = useChatStore((state) => state.channels);
+
+  const workspaceUnreadCount = React.useMemo(() => {
+    const wsId = workspace._id || workspaceId;
+    const ch = channels.find(
+      (c) => c.type === "workspace" && String(c.workspaceId) === String(wsId)
+    );
+    return ch ? ch.unreadCount || 0 : 0;
+  }, [channels, workspace._id, workspaceId]);
+
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [avatarSamples, setAvatarSamples] = useState<WorkspaceSampleAvatar[]>([]);
@@ -136,6 +148,18 @@ const Header = ({
         </div>
       </div>
       <div className="flex flex-wrap gap-2 lg:justify-end">
+        <Link
+          href={`/chat?workspaceId=${workspace._id}`}
+          className="inline-flex items-center gap-2 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] text-[#111111] dark:text-[#E8E8E7] px-4 py-2 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] font-medium text-[0.8125rem] transition-colors shadow-sm"
+        >
+          <MessageSquare className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
+          <span>Chat</span>
+          {workspaceUnreadCount > 0 && (
+            <span className="flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full leading-none shrink-0">
+              {workspaceUnreadCount > 99 ? "99+" : workspaceUnreadCount}
+            </span>
+          )}
+        </Link>
         {canUpdateWorkspace && (
           <button
             onClick={() => setIsInviteModalOpen(true)}

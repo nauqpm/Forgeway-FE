@@ -32,7 +32,7 @@ type BacklogTabProps = {
     density: "compact" | "comfortable" | "spacious";
     filters: Filters;
     isFilterOpen: boolean;
-    newIssueForm: { title: string };
+    newIssueForm: { title: string; sprintId?: string | null };
   };
 
   actions: {
@@ -46,17 +46,17 @@ type BacklogTabProps = {
 
     setIsFilterOpen: React.Dispatch<React.SetStateAction<boolean>>;
 
-    toggleTaskSelection: (taskId: string) => void;
-    toggleSprintSelection: (sprintId: string) => void;
+    toggleTaskSelection: (taskId: string, e?: any) => void;
+    toggleSprintSelection: (taskIds: string[], e?: any) => void;
 
     updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
 
     setSelectedIssue: (issue: Issue | null) => void;
 
-    setNewIssueForm: React.Dispatch<React.SetStateAction<{ title: string }>>;
+    setNewIssueForm: React.Dispatch<React.SetStateAction<{ title: string; sprintId?: string | null }>>;
     setShowCreateIssue: React.Dispatch<React.SetStateAction<boolean>>;
 
-    handleCreateSprint: (name: string) => void;
+    handleCreateSprint: (name?: any) => void;
 
     setEditingSprint: React.Dispatch<React.SetStateAction<Sprint | null>>;
     setIsSprintModalOpen: React.Dispatch<React.SetStateAction<boolean>>;

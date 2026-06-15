@@ -196,7 +196,7 @@ export default function MemberSettings({
 
                       <div className="flex flex-col gap-2 sm:w-[20rem] sm:flex-row sm:items-end sm:justify-end">
                         <RoleChanger
-                          value={normalizedRole}
+                          value={normalizedRole as any}
                           onChange={(role) => handleUpdateMemberRole(member, role)}
                           disabled={!canManageWorkspace || isSelf || isBusy}
                           isLoading={updatingMemberId === memberId}

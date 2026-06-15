@@ -6,16 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
-export default function CreateWorkspacePage({
-  params,
-}: {
-  params: Promise<{ key: string }>;
-}) {
-  usePageTitle('New Page');
+export default function CreateWorkspacePage({ params }: { params: Promise<{ key: string }> }) {
+  usePageTitle("New Page");
   const { key } = use(params);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -42,7 +38,10 @@ export default function CreateWorkspacePage({
 
     setLoading(true);
     try {
-      const labels = form.labels.split(",").map((label) => label.trim()).filter(Boolean);
+      const labels = form.labels
+        .split(",")
+        .map((label) => label.trim())
+        .filter(Boolean);
       const res = await api.post(apiRoutes.PAGES.BASE, {
         title: form.title.trim(),
         content: form.content,
@@ -64,7 +63,10 @@ export default function CreateWorkspacePage({
     const nextLabel = labelInput.trim();
     if (!nextLabel) return;
 
-    const current = form.labels.split(",").map((label) => label.trim()).filter(Boolean);
+    const current = form.labels
+      .split(",")
+      .map((label) => label.trim())
+      .filter(Boolean);
     if (!current.includes(nextLabel)) {
       setForm((curr) => ({ ...curr, labels: [...current, nextLabel].join(", ") }));
     }
@@ -94,9 +96,7 @@ export default function CreateWorkspacePage({
       >
         <div className="workspace-panel space-y-5">
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Page title *
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Page title *</label>
             <input
               type="text"
               value={form.title}
@@ -107,9 +107,7 @@ export default function CreateWorkspacePage({
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Content
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Content</label>
             <textarea
               value={form.content}
               onChange={(e) => setForm((curr) => ({ ...curr, content: e.target.value }))}
@@ -119,9 +117,7 @@ export default function CreateWorkspacePage({
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Labels
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Labels</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -146,21 +142,23 @@ export default function CreateWorkspacePage({
             </div>
             {form.labels && (
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {form.labels.split(",").map((label) => label.trim()).filter(Boolean).map((label) => (
-                  <span
-                    key={label}
-                    className="inline-flex items-center gap-1 rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
-                  >
-                    {label}
-                  </span>
-                ))}
+                {form.labels
+                  .split(",")
+                  .map((label) => label.trim())
+                  .filter(Boolean)
+                  .map((label) => (
+                    <span
+                      key={label}
+                      className="inline-flex items-center gap-1 rounded bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                    >
+                      {label}
+                    </span>
+                  ))}
               </div>
             )}
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Status
-            </label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
             <div className="flex gap-3">
               {(["draft", "published"] as const).map((status) => (
                 <label
@@ -178,9 +176,7 @@ export default function CreateWorkspacePage({
                     checked={form.status === status}
                     onChange={() => setForm((curr) => ({ ...curr, status }))}
                   />
-                  <span className="text-sm font-medium capitalize text-gray-800 dark:text-gray-200">
-                    {status}
-                  </span>
+                  <span className="text-sm font-medium capitalize text-gray-800 dark:text-gray-200">{status}</span>
                 </label>
               ))}
             </div>
@@ -198,9 +194,13 @@ export default function CreateWorkspacePage({
             disabled={loading || resolvingWorkspace || !workspaceId || !form.title.trim()}
             className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:opacity-50"
           >
-            {loading ? "Creating..." : <>
-              <Save className="h-4 w-4" /> Create Page
-            </>}
+            {loading ? (
+              "Creating..."
+            ) : (
+              <>
+                <Save className="h-4 w-4" /> Create Page
+              </>
+            )}
           </button>
         </div>
       </form>

@@ -1,20 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import api from "@/common/services/api.service";
-import type {
-  AppUserProfile,
-  UpdateProfilePayload,
-  ChangePasswordPayload,
-} from "../types/profile.types";
+import api from "@/lib/axiosIns";
+import type { AppUserProfile, UpdateProfilePayload, ChangePasswordPayload } from "../types/profile.types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-const ALLOWED_MIME_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-];
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
 export function useAppProfile() {
   const [profile, setProfile] = useState<AppUserProfile | null>(null);
@@ -41,9 +32,7 @@ export function useAppProfile() {
   }, [fetchProfile]);
 
   const updateInfo = useCallback(
-    async (
-      payload: UpdateProfilePayload,
-    ): Promise<{ success: boolean; fieldErrors?: Record<string, string> }> => {
+    async (payload: UpdateProfilePayload): Promise<{ success: boolean; fieldErrors?: Record<string, string> }> => {
       try {
         setSaving(true);
         setError(null);
@@ -58,32 +47,14 @@ export function useAppProfile() {
 
           errData.message.forEach((msg: string) => {
             const lowerMsg = msg.toLowerCase();
-            if (lowerMsg.includes("điện thoại") || lowerMsg.includes("phone"))
-              fieldErrors.phone = msg;
-            else if (
-              lowerMsg.includes("ngày sinh") ||
-              lowerMsg.includes("birthday")
-            )
-              fieldErrors.birthday = msg;
-            else if (
-              lowerMsg.includes("giới tính") ||
-              lowerMsg.includes("gender")
-            )
-              fieldErrors.gender = msg;
+            if (lowerMsg.includes("điện thoại") || lowerMsg.includes("phone")) fieldErrors.phone = msg;
+            else if (lowerMsg.includes("ngày sinh") || lowerMsg.includes("birthday")) fieldErrors.birthday = msg;
+            else if (lowerMsg.includes("giới tính") || lowerMsg.includes("gender")) fieldErrors.gender = msg;
             else if (lowerMsg.includes("email")) fieldErrors.email = msg;
-            else if (lowerMsg.includes("avatar") || lowerMsg.includes("ảnh"))
-              fieldErrors.avatar = msg;
-            else if (
-              lowerMsg.includes("tên") ||
-              lowerMsg.includes("name") ||
-              lowerMsg.includes("họ")
-            )
+            else if (lowerMsg.includes("avatar") || lowerMsg.includes("ảnh")) fieldErrors.avatar = msg;
+            else if (lowerMsg.includes("tên") || lowerMsg.includes("name") || lowerMsg.includes("họ"))
               fieldErrors.fullName = msg;
-            else if (
-              lowerMsg.includes("địa chỉ") ||
-              lowerMsg.includes("address")
-            )
-              fieldErrors.address = msg;
+            else if (lowerMsg.includes("địa chỉ") || lowerMsg.includes("address")) fieldErrors.address = msg;
             else {
               if (!genericError) genericError = msg;
               else genericError += " | " + msg;
@@ -101,7 +72,7 @@ export function useAppProfile() {
         setSaving(false);
       }
     },
-    [],
+    []
   );
 
   const uploadAvatar = useCallback(
@@ -133,22 +104,15 @@ export function useAppProfile() {
             },
           ],
         });
-        let avatarUrl: string =
-          uploadRes.data?.data?.url ??
-          uploadRes.data?.url ??
-          uploadRes.data?.data?.path;
+        let avatarUrl: string = uploadRes.data?.data?.url ?? uploadRes.data?.url ?? uploadRes.data?.data?.path;
 
         if (!avatarUrl) {
-          setError(
-            "Image upload failed because the server did not return a URL",
-          );
+          setError("Image upload failed because the server did not return a URL");
           return false;
         }
         if (!avatarUrl.startsWith("http") && !avatarUrl.startsWith("https")) {
           // @ts-ignore
-          avatarUrl =
-            (process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:5512") +
-            avatarUrl;
+          avatarUrl = (process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:5512") + avatarUrl;
         }
 
         // Phase 2: save URL to profile
@@ -158,12 +122,9 @@ export function useAppProfile() {
           return true;
         } catch (e: unknown) {
           // Phase 2 failed — revert to old avatar in UI
-          setProfile((prev) =>
-            prev ? { ...prev, avatar: previousAvatar } : prev,
-          );
+          setProfile((prev) => (prev ? { ...prev, avatar: previousAvatar } : prev));
           const msg =
-            (e as { response?: { data?: { message?: string } } })?.response
-              ?.data?.message ??
+            (e as { response?: { data?: { message?: string } } })?.response?.data?.message ??
             "Image uploaded but was not saved to your profile. Please try again";
           setError(msg);
           return false;
@@ -175,12 +136,12 @@ export function useAppProfile() {
         setAvatarUploading(false);
       }
     },
-    [profile?.avatar],
+    [profile?.avatar]
   );
 
   const changePassword = useCallback(
     async (
-      payload: ChangePasswordPayload,
+      payload: ChangePasswordPayload
     ): Promise<{
       success: boolean;
       fieldErrors?: Record<string, string>;
@@ -202,12 +163,8 @@ export function useAppProfile() {
 
           errData.message.forEach((msg: string) => {
             const lowerMsg = msg.toLowerCase();
-            if (
-              lowerMsg.includes("mật khẩu") ||
-              lowerMsg.includes("password")
-            ) {
-              if (lowerMsg.includes("hiện tại") || lowerMsg.includes("current"))
-                fieldErrors.currentPassword = msg;
+            if (lowerMsg.includes("mật khẩu") || lowerMsg.includes("password")) {
+              if (lowerMsg.includes("hiện tại") || lowerMsg.includes("current")) fieldErrors.currentPassword = msg;
               else fieldErrors.newPassword = msg;
             } else {
               if (!genericError) genericError = msg;
@@ -226,7 +183,7 @@ export function useAppProfile() {
         setSaving(false);
       }
     },
-    [],
+    []
   );
 
   return {

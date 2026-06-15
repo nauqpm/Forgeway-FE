@@ -1,5 +1,5 @@
-import api from '@/config/api';
-import imageCompression from 'browser-image-compression';
+import api from "@/lib/axiosIns";
+import imageCompression from "browser-image-compression";
 
 export interface ImageResponse {
   _id: string;
@@ -38,7 +38,7 @@ const compressionOptions = {
   preserveExif: true,
   initialQuality: 0.9, // Start with 90% quality
   alwaysKeepResolution: true,
-  fileType: 'image/jpeg',
+  fileType: "image/jpeg",
 };
 
 type ImageApiEnvelope = {
@@ -68,29 +68,42 @@ const imageService = {
 
     try {
       // Check file size and type
-      const isImage = file.type.startsWith('image/');
+      const isImage = file.type.startsWith("image/");
       if (!isImage) {
-        console.warn('File is not an image:', file.type);
+        console.warn("File is not an image:", file.type);
         return file;
       }
 
       // Only compress images larger than 1MB
       if (file.size <= 1024 * 1024) {
+        console.log(
+          "Image is already under 1MB; compression is not needed:",
+          (file.size / 1024 / 1024).toFixed(2),
+          "MB"
+        );
         return file;
       }
+
+      console.log(
+        "Starting image compression:",
+        file.name,
+        "Original size:",
+        (file.size / 1024 / 1024).toFixed(2),
+        "MB"
+      );
 
       const options = {
         ...compressionOptions,
         ...customOptions,
         maxSizeMB: customOptions?.maxSizeMB || 1, // Allow maximum size adjustment
-        initialQuality: customOptions?.initialQuality || 0.9 // Allow initial quality adjustment
+        initialQuality: customOptions?.initialQuality || 0.9, // Allow initial quality adjustment
       };
 
       let compressedFile;
       try {
         compressedFile = await imageCompression(file, options);
       } catch (compressError) {
-        console.error('First image compression attempt failed. Retrying with lower quality:', compressError);
+        console.error("First image compression attempt failed. Retrying with lower quality:", compressError);
         // Retry with lower quality if the first attempt fails
         options.initialQuality = 0.7;
         compressedFile = await imageCompression(file, options);
@@ -98,7 +111,9 @@ const imageService = {
 
       // Check size after compression
       if (compressedFile.size > options.maxSizeMB * 1024 * 1024) {
-        console.warn('Image is still large after the first compression attempt. Trying a second attempt with lower quality');
+        console.warn(
+          "Image is still large after the first compression attempt. Trying a second attempt with lower quality"
+        );
         // Try a second compression attempt with lower quality settings
         options.initialQuality = 0.5;
         options.maxWidthOrHeight = 1280; // Reduce image dimensions
@@ -106,15 +121,25 @@ const imageService = {
       }
 
       // Create a new file with the original name
-      const newFile = new File(
-        [compressedFile],
-        file.name,
-        { type: 'image/jpeg' }
+      const newFile = new File([compressedFile], file.name, { type: "image/jpeg" });
+
+      console.log(
+        "Image compression complete:",
+        "\nOriginal size:",
+        (file.size / 1024 / 1024).toFixed(2),
+        "MB",
+        "\nCompressed size:",
+        (newFile.size / 1024 / 1024).toFixed(2),
+        "MB",
+        "\nCompression ratio:",
+        Math.round((1 - newFile.size / file.size) * 100) + "%",
+        "\nFile type:",
+        newFile.type
       );
 
       return newFile;
     } catch (error) {
-      console.error('Error compressing image:', error);
+      console.error("Error compressing image:", error);
       // If compression fails, return the original file with reduced size when possible
       try {
         // Try emergency compression with low quality and small dimensions
@@ -126,11 +151,12 @@ const imageService = {
         };
 
         const emergencyCompressed = await imageCompression(file, emergencyOptions);
-        const emergencyFile = new File([emergencyCompressed], file.name, { type: 'image/jpeg' });
+        const emergencyFile = new File([emergencyCompressed], file.name, { type: "image/jpeg" });
 
+        console.log("Emergency compression succeeded, new size:", (emergencyFile.size / 1024 / 1024).toFixed(2), "MB");
         return emergencyFile;
       } catch (emergencyError) {
-        console.error('Could not compress image in emergency mode:', emergencyError);
+        console.error("Could not compress image in emergency mode:", emergencyError);
         return file;
       }
     }
@@ -149,12 +175,18 @@ const imageService = {
       }
 
       // Check file size after processing
-      if (processedFile.size > 10 * 1024 * 1024) { // 10MB
-        throw new Error('File size is too large (maximum 10MB)');
+      if (processedFile.size > 10 * 1024 * 1024) {
+        // 10MB
+        throw new Error("File size is too large (maximum 10MB)");
       }
 
-      formData.append('file', processedFile);
+      formData.append("file", processedFile);
 
+      // const response = await api.post("/imagesapi/upload", formData, {
+      //   headers: {
+      //     "Content-Type": "multipart/form-data",
+      //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+      //   },
       const response = await api.post('/imagesapi/upload', formData, {
         timeout: 30000, // 30 seconds timeout
       });
@@ -176,7 +208,7 @@ const imageService = {
     }
 
     if (files.length > 10) {
-      throw new Error('You can upload up to 10 images at a time');
+      throw new Error("You can upload up to 10 images at a time");
     }
 
     try {
@@ -192,7 +224,7 @@ const imageService = {
           processedFile = await imageService.compressImage(file, {
             initialQuality: compressionLevel,
             maxSizeMB: maxSizeMB,
-            maxWidthOrHeight: files.length > 5 ? 1600 : 1920
+            maxWidthOrHeight: files.length > 5 ? 1600 : 1920,
           });
         }
 
@@ -212,17 +244,22 @@ const imageService = {
         const chunk = processedFiles.slice(i, i + chunkSize);
 
         const formData = new FormData();
-        chunk.forEach(file => {
-          formData.append('files', file);
+        chunk.forEach((file) => {
+          formData.append("files", file);
         });
 
+        // const response = await api.post("/images/upload-multiple", formData, {
+        //   headers: {
+        //     "Content-Type": "multipart/form-data",
+        //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+        //   },
         const response = await api.post('/images/upload-multiple', formData, {
           timeout: 60000, // 60 seconds
         });
 
         // Process server results
         let chunkResults;
-        if (typeof response.data === 'string') {
+        if (typeof response.data === "string") {
           try {
             chunkResults = JSON.parse(response.data);
           } catch (e) {
@@ -235,7 +272,7 @@ const imageService = {
 
         // Ensure we have an array
         if (!Array.isArray(chunkResults)) {
-          if (chunkResults && typeof chunkResults === 'object' && Array.isArray(chunkResults.data)) {
+          if (chunkResults && typeof chunkResults === "object" && Array.isArray(chunkResults.data)) {
             chunkResults = chunkResults.data;
           } else {
             console.error("Invalid response format:", chunkResults);
@@ -246,23 +283,23 @@ const imageService = {
         // Process each result
         const processedChunkResults = chunkResults.map((img: any, index: number) => {
           // If img is a string, assume it is a URL
-          if (typeof img === 'string') {
-            const pathOnly = img.replace(/^https?:\/\/[^\/]+/i, '');
+          if (typeof img === "string") {
+            const pathOnly = img.replace(/^https?:\/\/[^\/]+/i, "");
             return {
               _id: `generated_${index}`,
               filename: `image_${index}.jpg`,
               path: pathOnly,
               url: pathOnly,
               size: 0,
-              mimetype: 'image/jpeg',
+              mimetype: "image/jpeg",
               slug: `image_${index}`,
               createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
+              updatedAt: new Date().toISOString(),
             };
           }
 
           // If img is null or not an object, handle it as an error
-          if (!img || typeof img !== 'object') {
+          if (!img || typeof img !== "object") {
             console.error(`Image response ${index} is invalid:`, img);
             throw new Error(`Invalid image response at index ${index}`);
           }
@@ -275,14 +312,14 @@ const imageService = {
           else if (img.src) url = img.src;
           else if (img.data && img.data.url) url = img.data.url;
 
-          if (!url || url === 'undefined') {
+          if (!url || url === "undefined") {
             console.error(`No valid URL found in image response ${index}:`, img);
             throw new Error(`Missing URL in image response at index ${index}`);
           }
 
           // Ensure URL is a string and remove the domain part
           const urlString = String(url);
-          const pathOnly = urlString.replace(/^https?:\/\/[^\/]+/i, '');
+          const pathOnly = urlString.replace(/^https?:\/\/[^\/]+/i, "");
 
           // Return normalized object
           return {
@@ -292,10 +329,10 @@ const imageService = {
             filename: img.filename || `image_${index}.jpg`,
             path: img.path || pathOnly,
             size: img.size || 0,
-            mimetype: img.mimetype || 'image/jpeg',
+            mimetype: img.mimetype || "image/jpeg",
             slug: img.slug || `image_${index}`,
             createdAt: img.createdAt || new Date().toISOString(),
-            updatedAt: img.updatedAt || new Date().toISOString()
+            updatedAt: img.updatedAt || new Date().toISOString(),
           };
         });
 
@@ -303,7 +340,7 @@ const imageService = {
       }
 
       return uploadResults;
-    } catch (error) {
+    } catch (error: any) {
       const err = error as { 
         response?: { status?: number; data?: unknown; headers?: unknown }; 
         message?: string 
@@ -320,7 +357,7 @@ const imageService = {
 
       error.imageData = {
         message: "Error processing image upload",
-        error: error.message
+        error: error.message,
       };
 
       throw error;
@@ -336,8 +373,14 @@ const imageService = {
     try {
       // Compress image when requested
       const processedFile = compress ? await imageService.compressImage(file) : file;
-      formData.append('file', processedFile);
+      formData.append("file", processedFile);
 
+      // const response = await api.post("/images/sunEditor", formData, {
+      //   headers: {
+      //     "Content-Type": "multipart/form-data",
+      //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+      //   },
+      // });
       const response = await api.post('/images/sunEditor', formData);
 
       return response.data;
@@ -351,7 +394,7 @@ const imageService = {
    * Get all images
    */
   getAllImages: async (): Promise<ImageResponse[]> => {
-    const response = await api.get('/images');
+    const response = await api.get("/images");
     return response.data;
   },
 

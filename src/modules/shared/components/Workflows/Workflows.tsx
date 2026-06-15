@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import { BarChart3, ArrowRight } from "lucide-react";
@@ -10,7 +10,7 @@ import { BarChart3, ArrowRight } from "lucide-react";
 interface Workflow {
   _id: string;
   name: string;
-  projectId?: string;
+  projectId?: any;
   statuses: { id: string; name: string; color: string }[];
 }
 
@@ -31,12 +31,16 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    api.get(apiRoutes.WORKSPACES.BASE)
+    api
+      .get(apiRoutes.WORKSPACES.BASE)
       .then((res) => {
         if (cancelled) return;
         setWorkspaces(res.data);
         const ws = currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
-        if (!ws) { setLoading(false); return; }
+        if (!ws) {
+          setLoading(false);
+          return;
+        }
         return api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`);
       })
       .then((res) => {
@@ -53,7 +57,7 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
       .then((results) => {
         if (cancelled || !results) return;
         const wfs: Workflow[] = [];
-        results.forEach((wfRes: { data?: Workflow }) => {
+        results.forEach((wfRes: any) => {
           if (wfRes?.data) wfs.push(wfRes.data);
         });
         setWorkflows(wfs);
@@ -74,12 +78,17 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
         <div className="flex flex-col items-center py-16 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8">
           <BarChart3 className="w-12 h-12 text-[#ABABAB] dark:text-[#6B6B6B] mb-3" />
           <p className="text-[#787774] dark:text-[#9B9A97] font-medium">No workflows have been configured</p>
-          <p className="text-[#ABABAB] dark:text-[#6B6B6B] text-sm">Workflows will be created when you create a project</p>
+          <p className="text-[#ABABAB] dark:text-[#6B6B6B] text-sm">
+            Workflows will be created when you create a project
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
           {workflows.map((wf) => (
-            <div key={wf._id} className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8">
+            <div
+              key={wf._id}
+              className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8"
+            >
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{wf.name}</h3>
@@ -93,7 +102,9 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: status.color }} />
                       <span className="text-sm font-medium text-[#787774] dark:text-[#9B9A97]">{status.name}</span>
                     </div>
-                    {i < wf.statuses.length - 1 && <ArrowRight className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B] mx-1" />}
+                    {i < wf.statuses.length - 1 && (
+                      <ArrowRight className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B] mx-1" />
+                    )}
                   </div>
                 ))}
               </div>

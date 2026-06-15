@@ -1,4 +1,4 @@
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import type { SavedAccount } from "@/common/services/account-switcher.service";
 

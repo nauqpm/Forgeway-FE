@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
+  ChevronDown,
   LayoutDashboard,
   Loader2,
   LogOut,

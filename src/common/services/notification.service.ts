@@ -1,11 +1,7 @@
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 
-export type NotificationType =
-  | "TASK_ASSIGNED"
-  | "COMMENT_MENTIONED"
-  | "TASK_COMMENT_CREATED"
-  | "WORKSPACE_INVITED";
+export type NotificationType = "TASK_ASSIGNED" | "COMMENT_MENTIONED" | "TASK_COMMENT_CREATED" | "WORKSPACE_INVITED";
 
 export interface NotificationActor {
   id: string;

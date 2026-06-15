@@ -95,7 +95,8 @@ export default function WorkspacesPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="app-page-wide">
+    <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">
+      <div className="app-page-wide">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-1">Workspaces</h1>
@@ -183,6 +184,7 @@ export default function WorkspacesPage() {
           })}
         </div>
       )}
+    </div>
     </div>
   );
 }

@@ -45,3 +45,15 @@ export const resolveTaskStatusColumn = (
     displayName: resolved?.name ?? issue.status ?? issue.columnId ?? "No status",
   };
 };
+
+export const buildTaskStatusSelection = (
+  column: TaskStatusColumn,
+  current?: { columnId?: string; status?: string }
+) => {
+  if (current?.columnId) return current;
+  return {
+    columnId: column.id,
+    status: column.mappedStatuses?.[0] ?? column.name,
+  };
+};
+

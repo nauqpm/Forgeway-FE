@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { ChevronDown, Plus, Check, Building2 } from "lucide-react";
 
@@ -52,7 +52,9 @@ export default function WorkspaceSwitcher() {
           style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
         >
           <div className="px-3 py-2">
-            <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider font-medium">Workspaces</p>
+            <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider font-medium">
+              Workspaces
+            </p>
           </div>
           {workspaces.map((ws) => (
             <button
@@ -77,7 +79,10 @@ export default function WorkspaceSwitcher() {
 
           <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] mt-2 pt-2">
             <button
-              onClick={() => { setShowDropdown(false); router.push("/workspaces/create"); }}
+              onClick={() => {
+                setShowDropdown(false);
+                router.push("/workspaces/create");
+              }}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-[#2563EB] dark:text-[#3B82F6] hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.12)]"
             >
               <Plus className="w-4 h-4" /> Create New Workspace

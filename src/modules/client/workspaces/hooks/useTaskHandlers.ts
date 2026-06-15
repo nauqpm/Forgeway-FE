@@ -69,7 +69,7 @@ export const useTaskHandlers = ({
       );
       
       taskService.updateBoardTask(workspaceId, id, updates)
-        .then((savedIssue) => {
+        .then((savedIssue: Issue) => {
           const nextIssue = (() => {
             const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
             return isObjectId && updates.status
@@ -92,7 +92,7 @@ export const useTaskHandlers = ({
             queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
           }
         })
-        .catch((error) => {
+        .catch((error: unknown) => {
           // Rollback on error
           setIssues((current) =>
             current.map((i) => (i.id === id ? existingIssue : i))
