@@ -91,7 +91,7 @@ export default function ChatWindow() {
 
   if (!activeChannelId || !activeChannel) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#202020] text-[#787774]">
+      <div className="flex-1 flex flex-col min-h-0 items-center justify-center bg-white dark:bg-[#202020] text-[#787774]">
         <div className="w-16 h-16 bg-[#F0F0EE] dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
           <Hash className="w-8 h-8 opacity-20" />
         </div>
@@ -140,7 +140,7 @@ export default function ChatWindow() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-[#202020]">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden bg-white dark:bg-[#202020]">
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -253,12 +253,14 @@ export default function ChatWindow() {
                 : 10;
               
               const isSameUserAsPrevious = isSameUser && timeDiff < 5;
+              const isMine = String(currentSenderId) === String(currentUserId);
 
               return (
                 <MessageItem
                   key={msg._id || (msg as any).id}
                   message={msg}
                   isSameUserAsPrevious={isSameUserAsPrevious}
+                  isMine={isMine}
                 />
               );
             })}

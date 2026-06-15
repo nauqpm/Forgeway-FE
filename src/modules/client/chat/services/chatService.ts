@@ -109,3 +109,8 @@ export const searchUsersAPI = async (search?: string): Promise<any[]> => {
     }
   }
 };
+
+export const deleteMessageAPI = async (messageId: string): Promise<void> => {
+  await api.delete(`/chat/messages/${messageId}`);
+};
+

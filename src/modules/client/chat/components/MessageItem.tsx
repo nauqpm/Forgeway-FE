@@ -3,18 +3,30 @@
 import React from 'react';
 import { Message } from '@/stores/chatStore';
 import { format } from 'date-fns';
-import { Paperclip, SmilePlus, Reply, MoreHorizontal } from 'lucide-react';
+import { Paperclip, SmilePlus, Reply, MoreHorizontal, Trash2 } from 'lucide-react';
+import { deleteMessageAPI } from '@/modules/client/chat/services/chatService';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MessageItemProps {
   message: Message;
   isSameUserAsPrevious: boolean;
+  isMine: boolean;
 }
 
-export default function MessageItem({ message, isSameUserAsPrevious }: MessageItemProps) {
+export default function MessageItem({ message, isSameUserAsPrevious, isMine }: MessageItemProps) {
   const sender = message.senderId;
   const isDeleted = message.deletedAt !== null;
+
+  const handleDelete = async () => {
+    if (window.confirm("Are you sure you want to delete this message?")) {
+      try {
+        await deleteMessageAPI(message._id);
+      } catch (err) {
+        console.error("Failed to delete message:", err);
+      }
+    }
+  };
 
   return (
     <div className={cn(
@@ -31,6 +43,15 @@ export default function MessageItem({ message, isSameUserAsPrevious }: MessageIt
           <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="Reply">
             <Reply className="w-3.5 h-3.5" />
           </button>
+          {isMine && (
+            <button 
+              onClick={handleDelete}
+              className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-red-50 dark:hover:bg-red-900/20 text-[#787774] hover:text-red-500 transition-colors" 
+              title="Delete message"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="More">
             <MoreHorizontal className="w-3.5 h-3.5" />
           </button>

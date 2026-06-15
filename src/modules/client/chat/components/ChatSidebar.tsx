@@ -235,7 +235,8 @@ export default function ChatSidebar() {
   const totalCount = generalChannels.length + (workspaces?.length || 0) + dmChannels.length;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-[#FBFBFA] dark:bg-[#252525]">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-[#FBFBFA] dark:bg-[#252525]">
+
       <div className="flex items-center px-[10px] pt-2 gap-[2px] border-b border-[#EAEAEA] dark:border-white/[0.06]">
         <button 
           onClick={() => setActiveTab('all')}
