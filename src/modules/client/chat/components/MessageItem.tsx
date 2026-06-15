@@ -33,6 +33,61 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     ? (message.replyToId as Message)
     : null;
 
+  const isMentioned = (() => {
+    if (!currentUserId || !message.content) return false;
+    if (message.content.includes('[@All](All)') || message.content.includes('[@all](all)')) return true;
+    const mentionRegex = new RegExp(`\\[@[^\\]]+\\]\\(${currentUserId}\\)`, 'g');
+    return mentionRegex.test(message.content);
+  })();
+
+  const isReplyToMe = (() => {
+    if (!replyParent || !currentUserId) return false;
+    const parentSender = replyParent.senderId;
+    const parentSenderId = typeof parentSender === 'object' && parentSender 
+      ? (parentSender._id || (parentSender as any).id) 
+      : parentSender;
+    return String(parentSenderId) === String(currentUserId);
+  })();
+
+  const shouldHighlight = isMentioned || isReplyToMe;
+
+  const renderMessageContent = (content: string) => {
+    const mentionRegex = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = mentionRegex.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(content.substring(lastIndex, match.index));
+      }
+      const displayName = match[1];
+      const userId = match[2];
+      const isMe = String(userId) === String(currentUserId) || userId === 'All' || userId === 'all';
+      
+      parts.push(
+        <span
+          key={match.index}
+          className={cn(
+            "px-1 py-0.5 rounded-[3px] font-medium text-[0.875rem]",
+            isMe 
+              ? "text-[#F59E0B] dark:text-[#FBBF24] bg-[#FFF9E6] dark:bg-[#F59E0B]/20" 
+              : "text-[#2563EB] dark:text-[#3B82F6] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)]"
+          )}
+        >
+          @{displayName}
+        </span>
+      );
+      lastIndex = mentionRegex.lastIndex;
+    }
+
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : content;
+  };
+
   useEffect(() => {
     if (!showEmojiPicker) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -67,7 +122,10 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     <div 
       id={`msg-${message._id}`}
       className={cn(
-        "group relative flex gap-4 px-4 py-0.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors flex-row",
+        "group relative flex gap-4 transition-colors flex-row",
+        shouldHighlight 
+          ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4" 
+          : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4",
         !isSameUserAsPrevious ? 'mt-3' : ''
       )}
     >
@@ -167,11 +225,32 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }}
           >
+            {replyParent.senderId?.avatar ? (
+              <img 
+                src={replyParent.senderId.avatar} 
+                alt={replyParent.senderId.fullName} 
+                className="w-4 h-4 rounded-full object-cover shrink-0" 
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const parent = (e.target as HTMLImageElement).parentElement;
+                  if (parent && !parent.querySelector('.reply-avatar-fallback')) {
+                    const span = document.createElement('span');
+                    span.className = 'reply-avatar-fallback w-4 h-4 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[9px] font-bold shrink-0';
+                    span.innerText = replyParent.senderId?.fullName?.charAt(0).toUpperCase() || 'U';
+                    parent.insertBefore(span, parent.firstChild);
+                  }
+                }}
+              />
+            ) : (
+              <div className="w-4 h-4 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[9px] font-bold shrink-0">
+                {replyParent.senderId?.fullName?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
             <span className="font-bold hover:underline">
               @{replyParent.senderId?.fullName || "User"}
             </span>
             <span className="truncate opacity-80 flex-1 text-left">
-              {replyParent.content}
+              {replyParent.deletedAt ? "[Message deleted]" : renderMessageContent(replyParent.content)}
             </span>
           </div>
         )}
@@ -191,7 +270,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
           "text-[0.875rem] leading-normal break-words whitespace-pre-wrap",
           isDeleted ? "text-[#ABABAB] dark:text-[#6B6B6B] italic text-[0.8125rem]" : "text-[#111111] dark:text-[#E8E8E7]"
         )}>
-          {isDeleted ? "[Message deleted]" : message.content}
+          {isDeleted ? "[Message deleted]" : renderMessageContent(message.content)}
         </div>
 
         {/* Attachments */}

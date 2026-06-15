@@ -5,6 +5,7 @@ export interface ChatUser {
   fullName: string;
   avatar?: string;
   email: string;
+  phone?: string;
 }
 
 export interface Attachment {
