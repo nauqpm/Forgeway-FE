@@ -7,6 +7,7 @@ export interface PageJoinResponse {
   yjsState?: number[];
   stateVector?: number[];
   title?: string;
+  content?: string;
 }
 
 export class PageRoomManager {
@@ -141,7 +142,7 @@ export class PageRoomManager {
     if (!this.currentId || !socket.connected) return;
 
     socket.emit(
-      SOCKET_COMMANDS.PAGE_PUBLISH_DRAFT,
+      SOCKET_COMMANDS.PAGE_DRAFT_CONTENT,
       { pageId: this.currentId, ...payload },
       (res: { ok: boolean }) => onComplete?.(res?.ok ?? false),
     );

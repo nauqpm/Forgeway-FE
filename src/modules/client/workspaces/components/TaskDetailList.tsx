@@ -36,7 +36,7 @@ interface TaskDetailListProps {
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   showBackButton?: boolean;
-  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
+  onUpdateIssue?: (updatedIssue: any) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;

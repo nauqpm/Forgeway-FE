@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import { Search, Plus, MoreHorizontal, Mail, Shield, Trash2, ChevronDown } from "lucide-react";
 
 interface User {

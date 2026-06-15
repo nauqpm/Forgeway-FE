@@ -382,7 +382,7 @@ export default function NotificationPanel({
   };
 
   const handleNotificationKeyDown = (
-    event: ReactKeyboardEvent<HTMLDivElement>,
+    event: ReactKeyboardEvent<HTMLButtonElement>,
     notification: NotificationViewModel,
   ) => {
     if (event.key !== "Enter" && event.key !== " ") return;

@@ -1,5 +1,5 @@
 // Task Mutations - API calls for creating/updating/deleting data
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "../types/issue.type";
 import type { CreateTaskInput } from "./taskTypes";

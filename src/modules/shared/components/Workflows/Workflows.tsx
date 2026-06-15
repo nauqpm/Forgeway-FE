@@ -10,7 +10,7 @@ import { BarChart3, ArrowRight } from "lucide-react";
 interface Workflow {
   _id: string;
   name: string;
-  projectId?: string;
+  projectId?: any;
   statuses: { id: string; name: string; color: string }[];
 }
 
@@ -57,7 +57,7 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
       .then((results) => {
         if (cancelled || !results) return;
         const wfs: Workflow[] = [];
-        results.forEach((wfRes: { data?: Workflow }) => {
+        results.forEach((wfRes: any) => {
           if (wfRes?.data) wfs.push(wfRes.data);
         });
         setWorkflows(wfs);

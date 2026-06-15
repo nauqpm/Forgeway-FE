@@ -65,7 +65,7 @@ type BoardTabProps = {
 
   ui: {
     filters: Filters;
-    newIssueForm: { title: string };
+    newIssueForm: { title: string; status?: string; columnId?: string; sprintId?: string | null };
     showCreateColumn: boolean;
     newColumnName: string;
     isFetching?: boolean;
@@ -78,7 +78,7 @@ type BoardTabProps = {
 
     setSelectedIssue: (issue: Issue | null) => void;
 
-    setNewIssueForm: React.Dispatch<React.SetStateAction<{ title: string }>>;
+    setNewIssueForm: React.Dispatch<React.SetStateAction<{ title: string; status?: string; columnId?: string; sprintId?: string | null }>>;
     setShowCreateIssue: React.Dispatch<React.SetStateAction<boolean>>;
 
     setShowCreateColumn: React.Dispatch<React.SetStateAction<boolean>>;

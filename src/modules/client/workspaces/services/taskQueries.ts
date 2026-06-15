@@ -1,5 +1,5 @@
 // Task Queries - API calls for fetching data
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import type { TaskFilters } from "../types/filter.type";
 import { Issue } from "../types/issue.type";

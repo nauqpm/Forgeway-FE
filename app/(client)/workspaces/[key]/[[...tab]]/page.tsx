@@ -456,7 +456,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     setIssues(nextTasksData);
     if (selectedTaskKey && !selectedIssue) {
       const matchingIssue = nextTasksData.find(
-        (issue) => issue.key === selectedTaskKey,
+        (issue: any) => issue.key === selectedTaskKey,
       );
       if (matchingIssue) setSelectedIssue(matchingIssue);
     }
@@ -639,7 +639,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           beforeTaskId,
           afterTaskId,
         })
-        .then((updatedTask) => {
+        .then((updatedTask: any) => {
           const hasQueuedReorder = pendingReorderRef.current.has(taskId);
           patchSelectedTaskView(updatedTask);
 
@@ -664,7 +664,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
             queryKey: ["taskActivities", workspaceApiId, taskId],
           });
         })
-        .catch((error) => {
+        .catch((error: any) => {
           setIssues((current) => current.map(clearOptimisticIssueOrder));
 
           if (isNoopReorderError(error)) {
@@ -755,13 +755,13 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
             .updateBoardTask(workspaceApiId, taskId, {
               sprintId: sprintId ?? undefined,
             })
-            .then((updatedTask) => {
+            .then((updatedTask: any) => {
               patchSelectedTaskView(updatedTask);
               queryClient.invalidateQueries({
                 queryKey: ["taskActivities", workspaceApiId, taskId],
               });
             })
-            .catch((error) => {
+            .catch((error: any) => {
               queryClient.invalidateQueries({
                 queryKey: ["tasks", workspaceApiId],
               });
@@ -1184,13 +1184,13 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
                       .moveBoardTask(workspaceApiId, taskId, { columnId })
                     taskService
                       .moveBoardTask(workspaceApiId, taskId, { columnId })
-                      .then((updatedTask) => {
+                      .then((updatedTask: any) => {
                         patchSelectedTaskView(updatedTask);
                         queryClient.invalidateQueries({
                           queryKey: ["taskActivities", workspaceApiId, taskId],
                         });
                       })
-                      .catch((error) => {
+                      .catch((error: any) => {
                         if (isNoopReorderError(error)) {
                           queryClient.invalidateQueries({
                             queryKey: ["tasks", workspaceApiId],
@@ -1399,9 +1399,9 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
-          onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
-          onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
-          onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
+          onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
+          onFieldUpdate={canEditTask ? ((id: string, updates: any) => updateIssueDirectly(id, updates)) : undefined}
+          onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
       ) : activeIssueDetail && activeTab !== "list" ? (
@@ -1413,8 +1413,8 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
-          onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
-          onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
+          onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
+          onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
       ) : null}

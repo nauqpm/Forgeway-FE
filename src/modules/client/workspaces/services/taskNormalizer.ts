@@ -35,8 +35,8 @@ const STATUS_BY_COLUMN: Record<string, string> = {
 
 // Helper functions
 export const normalizeResponseData = <T>(payload: unknown): T => {
-  const res = payload as { data?: { data?: T }; data?: T };
-  return res?.data?.data ?? res?.data ?? (payload as T);
+  const res = payload as { data?: { data?: T } | T };
+  return ((res?.data as any)?.data ?? res?.data ?? payload) as T;
 };
 
 export const normalizeValue = (value?: string | null): string | undefined => {

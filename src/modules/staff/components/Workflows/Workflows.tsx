@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import { BarChart3, ArrowRight } from "lucide-react";
 
 interface Workflow {

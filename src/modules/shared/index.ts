@@ -4,4 +4,3 @@ export { default as WorkspaceSettings } from "./components/WorkspaceSettings/Wor
 export { default as AdminUsers } from "./components/Users/Users";
 export { default as Permissions } from "./components/Permissions/Permissions";
 export { default as KanbanBoard } from "./components/KanbanBoard/KanbanBoard";
-export { default as AdminChat } from "./components/Chat/Chat";

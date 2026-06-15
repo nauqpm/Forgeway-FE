@@ -51,18 +51,8 @@ type WorkspaceContentProps = {
   workspace: any;
   workspaceId: string;
 
-  boardProps: {
-    data: BoardTabProps["data"];
-    ui: BoardTabProps["ui"];
-    actions: BoardTabProps["actions"];
-    refs: BoardTabProps["refs"];
-  };
-  backlogProps: {
-    data: BacklogTabProps["data"];
-    ui: BacklogTabProps["ui"];
-    actions: BacklogTabProps["actions"];
-    permissions?: BacklogTabProps["permissions"];
-  };
+  boardProps: any;
+  backlogProps: any;
   timelineProps: any;
   listProps: any;
   summaryProps: any;

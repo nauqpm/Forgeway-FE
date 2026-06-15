@@ -26,6 +26,7 @@ import appleIcon from "../apple-icon.png";
 import { usePathname, useRouter } from "next/navigation";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
 import AppHeader from "@/modules/client/common/layout/AppHeader";
+import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
 import { useTheme } from "@/hooks/useTheme";
@@ -82,44 +83,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const router = useRouter();
   const pathname = usePathname();
-  const workspaceKey = pathname?.startsWith("/workspaces/")
-    ? pathname.split("/")[2]
-    : "";
-  const activeWorkspaceKey =
-    workspaceKey || currentWorkspace?.key || currentWorkspace?.slug || "AL";
-  const [taskSearchFilters, setTaskSearchFilters] = useState<Filters>({
-    search: "",
-    assigneeId: null,
-    reporterId: null,
-    taskKey: null,
-    workspaceKey,
-    workspaceKeys: [],
-    lastUpdated: null,
-    priority: null,
-    type: null,
-    assignees: [],
-    types: [],
-    statuses: [],
-    priorities: [],
-    backlog: false,
-    archived: false,
-  });
-  const [isTaskSearchReady, setIsTaskSearchReady] = useState(false);
-  const taskSearchHydrationPathRef = useRef<string | null>(null);
-
-  const searchProjects = (
-    workspaces.length > 0
-      ? workspaces
-      : currentWorkspace
-        ? [currentWorkspace]
-        : []
-  )
-  // Task search filters state
   const workspaceKey = pathname?.startsWith("/workspaces/") ? pathname.split("/")[2] : "";
+  const activeWorkspaceKey = workspaceKey || currentWorkspace?.key || currentWorkspace?.slug || "AL";
+
   const [taskSearchFilters, setTaskSearchFilters] = useState<Filters>({
     ...DEFAULT_FILTERS,
     workspaceKey,
   });
+  const [isTaskSearchReady, setIsTaskSearchReady] = useState(false);
+  const taskSearchHydrationPathRef = useRef<string | null>(null);
 
   // Default workspace keys for search
   const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
@@ -130,7 +102,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return id && key ? { id, name: workspace.name, key } : null;
     })
     .filter((workspace): workspace is { id: string; name: string; key: string } => Boolean(workspace));
-  const defaultSearchWorkspaceKeys = workspaceKey ? [workspaceKey] : searchProjects.map((workspace) => workspace.key);
+  const defaultSearchWorkspaceKeys = (workspaceKey ? [workspaceKey] : searchProjects.map((workspace) => workspace.key)).filter(Boolean) as string[];
   const searchAssignees = (currentWorkspace?.members ?? [])
     .filter((member) => member && member.userId)
     .map((member) => {

@@ -1,24 +1,26 @@
+export interface WorkspaceMember {
+  userId:
+    | string
+    | {
+        _id?: string;
+        id?: string;
+        fullName?: string;
+        name?: string;
+        email?: string;
+        avatar?: string;
+        avatarUrl?: string;
+        image?: string;
+      };
+  role: string;
+}
+
 export interface Workspace {
   _id: string;
   name: string;
   key: string;
   slug?: string;
   ownerId?: string | { _id?: string; id?: string };
-  members?: {
-    userId:
-      | string
-      | {
-          _id?: string;
-          id?: string;
-          fullName?: string;
-          name?: string;
-          email?: string;
-          avatar?: string;
-          avatarUrl?: string;
-          image?: string;
-        };
-    role: string;
-  }[];
+  members?: WorkspaceMember[];
   description?: string;
   avatar?: string;
   access?: "private" | "public";

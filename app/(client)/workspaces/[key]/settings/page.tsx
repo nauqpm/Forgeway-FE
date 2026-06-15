@@ -11,6 +11,13 @@ import {
   Settings,
   ShieldAlert,
   Users,
+  Lock,
+  Save,
+  LogOut,
+  Trash2,
+  UserPlus,
+  X,
+  MoreHorizontal,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -32,7 +39,7 @@ import {
 
 type WorkspaceStatus = "active" | "archived";
 type WorkspaceAccess = "public" | "private";
-type InviteRole = "admin" | "member" | "viewer";
+type InviteRole = "workspace_admin" | "space_admin" | "admin" | "member" | "viewer";
 
 interface WorkspaceSettings {
   _id: string;
@@ -127,6 +134,12 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const [memberSubTab, setMemberSubTab] = useState<"list" | "invites">("list");
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<InviteRole>("member");
+  const [inviting, setInviting] = useState(false);
 
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [leaveConfirm, setLeaveConfirm] = useState("");
@@ -245,27 +258,34 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     }
   };
 
-  // const handleInvite = async (event: FormEvent) => {
-  //   event.preventDefault();
-  //   const email = inviteEmail.trim();
-  //   if (!email) return;
+  const refreshInvites = async () => {
+    if (!workspaceInviteId) return;
+    try {
+      const updated = await inviteService.listInvites(workspaceInviteId);
+      setInvites(updated);
+    } catch { }
+  };
 
-  //   setInviting(true);
-  //   try {
-  //     await inviteService.sendInvite(workspaceInviteId, {
-  //       email,
-  //       role: inviteRole,
-  //     });
-  //     toast.success(`Invitation sent to ${email}.`);
-  //     setInviteEmail("");
-  //     const updated = await inviteService.listInvites(workspaceInviteId);
-  //     setInvites(updated);
-  //   } catch (error: any) {
-  //     toast.error(error?.response?.data?.message || "User is already a member of this workspace.");
-  //   } finally {
-  //     setInviting(false);
-  //   }
-  // };
+  const handleInvite = async (event: FormEvent) => {
+    event.preventDefault();
+    const email = inviteEmail.trim();
+    if (!email) return;
+
+    setInviting(true);
+    try {
+      await inviteService.sendInvite(workspaceInviteId, {
+        email,
+        role: inviteRole as any,
+      });
+      toast.success(`Invitation sent to ${email}.`);
+      setInviteEmail("");
+      await refreshInvites();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "User is already a member of this workspace.");
+    } finally {
+      setInviting(false);
+    }
+  };
 
   const handleCancelInvite = async (inviteId: string) => {
     setCancellingId(inviteId);
@@ -454,16 +474,28 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
 
         <div className="flex-1 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,32px)]">
           {activeTab === "general" ? (
-            <GeneralSettings
-              form={form}
-              workspace={workspace}
-              saving={saving}
-              canManageWorkspace={canManageWorkspace}
-              setForm={setForm}
-              handleSave={handleSave}
-              setShowDeleteDialog={setShowDeleteDialog}
-              setShowLeaveDialog={setShowLeaveDialog}
-            />
+              <GeneralSettings
+                form={form}
+                workspace={workspace}
+                saving={saving}
+                canManageWorkspace={canManageWorkspace}
+                setForm={setForm}
+                handleSave={handleSave}
+                setShowDeleteDialog={setShowDeleteDialog}
+                setShowLeaveDialog={setShowLeaveDialog}
+                deleting={deleting}
+                deleteConfirm={deleteConfirm}
+                showDeleteDialog={showDeleteDialog}
+                setDeleteConfirm={setDeleteConfirm}
+                handleDelete={handleDelete}
+                leaving={leaving}
+                leaveConfirm={leaveConfirm}
+                setLeaveConfirm={setLeaveConfirm}
+                showLeaveDialog={showLeaveDialog}
+                handleLeave={handleLeave}
+                handleDeleteConfirmKeyDown={handleDeleteConfirmKeyDown}
+                handleLeaveConfirmKeyDown={handleLeaveConfirmKeyDown}
+              />
           ) : (
             <MemberSettings
               members={members}
@@ -471,6 +503,28 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
               canManageWorkspace={canManageWorkspace}
               workspaceInviteId={workspaceInviteId}
               currentUserId={currentUserId}
+              memberSubTab={memberSubTab}
+              setMemberSubTab={setMemberSubTab}
+              showInviteModal={showInviteModal}
+              setShowInviteModal={setShowInviteModal}
+              inviteEmail={inviteEmail}
+              inviteRole={inviteRole}
+              inviting={inviting}
+              invites={invites}
+              loadingInvites={loadingInvites}
+              cancellingId={cancellingId}
+              setInviteEmail={setInviteEmail}
+              setInviteRole={setInviteRole}
+              handleInvite={handleInvite}
+              refreshInvites={refreshInvites}
+              handleCancelInvite={handleCancelInvite}
+              memberMenu={memberMenu}
+              removingMemberId={removingMemberId}
+              updatingMemberId={updatingMemberId}
+              handleOpenMemberMenu={handleOpenMemberMenu}
+              handleClickMember={handleClickMember}
+              handleUpdateMemberRole={handleUpdateMemberRole}
+              handleRemoveMember={handleRemoveMember}
             />
           )}
         </div>
@@ -1006,7 +1060,7 @@ function MemberSettings({
 
                       <div className="flex flex-col gap-2 sm:w-[20rem] sm:flex-row sm:items-end sm:justify-end">
                         <RoleChanger
-                          value={normalizedRole}
+                          value={normalizedRole as any}
                           onChange={(role) => handleUpdateMemberRole(member, role)}
                           disabled={!canManageWorkspace || isSelf || isBusy}
                           isLoading={updatingMemberId === memberId}
