@@ -2,15 +2,17 @@
 
 import React from "react";
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
-import TaskDescription from "@/modules/admin/components/common/components/TaskDescription";
+import TaskDescription from "@/modules/shared/components/common/components/TaskDescription";
 import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
 import TaskComments from "./TaskComments";
 import TaskActivityHistory from "./TaskActivityHistory";
 import { getIssueAssigneeId } from "./task-detail-shared";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
+import type { TaskDetailResponse } from "../types/task-detail.type";
+import type { WorkspaceMember } from "./task-detail-shared";
 
 interface TaskDetailMainContentProps {
-  issue: any;
+  issue: TaskDetailResponse;
   workspaceId: string;
   user?: { id?: string } | null;
   token?: string | null;
@@ -21,7 +23,7 @@ interface TaskDetailMainContentProps {
   setIsEditingTitle: (v: boolean) => void;
   activeTab: "comments" | "history";
   setActiveTab: (v: "comments" | "history") => void;
-  workspaceMembers: any[];
+  workspaceMembers: WorkspaceMember[];
   assigneeName: string;
   onSaveTitle: () => void;
   onSaveDescription: (desc: string) => void;
@@ -74,7 +76,7 @@ export default function TaskDetailMainContent({
           </div>
           <button
             onClick={() => {
-              console.log("Restore triggered");
+              // Restore action
             }}
             className="flex items-center px-3 py-1.5 bg-[#FBF3DB] hover:bg-[#F7F6F3] dark:bg-[rgba(149,100,0,0.12)] dark:hover:bg-[#2E2E2E] text-[#956400] dark:text-[#F59E0B] text-sm font-semibold rounded-[6px] transition-colors"
           >

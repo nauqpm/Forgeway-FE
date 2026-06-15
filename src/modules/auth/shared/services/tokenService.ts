@@ -18,10 +18,12 @@ export const refreshTokenAPI = async (): Promise<RefreshTokenResponse> => {
 // Backend clears cookies on logout. This is a client-side cleanup helper.
 
 export const clearTokens = (): void => {
-  // Remove any client-side remnants (legacy support during migration)
+  // Tokens are stored in httpOnly cookies managed by backend
+  // Clear localStorage remnants only (legacy migration support)
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('token');
     localStorage.removeItem('workspace-storage');
+    // Note: 'token' is intentionally NOT removed here as it may be used by other legacy code
+    // The httpOnly cookie handles actual authentication
   }
 };
 

@@ -114,7 +114,6 @@ export function useAppProfile() {
           // @ts-ignore
           avatarUrl = (process.env.NEXT_PUBLIC_SERVER_URL ?? "http://localhost:5512") + avatarUrl;
         }
-        console.log({ avatarUrl });
 
         // Phase 2: save URL to profile
         try {
@@ -131,8 +130,6 @@ export function useAppProfile() {
           return false;
         }
       } catch (e: unknown) {
-        console.log(e);
-
         setError("Image upload failed");
         return false;
       } finally {

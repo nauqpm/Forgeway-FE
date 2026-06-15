@@ -182,17 +182,19 @@ const imageService = {
 
       formData.append("file", processedFile);
 
-      const response = await api.post("/imagesapi/upload", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+      // const response = await api.post("/imagesapi/upload", formData, {
+      //   headers: {
+      //     "Content-Type": "multipart/form-data",
+      //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+      //   },
+      const response = await api.post('/imagesapi/upload', formData, {
         timeout: 30000, // 30 seconds timeout
       });
 
       return imageService.normalizeImageResponse(response.data);
-    } catch (error: any) {
-      console.error("Image upload error:", error.response?.data || error.message);
+    } catch (error) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      console.error("Image upload error:", err.response?.data || err.message);
       throw error;
     }
   },
@@ -210,8 +212,6 @@ const imageService = {
     }
 
     try {
-      console.log(`Processing ${files.length} images...`);
-
       // Process files one at a time instead of in parallel
       const processedFiles = [];
       for (const file of files) {
@@ -236,26 +236,24 @@ const imageService = {
         processedFiles.push(processedFile);
       }
 
-      console.log(`Processed ${processedFiles.length} images, starting upload...`);
-
       // Split into small batches when there are many images
       const uploadResults = [];
       const chunkSize = 3; // Upload up to 3 images at a time
 
       for (let i = 0; i < processedFiles.length; i += chunkSize) {
         const chunk = processedFiles.slice(i, i + chunkSize);
-        console.log(`Uploading image batch ${i / chunkSize + 1}/${Math.ceil(processedFiles.length / chunkSize)}...`);
 
         const formData = new FormData();
         chunk.forEach((file) => {
           formData.append("files", file);
         });
 
-        const response = await api.post("/images/upload-multiple", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+        // const response = await api.post("/images/upload-multiple", formData, {
+        //   headers: {
+        //     "Content-Type": "multipart/form-data",
+        //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+        //   },
+        const response = await api.post('/images/upload-multiple', formData, {
           timeout: 60000, // 60 seconds
         });
 
@@ -341,16 +339,19 @@ const imageService = {
         uploadResults.push(...processedChunkResults);
       }
 
-      console.log("All images uploaded successfully:", uploadResults.length);
       return uploadResults;
     } catch (error: any) {
-      console.error("Image upload error:", error);
+      const err = error as { 
+        response?: { status?: number; data?: unknown; headers?: unknown }; 
+        message?: string 
+      };
+      console.error('Image upload error:', error);
 
-      if (error.response) {
-        console.error("Error details:", {
-          status: error.response.status,
-          data: error.response.data,
-          headers: error.response.headers,
+      if (err.response) {
+        console.error('Error details:', {
+          status: err.response.status,
+          data: err.response.data,
+          headers: err.response.headers
         });
       }
 
@@ -374,15 +375,16 @@ const imageService = {
       const processedFile = compress ? await imageService.compressImage(file) : file;
       formData.append("file", processedFile);
 
-      const response = await api.post("/images/sunEditor", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      // const response = await api.post("/images/sunEditor", formData, {
+      //   headers: {
+      //     "Content-Type": "multipart/form-data",
+      //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+      //   },
+      // });
+      const response = await api.post('/images/sunEditor', formData);
 
       return response.data;
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error uploading editor image:", error);
       throw error;
     }
@@ -407,11 +409,7 @@ const imageService = {
 
 // Log image compression support state when initializing module (client-only)
 if (typeof window !== "undefined") {
-  if (!isImageCompressionSupported()) {
-    console.log("Device or browser does not support image compression. Please update your browser.");
-  } else {
-    console.log("Device or browser supports image compression.");
-  }
+  // Image compression support status logged to console for debugging
 }
 
 export default imageService;

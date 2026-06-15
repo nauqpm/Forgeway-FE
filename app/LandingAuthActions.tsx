@@ -11,9 +11,12 @@ import {
   LogOut,
   Monitor,
   Moon,
+  Repeat,
   Settings,
+  Shield,
   Sun,
   User,
+  X,
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -21,6 +24,9 @@ import { useTheme } from "@/hooks/useTheme";
 import NotificationPanel from "@/common/components/NotificationPanel";
 import { notificationService } from "@/common/services/notification.service";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
+import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
+import { useAccountSwitcherStore } from "@/common/stores/account-switcher.store";
+import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 
 function ThemeToggleButton() {
   const { theme, setTheme } = useTheme();
@@ -45,8 +51,13 @@ export function NavAuthActions() {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSwitcher, setShowSwitcher] = useState(false);
+  const [hasFetched, setHasFetched] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Account-switcher badge count
+  const accountsCount = useAccountSwitcherStore((s) => s.accounts.length);
 
   const refreshUnreadNotificationCount = useCallback(() => {
     if (!isAuthenticated) return;
@@ -128,12 +139,44 @@ export function NavAuthActions() {
         )}
         {dropdownOpen && (
           <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#202020] py-2 shadow-xl shadow-black/10 dark:shadow-black/40">
-            <div className="border-b border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2">
-              <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                {user?.fullName ?? "User"}
-              </p>
-              <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">{user?.email}</p>
+            <div className="flex items-start gap-2 border-b border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                  {user?.fullName ?? "User"}
+                </p>
+                <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">{user?.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSwitcher((v) => !v)}
+                title="Chuyển account"
+                aria-label="Chuyển account"
+                aria-expanded={showSwitcher}
+                className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-md transition ${
+                  showSwitcher
+                    ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-indigo-500/15 dark:text-indigo-300"
+                    : "text-[#2563EB] hover:bg-[#EFF6FF] dark:text-indigo-300 dark:hover:bg-indigo-500/10"
+                }`}
+              >
+                {showSwitcher ? <X className="h-3.5 w-3.5" /> : <Repeat className="h-4 w-4" />}
+                {accountsCount > 0 && !showSwitcher && (
+                  <span className="absolute -right-0.5 -top-0.5 min-w-[14px] rounded-full bg-[#2563EB] px-1 text-[9px] font-semibold leading-[14px] text-white dark:bg-indigo-500">
+                    {accountsCount}
+                  </span>
+                )}
+              </button>
             </div>
+
+            {showSwitcher && (
+              <div className="border-b border-[#EAEAEA] dark:border-white/[0.06]">
+                <AccountSwitcher
+                  open={showSwitcher}
+                  hasFetched={hasFetched}
+                  setHasFetched={setHasFetched}
+                  onCloseMenu={() => setDropdownOpen(false)}
+                />
+              </div>
+            )}
 
             <Link
               href="/dashboard"
@@ -145,7 +188,7 @@ export function NavAuthActions() {
             </Link>
 
             <Link
-              href="/account"
+              href="/settings"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#111111] dark:text-[#E8E8E7] transition hover:bg-[#F7F6F3] dark:hover:bg-[#252525]"
               onClick={() => setDropdownOpen(false)}
             >
@@ -161,6 +204,24 @@ export function NavAuthActions() {
               <Settings className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
               Settings
             </Link>
+
+            {IS_SUPER_ADMIN(user?.role) && (
+              <>
+                <div className="mt-2 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-2">
+                  <a
+                    href={ADMIN_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#2563EB] dark:text-indigo-300 transition hover:bg-[#EFF6FF] dark:hover:bg-indigo-500/10"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Trang quản trị
+                    <span className="ml-auto text-[10px] uppercase tracking-wider text-[#9B9A97] dark:text-[#6B6B6B]">↗</span>
+                  </a>
+                </div>
+              </>
+            )}
 
             <div className="mt-2 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-2">
               <button

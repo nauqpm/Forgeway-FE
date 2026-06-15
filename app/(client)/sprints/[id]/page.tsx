@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import api from "@/lib/axiosIns";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import {
   ArrowLeft,
   CheckSquare,

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { realtimeSocketClient } from '@/lib/socket/socket.client';
@@ -21,6 +21,7 @@ type UseWorkspaceRealtimeOptions = {
 };
 
 const REDIRECT_DELAY_MS = 2_500;
+const MAX_HANDLED_EVENT_IDS = 1000; // Prevent memory leak from unbounded Set growth
 
 const isCurrentUserTarget = (
   envelope: WorkspaceRealtimeEnvelope,
@@ -41,8 +42,21 @@ export function useWorkspaceRealtime({
   const setCurrentWorkspace = useWorkspaceStore(
     (state) => state.setCurrentWorkspace,
   );
+
+  // Use refs to store latest state values to avoid stale closures
+  const workspacesRef = useRef(workspaces);
+  const currentWorkspaceRef = useRef(currentWorkspace);
   const handledEventIdsRef = useRef<Set<string>>(new Set());
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    workspacesRef.current = workspaces;
+  }, [workspaces]);
+
+  useEffect(() => {
+    currentWorkspaceRef.current = currentWorkspace;
+  }, [currentWorkspace]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -50,8 +64,23 @@ export function useWorkspaceRealtime({
     const socket = realtimeSocketClient.connect();
     if (!socket) return;
 
+    // Cleanup function for event deduplication set to prevent memory leak
     const markHandled = (eventId?: string): boolean => {
       if (!eventId) return false;
+      
+      // Prevent unbounded Set growth
+      if (handledEventIdsRef.current.size >= MAX_HANDLED_EVENT_IDS) {
+        // Clear oldest entries when limit reached (simple FIFO)
+        const entriesToRemove = handledEventIdsRef.current.size - (MAX_HANDLED_EVENT_IDS / 2);
+        const iterator = handledEventIdsRef.current.values();
+        for (let i = 0; i < entriesToRemove; i++) {
+          const next = iterator.next();
+          if (next.value) {
+            handledEventIdsRef.current.delete(next.value);
+          }
+        }
+      }
+      
       if (handledEventIdsRef.current.has(eventId)) return true;
       handledEventIdsRef.current.add(eventId);
       return false;
@@ -63,26 +92,32 @@ export function useWorkspaceRealtime({
       redirectTimerRef.current = null;
     };
 
+    // Use functional updates to always get latest state
     const syncWorkspace = (workspaceId: string, workspace?: ReturnType<typeof mapWorkspacePayload>) => {
       if (!workspace) return;
 
-      const nextWorkspaces = upsertWorkspace(workspaces, workspace);
-      setWorkspaces(nextWorkspaces as any);
+      setWorkspaces((currentWorkspaces) => {
+        const nextWorkspaces = upsertWorkspace(currentWorkspaces, workspace);
+        return nextWorkspaces;
+      });
 
-      if (workspaceIdOf(currentWorkspace ?? {}) === workspaceId) {
-        setCurrentWorkspace({
-          ...currentWorkspace,
+      const currentWs = currentWorkspaceRef.current;
+      if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
+        setCurrentWorkspace((currentWs) => ({
+          ...currentWs,
           ...workspace,
-          members: workspace.members ?? currentWorkspace?.members ?? [],
-        } as any);
+          members: workspace.members ?? currentWs?.members ?? [],
+        }));
       }
     };
 
     const removeWorkspaceFromState = (workspaceId: string) => {
-      const nextWorkspaces = removeWorkspace(workspaces, workspaceId);
-      setWorkspaces(nextWorkspaces as any);
+      setWorkspaces((currentWorkspaces) => {
+        return removeWorkspace(currentWorkspaces, workspaceId);
+      });
 
-      if (workspaceIdOf(currentWorkspace ?? {}) === workspaceId) {
+      const currentWs = currentWorkspaceRef.current;
+      if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
         realtimeSocketClient.leaveCurrentWorkspace();
         setCurrentWorkspace(null);
         router.push('/dashboard');
@@ -122,10 +157,12 @@ export function useWorkspaceRealtime({
       const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
       if (!workspaceId) return;
 
-      const nextWorkspaces = removeWorkspace(workspaces, workspaceId);
-      setWorkspaces(nextWorkspaces as any);
+      setWorkspaces((currentWorkspaces) => {
+        return removeWorkspace(currentWorkspaces, workspaceId);
+      });
 
-      if (workspaceIdOf(currentWorkspace ?? {}) !== workspaceId) return;
+      const currentWs = currentWorkspaceRef.current;
+      if (workspaceIdOf(currentWs ?? {}) !== workspaceId) return;
 
       clearRedirectTimer();
       redirectTimerRef.current = setTimeout(() => {
@@ -143,17 +180,20 @@ export function useWorkspaceRealtime({
       const nextRole = envelope.data.nextRole ?? envelope.data.member?.role;
       if (!workspaceId || !userId || !nextRole) return;
 
-      const nextWorkspaces = workspaces.map((workspace) =>
-        workspaceIdOf(workspace) === workspaceId
-          ? updateWorkspaceMemberRole(workspace, userId, nextRole)
-          : workspace,
-      );
-      setWorkspaces(nextWorkspaces as any);
-
-      if (workspaceIdOf(currentWorkspace ?? {}) === workspaceId) {
-        setCurrentWorkspace(
-          updateWorkspaceMemberRole(currentWorkspace!, userId, nextRole) as any,
+      setWorkspaces((currentWorkspaces) => {
+        return currentWorkspaces.map((workspace) =>
+          workspaceIdOf(workspace) === workspaceId
+            ? updateWorkspaceMemberRole(workspace, userId, nextRole)
+            : workspace,
         );
+      });
+
+      const currentWs = currentWorkspaceRef.current;
+      if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
+        setCurrentWorkspace((currentWs) => {
+          if (!currentWs) return null;
+          return updateWorkspaceMemberRole(currentWs, userId, nextRole);
+        });
       }
     };
 
@@ -179,11 +219,9 @@ export function useWorkspaceRealtime({
     };
   }, [
     currentUserId,
-    currentWorkspace,
     enabled,
     router,
     setCurrentWorkspace,
     setWorkspaces,
-    workspaces,
   ]);
 }

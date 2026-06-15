@@ -49,7 +49,7 @@ const normalizeUser = (
   role: (user.role || "user") as UserRole,
   fullName: user.fullName,
   avatar: user.avatar,
-  ssoProvider: (user as any).googleId ? "google" : user.ssoProvider,
+  ssoProvider: 'googleId' in user ? "google" : (user as AuthUser).ssoProvider ?? null,
   permissions: permissions.length ? permissions : user.permissions || [],
 });
 

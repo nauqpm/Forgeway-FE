@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 
 const tabLoading = () => <LoadingSpinner />;
 
@@ -51,8 +51,18 @@ type WorkspaceContentProps = {
   workspace: any;
   workspaceId: string;
 
-  boardProps: any;
-  backlogProps: any;
+  boardProps: {
+    data: BoardTabProps["data"];
+    ui: BoardTabProps["ui"];
+    actions: BoardTabProps["actions"];
+    refs: BoardTabProps["refs"];
+  };
+  backlogProps: {
+    data: BacklogTabProps["data"];
+    ui: BacklogTabProps["ui"];
+    actions: BacklogTabProps["actions"];
+    permissions?: BacklogTabProps["permissions"];
+  };
   timelineProps: any;
   listProps: any;
   summaryProps: any;

@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import { Plus, ArrowLeft, Settings, GripVertical } from "lucide-react";
 import Link from "next/link";
 

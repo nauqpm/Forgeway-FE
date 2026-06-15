@@ -23,21 +23,22 @@ import {
   getIssueAssigneeId,
   type SprintOption,
 } from "./task-detail-shared";
+import type { WorkspaceMember } from "../types/workspace.type";
 import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
 
 interface TaskDetailListProps {
   issue: TaskDetailResponse | any;
   workspaceId: string;
-  workspaceMembers?: any[];
+  workspaceMembers?: WorkspaceMember[];
   sprints?: SprintOption[];
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   showBackButton?: boolean;
-  onUpdateIssue?: (updatedIssue: any) => void;
+  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
-  onArchiveIssue?: (issue: any) => void;
+  onArchiveIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   canEditTask?: boolean;
 }

@@ -24,7 +24,8 @@ import {
   PlayCircle,
   ArrowRight,
 } from "lucide-react";
-import AssigneePicker from "../../../../../common/components/AssigneePicker";
+import AssigneePicker from "@/common/components/AssigneePicker";
+import type { AssigneePickerUser } from "@/common/components/AssigneePicker";
 
 const normalizeObjectId = (value: unknown): string => {
   if (!value) return "";
@@ -57,14 +58,14 @@ type BoardTabProps = {
     columns: BoardColumn[];
     issues: Issue[];
     filteredIssues: Issue[];
-    uniqueAssignees: any[];
+    uniqueAssignees: AssigneePickerUser[];
     workspace: Workspace;
     activeSprint?: Sprint | null;
   };
 
   ui: {
     filters: Filters;
-    newIssueForm: any;
+    newIssueForm: { title: string };
     showCreateColumn: boolean;
     newColumnName: string;
     isFetching?: boolean;
@@ -75,16 +76,16 @@ type BoardTabProps = {
     setColumns: React.Dispatch<React.SetStateAction<BoardColumn[]>>;
     setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
 
-    setSelectedIssue: (issue: Issue) => void;
+    setSelectedIssue: (issue: Issue | null) => void;
 
-    setNewIssueForm: any;
-    setShowCreateIssue: any;
+    setNewIssueForm: React.Dispatch<React.SetStateAction<{ title: string }>>;
+    setShowCreateIssue: React.Dispatch<React.SetStateAction<boolean>>;
 
-    setShowCreateColumn: any;
-    setNewColumnName: any;
+    setShowCreateColumn: React.Dispatch<React.SetStateAction<boolean>>;
+    setNewColumnName: React.Dispatch<React.SetStateAction<string>>;
 
-    handleBoardDragEnd: any;
-    handleBoardDragStart?: any;
+    handleBoardDragEnd: () => void;
+    handleBoardDragStart?: () => void;
     handleAddColumn: () => void;
     handleRenameColumn: (columnId: string, name: string) => void;
     handleDeleteColumn: (columnId: string, migrateTo?: string) => void;

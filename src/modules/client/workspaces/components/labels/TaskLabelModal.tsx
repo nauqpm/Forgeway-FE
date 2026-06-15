@@ -7,6 +7,7 @@ import type { Issue } from "../../types/issue.type";
 import type { TaskLabel } from "../../types/label.type";
 import { labelService } from "../../services/labelService";
 import { taskService } from "../../services/taskService";
+import { extractApiError } from "@/common/utils/apiError";
 
 type TaskLabelModalProps = {
   isOpen: boolean;
@@ -80,8 +81,8 @@ export default function TaskLabelModal({
       setSelectedIds((current) => [...current, createdLabel.id]);
       setNewLabelName("");
       toast.success("Label created");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not create label");
+    } catch (error) {
+      toast.error(extractApiError(error, "Could not create label"));
     } finally {
       setCreating(false);
     }
@@ -101,8 +102,8 @@ export default function TaskLabelModal({
       onSaved({ ...issue, labels: nextIssueLabels, labelIds: nextSelectedIds });
       setLabelToDelete(null);
       toast.success("Label deleted");
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not delete label");
+    } catch (error) {
+      toast.error(extractApiError(error, "Could not delete label"));
     } finally {
       setDeletingIds((current) => current.filter((id) => id !== label.id));
     }
@@ -120,8 +121,8 @@ export default function TaskLabelModal({
       });
       toast.success("Label updated");
       onClose();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not update label");
+    } catch (error) {
+      toast.error(extractApiError(error, "Could not update label"));
     } finally {
       setSaving(false);
     }

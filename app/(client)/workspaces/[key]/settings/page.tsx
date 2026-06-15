@@ -8,30 +8,31 @@ import {
   ArrowLeft,
   Globe,
   Loader2,
-  Lock,
-  LogOut,
-  Save,
   Settings,
   ShieldAlert,
-  Trash2,
-  UserPlus,
   Users,
-  X,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
-import InviteModal from "@/modules/admin/components/common/components/InviteModal";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import InviteModal from "@/modules/shared/components/common/components/InviteModal";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import RoleChanger, { WorkspaceRoleValue } from "@/modules/client/workspaces/components/RoleChanger";
 import { inviteService, PendingInvite } from "@/modules/client/workspaces/services/inviteService";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
 
+// import GeneralSettings from "@/modules/client/workspaces/settings/components/GeneralSettings";
+// import MemberSettings from "@/modules/client/workspaces/settings/components/MemberSettings";
+import {
+  WorkspaceDeleteDialog,
+  LeaveWorkspaceDialog,
+} from "@/modules/client/workspaces/settings/components/Dialogs";
+
 type WorkspaceStatus = "active" | "archived";
 type WorkspaceAccess = "public" | "private";
-type InviteRole = WorkspaceRoleValue;
+type InviteRole = "admin" | "member" | "viewer";
 
 interface WorkspaceSettings {
   _id: string;
@@ -103,7 +104,6 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<"general" | "members">("general");
-  const [memberSubTab, setMemberSubTab] = useState<"list" | "invites">("list");
 
   const [form, setForm] = useState<WorkspaceSettingsForm>({
     name: "",
@@ -111,8 +111,8 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     status: "active",
     access: "public",
   });
-  const [deleteConfirm, setDeleteConfirm] = useState("");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
 
   const [members, setMembers] = useState<WorkspaceMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(true);
@@ -123,13 +123,11 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
   } | null>(null);
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState<InviteRole>("member");
-  const [inviting, setInviting] = useState(false);
-  const [showInviteModal, setShowInviteModal] = useState(false);
+
   const [invites, setInvites] = useState<PendingInvite[]>([]);
   const [loadingInvites, setLoadingInvites] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [leaveConfirm, setLeaveConfirm] = useState("");
   const [leaving, setLeaving] = useState(false);
@@ -189,19 +187,6 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       .finally(() => setLoadingInvites(false));
   }, [activeTab, canManageWorkspace, workspaceInviteId]);
 
-  const refreshInvites = async () => {
-    if (!workspaceInviteId || !canManageWorkspace) return;
-    setLoadingInvites(true);
-    try {
-      const updated = await inviteService.listInvites(workspaceInviteId);
-      setInvites(updated);
-    } catch {
-      setInvites([]);
-    } finally {
-      setLoadingInvites(false);
-    }
-  };
-
   const handleSave = async (event: FormEvent) => {
     event.preventDefault();
 
@@ -248,7 +233,6 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     setDeleting(true);
     try {
       if (!workspaceApiId) throw new Error("Missing workspace id");
-
       await api.delete(apiRoutes.WORKSPACES.BY_ID(workspaceApiId));
       toast.success("Workspace deleted.");
       setShowDeleteDialog(false);
@@ -261,27 +245,27 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     }
   };
 
-  const handleInvite = async (event: FormEvent) => {
-    event.preventDefault();
-    const email = inviteEmail.trim();
-    if (!email) return;
+  // const handleInvite = async (event: FormEvent) => {
+  //   event.preventDefault();
+  //   const email = inviteEmail.trim();
+  //   if (!email) return;
 
-    setInviting(true);
-    try {
-      await inviteService.sendInvite(workspaceInviteId, {
-        email,
-        role: inviteRole,
-      });
-      toast.success(`Invitation sent to ${email}.`);
-      setInviteEmail("");
-      const updated = await inviteService.listInvites(workspaceInviteId);
-      setInvites(updated);
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "User is already a member of this workspace.");
-    } finally {
-      setInviting(false);
-    }
-  };
+  //   setInviting(true);
+  //   try {
+  //     await inviteService.sendInvite(workspaceInviteId, {
+  //       email,
+  //       role: inviteRole,
+  //     });
+  //     toast.success(`Invitation sent to ${email}.`);
+  //     setInviteEmail("");
+  //     const updated = await inviteService.listInvites(workspaceInviteId);
+  //     setInvites(updated);
+  //   } catch (error: any) {
+  //     toast.error(error?.response?.data?.message || "User is already a member of this workspace.");
+  //   } finally {
+  //     setInviting(false);
+  //   }
+  // };
 
   const handleCancelInvite = async (inviteId: string) => {
     setCancellingId(inviteId);
@@ -344,7 +328,6 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     setRemovingMemberId(userId);
     try {
       if (!workspaceApiId) throw new Error("Missing workspace id");
-
       await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceApiId, userId));
       setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
       setMemberMenu(null);
@@ -365,7 +348,6 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     setLeaving(true);
     try {
       if (!workspaceApiId) throw new Error("Missing workspace id");
-
       await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceApiId));
       toast.success("Left workspace.");
       router.push("/workspaces");
@@ -476,53 +458,19 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
               form={form}
               workspace={workspace}
               saving={saving}
-              deleting={deleting}
-              deleteConfirm={deleteConfirm}
-              showDeleteDialog={showDeleteDialog}
-              setForm={setForm}
-              setDeleteConfirm={setDeleteConfirm}
-              setShowDeleteDialog={setShowDeleteDialog}
-              handleSave={handleSave}
-              handleDelete={handleDelete}
               canManageWorkspace={canManageWorkspace}
-              leaving={leaving}
-              leaveConfirm={leaveConfirm}
-              setLeaveConfirm={setLeaveConfirm}
-              showLeaveDialog={showLeaveDialog}
+              setForm={setForm}
+              handleSave={handleSave}
+              setShowDeleteDialog={setShowDeleteDialog}
               setShowLeaveDialog={setShowLeaveDialog}
-              handleLeave={handleLeave}
-              handleDeleteConfirmKeyDown={handleDeleteConfirmKeyDown}
-              handleLeaveConfirmKeyDown={handleLeaveConfirmKeyDown}
             />
           ) : (
             <MemberSettings
               members={members}
               loadingMembers={loadingMembers}
-              memberSubTab={memberSubTab}
-              setMemberSubTab={setMemberSubTab}
-              showInviteModal={showInviteModal}
-              setShowInviteModal={setShowInviteModal}
-              workspaceInviteId={workspaceInviteId}
-              currentUserId={user?.id}
-              inviteEmail={inviteEmail}
-              inviteRole={inviteRole}
-              inviting={inviting}
-              invites={invites}
-              loadingInvites={loadingInvites}
-              cancellingId={cancellingId}
-              setInviteEmail={setInviteEmail}
-              setInviteRole={setInviteRole}
-              handleInvite={handleInvite}
-              refreshInvites={refreshInvites}
-              handleCancelInvite={handleCancelInvite}
-              memberMenu={memberMenu}
-              removingMemberId={removingMemberId}
-              updatingMemberId={updatingMemberId}
-              handleOpenMemberMenu={handleOpenMemberMenu}
-              handleClickMember={handleClickMember}
-              handleUpdateMemberRole={handleUpdateMemberRole}
-              handleRemoveMember={handleRemoveMember}
               canManageWorkspace={canManageWorkspace}
+              workspaceInviteId={workspaceInviteId}
+              currentUserId={currentUserId}
             />
           )}
         </div>
@@ -801,7 +749,6 @@ function GeneralSettings({
         </div>
       )}
 
-      {/* Leave dialog */}
       {showLeaveDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-2xl p-6">

@@ -4,17 +4,39 @@ import api from '@/lib/axiosIns';
 import { apiRoutes } from "@/config/apiRoutes";
 import { DocumentItem } from "../types/document.type";
 import type { DocumentVersion } from "../types/docs.type";
+import { extractResponseData } from "@/common/utils/apiError";
 
-const normalize = <T>(res: any): T => res?.data?.data ?? res?.data ?? res;
+/**
+ * Normalize API response to extract data from various response envelope formats
+ */
+function normalize<T>(response: unknown, fallback: T): T {
+  if (!response) return fallback;
+  
+  const res = response as { data?: unknown };
+  
+  if (typeof res.data === 'object' && res.data !== null) {
+    const data = res.data as { data?: T };
+    if (data.data !== undefined) {
+      return data.data;
+    }
+    return data as T;
+  }
+  
+  if (typeof res.data === 'object' && res.data !== null) {
+    return res.data as T;
+  }
+  
+  return fallback;
+}
 
 export const documentService = {
   listMine: async (): Promise<DocumentItem[]> => {
     const res = await api.get(apiRoutes.DOCUMENTS.BASE);
-    return normalize<DocumentItem[]>(res);
+    return normalize<DocumentItem[]>(res, []);
   },
   getByWorkspace: async (workspaceId: string): Promise<DocumentItem[]> => {
     const res = await api.get(apiRoutes.DOCUMENTS.BY_WORKSPACE(workspaceId));
-    return normalize<DocumentItem[]>(res);
+    return normalize<DocumentItem[]>(res, []);
   },
   upload: async (file: File, payload?: { name?: string; workspaceIds?: string[] }) => {
     const formData = new FormData();
@@ -24,31 +46,33 @@ export const documentService = {
     const res = await api.post(apiRoutes.DOCUMENTS.UPLOAD, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
-    return normalize<DocumentItem>(res);
+    return normalize<DocumentItem>(res, {} as DocumentItem);
   },
   createOnline: async (name: string, content: string, workspaceIds?: string[]) => {
     const res = await api.post(apiRoutes.DOCUMENTS.CREATE_ONLINE, { name, content, workspaceIds });
-    return normalize<DocumentItem>(res);
+    return normalize<DocumentItem>(res, {} as DocumentItem);
   },
   getContent: async (id: string): Promise<{ content: string }> => {
     const res = await api.get(apiRoutes.DOCUMENTS.CONTENT(id));
-    return normalize<{ content: string }>(res);
+    return normalize<{ content: string }>(res, { content: '' });
   },
   updateContent: async (id: string, content: string): Promise<DocumentItem> => {
     const res = await api.patch(apiRoutes.DOCUMENTS.CONTENT(id), { content });
-    return normalize<DocumentItem>(res);
+    return normalize<DocumentItem>(res, {} as DocumentItem);
   },
   createVersion: async (id: string, label: string): Promise<DocumentVersion> => {
     const res = await api.post(apiRoutes.DOCUMENTS.VERSIONS(id), { label });
-    return mapDocumentVersion(normalize<any>(res));
+    const raw = normalize<RawDocumentVersion>(res, {} as RawDocumentVersion);
+    return mapDocumentVersion(raw);
   },
   getVersions: async (id: string): Promise<DocumentVersion[]> => {
     const res = await api.get(apiRoutes.DOCUMENTS.VERSIONS(id));
-    return normalize<any[]>(res).map(mapDocumentVersion);
+    const rawVersions = normalize<RawDocumentVersion[]>(res, []);
+    return rawVersions.map(mapDocumentVersion);
   },
   restoreVersion: async (id: string, versionId: string): Promise<DocumentItem> => {
     const res = await api.post(apiRoutes.DOCUMENTS.VERSION_RESTORE(id, versionId));
-    return normalize<DocumentItem>(res);
+    return normalize<DocumentItem>(res, {} as DocumentItem);
   },
   exportDocx: async (id: string, title: string): Promise<void> => {
     const res = await api.get(apiRoutes.DOCUMENTS.EXPORT_DOCX(id), {
@@ -73,46 +97,61 @@ export const documentService = {
     const res = await api.post(apiRoutes.DOCUMENTS.IMPORT_DOCX, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    return res.data?.html ?? res.data?.data?.html ?? "";
+    const responseData = extractResponseData(res, { html: '' });
+    return (responseData as { html?: string }).html ?? '';
   },
   rename: async (id: string, name: string): Promise<DocumentItem> => {
     const res = await api.patch(apiRoutes.DOCUMENTS.BY_ID(id), { name });
-    return normalize<DocumentItem>(res);
+    return normalize<DocumentItem>(res, {} as DocumentItem);
   },
   delete: async (id: string) => {
     const res = await api.delete(apiRoutes.DOCUMENTS.BY_ID(id));
-    return normalize<{ success: boolean }>(res);
+    return normalize<{ success: boolean }>(res, { success: false });
   },
   attach: async (id: string, workspaceIds: string[]): Promise<DocumentItem> => {
     const res = await api.post(apiRoutes.DOCUMENTS.ATTACH(id), { workspaceIds });
-    return normalize<DocumentItem>(res);
+    return normalize<DocumentItem>(res, {} as DocumentItem);
   },
   detach: async (id: string, workspaceId: string): Promise<DocumentItem> => {
     const res = await api.post(apiRoutes.DOCUMENTS.DETACH(id), { workspaceId });
-    return normalize<DocumentItem>(res);
+    return normalize<DocumentItem>(res, {} as DocumentItem);
   },
   updateWorkspaces: async (id: string, workspaceIds: string[]): Promise<DocumentItem> => {
     const res = await api.patch(apiRoutes.DOCUMENTS.WORKSPACES(id), { workspaceIds });
-    return normalize<DocumentItem>(res);
+    return normalize<DocumentItem>(res, {} as DocumentItem);
   },
   viewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.VIEW(id)}`,
   previewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.PREVIEW(id)}`,
   downloadUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.DOWNLOAD(id)}`,
 };
 
-function mapDocumentVersion(raw: any): DocumentVersion {
+// Internal type for raw document version from API
+interface RawDocumentVersion {
+  _id?: string;
+  documentId?: string;
+  htmlSnapshot?: string;
+  label?: string;
+  version?: number;
+  createdBy?: {
+    _id?: string;
+    fullName?: string;
+  };
+  createdAt?: string;
+}
+
+function mapDocumentVersion(raw: RawDocumentVersion): DocumentVersion {
   return {
-    id: raw._id,
-    pageId: raw.documentId,
+    id: raw._id ?? '',
+    pageId: raw.documentId ?? '',
     htmlSnapshot: raw.htmlSnapshot ?? "",
-    label: raw.label,
-    version: raw.version,
+    label: raw.label ?? '',
+    version: raw.version ?? 0,
     createdBy: raw.createdBy
       ? {
-          _id: raw.createdBy._id,
+          _id: raw.createdBy._id ?? '',
           fullName: raw.createdBy.fullName || "Anonymous",
         }
       : { _id: "", fullName: "Anonymous" },
-    createdAt: raw.createdAt,
+    createdAt: raw.createdAt ?? new Date().toISOString(),
   };
 }

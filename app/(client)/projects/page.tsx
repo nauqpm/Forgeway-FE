@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import { FolderKanban, Plus, LayoutGrid, List, Search, Folder } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";

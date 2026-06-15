@@ -1,6 +1,6 @@
 "use client";
 
-import CalendarView from '@/modules/admin/components/common/components/CalendarView';
+import CalendarView from '@/modules/shared/components/common/components/CalendarView';
 import { Issue } from '@/modules/client/workspaces/types/issue.type';
 import { Sprint } from '@/modules/client/workspaces/types/sprint.type';
 

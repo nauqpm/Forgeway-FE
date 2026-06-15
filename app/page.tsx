@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "./apple-icon.png";
 import { HeroAuthActions, NavAuthActions } from "./LandingAuthActions";
+import AdminNavLink from "./AdminNavLink";
+import BackToTop from "@/modules/client/common/back-to-top/BackToTop";
 import {
   Activity,
   BarChart3,
@@ -348,7 +350,7 @@ function DashboardPreview() {
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#F2FAFF] dark:bg-[#1A1A1A] text-[#111111] dark:text-[#E8E8E7]">
+    <main className="min-h-screen bg-[#F2FAFF] dark:bg-[#1A1A1A] text-[#111111] dark:text-[#E8E8E7]">
       {/* ambient glow */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-1/2 top-0 h-[33.75rem] w-[56.25rem] -translate-x-1/2 rounded-full bg-blue-300/25 dark:bg-blue-600/20 blur-3xl" />
@@ -371,6 +373,7 @@ export default function LandingPage() {
             {["Features", "Solutions", "Pricing", "About"].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`} className="transition hover:text-[#2563EB] dark:hover:text-white">{item}</a>
             ))}
+            <AdminNavLink />
           </div>
           <NavAuthActions />
         </div>
@@ -730,6 +733,7 @@ export default function LandingPage() {
           <p>Designed for modern software delivery teams.</p>
         </div>
       </footer>
+      <BackToTop />
     </main>
   );
 }

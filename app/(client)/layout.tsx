@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import Sidebar from "@/modules/admin/components/common/components/Sidebar";
+import Sidebar from "@/modules/shared/components/common/components/Sidebar";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import NotificationPanel from "@/modules/admin/components/common/components/NotificationPanel";
+import NotificationPanel from "@/modules/shared/components/common/components/NotificationPanel";
 import { notificationService } from "@/common/services/notification.service";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 import { useWorkspaceRealtime } from "@/hooks/realtime/use-workspace-realtime";
@@ -24,11 +24,11 @@ import {
 import Image from "next/image";
 import appleIcon from "../apple-icon.png";
 import { usePathname, useRouter } from "next/navigation";
-import { useTheme } from "@/hooks/useTheme";
-import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
+import AppHeader from "@/modules/client/common/layout/AppHeader";
 
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
+import { useTheme } from "@/hooks/useTheme";
 
 type SearchAssigneeUser = {
   _id?: string;
@@ -41,6 +41,25 @@ type SearchAssigneeUser = {
   image?: string;
 };
 
+// Constants for filter synchronization
+const DEFAULT_FILTERS: Filters = {
+  search: "",
+  assigneeId: null,
+  reporterId: null,
+  taskKey: null,
+  workspaceKey: "",
+  workspaceKeys: [],
+  lastUpdated: null,
+  priority: null,
+  type: null,
+  assignees: [],
+  types: [],
+  statuses: [],
+  priorities: [],
+  backlog: false,
+  archived: false,
+};
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const {
@@ -51,6 +70,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     workspacesLoaded,
   } = useWorkspaceStore();
   const { theme, setTheme } = useTheme();
+
+
+  // UI State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
@@ -92,6 +114,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         ? [currentWorkspace]
         : []
   )
+  // Task search filters state
+  const workspaceKey = pathname?.startsWith("/workspaces/") ? pathname.split("/")[2] : "";
+  const [taskSearchFilters, setTaskSearchFilters] = useState<Filters>({
+    ...DEFAULT_FILTERS,
+    workspaceKey,
+  });
+
+  // Default workspace keys for search
+  const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
     .filter(Boolean)
     .map((workspace) => {
       const id = workspace._id || (workspace as { id?: string }).id;
@@ -151,13 +182,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const refreshUnreadNotificationCount = useCallback(() => {
     if (!isAuthenticated) return;
-
     notificationService
       .unreadCount()
       .then(setUnreadNotificationCount)
       .catch(() => setUnreadNotificationCount(0));
   }, [isAuthenticated]);
 
+  // Setup real-time connections
   useNotificationRealtime({
     enabled: isAuthenticated,
     onCreated: refreshUnreadNotificationCount,
@@ -166,9 +197,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
   useWorkspaceRealtime({ enabled: isAuthenticated });
 
+  // Load workspaces on mount
   useEffect(() => {
     refreshUnreadNotificationCount();
   }, [refreshUnreadNotificationCount]);
+
   useEffect(() => {
     if (isAuthenticated && !workspacesLoaded) {
       api
@@ -180,12 +213,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, workspacesLoaded, setWorkspaces]);
 
+  // Auth redirect
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace("/login");
     }
   }, [isAuthenticated, isLoading, router]);
 
+  // Hydrate filters from URL on mount
   useEffect(() => {
     if (typeof window === "undefined") {
       setIsTaskSearchReady(false);
@@ -217,7 +252,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           ? csv(params.get("workspaceKeys"))
           : defaultSearchWorkspaceKeys,
       search: params.get("search") || "",
-      taskKey: params.get("taskKey"),
+      taskKey: params.get("taskKey") ?? null,
       statuses: csv(params.get("status")).map((item) => {
         if (item === "todo") return "To Do";
         if (item === "inprogress") return "In Progress";
@@ -226,8 +261,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       types: csv(params.get("type")).map(label),
       priorities: csv(params.get("priority")).map(label),
       assignees: csv(params.get("assigneeId")),
-      reporterId: params.get("reporterId"),
-      lastUpdated: params.get("lastUpdated"),
+      reporterId: params.get("reporterId") ?? null,
+      lastUpdated: params.get("lastUpdated") ?? null,
       backlog: params.get("backlog") === "true",
       archived: params.get("archived") === "true",
     }));
@@ -240,6 +275,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     defaultSearchWorkspaceKeys.join(","),
   ]);
 
+  // Sync filters to URL
   useEffect(() => {
     if (!workspaceKey || !isTaskSearchReady || typeof window === "undefined")
       return;
@@ -253,7 +289,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       value.trim().toLowerCase().replace(/\s+/g, "");
 
     setOrDelete("search", taskSearchFilters.search.trim());
-    setOrDelete("taskKey", taskSearchFilters.taskKey);
+    setOrDelete("taskKey", taskSearchFilters.taskKey ?? undefined);
     params.delete("workspaceKeys");
     setOrDelete("status", taskSearchFilters.statuses.map(normalize).join(","));
     setOrDelete("type", taskSearchFilters.types.map(normalize).join(","));
@@ -262,8 +298,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       taskSearchFilters.priorities.map(normalize).join(","),
     );
     setOrDelete("assigneeId", taskSearchFilters.assignees.join(","));
-    setOrDelete("reporterId", taskSearchFilters.reporterId);
-    setOrDelete("lastUpdated", taskSearchFilters.lastUpdated);
+    setOrDelete("reporterId", taskSearchFilters.reporterId ?? undefined);
+    setOrDelete("lastUpdated", taskSearchFilters.lastUpdated ?? undefined);
     if (taskSearchFilters.backlog) params.set("backlog", "true");
     else params.delete("backlog");
     if (taskSearchFilters.archived) params.set("archived", "true");
@@ -280,6 +316,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }, [isTaskSearchReady, pathname, taskSearchFilters, workspaceKey]);
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F2FAFF] dark:bg-[#202020]">

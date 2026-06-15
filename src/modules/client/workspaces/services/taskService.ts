@@ -6,81 +6,64 @@ import { TaskDetailResponse } from "../types/task-detail.type";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskLabel } from "../types/label.type";
 import { toTaskDateKey } from "../utils/taskDateKey";
+import { CreateTaskInput, TaskDto } from "./taskTypes";
 
-type TaskUserDto = {
-  id?: string;
-  fullName?: string;
-  email?: string;
-  avatar?: string;
-} | null;
+// Re-export types
+export type {
+  TaskDto,
+  TaskUserDto,
+  TaskSprintDto,
+  TaskBoardDto,
+  CreateTaskInput
+} from "./taskTypes";
 
-type TaskSprintDto = {
-  id?: string;
-  name?: string;
-  startDate?: string;
-  endDate?: string;
-} | null;
+// Re-export normalizer utilities
+export {
+  normalizeResponseData,
+  normalizeValue,
+  toArray,
+  normalizeArray,
+  toColumnId,
+  toUiLabel,
+  toTaskLabel,
+  toTaskLabels,
+  requireTaskKey,
+  requireTaskId,
+  toIssue,
+  toTaskDetail,
+  formatAssignee,
+  toCreatePayload,
+  toUpdatePayload,
+} from "./taskNormalizer";
 
-type TaskBoardDto = {
-  id?: string;
-  name?: string;
-} | null;
+// Re-export query functions
+export {
+  getBoardTasks,
+  getBoardTaskDetail,
+  getTaskActivities,
+  getArchivedTasks,
+  getComments,
+} from "./taskQueries";
 
-type TaskDto = {
-  _id?: string;
-  id?: string;
-  workspaceId?: string;
-  key: string;
-  title: string;
-  description?: string;
-  type?: string;
-  status?: string;
-  priority?: string;
-  rank?: string;
-  version?: number;
-  assigneeId?: string | null;
-  assignee?: TaskUserDto;
-  reporterId?: string;
-  reporter?: TaskUserDto;
-  sprintId?: string;
-  sprint?: TaskSprintDto;
-  boardId?: string;
-  board?: TaskBoardDto;
-  columnId?: string;
-  boardColumnId?: string;
-  storyPoints?: number;
-  startDate?: string;
-  dueDate?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  isArchived?: boolean;
-  archivedAt?: string | null;
-  archivedBy?: string | null;
-  archivedByUser?: {
-    id?: string;
-    fullName?: string;
-    email?: string;
-    avatar?: string;
-  } | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  deletedBy?: string | null;
-  cover?: TaskCover | null;
-  labels?: (TaskLabel | string | { _id?: string; id?: string; name?: string })[];
-  labelIds?: string[];
-};
+// Re-export mutation functions
+export {
+  createBoardTask,
+  updateBoardTask,
+  moveBoardTask,
+  reorderBoardTask,
+  deleteBoardTask,
+  archiveBoardTask,
+  restoreBoardTask,
+  replaceTaskLabels,
+  createComment,
+  updateComment,
+  deleteComment,
+} from "./taskMutations";
 
-type CreateTaskInput = {
-  title: string;
-  type: string;
-  priority: string;
-  status: string;
-  sprintId: string | null;
-  assigneeId?: string | null;
-  columnId?: string | null;
-  startDate?: string;
-  dueDate?: string;
-};
+// Legacy re-export for backward compatibility
+// Components importing from taskService.ts will still work
+export * from "./taskQueries";
+export * from "./taskMutations";
 
 export type ReorderTaskInput = {
   columnId?: string;
@@ -411,7 +394,7 @@ export const buildTaskQuery = (filters?: TaskFilters) => {
   return params.length > 0 ? `?${params.join("&")}` : "";
 };
 
-export const taskService = {
+export const taskService: any = {
   async getBoardTasks(workspaceId: string, filters?: TaskFilters): Promise<Issue[]> {
     const response = await api.get(`${apiRoutes.TASKS.BOARD(workspaceId)}${buildTaskQuery(filters)}`);
     const payload = normalizeResponseData<any>(response);
@@ -573,4 +556,38 @@ export const taskService = {
   async deleteComment(workspaceId: string, taskId: string, commentId: string): Promise<void> {
     await api.delete(apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId));
   },
+// Task service object (legacy interface for components using taskService.xxx)
+// import * as taskQueries from "./taskQueries";
+// import * as taskMutations from "./taskMutations";
+
+// export const taskService = {
+//   // Board tasks
+//   getBoardTasks: taskQueries.getBoardTasks,
+//   listBoardTasks: taskQueries.getBoardTasks,
+//   getBoardTaskDetail: taskQueries.getBoardTaskDetail,
+//   createBoardTask: taskMutations.createBoardTask,
+//   updateBoardTask: taskMutations.updateBoardTask,
+//   moveBoardTask: taskMutations.moveBoardTask,
+//   reorderBoardTask: taskMutations.reorderBoardTask,
+//   deleteBoardTask: taskMutations.deleteBoardTask,
+//   archiveBoardTask: taskMutations.archiveBoardTask,
+//   restoreBoardTask: taskMutations.restoreBoardTask,
+  
+//   // Labels
+//   replaceTaskLabels: taskMutations.replaceTaskLabels,
+  
+//   // Activities
+//   getTaskActivities: taskQueries.getTaskActivities,
+  
+//   // Archived tasks
+//   getArchivedTasks: taskQueries.getArchivedTasks,
+  
+//   // Comments
+//   getComments: taskQueries.getComments,
+//   createComment: taskMutations.createComment,
+//   updateComment: taskMutations.updateComment,
+//   deleteComment: taskMutations.deleteComment,
+  
+//   // Utility
+//   buildTaskQuery: taskQueries.buildTaskQuery,
 };
