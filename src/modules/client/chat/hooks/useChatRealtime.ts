@@ -50,6 +50,13 @@ export function useChatRealtime() {
     }
   }, []);
 
+  const sendDeleteMessage = useCallback((channelId: string, messageId: string) => {
+    const socket = chatSocketClient.getSocket();
+    if (socket?.connected) {
+      socket.emit(SOCKET_EVENTS.DELETE, { channelId, messageId });
+    }
+  }, []);
+
   return {
     sendMessage,
     sendTyping,
@@ -57,6 +64,7 @@ export function useChatRealtime() {
     joinChannel,
     leaveChannel,
     sendReaction,
+    sendDeleteMessage,
     isConnected: chatSocketClient.getSocket()?.connected ?? false
   };
 }

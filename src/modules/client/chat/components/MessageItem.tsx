@@ -3,8 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, useChatStore } from '@/stores/chatStore';
 import { format } from 'date-fns';
-import { Paperclip, SmilePlus, Reply, MoreHorizontal, Trash2 } from 'lucide-react';
-import { deleteMessageAPI } from '@/modules/client/chat/services/chatService';
+import { Paperclip, SmilePlus, Reply, Trash2 } from 'lucide-react';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
@@ -24,7 +23,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
 
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as any)?._id || authUser?.id;
-  const { sendReaction } = useChatRealtime();
+  const { sendReaction, sendDeleteMessage } = useChatRealtime();
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -45,10 +44,10 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this message?")) {
       try {
-        await deleteMessageAPI(message._id);
+        sendDeleteMessage(message.channelId, message._id);
       } catch (err) {
         console.error("Failed to delete message:", err);
       }
@@ -125,9 +124,6 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
-          <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="More">
-            <MoreHorizontal className="w-3.5 h-3.5" />
-          </button>
         </div>
       )}
 
