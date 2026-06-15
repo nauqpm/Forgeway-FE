@@ -95,7 +95,7 @@ export default function ChatSidebar() {
 
   const getLastMessagePreview = (channel: Channel) => {
     const lastMsg = channel.lastMessage;
-    if (!lastMsg) return "Start a conversation";
+    if (!lastMsg || (!lastMsg.content && !lastMsg.senderId)) return "Start a conversation";
     
     const msgSenderId = typeof lastMsg.senderId === 'object' 
       ? ((lastMsg.senderId as any)._id || (lastMsg.senderId as any).id) 

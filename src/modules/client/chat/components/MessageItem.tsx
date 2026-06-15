@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, useChatStore } from '@/stores/chatStore';
 import { format } from 'date-fns';
-import { Paperclip, SmilePlus, Reply, Trash2 } from 'lucide-react';
+import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle } from 'lucide-react';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
@@ -27,6 +27,8 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [positionBelow, setPositionBelow] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
 
   const replyParent = message.replyToId && typeof message.replyToId === 'object'
@@ -99,14 +101,39 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
 
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this message?")) {
-      try {
-        sendDeleteMessage(message.channelId, message._id);
-      } catch (err) {
-        console.error("Failed to delete message:", err);
+  useEffect(() => {
+    if (showEmojiPicker && pickerRef.current) {
+      const parent = pickerRef.current.parentElement;
+      if (parent) {
+        const buttonEl = parent.querySelector('button');
+        if (buttonEl) {
+          const buttonRect = buttonEl.getBoundingClientRect();
+          const scrollContainer = buttonEl.closest('.overflow-y-auto');
+          if (scrollContainer) {
+            const containerRect = scrollContainer.getBoundingClientRect();
+            const relativeTop = buttonRect.top - containerRect.top;
+            if (relativeTop < 50) {
+              setPositionBelow(true);
+              return;
+            }
+          }
+        }
       }
+      setPositionBelow(false);
     }
+  }, [showEmojiPicker]);
+
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    try {
+      sendDeleteMessage(message.channelId, message._id);
+    } catch (err) {
+      console.error("Failed to delete message:", err);
+    }
+    setShowDeleteConfirm(false);
   };
 
   const handleToggleReaction = (emoji: string) => {
@@ -151,7 +178,10 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             {showEmojiPicker && (
               <div 
                 ref={pickerRef}
-                className="absolute bottom-full right-0 mb-1.5 flex items-center gap-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.08)] z-50 whitespace-nowrap"
+                className={cn(
+                  "absolute right-0 flex items-center gap-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.08)] z-50 whitespace-nowrap",
+                  positionBelow ? "top-full mt-1.5" : "bottom-full mb-1.5"
+                )}
               >
                 {QUICK_EMOJIS.map(emoji => (
                   <button
@@ -323,6 +353,72 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-[2px] animate-[fadeIn_0.15s_ease-out]" />
+          
+          {/* Modal */}
+          <div 
+            className="relative bg-white dark:bg-[#2A2A2A] rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.4)] w-[400px] max-w-[90vw] animate-[scaleIn_0.2s_ease-out] border border-[#E5E5E5] dark:border-white/[0.08]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
+                  <AlertTriangle className="w-4 h-4 text-red-500" />
+                </div>
+                <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                  Delete Message
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {/* Body */}
+            <div className="px-5 pb-4">
+              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-relaxed">
+                Are you sure you want to delete this message? This action cannot be undone
+              </p>
+              
+              {/* Message Preview */}
+              <div className="mt-3 p-3 bg-[#F7F6F3] dark:bg-white/[0.04] rounded-lg border border-[#EAEAEA] dark:border-white/[0.06]">
+                <p className="text-[0.75rem] text-[#ABABAB] dark:text-[#6B6B6B] mb-1">{sender.fullName}</p>
+                <p className="text-[0.8125rem] text-[#555555] dark:text-[#AAAAAA] line-clamp-2 break-words">
+                  {message.content ? renderMessageContent(message.content) : '[Attachment]'}
+                </p>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 px-5 pb-5">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-[0.8125rem] font-medium text-[#555555] dark:text-[#AAAAAA] bg-[#F0F0EE] dark:bg-white/[0.08] hover:bg-[#E5E5E3] dark:hover:bg-white/[0.12] rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-[0.8125rem] font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm"
+              >
+                Delete Message
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

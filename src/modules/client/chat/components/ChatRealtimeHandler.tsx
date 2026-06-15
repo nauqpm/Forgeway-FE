@@ -104,7 +104,12 @@ export default function ChatRealtimeHandler() {
     const data = envelope.data || envelope;
     if (!data?.messageId || !data?.channelId) return;
     deleteMessage(data.channelId, data.messageId);
-  }, [deleteMessage]);
+    
+    // Update sidebar lastMessage if the backend sent the updated one
+    if (data.lastMessage !== undefined) {
+      updateChannel(data.channelId, { lastMessage: data.lastMessage || undefined });
+    }
+  }, [deleteMessage, updateChannel]);
 
   const handleUserTyping = useCallback((envelope: any) => {
     const data = envelope.data || envelope;

@@ -27,6 +27,9 @@ export default function ChatWindow() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const shouldScrollToBottomRef = useRef(true);
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
   
@@ -49,11 +52,14 @@ export default function ChatWindow() {
     let isMounted = true;
     setLoading(true);
     setError(null);
+    setNextCursor(null);
+    shouldScrollToBottomRef.current = true;
     
-    getMessagesAPI(activeChannelId)
-      .then(msgs => {
+    getMessagesAPI(activeChannelId, { limit: 20 })
+      .then(({ messages: msgs, nextCursor: cursor }) => {
         if (isMounted) {
           setMessages(activeChannelId, msgs);
+          setNextCursor(cursor);
         }
       })
       .catch(err => {
@@ -79,8 +85,12 @@ export default function ChatWindow() {
   }, [activeChannelId]); // Strictly ONLY run when activeChannelId changes to prevent polling loops
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (shouldScrollToBottomRef.current) {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    } else {
+      shouldScrollToBottomRef.current = true;
     }
   }, [messages]);
 
@@ -88,6 +98,43 @@ export default function ChatWindow() {
     const interval = setInterval(clearOldTyping, 2000);
     return () => clearInterval(interval);
   }, [clearOldTyping]);
+
+  const handleLoadMore = async () => {
+    if (!activeChannelId || !nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    
+    const container = scrollRef.current;
+    const previousScrollHeight = container ? container.scrollHeight : 0;
+    const previousScrollTop = container ? container.scrollTop : 0;
+
+    try {
+      const { messages: olderMsgs, nextCursor: cursor } = await getMessagesAPI(activeChannelId, {
+        limit: 20,
+        cursor: nextCursor
+      });
+      
+      const currentMsgs = messagesByChannel[activeChannelId] || [];
+      const mergedMsgs = [...olderMsgs, ...currentMsgs];
+      const uniqueMsgs = Array.from(new Map(mergedMsgs.map(m => [m._id, m])).values());
+      
+      shouldScrollToBottomRef.current = false;
+      setMessages(activeChannelId, uniqueMsgs);
+      setNextCursor(cursor);
+
+      // Restore scroll position
+      setTimeout(() => {
+        if (container) {
+          const newScrollHeight = container.scrollHeight;
+          const diff = newScrollHeight - previousScrollHeight;
+          container.scrollTop = previousScrollTop + diff;
+        }
+      }, 0);
+    } catch (err) {
+      console.error("Failed to load older messages:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   if (!activeChannelId || !activeChannel) {
     return (
@@ -240,6 +287,24 @@ export default function ChatWindow() {
           </div>
         ) : (
           <div className="py-4">
+            {nextCursor && (
+              <div className="flex justify-center mb-4">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="px-4 py-1.5 text-xs font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] bg-[#F0F0EE] dark:bg-white/5 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded-[6px] transition-colors flex items-center gap-2"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Loading history...
+                    </>
+                  ) : (
+                    "Load older messages"
+                  )}
+                </button>
+              </div>
+            )}
             {messages.map((msg, idx) => {
               const previousMsg = messages[idx - 1];
               const currentSenderId = getSenderId(msg);

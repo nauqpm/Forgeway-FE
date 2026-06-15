@@ -58,17 +58,24 @@ export const getChannelAPI = async (channelId: string): Promise<Channel> => {
 export const getMessagesAPI = async (
   channelId: string,
   params?: { limit?: number; cursor?: string }
-): Promise<Message[]> => {
+): Promise<{ messages: Message[]; nextCursor: string | null }> => {
   // Removed _t to avoid 400 Bad Request on strict BE validation
   const response = await api.get(`/chat/channels/${channelId}/messages`, {
     params
   });
-  const data = normalizeArray<any>(response);
+  const body = response.data?.data ?? response.data;
+  const messagesData = Array.isArray(body?.messages) ? body.messages : (Array.isArray(body) ? body : []);
+  const nextCursor = body?.nextCursor || null;
   
-  return data.map(item => ({
+  const messages = messagesData.map((item: any) => ({
     ...item,
     _id: item._id || item.id
   }));
+
+  return {
+    messages,
+    nextCursor
+  };
 };
 
 export const resetUnreadCountAPI = async (channelId: string): Promise<void> => {
