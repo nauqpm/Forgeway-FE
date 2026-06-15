@@ -70,12 +70,22 @@ jobs:
             docker image ls "ghcr.io/automationland-dev/sdlc-platform-frontend" \
               --format "{{.Repository}}:{{.Tag}}" | grep "sha-" | sort -r | \
               tail -n +3 | xargs docker rmi 2>/dev/null || true
-            sleep 20
-            CONTAINER=$(docker compose ps -q frontend 2>/dev/null | head -1)
-            STATUS=$(docker inspect --format='{{.State.Status}}' "$CONTAINER" 2>/dev/null)
-            if [ "$STATUS" != "running" ]; then
-              echo "DEPLOY FAILED: frontend is ${STATUS:-not found}"
-              docker compose logs --tail=30 frontend
-              exit 1
-            fi
-            echo "Frontend deployed OK: $(date)"
+            for i in $(seq 1 12); do
+              CONTAINER=$(docker compose ps -q frontend 2>/dev/null | head -1)
+              STATUS=$(docker inspect --format='{{.State.Status}}' "$CONTAINER" 2>/dev/null)
+              RESTARTS=$(docker inspect --format='{{.RestartCount}}' "$CONTAINER" 2>/dev/null)
+              if [ "${RESTARTS:-0}" -gt 0 ]; then
+                echo "DEPLOY FAILED: frontend restarted ${RESTARTS} time(s) — crash loop detected"
+                docker compose logs --tail=30 frontend
+                exit 1
+              fi
+              if [ "$STATUS" = "running" ]; then
+                echo "Frontend deployed OK (restarts=0, attempt=$i): $(date)"
+                exit 0
+              fi
+              echo "Waiting... attempt $i/12 (status=${STATUS:-unknown})"
+              sleep 5
+            done
+            echo "DEPLOY FAILED: frontend did not reach running state after 60s"
+            docker compose logs --tail=30 frontend
+            exit 1
