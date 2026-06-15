@@ -43,12 +43,20 @@ export function useChatRealtime() {
     chatSocketClient.leaveChannel();
   }, []);
 
+  const sendReaction = useCallback((channelId: string, messageId: string, emoji: string) => {
+    const socket = chatSocketClient.getSocket();
+    if (socket?.connected) {
+      socket.emit(SOCKET_EVENTS.REACTION, { channelId, messageId, emoji });
+    }
+  }, []);
+
   return {
     sendMessage,
     sendTyping,
     markAsRead,
     joinChannel,
     leaveChannel,
+    sendReaction,
     isConnected: chatSocketClient.getSocket()?.connected ?? false
   };
 }

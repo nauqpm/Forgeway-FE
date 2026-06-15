@@ -1,10 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Message } from '@/stores/chatStore';
 import { format } from 'date-fns';
 import { Paperclip, SmilePlus, Reply, MoreHorizontal, Trash2 } from 'lucide-react';
 import { deleteMessageAPI } from '@/modules/client/chat/services/chatService';
+import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -14,9 +16,29 @@ interface MessageItemProps {
   isMine: boolean;
 }
 
+const QUICK_EMOJIS = ['❤️', '👍', '😂', '😢', '❓'];
+
 export default function MessageItem({ message, isSameUserAsPrevious, isMine }: MessageItemProps) {
   const sender = message.senderId;
   const isDeleted = message.deletedAt !== null;
+
+  const authUser = useAuthStore(state => state.user);
+  const currentUserId = (authUser as any)?._id || authUser?.id;
+  const { sendReaction } = useChatRealtime();
+
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker]);
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this message?")) {
@@ -28,6 +50,15 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     }
   };
 
+  const handleToggleReaction = (emoji: string) => {
+    sendReaction(message.channelId, message._id, emoji);
+  };
+
+  const handleSelectEmoji = (emoji: string) => {
+    sendReaction(message.channelId, message._id, emoji);
+    setShowEmojiPicker(false);
+  };
+
   return (
     <div className={cn(
       "group relative flex gap-4 px-4 py-0.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors flex-row",
@@ -36,10 +67,40 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
       
       {/* Hover Actions */}
       {!isDeleted && (
-        <div className="absolute top-0 right-2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] px-1 py-0.5 shadow-none">
-          <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="Add reaction">
-            <SmilePlus className="w-3.5 h-3.5" />
-          </button>
+        <div className={cn(
+          "absolute top-0 right-2 flex items-center gap-0.5 transition-opacity z-10 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] px-1 py-0.5 shadow-none",
+          showEmojiPicker ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        )}>
+          <div className="relative">
+            <button 
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className={cn(
+                "w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 transition-colors",
+                showEmojiPicker ? "text-[#2563EB] bg-[#2563EB]/10" : "text-[#787774]"
+              )} 
+              title="Add reaction"
+            >
+              <SmilePlus className="w-3.5 h-3.5" />
+            </button>
+            
+            {showEmojiPicker && (
+              <div 
+                ref={pickerRef}
+                className="absolute bottom-full right-0 mb-1.5 flex items-center gap-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.08)] z-50 whitespace-nowrap"
+              >
+                {QUICK_EMOJIS.map(emoji => (
+                  <button
+                    key={emoji}
+                    onClick={() => handleSelectEmoji(emoji)}
+                    className="w-7 h-7 flex items-center justify-center text-lg hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="Reply">
             <Reply className="w-3.5 h-3.5" />
           </button>
@@ -134,15 +195,27 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
         {/* Reactions */}
         {!isDeleted && message.reactions && Object.keys(message.reactions).length > 0 && (
           <div className="mt-1 flex flex-wrap gap-1 justify-start">
-            {Object.entries(message.reactions).map(([emoji, userIds]) => (
-              <button 
-                key={emoji}
-                className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F0F0EE] dark:bg-white/8 rounded-[6px] border border-transparent hover:border-[#2563EB] transition-colors"
-              >
-                <span className="text-sm">{emoji}</span>
-                <span className="text-[10px] font-bold text-[#787774]">{userIds.length}</span>
-              </button>
-            ))}
+            {Object.entries(message.reactions).map(([emoji, userIds]) => {
+              const hasReacted = userIds.includes(String(currentUserId));
+              return (
+                <button 
+                  key={emoji}
+                  onClick={() => handleToggleReaction(emoji)}
+                  className={cn(
+                    "flex items-center gap-1 px-1.5 py-0.5 rounded-[6px] border transition-colors",
+                    hasReacted
+                      ? "bg-[#2563EB]/10 border-[#2563EB] text-[#2563EB] dark:bg-[#2563EB]/20"
+                      : "bg-[#F0F0EE] dark:bg-white/8 border-transparent hover:border-[#2563EB] text-[#787774] dark:text-[#9B9A97]"
+                  )}
+                >
+                  <span className="text-sm">{emoji}</span>
+                  <span className={cn(
+                    "text-[10px] font-bold",
+                    hasReacted ? "text-[#2563EB]" : "text-[#787774] dark:text-[#9B9A97]"
+                  )}>{userIds.length}</span>
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
