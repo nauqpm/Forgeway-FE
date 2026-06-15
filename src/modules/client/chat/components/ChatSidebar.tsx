@@ -103,10 +103,13 @@ export default function ChatSidebar() {
 
     const isMine = String(msgSenderId) === String(currentUserId);
     const senderName = (lastMsg.senderId as any)?.fullName || "User";
+    const formattedContent = lastMsg.deletedAt 
+      ? "[Message deleted]" 
+      : lastMsg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
     
-    if (isMine) return `You: ${lastMsg.content}`;
-    if (channel.type === 'dm') return lastMsg.content;
-    return `${senderName}: ${lastMsg.content}`;
+    if (isMine) return `You: ${formattedContent}`;
+    if (channel.type === 'dm') return formattedContent;
+    return `${senderName}: ${formattedContent}`;
   };
 
   const renderChannelLink = (id: string, name: string, type: string, unreadCount: number = 0, lastMessage?: any, workspaceData?: any) => {
