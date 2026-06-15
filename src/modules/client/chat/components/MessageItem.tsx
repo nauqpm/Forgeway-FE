@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Message } from '@/stores/chatStore';
+import { Message, useChatStore } from '@/stores/chatStore';
 import { format } from 'date-fns';
 import { Paperclip, SmilePlus, Reply, MoreHorizontal, Trash2 } from 'lucide-react';
 import { deleteMessageAPI } from '@/modules/client/chat/services/chatService';
@@ -25,9 +25,14 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as any)?._id || authUser?.id;
   const { sendReaction } = useChatRealtime();
+  const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
+
+  const replyParent = message.replyToId && typeof message.replyToId === 'object'
+    ? (message.replyToId as Message)
+    : null;
 
   useEffect(() => {
     if (!showEmojiPicker) return;
@@ -60,10 +65,13 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   };
 
   return (
-    <div className={cn(
-      "group relative flex gap-4 px-4 py-0.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors flex-row",
-      !isSameUserAsPrevious ? 'mt-3' : ''
-    )}>
+    <div 
+      id={`msg-${message._id}`}
+      className={cn(
+        "group relative flex gap-4 px-4 py-0.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors flex-row",
+        !isSameUserAsPrevious ? 'mt-3' : ''
+      )}
+    >
       
       {/* Hover Actions */}
       {!isDeleted && (
@@ -101,7 +109,11 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             )}
           </div>
 
-          <button className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" title="Reply">
+          <button 
+            onClick={() => setReplyingToMessage(message)}
+            className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" 
+            title="Reply"
+          >
             <Reply className="w-3.5 h-3.5" />
           </button>
           {isMine && (
@@ -151,6 +163,23 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
 
       {/* Content column */}
       <div className="flex flex-col flex-1 min-w-0 items-start">
+        {replyParent && (
+          <div 
+            className="flex items-center gap-2 text-[11px] text-[#787774] dark:text-[#9B9A97] mb-1.5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors cursor-pointer group/reply pl-2 border-l-2 border-[#2563EB] w-full"
+            onClick={() => {
+              const el = document.getElementById(`msg-${replyParent._id}`);
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }}
+          >
+            <span className="font-bold hover:underline">
+              @{replyParent.senderId?.fullName || "User"}
+            </span>
+            <span className="truncate opacity-80 flex-1 text-left">
+              {replyParent.content}
+            </span>
+          </div>
+        )}
+
         {!isSameUserAsPrevious && (
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-[0.875rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer">
