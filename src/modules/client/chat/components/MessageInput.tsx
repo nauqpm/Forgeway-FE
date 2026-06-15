@@ -5,6 +5,7 @@ import { Send, Smile, Paperclip, X } from 'lucide-react';
 import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
+import api from '@/config/api';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -18,6 +19,16 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   const { sendMessage, sendTyping } = useChatRealtime();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef<number>(0);
+  const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (mentionSearchTimeoutRef.current) {
+        clearTimeout(mentionSearchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const replyingToMessage = useChatStore(state => state.replyingToMessage);
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
@@ -69,37 +80,45 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
       return;
     }
 
-    const members = activeChannel?.members || [];
-    
-    const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map(m => {
-      const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || (m as any).id || 'User');
-      return {
-        id: m._id || (m as any).id,
-        display,
-        email: m.email,
-        phone: m.phone,
-        avatar: m.avatar
-      };
-    });
-
-    // Thêm tùy chọn @All nếu từ khóa khớp
-    if ('all'.includes(search.toLowerCase())) {
-      mappedMembers.unshift({
-        id: 'All',
-        display: 'All',
-        email: 'Mention everyone in this channel',
-        phone: '',
-        avatar: 'special-all'
-      });
+    if (mentionSearchTimeoutRef.current) {
+      clearTimeout(mentionSearchTimeoutRef.current);
     }
 
-    const filteredMembers = mappedMembers.filter(m => 
-      m.display.toLowerCase().includes(search.toLowerCase()) ||
-      (m.email && m.email.toLowerCase().includes(search.toLowerCase())) ||
-      (m.phone && m.phone.toLowerCase().includes(search.toLowerCase()))
-    );
+    mentionSearchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
+          params: { q: search }
+        });
+        const members = response.data || [];
+        
+        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: any) => {
+          const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
+          return {
+            id: m._id || m.id,
+            display,
+            email: m.email,
+            phone: m.phone,
+            avatar: m.avatar
+          };
+        });
 
-    callback(filteredMembers);
+        // Thêm tùy chọn @All nếu từ khóa khớp
+        if ('all'.startsWith(search.toLowerCase())) {
+          mappedMembers.unshift({
+            id: 'All',
+            display: 'All',
+            email: 'Mention everyone in this channel',
+            phone: '',
+            avatar: 'special-all'
+          });
+        }
+
+        callback(mappedMembers);
+      } catch (err) {
+        console.error('Failed to search mention members:', err);
+        callback([]);
+      }
+    }, 250);
   };
 
   return (

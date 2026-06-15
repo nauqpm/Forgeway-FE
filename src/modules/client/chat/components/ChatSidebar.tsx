@@ -105,7 +105,7 @@ export default function ChatSidebar() {
     const senderName = (lastMsg.senderId as any)?.fullName || "User";
     const formattedContent = lastMsg.deletedAt 
       ? "[Message deleted]" 
-      : lastMsg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+      : (lastMsg.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
     
     if (isMine) return `You: ${formattedContent}`;
     if (channel.type === 'dm') return formattedContent;
