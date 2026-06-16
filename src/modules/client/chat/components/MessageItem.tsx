@@ -22,7 +22,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   const isDeleted = message.deletedAt !== null;
 
   const authUser = useAuthStore(state => state.user);
-  const currentUserId = (authUser as any)?._id || authUser?.id;
+  const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
   const { sendReaction, sendDeleteMessage } = useChatRealtime();
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
 
@@ -46,7 +46,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     if (!replyParent || !currentUserId) return false;
     const parentSender = replyParent.senderId;
     const parentSenderId = typeof parentSender === 'object' && parentSender 
-      ? (parentSender._id || (parentSender as any).id) 
+      ? (parentSender._id || (parentSender as { _id?: string; id?: string }).id) 
       : parentSender;
     return String(parentSenderId) === String(currentUserId);
   })();

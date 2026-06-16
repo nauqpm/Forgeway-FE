@@ -1,15 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { X, Search, Loader2, Shield, Crown, Users, Eye } from 'lucide-react';
+import { X, Search, Loader2, Users } from 'lucide-react';
 import { getChannelMembersAPI } from '@/modules/client/chat/services/chatService';
 
-const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MemberPanelProps {
   channelId: string;
-  channelName: string;
-  channelType: string;
   onClose: () => void;
 }
 
@@ -72,7 +69,7 @@ const getRoleBadge = (role?: string) => {
   return null;
 };
 
-export default function MemberPanel({ channelId, channelName, channelType, onClose }: MemberPanelProps) {
+export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   const [members, setMembers] = useState<MemberInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,7 +80,7 @@ export default function MemberPanel({ channelId, channelName, channelType, onClo
 
     getChannelMembersAPI(channelId)
       .then((data) => {
-        if (isMounted) setMembers(data);
+        if (isMounted) setMembers(data as MemberInfo[]);
       })
       .catch((err) => {
         console.error('Failed to load channel members:', err);

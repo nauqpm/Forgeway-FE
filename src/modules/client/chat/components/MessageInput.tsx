@@ -32,7 +32,6 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
 
   const replyingToMessage = useChatStore(state => state.replyingToMessage);
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
-  const activeChannel = useChatStore(state => state.channels.find(c => c._id === channelId));
 
   // Auto-resize input when content changes
   useEffect(() => {
@@ -59,7 +58,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: { target: { value: string } }) => {
     setContent(e.target.value);
 
     // Throttle typing event
@@ -91,7 +90,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
         });
         const members = response.data || [];
         
-        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: any) => {
+        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
           const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
           return {
             id: m._id || m.id,
@@ -241,8 +240,8 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
                   _search,
                   highlightedDisplay,
                 ) => {
-                  const avatarUrl = (suggestion as any).avatar;
-                  const email = (suggestion as any).email;
+                  const avatarUrl = (suggestion as { id: string | number; display: string; avatar?: string; email?: string }).avatar;
+                  const email = (suggestion as { id: string | number; display: string; avatar?: string; email?: string }).email;
                   const isAll = suggestion.id === 'All' || suggestion.id === 'all';
 
                   return (

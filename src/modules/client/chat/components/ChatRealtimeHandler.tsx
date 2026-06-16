@@ -95,7 +95,7 @@ export default function ChatRealtimeHandler() {
         ? (message.senderId._id || message.senderId.id)
         : message.senderId;
       const currentUser = useAuthStore.getState().user;
-      const currentUserId = (currentUser as any)?._id || currentUser?.id;
+      const currentUserId = (currentUser as { id: string; _id?: string } | null)?._id || currentUser?.id;
       const isMyOwnMessage = senderIdStr && currentUserId && senderIdStr.toString() === currentUserId.toString();
 
       if (!isMyOwnMessage) {

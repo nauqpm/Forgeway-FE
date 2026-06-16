@@ -410,8 +410,6 @@ export default function ChatWindow() {
     {showMembers && activeChannelId && (
       <MemberPanel
         channelId={activeChannelId}
-        channelName={headerName}
-        channelType={activeChannel.type}
         onClose={() => setShowMembers(false)}
       />
     )}
