@@ -14,7 +14,6 @@ import WorkspaceAvatar from "@/modules/client/workspaces/components/common/Works
 import {
   LayoutDashboard,
   BookOpen,
-  BarChart3,
   Settings,
   ChevronDown,
   ChevronRight,
@@ -27,7 +26,6 @@ import {
   Building2,
   Clock7,
   Star,
-  ListFilter,
   Search,
   Columns,
   FolderOpen,
@@ -54,9 +52,8 @@ const mainNav = [
     href: '/workspaces',
     badge: null,
   },
-  { icon: ListFilter, label: 'Filter', href: '/filter' },
+
   { icon: FolderOpen, label: 'Documents', href: '/documents' },
-  { icon: BarChart3, label: 'Reports', href: '/reports', badge: 'Coming soon' },
 ];
 
 const adminNav = [
@@ -874,11 +871,8 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
               )}
              
             </div>
-            {/* Filter */}
-            <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
-
             {/* Documents */}
-            <NavItem item={mainNav[7]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+            <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
           </div>
 
           {/* Admin Section */}
