@@ -91,7 +91,8 @@ export default function ChatRealtimeHandler() {
       const senderIdStr = typeof message.senderId === 'object' && message.senderId
         ? (message.senderId._id || message.senderId.id)
         : message.senderId;
-      const currentUserId = (user as any)?._id || user?.id;
+      const currentUser = useAuthStore.getState().user;
+      const currentUserId = (currentUser as any)?._id || currentUser?.id;
       const isMyOwnMessage = senderIdStr && currentUserId && senderIdStr.toString() === currentUserId.toString();
 
       if (!isMyOwnMessage) {
@@ -100,7 +101,7 @@ export default function ChatRealtimeHandler() {
     }
     
     updateChannel(message.channelId, { lastMessage: message });
-  }, [addMessage, updateChannel, incrementUnread, markAsRead, addChannel, user]);
+  }, [addMessage, updateChannel, incrementUnread, markAsRead, addChannel]);
 
   const handleMessageEdited = useCallback((envelope: any) => {
     const message = envelope.data || envelope;

@@ -124,13 +124,13 @@ export default function ChatWindow() {
       setNextCursor(cursor);
 
       // Restore scroll position
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         if (container) {
           const newScrollHeight = container.scrollHeight;
           const diff = newScrollHeight - previousScrollHeight;
           container.scrollTop = previousScrollTop + diff;
         }
-      }, 0);
+      });
     } catch (err) {
       console.error("Failed to load older messages:", err);
     } finally {
