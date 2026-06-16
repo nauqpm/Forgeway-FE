@@ -5,7 +5,7 @@ import { Send, Smile, Paperclip, X } from 'lucide-react';
 import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
-import api from '@/config/api';
+import api from '@/lib/axiosIns';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
