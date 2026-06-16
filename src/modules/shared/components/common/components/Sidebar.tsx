@@ -885,8 +885,11 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
               )}
              
             </div>
-            {/* Documents */}
+            {/* Filter */}
             <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+
+            {/* Documents */}
+            <NavItem item={mainNav[7]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
           </div>
 
           {/* Admin Section */}
