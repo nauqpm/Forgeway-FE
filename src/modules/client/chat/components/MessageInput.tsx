@@ -58,7 +58,11 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
-  const handleChange = (e: { target: { value: string } }) => {
+  const handleChange = (
+    e: { target: { value: string } },
+    newValue?: string,
+    newPlainTextValue?: string
+  ) => {
     setContent(e.target.value);
 
     // Throttle typing event
@@ -122,82 +126,6 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
 
   return (
     <div className="p-4 bg-white dark:bg-[#202020]">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            .chat-m {
-              font-family: inherit;
-              font-size: 0.875rem;
-              line-height: 1.25rem;
-              color: #111111;
-            }
-            .dark .chat-m {
-              color: #E8E8E7;
-            }
-            .chat-m__control {
-              min-height: 24px;
-              font-family: inherit;
-              font-size: 0.875rem;
-              line-height: 1.25rem;
-            }
-            .chat-m__highlighter {
-              padding: 0px;
-              border: 1px solid transparent;
-              font-family: inherit;
-              font-size: 0.875rem;
-              line-height: 1.25rem;
-            }
-            .chat-m__input {
-              width: 100%;
-              outline: none;
-              border: 1px solid transparent;
-              background: transparent;
-              color: inherit;
-              font-family: inherit;
-              font-size: 0.875rem;
-              line-height: 1.25rem;
-              resize: none;
-              padding: 0px;
-              margin: 0px;
-              min-height: 24px;
-              max-h: 200px;
-              overflow-y: auto !important;
-            }
-            .chat-m__suggestions__list {
-              background: #ffffff;
-              border: 1px solid #EAEAEA;
-              border-radius: 8px;
-              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-              overflow: hidden;
-              z-index: 100;
-              position: absolute;
-              min-width: 260px;
-              margin-top: 4px;
-              bottom: 100%;
-              margin-bottom: 8px;
-            }
-            .chat-m__suggestions__item {
-              padding: 0px;
-              cursor: pointer;
-            }
-            .chat-m__suggestions__item--focused {
-              background: #F0F0EE;
-            }
-
-            .dark .chat-m__suggestions__list {
-              background: #252525;
-              border-color: rgba(255, 255, 255, 0.08);
-              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
-            }
-            .dark .chat-m__suggestions__item {
-              color: #E8E8E7;
-            }
-            .dark .chat-m__suggestions__item--focused {
-              background: rgba(255, 255, 255, 0.06);
-            }
-          `,
-        }}
-      />
       <div className="border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-visible flex flex-col focus-within:border-[#ABABAB] dark:focus-within:border-[#3B82F6] transition-colors">
         {/* Input Area */}
         <div className="p-3 bg-[#FBFBFA] dark:bg-[#252525] flex flex-col gap-2 rounded-[8px]">
