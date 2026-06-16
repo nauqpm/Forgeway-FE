@@ -74,7 +74,8 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
   };
 
   return (
-    <div className="app-page-narrow">
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="mb-6 flex items-center gap-3">
         <Link
           href={`/workspaces/${key}/docs`}
@@ -204,6 +205,7 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 }

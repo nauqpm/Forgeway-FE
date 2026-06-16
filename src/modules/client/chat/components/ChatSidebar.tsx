@@ -99,7 +99,7 @@ export default function ChatSidebar() {
 
   const getLastMessagePreview = (channel: Channel) => {
     const lastMsg = channel.lastMessage;
-    if (!lastMsg) return "Start a conversation";
+    if (!lastMsg || (!lastMsg.content && !lastMsg.senderId)) return "Start a conversation";
     
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const msgSenderId = typeof lastMsg.senderId === 'object'
@@ -110,10 +110,13 @@ export default function ChatSidebar() {
     const isMine = String(msgSenderId) === String(currentUserId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const senderName = (lastMsg.senderId as any)?.fullName || "User";
+    const formattedContent = lastMsg.deletedAt 
+      ? "[Message deleted]" 
+      : (lastMsg.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
     
-    if (isMine) return `You: ${lastMsg.content}`;
-    if (channel.type === 'dm') return lastMsg.content;
-    return `${senderName}: ${lastMsg.content}`;
+    if (isMine) return `You: ${formattedContent}`;
+    if (channel.type === 'dm') return formattedContent;
+    return `${senderName}: ${formattedContent}`;
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -245,7 +248,8 @@ export default function ChatSidebar() {
   const totalCount = generalChannels.length + (workspaces?.length || 0) + dmChannels.length;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-[#FBFBFA] dark:bg-[#252525]">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden bg-[#FBFBFA] dark:bg-[#252525]">
+
       <div className="flex items-center px-[10px] pt-2 gap-[2px] border-b border-[#EAEAEA] dark:border-white/[0.06]">
         <button 
           onClick={() => setActiveTab('all')}

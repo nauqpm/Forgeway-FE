@@ -50,7 +50,8 @@ export default function PageViewPage() {
   if (!page) return <div className="app-main text-center text-gray-500">Page not found</div>;
 
   return (
-    <div className="app-page-narrow">
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link
@@ -113,6 +114,7 @@ export default function PageViewPage() {
           }}
         />
       </article>
+      </div>
     </div>
   );
 }

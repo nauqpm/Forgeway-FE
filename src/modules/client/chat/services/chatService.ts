@@ -62,18 +62,24 @@ export const getChannelAPI = async (channelId: string): Promise<Channel> => {
 export const getMessagesAPI = async (
   channelId: string,
   params?: { limit?: number; cursor?: string }
-): Promise<Message[]> => {
+): Promise<{ messages: Message[]; nextCursor: string | null }> => {
   // Removed _t to avoid 400 Bad Request on strict BE validation
   const response = await api.get(`/chat/channels/${channelId}/messages`, {
     params
   });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = normalizeArray<any>(response);
-
-  return data.map(item => ({
+  const body = response.data?.data ?? response.data;
+  const messagesData = Array.isArray(body?.messages) ? body.messages : (Array.isArray(body) ? body : []);
+  const nextCursor = body?.nextCursor || null;
+  
+  const messages = messagesData.map((item: Message & { id?: string }) => ({
     ...item,
     _id: item._id || item.id
   }));
+
+  return {
+    messages,
+    nextCursor
+  };
 };
 
 export const resetUnreadCountAPI = async (channelId: string): Promise<void> => {
@@ -117,3 +123,14 @@ export const searchUsersAPI = async (search?: string): Promise<any[]> => {
     }
   }
 };
+
+export const deleteMessageAPI = async (messageId: string): Promise<void> => {
+  await api.delete(`/chat/messages/${messageId}`);
+};
+
+export const getChannelMembersAPI = async (channelId: string): Promise<unknown[]> => {
+  const response = await api.get(`/chat/channels/${channelId}/members`);
+  const data = response.data?.data ?? response.data;
+  return Array.isArray(data) ? data : [];
+};
+

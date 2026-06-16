@@ -85,7 +85,8 @@ export default function CreateOnlineDocumentPage() {
   };
 
   return (
-    <div className="app-page-narrow">
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="mb-6 flex items-center gap-3">
         <Link
           href="/documents"
@@ -152,6 +153,7 @@ export default function CreateOnlineDocumentPage() {
           </button>
         </div>
       </form>
+      </div>
     </div>
   );
 }

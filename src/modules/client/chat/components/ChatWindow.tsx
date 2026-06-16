@@ -7,6 +7,7 @@ import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { getMessagesAPI } from '@/modules/client/chat/services/chatService';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
+import MemberPanel from './MemberPanel';
 import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
@@ -28,7 +29,11 @@ export default function ChatWindow() {
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const shouldScrollToBottomRef = useRef(true);
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
   
@@ -55,11 +60,14 @@ export default function ChatWindow() {
     let isMounted = true;
     setLoading(true);
     setError(null);
+    setNextCursor(null);
+    shouldScrollToBottomRef.current = true;
     
-    getMessagesAPI(activeChannelId)
-      .then(msgs => {
+    getMessagesAPI(activeChannelId, { limit: 20 })
+      .then(({ messages: msgs, nextCursor: cursor }) => {
         if (isMounted) {
           setMessages(activeChannelId, msgs);
+          setNextCursor(cursor);
         }
       })
       .catch(err => {
@@ -85,8 +93,12 @@ export default function ChatWindow() {
   }, [activeChannelId]); // Strictly ONLY run when activeChannelId changes to prevent polling loops
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (shouldScrollToBottomRef.current) {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    } else {
+      shouldScrollToBottomRef.current = true;
     }
   }, [messages]);
 
@@ -95,9 +107,46 @@ export default function ChatWindow() {
     return () => clearInterval(interval);
   }, [clearOldTyping]);
 
+  const handleLoadMore = async () => {
+    if (!activeChannelId || !nextCursor || loadingMore) return;
+    setLoadingMore(true);
+    
+    const container = scrollRef.current;
+    const previousScrollHeight = container ? container.scrollHeight : 0;
+    const previousScrollTop = container ? container.scrollTop : 0;
+
+    try {
+      const { messages: olderMsgs, nextCursor: cursor } = await getMessagesAPI(activeChannelId, {
+        limit: 20,
+        cursor: nextCursor
+      });
+      
+      const currentMsgs = messagesByChannel[activeChannelId] || [];
+      const mergedMsgs = [...olderMsgs, ...currentMsgs];
+      const uniqueMsgs = Array.from(new Map(mergedMsgs.map(m => [m._id, m])).values());
+      
+      shouldScrollToBottomRef.current = false;
+      setMessages(activeChannelId, uniqueMsgs);
+      setNextCursor(cursor);
+
+      // Restore scroll position
+      requestAnimationFrame(() => {
+        if (container) {
+          const newScrollHeight = container.scrollHeight;
+          const diff = newScrollHeight - previousScrollHeight;
+          container.scrollTop = previousScrollTop + diff;
+        }
+      });
+    } catch (err) {
+      console.error("Failed to load older messages:", err);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   if (!activeChannelId || !activeChannel) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#202020] text-[#787774]">
+      <div className="flex-1 flex flex-col min-h-0 items-center justify-center bg-white dark:bg-[#202020] text-[#787774]">
         <div className="w-16 h-16 bg-[#F0F0EE] dark:bg-white/5 rounded-full flex items-center justify-center mb-4">
           <Hash className="w-8 h-8 opacity-20" />
         </div>
@@ -154,7 +203,8 @@ export default function ChatWindow() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-[#202020]">
+    <div className="flex-1 flex min-w-0 min-h-0 overflow-hidden bg-white dark:bg-[#202020]">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-3 min-w-0">
@@ -242,19 +292,19 @@ export default function ChatWindow() {
           </Link>
 
           <div className="w-px h-4 bg-[#EAEAEA] dark:bg-white/[0.06] mx-1" />
-
-          <button
-            className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+          
+          <button 
+            className={`p-1 transition-colors rounded-md ${
+              showMembers 
+                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
+                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+            }`}
             title="View members"
+            onClick={() => setShowMembers(!showMembers)}
           >
             <Users className="w-4 h-4" />
           </button>
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors">
-            <Search className="w-4 h-4" />
-          </button>
-          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors">
-            <Info className="w-4 h-4" />
-          </button>
+          <button className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"><Search className="w-4 h-4" /></button>
         </div>
       </header>
 
@@ -278,6 +328,24 @@ export default function ChatWindow() {
           </div>
         ) : (
           <div className="py-4">
+            {nextCursor && (
+              <div className="flex justify-center mb-4">
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="px-4 py-1.5 text-xs font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] bg-[#F0F0EE] dark:bg-white/5 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded-[6px] transition-colors flex items-center gap-2"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Loading history...
+                    </>
+                  ) : (
+                    "Load older messages"
+                  )}
+                </button>
+              </div>
+            )}
             {messages.map((msg, idx) => {
               const previousMsg = messages[idx - 1];
               const currentSenderId = getSenderId(msg);
@@ -297,6 +365,7 @@ export default function ChatWindow() {
                 : 10;
 
               const isSameUserAsPrevious = isSameUser && timeDiff < 5;
+              const isMine = String(currentSenderId) === String(currentUserId);
 
               return (
                 <MessageItem
@@ -304,6 +373,7 @@ export default function ChatWindow() {
                   key={msg._id || (msg as any).id}
                   message={msg}
                   isSameUserAsPrevious={isSameUserAsPrevious}
+                  isMine={isMine}
                 />
               );
             })}
@@ -334,6 +404,15 @@ export default function ChatWindow() {
           />
         )}
       </div>
+    </div>
+
+    {/* Member Panel */}
+    {showMembers && activeChannelId && (
+      <MemberPanel
+        channelId={activeChannelId}
+        onClose={() => setShowMembers(false)}
+      />
+    )}
     </div>
   );
 }

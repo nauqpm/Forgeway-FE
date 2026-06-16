@@ -68,8 +68,8 @@ export default function ChatRealtimeHandler() {
     const socket = chatSocketClient.getSocket();
     if (socket?.connected) {
       socket.emit(SOCKET_EVENTS.READ, { channelId });
+      updateChannel(channelId, { unreadCount: 0 });
     }
-    updateChannel(channelId, { unreadCount: 0 });
   }, [updateChannel]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,7 +91,16 @@ export default function ChatRealtimeHandler() {
     if (isCurrentChannel) {
       markAsRead(message.channelId);
     } else {
-      incrementUnread(message.channelId);
+      const senderIdStr = typeof message.senderId === 'object' && message.senderId
+        ? (message.senderId._id || message.senderId.id)
+        : message.senderId;
+      const currentUser = useAuthStore.getState().user;
+      const currentUserId = (currentUser as { id: string; _id?: string } | null)?._id || currentUser?.id;
+      const isMyOwnMessage = senderIdStr && currentUserId && senderIdStr.toString() === currentUserId.toString();
+
+      if (!isMyOwnMessage) {
+        incrementUnread(message.channelId);
+      }
     }
     
     updateChannel(message.channelId, { lastMessage: message });
@@ -109,7 +118,12 @@ export default function ChatRealtimeHandler() {
     const data = envelope.data || envelope;
     if (!data?.messageId || !data?.channelId) return;
     deleteMessage(data.channelId, data.messageId);
-  }, [deleteMessage]);
+    
+    // Update sidebar lastMessage if the backend sent the updated one
+    if (data.lastMessage !== undefined) {
+      updateChannel(data.channelId, { lastMessage: data.lastMessage || undefined });
+    }
+  }, [deleteMessage, updateChannel]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUserTyping = useCallback((envelope: any) => {
@@ -134,7 +148,7 @@ export default function ChatRealtimeHandler() {
           unreadCount: data.unreadCount,
           ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
         });
-      } else if (data.increment) {
+      } else if (data.increment !== undefined) {
         const existingChannel = channels.find(c => c._id === data.channelId);
         const currentCount = existingChannel?.unreadCount || 0;
         updateChannel(data.channelId, { 
@@ -161,7 +175,7 @@ export default function ChatRealtimeHandler() {
     const toastId = "chat-rate-limit-toast";
     let timeLeft = Math.ceil(retryAfterMs / 1000);
 
-    toast.error(`Bạn đang thao tác quá nhanh. Vui lòng thử lại sau ${timeLeft} giây.`, {
+    toast.error(`Please slow down. Try again in ${timeLeft} seconds.`, {
       id: toastId,
       duration: retryAfterMs,
     });
@@ -175,7 +189,7 @@ export default function ChatRealtimeHandler() {
         }
         toast.dismiss(toastId);
       } else {
-        toast.error(`Bạn đang thao tác quá nhanh. Vui lòng thử lại sau ${timeLeft} giây.`, {
+        toast.error(`Please slow down. Try again in ${timeLeft} seconds.`, {
           id: toastId,
           duration: timeLeft * 1000,
         });

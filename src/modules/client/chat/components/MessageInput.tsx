@@ -1,8 +1,13 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Send, Smile, Paperclip } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Smile, Paperclip, X } from 'lucide-react';
+import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
+import { useChatStore } from '@/stores/chatStore';
+import api from '@/lib/axiosIns';
+
+const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MessageInputProps {
   channelId: string;
@@ -14,11 +19,33 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   const { sendMessage, sendTyping } = useChatRealtime();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef<number>(0);
+  const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (mentionSearchTimeoutRef.current) {
+        clearTimeout(mentionSearchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const replyingToMessage = useChatStore(state => state.replyingToMessage);
+  const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+
+  // Auto-resize input when content changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, [content]);
 
   const handleSend = () => {
     if (!content.trim()) return;
-    sendMessage(channelId, content.trim());
+    sendMessage(channelId, content.trim(), undefined, replyingToMessage?._id);
     setContent('');
+    setReplyingToMessage(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
@@ -31,12 +58,8 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = (e: { target: { value: string } }) => {
     setContent(e.target.value);
-    
-    // Auto-resize textarea
-    e.target.style.height = 'auto';
-    e.target.style.height = `${Math.min(e.target.scrollHeight, 200)}px`;
 
     // Throttle typing event
     const now = Date.now();
@@ -46,20 +69,230 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
+  const handleMentionSearch = (
+    search: string,
+    callback: (data: { id: string; display: string; email?: string; phone?: string; avatar?: string }[]) => void
+  ) => {
+    // Chỉ gợi ý khi người dùng bắt đầu nhập từ khóa tìm kiếm sau dấu @
+    if (!search || !search.trim()) {
+      callback([]);
+      return;
+    }
+
+    if (mentionSearchTimeoutRef.current) {
+      clearTimeout(mentionSearchTimeoutRef.current);
+    }
+
+    mentionSearchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
+          params: { q: search }
+        });
+        const members = response.data || [];
+        
+        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
+          const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
+          return {
+            id: m._id || m.id,
+            display,
+            email: m.email,
+            phone: m.phone,
+            avatar: m.avatar
+          };
+        });
+
+        // Thêm tùy chọn @All nếu từ khóa khớp
+        if ('all'.startsWith(search.toLowerCase())) {
+          mappedMembers.unshift({
+            id: 'All',
+            display: 'All',
+            email: 'Mention everyone in this channel',
+            phone: '',
+            avatar: 'special-all'
+          });
+        }
+
+        callback(mappedMembers);
+      } catch (err) {
+        console.error('Failed to search mention members:', err);
+        callback([]);
+      }
+    }, 250);
+  };
+
   return (
     <div className="p-4 bg-white dark:bg-[#202020]">
-      <div className="border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden flex flex-col focus-within:border-[#ABABAB] dark:focus-within:border-[#3B82F6] transition-colors">
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+            .chat-m {
+              font-family: inherit;
+              font-size: 0.875rem;
+              line-height: 1.25rem;
+              color: #111111;
+            }
+            .dark .chat-m {
+              color: #E8E8E7;
+            }
+            .chat-m__control {
+              min-height: 24px;
+              font-family: inherit;
+              font-size: 0.875rem;
+              line-height: 1.25rem;
+            }
+            .chat-m__highlighter {
+              padding: 0px;
+              border: 1px solid transparent;
+              font-family: inherit;
+              font-size: 0.875rem;
+              line-height: 1.25rem;
+            }
+            .chat-m__input {
+              width: 100%;
+              outline: none;
+              border: 1px solid transparent;
+              background: transparent;
+              color: inherit;
+              font-family: inherit;
+              font-size: 0.875rem;
+              line-height: 1.25rem;
+              resize: none;
+              padding: 0px;
+              margin: 0px;
+              min-height: 24px;
+              max-h: 200px;
+              overflow-y: auto !important;
+            }
+            .chat-m__suggestions__list {
+              background: #ffffff;
+              border: 1px solid #EAEAEA;
+              border-radius: 8px;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+              overflow: hidden;
+              z-index: 100;
+              position: absolute;
+              min-width: 260px;
+              margin-top: 4px;
+              bottom: 100%;
+              margin-bottom: 8px;
+            }
+            .chat-m__suggestions__item {
+              padding: 0px;
+              cursor: pointer;
+            }
+            .chat-m__suggestions__item--focused {
+              background: #F0F0EE;
+            }
+
+            .dark .chat-m__suggestions__list {
+              background: #252525;
+              border-color: rgba(255, 255, 255, 0.08);
+              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
+            }
+            .dark .chat-m__suggestions__item {
+              color: #E8E8E7;
+            }
+            .dark .chat-m__suggestions__item--focused {
+              background: rgba(255, 255, 255, 0.06);
+            }
+          `,
+        }}
+      />
+      <div className="border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-visible flex flex-col focus-within:border-[#ABABAB] dark:focus-within:border-[#3B82F6] transition-colors">
         {/* Input Area */}
-        <div className="p-3 bg-[#FBFBFA] dark:bg-[#252525] flex flex-col gap-2">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            placeholder={channelName ? `Message into #${channelName}...` : 'Type a message...'}
-            rows={1}
-            className="w-full bg-transparent border-none outline-none text-[0.875rem] resize-none max-h-[200px] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB]"
-          />
+        <div className="p-3 bg-[#FBFBFA] dark:bg-[#252525] flex flex-col gap-2 rounded-[8px]">
+          {replyingToMessage && (
+            <div className="flex items-center justify-between bg-[#F0F0EE] dark:bg-white/5 rounded-[6px] px-3 py-2 border-l-4 border-[#2563EB] text-xs mb-1">
+              <div className="flex flex-col min-w-0">
+                <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                  Replying to {replyingToMessage.senderId.fullName}
+                </span>
+                <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
+                  {replyingToMessage.content}
+                </span>
+              </div>
+              <button 
+                onClick={() => setReplyingToMessage(null)}
+                className="p-1 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors shrink-0 ml-2"
+                title="Cancel reply"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          <div className="w-full relative">
+            <MentionsInput
+              inputRef={textareaRef}
+              value={content}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder={channelName ? `Message into #${channelName}...` : 'Type a message...'}
+              className="chat-m w-full bg-transparent"
+              a11ySuggestionsListLabel="Suggested mentions"
+            >
+              <Mention
+                trigger="@"
+                data={handleMentionSearch}
+                markup="[@__display__](__id__)"
+                renderSuggestion={(
+                  suggestion,
+                  _search,
+                  highlightedDisplay,
+                ) => {
+                  const avatarUrl = (suggestion as { id: string | number; display: string; avatar?: string; email?: string }).avatar;
+                  const email = (suggestion as { id: string | number; display: string; avatar?: string; email?: string }).email;
+                  const isAll = suggestion.id === 'All' || suggestion.id === 'all';
+
+                  return (
+                    <div className="flex items-center gap-3 py-1.5 px-3 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors w-full text-left">
+                      {/* Avatar container */}
+                      <div className={cn(
+                        "w-9 h-9 rounded-full overflow-hidden flex items-center justify-center text-white text-sm font-bold shadow-sm shrink-0",
+                        isAll ? "bg-[#F59E0B]" : "bg-[#2563EB] dark:bg-[#3B82F6]"
+                      )}>
+                        {isAll ? (
+                          <span className="text-[14px]">@</span>
+                        ) : avatarUrl ? (
+                          <img 
+                            src={avatarUrl} 
+                            alt={suggestion.display} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent && !parent.querySelector('.mention-avatar-fallback')) {
+                                const span = document.createElement('span');
+                                span.className = 'mention-avatar-fallback';
+                                span.innerText = suggestion.display?.toString().charAt(0).toUpperCase() || 'U';
+                                parent.appendChild(span);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <span>{suggestion.display?.toString().charAt(0).toUpperCase()}</span>
+                        )}
+                      </div>
+
+                      {/* User details */}
+                      <div className="flex-1 min-w-0 flex flex-col text-left">
+                        <span className="font-semibold text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] truncate leading-tight">
+                          {isAll ? "@All" : highlightedDisplay}
+                        </span>
+                        {email && (
+                          <span className="text-[0.75rem] text-[#787774] dark:text-[#9B9A97] truncate leading-tight mt-0.5">
+                            {email}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }}
+                className="text-[#2563EB] bg-[#EFF6FF] dark:text-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)] font-medium"
+                displayTransform={(id, display) => `@${display}`}
+              />
+            </MentionsInput>
+          </div>
 
           {/* Toolbar */}
           <div className="flex items-center justify-between pt-1">

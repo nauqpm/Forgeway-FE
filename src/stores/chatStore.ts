@@ -5,6 +5,7 @@ export interface ChatUser {
   fullName: string;
   avatar?: string;
   email: string;
+  phone?: string;
 }
 
 export interface Attachment {
@@ -21,7 +22,7 @@ export interface Message {
   content: string;
   attachments?: Attachment[];
   type: 'text' | 'system' | string;
-  replyToId?: string;
+  replyToId?: string | Message;
   createdAt: string;
   updatedAt?: string;
   deletedAt?: string;
@@ -44,6 +45,7 @@ interface ChatStore {
   messagesByChannel: Record<string, Message[]>;
   activeChannelId: string | null;
   typingUsers: Record<string, Record<string, number>>; // channelId: { userId: timestamp }
+  replyingToMessage: Message | null;
   
   setChannels: (channels: Channel[]) => void;
   addChannel: (channel: Channel) => void;
@@ -59,6 +61,8 @@ interface ChatStore {
   setTyping: (channelId: string, userId: string) => void;
   removeTyping: (channelId: string, userId: string) => void;
   clearOldTyping: () => void;
+  
+  setReplyingToMessage: (message: Message | null) => void;
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
@@ -66,6 +70,7 @@ export const useChatStore = create<ChatStore>((set) => ({
   messagesByChannel: {},
   activeChannelId: null,
   typingUsers: {},
+  replyingToMessage: null,
 
   setChannels: (channels) => set({ channels }),
   
@@ -118,7 +123,9 @@ export const useChatStore = create<ChatStore>((set) => ({
   deleteMessage: (channelId, messageId) => set((state) => ({
     messagesByChannel: {
       ...state.messagesByChannel,
-      [channelId]: (state.messagesByChannel[channelId] || []).filter((m) => m._id !== messageId)
+      [channelId]: (state.messagesByChannel[channelId] || []).map((m) => 
+        m._id === messageId ? { ...m, deletedAt: new Date().toISOString() } : m
+      )
     }
   })),
 
@@ -166,5 +173,7 @@ export const useChatStore = create<ChatStore>((set) => ({
     });
 
     return changed ? { typingUsers: newTypingUsers } : state;
-  })
+  }),
+  
+  setReplyingToMessage: (replyingToMessage) => set({ replyingToMessage })
 }));
