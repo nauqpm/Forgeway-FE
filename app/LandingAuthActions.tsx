@@ -188,7 +188,7 @@ export function NavAuthActions() {
             </Link>
 
             <Link
-              href="/settings"
+              href="/profile"
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#111111] dark:text-[#E8E8E7] transition hover:bg-[#F7F6F3] dark:hover:bg-[#252525]"
               onClick={() => setDropdownOpen(false)}
             >
