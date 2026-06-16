@@ -6,6 +6,7 @@ import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
 import api from '@/lib/axiosIns';
+import StickerPicker from './StickerPicker';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -16,6 +17,7 @@ interface MessageInputProps {
 
 export default function MessageInput({ channelId, channelName }: MessageInputProps) {
   const [content, setContent] = useState('');
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef<number>(0);
@@ -49,6 +51,12 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+  };
+
+  const handleSelectSticker = (stickerUrl: string) => {
+    sendMessage(channelId, stickerUrl, undefined, replyingToMessage?._id, 'sticker');
+    setReplyingToMessage(null);
+    setShowStickerPicker(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -125,7 +133,13 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   };
 
   return (
-    <div className="p-4 bg-white dark:bg-[#202020]">
+    <div className="p-4 bg-white dark:bg-[#202020] relative">
+      {showStickerPicker && (
+        <StickerPicker
+          onSelectSticker={handleSelectSticker}
+          onClose={() => setShowStickerPicker(false)}
+        />
+      )}
       <div className="border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-visible flex flex-col focus-within:border-[#ABABAB] dark:focus-within:border-[#3B82F6] transition-colors">
         {/* Input Area */}
         <div className="p-3 bg-[#FBFBFA] dark:bg-[#252525] flex flex-col gap-2 rounded-[8px]">
@@ -233,9 +247,10 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
                 <Paperclip className="w-4 h-4" />
               </button>
               <button 
-                disabled
-                title="Coming soon"
-                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+                onClick={() => setShowStickerPicker(prev => !prev)}
+                title="Stickers"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors"
               >
                 <Smile className="w-4 h-4" />
               </button>

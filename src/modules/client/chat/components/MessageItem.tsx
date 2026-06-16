@@ -288,7 +288,11 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
               @{replyDisplayName}
             </span>
             <span className="truncate opacity-80 flex-1 text-left">
-              {replyParent.deletedAt ? "[Message deleted]" : renderMessageContent(replyParent.content)}
+              {replyParent.deletedAt
+                ? "[Message deleted]"
+                : replyParent.type === 'sticker'
+                ? "[Sticker]"
+                : renderMessageContent(replyParent.content)}
             </span>
           </div>
         )}
@@ -306,9 +310,21 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
         
         <div className={cn(
           "text-[0.875rem] leading-normal break-words whitespace-pre-wrap",
-          isDeleted ? "text-[#ABABAB] dark:text-[#6B6B6B] italic text-[0.8125rem]" : "text-[#111111] dark:text-[#E8E8E7]"
+          isDeleted ? "text-[#ABABAB] dark:text-[#6B6B6B] italic text-[0.8125rem]" : ""
         )}>
-          {isDeleted ? "[Message deleted]" : renderMessageContent(message.content)}
+          {isDeleted ? (
+            "[Message deleted]"
+          ) : message.type === 'sticker' ? (
+            <div className="relative group/sticker max-w-[120px] max-h-[120px] rounded-lg overflow-hidden my-1">
+              <img
+                src={message.content}
+                alt="sticker"
+                className="max-w-[120px] max-h-[120px] object-contain transition-transform duration-200 hover:scale-105"
+              />
+            </div>
+          ) : (
+            <span className="text-[#111111] dark:text-[#E8E8E7]">{renderMessageContent(message.content)}</span>
+          )}
         </div>
 
         {/* Attachments */}
@@ -404,7 +420,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
               <div className="mt-3 p-3 bg-[#F7F6F3] dark:bg-white/[0.04] rounded-lg border border-[#EAEAEA] dark:border-white/[0.06]">
                 <p className="text-[0.75rem] text-[#ABABAB] dark:text-[#6B6B6B] mb-1">{displayName}</p>
                 <p className="text-[0.8125rem] text-[#555555] dark:text-[#AAAAAA] line-clamp-2 break-words">
-                  {message.content ? renderMessageContent(message.content) : '[Attachment]'}
+                  {message.type === 'sticker' ? '[Sticker]' : (message.content ? renderMessageContent(message.content) : '[Attachment]')}
                 </p>
               </div>
             </div>
