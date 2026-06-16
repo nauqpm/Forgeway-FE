@@ -1,0 +1,16 @@
+node_modules
+.next
+.planning
+.codegraph
+.agents
+.claude
+.idea
+.tmp
+.git
+.vscode
+coverage
+.env
+.env.*
+*.log
+*.md
+tests

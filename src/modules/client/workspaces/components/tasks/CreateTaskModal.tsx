@@ -11,8 +11,11 @@ import { BoardColumn } from "../../types/board.type";
 type CreateTaskModalProps = {
   showCreateIssue: boolean;
   setShowCreateIssue: (value: boolean) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   newIssueForm: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setNewIssueForm: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleCreateIssue: any;
   workspace: Workspace;
   boardColumns?: BoardColumn[];

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { Key, LogOut, Shield, User } from "lucide-react";
 import ThemeSwitcher from "@/common/components/ThemeSwitcher";
 import FontSizeControl from "@/common/components/FontSizeControl";
@@ -24,6 +24,7 @@ export default function SettingsPage() {
     try {
       await api.put("/users/profile", profile);
       setMessage("Profile updated successfully!");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       setMessage(e.response?.data?.message || "Failed to update");
     } finally {
@@ -31,10 +32,7 @@ export default function SettingsPage() {
     }
   };
 
-  const initial =
-    user?.fullName?.charAt(0).toUpperCase() ||
-    user?.email?.charAt(0).toUpperCase() ||
-    "U";
+  const initial = user?.fullName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -65,42 +63,30 @@ export default function SettingsPage() {
               {initial}
             </div>
             <div>
-              <p className="font-medium text-[#111111] dark:text-[#E8E8E7]">
-                {user?.fullName || "User"}
-              </p>
-              <p className="text-sm text-[#787774] dark:text-[#9B9A97]">
-                {user?.email}
-              </p>
+              <p className="font-medium text-[#111111] dark:text-[#E8E8E7]">{user?.fullName || "User"}</p>
+              <p className="text-sm text-[#787774] dark:text-[#9B9A97]">{user?.email}</p>
             </div>
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">
-              Full Name
-            </label>
+            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">Full Name</label>
             <input
               type="text"
               value={profile.fullName}
-              onChange={(event) =>
-                setProfile({ ...profile, fullName: event.target.value })
-              }
+              onChange={(event) => setProfile({ ...profile, fullName: event.target.value })}
               className="w-full rounded-[6px] border border-[#EAEAEA] bg-white px-4 py-2.5 text-[#111111] outline-none transition-colors focus:border-[#2563EB] dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">
-              Email
-            </label>
+            <label className="mb-2 block text-sm font-medium text-[#787774] dark:text-[#9B9A97]">Email</label>
             <input
               type="email"
               value={profile.email}
               className="w-full cursor-not-allowed rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-4 py-2.5 text-[#ABABAB] dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#6B6B6B]"
               disabled
             />
-            <p className="mt-1 text-xs text-[#ABABAB] dark:text-[#6B6B6B]">
-              Email cannot be changed
-            </p>
+            <p className="mt-1 text-xs text-[#ABABAB] dark:text-[#6B6B6B]">Email cannot be changed</p>
           </div>
 
           <div className="flex justify-end">
@@ -120,6 +106,7 @@ export default function SettingsPage() {
           <Shield className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
           Password
         </h2>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {user?.ssoProvider === 'google' || (user as any)?.googleId ? (
           <div className="rounded-[6px] bg-[#F9F9F8] p-4 text-sm text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">
             Your account is linked with Google. Password management is handled directly through your Google account.

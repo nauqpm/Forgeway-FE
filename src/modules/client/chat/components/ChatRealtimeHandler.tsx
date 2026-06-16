@@ -10,6 +10,7 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
 const fetchingChannels = new Set<string>();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const fetchAndAddChannel = (channelId: string, addChannelAction: (channel: any) => void) => {
   if (fetchingChannels.has(channelId)) return;
   fetchingChannels.add(channelId);
@@ -33,13 +34,14 @@ const fetchAndAddChannel = (channelId: string, addChannelAction: (channel: any) 
  */
 export default function ChatRealtimeHandler() {
   const { 
-    addMessage, 
-    updateMessage, 
-    deleteMessage, 
-    setTyping, 
+    addMessage,
+    updateMessage,
+    deleteMessage,
+    setTyping,
     updateChannel,
     incrementUnread,
-    channels,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    channels: _channels,
     addChannel
   } = useChatStore();
 
@@ -70,6 +72,7 @@ export default function ChatRealtimeHandler() {
     }
   }, [updateChannel]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNewMessage = useCallback((envelope: any) => {
     const message = envelope.data || envelope;
     if (!message?.channelId) return;
@@ -103,12 +106,14 @@ export default function ChatRealtimeHandler() {
     updateChannel(message.channelId, { lastMessage: message });
   }, [addMessage, updateChannel, incrementUnread, markAsRead, addChannel]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMessageEdited = useCallback((envelope: any) => {
     const message = envelope.data || envelope;
     if (!message?._id || !message?.channelId) return;
     updateMessage(message.channelId, message._id, message);
   }, [updateMessage]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMessageDeleted = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.messageId || !data?.channelId) return;
@@ -120,12 +125,14 @@ export default function ChatRealtimeHandler() {
     }
   }, [deleteMessage, updateChannel]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUserTyping = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.userId || !data?.channelId) return;
     setTyping(data.channelId, data.userId);
   }, [setTyping]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUnreadUpdate = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.channelId) return;
@@ -152,6 +159,7 @@ export default function ChatRealtimeHandler() {
     }
   }, [updateChannel, addChannel]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReactionUpdated = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.messageId || !data?.channelId) return;

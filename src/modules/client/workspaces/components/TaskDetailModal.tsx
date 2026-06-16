@@ -15,7 +15,7 @@ import StatusPicker from "@/common/components/StatusPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
@@ -24,6 +24,7 @@ import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
 
 interface TaskDetailModalProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issue: TaskDetailResponse | any;
   workspaceId: string;
   workspaceMembers?: WorkspaceMember[];
@@ -31,8 +32,8 @@ interface TaskDetailModalProps {
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
-  onUpdateIssue?: (updatedIssue: any) => void;
-  onArchiveIssue?: (issue: any) => void;
+  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
+  onArchiveIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
 }
 
@@ -131,6 +132,35 @@ export default function TaskDetailModal({
 
           <div className="flex items-center gap-1">
             {onArchiveIssue && (
+              // <div className="relative">
+              //   <button
+              //     type="button"
+              //     onClick={() => setShowActionMenu((open) => !open)}
+              //     className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
+              //     aria-label="Task actions"
+              //   >
+              //     <MoreHorizontal className="w-4 h-4" />
+              //   </button>
+              //   {showActionMenu && (
+              //     <div
+              //       className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
+              //       style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+              //     >
+              //       <button
+              //         type="button"
+              //         onClick={() => {
+              //           setShowActionMenu(false);
+              //           onArchiveIssue?.(issue);
+              //         }}
+              //         disabled={!onArchiveIssue || issue.isArchived}
+              //         className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
+              //       >
+              //         <Archive className="h-4 w-4" />
+              //         Archive
+              //       </button>
+              //     </div>
+              //   )}
+              // </div>
               <div className="relative">
                 <button
                   type="button"

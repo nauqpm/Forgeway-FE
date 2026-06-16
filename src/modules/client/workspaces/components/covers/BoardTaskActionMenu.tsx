@@ -9,7 +9,6 @@ import {
   ChevronRight,
   CircleDot,
   Copy,
-  Flag,
   Tag,
   Trash2,
 } from "lucide-react";

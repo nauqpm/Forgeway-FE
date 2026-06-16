@@ -23,21 +23,24 @@ import {
   getIssueAssigneeId,
   type SprintOption,
 } from "./task-detail-shared";
+import type { WorkspaceMember } from "../types/workspace.type";
 import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
 
 interface TaskDetailListProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issue: TaskDetailResponse | any;
   workspaceId: string;
-  workspaceMembers?: any[];
+  workspaceMembers?: WorkspaceMember[];
   sprints?: SprintOption[];
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
   showBackButton?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onUpdateIssue?: (updatedIssue: any) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
-  onArchiveIssue?: (issue: any) => void;
+  onArchiveIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   canEditTask?: boolean;
 }

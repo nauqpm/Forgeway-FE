@@ -1,5 +1,5 @@
 // Service managing document page interactions, including API calls to get list, create, update content, version history, export/import, and other operations,
-import api from '@/common/services/api.service';
+import api from '@/lib/axiosIns';
 import { apiRoutes } from '@/config/apiRoutes';
 import type {
   Document,
@@ -24,15 +24,14 @@ function mapPage(raw: PageApiResponse): Document {
     lastEditedBy: raw.lastEditedBy
       ? {
           _id: raw.lastEditedBy._id,
-          fullName:
-            raw.lastEditedBy.fullName ?? raw.lastEditedBy.fullName ?? "Unknown",
+          fullName: raw.lastEditedBy.fullName ?? raw.lastEditedBy.fullName ?? 'Unknown',
         }
       : null,
     version: raw.version,
     status: raw.status,
     labels: raw.labels ?? [],
     versionHistory: raw.versionHistory ?? [],
-    source: "docs",
+    source: 'docs',
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt,
   };
@@ -45,6 +44,13 @@ function mapPage(raw: PageApiResponse): Document {
 /** Fetch root-level pages (no parent) for a workspace */
 async function getRootPages(workspaceKey: string): Promise<Document[]> {
   const res = await api.get(apiRoutes.PAGES.ROOT_PAGES(workspaceKey));
+  const data: PageApiResponse[] = res.data?.data ?? res.data;
+  return data.map(mapPage);
+}
+
+/** Fetch all pages in a workspace */
+async function getWorkspacePages(workspaceId: string): Promise<Document[]> {
+  const res = await api.get(apiRoutes.PAGES.BY_WORKSPACE(workspaceId));
   const data: PageApiResponse[] = res.data?.data ?? res.data;
   return data.map(mapPage);
 }
@@ -71,10 +77,7 @@ async function createPage(payload: CreatePagePayload): Promise<Document> {
 }
 
 /** Partially update a page (title, content, status, labels) */
-async function updatePage(
-  id: string,
-  payload: UpdatePagePayload,
-): Promise<Document> {
+async function updatePage(id: string, payload: UpdatePagePayload): Promise<Document> {
   const res = await api.patch(apiRoutes.PAGES.BY_ID(id), payload);
   const raw: PageApiResponse = res.data?.data ?? res.data;
   return mapPage(raw);
@@ -108,7 +111,20 @@ async function syncPage(
   return mapPage(raw);
 }
 
-function mapVersion(raw: any): DocumentVersion {
+interface RawDocumentVersion {
+  _id: string;
+  pageId: string;
+  yjsState?: number[];
+  contentJson?: string;
+  htmlSnapshot?: string;
+  content?: string;
+  label: string;
+  version: number;
+  createdBy?: { _id: string; fullName?: string } | null;
+  createdAt: string;
+}
+
+function mapVersion(raw: RawDocumentVersion): DocumentVersion {
   return {
     id: raw._id,
     pageId: raw.pageId,
@@ -135,7 +151,7 @@ async function createVersion(id: string, label: string): Promise<DocumentVersion
 /** Get all versions of a page */
 async function getVersions(id: string): Promise<DocumentVersion[]> {
   const res = await api.get(apiRoutes.PAGES.VERSIONS(id));
-  const data: any[] = res.data?.data ?? res.data;
+  const data: RawDocumentVersion[] = res.data?.data ?? res.data;
   return data.map(mapVersion);
 }
 
@@ -184,6 +200,7 @@ async function importDocx(file: File): Promise<string> {
 }
 
 export const pagesService = {
+  getWorkspacePages,
   getRootPages,
   getChildren,
   getPageById,

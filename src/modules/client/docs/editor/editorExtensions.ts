@@ -28,6 +28,7 @@ import { ResizableImage } from "./ResizableImage";
 import { CommentMark } from "./commentMark";
 import { SuggestInsert, SuggestDelete, SuggestionExtension } from "./suggestionExtension";
 import { UndoCaptureBoundary } from "./undoCaptureBoundary";
+import { UnderlineWhitespace } from "./underlineWhitespace";
 import { Doc as YDoc, UndoManager } from "yjs";
 import { ySyncPluginKey } from "@tiptap/y-tiptap";
 
@@ -107,6 +108,7 @@ export const getEditorExtensions = (placeholder: string) => [
     types: ["heading", "paragraph"],
   }),
   Underline,
+  UnderlineWhitespace,
   TaskList,
   TaskItem.configure({
     nested: true,
@@ -137,6 +139,7 @@ export const getEditorExtensions = (placeholder: string) => [
 export const getCollaborativeEditorExtensions = (
   placeholder: string,
   ydoc: YDoc,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   _awareness?: any,
 ) => {
   const extensions = [
@@ -180,6 +183,7 @@ export const getCollaborativeEditorExtensions = (
       types: ["heading", "paragraph"],
     }),
     Underline,
+    UnderlineWhitespace,
     TaskList,
     TaskItem.configure({
       nested: true,

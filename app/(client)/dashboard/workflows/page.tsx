@@ -1,5 +1,5 @@
 import { AdminGuard } from "@/common/components/AdminGuard";
-import { AdminWorkflows } from "@/modules/admin";
+import { AdminWorkflows } from "@/modules/shared";
 
 export const metadata = { title: 'Workflows' };
 

@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "./apple-icon.png";
 import { HeroAuthActions, NavAuthActions } from "./LandingAuthActions";
+import AdminNavLink from "./AdminNavLink";
+import BackToTop from "@/modules/client/common/back-to-top/BackToTop";
 import {
   Activity,
   BarChart3,
@@ -348,7 +350,7 @@ function DashboardPreview() {
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen overflow-hidden bg-[#F2FAFF] dark:bg-[#1A1A1A] text-[#111111] dark:text-[#E8E8E7]">
+    <main className="min-h-screen bg-[#F2FAFF] dark:bg-[#1A1A1A] text-[#111111] dark:text-[#E8E8E7]">
       {/* ambient glow */}
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-1/2 top-0 h-[33.75rem] w-[56.25rem] -translate-x-1/2 rounded-full bg-blue-300/25 dark:bg-blue-600/20 blur-3xl" />
@@ -371,6 +373,7 @@ export default function LandingPage() {
             {["Features", "Solutions", "Pricing", "About"].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`} className="transition hover:text-[#2563EB] dark:hover:text-white">{item}</a>
             ))}
+            <AdminNavLink />
           </div>
           <NavAuthActions />
         </div>
@@ -682,7 +685,7 @@ export default function LandingPage() {
         <div className="mx-auto max-w-6xl overflow-hidden rounded-[32px] border border-[#DBEAFE] dark:border-white/10 bg-gradient-to-br from-[#2563EB]/[0.07] via-blue-400/[0.05] to-[#F2FAFF] dark:from-indigo-500/20 dark:via-blue-600/15 dark:to-white/[0.04] p-8 text-center shadow-xl shadow-blue-100/50 dark:shadow-blue-950/40 sm:p-12">
           <Workflow className="mx-auto h-12 w-12 text-[#2563EB] dark:text-indigo-300" />
           <h2 className="mx-auto mt-6 max-w-3xl text-3xl font-semibold tracking-tight text-[#111111] dark:text-white sm:text-5xl">
-            Ready to organize your team's work?
+            Ready to organize your team&apos;s work?
           </h2>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-[#64748b] dark:text-slate-300">
             Move from scattered tasks and unclear ownership to a project operating system built for software delivery.
@@ -730,6 +733,7 @@ export default function LandingPage() {
           <p>Designed for modern software delivery teams.</p>
         </div>
       </footer>
+      <BackToTop />
     </main>
   );
 }

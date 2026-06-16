@@ -26,6 +26,7 @@ type BoardDeltaAction =
 type BoardDelta = {
   workspaceId: string;
   action: BoardDeltaAction;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload: Record<string, any>;
   version?: number;
   occurredAt: string;
@@ -34,6 +35,7 @@ type BoardDelta = {
 const sortColumns = (columns: BoardColumn[]) =>
   [...columns].sort((a, b) => a.order - b.order);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const toIssue = (task: any): Issue | undefined => {
   if (!task) return undefined;
   const id = task.id ?? task._id;

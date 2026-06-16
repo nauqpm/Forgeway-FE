@@ -48,7 +48,8 @@ class EditorStorageService {
         resolve(request.result);
       };
 
-      request.onupgradeneeded = (event) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      request.onupgradeneeded = (_event) => {
         const db = request.result;
         if (!db.objectStoreNames.contains(STORE_NAME)) {
           const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { Workspace } from "../../types/workspace.type";
-import InviteModal from "@/modules/admin/components/common/components/InviteModal";
+import InviteModal from "@/modules/shared/components/common/components/InviteModal";
 import { workspaceService } from "../../services/workspaceService";
 import type { WorkspaceSampleAvatar } from "../../utils/workspaceAvatar";
 import WorkspaceAvatar from "./WorkspaceAvatar";

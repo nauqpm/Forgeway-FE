@@ -1,6 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 
 interface CreateWorkspaceInput {

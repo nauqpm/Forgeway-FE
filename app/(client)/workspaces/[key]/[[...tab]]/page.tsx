@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, use, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,14 +12,10 @@ import { BoardColumn } from "@/modules/client/workspaces/types/board.type";
 import { sprintService } from "@/modules/client/workspaces/services/sprintService";
 import { DropResult } from "@hello-pangea/dnd";
 
-import {
-  getWorkspaceTemplate,
-  Workspace,
-  WorkspaceTab,
-} from "@/modules/client/workspaces/types/workspace.type";
+import { getWorkspaceTemplate, Workspace, WorkspaceTab } from "@/modules/client/workspaces/types/workspace.type";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import { Sprint } from "@/modules/client/workspaces/types/sprint.type";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAssignees } from "@/modules/client/workspaces/hooks/useAssignees";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
@@ -58,38 +54,25 @@ import { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
 
-const CreateTaskModal = dynamic(
-  () => import("@/modules/client/workspaces/components/tasks/CreateTaskModal"),
-  { ssr: false },
-);
-const SprintModal = dynamic(
-  () => import("@/modules/client/workspaces/components/SprintModal"),
-  { ssr: false },
-);
-const StartSprintModal = dynamic(
-  () => import("@/modules/client/workspaces/components/StartSprintModal"),
-  { ssr: false },
-);
-const CompleteSprintModal = dynamic(
-  () => import("@/modules/client/workspaces/components/CompleteSprintModal"),
-  { ssr: false },
-);
-const TaskDetailDrawer = dynamic(
-  () => import("@/modules/client/workspaces/components/TaskDetailDrawer"),
-  { ssr: false },
-);
-const TaskDetailModal = dynamic(
-  () => import("@/modules/client/workspaces/components/TaskDetailModal"),
-  { ssr: false },
-);
-const TaskDetailList = dynamic(
-  () => import("@/modules/client/workspaces/components/TaskDetailList"),
-  { ssr: false },
-);
-const BulkActionBar = dynamic(
-  () => import("@/modules/admin/components/common/components/BulkActionBar"),
-  { ssr: false },
-);
+const CreateTaskModal = dynamic(() => import("@/modules/client/workspaces/components/tasks/CreateTaskModal"), {
+  ssr: false,
+});
+const SprintModal = dynamic(() => import("@/modules/client/workspaces/components/SprintModal"), { ssr: false });
+const StartSprintModal = dynamic(() => import("@/modules/client/workspaces/components/StartSprintModal"), {
+  ssr: false,
+});
+const CompleteSprintModal = dynamic(() => import("@/modules/client/workspaces/components/CompleteSprintModal"), {
+  ssr: false,
+});
+const TaskDetailDrawer = dynamic(() => import("@/modules/client/workspaces/components/TaskDetailDrawer"), {
+  ssr: false,
+});
+const TaskDetailModal = dynamic(() => import("@/modules/client/workspaces/components/TaskDetailModal"), { ssr: false });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _TaskDetailList = dynamic(() => import("@/modules/client/workspaces/components/TaskDetailList"), { ssr: false });
+const BulkActionBar = dynamic(() => import("@/modules/shared/components/common/components/BulkActionBar"), {
+  ssr: false,
+});
 
 const getRouteStateFromPath = (pathname: string) => {
   const segments = pathname.split("/").filter(Boolean);
@@ -111,11 +94,11 @@ const getRouteStateFromPath = (pathname: string) => {
 const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
   getWorkspaceTemplate(workspace) === "scrum" ? "backlog" : "board";
 
-const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) =>
-  tabName === "summary";
+const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) => tabName === "summary";
 
 const clearOptimisticIssueOrder = (issue: Issue): Issue => {
-  const { optimisticOrder, optimisticScope, ...rest } = issue;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { optimisticOrder: _optimisticOrder, optimisticScope: _optimisticScope, ...rest } = issue;
   return rest;
 };
 
@@ -125,6 +108,7 @@ const normalizeRole = (role?: string | null) =>
     .toLowerCase()
     .replace(/[-\s]+/g, "_") ?? null;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getUserObject = (member: any) =>
   member?.userId ?? member?.user ?? member?.member ?? member;
 
@@ -136,6 +120,7 @@ const normalizeObjectId = (value: string) => {
   return objectIdMatch?.[1] ?? trimmed;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getUserId = (value: any) => {
   if (!value) return "";
   if (typeof value === "string") return normalizeObjectId(value);
@@ -147,19 +132,15 @@ const getUserId = (value: any) => {
     : "";
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getUserEmail = (value: any) => {
   if (!value || typeof value === "string") return "";
   return value.email ?? "";
 };
 
-const sameNonEmpty = (left?: string | null, right?: string | null) =>
-  Boolean(left && right && left === right);
+const sameNonEmpty = (left?: string | null, right?: string | null) => Boolean(left && right && left === right);
 
-export default function WorkspaceDetailPage({
-  params,
-}: {
-  params: Promise<{ key: string; tab?: string[] }>;
-}) {
+export default function WorkspaceDetailPage({ params }: { params: Promise<{ key: string; tab?: string[] }> }) {
   const { key: workspaceKey, tab } = use(params);
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -191,7 +172,7 @@ export default function WorkspaceDetailPage({
 
   const getWorkspaceTabUrl = useCallback(
     (tabName: WorkspaceTab) => `/workspaces/${workspaceKey}/${tabName}`,
-    [workspaceKey],
+    [workspaceKey]
   );
 
   const getTaskDetailUrl = useCallback(
@@ -342,11 +323,7 @@ export default function WorkspaceDetailPage({
   useEffect(() => {
     if (!archivePageData) return;
     setArchiveTotal(archivePageData.total);
-    setArchivedItems((prev) =>
-      archivePage === 1
-        ? archivePageData.tasks
-        : [...prev, ...archivePageData.tasks],
-    );
+    setArchivedItems((prev) => (archivePage === 1 ? archivePageData.tasks : [...prev, ...archivePageData.tasks]));
   }, [archivePageData, archivePage]);
 
   const resetArchiveList = useCallback(() => {
@@ -388,6 +365,7 @@ export default function WorkspaceDetailPage({
           : current,
       );
 
+      if (!workspaceApiId || !issue.key) return;
       if (!workspaceApiId || !issue.key) return;
 
       queryClient.setQueryData(
@@ -438,9 +416,7 @@ export default function WorkspaceDetailPage({
       const exists = current.some((item) => sprintIdOf(item) === nextSprintId);
 
       if (exists) {
-        return current.map((item) =>
-          sprintIdOf(item) === nextSprintId ? { ...item, ...sprint } : item,
-        );
+        return current.map((item) => (sprintIdOf(item) === nextSprintId ? { ...item, ...sprint } : item));
       }
 
       return [...current, sprint];
@@ -448,9 +424,7 @@ export default function WorkspaceDetailPage({
   }, []);
 
   const handleRealtimeSprintDeleted = useCallback((sprintId: string) => {
-    setSprints((current) =>
-      current.filter((sprint) => sprintIdOf(sprint) !== sprintId),
-    );
+    setSprints((current) => current.filter((sprint) => sprintIdOf(sprint) !== sprintId));
   }, []);
 
   useWorkspaceSocket(workspaceApiId);
@@ -487,7 +461,8 @@ export default function WorkspaceDetailPage({
     setIssues(nextTasksData);
     if (selectedTaskKey && !selectedIssue) {
       const matchingIssue = nextTasksData.find(
-        (issue) => issue.key === selectedTaskKey,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (issue: any) => issue.key === selectedTaskKey,
       );
       if (matchingIssue) setSelectedIssue(matchingIssue);
     }
@@ -508,6 +483,7 @@ export default function WorkspaceDetailPage({
 
   const uniqueAssignees = useAssignees(issues, workspace);
   const bulkActionMembers = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     () => toAssigneePickerUsers(workspace?.members as any[] | undefined),
     [workspace?.members],
   );
@@ -517,18 +493,18 @@ export default function WorkspaceDetailPage({
   );
   const currentWorkspaceRole = useMemo(() => {
     if (!user || !workspace) return workspacePermissions.role;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const currentMember = (workspace.members ?? []).find((member: any) => {
       const memberUser = getUserObject(member);
       const memberId = getUserId(memberUser);
       const memberEmail = getUserEmail(memberUser);
       return (
-        sameNonEmpty(memberId, user.id) ||
-        sameNonEmpty(memberId, user.email) ||
-        sameNonEmpty(memberEmail, user.email)
+        sameNonEmpty(memberId, user.id) || sameNonEmpty(memberId, user.email) || sameNonEmpty(memberEmail, user.email)
       );
     });
 
     return (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       normalizeRole((currentMember as any)?.role) ?? workspacePermissions.role
     );
   }, [user, workspace, workspacePermissions.role]);
@@ -556,6 +532,7 @@ export default function WorkspaceDetailPage({
   const handleWorkspaceUpdated = useCallback(
     (updatedWorkspace: Workspace) => {
       setWorkspace(updatedWorkspace);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setCurrentWorkspace(updatedWorkspace as any);
       if (updatedWorkspace._id && updatedWorkspace.avatar) {
         updateWorkspaceAvatar(updatedWorkspace._id, updatedWorkspace.avatar);
@@ -590,6 +567,8 @@ export default function WorkspaceDetailPage({
 
       setSelectedIssue(issue);
       setSelectedTaskKey(issue.key);
+      setSelectedIssue(issue);
+      setSelectedTaskKey(issue.key);
 
       const detailUrl = getTaskDetailUrl(activeTab, issue.key);
       window.history.pushState(
@@ -618,9 +597,7 @@ export default function WorkspaceDetailPage({
     }
   }, [activeTab, getWorkspaceTabUrl, selectedTaskKey]);
 
-  const detailUrl = activeIssueDetail?.key
-    ? getTaskDetailUrl(activeTab, activeIssueDetail.key)
-    : undefined;
+  const detailUrl = activeIssueDetail?.key ? getTaskDetailUrl(activeTab, activeIssueDetail.key) : undefined;
 
   const handleListTaskSelection = useCallback(
     (issue: Issue | null) => {
@@ -634,6 +611,7 @@ export default function WorkspaceDetailPage({
     [closeTaskDetail, openTaskDetail],
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isNoopReorderError = (error: any) => {
     const message = error?.response?.data?.message;
     return (
@@ -672,32 +650,25 @@ export default function WorkspaceDetailPage({
           beforeTaskId,
           afterTaskId,
         })
-        .then((updatedTask) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .then((updatedTask: any) => {
           const hasQueuedReorder = pendingReorderRef.current.has(taskId);
           patchSelectedTaskView(updatedTask);
 
           if (!hasQueuedReorder) {
             setIssues((current) =>
               sortIssuesByRank(
-                current.map((issue) =>
-                  issue.id === updatedTask.id
-                    ? updatedTask
-                    : clearOptimisticIssueOrder(issue),
-                ),
-              ),
+                current.map((issue) => (issue.id === updatedTask.id ? updatedTask : clearOptimisticIssueOrder(issue)))
+              )
             );
-            queryClient.setQueriesData<Issue[]>(
-              { queryKey: ["tasks", workspaceApiId] },
-              (current) =>
-                Array.isArray(current)
-                  ? sortIssuesByRank(
-                      current.map((issue) =>
-                        issue.id === updatedTask.id
-                          ? updatedTask
-                          : clearOptimisticIssueOrder(issue),
-                      ),
+            queryClient.setQueriesData<Issue[]>({ queryKey: ["tasks", workspaceApiId] }, (current) =>
+              Array.isArray(current)
+                ? sortIssuesByRank(
+                    current.map((issue) =>
+                      issue.id === updatedTask.id ? updatedTask : clearOptimisticIssueOrder(issue)
                     )
-                  : current,
+                  )
+                : current
             );
           }
 
@@ -705,7 +676,8 @@ export default function WorkspaceDetailPage({
             queryKey: ["taskActivities", workspaceApiId, taskId],
           });
         })
-        .catch((error) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .catch((error: any) => {
           setIssues((current) => current.map(clearOptimisticIssueOrder));
 
           if (isNoopReorderError(error)) {
@@ -732,7 +704,7 @@ export default function WorkspaceDetailPage({
           }
         });
     },
-    [patchSelectedTaskView, queryClient, workspaceApiId],
+    [patchSelectedTaskView, queryClient, workspaceApiId]
   );
 
   const activeSprint = sprints.find((s) => s.status === "active") ?? null;
@@ -751,12 +723,7 @@ export default function WorkspaceDetailPage({
     setShowCreateIssue(true);
   }, [activeTab, workspace, activeSprint, columns, canCreateTask]);
 
-  const {
-    handleAddColumn,
-    handleRenameColumn,
-    handleDeleteColumn,
-    handleMoveColumn,
-  } = useColumnHandlers({
+  const { handleAddColumn, handleRenameColumn, handleDeleteColumn, handleMoveColumn } = useColumnHandlers({
     workspaceId: workspaceApiId ?? "",
     columns,
     newColumnName,
@@ -801,13 +768,15 @@ export default function WorkspaceDetailPage({
             .updateBoardTask(workspaceApiId, taskId, {
               sprintId: sprintId ?? undefined,
             })
-            .then((updatedTask) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .then((updatedTask: any) => {
               patchSelectedTaskView(updatedTask);
               queryClient.invalidateQueries({
                 queryKey: ["taskActivities", workspaceApiId, taskId],
               });
             })
-            .catch((error) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .catch((error: any) => {
               queryClient.invalidateQueries({
                 queryKey: ["tasks", workspaceApiId],
               });
@@ -836,6 +805,7 @@ export default function WorkspaceDetailPage({
       resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item archived");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || "Could not archive work item",
@@ -870,6 +840,7 @@ export default function WorkspaceDetailPage({
       setArchiveTotal(nextArchive.total);
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item restored");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || "Could not restore work item",
@@ -893,6 +864,7 @@ export default function WorkspaceDetailPage({
       resetArchiveList();
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
       toast.success("Work item deleted");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(
         error?.response?.data?.message || "Could not delete work item",
@@ -951,6 +923,7 @@ export default function WorkspaceDetailPage({
         ? updates.assigneeId ?? null
         : undefined;
     const selectedMember = assigneeId
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? (workspace?.members ?? []).find((member: any) => {
           const memberUser = getUserObject(member);
           return getUserId(memberUser) === assigneeId;
@@ -1094,6 +1067,7 @@ export default function WorkspaceDetailPage({
         if (!isActive) return;
 
         setWorkspace(workspaceWithMembers);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setCurrentWorkspace(workspaceWithMembers as any);
         if (!initialTab) {
           const defaultTab = getDefaultWorkspaceTab(nextWorkspace);
@@ -1104,6 +1078,7 @@ export default function WorkspaceDetailPage({
           window.history.replaceState(null, "", nextUrl);
         }
       })
+      .catch(() => {})
       .catch(() => {})
       .finally(() => {
         if (isActive) setLoading(false);
@@ -1124,7 +1099,9 @@ export default function WorkspaceDetailPage({
   if (loading || isBoardLoading) return <LoadingSpinner />;
 
   if (tasksError) {
-    const errorData = (tasksError as any).response?.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    const _errorData = (tasksError as any).response?.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const status = (tasksError as any).response?.status;
     let errorMessage = "An error occurred while loading board data";
     if (status === 401)
@@ -1213,6 +1190,7 @@ export default function WorkspaceDetailPage({
             handleBoardDragStart: () => {
               isDraggingIssueRef.current = true;
             },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleBoardDragEnd: (result: any) => {
               if (!canMoveTask) return;
               handleBoardDragEnd({
@@ -1227,13 +1205,17 @@ export default function WorkspaceDetailPage({
                   if (workspaceApiId) {
                     taskService
                       .moveBoardTask(workspaceApiId, taskId, { columnId })
-                      .then((updatedTask) => {
+                    taskService
+                      .moveBoardTask(workspaceApiId, taskId, { columnId })
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      .then((updatedTask: any) => {
                         patchSelectedTaskView(updatedTask);
                         queryClient.invalidateQueries({
                           queryKey: ["taskActivities", workspaceApiId, taskId],
                         });
                       })
-                      .catch((error) => {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      .catch((error: any) => {
                         if (isNoopReorderError(error)) {
                           queryClient.invalidateQueries({
                             queryKey: ["tasks", workspaceApiId],
@@ -1442,9 +1424,12 @@ export default function WorkspaceDetailPage({
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
-          onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
-          onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
-          onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onFieldUpdate={canEditTask ? ((id: string, updates: any) => updateIssueDirectly(id, updates)) : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
       ) : activeIssueDetail && activeTab !== "list" ? (
@@ -1456,8 +1441,10 @@ export default function WorkspaceDetailPage({
           boardColumns={columns}
           workspaceTemplate={getWorkspaceTemplate(workspace)}
           onClose={closeTaskDetail}
-          onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
-          onArchiveIssue={canDeleteTask ? handleArchiveIssue : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
       ) : null}

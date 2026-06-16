@@ -382,7 +382,7 @@ export default function NotificationPanel({
   };
 
   const handleNotificationKeyDown = (
-    event: ReactKeyboardEvent<HTMLDivElement>,
+    event: ReactKeyboardEvent<HTMLButtonElement>,
     notification: NotificationViewModel,
   ) => {
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -565,7 +565,7 @@ export default function NotificationPanel({
             <div className="w-14 h-14 bg-[#F7F6F3] dark:bg-[#252525] rounded-full flex items-center justify-center mb-3">
               <Bell className="w-7 h-7 text-[#ABABAB] dark:text-[#6B6B6B]" />
             </div>
-            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">You're all caught up!</p>
+            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">You&apos;re all caught up!</p>
             <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">No notifications here.</p>
           </div>
         ) : (
@@ -586,10 +586,9 @@ export default function NotificationPanel({
                       const isInviteBusy = isAccepting || isDeclining;
 
                       return (
-                        <div
+                        <button
                           key={notification.id}
-                          role="button"
-                          tabIndex={0}
+                          type="button"
                           onClick={() => handleNotificationClick(notification)}
                           onKeyDown={(event) => handleNotificationKeyDown(event, notification)}
                           className={`w-full text-left relative p-3 rounded-[8px] transition-all group hover:bg-[#F9F9F8] dark:hover:bg-[#252525] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 ${!notification.isRead ? "bg-[#EFF6FF]/30 dark:bg-[rgba(37,99,235,0.06)]" : ""}`}
@@ -661,7 +660,7 @@ export default function NotificationPanel({
                               <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1.5">{formatTime(notification.createdAt)}</p>
                             </div>
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

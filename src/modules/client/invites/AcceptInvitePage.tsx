@@ -63,6 +63,7 @@ export default function AcceptInvitePage({ token }: Props) {
       setDone(true);
       toast.success('You have joined the workspace successfully!');
       setTimeout(() => router.push(`/workspaces/${workspaceKey}`), 1500);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       const status = e?.response?.status;
       const workspaceKey = invite?.workspaceKey;

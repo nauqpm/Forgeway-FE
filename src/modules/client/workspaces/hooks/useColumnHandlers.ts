@@ -106,6 +106,7 @@ export const useColumnHandlers = ({
       if (context?.previousColumns) {
         setColumns(context.previousColumns);
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const serverMessage = (err as any)?.response?.data?.message;
       toast.error(serverMessage || "Failed to delete column");
     },
@@ -120,7 +121,8 @@ export const useColumnHandlers = ({
   const moveColumnMutation = useMutation({
     mutationFn: ({ columnId, newOrder }: { columnId: string; newOrder: number }) =>
       boardService.moveColumn(workspaceId, columnId, { targetIndex: newOrder }),
-    onMutate: async ({ columnId, newOrder }) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onMutate: async ({ columnId: _columnId, newOrder: _newOrder }) => {
       await queryClient.cancelQueries({ queryKey: ["board", workspaceId] });
       const previousColumns = columns;
       

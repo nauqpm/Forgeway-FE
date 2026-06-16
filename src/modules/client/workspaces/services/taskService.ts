@@ -1,86 +1,68 @@
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "../types/issue.type";
 import { TaskFilters } from "../types/filter.type";
 import { TaskDetailResponse } from "../types/task-detail.type";
-import type { TaskCover } from "../types/task-cover.type";
 import type { TaskLabel } from "../types/label.type";
 import { toTaskDateKey } from "../utils/taskDateKey";
+import { CreateTaskInput, TaskDto } from "./taskTypes";
 
-type TaskUserDto = {
-  id?: string;
-  fullName?: string;
-  email?: string;
-  avatar?: string;
-} | null;
+// Re-export types
+export type {
+  TaskDto,
+  TaskUserDto,
+  TaskSprintDto,
+  TaskBoardDto,
+  CreateTaskInput
+} from "./taskTypes";
 
-type TaskSprintDto = {
-  id?: string;
-  name?: string;
-  startDate?: string;
-  endDate?: string;
-} | null;
+// Re-export normalizer utilities
+export {
+  normalizeResponseData,
+  normalizeValue,
+  toArray,
+  normalizeArray,
+  toColumnId,
+  toUiLabel,
+  toTaskLabel,
+  toTaskLabels,
+  requireTaskKey,
+  requireTaskId,
+  toIssue,
+  toTaskDetail,
+  formatAssignee,
+  toCreatePayload,
+  toUpdatePayload,
+} from "./taskNormalizer";
 
-type TaskBoardDto = {
-  id?: string;
-  name?: string;
-} | null;
+// Re-export query functions
+export {
+  getBoardTasks,
+  getBoardTaskDetail,
+  getTaskActivities,
+  getArchivedTasks,
+  getComments,
+} from "./taskQueries";
 
-type TaskDto = {
-  _id?: string;
-  id?: string;
-  workspaceId?: string;
-  key: string;
-  title: string;
-  description?: string;
-  type?: string;
-  status?: string;
-  priority?: string;
-  rank?: string;
-  version?: number;
-  assigneeId?: string | null;
-  assignee?: TaskUserDto;
-  reporterId?: string;
-  reporter?: TaskUserDto;
-  sprintId?: string;
-  sprint?: TaskSprintDto;
-  boardId?: string;
-  board?: TaskBoardDto;
-  columnId?: string;
-  boardColumnId?: string;
-  storyPoints?: number;
-  startDate?: string;
-  dueDate?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  isArchived?: boolean;
-  archivedAt?: string | null;
-  archivedBy?: string | null;
-  archivedByUser?: {
-    id?: string;
-    fullName?: string;
-    email?: string;
-    avatar?: string;
-  } | null;
-  isDeleted?: boolean;
-  deletedAt?: string | null;
-  deletedBy?: string | null;
-  cover?: TaskCover | null;
-  labels?: (TaskLabel | string | { _id?: string; id?: string; name?: string })[];
-  labelIds?: string[];
-};
+// Re-export mutation functions
+export {
+  createBoardTask,
+  updateBoardTask,
+  moveBoardTask,
+  reorderBoardTask,
+  deleteBoardTask,
+  archiveBoardTask,
+  restoreBoardTask,
+  replaceTaskLabels,
+  createComment,
+  updateComment,
+  deleteComment,
+} from "./taskMutations";
 
-type CreateTaskInput = {
-  title: string;
-  type: string;
-  priority: string;
-  status: string;
-  sprintId: string | null;
-  assigneeId?: string | null;
-  columnId?: string | null;
-  startDate?: string;
-  dueDate?: string;
-};
+// Legacy re-export for backward compatibility
+// Components importing from taskService.ts will still work
+export * from "./taskQueries";
+export * from "./taskMutations";
 
 export type ReorderTaskInput = {
   columnId?: string;
@@ -162,6 +144,7 @@ const STATUS_BY_COLUMN: Record<string, string> = {
   done: "Done",
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeResponseData = <T>(payload: any): T => {
   return payload?.data?.data ?? payload?.data ?? payload;
 };
@@ -280,8 +263,7 @@ const toIssue = (task: TaskDto): Issue => {
   };
 };
 
-const formatAssignee = (task: TaskDto) =>
-  task.assignee?.fullName || task.assignee?.email || task.assigneeId || "U";
+const formatAssignee = (task: TaskDto) => task.assignee?.fullName || task.assignee?.email || task.assigneeId || "U";
 
 const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
   const issue = toIssue(task);
@@ -328,10 +310,7 @@ const toCreatePayload = (input: CreateTaskInput) => ({
 const toTaskComment = (comment: TaskComment): TaskComment => ({
   ...comment,
   id: comment.id || comment._id || "",
-  authorId:
-    comment.authorId ||
-    comment.author?.id ||
-    "",
+  authorId: comment.authorId || comment.author?.id || "",
 });
 
 const toUpdatePayload = (updates: Partial<Issue>) => {
@@ -415,54 +394,33 @@ export const buildTaskQuery = (filters?: TaskFilters) => {
   return params.length > 0 ? `?${params.join("&")}` : "";
 };
 
-export const taskService = {
-  async getBoardTasks(
-    workspaceId: string,
-    filters?: TaskFilters,
-  ): Promise<Issue[]> {
-    const response = await api.get(
-      `${apiRoutes.TASKS.BOARD(workspaceId)}${buildTaskQuery(filters)}`,
-    );
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const taskService: any = {
+  async getBoardTasks(workspaceId: string, filters?: TaskFilters): Promise<Issue[]> {
+    const response = await api.get(`${apiRoutes.TASKS.BOARD(workspaceId)}${buildTaskQuery(filters)}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload = normalizeResponseData<any>(response);
     const tasks: TaskDto[] = Array.isArray(payload) ? payload : (payload?.tasks ?? []);
     return tasks.map(toIssue);
   },
 
-  async listBoardTasks(
-    workspaceId: string,
-    filters?: TaskFilters,
-  ): Promise<Issue[]> {
+  async listBoardTasks(workspaceId: string, filters?: TaskFilters): Promise<Issue[]> {
     return taskService.getBoardTasks(workspaceId, filters);
   },
 
-  async getBoardTaskDetail(
-    workspaceId: string,
-    taskKey: string,
-  ): Promise<TaskDetailResponse> {
-    const response = await api.get(
-      apiRoutes.TASKS.BOARD_TASK_BY_KEY(workspaceId, taskKey),
-    );
+  async getBoardTaskDetail(workspaceId: string, taskKey: string): Promise<TaskDetailResponse> {
+    const response = await api.get(apiRoutes.TASKS.BOARD_TASK_BY_KEY(workspaceId, taskKey));
 
     return toTaskDetail(normalizeResponseData<TaskDto>(response));
   },
 
-  async createBoardTask(
-    workspaceId: string,
-    input: CreateTaskInput,
-  ): Promise<Issue> {
-    const response = await api.post(
-      apiRoutes.TASKS.BOARD(workspaceId),
-      toCreatePayload(input),
-    );
+  async createBoardTask(workspaceId: string, input: CreateTaskInput): Promise<Issue> {
+    const response = await api.post(apiRoutes.TASKS.BOARD(workspaceId), toCreatePayload(input));
 
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
-  async updateBoardTask(
-    workspaceId: string,
-    taskId: string,
-    updates: Partial<Issue>,
-  ): Promise<Issue> {
+  async updateBoardTask(workspaceId: string, taskId: string, updates: Partial<Issue>): Promise<Issue> {
     const hasContentUpdate =
       updates.title !== undefined ||
       updates.description !== undefined ||
@@ -475,11 +433,10 @@ export const taskService = {
       updates.priority !== undefined;
     const isMoveUpdate =
       !hasContentUpdate &&
-      (updates.status !== undefined ||
-        updates.columnId !== undefined ||
-        updates.sprintId !== undefined);
+      (updates.status !== undefined || updates.columnId !== undefined || updates.sprintId !== undefined);
 
     if (isMoveUpdate) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const payload: Record<string, any> = {};
       if (updates.columnId !== undefined) {
         payload.columnId = updates.columnId;
@@ -492,87 +449,47 @@ export const taskService = {
         payload.sprintId = updates.sprintId;
       }
 
-      const response = await api.patch(
-        apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceId, taskId),
-        payload,
-      );
+      const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceId, taskId), payload);
       return toIssue(normalizeResponseData<TaskDto>(response));
     }
 
-    const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId),
-      toUpdatePayload(updates),
-    );
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId), toUpdatePayload(updates));
 
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
-  async moveBoardTask(
-    workspaceId: string,
-    taskId: string,
-    input: { columnId: string },
-  ): Promise<Issue> {
-    const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceId, taskId),
-      input,
-    );
+  async moveBoardTask(workspaceId: string, taskId: string, input: { columnId: string }): Promise<Issue> {
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceId, taskId), input);
 
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
-  async reorderBoardTask(
-    workspaceId: string,
-    taskId: string,
-    input: ReorderTaskInput,
-  ): Promise<Issue> {
-    const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK_REORDER(workspaceId, taskId),
-      input,
-    );
+  async reorderBoardTask(workspaceId: string, taskId: string, input: ReorderTaskInput): Promise<Issue> {
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_REORDER(workspaceId, taskId), input);
 
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
-  async deleteBoardTask(
-    workspaceId: string,
-    taskId: string,
-  ): Promise<void> {
+  async deleteBoardTask(workspaceId: string, taskId: string): Promise<void> {
     await api.delete(apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId), {
       data: { confirmText: "delete" },
     });
   },
 
-  async archiveBoardTask(
-    workspaceId: string,
-    taskId: string,
-  ): Promise<Issue> {
-    const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK_ARCHIVE(workspaceId, taskId),
-    );
+  async archiveBoardTask(workspaceId: string, taskId: string): Promise<Issue> {
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_ARCHIVE(workspaceId, taskId));
 
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
-  async restoreBoardTask(
-    workspaceId: string,
-    taskId: string,
-  ): Promise<Issue> {
-    const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK_RESTORE(workspaceId, taskId),
-    );
+  async restoreBoardTask(workspaceId: string, taskId: string): Promise<Issue> {
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_RESTORE(workspaceId, taskId));
 
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
 
-  async replaceTaskLabels(
-    workspaceId: string,
-    taskId: string,
-    labelIds: string[],
-  ): Promise<Issue> {
-    const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK_LABELS(workspaceId, taskId),
-      { labelIds },
-    );
+  async replaceTaskLabels(workspaceId: string, taskId: string, labelIds: string[]): Promise<Issue> {
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_LABELS(workspaceId, taskId), { labelIds });
 
     return toIssue(normalizeResponseData<TaskDto>(response));
   },
@@ -581,10 +498,10 @@ export const taskService = {
     workspaceId: string,
     taskId: string,
     page = 1,
-    limit = 20,
+    limit = 20
   ): Promise<PaginatedActivitiesResponse> {
     const response = await api.get(
-      `${apiRoutes.TASKS.BOARD_TASK_ACTIVITIES(workspaceId, taskId)}?page=${page}&limit=${limit}`,
+      `${apiRoutes.TASKS.BOARD_TASK_ACTIVITIES(workspaceId, taskId)}?page=${page}&limit=${limit}`
     );
     const payload = normalizeResponseData<Record<string, unknown>>(response);
     const activities: TaskActivity[] = Array.isArray(payload)
@@ -600,16 +517,12 @@ export const taskService = {
 
   async getArchivedTasks(
     workspaceId: string,
-    filters?: Pick<TaskFilters, "page" | "limit" | "sortBy" | "sortOrder">,
+    filters?: Pick<TaskFilters, "page" | "limit" | "sortBy" | "sortOrder">
   ): Promise<PaginatedTasksResponse> {
     const query = buildTaskQuery(filters);
-    const response = await api.get(
-      `${apiRoutes.TASKS.BOARD_ARCHIVES(workspaceId)}${query}`,
-    );
+    const response = await api.get(`${apiRoutes.TASKS.BOARD_ARCHIVES(workspaceId)}${query}`);
     const payload = normalizeResponseData<Record<string, unknown>>(response);
-    const raw: TaskDto[] = Array.isArray(payload)
-      ? (payload as TaskDto[])
-      : ((payload?.tasks ?? []) as TaskDto[]);
+    const raw: TaskDto[] = Array.isArray(payload) ? (payload as TaskDto[]) : ((payload?.tasks ?? []) as TaskDto[]);
     return {
       tasks: raw.map(toIssue),
       total: typeof payload?.total === "number" ? payload.total : raw.length,
@@ -619,13 +532,9 @@ export const taskService = {
   },
 
   async getComments(workspaceId: string, taskId: string): Promise<TaskComment[]> {
-    const response = await api.get(
-      apiRoutes.TASKS.BOARD_TASK_COMMENTS(workspaceId, taskId),
-    );
+    const response = await api.get(apiRoutes.TASKS.BOARD_TASK_COMMENTS(workspaceId, taskId));
     const payload = normalizeResponseData<unknown>(response);
-    return (Array.isArray(payload) ? payload : []).map((comment) =>
-      toTaskComment(comment as TaskComment),
-    );
+    return (Array.isArray(payload) ? payload : []).map((comment) => toTaskComment(comment as TaskComment));
   },
 
   async createComment(
@@ -633,34 +542,55 @@ export const taskService = {
     taskId: string,
     content: string,
     parentId?: string | null,
-    mentions?: string[],
+    mentions?: string[]
   ): Promise<TaskComment> {
     const body: Record<string, unknown> = { content };
     if (parentId) body.parentId = parentId;
     if (mentions?.length) body.mentions = mentions;
-    const response = await api.post(
-      apiRoutes.TASKS.BOARD_TASK_COMMENTS(workspaceId, taskId),
-      body,
-    );
+    const response = await api.post(apiRoutes.TASKS.BOARD_TASK_COMMENTS(workspaceId, taskId), body);
     return toTaskComment(normalizeResponseData<TaskComment>(response));
   },
 
-  async updateComment(
-    workspaceId: string,
-    taskId: string,
-    commentId: string,
-    content: string,
-  ): Promise<TaskComment> {
-    const response = await api.patch(
-      apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId),
-      { content },
-    );
+  async updateComment(workspaceId: string, taskId: string, commentId: string, content: string): Promise<TaskComment> {
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId), { content });
     return toTaskComment(normalizeResponseData<TaskComment>(response));
   },
 
   async deleteComment(workspaceId: string, taskId: string, commentId: string): Promise<void> {
-    await api.delete(
-      apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId),
-    );
+    await api.delete(apiRoutes.TASKS.BOARD_TASK_COMMENT(workspaceId, taskId, commentId));
   },
+// Task service object (legacy interface for components using taskService.xxx)
+// import * as taskQueries from "./taskQueries";
+// import * as taskMutations from "./taskMutations";
+
+// export const taskService = {
+//   // Board tasks
+//   getBoardTasks: taskQueries.getBoardTasks,
+//   listBoardTasks: taskQueries.getBoardTasks,
+//   getBoardTaskDetail: taskQueries.getBoardTaskDetail,
+//   createBoardTask: taskMutations.createBoardTask,
+//   updateBoardTask: taskMutations.updateBoardTask,
+//   moveBoardTask: taskMutations.moveBoardTask,
+//   reorderBoardTask: taskMutations.reorderBoardTask,
+//   deleteBoardTask: taskMutations.deleteBoardTask,
+//   archiveBoardTask: taskMutations.archiveBoardTask,
+//   restoreBoardTask: taskMutations.restoreBoardTask,
+  
+//   // Labels
+//   replaceTaskLabels: taskMutations.replaceTaskLabels,
+  
+//   // Activities
+//   getTaskActivities: taskQueries.getTaskActivities,
+  
+//   // Archived tasks
+//   getArchivedTasks: taskQueries.getArchivedTasks,
+  
+//   // Comments
+//   getComments: taskQueries.getComments,
+//   createComment: taskMutations.createComment,
+//   updateComment: taskMutations.updateComment,
+//   deleteComment: taskMutations.deleteComment,
+  
+//   // Utility
+//   buildTaskQuery: taskQueries.buildTaskQuery,
 };

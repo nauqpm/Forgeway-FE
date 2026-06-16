@@ -1,4 +1,4 @@
-import api from '@/config/api';
+import api from '@/lib/axiosIns';
 import type {
   LoginRequest,
   LoginResponse,
@@ -20,19 +20,13 @@ export const loginAPI = async (data: LoginRequest): Promise<LoginResponse> => {
   return response.data;
 };
 
-export const registerAPI = async (
-  data: RegisterRequest,
-): Promise<RegisterResponse> => {
+export const registerAPI = async (data: RegisterRequest): Promise<RegisterResponse> => {
   const response = await api.post<RegisterResponse>('/auth/register', data);
   return response.data;
 };
 
 export const logoutAPI = async (): Promise<{ message: string }> => {
-  const response = await api.post<{ message: string }>(
-    '/auth/logout',
-    {},
-    { withCredentials: true },
-  );
+  const response = await api.post<{ message: string }>('/auth/logout', {}, { withCredentials: true });
   return response.data;
 };
 
@@ -43,9 +37,7 @@ export const getCurrentUserAPI = async (): Promise<AuthUser> => {
   return response.data;
 };
 
-export const updateProfileAPI = async (
-  data: UpdateProfileRequest,
-): Promise<AuthUser> => {
+export const updateProfileAPI = async (data: UpdateProfileRequest): Promise<AuthUser> => {
   const response = await api.put<AuthUser>('/auth/update', data, {
     withCredentials: true,
   });
@@ -57,29 +49,19 @@ interface EmailCheckResponse {
   googleId?: string;
 }
 
-export const checkEmailAPI = async (
-  email: string,
-): Promise<EmailCheckResponse> => {
+export const checkEmailAPI = async (email: string): Promise<EmailCheckResponse> => {
   const response = await api.get<EmailCheckResponse>('/auth/check-email', {
     params: { email },
   });
   return response.data;
 };
 
-export const requestPasswordResetAPI = async (
-  data: ForgotPasswordRequest,
-): Promise<PasswordResetResponse> => {
-  const response = await api.post<PasswordResetResponse>(
-    '/auth/request-password-reset',
-    data,
-  );
+export const requestPasswordResetAPI = async (data: ForgotPasswordRequest): Promise<PasswordResetResponse> => {
+  const response = await api.post<PasswordResetResponse>('/auth/request-password-reset', data);
   return response.data;
 };
 
-export const verifyOtpAPI = async (
-  email: string,
-  otp: string,
-): Promise<VerifyOtpResponse> => {
+export const verifyOtpAPI = async (email: string, otp: string): Promise<VerifyOtpResponse> => {
   const response = await api.post<VerifyOtpResponse>('/auth/verify-otp', {
     email,
     otp,
@@ -87,20 +69,12 @@ export const verifyOtpAPI = async (
   return response.data;
 };
 
-export const resetPasswordWithGrantAPI = async (
-  data: ResetPasswordByGrantRequest,
-): Promise<PasswordResetResponse> => {
-  const response = await api.post<PasswordResetResponse>(
-    '/auth/reset-password',
-    data,
-  );
+export const resetPasswordWithGrantAPI = async (data: ResetPasswordByGrantRequest): Promise<PasswordResetResponse> => {
+  const response = await api.post<PasswordResetResponse>('/auth/reset-password', data);
   return response.data;
 };
 
-export const verifyEmailAPI = async (
-  email: string,
-  otp: string,
-): Promise<{ message: string }> => {
+export const verifyEmailAPI = async (email: string, otp: string): Promise<{ message: string }> => {
   const response = await api.post<{ message: string }>('/auth/verify-email', {
     email,
     code: otp,
@@ -108,13 +82,8 @@ export const verifyEmailAPI = async (
   return response.data;
 };
 
-export const resendVerifyEmailAPI = async (
-  email: string,
-): Promise<{ message: string }> => {
-  const response = await api.post<{ message: string }>(
-    '/auth/resend-verification',
-    { email },
-  );
+export const resendVerifyEmailAPI = async (email: string): Promise<{ message: string }> => {
+  const response = await api.post<{ message: string }>('/auth/resend-verification', { email });
   return response.data;
 };
 

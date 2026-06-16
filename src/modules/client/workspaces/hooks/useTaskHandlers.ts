@@ -1,8 +1,9 @@
-import { useRef } from "react";
+import { useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
 import { toast } from "react-hot-toast";
+import { extractApiError } from "@/common/utils/apiError";
 
 interface CreateIssueForm {
   title: string;
@@ -54,51 +55,53 @@ export const useTaskHandlers = ({
   const queryClient = useQueryClient();
   const isCreatingRef = useRef(false);
 
-  const updateIssueDirectly = (
-    id: string,
-    updates: Partial<Issue>
-  ) => {
-    const existingIssue = issues.find((issue) => issue.id === id);
-    if (!existingIssue) {
-      toast.error("No task");
-      return;
-    }
-    setIssues(
-      issues.map((i) =>
-        i.id === id
-          ? { ...i, ...updates }
-          : i
-        )
-    );
-    taskService.updateBoardTask(workspaceId, id, updates)
-      .then((savedIssue) => {
-        const nextIssue = (() => {
-          const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
-          return isObjectId && updates.status
-            ? { ...savedIssue, status: updates.status as string }
-            : savedIssue;
-        })();
+  const updateIssueDirectly = useCallback(
+    (id: string, updates: Partial<Issue>) => {
+      const existingIssue = issues.find((issue) => issue.id === id);
+      if (!existingIssue) {
+        toast.error("No task");
+        return;
+      }
+      
+      // Optimistic update
+      setIssues((current) =>
+        current.map((i) => (i.id === id ? { ...i, ...updates } : i))
+      );
+      
+      taskService.updateBoardTask(workspaceId, id, updates)
+        .then((savedIssue: Issue) => {
+          const nextIssue = (() => {
+            const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
+            return isObjectId && updates.status
+              ? { ...savedIssue, status: updates.status as string }
+              : savedIssue;
+          })();
 
-        setIssues((current) =>
-          current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
-        );
-        queryClient.setQueriesData<Issue[]>(
-          { queryKey: ["tasks", workspaceId] },
-          (current) =>
-            Array.isArray(current)
-              ? current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
-              : current,
-        );
-        queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
-        if (savedIssue.key) {
-          queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
-        }
-      })
-      .catch((error) => {
-        setIssues(issues);
-        toast.error(error?.response?.data?.message || "Could not update task");
-      });
-  };
+          setIssues((current) =>
+            current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
+          );
+          queryClient.setQueriesData<Issue[]>(
+            { queryKey: ["tasks", workspaceId] },
+            (current) =>
+              Array.isArray(current)
+                ? current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
+                : current,
+          );
+          queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
+          if (savedIssue.key) {
+            queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
+          }
+        })
+        .catch((error: unknown) => {
+          // Rollback on error
+          setIssues((current) =>
+            current.map((i) => (i.id === id ? existingIssue : i))
+          );
+          toast.error(extractApiError(error, "Could not update task"));
+        });
+    },
+    [issues, queryClient, workspaceId, setIssues]
+  );
 
   const handleCreateIssue = async (
     e: React.FormEvent,
@@ -123,8 +126,8 @@ export const useTaskHandlers = ({
         columnId: null,
       });
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not create task");
+    } catch (error) {
+      toast.error(extractApiError(error, "Could not create task"));
     } finally {
       isCreatingRef.current = false;
     }
@@ -168,8 +171,8 @@ export const useTaskHandlers = ({
       if (savedIssue.key) {
         queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
       }
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not update task");
+    } catch (error) {
+      toast.error(extractApiError(error, "Could not update task"));
     }
   };
 
@@ -197,8 +200,8 @@ export const useTaskHandlers = ({
       });
       setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not create task");
+    } catch (error) {
+      toast.error(extractApiError(error, "Could not create task"));
     } finally {
       isCreatingRef.current = false;
     }
@@ -224,8 +227,8 @@ export const useTaskHandlers = ({
       });
       setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Could not create task');
+    } catch (error) {
+      toast.error(extractApiError(error, 'Could not create task'));
     } finally {
       isCreatingRef.current = false;
     }
@@ -246,8 +249,8 @@ export const useTaskHandlers = ({
       });
       setIssues((current) => upsertIssue(current, issue));
       queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not create work item");
+    } catch (error) {
+      toast.error(extractApiError(error, "Could not create work item"));
     } finally {
       isCreatingRef.current = false;
     }

@@ -1,7 +1,5 @@
-import { ForYouPage } from "@/modules/client/for-you";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: 'For You' };
-
-export default function Page() {
-  return <ForYouPage />;
+export default function ForYouPage() {
+  redirect("/my-tasks");
 }

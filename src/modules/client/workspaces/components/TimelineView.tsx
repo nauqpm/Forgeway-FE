@@ -25,10 +25,13 @@ import {
 /* ─────────────────────────────── Types ──────────────────────────────────── */
 
 interface TimelineViewProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issues: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sprints: any[];
   dependencies?: TaskDependency[];
   onUpdateIssueDate: (id: string, start: string, end: string) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onClickTask?: (issue: any) => void;
   onCreateDependency?: (fromTaskId: string, toTaskId: string) => void;
   canMoveTask?: boolean;
@@ -285,7 +288,7 @@ export default function TimelineView({
   const toggleCollapse = useCallback((id: string) => {
     setCollapsed(prev => {
       const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) { n.delete(id); } else { n.add(id); }
       return n;
     });
   }, []);

@@ -2,6 +2,7 @@
 import { Mark, mergeAttributes } from "@tiptap/core";
 
 export interface CommentOptions {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   HTMLAttributes: Record<string, any>;
 }
 

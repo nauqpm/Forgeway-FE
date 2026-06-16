@@ -28,7 +28,9 @@ interface CommentsSidebarProps {
   openCount: number;
   onSetActiveCommentId: (id: string | null) => void;
   onSetShowResolved: (show: boolean) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onAddComment: (content: string, inlineId?: string) => Promise<any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onReply: (parentId: string, content: string) => Promise<any>;
   onEdit: (commentId: string, content: string) => Promise<void>;
   onDelete: (commentId: string) => Promise<void>;

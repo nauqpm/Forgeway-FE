@@ -14,7 +14,7 @@ import StatusPicker from "@/common/components/StatusPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import type { Issue } from "../types/issue.type";
 import {
@@ -28,6 +28,7 @@ import TaskDetailFields from "./TaskDetailFields";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issue: TaskDetailResponse | any;
   workspaceId: string;
   workspaceMembers?: WorkspaceMember[];
@@ -35,9 +36,9 @@ interface TaskDetailDrawerProps {
   boardColumns?: TaskStatusColumn[];
   workspaceTemplate?: "kanban" | "scrum";
   onClose: () => void;
-  onUpdateIssue?: (updatedIssue: any) => void;
+  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
-  onArchiveIssue?: (issue: any) => void;
+  onArchiveIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   /** Embedded in split list view: no overlay, no fixed positioning */
   embedded?: boolean;
@@ -296,14 +297,18 @@ export default function TaskDetailDrawer({
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #EAEAEA; border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #C8C7C4; }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
         .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
-      `}} />
+      `,
+        }}
+      />
     </>
   );
 }

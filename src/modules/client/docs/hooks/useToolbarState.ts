@@ -43,6 +43,20 @@ const hasStoredMark = (editor: Editor, markName: string) => {
   return storedMarks?.some((mark) => mark.type.name === markName) ?? false;
 };
 
+const isInlineMarkActive = (editor: Editor, markName: string) => {
+  const { selection, storedMarks } = editor.state;
+
+  // When the selection is collapsed, an explicit storedMarks value means
+  // ProseMirror has already decided what the next typed character should use.
+  // We prefer that over contextual isActive() so the toolbar turns off
+  // immediately after toggling a mark off at the caret.
+  if (selection.empty && storedMarks !== null) {
+    return hasStoredMark(editor, markName);
+  }
+
+  return editor.isActive(markName);
+};
+
 const getBlockType = (editor: Editor): BlockType => {
   if (editor.isActive("heading", { level: 1 })) return "h1";
   if (editor.isActive("heading", { level: 2 })) return "h2";
@@ -62,10 +76,10 @@ const readToolbarState = (editor: Editor | null): ToolbarState => {
   if (!editor) return DEFAULT_TOOLBAR_STATE;
 
   return {
-    bold: editor.isActive("bold") || hasStoredMark(editor, "bold"),
-    italic: editor.isActive("italic") || hasStoredMark(editor, "italic"),
-    underline: editor.isActive("underline") || hasStoredMark(editor, "underline"),
-    strike: editor.isActive("strike") || hasStoredMark(editor, "strike"),
+    bold: isInlineMarkActive(editor, "bold"),
+    italic: isInlineMarkActive(editor, "italic"),
+    underline: isInlineMarkActive(editor, "underline"),
+    strike: isInlineMarkActive(editor, "strike"),
     bulletList: editor.isActive("bulletList"),
     orderedList: editor.isActive("orderedList"),
     taskList: editor.isActive("taskList"),

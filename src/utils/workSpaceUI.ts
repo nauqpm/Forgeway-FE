@@ -1,5 +1,4 @@
 import {
-  Users,
   FolderKanban,
   BookOpen,
   LayoutDashboard,

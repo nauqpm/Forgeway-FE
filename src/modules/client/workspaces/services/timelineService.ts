@@ -1,8 +1,8 @@
-import api from '@/config/api';
-import { apiRoutes } from '@/config/apiRoutes';
-import { Issue } from '../types/issue.type';
+import api from "@/lib/axiosIns";
+import { apiRoutes } from "@/config/apiRoutes";
+import { Issue } from "../types/issue.type";
 
-export type DependencyType = 'blocks' | 'is_blocked_by' | 'relates_to';
+export type DependencyType = "blocks" | "is_blocked_by" | "relates_to";
 
 export interface TaskDependency {
   id: string;
@@ -23,6 +23,7 @@ export interface TimelineHierarchy {
 }
 
 function normalizePayload<T>(payload: unknown): T {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = payload as any;
   return (p?.data?.data ?? p?.data ?? p) as T;
 }
@@ -42,11 +43,10 @@ export const timelineService = {
    * Used to render arrows on the Gantt chart.
    */
   async getWorkspaceDependencies(workspaceId: string): Promise<TaskDependency[]> {
-    const response = await api.get(
-      apiRoutes.TASKS.WORKSPACE_DEPENDENCIES(workspaceId),
-    );
+    const response = await api.get(apiRoutes.TASKS.WORKSPACE_DEPENDENCIES(workspaceId));
     const raw = normalizePayload<TaskDependency[] | { items: TaskDependency[] }>(response);
-    return Array.isArray(raw) ? raw : (raw as any).items ?? [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return Array.isArray(raw) ? raw : ((raw as any).items ?? []);
   },
 
   /**
@@ -58,23 +58,16 @@ export const timelineService = {
     workspaceId: string,
     fromTaskId: string,
     toTaskId: string,
-    type: DependencyType = 'blocks',
+    type: DependencyType = "blocks"
   ): Promise<TaskDependency> {
-    const response = await api.post(
-      apiRoutes.TASKS.TASK_DEPENDENCIES(workspaceId, fromTaskId),
-      { toTaskId, type },
-    );
+    const response = await api.post(apiRoutes.TASKS.TASK_DEPENDENCIES(workspaceId, fromTaskId), { toTaskId, type });
     return normalizePayload<TaskDependency>(response);
   },
 
   /**
    * Delete a dependency by its ID.
    */
-  async deleteDependency(
-    workspaceId: string,
-    taskId: string,
-    depId: string,
-  ): Promise<void> {
+  async deleteDependency(workspaceId: string, taskId: string, depId: string): Promise<void> {
     await api.delete(apiRoutes.TASKS.TASK_DEPENDENCY(workspaceId, taskId, depId));
   },
 };

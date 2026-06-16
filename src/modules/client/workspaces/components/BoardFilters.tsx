@@ -9,6 +9,7 @@ import {
 type BoardFiltersProps = {
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   uniqueAssignees: any[];
   extraActions?: React.ReactNode;
 };

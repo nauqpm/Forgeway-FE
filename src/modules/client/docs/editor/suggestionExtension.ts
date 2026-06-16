@@ -96,19 +96,19 @@ export const SuggestionExtension = Extension.create({
   },
 
   addCommands() {
-    const extensionThis = this;
+    const storage = this.storage;
 
     return {
       setSuggestionMode:
         (active: boolean) =>
         () => {
-          extensionThis.storage.active = active;
+          storage.active = active;
           return true;
         },
       setSuggestionUser:
         (user: { id: string; name: string }) =>
         () => {
-          extensionThis.storage.user = user;
+          storage.user = user;
           return true;
         },
       acceptSuggestion:
@@ -117,6 +117,7 @@ export const SuggestionExtension = Extension.create({
           const { suggestInsert, suggestDelete } = state.schema.marks;
           if (!suggestInsert || !suggestDelete) return false;
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const actions: Array<{ type: "removeMark" | "delete"; from: number; to: number; markType?: any }> = [];
 
           state.doc.descendants((node, pos) => {
@@ -156,6 +157,7 @@ export const SuggestionExtension = Extension.create({
           const { suggestInsert, suggestDelete } = state.schema.marks;
           if (!suggestInsert || !suggestDelete) return false;
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const actions: Array<{ type: "removeMark" | "delete"; from: number; to: number; markType?: any }> = [];
 
           state.doc.descendants((node, pos) => {
@@ -193,7 +195,7 @@ export const SuggestionExtension = Extension.create({
   },
 
   addProseMirrorPlugins() {
-    const extensionThis = this;
+    const storage = this.storage;
     const pluginKey = new PluginKey("suggestionModePlugin");
 
     return [
@@ -202,21 +204,21 @@ export const SuggestionExtension = Extension.create({
         state: {
           init() {
             return {
-              active: extensionThis.storage.active,
-              user: extensionThis.storage.user,
+              active: storage.active,
+              user: storage.user,
             };
           },
-          apply(tr, value, oldState, newState) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          apply(_tr, _value, _oldState, _newState) {
             // Sync plugin state with extension storage
             return {
-              active: extensionThis.storage.active,
-              user: extensionThis.storage.user,
+              active: storage.active,
+              user: storage.user,
             };
           },
         },
         props: {
           handleKeyDown(view, event) {
-            const storage = extensionThis.storage;
             if (!storage.active || !storage.user.id) return false;
 
             if (event.key === "Backspace" || event.key === "Delete") {
@@ -228,7 +230,7 @@ export const SuggestionExtension = Extension.create({
 
               if (!suggestInsertType || !suggestDeleteType) return false;
 
-              let tr = state.tr;
+              const tr = state.tr;
 
               if (empty) {
                 const targetPos = isBackspace ? from - 1 : from;
@@ -306,7 +308,6 @@ export const SuggestionExtension = Extension.create({
           },
         },
         appendTransaction(transactions, oldState, newState) {
-          const storage = extensionThis.storage;
           if (!storage.active || !storage.user.id) return null;
 
           // Avoid processing our own appended transactions recursively
@@ -316,7 +317,7 @@ export const SuggestionExtension = Extension.create({
           const suggestInsertType = newState.schema.marks.suggestInsert;
           if (!suggestInsertType) return null;
 
-          let tr = newState.tr;
+          const tr = newState.tr;
           let modified = false;
 
           transactions.forEach((transaction) => {

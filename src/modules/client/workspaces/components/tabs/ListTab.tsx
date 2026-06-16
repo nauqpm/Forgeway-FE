@@ -14,7 +14,7 @@ import { Issue } from "../../types/issue.type";
 import { Filters } from "../../types/filter.type";
 import { VisibilityState } from "@tanstack/react-table";
 import { Sprint } from "../../types/sprint.type";
-import DataGridListView from "@/modules/admin/components/common/components/DataGridListView";
+import DataGridListView from "@/modules/shared/components/common/components/DataGridListView";
 import TaskDetailList from "../TaskDetailList";
 import BoardFilters from "../BoardFilters";
 
@@ -46,7 +46,9 @@ type ListTabProps = {
   listViewMode: "grid" | "split";
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   uniqueAssignees: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   members?: any[];
   boardColumns?: { id: string; name: string; order: number; mappedStatuses?: string[]; isDone?: boolean }[];
   setSelectedIssue: (issue: Issue | null) => void;

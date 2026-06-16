@@ -17,6 +17,7 @@ interface AnchoredCommentsRailProps {
   comments: PageComment[];
   activeCommentId: string | null;
   onSetActiveCommentId: (id: string | null) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onReply: (parentId: string, content: string) => Promise<any>;
   onEdit: (commentId: string, content: string) => Promise<void>;
   onDelete: (commentId: string) => Promise<void>;

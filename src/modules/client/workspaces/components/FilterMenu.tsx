@@ -14,10 +14,12 @@ type FilterAssignee = {
 interface FilterMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filters: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setFilters: (filters: any) => void;
-  density: 'default' | 'compact';
-  setDensity: (val: 'default' | 'compact') => void;
+  density: "compact" | "comfortable" | "spacious";
+  setDensity: (val: "compact" | "comfortable" | "spacious") => void;
   assignees: FilterAssignee[];
 }
 
@@ -27,6 +29,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
       if (e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         if (isOpen) onClose();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         else setFilters((prev: any) => ({ ...prev }));
       }
       if (e.key === 'Escape' && isOpen) {
@@ -53,6 +56,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
       .toUpperCase();
 
   const toggleArrayFilter = (key: string, value: string) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setFilters((prev: any) => {
       const arr = prev[key] || [];
       if (arr.includes(value)) {
@@ -64,6 +68,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
   };
 
   const clearFilters = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setFilters((prev: any) => ({
       ...prev,
       assignees: [],
@@ -160,9 +165,9 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
           <h5 className="text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wide">List density</h5>
           <div className="flex gap-2">
             <button
-              onClick={() => setDensity('default')}
+              onClick={() => setDensity('comfortable')}
               className={`flex-1 py-1.5 text-[0.8125rem] font-medium rounded-[6px] border transition-colors ${
-                density === 'default'
+                density === 'comfortable'
                   ? 'bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] border-[#2563EB]/20 text-[#1F6C9F] dark:text-[#93C5FD]'
                   : 'bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]'
               }`}

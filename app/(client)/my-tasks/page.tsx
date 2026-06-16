@@ -3,14 +3,18 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import {
-  CheckSquare, Filter, ArrowUpDown, Calendar, AlertCircle, Search,
-  ChevronDown, User, FolderKanban, LayoutGrid, List, ArrowRight,
-  Plus, SortAsc, Clock
+  CheckSquare,
+  Filter,
+  Search,
+  Calendar,
+  ArrowRight,
+  Plus,
+  SortAsc,
 } from "lucide-react";
 
 interface Task {
@@ -55,7 +59,7 @@ const statusConfig: Record<string, { color: string; bg: string; label: string }>
 type GroupBy = "status" | "project" | "priority" | "none";
 
 export default function MyTasksPage() {
-  usePageTitle('My Tasks');
+  usePageTitle("My Tasks");
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,21 +71,30 @@ export default function MyTasksPage() {
   const [sortBy, setSortBy] = useState<"priority" | "dueDate" | "updated">("priority");
 
   useEffect(() => {
-    if (!user?.id) { setLoading(false); return; }
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
     const fetchTasks = async () => {
       try {
         const res = await api.get(apiRoutes.TASKS.ASSIGNEE(user.id));
         setTasks(res.data);
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchTasks();
   }, [user?.id]);
 
   const priorityOrder: Record<string, number> = { highest: 0, high: 1, medium: 2, low: 3, lowest: 4 };
 
-  let filtered = tasks.filter(t => {
-    const matchSearch = !search || t.title.toLowerCase().includes(search.toLowerCase()) || t.key.toLowerCase().includes(search.toLowerCase());
+  const filtered = tasks.filter((t) => {
+    const matchSearch =
+      !search ||
+      t.title.toLowerCase().includes(search.toLowerCase()) ||
+      t.key.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "all" || t.status === filterStatus;
     const matchType = filterType === "all" || t.type === filterType;
     const matchPriority = filterPriority === "all" || t.priority === filterPriority;
@@ -98,20 +111,31 @@ export default function MyTasksPage() {
     return 0;
   });
 
-  const grouped = sorted.reduce((acc, task) => {
-    let key: string;
-    if (groupBy === "status") key = task.status || "todo";
-    else if (groupBy === "project") key = task.projectId?.name || "No Project";
-    else if (groupBy === "priority") key = task.priority || "medium";
-    else key = "all";
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(task);
-    return acc;
-  }, {} as Record<string, Task[]>);
+  const grouped = sorted.reduce(
+    (acc, task) => {
+      let key: string;
+      if (groupBy === "status") key = task.status || "todo";
+      else if (groupBy === "project") key = task.projectId?.name || "No Project";
+      else if (groupBy === "priority") key = task.priority || "medium";
+      else key = "all";
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(task);
+      return acc;
+    },
+    {} as Record<string, Task[]>
+  );
 
   const groupLabels: Record<string, string> = {
-    todo: "To Do", inprogress: "In Progress", review: "In Review", done: "Done", completed: "Completed",
-    highest: "Highest Priority", high: "High Priority", medium: "Medium Priority", low: "Low Priority", lowest: "Lowest Priority",
+    todo: "To Do",
+    inprogress: "In Progress",
+    review: "In Review",
+    done: "Done",
+    completed: "Completed",
+    highest: "Highest Priority",
+    high: "High Priority",
+    medium: "Medium Priority",
+    low: "Low Priority",
+    lowest: "Lowest Priority",
   };
 
   if (loading) return <LoadingSpinner />;
@@ -123,7 +147,10 @@ export default function MyTasksPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Tasks</h1>
           <p className="text-gray-500 dark:text-gray-400 text-sm mt-0.5">{tasks.length} tasks assigned to you</p>
         </div>
-        <Link href="/workspaces" className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors">
+        <Link
+          href="/workspaces"
+          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm transition-colors"
+        >
           Go to Workspaces
         </Link>
       </div>
@@ -134,27 +161,53 @@ export default function MyTasksPage() {
           {/* Search */}
           <div className="relative flex-1 min-w-[12.5rem]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tasks..." className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search tasks..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />
           </div>
 
           {/* Filter dropdowns */}
           <div className="flex flex-wrap items-center gap-2">
             <Filter className="w-4 h-4 text-gray-400" />
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
               <option value="all">All Status</option>
-              {Object.entries(statusConfig).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              {Object.entries(statusConfig).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v.label}
+                </option>
+              ))}
             </select>
-            <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
               <option value="all">All Types</option>
-              {Object.entries(typeConfig).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              {Object.entries(typeConfig).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v.label}
+                </option>
+              ))}
             </select>
-            <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
               <option value="all">All Priorities</option>
-              {Object.entries(priorityConfig).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+              {Object.entries(priorityConfig).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -165,8 +218,11 @@ export default function MyTasksPage() {
             <span className="text-xs text-gray-400 font-medium">Group:</span>
             <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5">
               {(["status", "project", "priority", "none"] as GroupBy[]).map((g) => (
-                <button key={g} onClick={() => setGroupBy(g)}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors capitalize ${groupBy === g ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}>
+                <button
+                  key={g}
+                  onClick={() => setGroupBy(g)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors capitalize ${groupBy === g ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"}`}
+                >
                   {g === "none" ? "None" : g}
                 </button>
               ))}
@@ -176,8 +232,12 @@ export default function MyTasksPage() {
           {/* Sort */}
           <div className="flex items-center gap-2">
             <SortAsc className="w-4 h-4 text-gray-400" />
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)}
-              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+            <select
+              value={sortBy}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            >
               <option value="priority">Sort: Priority</option>
               <option value="dueDate">Sort: Due Date</option>
               <option value="updated">Sort: Updated</option>
@@ -192,19 +252,29 @@ export default function MyTasksPage() {
             <CheckSquare className="w-8 h-8 text-indigo-400" />
           </div>
           <p className="text-gray-500 dark:text-gray-400 font-medium text-lg">No tasks assigned</p>
-          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">Tasks you create or are assigned to will appear here</p>
-          <Link href="/workspaces" className="mt-4 inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors">
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+            Tasks you create or are assigned to will appear here
+          </p>
+          <Link
+            href="/workspaces"
+            className="mt-4 inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 text-sm font-medium transition-colors"
+          >
             <Plus className="w-4 h-4" /> Go to Workspaces
           </Link>
         </div>
       ) : groupBy === "none" ? (
         <div className="space-y-2">
-          {sorted.map((task) => <TaskRow key={task._id} task={task} />)}
+          {sorted.map((task) => (
+            <TaskRow key={task._id} task={task} />
+          ))}
         </div>
       ) : (
         <div className="space-y-6">
           {Object.entries(grouped).map(([key, groupTasks]) => (
-            <div key={key} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+            <div
+              key={key}
+              className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden"
+            >
               <div className="flex items-center gap-3 px-5 py-3.5 bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                 {groupBy === "status" && statusConfig[key] && (
                   <span className={`w-2.5 h-2.5 rounded-full ${statusConfig[key].bg}`} />
@@ -212,13 +282,15 @@ export default function MyTasksPage() {
                 {groupBy === "priority" && priorityConfig[key] && (
                   <span className={`w-2.5 h-2.5 rounded-full ${priorityConfig[key].bg}`} />
                 )}
-                <h2 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">
-                  {groupLabels[key] || key}
-                </h2>
-                <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">{groupTasks.length}</span>
+                <h2 className="font-semibold text-gray-800 dark:text-gray-200 text-sm">{groupLabels[key] || key}</h2>
+                <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full font-medium">
+                  {groupTasks.length}
+                </span>
               </div>
               <div className="divide-y divide-gray-50 dark:divide-gray-800">
-                {groupTasks.map((task) => <TaskRow key={task._id} task={task} />)}
+                {groupTasks.map((task) => (
+                  <TaskRow key={task._id} task={task} />
+                ))}
               </div>
             </div>
           ))}
@@ -231,10 +303,14 @@ export default function MyTasksPage() {
 function TaskRow({ task }: { task: Task }) {
   const type = typeConfig[task.type] || typeConfig.task;
   const priority = priorityConfig[task.priority] || priorityConfig.medium;
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "done" && task.status !== "completed";
+  const isOverdue =
+    task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "done" && task.status !== "completed";
 
   return (
-    <Link href={`/tasks/${task._id}`} className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
+    <Link
+      href={`/tasks/${task._id}`}
+      className="flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
+    >
       {/* Priority dot */}
       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${priority.bg}`} title={priority.label} />
 
@@ -248,14 +324,20 @@ function TaskRow({ task }: { task: Task }) {
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono text-gray-400">{task.key}</span>
           {task.projectId && (
-            <span className="text-[0.6875rem] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-medium">{task.projectId.key}</span>
+            <span className="text-[0.6875rem] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded font-medium">
+              {task.projectId.key}
+            </span>
           )}
         </div>
-        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate mt-0.5 group-hover:text-indigo-600 transition-colors">{task.title}</p>
+        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate mt-0.5 group-hover:text-indigo-600 transition-colors">
+          {task.title}
+        </p>
         {task.labels.length > 0 && (
           <div className="flex items-center gap-1 mt-1">
             {task.labels.slice(0, 3).map((label) => (
-              <span key={label} className="text-[0.625rem] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">{label}</span>
+              <span key={label} className="text-[0.625rem] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">
+                {label}
+              </span>
             ))}
           </div>
         )}
@@ -263,12 +345,16 @@ function TaskRow({ task }: { task: Task }) {
 
       {/* Story points */}
       {task.storyPoints && (
-        <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-medium flex-shrink-0">{task.storyPoints} pts</span>
+        <span className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded font-medium flex-shrink-0">
+          {task.storyPoints} pts
+        </span>
       )}
 
       {/* Due date */}
       {task.dueDate && (
-        <div className={`flex items-center gap-1 text-xs flex-shrink-0 ${isOverdue ? "text-red-600 font-medium" : "text-gray-400"}`}>
+        <div
+          className={`flex items-center gap-1 text-xs flex-shrink-0 ${isOverdue ? "text-red-600 font-medium" : "text-gray-400"}`}
+        >
           <Calendar className="w-3.5 h-3.5" />
           {new Date(task.dueDate).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
         </div>

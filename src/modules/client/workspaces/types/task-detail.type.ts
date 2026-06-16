@@ -1,6 +1,21 @@
 import type { TaskCover } from "./task-cover.type";
 import type { TaskLabel } from "./label.type";
 
+export interface Comment {
+  id: string;
+  content: string;
+  author?: TaskDetailUser;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Subtask {
+  id: string;
+  title: string;
+  completed?: boolean;
+  assigneeId?: string;
+}
+
 export interface TaskDetailUser {
   id?: string;
   fullName?: string;
@@ -63,8 +78,8 @@ export interface TaskDetailResponse {
   version?: number;
 
   // Frontend-specific fields currently expected by the UI Drawer
-  comments?: any[];
-  subtasks?: any[];
+  comments?: Comment[];
+  subtasks?: Subtask[];
   timeLogged?: number;
   timeEstimated?: string;
   startDate?: string;

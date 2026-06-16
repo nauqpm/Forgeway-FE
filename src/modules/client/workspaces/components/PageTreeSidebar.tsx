@@ -99,6 +99,7 @@ export default function PageTreeSidebar({ initialData, workspaceId }: { initialD
     if (over && active.id !== over.id) {
       const newItems = JSON.parse(JSON.stringify(items));
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const findNodeArrayAndIndex = (nodes: any[], id: string): [any[], number] | null => {
         for (let i = 0; i < nodes.length; i++) {
           if (nodes[i].id === id) return [nodes, i];

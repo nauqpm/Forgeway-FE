@@ -19,6 +19,7 @@ interface PreviewData {
   totalTasks: number;
   completedTasks: number;
   incompleteTasks: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   incompleteTaskList: any[];
 }
 

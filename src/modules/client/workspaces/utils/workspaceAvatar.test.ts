@@ -30,5 +30,4 @@ const updated = updateWorkspaceAvatarInList(workspaces, "2", "new-2");
 assert.notEqual(updated, workspaces);
 assert.equal(updated[0], workspaces[0]);
 assert.deepEqual(updated[1], { _id: "2", name: "Two", avatar: "new-2" });
-
-console.log("workspaceAvatar tests passed");
+// Tests passed

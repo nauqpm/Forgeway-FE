@@ -1,7 +1,7 @@
 // Service managing all interactions related to document page comments,
 // including API calls to fetch, create, reply, edit, delete, and resolve comments,
 // providing a simple interface for components without direct API handling.
-import api from '@/common/services/api.service';
+import api from '@/lib/axiosIns';
 import { apiRoutes } from '@/config/apiRoutes';
 
 // ──────────────────────────────────────────────────────────────

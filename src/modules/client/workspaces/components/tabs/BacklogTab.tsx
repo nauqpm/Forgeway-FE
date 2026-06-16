@@ -2,7 +2,7 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Pencil, Trash2 } from "lucide-react";
 import AssigneePicker, { toAssigneePickerUsers } from "../../../../../common/components/AssigneePicker";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
@@ -12,50 +12,57 @@ import TypePicker from "@/common/components/TypePicker";
 import { compareIssueRank } from "../../utils/dragUtils";
 import type { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
+import type { Issue } from "../../types/issue.type";
+import type { Workspace } from "../../types/workspace.type";
+import type { Filters } from "../../types/filter.type";
+import type { AssigneePickerUser } from "../../../../../common/components/AssigneePicker";
 
 type BacklogTabProps = {
   data: {
-    issues: any[];
-    filteredIssues: any[];
+    issues: Issue[];
+    filteredIssues: Issue[];
     columns?: BoardColumn[];
-    sprints: any[];
-    uniqueAssignees: any[];
+    sprints: Sprint[];
+    uniqueAssignees: AssigneePickerUser[];
     selectedTaskIds: string[];
-    workspace: any;
+    workspace: Workspace;
   };
 
   ui: {
-    density: any;
-    filters: any;
+    density: "compact" | "comfortable" | "spacious";
+    filters: Filters;
     isFilterOpen: boolean;
-    newIssueForm: any;
+    newIssueForm: { title: string; sprintId?: string | null };
   };
 
   actions: {
-    handleBacklogDragEnd: any;
-    handleBacklogDragStart?: any;
+    handleBacklogDragEnd: () => void;
+    handleBacklogDragStart?: () => void;
 
-    setIssues: any;
+    setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
 
-    setDensity: any;
-    setFilters: any;
+    setDensity: React.Dispatch<React.SetStateAction<"compact" | "comfortable" | "spacious">>;
+    setFilters: React.Dispatch<React.SetStateAction<Filters>>;
 
-    setIsFilterOpen: any;
+    setIsFilterOpen: React.Dispatch<React.SetStateAction<boolean>>;
 
-    toggleTaskSelection: any;
-    toggleSprintSelection: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    toggleTaskSelection: (taskId: string, e?: any) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    toggleSprintSelection: (taskIds: string[], e?: any) => void;
 
-    updateIssueDirectly: any;
+    updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
 
-    setSelectedIssue: any;
+    setSelectedIssue: (issue: Issue | null) => void;
 
-    setNewIssueForm: any;
-    setShowCreateIssue: any;
+    setNewIssueForm: React.Dispatch<React.SetStateAction<{ title: string; sprintId?: string | null }>>;
+    setShowCreateIssue: React.Dispatch<React.SetStateAction<boolean>>;
 
-    handleCreateSprint: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    handleCreateSprint: (name?: any) => void;
 
-    setEditingSprint: any;
-    setIsSprintModalOpen: any;
+    setEditingSprint: React.Dispatch<React.SetStateAction<Sprint | null>>;
+    setIsSprintModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 
     handleStartSprint: (sprintId: string) => void;
     handleCompleteSprint: (sprintId: string) => void;
@@ -201,6 +208,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     });
   }, [uniqueAssignees, workspaceMembers]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getReadonlyAssignee = (issue: any): AssigneeInfo | null => {
     const assigneeId = normalizeObjectId(issue.assigneeId ?? issue.assignee);
     if (!assigneeId || assigneeId === "U") return null;
@@ -224,6 +232,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     };
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderReadonlyAssignee = (issue: any) => {
     const assignee = getReadonlyAssignee(issue);
 
@@ -256,6 +265,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
 
   const issuesBySprintId = useMemo(() => {
     const assignedIssueIds = new Set<string>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const next = new Map<string | null, any[]>();
 
     sprints.forEach((sprint) => {
@@ -283,6 +293,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
     return next;
   }, [filteredIssues, sprints]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getSprintIssues = (sprint: any) => issuesBySprintId.get(sprint.id ?? sprint._id) ?? [];
   const backlogIssues = issuesBySprintId.get(null) ?? [];
 
@@ -520,7 +531,9 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                         onChange={uid => updateIssueDirectly(issue.id, {
                                           assigneeId: uid,
                                           assignee: uid ?? "U",
+                                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                           assigneeDisplayName: uid ? workspaceMembers.find((m: any) => m.id === uid)?.name ?? uid : "Unassigned",
+                                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                           assigneeAvatar: uid ? workspaceMembers.find((m: any) => m.id === uid)?.avatar : undefined,
                                         })}
                                         placement="auto"
@@ -742,7 +755,9 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                       onChange={uid => updateIssueDirectly(issue.id, {
                                         assigneeId: uid,
                                         assignee: uid ?? "U",
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                         assigneeDisplayName: uid ? workspaceMembers.find((m: any) => m.id === uid)?.name ?? uid : "Unassigned",
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                         assigneeAvatar: uid ? workspaceMembers.find((m: any) => m.id === uid)?.avatar : undefined,
                                       })}
                                       placement="bottom"

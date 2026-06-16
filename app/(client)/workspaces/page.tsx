@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import LoadingSpinner from "@/modules/admin/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { BookOpen, Plus, Globe, Lock, ChevronRight, Columns, Repeat } from "lucide-react";
 import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
@@ -61,6 +61,7 @@ export default function WorkspacesPage() {
     const socket = realtimeSocketClient.getSocket();
     if (!socket) return;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleWorkspaceCreated = (payload: any) => {
       if (payload.type === SOCKET_EVENTS.WORKSPACE_CREATED) {
         const newWorkspace = payload.data?.workspace;
@@ -76,6 +77,7 @@ export default function WorkspacesPage() {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleWorkspaceDeleted = (payload: any) => {
       const workspaceId = payload.data?.workspaceId ?? payload.workspaceId;
       if (workspaceId) {

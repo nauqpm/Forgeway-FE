@@ -56,7 +56,8 @@ export const Indent = Extension.create({
         ({ tr, state, commands }) => {
           const { selection } = state;
           let hasUpdated = false;
-          tr.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          tr.doc.nodesBetween(selection.from, selection.to, (node, _pos) => {
             if (this.options.types.includes(node.type.name)) {
               const currentIndent = node.attrs.indent || 0;
               const nextIndent = Math.min(this.options.maxIndent, currentIndent + 1);
@@ -71,7 +72,8 @@ export const Indent = Extension.create({
         ({ tr, state, commands }) => {
           const { selection } = state;
           let hasUpdated = false;
-          tr.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          tr.doc.nodesBetween(selection.from, selection.to, (node, _pos) => {
             if (this.options.types.includes(node.type.name)) {
               const currentIndent = node.attrs.indent || 0;
               const nextIndent = Math.max(this.options.minIndent, currentIndent - 1);

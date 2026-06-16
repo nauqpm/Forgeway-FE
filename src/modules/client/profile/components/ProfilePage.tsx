@@ -72,6 +72,7 @@ export function ProfilePage() {
           <Key className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
           Password
         </h2>
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         {user?.ssoProvider === 'google' || (user as any)?.googleId || (profile as any)?.ssoProvider === 'google' || (profile as any)?.googleId ? (
           <div className="p-3 rounded-[6px] bg-[#F9F9F8] dark:bg-[#2A2A2A] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             Your account is linked with Google. Password management is handled directly through your Google account.

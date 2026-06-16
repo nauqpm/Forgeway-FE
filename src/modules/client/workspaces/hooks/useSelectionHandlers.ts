@@ -38,7 +38,8 @@ export const useSelectionHandlers = ({
   const handleBulkStatusChange = (newStatus: string) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, status: newStatus } : i));
     selectedTaskIds.forEach((taskId) => {
-      taskService.updateBoardTask(workspaceId, taskId, { status: newStatus } as any).catch(() => {});
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      taskService.updateBoardTask(workspaceId, taskId, { status: newStatus } as any).catch(console.error);
     });
     setSelectedTaskIds([]);
   };
@@ -46,7 +47,8 @@ export const useSelectionHandlers = ({
   const handleBulkMoveSprint = (sprintId: string | null) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, sprintId } : i));
     selectedTaskIds.forEach((taskId) => {
-      taskService.updateBoardTask(workspaceId, taskId, { sprintId } as any).catch(() => {});
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      taskService.updateBoardTask(workspaceId, taskId, { sprintId } as any).catch(console.error);
     });
     setSelectedTaskIds([]);
   };
@@ -56,7 +58,7 @@ export const useSelectionHandlers = ({
     setIssues(issues.filter((i) => !ids.includes(i.id)));
     setSelectedTaskIds([]);
     ids.forEach((taskId) => {
-      taskService.deleteBoardTask(workspaceId, taskId).catch(() => {});
+      taskService.deleteBoardTask(workspaceId, taskId).catch(console.error);
     });
   };
 

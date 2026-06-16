@@ -1,8 +1,9 @@
-import api from "@/common/services/api.service";
+import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { Workspace } from "../types/workspace.type";
 import type { WorkspaceSampleAvatar } from "../utils/workspaceAvatar";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalize = <T>(res: any): T => res?.data?.data ?? res?.data ?? res;
 
 export interface UpdateWorkspaceInput {

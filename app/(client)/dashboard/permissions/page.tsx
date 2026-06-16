@@ -1,5 +1,5 @@
 import { AdminGuard } from "@/common/components/AdminGuard";
-import { Permissions } from "@/modules/admin";
+import { Permissions } from "@/modules/shared";
 
 export const metadata = { title: 'Permissions' };
 

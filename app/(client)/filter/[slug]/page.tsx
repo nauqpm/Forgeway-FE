@@ -3,21 +3,19 @@
 import { use, useState, useRef, useEffect } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { 
-  CheckCircle2, 
-  CircleDashed, 
-  Clock, 
+  CheckCircle2,
+  CircleDashed,
   Search,
   ChevronDown,
   LayoutList,
   LayoutGrid,
-  Share,
   Star,
   MoreHorizontal,
-  X,
   Sparkles
 } from "lucide-react";
 
 // Hook to detect click outside
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function useOnClickOutside(ref: React.RefObject<any>, handler: (event: MouseEvent | TouchEvent) => void) {
   useEffect(() => {
     const listener = (event: MouseEvent | TouchEvent) => {
@@ -439,7 +437,7 @@ export default function FilterPage({ params }: { params: Promise<{ slug: string 
           {filteredIssues.length === 0 && (
             <div className="flex flex-col items-center justify-center py-24 text-gray-500">
               <Search className="w-16 h-16 text-gray-200 mb-4" />
-              <p className="text-lg font-medium text-gray-900 dark:text-white">There's nothing matching your search</p>
+              <p className="text-lg font-medium text-gray-900 dark:text-white">There&apos;s nothing matching your search</p>
               <p className="text-sm mt-1 text-gray-500 dark:text-gray-400">Try adjusting your filters or clearing them completely.</p>
             </div>
           )}

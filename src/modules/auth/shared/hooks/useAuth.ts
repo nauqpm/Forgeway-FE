@@ -1,54 +1,29 @@
-'use client';
+"use client";
 
 // =============================================================================
 // useAuth HOOK - Main auth orchestration hook
 // =============================================================================
 // Composes authStore + services. This is the primary hook for components.
 
-import { useCallback, useEffect } from 'react';
-import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
-import {
-  useAuthStore,
-  useMfaStore,
-  useSecurityStore,
-  useSessionStore,
-} from '../stores/authStore';
-import { usePermissionStore } from '../../permission/stores/permissionStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { getQueryClient } from '@/common/providers/QueryProvider';
-import {
-  loginAPI,
-  registerAPI,
-  logoutAPI,
-  getCurrentUserAPI,
-} from '../services/authService';
-import { clearTokens } from '../services/tokenService';
-import { getMyPermissionsAPI } from '../../permission/services/permissionService';
-import { AUTH_ROUTES } from '../constants/auth-routes';
-import { AuthErrorCode } from '../types/auth.types';
-import { setupAuthInterceptors } from '../services/axiosAuthInterceptor';
-import { validateEmail } from '../utils/emailValidation';
-import type {
-  LoginRequest,
-  RegisterRequest,
-  AuthApiError,
-} from '../types/auth.types';
-
-let interceptorsInitialized = false;
+import { useCallback, useEffect } from "react";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from "../stores/authStore";
+import { usePermissionStore } from "../../permission/stores/permissionStore";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { getQueryClient } from "@/common/providers/QueryProvider";
+import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from "../services/authService";
+import { clearTokens } from "../services/tokenService";
+import { getMyPermissionsAPI } from "../../permission/services/permissionService";
+import { AUTH_ROUTES } from "../constants/auth-routes";
+import { AuthErrorCode } from "../types/auth.types";
+import { validateEmail } from "../utils/emailValidation";
+import type { LoginRequest, RegisterRequest, AuthApiError } from "../types/auth.types";
 
 export const useAuth = () => {
   const router = useRouter();
-  const {
-    user,
-    isAuthenticated,
-    isLoading,
-    isInitialized,
-    setUser,
-    setLoading,
-    setInitialized,
-    clearAuth,
-  } = useAuthStore();
+  const { user, isAuthenticated, isLoading, isInitialized, setUser, setLoading, setInitialized, clearAuth } =
+    useAuthStore();
   const { setMfaChallenge } = useMfaStore();
   const { resetFailedAttempts } = useSecurityStore();
   const { setGlobalPermissions } = usePermissionStore();
@@ -76,7 +51,7 @@ export const useAuth = () => {
         const currentUser = response.user ?? (await getCurrentUserAPI().catch(() => null));
 
         if (!currentUser) {
-          throw new Error('Could not load user information after sign-in.');
+          throw new Error("Could not load user information after sign-in.");
         }
 
         setUser(currentUser);
@@ -89,10 +64,9 @@ export const useAuth = () => {
           // Do not block the main flow if permission loading fails
         }
 
-        const isSuperAdmin = currentUser.role === 'super_admin';
+        const isSuperAdmin = currentUser.role === "super_admin";
         if (isSuperAdmin) {
-          window.location.href =
-            process.env.NEXT_PUBLIC_ADMIN_URL || 'http://localhost:3001';
+          window.location.href = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001";
           return response;
         }
 
@@ -114,7 +88,7 @@ export const useAuth = () => {
         ) {
           toast.error('Email or password is incorrect.');
         } else {
-          toast.error('Sign-in failed. Please try again later.');
+          toast.error("Sign-in failed. Please try again later.");
         }
 
         throw error;
@@ -129,7 +103,7 @@ export const useAuth = () => {
       setMfaChallenge,
       resetFailedAttempts,
       setGlobalPermissions,
-    ],
+    ]
   );
 
   const register = useCallback(
@@ -144,12 +118,10 @@ export const useAuth = () => {
       try {
         const response = await registerAPI(data);
         if (!response.success) {
-          throw new Error('Registration failed.');
+          throw new Error("Registration failed.");
         }
 
-        router.push(
-          `${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`,
-        );
+        router.push(`${AUTH_ROUTES.VERIFY_EMAIL}?email=${encodeURIComponent(data.email)}`);
         return response;
       } catch (error: unknown) {
         const err = error as {
@@ -194,7 +166,7 @@ export const useAuth = () => {
         setLoading(false);
       }
     },
-    [router, setLoading],
+    [router, setLoading]
   );
 
   const logout = useCallback(async () => {
@@ -244,21 +216,7 @@ export const useAuth = () => {
     } finally {
       setInitialized(true);
     }
-  }, [
-    isInitialized,
-    setUser,
-    setLoading,
-    setInitialized,
-    clearAuth,
-    setGlobalPermissions,
-  ]);
-
-  useEffect(() => {
-    if (!interceptorsInitialized) {
-      setupAuthInterceptors();
-      interceptorsInitialized = true;
-    }
-  }, []);
+  }, [isInitialized, setUser, setLoading, setInitialized, clearAuth, setGlobalPermissions]);
 
   useEffect(() => {
     initializeAuth();

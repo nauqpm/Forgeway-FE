@@ -3,7 +3,7 @@
 import React from 'react';
 import { PASSWORD_POLICY } from '../constants/password-policy';
 import type { PasswordPolicyResult } from '../../shared/types/auth.types';
-import { Check, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 // ─── Password Validation Utility ─────────────────────────────────────────────
 

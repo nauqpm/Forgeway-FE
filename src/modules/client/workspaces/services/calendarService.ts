@@ -1,4 +1,4 @@
-import api from '@/config/api';
+import api from '@/lib/axiosIns';
 import { apiRoutes } from '@/config/apiRoutes';
 import { Issue } from '../types/issue.type';
 
@@ -7,6 +7,7 @@ export interface CalendarTasksResponse {
 }
 
 function normalizePayload<T>(payload: unknown): T {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const p = payload as any;
   return (p?.data?.data ?? p?.data ?? p) as T;
 }
@@ -17,11 +18,7 @@ export const calendarService = {
    * The backend returns tasks whose startDate or dueDate falls within
    * [firstDayOfMonth − 7d, lastDayOfMonth + 7d].
    */
-  async getCalendarTasks(
-    workspaceId: string,
-    year: number,
-    month: number,
-  ): Promise<CalendarTasksResponse> {
+  async getCalendarTasks(workspaceId: string, year: number, month: number): Promise<CalendarTasksResponse> {
     const response = await api.get(apiRoutes.TASKS.CALENDAR(workspaceId), {
       params: { year, month },
     });
@@ -32,12 +29,7 @@ export const calendarService = {
    * Quick-create a task on a specific date.
    * Delegates to the standard board task creation endpoint.
    */
-  async quickCreateTask(
-    workspaceId: string,
-    title: string,
-    startDate: string,
-    dueDate?: string,
-  ): Promise<Issue> {
+  async quickCreateTask(workspaceId: string, title: string, startDate: string, dueDate?: string): Promise<Issue> {
     const response = await api.post(apiRoutes.TASKS.BOARD(workspaceId), {
       title,
       type: 'task',
