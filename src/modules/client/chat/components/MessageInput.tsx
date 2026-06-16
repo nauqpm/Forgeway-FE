@@ -225,10 +225,18 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
           {/* Toolbar */}
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-1">
-              <button className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors">
+              <button 
+                disabled
+                title="Coming soon"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Paperclip className="w-4 h-4" />
               </button>
-              <button className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors">
+              <button 
+                disabled
+                title="Coming soon"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Smile className="w-4 h-4" />
               </button>
             </div>
