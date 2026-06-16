@@ -67,9 +67,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   };
 
   const handleChange = (
-    e: { target: { value: string } },
-    newValue?: string,
-    newPlainTextValue?: string
+    e: { target: { value: string } }
   ) => {
     setContent(e.target.value);
 
