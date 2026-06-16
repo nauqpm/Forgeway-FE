@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chatSocketClient } from "@/lib/socket/chat.client";
 import { MEETING_EVENTS, RTC_EVENTS } from "@/lib/socket/socket.events";
+import toast from "react-hot-toast";
 import type {
   MeetingEndedPayload,
   MeetingTogglePayload,
@@ -31,6 +32,17 @@ const ICE_SERVERS: RTCConfiguration = {
 const getPeerDisplayName = (payload: MeetingUserPayload): string | undefined =>
   payload.displayName || payload.name;
 
+const getPeerFallbackName = (userId: string): string =>
+  `Participant ${userId.slice(-4)}`;
+
+const getPeerAudioState = (
+  payload: Pick<MeetingUserPayload, "isAudioOn" | "isMuted">,
+): boolean | undefined => {
+  if (typeof payload.isAudioOn === "boolean") return payload.isAudioOn;
+  if (typeof payload.isMuted === "boolean") return !payload.isMuted;
+  return undefined;
+};
+
 export function useWebRTC(
   meetingId: string | undefined,
   userId: string | undefined,
@@ -57,18 +69,28 @@ export function useWebRTC(
   );
   const localStreamRef = useRef<MediaStream | null>(null);
   const hasLeftRef = useRef(false);
+  const isAudioOnRef = useRef(true);
+  const isVideoOnRef = useRef(true);
+  const hasJoinedMeetingRef = useRef(false);
 
-  const cleanupConnections = useCallback(() => {
+  const cleanupPeerConnections = useCallback(() => {
     peerConnections.current.forEach((pc) => pc.close());
     peerConnections.current.clear();
     pendingIceCandidates.current.clear();
+    setRemoteStreams(new Map());
+    hasJoinedMeetingRef.current = false;
+  }, []);
 
+  const cleanupLocalMedia = useCallback(() => {
     localStreamRef.current?.getTracks().forEach((track) => track.stop());
     localStreamRef.current = null;
-
     setLocalStream(null);
-    setRemoteStreams(new Map());
   }, []);
+
+  const cleanupAllMeetingResources = useCallback(() => {
+    cleanupPeerConnections();
+    cleanupLocalMedia();
+  }, [cleanupLocalMedia, cleanupPeerConnections]);
 
   const acquireMedia = useCallback(async (): Promise<MediaStream> => {
     setMediaStatus("pending");
@@ -79,6 +101,8 @@ export function useWebRTC(
           video: false,
           audio: true,
         });
+        isAudioOnRef.current = true;
+        isVideoOnRef.current = false;
         setIsAudioOn(true);
         setIsVideoOn(false);
         setMediaStatus("ready");
@@ -89,6 +113,8 @@ export function useWebRTC(
         video: true,
         audio: true,
       });
+      isAudioOnRef.current = true;
+      isVideoOnRef.current = true;
       setIsAudioOn(true);
       setIsVideoOn(true);
       setMediaStatus("ready");
@@ -99,11 +125,15 @@ export function useWebRTC(
           video: false,
           audio: true,
         });
+        isAudioOnRef.current = true;
+        isVideoOnRef.current = false;
         setIsAudioOn(true);
         setIsVideoOn(false);
         setMediaStatus("audio-only");
         return stream;
       } catch {
+        isAudioOnRef.current = false;
+        isVideoOnRef.current = false;
         setIsAudioOn(false);
         setIsVideoOn(false);
         setMediaStatus("unavailable");
@@ -214,7 +244,7 @@ export function useWebRTC(
         setConnectionError("Could not connect to a meeting participant.");
       }
     },
-    [meetingId, createPeerConnection],
+    [meetingId, createPeerConnection, currentUserName],
   );
 
   const toggleAudio = useCallback(() => {
@@ -224,12 +254,15 @@ export function useWebRTC(
     if (!audioTrack) return;
 
     audioTrack.enabled = !audioTrack.enabled;
+    isAudioOnRef.current = audioTrack.enabled;
     setIsAudioOn(audioTrack.enabled);
 
-    chatSocketClient.getSocket()?.emit(MEETING_EVENTS.TOGGLE_AUDIO, {
-      meetingId,
-      isOn: audioTrack.enabled,
-    });
+    if (hasJoinedMeetingRef.current) {
+      chatSocketClient.getSocket()?.emit(MEETING_EVENTS.TOGGLE_AUDIO, {
+        meetingId,
+        isOn: audioTrack.enabled,
+      });
+    }
   }, [meetingId]);
 
   const toggleVideo = useCallback(() => {
@@ -243,12 +276,15 @@ export function useWebRTC(
     if (!videoTrack) return;
 
     videoTrack.enabled = !videoTrack.enabled;
+    isVideoOnRef.current = videoTrack.enabled;
     setIsVideoOn(videoTrack.enabled);
 
-    chatSocketClient.getSocket()?.emit(MEETING_EVENTS.TOGGLE_VIDEO, {
-      meetingId,
-      isOn: videoTrack.enabled,
-    });
+    if (hasJoinedMeetingRef.current) {
+      chatSocketClient.getSocket()?.emit(MEETING_EVENTS.TOGGLE_VIDEO, {
+        meetingId,
+        isOn: videoTrack.enabled,
+      });
+    }
   }, [meetingId, meetingType]);
 
   const leave = useCallback(() => {
@@ -259,14 +295,45 @@ export function useWebRTC(
       chatSocketClient.getSocket()?.emit(MEETING_EVENTS.LEAVE, { meetingId });
     }
 
-    cleanupConnections();
-  }, [meetingId, cleanupConnections]);
+    cleanupAllMeetingResources();
+  }, [cleanupAllMeetingResources, meetingId]);
 
   const endForAll = useCallback(() => {
     if (!meetingId) return;
 
     chatSocketClient.getSocket()?.emit(MEETING_EVENTS.END, { meetingId });
   }, [meetingId]);
+
+  useEffect(() => {
+    if (!meetingType || !userId) return;
+
+    let isMounted = true;
+
+    const init = async () => {
+      try {
+        const stream = await acquireMedia();
+        if (!isMounted) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+
+        localStreamRef.current = stream;
+        setLocalStream(stream);
+      } catch (error) {
+        console.error("[useWebRTC] Could not initialize media", error);
+        if (isMounted) {
+          setConnectionError("Could not initialize the meeting.");
+        }
+      }
+    };
+
+    void init();
+
+    return () => {
+      isMounted = false;
+      cleanupAllMeetingResources();
+    };
+  }, [acquireMedia, cleanupAllMeetingResources, meetingType, userId]);
 
   useEffect(() => {
     if (!meetingId || !userId || !meetingType) {
@@ -276,6 +343,16 @@ export function useWebRTC(
           "Meeting cannot start because the current meeting context is not available.",
         );
       }
+      return;
+    }
+
+    if (!shouldConnect) {
+      setIsConnecting(false);
+      return;
+    }
+
+    if (!localStreamRef.current) {
+      setIsConnecting(true);
       return;
     }
 
@@ -292,26 +369,78 @@ export function useWebRTC(
       return;
     }
 
+    const emitLocalMediaState = () => {
+      socket.emit(MEETING_EVENTS.TOGGLE_AUDIO, {
+        meetingId,
+        isOn: isAudioOnRef.current,
+      });
+
+      socket.emit(MEETING_EVENTS.TOGGLE_VIDEO, {
+        meetingId,
+        isOn: isVideoOnRef.current,
+      });
+    };
+
+    const syncParticipants = (
+      participants: MeetingUserPayload["participants"],
+    ) => {
+      if (!participants) return;
+
+      setRemoteStreams((previous) => {
+        const next = new Map(previous);
+
+        participants.forEach((participant) => {
+          if (participant.userId === userId) return;
+
+          const current = next.get(participant.userId);
+          const displayName = participant.displayName || participant.name;
+          next.set(participant.userId, {
+            userId: participant.userId,
+            stream: current?.stream ?? null,
+            isAudioOn:
+              getPeerAudioState(participant) ?? current?.isAudioOn ?? true,
+            isVideoOn:
+              participant.isVideoOn ?? current?.isVideoOn ?? meetingType === "video",
+            displayName: displayName ?? current?.displayName,
+          });
+        });
+
+        Array.from(next.keys()).forEach((peerId) => {
+          if (!participants.some((participant) => participant.userId === peerId)) {
+            next.delete(peerId);
+          }
+        });
+
+        return next;
+      });
+    };
+
     const handleUserJoined = (envelope: SocketEnvelope<MeetingUserPayload>) => {
       const data = unwrapSocketPayload(envelope);
       if (data.meetingId && data.meetingId !== meetingId) return;
       if (data.userId === userId) return;
 
+      syncParticipants(data.participants);
+
       const displayName = getPeerDisplayName(data);
-      if (displayName) {
-        setRemoteStreams((previous) => {
-          const next = new Map(previous);
-          const current = next.get(data.userId);
-          next.set(data.userId, {
-            userId: data.userId,
-            stream: current?.stream ?? null,
-            isAudioOn: current?.isAudioOn ?? true,
-            isVideoOn: current?.isVideoOn ?? data.type === "video",
-            displayName,
-          });
-          return next;
+      toast.success(`${displayName || getPeerFallbackName(data.userId)} joined the meeting.`, {
+        position: "bottom-right", style: {
+          marginBottom: "4rem",
+        }
+      });
+      setRemoteStreams((previous) => {
+        const next = new Map(previous);
+        const current = next.get(data.userId);
+        next.set(data.userId, {
+          userId: data.userId,
+          stream: current?.stream ?? null,
+          isAudioOn: getPeerAudioState(data) ?? current?.isAudioOn ?? true,
+          isVideoOn:
+            data.isVideoOn ?? current?.isVideoOn ?? data.type === "video",
+          displayName: displayName ?? current?.displayName,
         });
-      }
+        return next;
+      });
 
       void createAndSendOffer(data.userId);
     };
@@ -319,6 +448,13 @@ export function useWebRTC(
     const handleUserLeft = (envelope: SocketEnvelope<MeetingUserPayload>) => {
       const data = unwrapSocketPayload(envelope);
       if (data.meetingId && data.meetingId !== meetingId) return;
+      if (data.userId === userId) return;
+
+      syncParticipants(data.participants);
+      // bottom right
+      toast(`${getPeerDisplayName(data) || getPeerFallbackName(data.userId)} left the meeting.`, { position: "bottom-right", style: {
+          marginBottom: "4rem",
+        } });
 
       const pc = peerConnections.current.get(data.userId);
       if (pc) {
@@ -339,7 +475,7 @@ export function useWebRTC(
       const data = unwrapSocketPayload(envelope);
       if (data.meetingId !== meetingId) return;
 
-      cleanupConnections();
+      cleanupAllMeetingResources();
       setConnectionError("This meeting has ended.");
     };
 
@@ -466,51 +602,38 @@ export function useWebRTC(
       pendingIceCandidates.current.set(data.senderId, pending);
     };
 
-    const init = async () => {
-      try {
-        const stream = await acquireMedia();
-        if (!isMounted) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
+    socket.on(MEETING_EVENTS.USER_JOINED, handleUserJoined);
+    socket.on(MEETING_EVENTS.USER_LEFT, handleUserLeft);
+    socket.on(MEETING_EVENTS.ENDED, handleMeetingEnded);
+    socket.on(MEETING_EVENTS.CAPACITY_WARNING, handleCapacityWarning);
+    socket.on(MEETING_EVENTS.USER_AUDIO_CHANGED, handleAudioChanged);
+    socket.on(MEETING_EVENTS.USER_VIDEO_CHANGED, handleVideoChanged);
+    socket.on(RTC_EVENTS.OFFER, handleOffer);
+    socket.on(RTC_EVENTS.ANSWER, handleAnswer);
+    socket.on(RTC_EVENTS.ICE, handleIce);
 
-        localStreamRef.current = stream;
-        setLocalStream(stream);
+    socket.emit(
+      MEETING_EVENTS.JOIN,
+      {
+        meetingId,
+        displayName: currentUserName,
+        isAudioOn: isAudioOnRef.current,
+        isVideoOn: isVideoOnRef.current,
+      },
+      (response?: { ok?: boolean; message?: string }) => {
+        if (!isMounted) return;
 
-        if (!shouldConnect) {
+        if (!response || response.ok !== false) {
+          hasJoinedMeetingRef.current = true;
+          emitLocalMediaState();
           setIsConnecting(false);
           return;
         }
 
-        socket.on(MEETING_EVENTS.USER_JOINED, handleUserJoined);
-        socket.on(MEETING_EVENTS.USER_LEFT, handleUserLeft);
-        socket.on(MEETING_EVENTS.ENDED, handleMeetingEnded);
-        socket.on(MEETING_EVENTS.CAPACITY_WARNING, handleCapacityWarning);
-        socket.on(MEETING_EVENTS.USER_AUDIO_CHANGED, handleAudioChanged);
-        socket.on(MEETING_EVENTS.USER_VIDEO_CHANGED, handleVideoChanged);
-        socket.on(RTC_EVENTS.OFFER, handleOffer);
-        socket.on(RTC_EVENTS.ANSWER, handleAnswer);
-        socket.on(RTC_EVENTS.ICE, handleIce);
-
-        socket.emit(
-          MEETING_EVENTS.JOIN,
-          { meetingId, displayName: currentUserName },
-          (response?: { ok?: boolean; message?: string }) => {
-            if (!response || response.ok !== false) return;
-            setConnectionError(
-              response.message || "Could not join the meeting.",
-            );
-          },
-        );
-      } catch (error) {
-        console.error("[useWebRTC] Could not initialize meeting", error);
-        setConnectionError("Could not initialize the meeting.");
-      } finally {
-        if (isMounted) setIsConnecting(false);
-      }
-    };
-
-    void init();
+        setConnectionError(response.message || "Could not join the meeting.");
+        setIsConnecting(false);
+      },
+    );
 
     return () => {
       isMounted = false;
@@ -525,18 +648,20 @@ export function useWebRTC(
       socket.off(RTC_EVENTS.ANSWER, handleAnswer);
       socket.off(RTC_EVENTS.ICE, handleIce);
 
-      cleanupConnections();
+      cleanupPeerConnections();
     };
   }, [
     meetingId,
     meetingType,
     userId,
-    acquireMedia,
-    cleanupConnections,
+    currentUserName,
     createAndSendOffer,
     createPeerConnection,
+    localStream,
     processPendingIce,
     shouldConnect,
+    cleanupAllMeetingResources,
+    cleanupPeerConnections,
   ]);
 
   return {

@@ -457,7 +457,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   </button>
                   <button
                     onClick={() => {
-                      router.push("/account");
+                      router.push("/profile");
                       setShowUserMenu(false);
                     }}
                     className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"

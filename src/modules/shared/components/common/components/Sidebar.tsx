@@ -10,13 +10,10 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 import { useChatStore } from "@/stores/chatStore";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
-import api from '@/lib/axiosIns';
-import { apiRoutes } from "@/config/apiRoutes";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
 import {
   LayoutDashboard,
   BookOpen,
-  BarChart3,
   Settings,
   ChevronDown,
   ChevronRight,
@@ -50,15 +47,9 @@ const mainNav = [
   { icon: Sparkles, label: "For You", href: "/for-you" },
   { icon: Clock7, label: "Recent", href: "/recent" },
   { icon: Star, label: "Starred", href: "/starred" },
-  {
-    icon: BookOpen,
-    label: 'Workspaces',
-    href: '/workspaces',
-    badge: null,
-  },
-  { icon: ListFilter, label: 'Filter', href: '/filter' },
+  { icon: BookOpen, label: 'Workspaces', href: '/workspaces' },
+
   { icon: FolderOpen, label: 'Documents', href: '/documents' },
-  { icon: BarChart3, label: 'Reports', href: '/reports', badge: 'Coming soon' },
 ];
 
 const adminNav = [
@@ -87,14 +78,12 @@ const iconInactiveClass =
 
 const NavItem = ({
   item,
-  showBadge,
   pathname,
   onMobileClose,
   collapsed,
   badgeContent,
 }: {
   item: (typeof mainNav)[0];
-  showBadge?: boolean;
   pathname: string;
   onMobileClose: () => void;
   collapsed: boolean;
@@ -115,15 +104,7 @@ const NavItem = ({
       {!collapsed && (
         <>
           <span className="text-[0.8125rem] font-medium flex-1 text-left">{item.label}</span>
-          {badgeContent ? (
-            badgeContent
-          ) : (
-            showBadge && item.badge && (
-              <span className="text-[0.625rem] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
-                {item.badge}
-              </span>
-            )
-          )}
+          {badgeContent}
         </>
       )}
       {collapsed && badgeContent && (
@@ -666,8 +647,6 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-  const [_forYouWorkspaces, setForYouWorkspaces] = useState<any[]>([]);
   const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
   const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: '0px' });
   const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
@@ -705,14 +684,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
 
   useEffect(() => {
     setMounted(true);
-    api
-      .get(apiRoutes.FOR_YOU)
-      .then((res) => {
-        const payload = res.data?.data ?? res.data;
-        setForYouWorkspaces(Array.isArray(payload) ? payload : (payload?.workspaces ?? []));
-      })
-      .catch(() => setForYouWorkspaces([]));
-  }, [currentWorkspace]);
+  }, []);
 
   const isAdmin = isGlobalAdminRole(user?.role);
 
@@ -885,11 +857,8 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
               )}
              
             </div>
-            {/* Filter */}
-            <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
-
             {/* Documents */}
-            <NavItem item={mainNav[7]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+            <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
           </div>
 
           {/* Admin Section */}

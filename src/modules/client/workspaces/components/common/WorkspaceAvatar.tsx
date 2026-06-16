@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { WorkspaceAvatarSource } from "../../utils/workspaceAvatar";
 import {
+  DEFAULT_WORKSPACE_AVATAR_URL,
   getWorkspaceAvatarInitial,
-  getWorkspaceAvatarUrl,
 } from "../../utils/workspaceAvatar";
 
-type WorkspaceAvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
+export type WorkspaceAvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 
-interface WorkspaceAvatarProps {
+export interface WorkspaceAvatarProps {
   workspace?: WorkspaceAvatarSource | null;
   size?: WorkspaceAvatarSize;
   className?: string;
@@ -24,25 +24,41 @@ const sizeClasses: Record<WorkspaceAvatarSize, string> = {
   xl: "h-14 w-14 rounded-[10px] text-base",
 };
 
+// Fallback chain: custom avatar → viewavatar-1 (default) → initials
+type FallbackStage = "custom" | "default" | "initials";
+
 export default function WorkspaceAvatar({
   workspace,
   size = "md",
   className = "",
 }: WorkspaceAvatarProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const avatarUrl = getWorkspaceAvatarUrl(workspace);
+  const customAvatar = workspace?.avatar || null;
   const initial = getWorkspaceAvatarInitial(workspace);
+
+  const [stage, setStage] = useState<FallbackStage>(customAvatar ? "custom" : "default");
+
+  // Reset stage when avatar prop changes (e.g. after sync from store)
+  useEffect(() => {
+    setStage(customAvatar ? "custom" : "default");
+  }, [customAvatar]);
+
+  const currentSrc = stage === "custom" ? customAvatar! : DEFAULT_WORKSPACE_AVATAR_URL;
+
+  const handleError = () => {
+    if (stage === "custom") setStage("default");
+    else setStage("initials");
+  };
 
   return (
     <span
       className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden bg-[#2563EB] text-white dark:bg-[#3B82F6] ${sizeClasses[size]} ${className}`}
     >
-      {!imageFailed && avatarUrl ? (
+      {stage !== "initials" ? (
         <img
-          src={avatarUrl}
+          src={currentSrc}
           alt=""
           className="h-full w-full object-cover"
-          onError={() => setImageFailed(true)}
+          onError={handleError}
         />
       ) : (
         <span className="font-bold leading-none">{initial}</span>
