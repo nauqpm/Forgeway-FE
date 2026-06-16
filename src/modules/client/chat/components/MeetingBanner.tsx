@@ -70,15 +70,23 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
         current?._id === data.meetingId
           ? {
               ...current,
-              participants: data.participants!.map((participant) => ({
-                userId: participant.userId,
-                joinedAt: new Date().toISOString(),
-                isAudioOn: true,
-                isVideoOn: true,
-                isMuted: false,
-                displayName: participant.displayName,
-                name: participant.name,
-              })),
+              participants: data.participants!.map((participant) => {
+                const isAudioOn =
+                  participant.isAudioOn ??
+                  (typeof participant.isMuted === "boolean"
+                    ? !participant.isMuted
+                    : true);
+
+                return {
+                  userId: participant.userId,
+                  joinedAt: new Date().toISOString(),
+                  isAudioOn,
+                  isVideoOn: participant.isVideoOn ?? true,
+                  isMuted: participant.isMuted ?? !isAudioOn,
+                  displayName: participant.displayName,
+                  name: participant.name,
+                };
+              }),
             }
           : current,
       );

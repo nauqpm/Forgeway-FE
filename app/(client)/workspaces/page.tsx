@@ -11,6 +11,7 @@ import type { Workspace } from "@/modules/client/workspaces/types/workspace.type
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import { useWorkspaceAvatarSync } from "@/hooks/useWorkspaceAvatarSync";
 
 const getWorkspaceType = (workspace: Workspace) =>
   workspace.template ?? workspace.type ?? "kanban";
@@ -44,7 +45,8 @@ const getStatusClassName = (status: "active" | "archived") =>
 export default function WorkspacesPage() {
   usePageTitle('Workspaces');
   const { currentWorkspace, workspacesLoaded } = useWorkspaceStore();
-  const [workspaces, setWorkspacesList] = useState<Workspace[]>([]);
+  const [rawWorkspaces, setWorkspacesList] = useState<Workspace[]>([]);
+  const workspaces = useWorkspaceAvatarSync(rawWorkspaces);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

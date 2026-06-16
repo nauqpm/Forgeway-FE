@@ -1,0 +1,7 @@
+import { ProfilePage } from "@/modules/client/profile/components/ProfilePage";
+
+export const metadata = { title: "Profile" };
+
+export default function Page() {
+  return <ProfilePage />;
+}

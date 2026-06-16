@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { useWebRTC } from '@/modules/client/chat/hooks/useWebRTC';
@@ -8,6 +8,8 @@ import { getMeetingByIdAPI } from '@/modules/client/chat/services/meeting.api';
 import { MeetingType } from '@/modules/client/chat/types/webrtc.types';
 import VideoTile from '@/modules/client/meeting/components/VideoTile';
 import MeetingControls from '@/modules/client/meeting/components/MeetingControls';
+import MeetingParticipantsSidebar from '@/modules/client/meeting/components/MeetingParticipantsSidebar';
+import meetingParticipants from '@/modules/client/meeting/utils/meetingParticipants';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -26,6 +28,7 @@ export default function MeetingPage() {
   const [initError, setInitError] = useState<string | null>(null);
   const [isEndingMeeting, setIsEndingMeeting] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
+  const [isParticipantsOpen, setIsParticipantsOpen] = useState(true);
   const hasHandledMeetingEndedRef = useRef(false);
 
   // Initialize WebRTC Hook
@@ -66,7 +69,7 @@ export default function MeetingPage() {
       .finally(() => setIsMeetingLoading(false));
   }, [meetingId]);
 
-  const leaveMeetingPage = () => {
+  const leaveMeetingPage = useCallback(() => {
     window.close();
 
     window.setTimeout(() => {
@@ -74,7 +77,7 @@ export default function MeetingPage() {
         router.push('/chat');
       }
     }, 150);
-  };
+  }, [router]);
 
   const handleLeave = () => {
     leave();
@@ -87,7 +90,7 @@ export default function MeetingPage() {
     hasHandledMeetingEndedRef.current = true;
     toast.error('This meeting has ended.');
     window.setTimeout(leaveMeetingPage, 800);
-  }, [connectionError]);
+  }, [connectionError, leaveMeetingPage]);
 
   const handleEndForAll = () => {
     if (confirm("Are you sure you want to end this meeting for everyone?")) {
@@ -97,6 +100,13 @@ export default function MeetingPage() {
       window.setTimeout(leaveMeetingPage, 250);
     }
   };
+
+  const participants = meetingParticipants.buildMeetingParticipants({
+    currentUserName,
+    isLocalAudioOn: isAudioOn,
+    isLocalVideoOn: isVideoOn,
+    remoteStreams,
+  });
 
   if (initError) {
     return (
@@ -228,35 +238,43 @@ export default function MeetingPage() {
         </div>
       )}
 
-      {/* Main Grid Area */}
-      <div className="flex-1 p-4 md:p-8 flex items-center justify-center min-h-0">
-        <div className={`w-full h-full max-w-7xl mx-auto grid gap-4 ${gridClass} auto-rows-fr`}>
-          
-          {/* Local User */}
-          <div className="w-full h-full min-h-[200px]">
-            <VideoTile
-              stream={localStream}
-              isAudioOn={isAudioOn}
-              isVideoOn={isVideoOn}
-              name="You"
-              isLocal={true}
-            />
-          </div>
-
-          {/* Remote Users */}
-          {Array.from(remoteStreams.values()).map((peer) => (
-            <div key={peer.userId} className="w-full h-full min-h-[200px]">
+      {/* Main Content */}
+      <div className="flex-1 min-h-0 flex overflow-hidden relative">
+        <div className="flex-1 min-w-0 p-4 md:p-8 flex items-center justify-center">
+          <div className={`w-full h-full max-w-7xl mx-auto grid gap-4 ${gridClass} auto-rows-fr`}>
+            
+            {/* Local User */}
+            <div className="w-full h-full min-h-[200px]">
               <VideoTile
-                stream={peer.stream}
-                isAudioOn={peer.isAudioOn}
-                isVideoOn={peer.isVideoOn}
-                name={peer.displayName || `Participant ${peer.userId.slice(-4)}`}
-                isLocal={false}
+                stream={localStream}
+                isAudioOn={isAudioOn}
+                isVideoOn={isVideoOn}
+                name="You"
+                isLocal={true}
               />
             </div>
-          ))}
 
+            {/* Remote Users */}
+            {Array.from(remoteStreams.values()).map((peer) => (
+              <div key={peer.userId} className="w-full h-full min-h-[200px]">
+                <VideoTile
+                  stream={peer.stream}
+                  isAudioOn={peer.isAudioOn}
+                  isVideoOn={peer.isVideoOn}
+                  name={peer.displayName || `Participant ${peer.userId.slice(-4)}`}
+                  isLocal={false}
+                />
+              </div>
+            ))}
+
+          </div>
         </div>
+
+        <MeetingParticipantsSidebar
+          participants={participants}
+          isOpen={isParticipantsOpen}
+          onClose={() => setIsParticipantsOpen(false)}
+        />
       </div>
 
       {/* Controls Area */}
@@ -264,8 +282,11 @@ export default function MeetingPage() {
         isAudioOn={isAudioOn}
         isVideoOn={isVideoOn}
         meetingType={meetingType ?? 'video'}
+        participantCount={participants.length}
+        isParticipantsOpen={isParticipantsOpen}
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
+        onToggleParticipants={() => setIsParticipantsOpen((current) => !current)}
         onLeave={handleLeave}
         onEndForAll={currentUserId === meetingCreatorId ? handleEndForAll : undefined}
         isEndingMeeting={isEndingMeeting}
