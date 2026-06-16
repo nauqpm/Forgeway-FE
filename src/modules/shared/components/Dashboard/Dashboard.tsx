@@ -16,7 +16,7 @@ import type { Issue } from "@/modules/client/workspaces/types/issue.type";
 import type { Sprint } from "@/modules/client/workspaces/types/sprint.type";
 import type { BoardColumn } from "@/modules/client/workspaces/types/board.type";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useWorkspaceAvatarSync } from "@/hooks/useWorkspaceAvatarSync";
 
 export interface AdminDashboardProps {
   className?: string;
@@ -103,9 +103,9 @@ const toDashboardTask = (
 };
 
 export default function AdminDashboard({ className = "" }: AdminDashboardProps) {
-  const { setWorkspaces } = useWorkspaceStore();
   const { user } = useAuth();
-  const [workspaces, setDashboardWorkspaces] = useState<ForYouWorkspace[]>([]);
+  const [rawWorkspaces, setDashboardWorkspaces] = useState<ForYouWorkspace[]>([]);
+  const workspaces = useWorkspaceAvatarSync(rawWorkspaces);
   const [assignedTasks, setAssignedTasks] = useState<DashboardTask[]>([]);
   const [workedTasks, setWorkedTasks] = useState<DashboardTask[]>([]);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -144,8 +144,6 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         const nextUserStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
 
         setDashboardWorkspaces(nextWorkspaces);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setWorkspaces(nextWorkspaces as any);
         setUserStats(nextUserStats);
 
         if (!user?.id || nextWorkspaces.length === 0) {
@@ -232,7 +230,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     return () => {
       cancelled = true;
     };
-  }, [setWorkspaces, user?.id]);
+  }, [user?.id]);
 
   const displayWorkspaces = useMemo(() => workspaces.slice(0, 4).map(toWorkspaceCard), [workspaces]);
 

@@ -10,8 +10,6 @@ import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 import { useChatStore } from "@/stores/chatStore";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
-import api from '@/lib/axiosIns';
-import { apiRoutes } from "@/config/apiRoutes";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
 import {
   LayoutDashboard,
@@ -666,8 +664,6 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-  const [_forYouWorkspaces, setForYouWorkspaces] = useState<any[]>([]);
   const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
   const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: '0px' });
   const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
@@ -705,14 +701,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
 
   useEffect(() => {
     setMounted(true);
-    api
-      .get(apiRoutes.FOR_YOU)
-      .then((res) => {
-        const payload = res.data?.data ?? res.data;
-        setForYouWorkspaces(Array.isArray(payload) ? payload : (payload?.workspaces ?? []));
-      })
-      .catch(() => setForYouWorkspaces([]));
-  }, [currentWorkspace]);
+  }, []);
 
   const isAdmin = isGlobalAdminRole(user?.role);
 

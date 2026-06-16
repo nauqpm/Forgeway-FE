@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { WorkspaceAvatarSource } from "../../utils/workspaceAvatar";
 import {
@@ -36,6 +36,11 @@ export default function WorkspaceAvatar({
   const initial = getWorkspaceAvatarInitial(workspace);
 
   const [stage, setStage] = useState<FallbackStage>(customAvatar ? "custom" : "default");
+
+  // Reset stage when avatar prop changes (e.g. after sync from store)
+  useEffect(() => {
+    setStage(customAvatar ? "custom" : "default");
+  }, [customAvatar]);
 
   const currentSrc = stage === "custom" ? customAvatar! : DEFAULT_WORKSPACE_AVATAR_URL;
 
