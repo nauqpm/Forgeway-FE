@@ -19,10 +19,10 @@ export function useChatRealtime() {
     }
   }, []);
 
-  const sendMessage = useCallback((channelId: string, content: string, attachments?: { url: string; filename: string; mimetype: string; size: number }[], replyToId?: string) => {
+  const sendMessage = useCallback((channelId: string, content: string, attachments?: { url: string; filename: string; mimetype: string; size: number }[], replyToId?: string, type?: string) => {
     const socket = chatSocketClient.getSocket();
     if (socket?.connected) {
-      socket.emit(SOCKET_EVENTS.SEND, { channelId, content, attachments, replyToId });
+      socket.emit(SOCKET_EVENTS.SEND, { channelId, content, attachments, replyToId, type });
     }
   }, []);
 
