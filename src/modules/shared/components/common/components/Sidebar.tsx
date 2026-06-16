@@ -26,6 +26,7 @@ import {
   Building2,
   Clock7,
   Star,
+  ListFilter,
   Search,
   Columns,
   FolderOpen,
@@ -46,12 +47,7 @@ const mainNav = [
   { icon: Sparkles, label: "For You", href: "/for-you" },
   { icon: Clock7, label: "Recent", href: "/recent" },
   { icon: Star, label: "Starred", href: "/starred" },
-  {
-    icon: BookOpen,
-    label: 'Workspaces',
-    href: '/workspaces',
-    badge: null,
-  },
+  { icon: BookOpen, label: 'Workspaces', href: '/workspaces' },
 
   { icon: FolderOpen, label: 'Documents', href: '/documents' },
 ];
@@ -82,14 +78,12 @@ const iconInactiveClass =
 
 const NavItem = ({
   item,
-  showBadge,
   pathname,
   onMobileClose,
   collapsed,
   badgeContent,
 }: {
   item: (typeof mainNav)[0];
-  showBadge?: boolean;
   pathname: string;
   onMobileClose: () => void;
   collapsed: boolean;
@@ -110,15 +104,7 @@ const NavItem = ({
       {!collapsed && (
         <>
           <span className="text-[0.8125rem] font-medium flex-1 text-left">{item.label}</span>
-          {badgeContent ? (
-            badgeContent
-          ) : (
-            showBadge && item.badge && (
-              <span className="text-[0.625rem] bg-[#F0F0EE] text-[#787774] dark:bg-white/8 dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] font-medium">
-                {item.badge}
-              </span>
-            )
-          )}
+          {badgeContent}
         </>
       )}
       {collapsed && badgeContent && (
