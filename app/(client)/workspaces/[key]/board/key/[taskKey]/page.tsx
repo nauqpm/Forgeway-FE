@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft } from "lucide-react";
@@ -11,10 +12,11 @@ import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/servic
 import { boardService } from "@/modules/client/workspaces/services/boardService";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
 import { TaskDetailResponse } from "@/modules/client/workspaces/types/task-detail.type";
-import { getWorkspaceTemplate, Workspace } from "@/modules/client/workspaces/types/workspace.type";
+import { getWorkspaceTemplate } from "@/modules/client/workspaces/types/workspace.type";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import type { BoardColumn } from "@/modules/client/workspaces/types/board.type";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 export default function TaskDetailDeepLinkPage() {
   usePageTitle("Task Detail");
@@ -23,92 +25,93 @@ export default function TaskDetailDeepLinkPage() {
 
   const workspaceKey = Array.isArray(params.key) ? params.key[0] : params.key;
   const taskKey = Array.isArray(params.taskKey) ? params.taskKey[0] : params.taskKey;
-
-  const [workspace, setWorkspace] = useState<Workspace | null>(null);
-  const [issue, setIssue] = useState<TaskDetailResponse | null>(null);
-  const [columns, setColumns] = useState<BoardColumn[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const backToBoard = useCallback(() => {
     router.push(`/workspaces/${workspaceKey}/board`);
   }, [router, workspaceKey]);
 
-  useEffect(() => {
-    if (!workspaceKey || !taskKey) return;
+  const taskDetailQuery = useQuery({
+    queryKey: queryKeys.tasks.detail(workspaceKey ?? "", taskKey ?? ""),
+    queryFn: async () => {
+      const nextWorkspace = await resolveWorkspaceFromRouteKey(workspaceKey!);
+      let members = nextWorkspace.members ?? [];
 
-    let isActive = true;
-    setLoading(true);
-    setError(null);
+      try {
+        const membersResponse = await api.get(apiRoutes.WORKSPACES.MEMBERS(nextWorkspace._id));
+        members = membersResponse.data?.data ?? membersResponse.data ?? members;
+      } catch {
+        members = nextWorkspace.members ?? [];
+      }
 
-    resolveWorkspaceFromRouteKey(workspaceKey)
-      .then(async (nextWorkspace) => {
-        let members = nextWorkspace.members ?? [];
+      const workspaceWithMembers = { ...nextWorkspace, members };
+      const [taskDetail, boardData] = await Promise.all([
+        taskService.getBoardTaskDetail(nextWorkspace._id, taskKey!),
+        boardService.getBoardByWorkspace(nextWorkspace._id).catch(() => ({ columns: [] })),
+      ]);
+      return {
+        workspace: workspaceWithMembers,
+        issue: enrichTaskDetailUsers(taskDetail, members),
+        columns: boardData.columns as BoardColumn[],
+      };
+    },
+    enabled: !!workspaceKey && !!taskKey,
+    staleTime: 30_000,
+  });
 
-        try {
-          const membersResponse = await api.get(apiRoutes.WORKSPACES.MEMBERS(nextWorkspace._id));
-          members = membersResponse.data?.data ?? membersResponse.data ?? members;
-        } catch {
-          members = nextWorkspace.members ?? [];
-        }
+  const updateIssueMutation = useMutation({
+    mutationFn: async (updatedIssue: TaskDetailResponse) => {
+      if (!taskDetailQuery.data?.workspace || !updatedIssue.id) return null;
+      const workspace = taskDetailQuery.data.workspace;
+      const updates: Partial<Issue> = {
+        title: updatedIssue.title,
+        description: updatedIssue.description,
+        status: updatedIssue.status,
+        priority: updatedIssue.priority,
+        type: updatedIssue.type,
+        columnId: updatedIssue.columnId,
+        sprintId: updatedIssue.sprintId ?? null,
+        storyPoints: updatedIssue.storyPoints ?? undefined,
+        startDate: updatedIssue.startDate ?? undefined,
+        dueDate: updatedIssue.dueDate ?? undefined,
+        assigneeId: updatedIssue.assigneeId ?? null,
+      };
 
-        const workspaceWithMembers = { ...nextWorkspace, members };
-        const [taskDetail, boardData] = await Promise.all([
-          taskService.getBoardTaskDetail(nextWorkspace._id, taskKey),
-          boardService.getBoardByWorkspace(nextWorkspace._id).catch(() => ({ columns: [] })),
-        ]);
-        if (!isActive) return;
-
-        setWorkspace(workspaceWithMembers);
-        setIssue(enrichTaskDetailUsers(taskDetail, members));
-        setColumns(boardData.columns);
-      })
-      .catch((err) => {
-        if (!isActive) return;
-
-        const status = err?.response?.status;
-        if (status === 404) setError("Task not found");
-        else if (status === 403) setError("You do not have permission to access this task");
-        else setError("Could not load task details");
-      })
-      .finally(() => {
-        if (isActive) setLoading(false);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [workspaceKey, taskKey]);
+      await taskService.updateBoardTask(workspace._id, updatedIssue.id, updates);
+      const refreshedIssue = await taskService.getBoardTaskDetail(workspace._id, updatedIssue.key);
+      return enrichTaskDetailUsers(refreshedIssue, workspace.members);
+    },
+    onSuccess: (refreshedIssue) => {
+      if (!refreshedIssue || !workspaceKey || !taskKey) return;
+      queryClient.setQueryData(queryKeys.tasks.detail(workspaceKey, taskKey), (current: typeof taskDetailQuery.data) =>
+        current ? { ...current, issue: refreshedIssue } : current,
+      );
+    },
+  });
 
   const handleUpdateIssue = async (updatedIssue: TaskDetailResponse) => {
-    if (!workspace || !updatedIssue.id) return;
+    await updateIssueMutation.mutateAsync(updatedIssue);
 
-    const updates: Partial<Issue> = {
-      title: updatedIssue.title,
-      description: updatedIssue.description,
-      status: updatedIssue.status,
-      priority: updatedIssue.priority,
-      type: updatedIssue.type,
-      columnId: updatedIssue.columnId,
-      sprintId: updatedIssue.sprintId ?? null,
-      storyPoints: updatedIssue.storyPoints ?? undefined,
-      startDate: updatedIssue.startDate ?? undefined,
-      dueDate: updatedIssue.dueDate ?? undefined,
-      assigneeId: updatedIssue.assigneeId ?? null,
-    };
-
-    await taskService.updateBoardTask(workspace._id, updatedIssue.id, updates);
-    const refreshedIssue = await taskService.getBoardTaskDetail(workspace._id, updatedIssue.key);
-    setIssue(enrichTaskDetailUsers(refreshedIssue, workspace.members));
-  };
-
-  if (loading) {
+  if (taskDetailQuery.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563EB] dark:border-[#3B82F6] border-t-transparent" />
       </div>
     );
   }
+
+  const status = (taskDetailQuery.error as { response?: { status?: number } } | null)?.response?.status;
+  const error =
+    status === 404
+      ? "Task not found"
+      : status === 403
+        ? "You do not have permission to access this task"
+        : taskDetailQuery.error
+          ? "Could not load task details"
+          : null;
+  const workspace = taskDetailQuery.data?.workspace ?? null;
+  const issue = taskDetailQuery.data?.issue ?? null;
+  const columns = taskDetailQuery.data?.columns ?? [];
 
   if (error || !issue || !workspace) {
     return (

@@ -10,9 +10,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { toast } from "react-hot-toast";
+import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 
 export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
-  const { documents, selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
+  const { selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
+  const { documents } = useWorkspaceDocs(workspaceId);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
   const [removeTarget, setRemoveTarget] = useState<DocumentItem | null>(null);
@@ -102,7 +104,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
           >
             <div className="p-4 flex flex-col gap-4">
               <button
-                onClick={() => selectDocument(null)}
+                onClick={() => selectDocument(null, documents)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-[6px] text-[0.8125rem] font-medium transition-all ${
                   !selectedDocumentId && !selectedImportedDocumentId
                     ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
@@ -131,7 +133,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                           onClick={() =>
                             doc.source === "import"
                               ? selectImportedDocument(doc.id)
-                              : selectDocument(doc.id)
+                              : selectDocument(doc.id, documents)
                           }
                           className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[0.8125rem] transition-all ${
                             selectedDocumentId === doc.id || selectedImportedDocumentId === doc.id
@@ -151,7 +153,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                 </div>
               ) : (
                 <>
-                  <RecentDocs />
+                  <RecentDocs workspaceId={workspaceId} />
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
                       <h3 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest">

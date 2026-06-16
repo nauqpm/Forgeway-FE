@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useDocsStore } from "../store/docs.store";
+import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 import DocsSidebar from "./DocsSidebar";
 import TiptapEditor from "../editor/TiptapEditor";
 import DocsDashboard from "./DocsDashboard";
@@ -12,12 +13,12 @@ import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 
 export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
-  const { documents, selectedDocumentId, selectedImportedDocumentId, isLoading, loadRootPages } = useDocsStore();
+  const { selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
+  const { documents, isLoading } = useWorkspaceDocs(workspaceId);
   const [mounted, setMounted] = useState(false);
   const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
 
   useEffect(() => {
-    loadRootPages(workspaceId);
     setMounted(true);
   }, [workspaceId]);
 
@@ -85,7 +86,7 @@ export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
                 transition={{ duration: 0.2 }}
                 className="h-full w-full flex flex-col"
               >
-                <TiptapEditor />
+                <TiptapEditor workspaceId={workspaceId} />
               </motion.div>
             )}
           </AnimatePresence>

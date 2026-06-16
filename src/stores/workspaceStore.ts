@@ -1,18 +1,9 @@
 import { create } from "zustand";
+import type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
 
-interface Workspace {
-    _id: string;
-    id?: string;
-    name: string;
-    key?: string;
-    slug: string;
-    description?: string;
-    avatar?: string;
-    ownerId: string | { _id?: string; id?: string };
-    members: { userId: string | { _id?: string; id?: string }; role: string }[];
-}
+export type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
 
-interface Project {
+export interface Project {
   _id: string;
   name: string;
   key: string;
@@ -22,49 +13,28 @@ interface Project {
 }
 
 interface WorkspaceStore {
-    workspaces: Workspace[];
-    currentWorkspace: Workspace | null;
-    projects: Project[];
-    currentProject: Project | null;
-    workspacesLoaded: boolean;
-    setWorkspaces: (workspaces: Workspace[]) => void;
-    setCurrentWorkspace: (workspace: Workspace | null) => void;
-    updateWorkspaceAvatar: (workspaceId: string, avatar: string) => void;
-    setProjects: (projects: Project[]) => void;
-    setCurrentProject: (project: Project | null) => void;
+    // Client State
+    currentWorkspaceId: string | null;
+    currentProjectId: string | null;
+
+    // Actions
+    setCurrentWorkspaceId: (id: string | null) => void;
+    setCurrentProjectId: (id: string | null) => void;
+    setCurrentWorkspace: (workspace: Pick<Workspace, "_id"> | null) => void;
+    setCurrentProject: (project: Pick<Project, "_id"> | null) => void;
     clearWorkspace: () => void;
 }
 
-export const useWorkspaceStore = create<WorkspaceStore>()((set, get) => ({
-    workspaces: [],
-    currentWorkspace: null,
-    projects: [],
-    currentProject: null,
-    workspacesLoaded: false,
-    setWorkspaces: (workspaces) => {
-        const needsAutoSelect = !get().currentWorkspace && workspaces.length > 0;
-        set({ workspaces, workspacesLoaded: true });
-        if (needsAutoSelect) {
-            set({ currentWorkspace: workspaces[0] });
-        }
-    },
-    setCurrentWorkspace: (workspace) => set({ currentWorkspace: workspace }),
-    updateWorkspaceAvatar: (workspaceId, avatar) => set((state) => ({
-        workspaces: state.workspaces.map((workspace) =>
-            workspace._id === workspaceId ? { ...workspace, avatar } : workspace,
-        ),
-        currentWorkspace:
-            state.currentWorkspace?._id === workspaceId
-                ? { ...state.currentWorkspace, avatar }
-                : state.currentWorkspace,
-    })),
-    setProjects: (projects) => set({ projects }),
-    setCurrentProject: (project) => set({ currentProject: project }),
+export const useWorkspaceStore = create<WorkspaceStore>()((set) => ({
+    currentWorkspaceId: null,
+    currentProjectId: null,
+
+    setCurrentWorkspaceId: (id) => set({ currentWorkspaceId: id }),
+    setCurrentProjectId: (id) => set({ currentProjectId: id }),
+    setCurrentWorkspace: (workspace) => set({ currentWorkspaceId: workspace ? workspace._id : null }),
+    setCurrentProject: (project) => set({ currentProjectId: project ? project._id : null }),
     clearWorkspace: () => set({
-        workspaces: [],
-        currentWorkspace: null,
-        projects: [],
-        currentProject: null,
-        workspacesLoaded: false,
+        currentWorkspaceId: null,
+        currentProjectId: null,
     }),
 }));

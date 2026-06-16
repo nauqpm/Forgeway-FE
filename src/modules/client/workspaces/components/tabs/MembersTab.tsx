@@ -15,6 +15,7 @@ import {
   PendingInvite,
 } from "@/modules/client/workspaces/services/inviteService";
 import { extractApiError } from "@/common/utils/apiError";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 interface MemberUser {
   _id: string;
@@ -78,7 +79,7 @@ export default function MembersTab({
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   const { data: members = [], isLoading } = useQuery<WorkspaceMember[]>({
-    queryKey: ["members", workspaceId],
+    queryKey: queryKeys.workspaces.members(workspaceId),
     queryFn: async () => {
       const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
       return res.data?.data ?? res.data ?? [];
@@ -88,7 +89,7 @@ export default function MembersTab({
   });
 
   const { data: pendingInvites = [], isLoading: isLoadingInvites } = useQuery<PendingInvite[]>({
-    queryKey: ["invites", workspaceId],
+    queryKey: queryKeys.workspaces.invites(workspaceId),
     queryFn: () => inviteService.listInvites(workspaceId),
     enabled: !!workspaceId && isAdmin,
     staleTime: 30_000,
@@ -182,7 +183,7 @@ export default function MembersTab({
           isOpen={isInviteOpen}
           onClose={() => {
             setIsInviteOpen(false);
-            queryClient.invalidateQueries({ queryKey: ["invites", workspaceId] });
+            queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.invites(workspaceId) });
           }}
           projectId={workspaceId}
         />

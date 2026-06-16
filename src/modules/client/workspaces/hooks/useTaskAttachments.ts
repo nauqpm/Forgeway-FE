@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { attachmentService } from "../services/attachmentService";
+import { queryKeys } from "@/common/constants/queryKeys";
 import {
   isImageAttachment,
   isPreviewableAttachment,
@@ -66,7 +67,7 @@ export const useTaskAttachments = ({
   }, []);
 
   const queryKey = useMemo(
-    () => ["taskAttachments", workspaceId, taskId],
+    () => queryKeys.tasks.attachments(workspaceId, taskId),
     [taskId, workspaceId],
   );
 

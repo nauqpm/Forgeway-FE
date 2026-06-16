@@ -1,17 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { BookOpen, Plus, Globe, Lock, ChevronRight, Columns, Repeat } from "lucide-react";
-import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
 import type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
-import { useWorkspaceAvatarSync } from "@/hooks/useWorkspaceAvatarSync";
+import { queryKeys } from "@/common/constants/queryKeys";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 
 const getWorkspaceType = (workspace: Workspace) =>
   workspace.template ?? workspace.type ?? "kanban";
@@ -44,20 +44,8 @@ const getStatusClassName = (status: "active" | "archived") =>
 
 export default function WorkspacesPage() {
   usePageTitle('Workspaces');
-  const { currentWorkspace, workspacesLoaded } = useWorkspaceStore();
-  const [rawWorkspaces, setWorkspacesList] = useState<Workspace[]>([]);
-  const workspaces = useWorkspaceAvatarSync(rawWorkspaces);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!workspacesLoaded) return;
-    
-    setLoading(true);
-    workspaceService.listMine()
-      .then((nextWorkspaces) => setWorkspacesList(nextWorkspaces))
-      .catch(() => setWorkspacesList([]))
-      .finally(() => setLoading(false));
-  }, [workspacesLoaded]);
+  const queryClient = useQueryClient();
+  const { currentWorkspace, workspaces, isLoading } = useCurrentWorkspace();
 
   useEffect(() => {
     const socket = realtimeSocketClient.getSocket();
@@ -68,7 +56,7 @@ export default function WorkspacesPage() {
       if (payload.type === SOCKET_EVENTS.WORKSPACE_CREATED) {
         const newWorkspace = payload.data?.workspace;
         if (newWorkspace) {
-          setWorkspacesList((prev) => {
+          queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (prev = []) => {
             // Avoid duplicates
             if (prev.some((w) => w._id === newWorkspace.id || w._id === newWorkspace._id)) return prev;
             // The event payload has id instead of _id, we normalize it
@@ -83,7 +71,9 @@ export default function WorkspacesPage() {
     const handleWorkspaceDeleted = (payload: any) => {
       const workspaceId = payload.data?.workspaceId ?? payload.workspaceId;
       if (workspaceId) {
-        setWorkspacesList((prev) => prev.filter((w) => w._id !== workspaceId));
+        queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (prev = []) =>
+          prev.filter((w) => w._id !== workspaceId),
+        );
       }
     };
 
@@ -94,9 +84,9 @@ export default function WorkspacesPage() {
       socket.off(SOCKET_EVENTS.WORKSPACE_CREATED, handleWorkspaceCreated);
       socket.off(SOCKET_EVENTS.WORKSPACE_DELETED, handleWorkspaceDeleted);
     };
-  }, []);
+  }, [queryClient]);
 
-  if (loading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">

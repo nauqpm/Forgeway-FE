@@ -6,11 +6,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import appleIcon from "../../../../../../app/apple-icon.png";
 import Image from "next/image";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useAuth } from "@/context/AuthContext";
 import { useChatStore } from "@/stores/chatStore";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import {
   LayoutDashboard,
   BookOpen,
@@ -28,7 +28,6 @@ import {
   Star,
   ListFilter,
   Search,
-  Columns,
   FolderOpen,
   Sparkles,
   MessageCircle,
@@ -59,10 +58,6 @@ const adminNav = [
   { icon: Shield, label: 'Permissions', href: '/dashboard/permissions' },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _SHOW_RECENT_NAV = false;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _SHOW_STARRED_NAV = false;
 const SHOW_ADMIN_NAV = false;
 const SIDEBAR_WORKSPACE_LIMIT = 3;
 const MORE_WORKSPACE_LIMIT = 3;
@@ -117,519 +112,11 @@ const NavItem = ({
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const PopoverNavItem = ({
-  item,
-  type,
-  activePopover,
-  setActivePopover,
-  collapsed,
-  mounted,
-  forYouWorkspaces = [],
-  onMobileClose,
-}: {
-  item: (typeof mainNav)[0];
-  type: 'for_you' | 'recent' | 'starred';
-  activePopover: SidebarPopoverType | null;
-  setActivePopover: (val: SidebarPopoverType | null) => void;
-  collapsed: boolean;
-  mounted: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  forYouWorkspaces?: any[];
-  onMobileClose?: () => void;
-}) => {
-  const isActive = activePopover === type;
-  const btnRef = useRef<HTMLButtonElement>(null);
-  const [pos, setPos] = useState({ top: 0, left: '0px' });
-  const [forYouSearch, setForYouSearch] = useState('');
-  const filteredForYouWorkspaces = forYouWorkspaces.filter((workspace) => {
-    const query = forYouSearch.trim().toLowerCase();
-    if (!query) return true;
 
-    return [
-      workspace.name,
-      workspace.key,
-      workspace.slug,
-      workspace.type,
-      workspace.role,
-      workspace.relationship,
-      workspace.ownershipLabel,
-      workspace.status,
-    ]
-      .filter(Boolean)
-      .some((value) => String(value).toLowerCase().includes(query));
-  });
-
-  const handleToggle = () => {
-    if (isActive) {
-      setActivePopover(null);
-    } else {
-      if (btnRef.current) {
-        const rect = btnRef.current.getBoundingClientRect();
-        setPos({
-          top: rect.top,
-          left: collapsed ? 'calc(var(--app-sidebar-collapsed) + 12px)' : 'calc(var(--app-sidebar-expanded) + 12px)',
-        });
-      }
-      setActivePopover(type);
-    }
-  };
-
-  return (
-    <div className="relative">
-      <button
-        ref={btnRef}
-        onClick={handleToggle}
-        className={`w-full flex items-center gap-3 px-3 py-2 rounded-[6px] transition-all group ${
-          isActive ? navActiveClass : navInactiveClass
-        }`}
-      >
-        <item.icon
-          className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`}
-        />
-        {!collapsed && (
-          <>
-            <span className="text-[0.8125rem] font-medium flex-1 text-left">{item.label}</span>
-            <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </>
-        )}
-      </button>
-
-      {isActive &&
-        mounted &&
-        createPortal(
-          <>
-            <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
-            <div
-              className="app-popover fixed bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[10px] z-[9999] flex flex-col"
-              style={{
-                top: `${pos.top}px`,
-                left: pos.left,
-                boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)',
-              }}
-            >
-              <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{item.label}</span>
-                <button
-                  onClick={() => setActivePopover(null)}
-                  className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {type === 'for_you' && (
-                <div className="flex flex-col max-h-[60vh]">
-                  <div className="p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                    <div className="relative">
-                      <Search className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B] absolute left-3 top-2.5" />
-                      <input
-                        type="text"
-                        value={forYouSearch}
-                        onChange={(event) => setForYouSearch(event.target.value)}
-                        placeholder="Search for you items"
-                        className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="overflow-y-auto flex-1 p-2">
-                    {forYouWorkspaces.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
-                          <Sparkles className="h-5 w-5" />
-                        </div>
-                        <h4 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                          No workspace suggestions
-                        </h4>
-                        <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                          Workspaces you own or join will appear here.
-                        </p>
-                      </div>
-                    ) : filteredForYouWorkspaces.length === 0 ? (
-                      <div className="p-8 text-center">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
-                          <Search className="h-5 w-5" />
-                        </div>
-                        <h4 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                          No matching items
-                        </h4>
-                        <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                          Try another workspace name, key, role, or status.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-0.5">
-                        {filteredForYouWorkspaces.slice(0, 8).map((workspace) => {
-                          const routeKey = workspace.key || workspace.slug || workspace.id || workspace._id;
-
-                          return (
-                            <Link
-                              key={workspace.id || workspace._id || routeKey}
-                              href={`/workspaces/${routeKey}`}
-                              className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors"
-                              onClick={() => {
-                                setActivePopover(null);
-                                onMobileClose?.();
-                              }}
-                            >
-                              <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-xs font-bold">
-                                {workspace.name?.charAt(0) || 'W'}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors">
-                                  {workspace.name}
-                                </p>
-                                <p className="truncate text-[0.6875rem] capitalize text-[#787774] dark:text-[#9B9A97]">
-                                  {workspace.ownershipLabel ||
-                                    workspace.relationship ||
-                                    workspace.role?.replace(/_/g, ' ') ||
-                                    workspace.type ||
-                                    'Workspace'}
-                                </p>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                    <Link
-                      href="/for-you"
-                      className="flex w-full items-center justify-between p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
-                      onClick={() => {
-                        setActivePopover(null);
-                        onMobileClose?.();
-                      }}
-                    >
-                      <span>View all for you items</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </div>
-                </div>
-              )}
-
-              {type === 'recent' && (
-                <div className="flex flex-col max-h-[60vh]">
-                  <div className="p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                    <div className="relative">
-                      <Search className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B] absolute left-3 top-2.5" />
-                      <input
-                        type="text"
-                        placeholder="Search recent items"
-                        className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
-                      />
-                    </div>
-                  </div>
-                  <div className="overflow-y-auto flex-1 p-2 space-y-4">
-                    <div>
-                      <h4 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">
-                        Today
-                      </h4>
-                      <div className="space-y-0.5">
-                        <Link
-                          href="/workspaces/mock-1"
-                          className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors"
-                          onClick={() => setActivePopover(null)}
-                        >
-                          <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-center text-[#787774] dark:text-[#9B9A97]">
-                            <Columns className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
-                              QUAN board
-                            </p>
-                            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">6 seconds ago</p>
-                          </div>
-                        </Link>
-                        <Link
-                          href="/workspaces/mock-2"
-                          className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors"
-                          onClick={() => setActivePopover(null)}
-                        >
-                          <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs">
-                            Q
-                          </div>
-                          <div>
-                            <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">quan</p>
-                            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
-                          </div>
-                        </Link>
-                        <Link
-                          href="/filter/my-tasks"
-                          className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors"
-                          onClick={() => setActivePopover(null)}
-                        >
-                          <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B]">
-                            <ListFilter className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
-                              Reported by me
-                            </p>
-                            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
-                          </div>
-                        </Link>
-                      </div>
-                    </div>
-                    <div>
-                      <h4 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">
-                        More than 1 month ago
-                      </h4>
-                      <div className="space-y-0.5">
-                        <Link
-                          href="/workspaces/mock-3"
-                          className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors"
-                          onClick={() => setActivePopover(null)}
-                        >
-                          <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-center text-[#787774] dark:text-[#9B9A97]">
-                            <Columns className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
-                              SCRUM board
-                            </p>
-                            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
-                          </div>
-                        </Link>
-                        <Link
-                          href="/workspaces/mock-4"
-                          className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors"
-                          onClick={() => setActivePopover(null)}
-                        >
-                          <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs">
-                            <Zap className="w-3.5 h-3.5" />
-                          </div>
-                          <div>
-                            <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
-                              My Software Team
-                            </p>
-                            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
-                          </div>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                    <button className="w-full text-left p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
-                      View all recent items
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {type === 'starred' && (
-                <div className="flex flex-col">
-                  <div className="p-8 text-center flex flex-col items-center">
-                    <div className="w-20 h-20 mb-4 relative flex items-center justify-center">
-                      <div className="absolute inset-0 bg-[#F0F0EE] dark:bg-white/5 rounded-full scale-150 opacity-50" />
-                      <Star className="w-10 h-10 text-[#ABABAB] dark:text-[#6B6B6B] relative z-10" />
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#2563EB] dark:bg-[#3B82F6] rounded-full flex items-center justify-center z-20 text-white dark:text-[#111111] border-2 border-white dark:border-[#1A1A1A]">
-                        <Plus className="w-3.5 h-3.5" />
-                      </div>
-                    </div>
-                    <h4 className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2 mt-4">
-                      You have not starred any items yet.
-                    </h4>
-                    <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-relaxed">
-                      Star important items for quick access. They will appear here.
-                    </p>
-                  </div>
-                  <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                    <button className="w-full text-left p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
-                      View all starred items
-                    </button>
-                  </div>
-                </div>
-              )}
-
-            {type === "for_you" && (
-              <div className="flex flex-col max-h-[60vh]">
-                <div className="p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B] absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      value={forYouSearch}
-                      onChange={(event) => setForYouSearch(event.target.value)}
-                      placeholder="Search for you items"
-                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
-                    />
-                  </div>
-                </div>
-
-                <div className="overflow-y-auto flex-1 p-2">
-                  {forYouWorkspaces.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
-                        <Sparkles className="h-5 w-5" />
-                      </div>
-                      <h4 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                        No workspace suggestions
-                      </h4>
-                      <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                        Workspaces you own or join will appear here.
-                      </p>
-                    </div>
-                  ) : filteredForYouWorkspaces.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
-                        <Search className="h-5 w-5" />
-                      </div>
-                      <h4 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                        No matching items
-                      </h4>
-                      <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                        Try another workspace name, key, role, or status.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-0.5">
-                      {filteredForYouWorkspaces.slice(0, 8).map((workspace) => {
-                        const routeKey = workspace.key || workspace.slug || workspace.id || workspace._id;
-
-                        return (
-                          <Link
-                            key={workspace.id || workspace._id || routeKey}
-                            href={`/workspaces/${routeKey}`}
-                            className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors"
-                            onClick={() => {
-                              setActivePopover(null);
-                              onMobileClose?.();
-                            }}
-                          >
-                            <WorkspaceAvatar workspace={workspace} size="sm" />
-                            <div className="min-w-0">
-                              <p className="truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] transition-colors">
-                                {workspace.name}
-                              </p>
-                              <p className="truncate text-[0.6875rem] capitalize text-[#787774] dark:text-[#9B9A97]">
-                                {workspace.ownershipLabel || workspace.relationship || workspace.role?.replace(/_/g, " ") || workspace.type || "Workspace"}
-                              </p>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                  <Link
-                    href="/for-you"
-                    className="flex w-full items-center justify-between p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
-                    onClick={() => {
-                      setActivePopover(null);
-                      onMobileClose?.();
-                    }}
-                  >
-                    <span>View all for you items</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {type === "recent" && (
-              <div className="flex flex-col max-h-[60vh]">
-                <div className="p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B] absolute left-3 top-2.5" />
-                    <input
-                      type="text"
-                      placeholder="Search recent items"
-                      className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
-                    />
-                  </div>
-                </div>
-                <div className="overflow-y-auto flex-1 p-2 space-y-4">
-                  <div>
-                    <h4 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">Today</h4>
-                    <div className="space-y-0.5">
-                      <Link href="/workspaces/mock-1" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-center text-[#787774] dark:text-[#9B9A97]"><Columns className="w-4 h-4" /></div>
-                        <div>
-                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">QUAN board</p>
-                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">6 seconds ago</p>
-                        </div>
-                      </Link>
-                      <Link href="/workspaces/mock-2" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs">Q</div>
-                        <div>
-                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">quan</p>
-                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
-                        </div>
-                      </Link>
-                      <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B]"><ListFilter className="w-4 h-4" /></div>
-                        <div>
-                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">Reported by me</p>
-                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-1 px-2 uppercase tracking-[0.06em]">More than 1 month ago</h4>
-                    <div className="space-y-0.5">
-                      <Link href="/workspaces/mock-3" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded-[6px] bg-[#F0F0EE] dark:bg-white/8 border border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-center text-[#787774] dark:text-[#9B9A97]"><Columns className="w-4 h-4" /></div>
-                        <div>
-                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">SCRUM board</p>
-                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
-                        </div>
-                      </Link>
-                      <Link href="/workspaces/mock-4" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white font-bold text-xs"><Zap className="w-3.5 h-3.5" /></div>
-                        <div>
-                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">My Software Team</p>
-                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">5 days ago</p>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                  <button className="w-full text-left p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
-                    View all recent items
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {type === "starred" && (
-              <div className="flex flex-col">
-                <div className="p-8 text-center flex flex-col items-center">
-                  <div className="w-20 h-20 mb-4 relative flex items-center justify-center">
-                    <div className="absolute inset-0 bg-[#F0F0EE] dark:bg-white/5 rounded-full scale-150 opacity-50" />
-                    <Star className="w-10 h-10 text-[#ABABAB] dark:text-[#6B6B6B] relative z-10" />
-                    <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#2563EB] dark:bg-[#3B82F6] rounded-full flex items-center justify-center z-20 text-white dark:text-[#111111] border-2 border-white dark:border-[#1A1A1A]">
-                      <Plus className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                  <h4 className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7] mb-2 mt-4">You have not starred any items yet.</h4>
-                  <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-relaxed">Star important items for quick access. They will appear here.</p>
-                </div>
-                <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06]">
-                  <button className="w-full text-left p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors">
-                    View all starred items
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </>,
-        document.body
-      )}
-    </div>
-  );
-};
 
 export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
-  const { currentWorkspace, workspaces: sidebarWorkspaces } = useWorkspaceStore();
+  const { currentWorkspace, workspaces: sidebarWorkspaces } = useCurrentWorkspace();
   const { user } = useAuth();
   const channels = useChatStore((state) => state.channels);
 
@@ -647,6 +134,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [showCreateMenu, setShowCreateMenu] = useState(false);
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
+
   const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
   const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: '0px' });
   const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
@@ -829,11 +317,11 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
               {workspaceOpen && !collapsed && (
                 <div className="ml-6 mt-1 space-y-0.5">
                   {sidebarVisibleWorkspaces.map((workspace) => {
-                    const routeKey = workspace.key || workspace.slug || workspace.id || workspace._id;
+                    const routeKey = workspace.key || workspace.slug || workspace._id;
 
                     return (
                       <Link
-                        key={workspace.id || workspace._id || routeKey}
+                        key={workspace._id || routeKey}
                         href={`/workspaces/${routeKey}`}
                         className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                       >
@@ -978,58 +466,53 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                     <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
                       <BookOpen className="h-5 w-5" />
                     </div>
-                    <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                      No more workspaces
-                    </p>
-                    <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                      All available workspaces are already shown in the sidebar.
-                    </p>
+                    <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No more workspaces</p>
+                    <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">All available workspaces are already shown in the sidebar.</p>
                   </div>
                 ) : visibleMoreWorkspaces.length === 0 ? (
                   <div className="px-3 py-8 text-center">
                     <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
                       <Search className="h-5 w-5" />
                     </div>
-                    <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                      No matching workspaces
-                    </p>
-                    <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                      Try another workspace name or key.
-                    </p>
+                    <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No matching workspaces</p>
+                    <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Try another workspace name or key.</p>
                   </div>
                 ) : (
                   <div className="space-y-0.5">
                     {visibleMoreWorkspaces.map((workspace) => {
-                      const routeKey = workspace.key || workspace.slug || workspace._id || workspace.id;
+                      const routeKey = workspace.key || workspace.slug || workspace._id;
                       const isActiveWorkspace =
                         currentWorkspace?._id === workspace._id ||
                         currentWorkspace?.key === workspace.key ||
                         currentWorkspace?.slug === workspace.slug;
+                      const wsId = workspace._id || "";
+                      const hasUnread = getWorkspaceUnread(wsId) > 0;
 
                       return (
                         <Link
-                          key={workspace._id || workspace.id || routeKey}
+                          key={workspace._id || routeKey}
                           href={`/workspaces/${routeKey}`}
                           onClick={() => {
                             setActivePopover(null);
-                            setMoreWorkspaceSearch('');
+                            setMoreWorkspaceSearch("");
                             onMobileClose();
                           }}
-                          className={`flex w-full items-center gap-3 rounded-[6px] p-2 text-left transition-colors ${
-                            isActiveWorkspace ? navActiveClass : navInactiveClass
+                          className={`flex w-full items-center justify-between rounded-[6px] p-2 text-left transition-colors ${
+                            isActiveWorkspace
+                              ? navActiveClass
+                              : navInactiveClass
                           }`}
                         >
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-[#111111] dark:bg-[#E8E8E7] text-xs font-bold text-white dark:text-[#111111]">
-                            {workspace.name?.charAt(0) || workspace.key?.charAt(0) || 'W'}
+                          <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <WorkspaceAvatar workspace={workspace} size="md" />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[0.8125rem] font-semibold">{workspace.name || "Untitled workspace"}</p>
+                              <p className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{workspace.key || workspace.slug || "Workspace"}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[0.8125rem] font-semibold">
-                              {workspace.name || 'Untitled workspace'}
-                            </p>
-                            <p className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
-                              {workspace.key || workspace.slug || 'Workspace'}
-                            </p>
-                          </div>
+                          {hasUnread && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] shrink-0 ml-2 mr-1" />
+                          )}
                         </Link>
                       );
                     })}
@@ -1055,93 +538,10 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                   Create Workspace
                 </Link>
               </div>
-            
-
-            <div className="max-h-[16.25rem] overflow-y-auto p-2">
-              {hiddenSidebarWorkspaces.length === 0 ? (
-                <div className="px-3 py-8 text-center">
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
-                    <BookOpen className="h-5 w-5" />
-                  </div>
-                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No more workspaces</p>
-                  <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">All available workspaces are already shown in the sidebar.</p>
-                </div>
-              ) : visibleMoreWorkspaces.length === 0 ? (
-                <div className="px-3 py-8 text-center">
-                  <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
-                    <Search className="h-5 w-5" />
-                  </div>
-                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No matching workspaces</p>
-                  <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Try another workspace name or key.</p>
-                </div>
-              ) : (
-                <div className="space-y-0.5">
-                  {visibleMoreWorkspaces.map((workspace) => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const routeKey = workspace.key || workspace.slug || workspace._id || (workspace as any).id;
-                    const isActiveWorkspace =
-                      currentWorkspace?._id === workspace._id ||
-                      currentWorkspace?.key === workspace.key ||
-                      currentWorkspace?.slug === workspace.slug;
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const wsId = workspace._id || (workspace as any).id;
-                    const hasUnread = getWorkspaceUnread(wsId) > 0;
-
-                    return (
-                      <Link
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        key={workspace._id || (workspace as any).id || routeKey}
-                        href={`/workspaces/${routeKey}`}
-                        onClick={() => {
-                          setActivePopover(null);
-                          setMoreWorkspaceSearch("");
-                          onMobileClose();
-                        }}
-                        className={`flex w-full items-center justify-between rounded-[6px] p-2 text-left transition-colors ${
-                          isActiveWorkspace
-                            ? navActiveClass
-                            : navInactiveClass
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <WorkspaceAvatar workspace={workspace} size="md" />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-[0.8125rem] font-semibold">{workspace.name || "Untitled workspace"}</p>
-                            <p className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{workspace.key || workspace.slug || "Workspace"}</p>
-                          </div>
-                        </div>
-                        {hasUnread && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] shrink-0 ml-2 mr-1" />
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
             </div>
-
-            <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] p-2">
-              <Link
-                href="/workspaces"
-                onClick={() => setActivePopover(null)}
-                className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
-              >
-                <ListFilter className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
-                View all Workspaces
-              </Link>
-              <Link
-                href="/workspaces/create"
-                onClick={() => setActivePopover(null)}
-                className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
-              >
-                <Plus className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
-                Create Workspace
-              </Link>
-            </div>
-          </div>
-        </>,
-        document.body
-      )}
+          </>,
+          document.body
+        )}
     </>
   );
 }

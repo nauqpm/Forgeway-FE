@@ -120,9 +120,22 @@ export const documentService = {
     const res = await api.patch(apiRoutes.DOCUMENTS.WORKSPACES(id), { workspaceIds });
     return normalize<DocumentItem>(res, {} as DocumentItem);
   },
-  viewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.VIEW(id)}`,
-  previewUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.PREVIEW(id)}`,
-  downloadUrl: (id: string) => `${process.env.NEXT_PUBLIC_API_URL}${apiRoutes.DOCUMENTS.DOWNLOAD(id)}`,
+  getViewBlob: async (id: string): Promise<Blob> => {
+    const res = await api.get(apiRoutes.DOCUMENTS.VIEW(id), {
+      responseType: "blob",
+    });
+    return res.data;
+  },
+  getPreviewHtml: async (id: string): Promise<string> => {
+    const res = await api.get<string>(apiRoutes.DOCUMENTS.PREVIEW(id), {
+      responseType: "text",
+      transformResponse: [(data) => data],
+    });
+    return res.data;
+  },
+  viewUrl: (id: string) => api.getUri({ url: apiRoutes.DOCUMENTS.VIEW(id) }),
+  previewUrl: (id: string) => api.getUri({ url: apiRoutes.DOCUMENTS.PREVIEW(id) }),
+  downloadUrl: (id: string) => api.getUri({ url: apiRoutes.DOCUMENTS.DOWNLOAD(id) }),
 };
 
 // Internal type for raw document version from API

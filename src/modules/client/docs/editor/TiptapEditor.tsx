@@ -4,6 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useDocsStore } from "../store/docs.store";
+import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 import EditorHeader from "./EditorHeader";
 import EditorToolbar from "./EditorToolbar";
 import ReadOnlyEditor from "./ReadOnlyEditor";
@@ -39,8 +40,9 @@ export type EditorMode = "read" | "edit";
 
 const normalizeTitle = (value: string) => value.trim().toLocaleLowerCase();
 
-export default function TiptapEditor() {
-  const { documents, selectedDocumentId, updateDocument, saveDocument } = useDocsStore();
+export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
+  const { selectedDocumentId } = useDocsStore();
+  const { documents, updateDocument, saveDocument } = useWorkspaceDocs(workspaceId);
   const document = documents.find((d) => d.id === selectedDocumentId);
   const persistedPageId =
     selectedDocumentId && !selectedDocumentId.startsWith("temp-")
@@ -110,30 +112,12 @@ export default function TiptapEditor() {
       setWorkspacePages([]);
       return;
     }
-
-    let cancelled = false;
-
-    const loadWorkspacePages = async () => {
-      try {
-        const pages = await pagesService.getWorkspacePages(document.workspaceId);
-        if (!cancelled) {
-          setWorkspacePages(
-            pages.map((page) => ({ id: page.id, title: page.title })),
-          );
-        }
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Failed to load workspace pages:", error);
-        }
-      }
-    };
-
-    void loadWorkspacePages();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [document?.workspaceId]);
+    setWorkspacePages(
+      documents
+        .filter((page) => page.workspaceId === document.workspaceId)
+        .map((page) => ({ id: page.id, title: page.title })),
+    );
+  }, [document?.workspaceId, documents]);
 
   useEffect(() => {
     if (!document) {

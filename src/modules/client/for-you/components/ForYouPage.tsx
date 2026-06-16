@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, LayoutDashboard, Loader2, Plus } from "lucide-react";
+import { ArrowRight, BookOpen, LayoutDashboard, Loader2, Plus, ShieldCheck, Users } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
-import { useWorkspaceAvatarSync } from "@/hooks/useWorkspaceAvatarSync";
 
 export type ForYouWorkspace = {
   id?: string;
@@ -37,42 +38,18 @@ const roleLabel = (workspace: ForYouWorkspace) =>
   workspace.ownershipLabel || workspace.relationship || workspace.role?.replace(/_/g, " ") || "Workspace";
 
 export default function ForYouPage() {
-  const [rawWorkspaces, setForYouWorkspaces] = useState<ForYouWorkspace[]>([]);
-  const workspaces = useWorkspaceAvatarSync(rawWorkspaces);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadForYou = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await api.get(apiRoutes.FOR_YOU);
-        if (cancelled) return;
-
-        const payload = normalizePayload(response);
-        const nextWorkspaces = Array.isArray(payload) ? payload : (payload.workspaces ?? []);
-
-        setForYouWorkspaces(nextWorkspaces);
-      } catch {
-        if (!cancelled) {
-          setForYouWorkspaces([]);
-          setError("Could not load your workspace recommendations.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    loadForYou();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const {
+    data: workspaces = [],
+    isLoading: loading,
+    error,
+  } = useQuery<ForYouWorkspace[]>({
+    queryKey: queryKeys.workspaces.forYou(),
+    queryFn: async () => {
+      const response = await api.get(apiRoutes.FOR_YOU);
+      const payload = normalizePayload(response);
+      return Array.isArray(payload) ? payload : (payload.workspaces ?? []);
+    },
+  });
 
   const stats = useMemo(() => {
     const owned = workspaces.filter(
@@ -128,7 +105,7 @@ export default function ForYouPage() {
 
       {error && (
         <div className="mb-4 rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-4 py-3 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
-          {error}
+          Could not load your workspace recommendations.
         </div>
       )}
 

@@ -1,15 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2, Users, X, Crown, Shield, User } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
-import { Building2, Users, X, Crown, Shield, User } from "lucide-react";
+import type { Workspace } from "@/stores/workspaceStore";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
 
 interface Member {
   userId: { _id: string; email: string; fullName?: string };
   role: string;
+}
+
+interface WorkspaceDetail extends Workspace {
+  description?: string;
 }
 
 export interface WorkspaceSettingsProps {
@@ -17,64 +25,82 @@ export interface WorkspaceSettingsProps {
 }
 
 export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsProps) {
-  const { currentWorkspace, setCurrentWorkspace, setWorkspaces } = useWorkspaceStore();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [workspace, setWorkspace] = useState<any>(null);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { currentWorkspace } = useCurrentWorkspace();
   const [form, setForm] = useState({ name: "", description: "" });
-  const [saving, setSaving] = useState(false);
+
+  const workspacesQuery = useQuery<Workspace[]>({
+    queryKey: queryKeys.workspaces.list(),
+    queryFn: workspaceService.listMine,
+  });
+
+  const activeWorkspace = currentWorkspace ?? workspacesQuery.data?.[0] ?? null;
+
+  const workspaceQuery = useQuery<WorkspaceDetail>({
+    queryKey: activeWorkspace ? queryKeys.admin.settings(activeWorkspace._id) : [...queryKeys.admin.all, "settings", "none"],
+    queryFn: async () => {
+      const res = await api.get(apiRoutes.WORKSPACES.BY_ID(activeWorkspace!._id));
+      return res.data;
+    },
+    enabled: !!activeWorkspace?._id,
+  });
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    api
-      .get(apiRoutes.WORKSPACES.BASE)
-      .then((res) => {
-        if (cancelled) return;
-        setWorkspaces(res.data);
-        const ws = currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
-        if (!ws) {
-          setLoading(false);
-          return;
-        }
-        return api.get(apiRoutes.WORKSPACES.BY_ID(ws._id));
-      })
-      .then((res) => {
-        if (cancelled || !res) return;
-        setWorkspace(res.data);
-        setMembers(res.data.members || []);
-        setForm({ name: res.data.name, description: res.data.description || "" });
-      })
-      .catch((err) => {
-        console.error("Failed to fetch workspace settings:", err);
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [setWorkspaces]);
-
-  const handleSave = async () => {
-    const workspaceId = currentWorkspace?._id ?? workspace?._id;
-    if (!workspaceId) return;
-    setSaving(true);
-    try {
-      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceId), form);
-      setWorkspace(res.data);
-      setCurrentWorkspace(res.data);
-    } catch {
-    } finally {
-      setSaving(false);
+    if (workspaceQuery.data) {
+      setForm({
+        name: workspaceQuery.data.name,
+        description: workspaceQuery.data.description || "",
+      });
     }
-  };
+  }, [workspaceQuery.data]);
 
-  const handleRemoveMember = async (userId: string) => {
-    const workspaceId = currentWorkspace?._id ?? workspace?._id;
-    if (!workspaceId) return;
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const workspaceId = activeWorkspace?._id ?? workspaceQuery.data?._id;
+      if (!workspaceId) return null;
+      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceId), form);
+      return res.data as WorkspaceDetail;
+    },
+    onSuccess: (updatedWorkspace) => {
+      if (!updatedWorkspace) return;
+      queryClient.setQueryData(queryKeys.admin.settings(updatedWorkspace._id), updatedWorkspace);
+      queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (current = []) =>
+        current.map((workspace) =>
+          workspace._id === updatedWorkspace._id ? { ...workspace, ...updatedWorkspace } : workspace,
+        ),
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+    },
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const workspaceId = activeWorkspace?._id ?? workspaceQuery.data?._id;
+      if (!workspaceId) return null;
       await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceId, userId));
-      setMembers(members.filter((m) => m.userId._id !== userId));
-    } catch {}
-  };
+      return userId;
+    },
+    onSuccess: (userId) => {
+      if (!userId || !workspaceQuery.data?._id) return;
+      queryClient.setQueryData<WorkspaceDetail>(queryKeys.admin.settings(workspaceQuery.data._id), (current) =>
+        current
+          ? {
+              ...current,
+              members: (current.members ?? []).filter((member) => {
+                const memberId =
+                  typeof member.userId === "string"
+                    ? member.userId
+                    : member.userId?._id ?? member.userId?.id ?? "";
+                return memberId !== userId;
+              }),
+            }
+          : current,
+      );
+    },
+  });
+
+  const workspace = workspaceQuery.data ?? null;
+  const members = (workspace?.members ?? []) as Member[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const roleIcons: Record<string, any> = { owner: Crown, admin: Shield, member: User, viewer: User };
@@ -91,9 +117,9 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
     viewer: "Viewer",
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (workspacesQuery.isLoading || workspaceQuery.isLoading) return <LoadingSpinner />;
 
-  if (!currentWorkspace)
+  if (!activeWorkspace)
     return (
       <div className={`p-6 text-center text-[#787774] dark:text-[#9B9A97] ${className}`}>
         No workspace found. Please create a workspace first.
@@ -132,11 +158,11 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
           </div>
           <div className="flex justify-end">
             <button
-              onClick={handleSave}
-              disabled={saving}
+              onClick={() => saveMutation.mutate()}
+              disabled={saveMutation.isPending}
               className="px-6 py-2.5 bg-[#2563EB] text-white rounded-[6px] hover:bg-[#1D4ED8] font-medium disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Save changes"}
+              {saveMutation.isPending ? "Saving..." : "Save changes"}
             </button>
           </div>
         </div>
@@ -171,7 +197,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
                   </span>
                   {member.role !== "owner" && (
                     <button
-                      onClick={() => handleRemoveMember(member.userId._id)}
+                      onClick={() => removeMemberMutation.mutate(member.userId._id)}
                       className="p-1 hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] rounded text-[#9F2F2D] dark:text-[#F87171]"
                       title="Remove from workspace"
                     >

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { sprintService } from "../services/sprintService";
 import { Sprint, CreateSprintInput, UpdateSprintInput } from "../types/sprint.type";
-import { Issue } from "../types/issue.type";
 import { toast } from "react-hot-toast";
 
 const getApiErrorMessage = (error: unknown, fallback: string): string => {
@@ -15,45 +15,59 @@ const getApiErrorMessage = (error: unknown, fallback: string): string => {
 
 interface UseSprintHandlersProps {
   workspaceId: string;
-  sprints: Sprint[];
   editingSprint: Sprint | null;
-  setSprints: React.Dispatch<React.SetStateAction<Sprint[]>>;
   setEditingSprint: React.Dispatch<React.SetStateAction<Sprint | null>>;
   setIsSprintModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  setIssues: React.Dispatch<React.SetStateAction<Issue[]>>;
 }
 
 export const useSprintHandlers = ({
   workspaceId,
-  sprints,
   editingSprint,
-  setSprints,
   setEditingSprint,
   setIsSprintModalOpen,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  setIssues: _setIssues,
 }: UseSprintHandlersProps) => {
   const queryClient = useQueryClient();
   const [startSprintTarget, setStartSprintTarget] = useState<Sprint | null>(null);
   const [completeSprintTarget, setCompleteSprintTarget] = useState<Sprint | null>(null);
 
+  const { data: sprints = [] } = useQuery<Sprint[]>({
+    queryKey: queryKeys.sprints.byWorkspace(workspaceId),
+    queryFn: () => sprintService.listSprints(workspaceId),
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  });
+
   const createSprintMutation = useMutation({
     mutationFn: (input: CreateSprintInput) =>
       sprintService.createSprint(workspaceId, input),
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
-      return { previousSprints: sprints };
+    onMutate: async (newSprintInput) => {
+      const queryKey = queryKeys.sprints.byWorkspace(workspaceId);
+      await queryClient.cancelQueries({ queryKey });
+      const previousSprints = queryClient.getQueryData<Sprint[]>(queryKey) || [];
+      const optimisticSprint: Sprint = {
+        _id: "temp-" + Date.now(),
+        id: "temp-" + Date.now(),
+        name: newSprintInput.name,
+        status: "planning",
+        startDate: newSprintInput.startDate,
+        endDate: newSprintInput.endDate,
+        goal: newSprintInput.goal,
+        workspaceId,
+      };
+      queryClient.setQueryData(queryKey, [...previousSprints, optimisticSprint]);
+      return { previousSprints };
     },
-    onSuccess: (newSprint) => {
-      setSprints((prev) => [...prev, newSprint]);
+    onSuccess: () => {
       toast.success("Sprint created");
     },
     onError: (err, _input, context) => {
-      if (context?.previousSprints) setSprints(context.previousSprints);
+      if (context?.previousSprints) {
+        queryClient.setQueryData(queryKeys.sprints.byWorkspace(workspaceId), context.previousSprints);
+      }
       toast.error(getApiErrorMessage(err, "Error creating sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sprints.byWorkspace(workspaceId) });
     },
   });
 
@@ -61,17 +75,23 @@ export const useSprintHandlers = ({
     mutationFn: ({ sprintId, input }: { sprintId: string; input: UpdateSprintInput }) =>
       sprintService.updateSprint(workspaceId, sprintId, input),
     onMutate: async ({ sprintId, input }) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
-      const previousSprints = sprints;
-      setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, ...input } : s)));
+      const queryKey = queryKeys.sprints.byWorkspace(workspaceId);
+      await queryClient.cancelQueries({ queryKey });
+      const previousSprints = queryClient.getQueryData<Sprint[]>(queryKey) || [];
+      queryClient.setQueryData(
+        queryKey,
+        previousSprints.map((s) => (s._id === sprintId ? { ...s, ...input } : s))
+      );
       return { previousSprints };
     },
     onError: (err, _vars, context) => {
-      if (context?.previousSprints) setSprints(context.previousSprints);
+      if (context?.previousSprints) {
+        queryClient.setQueryData(queryKeys.sprints.byWorkspace(workspaceId), context.previousSprints);
+      }
       toast.error(getApiErrorMessage(err, "Error updating sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sprints.byWorkspace(workspaceId) });
     },
     onSuccess: () => {
       toast.success("Sprint updated");
@@ -82,17 +102,23 @@ export const useSprintHandlers = ({
     mutationFn: (sprintId: string) =>
       sprintService.deleteSprint(workspaceId, sprintId),
     onMutate: async (sprintId) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
-      const previousSprints = sprints;
-      setSprints(sprints.filter((s) => s._id !== sprintId));
+      const queryKey = queryKeys.sprints.byWorkspace(workspaceId);
+      await queryClient.cancelQueries({ queryKey });
+      const previousSprints = queryClient.getQueryData<Sprint[]>(queryKey) || [];
+      queryClient.setQueryData(
+        queryKey,
+        previousSprints.filter((s) => s._id !== sprintId)
+      );
       return { previousSprints };
     },
     onError: (err, _id, context) => {
-      if (context?.previousSprints) setSprints(context.previousSprints);
+      if (context?.previousSprints) {
+        queryClient.setQueryData(queryKeys.sprints.byWorkspace(workspaceId), context.previousSprints);
+      }
       toast.error(getApiErrorMessage(err, "Error deleting sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sprints.byWorkspace(workspaceId) });
     },
     onSuccess: () => {
       toast.success("Sprint deleted");
@@ -103,18 +129,24 @@ export const useSprintHandlers = ({
     mutationFn: ({ sprintId, input }: { sprintId: string; input: { startDate: string; endDate: string } }) =>
       sprintService.startSprint(workspaceId, sprintId, input),
     onMutate: async ({ sprintId }) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
-      const previousSprints = sprints;
-      setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, status: "active" as const } : s)));
+      const queryKey = queryKeys.sprints.byWorkspace(workspaceId);
+      await queryClient.cancelQueries({ queryKey });
+      const previousSprints = queryClient.getQueryData<Sprint[]>(queryKey) || [];
+      queryClient.setQueryData(
+        queryKey,
+        previousSprints.map((s) => (s._id === sprintId ? { ...s, status: "active" as const } : s))
+      );
       return { previousSprints };
     },
     onError: (err, _id, context) => {
-      if (context?.previousSprints) setSprints(context.previousSprints);
+      if (context?.previousSprints) {
+        queryClient.setQueryData(queryKeys.sprints.byWorkspace(workspaceId), context.previousSprints);
+      }
       toast.error(getApiErrorMessage(err, "Error starting sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sprints.byWorkspace(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.board.byWorkspace(workspaceId) });
     },
     onSuccess: () => {
       toast.success("Sprint started");
@@ -125,19 +157,25 @@ export const useSprintHandlers = ({
     mutationFn: ({ sprintId, input }: { sprintId: string; input?: { moveToSprintId?: string } }) =>
       sprintService.completeSprint(workspaceId, sprintId, input),
     onMutate: async ({ sprintId }) => {
-      await queryClient.cancelQueries({ queryKey: ["sprints", workspaceId] });
-      const previousSprints = sprints;
-      setSprints(sprints.map((s) => (s._id === sprintId ? { ...s, status: "completed" as const } : s)));
+      const queryKey = queryKeys.sprints.byWorkspace(workspaceId);
+      await queryClient.cancelQueries({ queryKey });
+      const previousSprints = queryClient.getQueryData<Sprint[]>(queryKey) || [];
+      queryClient.setQueryData(
+        queryKey,
+        previousSprints.map((s) => (s._id === sprintId ? { ...s, status: "completed" as const } : s))
+      );
       return { previousSprints };
     },
     onError: (err, _id, context) => {
-      if (context?.previousSprints) setSprints(context.previousSprints);
+      if (context?.previousSprints) {
+        queryClient.setQueryData(queryKeys.sprints.byWorkspace(workspaceId), context.previousSprints);
+      }
       toast.error(getApiErrorMessage(err, "Error completing sprint"));
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["sprints", workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sprints.byWorkspace(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.board.byWorkspace(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
     },
     onSuccess: () => {
       toast.success("Sprint completed");
@@ -235,6 +273,7 @@ export const useSprintHandlers = ({
   };
 
   return {
+    sprints,
     handleCreateSprint,
     handleSaveSprint,
     handleEditSprint,
