@@ -201,7 +201,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] truncate leading-snug">
-                      {member.fullName || 'Unknown'}
+                      {member.fullName || member.email || 'User'}
                     </span>
                     {getRoleBadge(member.role)}
                   </div>
