@@ -205,7 +205,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
             <div className="flex items-center justify-between bg-[#F0F0EE] dark:bg-white/5 rounded-[6px] px-3 py-2 border-l-4 border-[#2563EB] text-xs mb-1">
               <div className="flex flex-col min-w-0">
                 <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  Replying to {replyingToMessage.senderId.fullName}
+                  Replying to {replyingToMessage.senderId.fullName || replyingToMessage.senderId.email || 'User'}
                 </span>
                 <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
                   {replyingToMessage.content}
