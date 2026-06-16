@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2, Mic, MicOff, Video, VideoOff, PhoneOff, LogOut } from 'lucide-react';
+import { Loader2, Mic, MicOff, Video, VideoOff, PhoneOff, LogOut, Users, UsersRound } from 'lucide-react';
 
 import { MeetingType } from '@/modules/client/chat/types/webrtc.types';
 
@@ -7,8 +7,11 @@ interface MeetingControlsProps {
   isAudioOn: boolean;
   isVideoOn: boolean;
   meetingType: MeetingType;
+  participantCount: number;
+  isParticipantsOpen: boolean;
   onToggleAudio: () => void;
   onToggleVideo: () => void;
+  onToggleParticipants: () => void;
   onLeave: () => void;
   onEndForAll?: () => void;
   isEndingMeeting?: boolean;
@@ -18,8 +21,11 @@ export default function MeetingControls({
   isAudioOn,
   isVideoOn,
   meetingType,
+  participantCount,
+  isParticipantsOpen,
   onToggleAudio,
   onToggleVideo,
+  onToggleParticipants,
   onLeave,
   onEndForAll,
   isEndingMeeting = false,
@@ -32,6 +38,20 @@ export default function MeetingControls({
 
       {/* Center section - Main controls */}
       <div className="flex items-center gap-4 flex-1 justify-center">
+        
+
+        <button
+          onClick={onToggleParticipants}
+          className={`md:hidden w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md ${
+            isParticipantsOpen
+              ? 'bg-blue-500 hover:bg-blue-600 text-white'
+              : 'bg-[#2A2B3D] hover:bg-[#3A3B4D] text-white'
+          }`}
+          title={isParticipantsOpen ? 'Hide participants' : 'Show participants'}
+        >
+          {isParticipantsOpen ? <UsersRound className="w-5 h-5" /> : <Users className="w-5 h-5" />}
+        </button>
+
         <button
           onClick={onToggleAudio}
           className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md ${
@@ -67,6 +87,20 @@ export default function MeetingControls({
         >
           <LogOut className="w-5 h-5" />
           Leave
+        </button>
+
+        <button
+          onClick={onToggleParticipants}
+          className={`hidden md:flex h-12 items-center gap-2 rounded-full border px-4 font-medium transition-all shadow-md ${
+            isParticipantsOpen
+              ? 'border-blue-500/40 bg-blue-500/10 text-blue-300 hover:bg-blue-500/15'
+              : 'border-[#2A2B3D] bg-[#2A2B3D] text-white hover:bg-[#3A3B4D]'
+          }`}
+          title={isParticipantsOpen ? 'Hide participants' : 'Show participants'}
+        >
+          {isParticipantsOpen ? <UsersRound className="w-5 h-5" /> : <Users className="w-5 h-5" />}
+          <span>People</span>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs">{participantCount}</span>
         </button>
       </div>
 
