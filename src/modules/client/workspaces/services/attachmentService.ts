@@ -26,6 +26,42 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return typeof message === "string" && message.trim() ? message : fallback;
 };
 
+const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please try again.") => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const status = (error as any)?.response?.status;
+  const message = getErrorMessage(error, fallback).toLowerCase();
+
+  if (status === 400) {
+    if (message.includes("file extension") || message.includes("file type") || message.includes("mime type")) {
+      return "Invalid file format. Please upload a supported file type.";
+    }
+
+    if (message.includes("file too large") || message.includes("too large") || message.includes("size")) {
+      return "File is too large. Please upload a smaller attachment.";
+    }
+
+    return "Could not upload this attachment. Please check the file and try again.";
+  }
+
+  if (status === 413) {
+    return "File is too large. Please upload a smaller attachment.";
+  }
+
+  if (status === 401 || status === 403) {
+    return "You do not have permission to upload attachments to this task.";
+  }
+
+  if (!status) {
+    return "Network issue while uploading attachment. Please check your connection and try again.";
+  }
+
+  if (status >= 500) {
+    return "Server issue while uploading attachment. Please try again later.";
+  }
+
+  return getErrorMessage(error, fallback);
+};
+
 export const attachmentService = {
   async listAttachments({ workspaceId, taskId, accessToken }: AttachmentRequestContext): Promise<TaskAttachment[]> {
     const response = await api.get(
@@ -109,4 +145,5 @@ export const attachmentService = {
   },
 
   getErrorMessage,
+  getUploadErrorMessage,
 };
