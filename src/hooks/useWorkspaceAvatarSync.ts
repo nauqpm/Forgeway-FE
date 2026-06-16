@@ -25,6 +25,10 @@ export function useWorkspaceAvatarSync<T extends AvatarSyncable>(localWorkspaces
       const sw = storeWorkspaces.find((s) => s._id === id);
       if (!sw) return local;
       const storeAvatar = sw.avatar ?? null;
+      // Only override local avatar when the store actually has a real value —
+      // avoids clobbering a correct API-fetched avatar with a stale null from
+      // a socket event that arrived before avatar was persisted.
+      if (!storeAvatar) return local;
       if (local.avatar === storeAvatar) return local;
       anyChanged = true;
       return { ...local, avatar: storeAvatar };
