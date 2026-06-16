@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { BookOpen, CheckCircle2, Database, LayoutDashboard, Loader2 } from "lucide-react";
+import { BookOpen, CheckCircle2, Loader2 } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-hot-toast";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
+import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
 import { boardService } from "@/modules/client/workspaces/services/boardService";
 import { taskService } from "@/modules/client/workspaces/services/taskService";
 import { sprintService } from "@/modules/client/workspaces/services/sprintService";
@@ -32,6 +33,7 @@ type ForYouWorkspace = {
   relationship?: string;
   ownershipLabel?: string;
   updatedAt?: string;
+  avatar?: string | null;
 };
 
 type UserDashboardStats = {
@@ -60,21 +62,12 @@ const workspaceIdOf = (workspace: ForYouWorkspace) => workspace.id || workspace.
 
 const workspaceRouteKeyOf = (workspace: ForYouWorkspace) => workspace.key || workspace.slug || workspaceIdOf(workspace);
 
-const SHOW_STARRED_DASHBOARD_TAB = false;
-
-const toWorkspaceCard = (workspace: ForYouWorkspace, index: number) => {
-  const icons = [LayoutDashboard, Database, BookOpen, CheckCircle2];
-  const colors = ["bg-[#2563EB]", "bg-[#346538]", "bg-[#1F6C9F]", "bg-[#3B82F6]"];
-
-  return {
-    ...workspace,
-    id: workspaceIdOf(workspace),
-    routeKey: workspaceRouteKeyOf(workspace),
-    description: workspace.ownershipLabel || workspace.relationship || workspace.role || workspace.type || "Workspace",
-    icon: icons[index % icons.length],
-    color: colors[index % colors.length],
-  };
-};
+const toWorkspaceCard = (workspace: ForYouWorkspace) => ({
+  ...workspace,
+  id: workspaceIdOf(workspace),
+  routeKey: workspaceRouteKeyOf(workspace),
+  description: workspace.ownershipLabel || workspace.relationship || workspace.role || workspace.type || "Workspace",
+});
 
 const isIdLike = (s?: string) =>
   /^[0-9a-f]{24}$/i.test(s ?? "") || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s ?? "");
@@ -118,7 +111,6 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_userStats, setUserStats] = useState<UserDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("assigned");
 
   const [selectedDashboardTask, setSelectedDashboardTask] = useState<DashboardTask | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -242,21 +234,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     };
   }, [setWorkspaces, user?.id]);
 
-  const tabs = [
-    { label: "Assigned to me", key: "assigned" },
-    { label: "Starred", key: "starred" },
-    { label: "Worked on", key: "worked" },
-    { label: "Viewed", key: "viewed" },
-  ].filter((tab) => SHOW_STARRED_DASHBOARD_TAB || tab.key !== "starred");
-
   const displayWorkspaces = useMemo(() => workspaces.slice(0, 4).map(toWorkspaceCard), [workspaces]);
-  const filteredTasks = activeTab === "assigned" ? assignedTasks : activeTab === "worked" ? workedTasks : [];
-  const emptyMessage =
-    activeTab === "starred"
-      ? "The backend does not have an API for starred items yet."
-      : activeTab === "viewed"
-        ? "The backend records task view audit events but does not have a viewed-items API yet."
-        : "No matching tasks.";
 
   const handleOpenTask = async (task: DashboardTask) => {
     setSelectedDashboardTask(task);
@@ -322,7 +300,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   if (loading) return null;
 
   return (
-    <div className={`app-page-medium ${className}`}>
+    <div className={`app-page-medium pt-6 ${className}`}>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="px-2 text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">Recommended workspaces</h1>
 
@@ -345,11 +323,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
               style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
             >
               <div className="flex items-start gap-4">
-                <div
-                  className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-[8px] ${workspace.color}`}
-                >
-                  <workspace.icon className="h-6 w-6 text-white" />
-                </div>
+                <WorkspaceAvatar workspace={workspace} size="lg" />
 
                 <div className="min-w-0">
                   <h3 className="truncate font-semibold text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#3B82F6]">
@@ -386,31 +360,13 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`rounded-[6px] px-3 py-1.5 text-sm transition ${
-                activeTab === tab.key
-                  ? "bg-[#EFF6FF] font-medium text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
-                  : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-white/[0.05]"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="mb-2 text-sm text-[#787774] dark:text-[#9B9A97]">Summary</div>
-
         <div className="space-y-2">
-          {filteredTasks.length === 0 ? (
+          {assignedTasks.length === 0 ? (
             <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] px-4 py-8 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
-              {emptyMessage}
+              No tasks assigned to you yet.
             </div>
           ) : (
-            filteredTasks.map((task) => (
+            assignedTasks.map((task) => (
               <div
                 key={task.id}
                 onClick={() => handleOpenTask(task)}
