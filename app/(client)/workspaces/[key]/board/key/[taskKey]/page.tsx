@@ -92,6 +92,7 @@ export default function TaskDetailDeepLinkPage() {
       columnId: updatedIssue.columnId,
       sprintId: updatedIssue.sprintId ?? null,
       storyPoints: updatedIssue.storyPoints ?? undefined,
+      startDate: updatedIssue.startDate ?? undefined,
       dueDate: updatedIssue.dueDate ?? undefined,
       assigneeId: updatedIssue.assigneeId ?? null,
     };
