@@ -19,6 +19,8 @@ const QUICK_EMOJIS = ['❤️', '👍', '😂', '😢', '❓'];
 
 export default function MessageItem({ message, isSameUserAsPrevious, isMine }: MessageItemProps) {
   const sender = message.senderId;
+  const displayName = sender.fullName || sender.email || 'User';
+  const initialLetter = displayName.charAt(0).toUpperCase();
   const isDeleted = message.deletedAt !== null;
 
   const authUser = useAuthStore(state => state.user);
@@ -34,6 +36,12 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   const replyParent = message.replyToId && typeof message.replyToId === 'object'
     ? (message.replyToId as Message)
     : null;
+
+  const replySender = replyParent?.senderId;
+  const replyDisplayName = replySender
+    ? (typeof replySender === 'object' ? (replySender.fullName || replySender.email || 'User') : 'User')
+    : 'User';
+  const replyInitialLetter = replyDisplayName.charAt(0).toUpperCase();
 
   const isMentioned = (() => {
     if (!currentUserId || !message.content) return false;
@@ -222,20 +230,20 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             {sender.avatar ? (
               <img 
                 src={sender.avatar} 
-                alt={sender.fullName} 
+                alt={displayName} 
                 className="w-full h-full object-cover" 
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
                   if (parent) {
                     const span = document.createElement('span');
-                    span.innerText = sender.fullName?.charAt(0).toUpperCase() || 'U';
+                    span.innerText = initialLetter;
                     parent.appendChild(span);
                   }
                 }}
               />
             ) : (
-              <span>{sender.fullName?.charAt(0).toUpperCase()}</span>
+              <span>{initialLetter}</span>
             )}
           </div>
         ) : (
@@ -258,7 +266,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             {replyParent.senderId?.avatar ? (
               <img 
                 src={replyParent.senderId.avatar} 
-                alt={replyParent.senderId.fullName} 
+                alt={replyDisplayName} 
                 className="w-4 h-4 rounded-full object-cover shrink-0" 
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
@@ -266,18 +274,18 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
                   if (parent && !parent.querySelector('.reply-avatar-fallback')) {
                     const span = document.createElement('span');
                     span.className = 'reply-avatar-fallback w-4 h-4 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[9px] font-bold shrink-0';
-                    span.innerText = replyParent.senderId?.fullName?.charAt(0).toUpperCase() || 'U';
+                    span.innerText = replyInitialLetter;
                     parent.insertBefore(span, parent.firstChild);
                   }
                 }}
               />
             ) : (
               <div className="w-4 h-4 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[9px] font-bold shrink-0">
-                {replyParent.senderId?.fullName?.charAt(0).toUpperCase() || 'U'}
+                {replyInitialLetter}
               </div>
             )}
             <span className="font-bold hover:underline">
-              @{replyParent.senderId?.fullName || "User"}
+              @{replyDisplayName}
             </span>
             <span className="truncate opacity-80 flex-1 text-left">
               {replyParent.deletedAt ? "[Message deleted]" : renderMessageContent(replyParent.content)}
@@ -288,7 +296,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
         {!isSameUserAsPrevious && (
           <div className="flex items-center gap-2 mb-0.5">
             <span className="text-[0.875rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer">
-              {sender.fullName}
+              {displayName}
             </span>
             <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
               {format(new Date(message.createdAt), 'dd/MM/yyyy HH:mm')}
@@ -394,7 +402,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
               
               {/* Message Preview */}
               <div className="mt-3 p-3 bg-[#F7F6F3] dark:bg-white/[0.04] rounded-lg border border-[#EAEAEA] dark:border-white/[0.06]">
-                <p className="text-[0.75rem] text-[#ABABAB] dark:text-[#6B6B6B] mb-1">{sender.fullName}</p>
+                <p className="text-[0.75rem] text-[#ABABAB] dark:text-[#6B6B6B] mb-1">{displayName}</p>
                 <p className="text-[0.8125rem] text-[#555555] dark:text-[#AAAAAA] line-clamp-2 break-words">
                   {message.content ? renderMessageContent(message.content) : '[Attachment]'}
                 </p>
