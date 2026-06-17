@@ -26,7 +26,6 @@ import {
   Building2,
   Clock7,
   Star,
-  ListFilter,
   Search,
   Columns,
   FolderOpen,
@@ -357,21 +356,6 @@ const PopoverNavItem = ({
                             <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
                           </div>
                         </Link>
-                        <Link
-                          href="/filter/my-tasks"
-                          className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors"
-                          onClick={() => setActivePopover(null)}
-                        >
-                          <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B]">
-                            <ListFilter className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
-                              Reported by me
-                            </p>
-                            <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
-                          </div>
-                        </Link>
                       </div>
                     </div>
                     <div>
@@ -560,13 +544,6 @@ const PopoverNavItem = ({
                         <div>
                           <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">quan</p>
                           <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">7 seconds ago</p>
-                        </div>
-                      </Link>
-                      <Link href="/filter/my-tasks" className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors" onClick={() => setActivePopover(null)}>
-                        <div className="w-7 h-7 rounded-[6px] flex items-center justify-center text-[#ABABAB] dark:text-[#6B6B6B]"><ListFilter className="w-4 h-4" /></div>
-                        <div>
-                          <p className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">Reported by me</p>
-                          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">14 seconds ago</p>
                         </div>
                       </Link>
                     </div>
@@ -1019,9 +996,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                             isActiveWorkspace ? navActiveClass : navInactiveClass
                           }`}
                         >
-                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] bg-[#111111] dark:bg-[#E8E8E7] text-xs font-bold text-white dark:text-[#111111]">
-                            {workspace.name?.charAt(0) || workspace.key?.charAt(0) || 'W'}
-                          </div>
+                            <WorkspaceAvatar workspace={workspace} size="md" />
                           <div className="min-w-0 flex-1">
                             <p className="truncate text-[0.8125rem] font-semibold">
                               {workspace.name || 'Untitled workspace'}
@@ -1043,7 +1018,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                   onClick={() => setActivePopover(null)}
                   className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
                 >
-                  <ListFilter className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
+                  <BookOpen className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                   View all Workspaces
                 </Link>
                 <Link
@@ -1126,7 +1101,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                 onClick={() => setActivePopover(null)}
                 className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
               >
-                <ListFilter className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
+                <BookOpen className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
                 View all Workspaces
               </Link>
               <Link

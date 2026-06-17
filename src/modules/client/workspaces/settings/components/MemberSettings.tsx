@@ -1,44 +1,36 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { Loader2, Users, UserPlus, Trash2, X } from "lucide-react";
+import { Loader2, Trash2, UserPlus, Users, X } from "lucide-react";
+
 import InviteModal from "@/modules/shared/components/common/components/InviteModal";
 import RoleChanger from "@/modules/client/workspaces/components/RoleChanger";
 import { PendingInvite } from "@/modules/client/workspaces/services/inviteService";
+import {
+  WorkspaceMember,
+  InviteRole,
+  ROLE_LABELS,
+  getMemberInitials,
+} from "../types/workspaceSettings.type";
 
-interface WorkspaceMember {
-  userId: {
-    _id: string;
-    fullName?: string;
-    email?: string;
-    avatar?: string;
-  };
-  role: string;
-}
-
-interface MemberSettingsProps {
+export interface MemberSettingsProps {
   members: WorkspaceMember[];
   loadingMembers: boolean;
   canManageWorkspace: boolean;
   workspaceInviteId: string;
   currentUserId?: string;
-}
-
-const ROLE_LABELS: Record<string, string> = {
-  workspace_admin: "Administrator",
-  space_admin: "Administrator",
-  member: "Member",
-  viewer: "Viewer",
-};
-
-function getMemberInitials(member: WorkspaceMember) {
-  const displayName = member.userId?.fullName || member.userId?.email || "?";
-  return displayName
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  memberSubTab: "list" | "invites";
+  showInviteModal: boolean;
+  invites: PendingInvite[];
+  loadingInvites: boolean;
+  cancellingId: string | null;
+  removingMemberId: string | null;
+  updatingMemberId: string | null;
+  setMemberSubTab: (value: "list" | "invites") => void;
+  setShowInviteModal: (value: boolean) => void;
+  refreshInvites: () => Promise<void>;
+  handleCancelInvite: (inviteId: string) => void;
+  handleUpdateMemberRole: (member: WorkspaceMember, role: InviteRole) => void;
+  handleRemoveMember: (member: WorkspaceMember) => void;
 }
 
 export default function MemberSettings({
@@ -47,28 +39,24 @@ export default function MemberSettings({
   canManageWorkspace,
   workspaceInviteId,
   currentUserId,
+  memberSubTab,
+  showInviteModal,
+  invites,
+  loadingInvites,
+  cancellingId,
+  removingMemberId,
+  updatingMemberId,
+  setMemberSubTab,
+  setShowInviteModal,
+  refreshInvites,
+  handleCancelInvite,
+  handleUpdateMemberRole,
+  handleRemoveMember,
 }: MemberSettingsProps) {
-  const [memberSubTab, setMemberSubTab] = useState<"list" | "invites">("list");
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_inviteEmail, _setInviteEmail] = useState("");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_inviteRole, _setInviteRole] = useState<"admin" | "member" | "viewer">("member");
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_inviting, _setInviting] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [invites, _setInvites] = useState<PendingInvite[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [loadingInvites, _setLoadingInvites] = useState(false);
-  const [cancellingId, setCancellingId] = useState<string | null>(null);
-  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
-  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_memberMenu, _setMemberMenu] = useState<{
-    member: WorkspaceMember;
-    x: number;
-    y: number;
-  } | null>(null);
+  const closeInviteModal = () => {
+    setShowInviteModal(false);
+    void refreshInvites();
+  };
 
   const listTabClass =
     memberSubTab === "list"
@@ -79,31 +67,6 @@ export default function MemberSettings({
     memberSubTab === "invites"
       ? "bg-white text-[#111111] shadow-sm dark:bg-[#202020] dark:text-[#E8E8E7]"
       : "text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]";
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _handleInvite = async (event: FormEvent) => {
-    event.preventDefault();
-    // Invite logic handled by parent or API call
-  };
-
-  const handleCancelInvite = async (inviteId: string) => {
-    setCancellingId(inviteId);
-    // Cancel logic handled by parent
-    setCancellingId(null);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleUpdateMemberRole = async (member: WorkspaceMember, _role: string) => {
-    setUpdatingMemberId(member.userId?._id);
-    // Update logic handled by parent
-    setUpdatingMemberId(null);
-  };
-
-  const handleRemoveMember = async (member: WorkspaceMember) => {
-    setRemovingMemberId(member.userId?._id);
-    // Remove logic handled by parent
-    setRemovingMemberId(null);
-  };
 
   return (
     <div className="space-y-6">
@@ -166,7 +129,8 @@ export default function MemberSettings({
                   const memberId = memberUser?._id;
                   const isSelf = memberId === currentUserId;
                   const isBusy = updatingMemberId === memberId || removingMemberId === memberId;
-                  const normalizedRole = member.role === "space_admin" ? "workspace_admin" : member.role;
+                  const normalizedRole: InviteRole =
+                    member.role === "space_admin" ? "workspace_admin" : (member.role as InviteRole);
 
                   return (
                     <div
@@ -298,11 +262,7 @@ export default function MemberSettings({
       )}
 
       {canManageWorkspace && (
-        <InviteModal
-          isOpen={showInviteModal}
-          onClose={() => setShowInviteModal(false)}
-          projectId={workspaceInviteId}
-        />
+        <InviteModal isOpen={showInviteModal} onClose={closeInviteModal} projectId={workspaceInviteId} />
       )}
     </div>
   );
