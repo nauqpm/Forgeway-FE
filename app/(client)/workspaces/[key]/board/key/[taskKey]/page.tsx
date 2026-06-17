@@ -91,6 +91,7 @@ export default function TaskDetailDeepLinkPage() {
 
   const handleUpdateIssue = async (updatedIssue: TaskDetailResponse) => {
     await updateIssueMutation.mutateAsync(updatedIssue);
+  };
 
   if (taskDetailQuery.isLoading) {
     return (

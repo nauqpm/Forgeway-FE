@@ -36,7 +36,7 @@ export function useCreateWorkspace() {
       if (normalizedId) {
         queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (prev = []) => {
           const alreadyInCache = prev.some(
-            (w) => w._id === normalizedId || w.id === normalizedId
+            (w) => w._id === normalizedId || (w as any).id === normalizedId
           );
           if (alreadyInCache) return prev;
           
