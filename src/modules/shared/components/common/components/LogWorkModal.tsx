@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { parseTimeToMinutes } from '@/utils/timeTracking';
+import { parseTimeToMinutes } from '@/common/utils/timeTracking';
 
 interface LogWorkModalProps {
   onClose: () => void;

@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { Hash, Megaphone, Loader2 } from 'lucide-react';
-import { getWorkspaceUI } from '@/utils/workSpaceUI';
+import { getWorkspaceUI } from '@/common/utils/workSpaceUI';
 import { useSearchParams } from 'next/navigation';
 import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
 import { useWorkspaces } from '@/modules/client/workspaces/hooks/useWorkspaces';

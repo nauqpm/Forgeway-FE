@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Clock } from 'lucide-react';
-import { parseTimeToMinutes, formatMinutesToTimeString } from '@/utils/timeTracking';
+import { parseTimeToMinutes, formatMinutesToTimeString } from '@/common/utils/timeTracking';
 import LogWorkModal from './LogWorkModal';
 
 interface TimeTrackingSidebarProps {
