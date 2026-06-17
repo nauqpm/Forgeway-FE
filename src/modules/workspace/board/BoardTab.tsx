@@ -1,19 +1,19 @@
-"use client";
+﻿"use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
-import { Filters } from "../../types/filter.type";
-import { Issue } from "../../types/issue.type";
-import { Workspace } from "../../types/workspace.type";
-import { BoardColumn } from "../../types/board.type";
-import { Sprint } from "../../types/sprint.type";
-import type { TaskCover } from "../../types/task-cover.type";
-import DeleteColumnModal from "../DeleteColumnModal";
-import BoardFilters from "../BoardFilters";
+import { Filters } from "@/modules/workspace/shared/types/filter.type";
+import { Issue } from "@/modules/workspace/shared/types/issue.type";
+import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
+import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
+import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
+import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import DeleteColumnModal from "@/modules/workspace/shared/components/DeleteColumnModal";
+import BoardFilters from "@/modules/workspace/shared/components/BoardFilters";
 import BoardTaskActionMenu from "@/modules/workspace/tasks/covers/BoardTaskActionMenu";
 import TaskLabelModal from "@/modules/workspace/tasks/labels/TaskLabelModal";
-import { compareIssueRank } from "../../utils/dragUtils";
+import { compareIssueRank } from "@/modules/workspace/shared/utils/dragUtils";
 
 import {
   Check,

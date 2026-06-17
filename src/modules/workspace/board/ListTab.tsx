@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
@@ -10,13 +10,13 @@ import {
   FileText,
   Columns,
 } from "lucide-react";
-import { Issue } from "../../types/issue.type";
-import { Filters } from "../../types/filter.type";
+import { Issue } from "@/modules/workspace/shared/types/issue.type";
+import { Filters } from "@/modules/workspace/shared/types/filter.type";
 import { VisibilityState } from "@tanstack/react-table";
-import { Sprint } from "../../types/sprint.type";
+import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
 import DataGridListView from "@/modules/admin-shared/components/common/components/DataGridListView";
-import TaskDetailList from "../TaskDetailList";
-import BoardFilters from "../BoardFilters";
+import TaskDetailList from "@/modules/workspace/tasks/detail/TaskDetailList";
+import BoardFilters from "@/modules/workspace/shared/components/BoardFilters";
 
 type ListSplitSortField =
   | "created"

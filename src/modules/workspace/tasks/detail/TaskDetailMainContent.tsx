@@ -4,11 +4,11 @@ import React from "react";
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
 import TaskDescription from "@/modules/admin-shared/components/common/components/TaskDescription";
 import TaskAttachmentsPanel from "@/modules/workspace/tasks/attachments/TaskAttachmentsPanel";
-import TaskComments from "./TaskComments";
-import TaskActivityHistory from "./TaskActivityHistory";
+import TaskComments from "@/modules/workspace/shared/components/TaskComments";
+import TaskActivityHistory from "@/modules/workspace/shared/components/TaskActivityHistory";
 import { getIssueAssigneeId } from "./task-detail-shared";
-import type { TaskStatusColumn } from "../utils/taskStatusColumns";
-import type { TaskDetailResponse } from "../types/task-detail.type";
+import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
+import type { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import type { WorkspaceMember } from "./task-detail-shared";
 
 interface TaskDetailMainContentProps {

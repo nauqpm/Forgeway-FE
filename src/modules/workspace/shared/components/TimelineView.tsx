@@ -15,12 +15,12 @@ import {
   calculateResizeResult,
   getTimelineBarGeometry,
   type TimelineDragSession,
-} from './timeline/timelineDrag';
-import { getWeeklyBoundaryOffsets } from './timeline/timelineDateMath';
+} from '@/modules/workspace/timeline/timelineDrag';
+import { getWeeklyBoundaryOffsets } from '@/modules/workspace/timeline/timelineDateMath';
 import {
   buildTimelineRows,
   type TimelineRow,
-} from './timeline/timelineRows';
+} from '@/modules/workspace/timeline/timelineRows';
 
 /* ─────────────────────────────── Types ──────────────────────────────────── */
 

@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import { ArchiveRestore, CheckSquare, FileText, Loader2, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Issue } from "../../types/issue.type";
-import { BoardColumn } from "../../types/board.type";
+import { Issue } from "@/modules/workspace/shared/types/issue.type";
+import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 
 type ArchiveTabProps = {
   issues: Issue[];

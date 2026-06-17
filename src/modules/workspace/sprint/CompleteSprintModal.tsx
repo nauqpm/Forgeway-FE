@@ -3,8 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { queryKeys } from '@/shared/constants/queryKeys';
-import { sprintService } from '../services/sprintService';
-import { Sprint } from '../types/sprint.type';
+import { sprintService } from '@/modules/workspace/shared/services/sprintService';
+import { Sprint } from '@/modules/workspace/shared/types/sprint.type';
 
 interface CompleteSprintModalProps {
   isOpen: boolean;

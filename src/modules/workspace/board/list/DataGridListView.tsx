@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { CheckSquare, Columns, FileText, MoreHorizontal, Search } from "lucide-react";
 
-import { Issue } from "../../../types/issue.type";
+import { Issue } from "@/modules/workspace/shared/types/issue.type";
 import CustomDatePicker from "@/shared/components/CustomDatePicker";
 import StatusPicker from "@/shared/components/StatusPicker";
 

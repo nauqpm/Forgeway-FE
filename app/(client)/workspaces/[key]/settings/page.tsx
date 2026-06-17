@@ -8,9 +8,9 @@ import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 
-import { useWorkspaceSettingsPage } from "@/modules/client/workspaces/settings/hooks/useWorkspaceSettingsPage";
-import GeneralSettings from "@/modules/client/workspaces/settings/components/GeneralSettings";
-import MemberSettings from "@/modules/client/workspaces/settings/components/MemberSettings";
+import { useWorkspaceSettingsPage } from "@/modules/workspace/settings/hooks/useWorkspaceSettingsPage";
+import GeneralSettings from "@/modules/workspace/settings/components/GeneralSettings";
+import MemberSettings from "@/modules/workspace/settings/components/MemberSettings";
 
 export default function WorkspaceSettingsPage({ params }: { params: Promise<{ key: string }> }) {
   usePageTitle("Workspace Settings");

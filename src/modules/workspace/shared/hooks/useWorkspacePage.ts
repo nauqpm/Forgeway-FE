@@ -123,15 +123,15 @@ export function useWorkspacePage(workspaceKey: string, tab: string[] | undefined
 
   const { handleCreateIssue, handleUpdateIssue, handleUpdateIssueDate, updateIssueDirectly,
     handleQuickCreateTask, handleQuickCreateCalendarTask, handleCreateTaskFromList } =
-    useTaskHandlers({ workspaceId: workspaceId ?? "", issues, setIssues, setShowCreateIssue, setNewIssueForm, setSelectedIssue });
+    useTaskHandlers({ workspaceId: workspaceId ?? "", setShowCreateIssue, setNewIssueForm, setSelectedIssue });
 
   const { handleAddColumn, handleRenameColumn, handleDeleteColumn, handleMoveColumn } =
-    useColumnHandlers({ workspaceId: workspaceId ?? "", columns, newColumnName, setColumns, setNewColumnName, setShowCreateColumn, columnsEndRef });
+    useColumnHandlers({ workspaceId: workspaceId ?? "", newColumnName, setNewColumnName, setShowCreateColumn, columnsEndRef });
 
   const { handleCreateSprint, handleSaveSprint, handleEditSprint, handleDeleteSprint,
     handleStartSprint, handleCompleteSprint, handleConfirmStartSprint, handleConfirmCompleteSprint,
     startSprintTarget, setStartSprintTarget, completeSprintTarget, setCompleteSprintTarget } =
-    useSprintHandlers({ workspaceId: workspaceId ?? "", sprints, editingSprint, setSprints, setEditingSprint, setIsSprintModalOpen, setIssues });
+    useSprintHandlers({ workspaceId: workspaceId ?? "", editingSprint, setEditingSprint, setIsSprintModalOpen });
 
   const { toggleTaskSelection, toggleSprintSelection } = useSelectionHandlers({
     workspaceId: workspaceId ?? "", issues, selectedTaskIds, setIssues, setSelectedTaskIds,

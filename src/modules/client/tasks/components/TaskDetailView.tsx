@@ -9,7 +9,7 @@ import {
   Send,
   Edit3,
 } from "lucide-react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import StatusPicker from "@/shared/components/StatusPicker";
 import { typeColors, priorityOptions } from "../types/taskDetail.type";
@@ -32,7 +32,7 @@ export default function TaskDetailView({
   handleSaveDescription,
 }: Props) {
   const { user } = useAuth();
-  const { workspaces } = useWorkspaceStore();
+  const { workspaces } = useCurrentWorkspace();
 
   if (!task)
     return (

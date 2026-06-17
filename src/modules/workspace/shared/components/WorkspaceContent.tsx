@@ -5,31 +5,31 @@ import LoadingSpinner from "@/modules/admin-shared/components/common/components/
 
 const tabLoading = () => <LoadingSpinner />;
 
-const BoardTab = dynamic(() => import("./tabs/BoardTab"), {
+const BoardTab = dynamic(() => import("@/modules/workspace/board/BoardTab"), {
   ssr: false,
   loading: tabLoading,
 });
-const BacklogTab = dynamic(() => import("./tabs/BacklogTab"), {
+const BacklogTab = dynamic(() => import("@/modules/workspace/board/BacklogTab"), {
   ssr: false,
   loading: tabLoading,
 });
-const TimelineTab = dynamic(() => import("./tabs/TimelineTab"), {
+const TimelineTab = dynamic(() => import("@/modules/workspace/board/TimelineTab"), {
   ssr: false,
   loading: tabLoading,
 });
-const CalendarTab = dynamic(() => import("./tabs/CalendarTab"), {
+const CalendarTab = dynamic(() => import("@/modules/workspace/board/CalendarTab"), {
   ssr: false,
   loading: tabLoading,
 });
-const ListTab = dynamic(() => import("./tabs/ListTab"), {
+const ListTab = dynamic(() => import("@/modules/workspace/board/ListTab"), {
   ssr: false,
   loading: tabLoading,
 });
-const SummaryTab = dynamic(() => import("./tabs/SummaryTab"), {
+const SummaryTab = dynamic(() => import("@/modules/workspace/board/SummaryTab"), {
   ssr: false,
   loading: tabLoading,
 });
-const ArchiveTab = dynamic(() => import("./tabs/ArchiveTab"), {
+const ArchiveTab = dynamic(() => import("@/modules/workspace/board/ArchiveTab"), {
   ssr: false,
   loading: tabLoading,
 });
@@ -40,7 +40,7 @@ const DocsLayout = dynamic(
     loading: tabLoading,
   },
 );
-const MembersTab = dynamic(() => import("./tabs/MembersTab"), {
+const MembersTab = dynamic(() => import("@/modules/workspace/board/MembersTab"), {
   ssr: false,
   loading: tabLoading,
 });

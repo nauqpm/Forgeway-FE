@@ -1,20 +1,20 @@
-"use client";
+﻿"use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Trash2 } from "lucide-react";
 import AssigneePicker, { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
 import { useMemo } from "react";
-import FilterMenu from "../FilterMenu";
+import FilterMenu from "@/modules/workspace/shared/components/FilterMenu";
 import StatusPicker from "@/shared/components/StatusPicker";
 import PriorityPicker from "@/shared/components/PriorityPicker";
 import TypePicker from "@/shared/components/TypePicker";
-import { compareIssueRank } from "../../utils/dragUtils";
-import type { BoardColumn } from "../../types/board.type";
-import { Sprint } from "../../types/sprint.type";
-import type { Issue } from "../../types/issue.type";
-import type { Workspace } from "../../types/workspace.type";
-import type { Filters } from "../../types/filter.type";
+import { compareIssueRank } from "@/modules/workspace/shared/utils/dragUtils";
+import type { BoardColumn } from "@/modules/workspace/shared/types/board.type";
+import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
+import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
+import type { Filters } from "@/modules/workspace/shared/types/filter.type";
 import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
 
 type BacklogTabProps = {

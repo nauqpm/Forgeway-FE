@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -31,7 +31,7 @@ import appleIcon from "../apple-icon.png";
 import { usePathname, useRouter } from "next/navigation";
 import { Filters } from "@/modules/workspace/shared/types/filter.type";
 
-import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
+import SearchDropdown from "@/modules/workspace/shared/components/SearchDropdown";
 
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
 import { useTheme } from "@/shared/hooks/useTheme";

@@ -10,21 +10,21 @@ const CreateTaskModal = dynamic(
   () => import("@/modules/workspace/tasks/create/CreateTaskModal"),
   { ssr: false },
 );
-const SprintModal = dynamic(() => import("@/modules/client/workspaces/components/SprintModal"), { ssr: false });
+const SprintModal = dynamic(() => import("@/modules/workspace/sprint/SprintModal"), { ssr: false });
 const StartSprintModal = dynamic(
-  () => import("@/modules/client/workspaces/components/StartSprintModal"),
+  () => import("@/modules/workspace/sprint/StartSprintModal"),
   { ssr: false },
 );
 const CompleteSprintModal = dynamic(
-  () => import("@/modules/client/workspaces/components/CompleteSprintModal"),
+  () => import("@/modules/workspace/sprint/CompleteSprintModal"),
   { ssr: false },
 );
 const TaskDetailDrawer = dynamic(
-  () => import("@/modules/client/workspaces/components/TaskDetailDrawer"),
+  () => import("@/modules/workspace/tasks/detail/TaskDetailDrawer"),
   { ssr: false },
 );
 const TaskDetailModal = dynamic(
-  () => import("@/modules/client/workspaces/components/TaskDetailModal"),
+  () => import("@/modules/workspace/tasks/detail/TaskDetailModal"),
   { ssr: false },
 );
 

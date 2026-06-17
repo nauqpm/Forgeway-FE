@@ -6,7 +6,7 @@ import {
   getXFromTimelineDate,
 } from "./timelineDateMath";
 import type { TimelineRow } from "./timelineRows";
-import { getSprintDateBoundViolation } from "../../utils/sprintDateBounds";
+import { getSprintDateBoundViolation } from "@/modules/workspace/shared/utils/sprintDateBounds";
 
 export type TimelineMutationResult =
   | { type: "noop" }

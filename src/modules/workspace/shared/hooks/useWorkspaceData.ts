@@ -27,18 +27,15 @@ export function useWorkspaceData({
 }: UseWorkspaceDataParams) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
-  const { setCurrentWorkspace, updateWorkspaceAvatar } = useWorkspaceStore();
+  const { setCurrentWorkspace } = useWorkspaceStore();
 
   const handleWorkspaceUpdated = useCallback(
     (updatedWorkspace: Workspace) => {
       setWorkspace(updatedWorkspace);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setCurrentWorkspace(updatedWorkspace as any);
-      if (updatedWorkspace._id && updatedWorkspace.avatar) {
-        updateWorkspaceAvatar(updatedWorkspace._id, updatedWorkspace.avatar);
-      }
     },
-    [setCurrentWorkspace, updateWorkspaceAvatar],
+    [setCurrentWorkspace],
   );
 
   useEffect(() => {

@@ -8,7 +8,7 @@ import api from '@/lib/axiosIns';
 import { apiRoutes } from "@/config/apiRoutes";
 import RoleChanger, {
   WorkspaceRoleValue,
-} from "@/modules/client/workspaces/components/RoleChanger";
+} from "@/modules/workspace/shared/components/RoleChanger";
 import InviteModal from "@/modules/admin-shared/components/common/components/InviteModal";
 import {
   inviteService,

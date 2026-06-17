@@ -8,16 +8,16 @@ import {
   FileText,
   Archive,
 } from "lucide-react";
-import { TaskDetailResponse } from "../types/task-detail.type";
+import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
 import StatusPicker from "@/shared/components/StatusPicker";
-import type { TaskCover } from "../types/task-cover.type";
-import type { TaskStatusColumn } from "../utils/taskStatusColumns";
+import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { queryKeys } from "@/shared/constants/queryKeys";
-import type { Issue } from "../types/issue.type";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
 import {
   getUserDisplayName,
   formatDateTime,

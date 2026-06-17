@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { X, Link as LinkIcon, Check, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import RoleChanger, {
   WorkspaceRoleValue,
-} from "@/modules/client/workspaces/components/RoleChanger";
+} from "@/modules/workspace/shared/components/RoleChanger";
 import { inviteService } from "@/modules/workspace/shared/services/inviteService";
 
 const EMAIL_SPLIT_REGEX = /[\s,;]+/;

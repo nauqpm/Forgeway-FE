@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import type { Project } from "../types/projects.type";
@@ -13,7 +13,7 @@ interface UseProjectsDataReturn {
 }
 
 export function useProjectsData(): UseProjectsDataReturn {
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace } = useCurrentWorkspace();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 

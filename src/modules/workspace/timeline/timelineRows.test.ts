@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict";
 import { buildTimelineRows } from "./timelineRows";
-import type { Issue } from "../../types/issue.type";
-import type { Sprint } from "../../types/sprint.type";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
+import type { Sprint } from "@/modules/workspace/shared/types/sprint.type";
 
 const sprint: Sprint = {
   _id: "sprint-1",

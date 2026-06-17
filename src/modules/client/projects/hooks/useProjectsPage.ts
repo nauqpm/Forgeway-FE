@@ -1,11 +1,11 @@
 "use client";
 
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import { useProjectsData } from "./useProjectsData";
 import { useProjectsFilters } from "./useProjectsFilters";
 
 export function useProjectsPage() {
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace } = useCurrentWorkspace();
   const { projects, loading, refetch } = useProjectsData();
   const { search, setSearch, view, setView, filtered } = useProjectsFilters(projects);
 

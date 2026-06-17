@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
-import TimelineView from "../TimelineView";
-import type { Issue } from "../../types/issue.type";
-import type { Sprint } from "../../types/sprint.type";
+import TimelineView from "@/modules/workspace/shared/components/TimelineView";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
+import type { Sprint } from "@/modules/workspace/shared/types/sprint.type";
 
 type TimelineTabProps = {
   filteredIssues: Issue[];

@@ -1,8 +1,8 @@
-'use client';
+﻿'use client';
 
 import { Menu } from "lucide-react";
 import Image from "next/image";
-import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
+import SearchDropdown from "@/modules/workspace/shared/components/SearchDropdown";
 import ThemeToggle from "./ThemeToggle";
 import UserMenu from "./UserMenu";
 import { Filters } from "@/modules/workspace/shared/types/filter.type";

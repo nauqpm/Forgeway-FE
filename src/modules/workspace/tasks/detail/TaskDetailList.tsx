@@ -9,12 +9,12 @@ import {
   Archive,
   ArrowLeft,
 } from "lucide-react";
-import { TaskDetailResponse } from "../types/task-detail.type";
-import type { Issue } from "../types/issue.type";
+import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
 import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
 import StatusPicker from "@/shared/components/StatusPicker";
-import type { TaskCover } from "../types/task-cover.type";
-import type { TaskStatusColumn } from "../utils/taskStatusColumns";
+import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
 import {
@@ -23,7 +23,7 @@ import {
   getIssueAssigneeId,
   type SprintOption,
 } from "./task-detail-shared";
-import type { WorkspaceMember } from "../types/workspace.type";
+import type { WorkspaceMember } from "@/modules/workspace/shared/types/workspace.type";
 import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
 

@@ -3,10 +3,10 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
-import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
+import WorkspaceContent from "./WorkspaceContent";
 import Header from "@/modules/workspace/shared/components/Header";
 import Tabs from "@/modules/workspace/shared/components/Tabs";
-import WorkspaceModals from "@/modules/client/workspaces/components/WorkspaceModals";
+import WorkspaceModals from "./WorkspaceModals";
 import { getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
 import type { useWorkspacePage } from "@/modules/client/workspaces/hooks/useWorkspacePage";

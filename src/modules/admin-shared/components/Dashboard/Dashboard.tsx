@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -9,7 +9,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { toast } from "react-hot-toast";
-import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
+import TaskDetailModal from "@/modules/workspace/tasks/detail/TaskDetailModal";
 import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
 import { boardService } from "@/modules/workspace/shared/services/boardService";
 import { taskService } from "@/modules/workspace/shared/services/taskService";

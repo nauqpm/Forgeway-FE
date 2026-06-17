@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
 import {
@@ -8,8 +8,8 @@ import {
   CalendarClock,
   FileText,
 } from "lucide-react";
-import { Issue } from "../../types/issue.type";
-import WorkspaceMembersPanel from "../WorkspaceMembersPanel";
+import { Issue } from "@/modules/workspace/shared/types/issue.type";
+import WorkspaceMembersPanel from "@/modules/workspace/shared/components/WorkspaceMembersPanel";
 
 type DashboardMetric = {
   completed: number;

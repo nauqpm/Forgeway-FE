@@ -1,7 +1,7 @@
 import { addDays, format } from "date-fns";
-import type { Issue } from "../../types/issue.type";
-import type { Sprint } from "../../types/sprint.type";
-import { normalizeDate } from "../../utils/dateUtils";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
+import type { Sprint } from "@/modules/workspace/shared/types/sprint.type";
+import { normalizeDate } from "@/modules/workspace/shared/utils/dateUtils";
 
 export type TimelineRowKind = "sprint" | "epic" | "task" | "section";
 
