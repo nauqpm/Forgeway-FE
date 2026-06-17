@@ -20,15 +20,15 @@ export function useChatRealtime() {
   }, []);
 
   const sendMessage = useCallback((channelId: string, content: string, attachments?: { url: string; filename: string; mimetype: string; size: number }[], replyToId?: string, type?: string) => {
-    const socket = chatSocketClient.getSocket();
-    if (socket?.connected) {
+    const socket = chatSocketClient.connect();
+    if (socket) {
       socket.emit(SOCKET_EVENTS.SEND, { channelId, content, attachments, replyToId, type });
     }
   }, []);
 
   const markAsRead = useCallback((channelId: string) => {
-    const socket = chatSocketClient.getSocket();
-    if (socket?.connected) {
+    const socket = chatSocketClient.connect();
+    if (socket) {
       socket.emit(SOCKET_EVENTS.READ, { channelId });
       // Reset local unread count
       updateChannel(channelId, { unreadCount: 0 });
@@ -44,15 +44,15 @@ export function useChatRealtime() {
   }, []);
 
   const sendReaction = useCallback((channelId: string, messageId: string, emoji: string) => {
-    const socket = chatSocketClient.getSocket();
-    if (socket?.connected) {
+    const socket = chatSocketClient.connect();
+    if (socket) {
       socket.emit(SOCKET_EVENTS.REACTION, { channelId, messageId, emoji });
     }
   }, []);
 
   const sendDeleteMessage = useCallback((channelId: string, messageId: string) => {
-    const socket = chatSocketClient.getSocket();
-    if (socket?.connected) {
+    const socket = chatSocketClient.connect();
+    if (socket) {
       socket.emit(SOCKET_EVENTS.DELETE, { channelId, messageId });
     }
   }, []);

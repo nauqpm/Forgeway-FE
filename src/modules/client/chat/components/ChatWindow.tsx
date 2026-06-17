@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { useChatStore } from '@/stores/chatStore';
+import { useChatStore, ChatUser } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { getMessagesAPI } from '@/modules/client/chat/services/chatService';
+import { getMessagesAPI, getChannelMembersAPI } from '@/modules/client/chat/services/chatService';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
@@ -34,6 +34,8 @@ export default function ChatWindow() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const shouldScrollToBottomRef = useRef(true);
+  const lastMessageIdRef = useRef<string | null>(null);
+  const prevChannelIdRef = useRef<string | null>(null);
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
   
@@ -85,6 +87,17 @@ export default function ChatWindow() {
     markAsRead(activeChannelId);
     joinChannel(activeChannelId);
 
+    // Fetch and populate channel members in store
+    getChannelMembersAPI(activeChannelId)
+      .then(members => {
+        if (isMounted) {
+          useChatStore.getState().updateChannel(activeChannelId, { members: members as ChatUser[] });
+        }
+      })
+      .catch(err => {
+        console.error("Failed to fetch channel members:", err);
+      });
+
     return () => {
       isMounted = false;
       leaveChannel();
@@ -93,14 +106,25 @@ export default function ChatWindow() {
   }, [activeChannelId]); // Strictly ONLY run when activeChannelId changes to prevent polling loops
 
   useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    const lastMsgId = lastMsg ? lastMsg._id : null;
+
+    const channelChanged = activeChannelId !== prevChannelIdRef.current;
+    const lastMsgChanged = lastMsgId !== lastMessageIdRef.current;
+
+    prevChannelIdRef.current = activeChannelId;
+    lastMessageIdRef.current = lastMsgId;
+
     if (shouldScrollToBottomRef.current) {
       if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        if (channelChanged || lastMsgChanged) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
       }
     } else {
       shouldScrollToBottomRef.current = true;
     }
-  }, [messages]);
+  }, [messages, activeChannelId]);
 
   useEffect(() => {
     const interval = setInterval(clearOldTyping, 2000);
