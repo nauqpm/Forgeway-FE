@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/modules/shared/components/common/components/Sidebar";
@@ -105,15 +105,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
 
   // Default workspace keys for search
-  const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
-    .filter(Boolean)
-    .map((workspace) => {
-      const id = workspace._id || (workspace as { id?: string }).id;
-      const key = workspace.key || workspace.slug;
-      return id && key ? { id, name: workspace.name, key } : null;
-    })
-    .filter((workspace): workspace is { id: string; name: string; key: string } => Boolean(workspace));
-  const defaultSearchWorkspaceKeys = (workspaceKey ? [workspaceKey] : searchProjects.map((workspace) => workspace.key)).filter(Boolean) as string[];
+  const searchProjects = useMemo(
+    () =>
+      (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
+        .filter(Boolean)
+        .map((workspace) => {
+          const id = workspace._id || (workspace as { id?: string }).id;
+          const key = workspace.key || workspace.slug;
+          return id && key ? { id, name: workspace.name, key } : null;
+        })
+        .filter((workspace): workspace is { id: string; name: string; key: string } => Boolean(workspace)),
+    [currentWorkspace, workspaces],
+  );
+  const defaultSearchWorkspaceKeys = useMemo(
+    () => (workspaceKey ? [workspaceKey] : searchProjects.map((workspace) => workspace.key)).filter(Boolean) as string[],
+    [searchProjects, workspaceKey],
+  );
   const searchAssignees = (currentWorkspace?.members ?? [])
     .filter((member) => member && member.userId)
     .map((member) => {
@@ -237,7 +244,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     pathname,
     workspaceKey,
     isWorkspacesLoading,
-    defaultSearchWorkspaceKeys.join(","),
+    defaultSearchWorkspaceKeys,
   ]);
 
   // Sync filters to URL
