@@ -10,6 +10,7 @@ const DOCS = ["docs"] as const;
 const NOTIFICATIONS = ["notifications"] as const;
 const ADMIN = ["admin"] as const;
 const STAFF = ["staff"] as const;
+const CHAT = ["chat"] as const;
 
 export const queryKeys = {
   profile: {
@@ -106,5 +107,16 @@ export const queryKeys = {
         : ([...STAFF, "users"] as const),
     workflows: () => [...STAFF, "workflows"] as const,
     settings: (workspaceId: string) => [...STAFF, "settings", workspaceId] as const,
+  },
+  chat: {
+    all: CHAT,
+    channels: () => [...CHAT, "channels"] as const,
+    channel: (channelId: string) => [...CHAT, "channels", "detail", channelId] as const,
+    messages: (channelId: string) => [...CHAT, "messages", channelId] as const,
+    members: (channelId: string) => [...CHAT, "members", channelId] as const,
+    mentionMembers: (channelId: string, query: string) => [...CHAT, "mention-members", channelId, query] as const,
+    searchUsers: (query: string) => [...CHAT, "users", "search", query] as const,
+    activeMeeting: (channelId: string) => [...CHAT, "meetings", "active", channelId] as const,
+    stickers: () => [...CHAT, "stickers"] as const,
   },
 } as const;
