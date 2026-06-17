@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { useChatStore, ChatUser } from '@/stores/chatStore';
+import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { getMessagesAPI, getChannelMembersAPI } from '@/modules/client/chat/services/chatService';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
@@ -31,6 +29,7 @@ export default function ChatWindow() {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    refetch,
   } = useChatMessages(activeChannelId);
   const { data: workspaces = [] } = useWorkspaces();
   const currentUserId = useAuthStore(state => state.user?.id);
@@ -65,17 +64,6 @@ export default function ChatWindow() {
 
     markAsRead(activeChannelId);
     joinChannel(activeChannelId);
-
-    // Fetch and populate channel members in store
-    getChannelMembersAPI(activeChannelId)
-      .then(members => {
-        if (isMounted) {
-          useChatStore.getState().updateChannel(activeChannelId, { members: members as ChatUser[] });
-        }
-      })
-      .catch(err => {
-        console.error("Failed to fetch channel members:", err);
-      });
 
     return () => {
       leaveChannel();
@@ -314,20 +302,51 @@ export default function ChatWindow() {
       {/* Active Meeting Banner */}
       <MeetingBanner channelId={activeChannelId} />
 
+      {/* Sync/Load Error Banner (when there is cached history) */}
+      {errorMessage && messages.length > 0 && (
+        <div className="bg-red-50 dark:bg-red-950/20 border-b border-red-100 dark:border-red-900/30 px-4 py-2 flex items-center justify-between gap-3 text-xs text-red-600 dark:text-red-400">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 flex-shrink-0" />
+            <span>Failed to sync latest messages. Showing cached history.</span>
+          </div>
+          <button
+            onClick={() => refetch()}
+            disabled={loading}
+            className="px-2 py-1 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/70 text-red-700 dark:text-red-300 rounded font-medium transition-colors disabled:opacity-50"
+          >
+            {loading ? "Retrying..." : "Retry"}
+          </button>
+        </div>
+      )}
+
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
         {loading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
           </div>
-        ) : errorMessage ? (
+        ) : errorMessage && messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-4 text-center">
             <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-3">
               <Info className="w-6 h-6 text-red-500" />
             </div>
-            <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic">
+            <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic mb-4">
               {errorMessage}
             </p>
+            <button
+              onClick={() => refetch()}
+              disabled={loading}
+              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-[6px] transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                "Retry"
+              )}
+            </button>
           </div>
         ) : (
           <div className="py-4">
