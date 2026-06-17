@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { DocumentItem } from "../types/document.type";
 import { documentService } from "../services/documentService";
 import OnlineDocumentEditorModal from "./OnlineDocumentEditorModal";
@@ -22,8 +24,6 @@ export default function ImportedDocumentViewer({ doc, showBackButton = true }: P
   useEffect(() => {
     setCurrentDoc(doc);
   }, [doc]);
-  const viewUrl = documentService.viewUrl(doc._id);
-  const previewUrl = documentService.previewUrl(doc._id);
   const downloadUrl = documentService.downloadUrl(doc._id);
   const isOnline = currentDoc.documentType === "online";
   const isOwner = user?.id === currentDoc.uploadedBy;
@@ -31,6 +31,36 @@ export default function ImportedDocumentViewer({ doc, showBackButton = true }: P
   const isPdf = currentDoc.mimeType === "application/pdf";
   const isOfficePreview =
     currentDoc.extension === ".docx" || currentDoc.extension === ".xlsx" || currentDoc.extension === ".pptx";
+  const canPreviewAsHtml = isOfficePreview || isOnline;
+  const canPreviewAsBlob = isImage || isPdf;
+
+  const viewBlobQuery = useQuery({
+    queryKey: queryKeys.docs.viewBlob(currentDoc._id),
+    queryFn: () => documentService.getViewBlob(currentDoc._id),
+    enabled: canPreviewAsBlob,
+  });
+
+  const previewHtmlQuery = useQuery({
+    queryKey: queryKeys.docs.previewHtml(currentDoc._id),
+    queryFn: () => documentService.getPreviewHtml(currentDoc._id),
+    enabled: canPreviewAsHtml,
+  });
+
+  const objectUrl = useMemo(() => {
+    if (!viewBlobQuery.data) return null;
+    return URL.createObjectURL(viewBlobQuery.data);
+  }, [viewBlobQuery.data]);
+
+  useEffect(() => {
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [objectUrl]);
+
+  const isPreviewLoading = viewBlobQuery.isLoading || previewHtmlQuery.isLoading;
+  const previewError = viewBlobQuery.isError || previewHtmlQuery.isError;
 
   return (
     <div className="h-full flex flex-col">
@@ -57,12 +87,23 @@ export default function ImportedDocumentViewer({ doc, showBackButton = true }: P
         </div>
       </div>
       <div className="flex-1 bg-[#F9F9F8] dark:bg-[#252525] p-4 overflow-auto">
-        {isImage ? (
-          <img src={viewUrl} alt={currentDoc.name} className="max-w-full h-auto mx-auto rounded-[6px]" />
-        ) : isPdf ? (
-          <iframe src={viewUrl} className="w-full h-full min-h-[31.25rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06]" />
-        ) : isOfficePreview || isOnline ? (
-          <iframe sandbox="allow-same-origin" src={previewUrl} className="w-full h-full min-h-[31.25rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white" />
+        {isPreviewLoading ? (
+          <div className="h-full min-h-[31.25rem] flex items-center justify-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+            Loading preview...
+          </div>
+        ) : previewError ? (
+          <div className="h-full min-h-[31.25rem] flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] mb-2">Could not load preview.</p>
+              <a href={downloadUrl} className="text-[0.8125rem] text-[#2563EB] dark:text-[#3B82F6] hover:text-[#1D4ED8]">Download to view</a>
+            </div>
+          </div>
+        ) : isImage && objectUrl ? (
+          <img src={objectUrl} alt={currentDoc.name} className="max-w-full h-auto mx-auto rounded-[6px]" />
+        ) : isPdf && objectUrl ? (
+          <iframe src={objectUrl} className="w-full h-full min-h-[31.25rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06]" />
+        ) : canPreviewAsHtml && previewHtmlQuery.data ? (
+          <iframe sandbox="allow-same-origin" srcDoc={previewHtmlQuery.data} className="w-full h-full min-h-[31.25rem] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white" />
         ) : (
           <div className="h-full flex items-center justify-center">
             <div className="text-center">

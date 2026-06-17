@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, KeyboardEvent, MouseEvent, use, useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,6 +29,7 @@ import LoadingSpinner from "@/modules/shared/components/common/components/Loadin
 import RoleChanger from "@/modules/client/workspaces/components/RoleChanger";
 import { inviteService, PendingInvite } from "@/modules/client/workspaces/services/inviteService";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 // import GeneralSettings from "@/modules/client/workspaces/settings/components/GeneralSettings";
 // import MemberSettings from "@/modules/client/workspaces/settings/components/MemberSettings";
@@ -101,11 +103,8 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
   const { key: workspaceKey } = use(params);
   const router = useRouter();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [workspace, setWorkspace] = useState<WorkspaceSettings | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<"general" | "members">("general");
 
   const [form, setForm] = useState<WorkspaceSettingsForm>({
@@ -117,8 +116,6 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
 
-  const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [loadingMembers, setLoadingMembers] = useState(true);
   const [memberMenu, setMemberMenu] = useState<{
     member: WorkspaceMember;
     x: number;
@@ -127,74 +124,207 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
 
-  const [invites, setInvites] = useState<PendingInvite[]>([]);
-  const [loadingInvites, setLoadingInvites] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const [memberSubTab, setMemberSubTab] = useState<"list" | "invites">("list");
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<InviteRole>("member");
-  const [inviting, setInviting] = useState(false);
 
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [leaveConfirm, setLeaveConfirm] = useState("");
-  const [leaving, setLeaving] = useState(false);
+  const workspaceQuery = useQuery({
+    queryKey: queryKeys.workspaces.bySlug(workspaceKey),
+    queryFn: () => resolveWorkspaceFromRouteKey(workspaceKey),
+    enabled: !!workspaceKey,
+  });
 
+  const workspace = (workspaceQuery.data ? normalizeWorkspace(workspaceQuery.data) : null) as WorkspaceSettings | null;
   const workspaceInviteId = workspace?._id ?? "";
   const workspaceApiId = workspace?._id ?? "";
+
+  const membersQuery = useQuery<WorkspaceMember[]>({
+    queryKey: queryKeys.workspaces.members(workspaceApiId),
+    queryFn: async () => {
+      const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceApiId));
+      return res.data?.data ?? res.data ?? [];
+    },
+    enabled: !!workspaceApiId,
+  });
+
+  const members = membersQuery.data ?? [];
   const currentUserId = normalizeObjectId(user?.id);
   const currentMember = members.find((m) => getMemberUserId(m) === currentUserId);
   const canManageWorkspace =
     currentMember?.role === "workspace_admin" || currentMember?.role === "space_admin" || user?.role === "super_admin";
 
-  useEffect(() => {
-    if (!workspaceKey) return;
+  const invitesQuery = useQuery<PendingInvite[]>({
+    queryKey: queryKeys.workspaces.invites(workspaceInviteId),
+    queryFn: () => inviteService.listInvites(workspaceInviteId),
+    enabled: activeTab === "members" && !!workspaceInviteId && canManageWorkspace,
+  });
+  const invites = invitesQuery.data ?? [];
 
-    setLoading(true);
-    resolveWorkspaceFromRouteKey(workspaceKey)
-      .then((resolvedWorkspace) => {
-        const nextWorkspace = normalizeWorkspace(resolvedWorkspace);
-        setWorkspace(nextWorkspace);
+  useEffect(() => {
+    if (workspace) {
         setForm({
-          name: nextWorkspace.name || "",
-          description: nextWorkspace.description || "",
-          status: nextWorkspace.status || "active",
-          access: nextWorkspace.access || nextWorkspace.visibility || "public",
+        name: workspace.name || "",
+        description: workspace.description || "",
+        status: workspace.status || "active",
+        access: workspace.access || workspace.visibility || "public",
         });
-      })
-      .catch(() => {
-        setWorkspace(null);
-        toast.error("Could not load workspace settings.");
-      })
-      .finally(() => setLoading(false));
-  }, [workspaceKey]);
-
-  useEffect(() => {
-    if (!workspaceApiId) return;
-    setLoadingMembers(true);
-    api
-      .get(apiRoutes.WORKSPACES.MEMBERS(workspaceApiId))
-      .then((res) => setMembers(res.data?.data ?? res.data ?? []))
-      .catch(() => setMembers([]))
-      .finally(() => setLoadingMembers(false));
-  }, [workspaceApiId]);
-
-  useEffect(() => {
-    if (activeTab !== "members" || !workspaceInviteId) return;
-    if (!canManageWorkspace) {
-      setInvites([]);
-      setLoadingInvites(false);
-      return;
     }
+  }, [workspace]);
 
-    setLoadingInvites(true);
-    inviteService
-      .listInvites(workspaceInviteId)
-      .then(setInvites)
-      .catch(() => setInvites([]))
-      .finally(() => setLoadingInvites(false));
-  }, [activeTab, canManageWorkspace, workspaceInviteId]);
+  useEffect(() => {
+    if (workspaceQuery.error) toast.error("Could not load workspace settings.");
+  }, [workspaceQuery.error]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+      const payload = {
+        name: form.name.trim(),
+        description: form.description.trim(),
+        status: form.status,
+        access: form.access,
+      };
+      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceApiId), payload);
+      return normalizeWorkspace(res.data);
+    },
+    onSuccess: (updatedWorkspace) => {
+      queryClient.setQueryData(queryKeys.workspaces.bySlug(workspaceKey), updatedWorkspace);
+      queryClient.setQueryData<WorkspaceSettings[]>(queryKeys.workspaces.list(), (current = []) =>
+        current.map((item) => (item._id === updatedWorkspace._id ? { ...item, ...updatedWorkspace } : item)),
+      );
+      toast.success("Workspace settings saved.");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      console.error("Save failed", error);
+      toast.error(error?.response?.data?.message || "Could not save workspace settings.");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+      await api.delete(apiRoutes.WORKSPACES.BY_ID(workspaceApiId));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+      toast.success("Workspace deleted.");
+      setShowDeleteDialog(false);
+      router.push("/workspaces");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      console.error("Delete failed", error);
+      toast.error(error?.response?.data?.message || "Could not delete workspace.");
+    },
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async ({ email, role }: { email: string; role: InviteRole }) =>
+      inviteService.sendInvite(workspaceInviteId, {
+        email,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        role: role as any,
+      }),
+    onSuccess: (_data, { email }) => {
+      toast.success(`Invitation sent to ${email}.`);
+      setInviteEmail("");
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.invites(workspaceInviteId) });
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "User is already a member of this workspace.");
+    },
+  });
+
+  const cancelInviteMutation = useMutation({
+    mutationFn: (inviteId: string) => inviteService.cancelInvite(workspaceInviteId, inviteId),
+    onMutate: (inviteId) => setCancellingId(inviteId),
+    onSuccess: (_data, inviteId) => {
+      queryClient.setQueryData<PendingInvite[]>(queryKeys.workspaces.invites(workspaceInviteId), (current = []) =>
+        current.filter((invite) => invite._id !== inviteId),
+      );
+      toast.success("Invitation canceled.");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Could not cancel invitation.");
+    },
+    onSettled: () => setCancellingId(null),
+  });
+
+  const updateMemberRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: InviteRole }) => {
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceApiId, userId), { role });
+      return { userId, role };
+    },
+    onMutate: ({ userId }) => setUpdatingMemberId(userId),
+    onSuccess: ({ userId, role }) => {
+      queryClient.setQueryData<WorkspaceMember[]>(queryKeys.workspaces.members(workspaceApiId), (current = []) =>
+        current.map((item) => (item.userId?._id === userId ? { ...item, role } : item)),
+      );
+      setMemberMenu(null);
+      toast.success("Member permissions updated.");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Could not update member permissions.");
+    },
+    onSettled: () => setUpdatingMemberId(null),
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceApiId, userId));
+      return userId;
+    },
+    onMutate: (userId) => setRemovingMemberId(userId),
+    onSuccess: (userId) => {
+      queryClient.setQueryData<WorkspaceMember[]>(queryKeys.workspaces.members(workspaceApiId), (current = []) =>
+        current.filter((item) => item.userId?._id !== userId),
+      );
+      setMemberMenu(null);
+      toast.success("Member removed from workspace.");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Could not remove member.");
+    },
+    onSettled: () => setRemovingMemberId(null),
+  });
+
+  const leaveMutation = useMutation({
+    mutationFn: async () => {
+      if (!workspaceApiId) throw new Error("Missing workspace id");
+      await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceApiId));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+      toast.success("Left workspace.");
+      router.push("/workspaces");
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || "Could not leave workspace.");
+    },
+    onSettled: () => setShowLeaveDialog(false),
+  });
+
+  const saving = saveMutation.isPending;
+  const deleting = deleteMutation.isPending;
+  const inviting = inviteMutation.isPending;
+  const leaving = leaveMutation.isPending;
+  const loadingMembers = membersQuery.isLoading;
+  const loadingInvites = invitesQuery.isFetching;
+  const refreshInvites = () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.invites(workspaceInviteId) }).then(() => undefined);
 
   const handleSave = async (event: FormEvent) => {
     event.preventDefault();
@@ -204,34 +334,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       return;
     }
 
-    setSaving(true);
-    try {
-      const payload = {
-        name: form.name.trim(),
-        description: form.description.trim(),
-        status: form.status,
-        access: form.access,
-      };
-
-      if (!workspaceApiId) throw new Error("Missing workspace id");
-
-      const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceApiId), payload);
-      const updatedWorkspace = normalizeWorkspace(res.data);
-      setWorkspace(updatedWorkspace);
-      setForm({
-        name: updatedWorkspace.name || "",
-        description: updatedWorkspace.description || "",
-        status: updatedWorkspace.status || "active",
-        access: updatedWorkspace.access || "public",
-      });
-      toast.success("Workspace settings saved.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      console.error("Save failed", error);
-      toast.error(error?.response?.data?.message || "Could not save workspace settings.");
-    } finally {
-      setSaving(false);
-    }
+    saveMutation.mutate();
   };
 
   const handleDelete = async () => {
@@ -240,28 +343,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       return;
     }
 
-    setDeleting(true);
-    try {
-      if (!workspaceApiId) throw new Error("Missing workspace id");
-      await api.delete(apiRoutes.WORKSPACES.BY_ID(workspaceApiId));
-      toast.success("Workspace deleted.");
-      setShowDeleteDialog(false);
-      router.push("/workspaces");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      console.error("Delete failed", error);
-      toast.error(error?.response?.data?.message || "Could not delete workspace.");
-    } finally {
-      setDeleting(false);
-    }
-  };
-
-  const refreshInvites = async () => {
-    if (!workspaceInviteId) return;
-    try {
-      const updated = await inviteService.listInvites(workspaceInviteId);
-      setInvites(updated);
-    } catch { }
+    deleteMutation.mutate();
   };
 
   const handleInvite = async (event: FormEvent) => {
@@ -269,36 +351,11 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     const email = inviteEmail.trim();
     if (!email) return;
 
-    setInviting(true);
-    try {
-      await inviteService.sendInvite(workspaceInviteId, {
-        email,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        role: inviteRole as any,
-      });
-      toast.success(`Invitation sent to ${email}.`);
-      setInviteEmail("");
-      await refreshInvites();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "User is already a member of this workspace.");
-    } finally {
-      setInviting(false);
-    }
+    inviteMutation.mutate({ email, role: inviteRole });
   };
 
   const handleCancelInvite = async (inviteId: string) => {
-    setCancellingId(inviteId);
-    try {
-      await inviteService.cancelInvite(workspaceInviteId, inviteId);
-      setInvites((prev) => prev.filter((invite) => invite._id !== inviteId));
-      toast.success("Invitation canceled.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not cancel invitation.");
-    } finally {
-      setCancellingId(null);
-    }
+    cancelInviteMutation.mutate(inviteId);
   };
 
   const handleOpenMemberMenu = (event: MouseEvent<HTMLDivElement>, member: WorkspaceMember) => {
@@ -327,39 +384,14 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       return;
     }
 
-    setUpdatingMemberId(userId);
-    try {
-      if (!workspaceApiId) throw new Error("Missing workspace id");
-
-      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceApiId, userId), { role });
-      setMembers((prev) => prev.map((item) => (item.userId?._id === userId ? { ...item, role } : item)));
-      setMemberMenu(null);
-      toast.success("Member permissions updated.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not update member permissions.");
-    } finally {
-      setUpdatingMemberId(null);
-    }
+    updateMemberRoleMutation.mutate({ userId, role });
   };
 
   const handleRemoveMember = async (member: WorkspaceMember) => {
     const userId = member.userId?._id;
     if (!userId) return;
 
-    setRemovingMemberId(userId);
-    try {
-      if (!workspaceApiId) throw new Error("Missing workspace id");
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceApiId, userId));
-      setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
-      setMemberMenu(null);
-      toast.success("Member removed from workspace.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not remove member.");
-    } finally {
-      setRemovingMemberId(null);
-    }
+    removeMemberMutation.mutate(userId);
   };
 
   const handleLeave = async () => {
@@ -368,19 +400,7 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
       return;
     }
 
-    setLeaving(true);
-    try {
-      if (!workspaceApiId) throw new Error("Missing workspace id");
-      await api.delete(apiRoutes.WORKSPACES.LEAVE(workspaceApiId));
-      toast.success("Left workspace.");
-      router.push("/workspaces");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Could not leave workspace.");
-    } finally {
-      setLeaving(false);
-      setShowLeaveDialog(false);
-    }
+    leaveMutation.mutate();
   };
 
   const handleDeleteConfirmKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -397,13 +417,13 @@ export default function WorkspaceSettingsPage({ params }: { params: Promise<{ ke
     void handleLeave();
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (workspaceQuery.isLoading) return <LoadingSpinner />;
 
   if (!workspace) {
     return <div className="p-10 text-center text-[#787774] dark:text-[#9B9A97]">Workspace not found.</div>;
   }
 
-  if (loadingMembers) return <LoadingSpinner />;
+  if (membersQuery.isLoading) return <LoadingSpinner />;
 
   if (!canManageWorkspace) {
     return (

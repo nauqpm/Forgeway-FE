@@ -1,22 +1,13 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, Search, Loader2, Users } from 'lucide-react';
-import { getChannelMembersAPI } from '@/modules/client/chat/services/chatService';
-
+import { useChannelMembers } from '@/modules/client/chat/hooks/useChatQueries';
+import type { ChatMember } from '@/modules/client/chat/types/chat.types';
 
 interface MemberPanelProps {
   channelId: string;
   onClose: () => void;
-}
-
-interface MemberInfo {
-  _id: string;
-  fullName: string;
-  email?: string;
-  phone?: string;
-  avatar?: string;
-  role?: string;
 }
 
 const getRoleBadge = (role?: string) => {
@@ -70,27 +61,8 @@ const getRoleBadge = (role?: string) => {
 };
 
 export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
-  const [members, setMembers] = useState<MemberInfo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: members = [], isLoading } = useChannelMembers(channelId);
   const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    let isMounted = true;
-    setLoading(true);
-
-    getChannelMembersAPI(channelId)
-      .then((data) => {
-        if (isMounted) setMembers(data as MemberInfo[]);
-      })
-      .catch((err) => {
-        console.error('Failed to load channel members:', err);
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-    return () => { isMounted = false; };
-  }, [channelId]);
 
   const filteredMembers = useMemo(() => {
     if (!searchQuery.trim()) return members;
@@ -105,7 +77,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
 
   // Sort: admins first, then alphabetically
   const sortedMembers = useMemo(() => {
-    return [...filteredMembers].sort((a, b) => {
+    return [...filteredMembers].sort((a: ChatMember, b: ChatMember) => {
       const roleOrder = (r?: string) => {
         if (!r) return 3;
         const nr = r.toLowerCase();
@@ -128,7 +100,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
           <h3 className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Members
           </h3>
-          {!loading && (
+          {!isLoading && (
             <span className="px-1.5 py-0.5 bg-[#F0F0EE] dark:bg-white/[0.06] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[10px] font-bold">
               {members.length}
             </span>
@@ -158,7 +130,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
 
       {/* Member list */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-5 h-5 animate-spin text-[#787774]" />
           </div>

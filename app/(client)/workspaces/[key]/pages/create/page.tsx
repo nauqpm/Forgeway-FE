@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, use, useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,14 +10,12 @@ import { toast } from "react-hot-toast";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 export default function CreateWorkspacePage({ params }: { params: Promise<{ key: string }> }) {
   usePageTitle("New Page");
   const { key } = use(params);
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [resolvingWorkspace, setResolvingWorkspace] = useState(true);
-  const [workspaceId, setWorkspaceId] = useState("");
   const [form, setForm] = useState({
     title: "",
     content: "",
@@ -25,19 +24,19 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
   });
   const [labelInput, setLabelInput] = useState("");
 
+  const workspaceQuery = useQuery({
+    queryKey: queryKeys.workspaces.bySlug(key),
+    queryFn: () => resolveWorkspaceFromRouteKey(key),
+    enabled: !!key,
+  });
+  const workspaceId = workspaceQuery.data?._id ?? "";
+
   useEffect(() => {
-    resolveWorkspaceFromRouteKey(key)
-      .then((workspace) => setWorkspaceId(workspace._id))
-      .catch(() => toast.error("Workspace not found"))
-      .finally(() => setResolvingWorkspace(false));
-  }, [key]);
+    if (workspaceQuery.error) toast.error("Workspace not found");
+  }, [workspaceQuery.error]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!form.title.trim() || !workspaceId) return;
-
-    setLoading(true);
-    try {
+  const createPageMutation = useMutation({
+    mutationFn: async () => {
       const labels = form.labels
         .split(",")
         .map((label) => label.trim())
@@ -49,14 +48,25 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
         status: form.status,
         labels,
       });
-      const created = res.data?.data ?? res.data;
+      return res.data?.data ?? res.data;
+    },
+    onSuccess: (created) => {
       toast.success("Page created in workspace");
       router.push(`/workspaces/${key}/pages/${created.slug}`);
-    } catch {
+    },
+    onError: () => {
       toast.error("Could not create page");
-    } finally {
-      setLoading(false);
-    }
+    },
+  });
+
+  const loading = createPageMutation.isPending;
+  const resolvingWorkspace = workspaceQuery.isLoading;
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!form.title.trim() || !workspaceId) return;
+
+    createPageMutation.mutate();
   };
 
   const addLabel = () => {

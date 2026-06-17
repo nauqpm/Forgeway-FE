@@ -1,5 +1,6 @@
 import { useRef, useCallback } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
 import { toast } from "react-hot-toast";
@@ -15,26 +16,11 @@ interface CreateIssueForm {
   columnId?: string | null;
 }
 
-interface UseIssueHandlersProps {
+interface UseTaskHandlersProps {
   workspaceId: string;
-
-  issues: Issue[];
-
-  setIssues: React.Dispatch<
-    React.SetStateAction<Issue[]>
-  >;
-
-  setShowCreateIssue: React.Dispatch<
-    React.SetStateAction<boolean>
-  >;
-
-  setNewIssueForm: React.Dispatch<
-    React.SetStateAction<CreateIssueForm>
-  >;
-
-  setSelectedIssue: React.Dispatch<
-    React.SetStateAction<Issue | null>
-  >;
+  setShowCreateIssue: React.Dispatch<React.SetStateAction<boolean>>;
+  setNewIssueForm: React.Dispatch<React.SetStateAction<CreateIssueForm>>;
+  setSelectedIssue: React.Dispatch<React.SetStateAction<Issue | null>>;
 }
 
 const upsertIssue = (current: Issue[], issue: Issue): Issue[] => {
@@ -44,63 +30,94 @@ const upsertIssue = (current: Issue[], issue: Issue): Issue[] => {
   return [...current, issue];
 };
 
+const invalidateDashboard = (queryClient: ReturnType<typeof useQueryClient>) => {
+  queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
+};
+
 export const useTaskHandlers = ({
   workspaceId,
-  issues,
-  setIssues,
   setShowCreateIssue,
   setNewIssueForm,
   setSelectedIssue,
-}: UseIssueHandlersProps) => {
+}: UseTaskHandlersProps) => {
   const queryClient = useQueryClient();
   const isCreatingRef = useRef(false);
 
   const updateIssueDirectly = useCallback(
     (id: string, updates: Partial<Issue>) => {
-      const existingIssue = issues.find((issue) => issue.id === id);
-      if (!existingIssue) {
-        toast.error("No task");
-        return;
+      const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceId);
+
+      // Take snapshot of previous state for rollback
+      let previousQueriesData: [unknown, Issue[] | undefined][] = [];
+      try {
+        previousQueriesData = queryClient.getQueriesData<Issue[]>({ queryKey: queryKeyPrefix });
+      } catch {
+        // Ignored
       }
-      
-      // Optimistic update
-      setIssues((current) =>
-        current.map((i) => (i.id === id ? { ...i, ...updates } : i))
+
+      // Optimistic update of all matching task queries
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: queryKeyPrefix },
+        (current) =>
+          Array.isArray(current)
+            ? current.map((i) => (i.id === id ? { ...i, ...updates } : i))
+            : current
       );
-      
+
+      // Find the issue to update task detail cache if present
+      let existingIssue: Issue | undefined;
+      for (const [, data] of previousQueriesData) {
+        if (Array.isArray(data)) {
+          existingIssue = data.find((i) => i.id === id);
+          if (existingIssue) break;
+        }
+      }
+
+      if (existingIssue && existingIssue.key) {
+        queryClient.setQueryData<Issue>(
+          queryKeys.tasks.detail(workspaceId, existingIssue.key),
+          (current) => (current ? { ...current, ...updates } : current)
+        );
+      }
+
       taskService.updateBoardTask(workspaceId, id, updates)
         .then((savedIssue: Issue) => {
           const nextIssue = (() => {
-            const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? '');
+            const isObjectId = /^[0-9a-f]{24}$/i.test(savedIssue.status ?? "");
             return isObjectId && updates.status
               ? { ...savedIssue, status: updates.status as string }
               : savedIssue;
           })();
 
-          setIssues((current) =>
-            current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
-          );
           queryClient.setQueriesData<Issue[]>(
-            { queryKey: ["tasks", workspaceId] },
+            { queryKey: queryKeyPrefix },
             (current) =>
               Array.isArray(current)
                 ? current.map((issue) => (issue.id === nextIssue.id ? nextIssue : issue))
-                : current,
+                : current
           );
-          queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, id] });
-          if (savedIssue.key) {
-            queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
+
+          if (nextIssue.key) {
+            queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, nextIssue.key), nextIssue);
           }
+
+          queryClient.invalidateQueries({ queryKey: queryKeys.tasks.activities(workspaceId, id) });
+          invalidateDashboard(queryClient);
         })
         .catch((error: unknown) => {
           // Rollback on error
-          setIssues((current) =>
-            current.map((i) => (i.id === id ? existingIssue : i))
-          );
+          if (previousQueriesData.length > 0) {
+            for (const [key, data] of previousQueriesData as [QueryKey, Issue[] | undefined][]) {
+              queryClient.setQueryData(key, data);
+            }
+          }
+          if (existingIssue && existingIssue.key) {
+            queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, existingIssue.key), existingIssue);
+          }
           toast.error(extractApiError(error, "Could not update task"));
         });
     },
-    [issues, queryClient, workspaceId, setIssues]
+    [queryClient, workspaceId]
   );
 
   const handleCreateIssue = async (
@@ -114,7 +131,13 @@ export const useTaskHandlers = ({
     isCreatingRef.current = true;
     try {
       const issue = await taskService.createBoardTask(workspaceId, newIssueForm);
-      setIssues((current) => upsertIssue(current, issue));
+      const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceId);
+
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: queryKeyPrefix },
+        (current) => (Array.isArray(current) ? upsertIssue(current, issue) : [issue])
+      );
+
       setShowCreateIssue(false);
       setNewIssueForm({
         title: "",
@@ -125,7 +148,8 @@ export const useTaskHandlers = ({
         assigneeId: "",
         columnId: null,
       });
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
+      invalidateDashboard(queryClient);
     } catch (error) {
       toast.error(extractApiError(error, "Could not create task"));
     } finally {
@@ -148,29 +172,27 @@ export const useTaskHandlers = ({
         updatedIssue,
       );
 
-      setIssues(
-        issues.map((i) =>
-          i.id === savedIssue.id
-            ? savedIssue
-            : i
-        )
+      const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceId);
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: queryKeyPrefix },
+        (current) =>
+          Array.isArray(current)
+            ? current.map((i) => (i.id === savedIssue.id ? savedIssue : i))
+            : current
       );
 
       setSelectedIssue(savedIssue);
 
       if (savedIssue.key) {
         queryClient.setQueryData(
-          ["taskDetail", workspaceId, savedIssue.key],
-          (current: Issue | undefined) =>
-            current ? { ...current, ...savedIssue } : savedIssue,
+          queryKeys.tasks.detail(workspaceId, savedIssue.key),
+          savedIssue
         );
       }
 
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["taskActivities", workspaceId, updatedIssue.id] });
-      if (savedIssue.key) {
-        queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, savedIssue.key] });
-      }
+      queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.activities(workspaceId, updatedIssue.id) });
+      invalidateDashboard(queryClient);
     } catch (error) {
       toast.error(extractApiError(error, "Could not update task"));
     }
@@ -198,8 +220,13 @@ export const useTaskHandlers = ({
         status: "To Do",
         sprintId,
       });
-      setIssues((current) => upsertIssue(current, issue));
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+      const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceId);
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: queryKeyPrefix },
+        (current) => (Array.isArray(current) ? upsertIssue(current, issue) : [issue])
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
+      invalidateDashboard(queryClient);
     } catch (error) {
       toast.error(extractApiError(error, "Could not create task"));
     } finally {
@@ -225,8 +252,13 @@ export const useTaskHandlers = ({
         assigneeId: task.assigneeId || '',
         dueDate: task.dueDate || undefined,
       });
-      setIssues((current) => upsertIssue(current, issue));
-      queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
+      const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceId);
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: queryKeyPrefix },
+        (current) => (Array.isArray(current) ? upsertIssue(current, issue) : [issue])
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
+      invalidateDashboard(queryClient);
     } catch (error) {
       toast.error(extractApiError(error, 'Could not create task'));
     } finally {
@@ -247,8 +279,13 @@ export const useTaskHandlers = ({
         startDate: date,
         dueDate: date,
       });
-      setIssues((current) => upsertIssue(current, issue));
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+      const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceId);
+      queryClient.setQueriesData<Issue[]>(
+        { queryKey: queryKeyPrefix },
+        (current) => (Array.isArray(current) ? upsertIssue(current, issue) : [issue])
+      );
+      queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
+      invalidateDashboard(queryClient);
     } catch (error) {
       toast.error(extractApiError(error, "Could not create work item"));
     } finally {

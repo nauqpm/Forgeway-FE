@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { SPRINT_EVENTS } from '@/lib/socket/socket.events';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import { queryKeys } from '@/common/constants/queryKeys';
 import type { Sprint } from '@/modules/client/workspaces/types/sprint.type';
 import {
   isActiveSprint,
@@ -53,14 +54,14 @@ export function useSprintRealtime(
 
     const upsertSprintCache = (sprint: Sprint) => {
       queryClient.setQueryData<Sprint[]>(
-        ['sprints', workspaceId],
+        queryKeys.sprints.byWorkspace(workspaceId),
         (current) => upsertSprint(current, sprint),
       );
     };
 
     const invalidateBoardTasks = () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ['board', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.board.byWorkspace(workspaceId) });
     };
 
     const handleSprintCreated = (envelope: SprintRealtimeEnvelope) => {
@@ -110,7 +111,7 @@ export function useSprintRealtime(
       const sprint = sprintFromEnvelope(envelope);
       const sprintId = sprint ? sprintIdOf(sprint) : envelope.data.sprintId;
 
-      queryClient.invalidateQueries({ queryKey: ['sprints', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sprints.byWorkspace(workspaceId) });
       invalidateBoardTasks();
       onSprintCompleted?.(sprint, sprintId);
     };
@@ -121,12 +122,12 @@ export function useSprintRealtime(
       const sprint = sprintFromEnvelope(envelope);
       const sprintId = sprint ? sprintIdOf(sprint) : envelope.data.sprintId;
       const cachedSprints =
-        queryClient.getQueryData<Sprint[]>(['sprints', workspaceId]) ?? [];
+        queryClient.getQueryData<Sprint[]>(queryKeys.sprints.byWorkspace(workspaceId)) ?? [];
       const wasActive =
         sprint?.status === 'active' || isActiveSprint(cachedSprints, sprintId);
 
       queryClient.setQueryData<Sprint[]>(
-        ['sprints', workspaceId],
+        queryKeys.sprints.byWorkspace(workspaceId),
         (current) => removeSprint(current, sprintId),
       );
       onSprintDeleted?.(sprintId);
@@ -137,7 +138,7 @@ export function useSprintRealtime(
     };
 
     const unsubscribeReconnect = realtimeSocketClient.onReconnect(() => {
-      queryClient.invalidateQueries({ queryKey: ['sprints', workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.sprints.byWorkspace(workspaceId) });
     });
 
     socket.on(SPRINT_EVENTS.CREATED, handleSprintCreated);

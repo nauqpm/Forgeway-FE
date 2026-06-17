@@ -19,16 +19,16 @@ interface NewChatModalProps {
 
 export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
   const [search, setSearch] = useState('');
-  const [users, setUsers] = useState<UserData[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const { setActiveChannel, addChannel } = useChatStore();
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { data: users = [], isFetching: loading } = useSearchUsers(debouncedSearch);
+  const createDMMutation = useCreateDM();
+  const creating = createDMMutation.isPending;
 
   // Reset state when modal is opened/closed
   useEffect(() => {
     if (!isOpen) {
       setSearch('');
-      setUsers([]);
+      setDebouncedSearch('');
     }
   }, [isOpen]);
 
@@ -58,26 +58,19 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
 
   const handleStartChat = async (targetUserId: string) => {
     if (!targetUserId) return;
-    setCreating(true);
     try {
-      const channel = await createDMAPI(targetUserId);
+      const channel = await createDMMutation.mutateAsync(targetUserId);
       console.log('DM Channel Created/Retrieved:', channel);
       
       if (!channel.members || channel.members.length === 0) {
         console.warn('Backend returned DM channel without populated members!');
       }
 
-      // Add to store dynamically without full refetch
-      addChannel(channel);
-      
-      setActiveChannel(channel._id);
       onClose();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Failed to create DM:', error);
       alert(`Error starting chat: ${error.response?.data?.message || error.message}`);
-    } finally {
-      setCreating(false);
     }
   };
 

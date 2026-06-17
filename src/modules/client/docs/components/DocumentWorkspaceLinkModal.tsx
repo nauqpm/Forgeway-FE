@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Loader2, Link2, X, Check } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { DocumentItem } from "../types/document.type";
 import { documentService } from "../services/documentService";
-import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
-import { Workspace } from "@/modules/client/workspaces/types/workspace.type";
+import { useWorkspaces } from "@/modules/client/workspaces/hooks/useWorkspaces";
 
 type Props = {
   doc: DocumentItem;
@@ -21,10 +21,8 @@ export default function DocumentWorkspaceLinkModal({
   onClose,
   onSaved,
 }: Props) {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const { data: workspaces = [], isLoading: loading, error: workspacesError } = useWorkspaces();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const initialIds = useMemo(
@@ -32,26 +30,19 @@ export default function DocumentWorkspaceLinkModal({
     [doc.workspaceIds],
   );
 
-  const loadWorkspaces = useCallback(async () => {
-    setLoading(true);
-    try {
-      const list = await workspaceService.listMine();
-      setWorkspaces(list);
-      setSelected(new Set(doc.workspaceIds ?? []));
-    } catch {
-      toast.error("Could not load workspace list");
-      onClose();
-    } finally {
-      setLoading(false);
-    }
-  }, [doc.workspaceIds, onClose]);
-
   useEffect(() => {
     if (open) {
-      loadWorkspaces();
+      setSelected(new Set(doc.workspaceIds ?? []));
       setShowConfirm(false);
     }
-  }, [open, loadWorkspaces]);
+  }, [doc.workspaceIds, open]);
+
+  useEffect(() => {
+    if (open && workspacesError) {
+      toast.error("Could not load workspace list");
+      onClose();
+    }
+  }, [onClose, open, workspacesError]);
 
   const toggle = (id: string) => {
     setShowConfirm(false);
@@ -78,19 +69,20 @@ export default function DocumentWorkspaceLinkModal({
 
   const hasChanges = added.length > 0 || removed.length > 0;
 
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await documentService.updateWorkspaces(doc._id, Array.from(selected));
+  const updateWorkspacesMutation = useMutation({
+    mutationFn: () => documentService.updateWorkspaces(doc._id, Array.from(selected)),
+    onSuccess: () => {
       toast.success("Workspace links updated successfully");
       onSaved?.();
       onClose();
-    } catch {
+    },
+    onError: () => {
       toast.error("Could not update workspace links");
-    } finally {
-      setSaving(false);
-    }
-  };
+    },
+  });
+
+  const handleSave = () => updateWorkspacesMutation.mutate();
+  const saving = updateWorkspacesMutation.isPending;
 
   if (!open) return null;
 

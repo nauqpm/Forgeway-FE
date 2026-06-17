@@ -13,26 +13,31 @@ import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
 import Link from 'next/link';
+import { useWorkspaces } from '@/modules/client/workspaces/hooks/useWorkspaces';
+import { useChatChannels, useChatMessages } from '@/modules/client/chat/hooks/useChatQueries';
 
 export default function ChatWindow() {
   // Use specific selectors to prevent unnecessary re-renders and reference changes
   const activeChannelId = useChatStore(state => state.activeChannelId);
-  const channels = useChatStore(state => state.channels);
-  const messagesByChannel = useChatStore(state => state.messagesByChannel);
   const typingUsers = useChatStore(state => state.typingUsers);
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
-  const setMessages = useChatStore(state => state.setMessages);
   
-  const { workspaces } = useWorkspaceStore();
+  const { data: channels = [] } = useChatChannels();
+  const {
+    data: messagesData,
+    isLoading: loading,
+    isError,
+    error,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useChatMessages(activeChannelId);
+  const { data: workspaces = [] } = useWorkspaces();
   const currentUserId = useAuthStore(state => state.user?.id);
   const userRole = useAuthStore(state => state.user?.role);
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
   const shouldScrollToBottomRef = useRef(true);
   const lastMessageIdRef = useRef<string | null>(null);
   const prevChannelIdRef = useRef<string | null>(null);
@@ -46,44 +51,18 @@ export default function ChatWindow() {
   }, [activeChannel, workspaces]);
 
   const messages = useMemo(() => {
-    const rawMessages = activeChannelId
-      ? messagesByChannel[activeChannelId] || []
-      : [];
+    const rawMessages = messagesData?.pages.flatMap((page) => page.messages) || [];
     // Ensure chronological order (oldest to newest)
     return [...rawMessages].sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
-  }, [activeChannelId, messagesByChannel]);
+  }, [messagesData]);
 
   useEffect(() => {
     if (!activeChannelId) return;
-
-    let isMounted = true;
-    setLoading(true);
-    setError(null);
-    setNextCursor(null);
     shouldScrollToBottomRef.current = true;
-    
-    getMessagesAPI(activeChannelId, { limit: 20 })
-      .then(({ messages: msgs, nextCursor: cursor }) => {
-        if (isMounted) {
-          setMessages(activeChannelId, msgs);
-          setNextCursor(cursor);
-        }
-      })
-      .catch(err => {
-        if (!isMounted) return;
-        if (err.response?.status === 403) {
-          setError("You don't have permission to view messages in this channel.");
-        } else {
-          setError("Failed to load messages. Please try again.");
-        }
-      })
-      .finally(() => {
-        if (isMounted) setLoading(false);
-      });
-    
+
     markAsRead(activeChannelId);
     joinChannel(activeChannelId);
 
@@ -99,7 +78,6 @@ export default function ChatWindow() {
       });
 
     return () => {
-      isMounted = false;
       leaveChannel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,26 +110,15 @@ export default function ChatWindow() {
   }, [clearOldTyping]);
 
   const handleLoadMore = async () => {
-    if (!activeChannelId || !nextCursor || loadingMore) return;
-    setLoadingMore(true);
+    if (!activeChannelId || !hasNextPage || isFetchingNextPage) return;
     
     const container = scrollRef.current;
     const previousScrollHeight = container ? container.scrollHeight : 0;
     const previousScrollTop = container ? container.scrollTop : 0;
 
     try {
-      const { messages: olderMsgs, nextCursor: cursor } = await getMessagesAPI(activeChannelId, {
-        limit: 20,
-        cursor: nextCursor
-      });
-      
-      const currentMsgs = messagesByChannel[activeChannelId] || [];
-      const mergedMsgs = [...olderMsgs, ...currentMsgs];
-      const uniqueMsgs = Array.from(new Map(mergedMsgs.map(m => [m._id, m])).values());
-      
       shouldScrollToBottomRef.current = false;
-      setMessages(activeChannelId, uniqueMsgs);
-      setNextCursor(cursor);
+      await fetchNextPage();
 
       // Restore scroll position
       requestAnimationFrame(() => {
@@ -163,10 +130,16 @@ export default function ChatWindow() {
       });
     } catch (err) {
       console.error("Failed to load older messages:", err);
-    } finally {
-      setLoadingMore(false);
     }
   };
+
+  const errorMessage = useMemo(() => {
+    if (!isError) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const status = (error as any)?.response?.status;
+    if (status === 403) return "You don't have permission to view messages in this channel.";
+    return "Failed to load messages. Please try again.";
+  }, [error, isError]);
 
   if (!activeChannelId || !activeChannel) {
     return (
@@ -347,25 +320,25 @@ export default function ChatWindow() {
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
           </div>
-        ) : error ? (
+        ) : errorMessage ? (
           <div className="flex flex-col items-center justify-center h-full p-4 text-center">
             <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-3">
               <Info className="w-6 h-6 text-red-500" />
             </div>
             <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic">
-              {error}
+              {errorMessage}
             </p>
           </div>
         ) : (
           <div className="py-4">
-            {nextCursor && (
+            {hasNextPage && (
               <div className="flex justify-center mb-4">
                 <button
                   onClick={handleLoadMore}
-                  disabled={loadingMore}
+                  disabled={isFetchingNextPage}
                   className="px-4 py-1.5 text-xs font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] bg-[#F0F0EE] dark:bg-white/5 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded-[6px] transition-colors flex items-center gap-2"
                 >
-                  {loadingMore ? (
+                  {isFetchingNextPage ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       Loading history...

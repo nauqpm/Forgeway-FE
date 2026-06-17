@@ -1,11 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Search, Plus, MoreHorizontal, Mail, Shield, Trash2, ChevronDown } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
-import { Search, Plus, MoreHorizontal, Mail, Shield, Trash2, ChevronDown } from "lucide-react";
+import type { Workspace } from "@/stores/workspaceStore";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
 
 interface User {
   _id: string;
@@ -46,100 +50,114 @@ const roleLabels: Record<string, string> = {
 };
 
 export default function AdminUsers({ className = "" }: AdminUsersProps) {
-  const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
-  const [users, setUsers] = useState<User[]>([]);
-  const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const { currentWorkspace } = useCurrentWorkspace();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"workspace" | "all">("workspace");
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
-  const [inviting, setInviting] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    Promise.all([
-      api.get(apiRoutes.USERS.BASE),
-      api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
-        if (!cancelled) setWorkspaces(res.data);
-        return res.data;
-      }),
-    ])
-      .then(([usersRes, wsData]) => {
-        if (cancelled) return;
-        setUsers(Array.isArray(usersRes.data) ? usersRes.data : []);
-        if (currentWorkspace?._id) {
-          return api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace._id));
-        }
-        const ws = currentWorkspace || (wsData.length > 0 ? wsData[0] : null);
-        if (ws?._id) {
-          return api.get(apiRoutes.WORKSPACES.MEMBERS(ws._id));
-        }
-        return null;
-      })
-      .then((res) => {
-        if (!cancelled && res) {
-          setMembers(Array.isArray(res.data) ? res.data : []);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to fetch users/members:", err);
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [setWorkspaces]);
+  const workspacesQuery = useQuery<Workspace[]>({
+    queryKey: queryKeys.workspaces.list(),
+    queryFn: workspaceService.listMine,
+  });
 
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail.trim() || !currentWorkspace?._id) return;
-    setInviting(true);
-    try {
-      await api.post(apiRoutes.WORKSPACES.ADD_MEMBER(currentWorkspace._id), { email: inviteEmail, role: inviteRole });
-      const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(currentWorkspace._id));
-      setMembers(Array.isArray(res.data) ? res.data : []);
+  const activeWorkspace = currentWorkspace ?? workspacesQuery.data?.[0] ?? null;
+
+  const usersQuery = useQuery<User[]>({
+    queryKey: queryKeys.admin.users(),
+    queryFn: async () => {
+      const res = await api.get(apiRoutes.USERS.BASE);
+      return Array.isArray(res.data) ? res.data : [];
+    },
+  });
+
+  const membersQuery = useQuery<WorkspaceMember[]>({
+    queryKey: queryKeys.workspaces.members(activeWorkspace?._id ?? "none"),
+    queryFn: async () => {
+      const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(activeWorkspace!._id));
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    enabled: !!activeWorkspace?._id,
+  });
+
+  const inviteMutation = useMutation({
+    mutationFn: async () => {
+      if (!activeWorkspace?._id) return;
+      await api.post(apiRoutes.WORKSPACES.ADD_MEMBER(activeWorkspace._id), {
+        email: inviteEmail,
+        role: inviteRole,
+      });
+    },
+    onSuccess: async () => {
+      if (activeWorkspace?._id) {
+        await queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.members(activeWorkspace._id) });
+      }
       setInviteEmail("");
       setShowInvite(false);
-    } catch {
-    } finally {
-      setInviting(false);
-    }
-  };
+    },
+  });
 
-  const handleChangeRole = async (memberUserId: string, newRole: string) => {
-    if (!currentWorkspace?._id) return;
-    try {
-      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(currentWorkspace._id, memberUserId), { role: newRole });
-      setMembers((prev) =>
-        prev.map((m) => (m.userId === memberUserId ? { ...m, role: newRole as WorkspaceMember["role"] } : m))
+  const changeRoleMutation = useMutation({
+    mutationFn: async ({ memberUserId, newRole }: { memberUserId: string; newRole: string }) => {
+      if (!activeWorkspace?._id) return;
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(activeWorkspace._id, memberUserId), { role: newRole });
+      return { memberUserId, newRole };
+    },
+    onSuccess: (result) => {
+      if (!result || !activeWorkspace?._id) return;
+      const { memberUserId, newRole } = result;
+      queryClient.setQueryData<WorkspaceMember[]>(queryKeys.workspaces.members(activeWorkspace._id), (current = []) =>
+        current.map((member) =>
+          member.userId === memberUserId ? { ...member, role: newRole as WorkspaceMember["role"] } : member,
+        ),
       );
       setOpenMenu(null);
-    } catch {}
-  };
+    },
+  });
 
-  const handleRemoveMember = async (memberUserId: string) => {
-    if (!currentWorkspace?._id) return;
-    if (!confirm("Remove this member from the workspace?")) return;
-    try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(currentWorkspace._id, memberUserId));
-      setMembers((prev) => prev.filter((m) => m.userId !== memberUserId));
-    } catch {}
-  };
+  const removeMemberMutation = useMutation({
+    mutationFn: async (memberUserId: string) => {
+      if (!activeWorkspace?._id) return;
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(activeWorkspace._id, memberUserId));
+      return memberUserId;
+    },
+    onSuccess: (memberUserId) => {
+      if (!activeWorkspace?._id) return;
+      queryClient.setQueryData<WorkspaceMember[]>(queryKeys.workspaces.members(activeWorkspace._id), (current = []) =>
+        current.filter((member) => member.userId !== memberUserId),
+      );
+    },
+  });
 
-  const filteredMembers = members.filter(
-    (u) =>
-      (u.email || "").toLowerCase().includes(search.toLowerCase()) ||
-      (u.fullName || "").toLowerCase().includes(search.toLowerCase())
+  const members = useMemo(() => membersQuery.data ?? [], [membersQuery.data]);
+  const users = useMemo(() => usersQuery.data ?? [], [usersQuery.data]);
+
+  const filteredMembers = useMemo(
+    () =>
+      members.filter(
+        (user) =>
+          (user.email || "").toLowerCase().includes(search.toLowerCase()) ||
+          (user.fullName || "").toLowerCase().includes(search.toLowerCase()),
+      ),
+    [members, search],
   );
-  const filteredUsers = users.filter(
-    (u) =>
-      u.email.toLowerCase().includes(search.toLowerCase()) ||
-      (u.fullName || "").toLowerCase().includes(search.toLowerCase())
+
+  const filteredUsers = useMemo(
+    () =>
+      users.filter(
+        (user) =>
+          user.email.toLowerCase().includes(search.toLowerCase()) ||
+          (user.fullName || "").toLowerCase().includes(search.toLowerCase()),
+      ),
+    [search, users],
   );
 
-  if (loading) return <LoadingSpinner />;
+  if (workspacesQuery.isLoading || usersQuery.isLoading || membersQuery.isLoading) {
+    return <LoadingSpinner />;
+  }
 
   const displayItems = tab === "workspace" ? filteredMembers : filteredUsers;
 
@@ -152,7 +170,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
         </div>
         <button
           onClick={() => setShowInvite(true)}
-          disabled={!currentWorkspace}
+          disabled={!activeWorkspace}
           className="inline-flex items-center gap-2 bg-[#2563EB] text-white px-4 py-2 rounded-[6px] hover:bg-[#1D4ED8] font-medium text-sm transition-colors disabled:opacity-50"
         >
           <Plus className="w-4 h-4" /> Invite Member
@@ -174,7 +192,14 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                 <MoreHorizontal className="w-5 h-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
               </button>
             </div>
-            <form onSubmit={handleInvite} className="p-5 space-y-4">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!inviteEmail.trim() || !activeWorkspace?._id) return;
+                inviteMutation.mutate();
+              }}
+              className="p-5 space-y-4"
+            >
               <div>
                 <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5">
                   Email Address
@@ -217,10 +242,10 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                 </button>
                 <button
                   type="submit"
-                  disabled={inviting}
+                  disabled={inviteMutation.isPending}
                   className="flex-1 px-4 py-2.5 bg-[#2563EB] text-white rounded-[6px] text-sm font-medium hover:bg-[#1D4ED8] transition-colors disabled:opacity-50"
                 >
-                  {inviting ? "Sending..." : "Send invitation"}
+                  {inviteMutation.isPending ? "Sending..." : "Send invitation"}
                 </button>
               </div>
             </form>
@@ -303,7 +328,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
-                            {item.fullName || "—"}
+                            {item.fullName || "-"}
                           </p>
                           <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] truncate">{item.email}</p>
                         </div>
@@ -324,13 +349,13 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                               className="absolute top-full left-0 mt-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-[8px] z-10 py-1 min-w-40"
                               style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
                             >
-                              {["admin", "member", "viewer"].map((r) => (
+                              {["admin", "member", "viewer"].map((role) => (
                                 <button
-                                  key={r}
-                                  onClick={() => handleChangeRole(item.userId, r)}
-                                  className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[#F7F6F3] dark:hover:bg-white/8 ${item.role === r ? "text-[#2563EB] dark:text-[#3B82F6] font-medium" : "text-[#787774] dark:text-[#9B9A97]"}`}
+                                  key={role}
+                                  onClick={() => changeRoleMutation.mutate({ memberUserId: item.userId, newRole: role })}
+                                  className={`w-full text-left px-3 py-1.5 text-sm hover:bg-[#F7F6F3] dark:hover:bg-white/8 ${item.role === role ? "text-[#2563EB] dark:text-[#3B82F6] font-medium" : "text-[#787774] dark:text-[#9B9A97]"}`}
                                 >
-                                  {roleLabels[r]}
+                                  {roleLabels[role]}
                                 </button>
                               ))}
                             </div>
@@ -361,7 +386,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
                     <td className="px-5 py-3.5 text-right">
                       {tab === "workspace" && item.role !== "owner" && (
                         <button
-                          onClick={() => handleRemoveMember(item.userId)}
+                          onClick={() => removeMemberMutation.mutate(item.userId)}
                           className="p-1.5 text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] dark:hover:text-[#F87171] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] rounded-[6px] transition-colors"
                           title="Remove from workspace"
                         >

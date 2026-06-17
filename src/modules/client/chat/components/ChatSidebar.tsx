@@ -1,25 +1,26 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { useChatStore, Channel } from '@/stores/chatStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
 import { Hash, Megaphone, Loader2 } from 'lucide-react';
 import { getWorkspaceUI } from '@/utils/workSpaceUI';
 import { useSearchParams } from 'next/navigation';
 import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
-import { chatSocketClient } from '@/lib/socket/chat.client';
+import { useWorkspaces } from '@/modules/client/workspaces/hooks/useWorkspaces';
+import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
+import type { Channel } from '@/modules/client/chat/types/chat.types';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 export default function ChatSidebar() {
-  const { channels, setChannels, activeChannelId, setActiveChannel } = useChatStore();
-  const { workspaces } = useWorkspaceStore();
+  const activeChannelId = useChatStore(state => state.activeChannelId);
+  const setActiveChannel = useChatStore(state => state.setActiveChannel);
+  const { data: channels = [], isLoading } = useChatChannels();
+  const { data: workspaces = [] } = useWorkspaces();
   const authUser = useAuthStore(state => state.user);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentUserId = (authUser as any)?._id || authUser?.id;
-  const [loading, setLoading] = useState(channels.length === 0);
   const [activeTab, setActiveTab] = useState<'all' | 'channels' | 'dms'>('all');
 
   const searchParams = useSearchParams();
@@ -40,23 +41,6 @@ export default function ChatSidebar() {
       }
     }
   }, [paramWorkspaceId, channels, setActiveChannel]);
-
-  const fetchSidebarData = useCallback(async () => {
-    try {
-      const allChannels = await getChannelsAPI();
-      setChannels(allChannels);
-      chatSocketClient.joinChannels(allChannels.map(c => c._id));
-    } catch (error) {
-      console.error("Failed to fetch channels", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [setChannels]);
-
-  useEffect(() => {
-    setLoading(true);
-    fetchSidebarData();
-  }, [fetchSidebarData]);
 
   const sortedChannels = useMemo(() => {
     /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -80,7 +64,7 @@ export default function ChatSidebar() {
     });
   }, [channels]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="w-5 h-5 animate-spin text-[#787774]" />

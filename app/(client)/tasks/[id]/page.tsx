@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { AlertCircle, ArrowLeft, Tag, Flag, MessageSquare, Paperclip, Send, Edit3 } from "lucide-react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useWorkspaces } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import StatusPicker from "@/common/components/StatusPicker";
 
 interface Task {
@@ -60,82 +62,126 @@ const priorityOptions = [
 export default function TaskDetailPage() {
   usePageTitle("Task");
   const params = useParams();
+  const queryClient = useQueryClient();
   const taskId = params.id as string;
   const { user } = useAuth();
-  const { workspaces } = useWorkspaceStore();
-  const [task, setTask] = useState<Task | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
+  const { data: workspaces = [] } = useWorkspaces();
   const [newComment, setNewComment] = useState("");
-  const [loading, setLoading] = useState(true);
   const [editingDesc, setEditingDesc] = useState(false);
   const [descContent, setDescContent] = useState("");
-  const [submitting, setSubmitting] = useState(false);
 
-  const fetchTask = async () => {
-    try {
+  const { data: task, isLoading: isTaskLoading } = useQuery({
+    queryKey: queryKeys.tasks.detailById(taskId),
+    queryFn: async () => {
       const res = await api.get(apiRoutes.TASKS.BY_ID(taskId));
-      setTask(res.data);
-      setDescContent(res.data.description || "");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return res.data as Task;
+    },
+    enabled: !!taskId,
+    staleTime: 30_000,
+  });
 
-  const fetchComments = async () => {
-    if (!task) return;
-    try {
+  const { data: commentsData, isLoading: isCommentsLoading } = useQuery({
+    queryKey: queryKeys.tasks.commentsByTaskId(taskId),
+    queryFn: async () => {
       const res = await api.get(apiRoutes.COMMENTS.BY_TARGET("task", taskId));
-      setComments(res.data);
-    } catch {}
-  };
+      return res.data as Comment[];
+    },
+    enabled: !!taskId,
+    staleTime: 30_000,
+  });
+
+  const comments = commentsData || [];
 
   useEffect(() => {
-    fetchTask();
-  }, [taskId]);
-  useEffect(() => {
-    fetchComments();
+    if (task) {
+      setDescContent(task.description || "");
+    }
   }, [task]);
 
-  const handleAddComment = async () => {
-    if (!newComment.trim() || !task) return;
-    setSubmitting(true);
-    try {
-      const res = await api.post(apiRoutes.COMMENTS.BASE, {
-        content: newComment,
+  const addCommentMutation = useMutation({
+    mutationFn: (content: string) =>
+      api.post(apiRoutes.COMMENTS.BASE, {
+        content,
         targetType: "task",
         targetId: taskId,
-      });
-      setComments([...comments, res.data]);
+      }),
+    onSuccess: (res) => {
+      queryClient.setQueryData<Comment[]>(queryKeys.tasks.commentsByTaskId(taskId), (current = []) => [
+        ...current,
+        res.data,
+      ]);
       setNewComment("");
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSubmitting(false);
-    }
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.commentsByTaskId(taskId) });
+    },
+  });
+
+  const handleAddComment = () => {
+    if (!newComment.trim() || !task) return;
+    addCommentMutation.mutate(newComment);
   };
 
-  const handleStatusChange = async (status: string) => {
+  const statusChangeMutation = useMutation({
+    mutationFn: (status: string) => api.put(apiRoutes.TASKS.STATUS(taskId), { status }),
+    onMutate: async (status) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks.detailById(taskId) });
+      const previousTask = queryClient.getQueryData<Task>(queryKeys.tasks.detailById(taskId));
+      if (previousTask) {
+        queryClient.setQueryData<Task>(queryKeys.tasks.detailById(taskId), {
+          ...previousTask,
+          status,
+        });
+      }
+      return { previousTask };
+    },
+    onError: (err, status, context) => {
+      if (context?.previousTask) {
+        queryClient.setQueryData(queryKeys.tasks.detailById(taskId), context.previousTask);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.detailById(taskId) });
+      if (task?.workspaceId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(task.workspaceId) });
+      }
+    },
+  });
+
+  const handleStatusChange = (status: string) => {
     if (!task) return;
-    try {
-      await api.put(apiRoutes.TASKS.STATUS(taskId), { status });
-      setTask({ ...task, status });
-    } catch (e) {
-      console.error(e);
-    }
+    statusChangeMutation.mutate(status);
   };
 
-  const handleSaveDescription = async () => {
-    if (!task) return;
-    try {
-      await api.put(apiRoutes.TASKS.BY_ID(taskId), { description: descContent });
-      setTask({ ...task, description: descContent });
+  const saveDescriptionMutation = useMutation({
+    mutationFn: (description: string) => api.put(apiRoutes.TASKS.BY_ID(taskId), { description }),
+    onMutate: async (description) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks.detailById(taskId) });
+      const previousTask = queryClient.getQueryData<Task>(queryKeys.tasks.detailById(taskId));
+      if (previousTask) {
+        queryClient.setQueryData<Task>(queryKeys.tasks.detailById(taskId), {
+          ...previousTask,
+          description,
+        });
+      }
+      return { previousTask };
+    },
+    onError: (err, description, context) => {
+      if (context?.previousTask) {
+        queryClient.setQueryData(queryKeys.tasks.detailById(taskId), context.previousTask);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.detailById(taskId) });
       setEditingDesc(false);
-    } catch (e) {
-      console.error(e);
-    }
+    },
+  });
+
+  const handleSaveDescription = () => {
+    if (!task) return;
+    saveDescriptionMutation.mutate(descContent);
   };
+
+  const submitting = addCommentMutation.isPending;
+  const loading = isTaskLoading || isCommentsLoading;
 
   if (loading) return <LoadingSpinner />;
   if (!task)

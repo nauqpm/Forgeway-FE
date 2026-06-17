@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,8 +17,29 @@ export default function VerifyEmailForm() {
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isResending, setIsResending] = useState(false);
+
+  const verifyEmailMutation = useMutation({
+    mutationFn: ({ email, otp }: { email: string; otp: string }) => verifyEmailAPI(email, otp),
+    onSuccess: () => {
+      toast.success('Account created successfully');
+      router.push(AUTH_ROUTES.LOGIN);
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error?.response?.data?.message || 'Verification failed. Please check the OTP code.');
+    },
+  });
+
+  const resendVerifyEmailMutation = useMutation({
+    mutationFn: resendVerifyEmailAPI,
+    onSuccess: () => {
+      toast.success('Verification code resent. Please check your email.');
+    },
+    onError: (err: unknown) => {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(error?.response?.data?.message || 'Could not resend verification code.');
+    },
+  });
 
   useEffect(() => {
     const emailParam = searchParams.get('email');
@@ -40,17 +62,7 @@ export default function VerifyEmailForm() {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      await verifyEmailAPI(email, otp);
-      toast.success('Account created successfully');
-      router.push(AUTH_ROUTES.LOGIN);
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error?.response?.data?.message || 'Verification failed. Please check the OTP code.');
-    } finally {
-      setIsLoading(false);
-    }
+    verifyEmailMutation.mutate({ email, otp });
   };
 
   const handleResend = async () => {
@@ -63,17 +75,11 @@ export default function VerifyEmailForm() {
       toast.error(emailError);
       return;
     }
-    setIsResending(true);
-    try {
-      await resendVerifyEmailAPI(email);
-      toast.success('Verification code resent. Please check your email.');
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      toast.error(error?.response?.data?.message || 'Could not resend verification code.');
-    } finally {
-      setIsResending(false);
-    }
+    resendVerifyEmailMutation.mutate(email);
   };
+
+  const isLoading = verifyEmailMutation.isPending;
+  const isResending = resendVerifyEmailMutation.isPending;
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 py-12 overflow-hidden">

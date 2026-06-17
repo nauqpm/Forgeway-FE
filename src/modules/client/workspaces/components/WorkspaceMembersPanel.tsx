@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, MouseEvent } from "react";
+import { useState, useEffect, MouseEvent } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { Users, UserPlus, Search, X, Loader2, ChevronDown, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/lib/axiosIns";
@@ -89,9 +91,8 @@ function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: Invit
       toast.success(`Invitation sent to ${email}.`);
       onSuccess();
       onClose();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? "User is already a member of this workspace.";
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "User is already a member of this workspace.";
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -165,11 +166,11 @@ type WorkspaceMembersPanelProps = {
 };
 
 export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }: WorkspaceMembersPanelProps) {
+  const queryClient = useQueryClient();
   const { user: authUser } = useAuth();
   const { hasPermission } = useWorkspacePermission(workspaceId);
   const canManageMembers = hasPermission(WORKSPACE_PERMISSIONS.WORKSPACE_UPDATE);
-  const [members, setMembers] = useState<WorkspaceMember[]>([]);
-  const [loading, setLoading] = useState(false);
+  
   const [search, setSearch] = useState("");
   const [showInvite, setShowInvite] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
@@ -177,22 +178,63 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
     x: number;
     y: number;
   } | null>(null);
-  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
-  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
 
-  const fetchMembers = useCallback(() => {
-    if (!workspaceId) return;
-    setLoading(true);
-    api
-      .get(apiRoutes.WORKSPACES.MEMBERS(workspaceId))
-      .then((res) => setMembers(res.data?.data ?? res.data ?? []))
-      .catch(() => setMembers([]))
-      .finally(() => setLoading(false));
-  }, [workspaceId]);
+  const { data: members = [], isLoading: loading } = useQuery<WorkspaceMember[]>({
+    queryKey: queryKeys.workspaces.members(workspaceId),
+    queryFn: async () => {
+      const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
+      return res.data?.data ?? res.data ?? [];
+    },
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    fetchMembers();
-  }, [fetchMembers]);
+  const updateRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceId, userId), { role });
+      return { userId, role };
+    },
+    onSuccess: ({ userId, role }) => {
+      queryClient.setQueryData<WorkspaceMember[]>(
+        queryKeys.workspaces.members(workspaceId),
+        (current = []) => current.map((item) => (item.userId?._id === userId ? { ...item, role } : item))
+      );
+      toast.success("Member permissions updated.");
+    },
+    onError: (err: unknown) => {
+      toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Could not update member permissions.");
+    },
+    onSettled: () => {
+      setContextMenu(null);
+    },
+  });
+
+  const removeMemberMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceMongoId ?? workspaceId, userId));
+      return userId;
+    },
+    onSuccess: (userId) => {
+      queryClient.setQueryData<WorkspaceMember[]>(
+        queryKeys.workspaces.members(workspaceId),
+        (current = []) => current.filter((item) => item.userId?._id !== userId)
+      );
+      toast.success("Member removed from workspace.");
+    },
+    onError: (err: unknown) => {
+      toast.error((err as { response?: { data?: { message?: string } } })?.response?.data?.message ?? "Could not remove member.");
+    },
+    onSettled: () => {
+      setContextMenu(null);
+    },
+  });
+
+  const updatingMemberId = updateRoleMutation.isPending ? updateRoleMutation.variables?.userId : null;
+  const removingMemberId = removeMemberMutation.isPending ? removeMemberMutation.variables : null;
+
+  const handleInviteSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.members(workspaceId) });
+  };
 
   useEffect(() => {
     const closeMenu = () => setContextMenu(null);
@@ -228,45 +270,19 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
     });
   };
 
-  const handleUpdateMemberRole = async (member: WorkspaceMember, role: string) => {
+  const handleUpdateMemberRole = (member: WorkspaceMember, role: string) => {
     const userId = member.userId?._id;
     if (!userId || member.role === role) {
       setContextMenu(null);
       return;
     }
-
-    setUpdatingMemberId(userId);
-    try {
-      await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceId, userId), {
-        role,
-      });
-      setMembers((prev) => prev.map((item) => (item.userId?._id === userId ? { ...item, role } : item)));
-      setContextMenu(null);
-      toast.success("Member permissions updated.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Could not update member permissions.");
-    } finally {
-      setUpdatingMemberId(null);
-    }
+    updateRoleMutation.mutate({ userId, role });
   };
 
-  const handleRemoveMember = async (member: WorkspaceMember) => {
+  const handleRemoveMember = (member: WorkspaceMember) => {
     const userId = member.userId?._id;
     if (!userId) return;
-
-    setRemovingMemberId(userId);
-    try {
-      await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceMongoId ?? workspaceId, userId));
-      setMembers((prev) => prev.filter((item) => item.userId?._id !== userId));
-      setContextMenu(null);
-      toast.success("Member removed from workspace.");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? "Could not remove member.");
-    } finally {
-      setRemovingMemberId(null);
-    }
+    removeMemberMutation.mutate(userId);
   };
 
   const filtered = members.filter((m) => {
@@ -304,7 +320,7 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
           workspaceId={workspaceId}
           workspaceMongoId={workspaceMongoId}
           onClose={() => setShowInvite(false)}
-          onSuccess={fetchMembers}
+          onSuccess={handleInviteSuccess}
         />
       )}
 

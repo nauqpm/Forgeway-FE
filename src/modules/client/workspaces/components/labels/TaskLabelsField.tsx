@@ -7,6 +7,7 @@ import type { Issue } from "../../types/issue.type";
 import type { TaskDetailResponse } from "../../types/task-detail.type";
 import type { TaskLabel } from "../../types/label.type";
 import TaskLabelModal from "./TaskLabelModal";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 type TaskLabelsFieldProps = {
   workspaceId: string;
@@ -41,7 +42,7 @@ export default function TaskLabelsField({
     setLabelIds(nextLabelIds);
 
     queryClient.setQueriesData<Issue[]>(
-      { queryKey: ["tasks", workspaceId] },
+      { queryKey: queryKeys.tasks.byWorkspace(workspaceId) },
       (current) =>
         Array.isArray(current)
           ? current.map((item) =>
@@ -53,7 +54,7 @@ export default function TaskLabelsField({
     );
 
     queryClient.setQueryData<TaskDetailResponse>(
-      ["taskDetail", workspaceId, issue.key],
+      queryKeys.tasks.detail(workspaceId, issue.key),
       (current) =>
         current
           ? { ...current, labels: nextLabels, labelIds: nextLabelIds }

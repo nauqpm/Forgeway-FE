@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Message, useChatStore } from '@/stores/chatStore';
+import { useChatStore } from '@/stores/chatStore';
+import type { ChatUser, Message } from '@/modules/client/chat/types/chat.types';
 import { format } from 'date-fns';
 import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle } from 'lucide-react';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
@@ -18,10 +19,12 @@ interface MessageItemProps {
 const QUICK_EMOJIS = ['❤️', '👍', '😂', '😢', '❓', '😮'];
 
 export default function MessageItem({ message, isSameUserAsPrevious, isMine }: MessageItemProps) {
-  const sender = message.senderId;
+  const sender = typeof message.senderId === 'object' && message.senderId
+    ? message.senderId
+    : ({ _id: String(message.senderId || ''), fullName: 'User', email: '' } as ChatUser);
   const displayName = sender.fullName || sender.email || 'User';
   const initialLetter = displayName.charAt(0).toUpperCase();
-  const isDeleted = message.deletedAt !== null;
+  const isDeleted = Boolean(message.deletedAt);
 
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
@@ -53,9 +56,11 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     ? (message.replyToId as Message)
     : null;
 
-  const replySender = replyParent?.senderId;
+  const replySender = typeof replyParent?.senderId === 'object' && replyParent.senderId
+    ? replyParent.senderId
+    : null;
   const replyDisplayName = replySender
-    ? (typeof replySender === 'object' ? (replySender.fullName || replySender.email || 'User') : 'User')
+    ? (replySender.fullName || replySender.email || 'User')
     : 'User';
   const replyInitialLetter = replyDisplayName.charAt(0).toUpperCase();
 
@@ -284,9 +289,9 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }}
           >
-            {replyParent.senderId?.avatar ? (
+            {replySender?.avatar ? (
               <img 
-                src={replyParent.senderId.avatar} 
+                src={replySender.avatar} 
                 alt={replyDisplayName} 
                 className="w-4 h-4 rounded-full object-cover shrink-0" 
                 onError={(e) => {

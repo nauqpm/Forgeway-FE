@@ -7,6 +7,7 @@ import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { TASK_EVENTS } from '@/lib/socket/socket.events';
 import type { RealtimeEnvelope } from '@/lib/socket/socket.types';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import { queryKeys } from '@/common/constants/queryKeys';
 import type { Issue } from '@/modules/client/workspaces/types/issue.type';
 import {
   findTaskInCache,
@@ -67,14 +68,17 @@ export function useTaskRealtime(
 
       if (envelope.type === TASK_EVENTS.ARCHIVED || envelope.type === TASK_EVENTS.DELETED) {
         queryClient.setQueriesData<Issue[]>(
-          { queryKey: ['tasks', workspaceId] },
+          { queryKey: queryKeys.tasks.byWorkspace(workspaceId) },
           (current) => removeTask(current, eventTaskId),
         );
         if (eventTaskId) onTaskRemoved?.(eventTaskId);
-        queryClient.removeQueries({
-          queryKey: ['taskDetail', workspaceId, envelope.data.taskKey],
-          exact: true,
-        });
+        if (envelope.data.taskKey) {
+          queryClient.removeQueries({
+            queryKey: queryKeys.tasks.detail(workspaceId, envelope.data.taskKey),
+            exact: true,
+          });
+        }
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
         return;
       }
 
@@ -82,7 +86,7 @@ export function useTaskRealtime(
       if (!issue) return;
 
       const cachedTasks = queryClient.getQueriesData<Issue[]>({
-        queryKey: ['tasks', workspaceId],
+        queryKey: queryKeys.tasks.byWorkspace(workspaceId),
       });
       const existing = findTaskInCache(cachedTasks, eventTaskId ?? issue.id);
       const decision = shouldApplyEvent(
@@ -93,16 +97,23 @@ export function useTaskRealtime(
       );
 
       if (decision.refetch) {
-        queryClient.invalidateQueries({ queryKey: ['tasks', workspaceId] });
+        queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
         return;
       }
 
       if (!decision.apply) return;
 
       queryClient.setQueriesData<Issue[]>(
-        { queryKey: ['tasks', workspaceId] },
+        { queryKey: queryKeys.tasks.byWorkspace(workspaceId) },
         (current) => upsertTask(current, issue),
       );
+      if (issue.key) {
+        queryClient.setQueryData(
+          queryKeys.tasks.detail(workspaceId, issue.key),
+          (current: Issue | undefined) => current ? { ...current, ...issue } : current
+        );
+      }
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
       onTaskUpserted?.(issue);
     };
 
@@ -122,7 +133,7 @@ export function useTaskRealtime(
       }
 
       const cachedTasks = queryClient.getQueriesData<Issue[]>({
-        queryKey: ['tasks', workspaceId],
+        queryKey: queryKeys.tasks.byWorkspace(workspaceId),
       });
       const affectedQueries = getAffectedTaskQueries(cachedTasks, eventTaskId);
 
@@ -161,6 +172,13 @@ export function useTaskRealtime(
               mergeReorderedTask(current, issue),
             );
           });
+          if (issue.key) {
+            queryClient.setQueryData(
+              queryKeys.tasks.detail(workspaceId, issue.key),
+              (current: Issue | undefined) => current ? { ...current, ...issue } : current
+            );
+          }
+          queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
           onTaskUpserted?.(issue);
         });
       } catch {

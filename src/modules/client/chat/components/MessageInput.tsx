@@ -5,10 +5,10 @@ import { Send, Smile, Paperclip, X } from 'lucide-react';
 import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
-import api from '@/lib/axiosIns';
 import StickerPicker from './StickerPicker';
 import { toast } from 'react-hot-toast';
-
+import { useQueryClient } from '@tanstack/react-query';
+import api from '@/lib/axiosIns';
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MessageInputProps {
@@ -20,6 +20,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   const [content, setContent] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
+  const queryClient = useQueryClient();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef<number>(0);
   const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -35,6 +36,9 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
 
   const replyingToMessage = useChatStore(state => state.replyingToMessage);
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+  const replyingSender = typeof replyingToMessage?.senderId === 'object' && replyingToMessage.senderId
+    ? replyingToMessage.senderId
+    : null;
 
   // Auto-resize input when content changes
   useEffect(() => {
@@ -152,7 +156,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
             <div className="flex items-center justify-between bg-[#F0F0EE] dark:bg-white/5 rounded-[6px] px-3 py-2 border-l-4 border-[#2563EB] text-xs mb-1">
               <div className="flex flex-col min-w-0">
                 <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  Replying to {replyingToMessage.senderId.fullName || replyingToMessage.senderId.email || 'User'}
+                  Replying to {replyingSender?.fullName || replyingSender?.email || 'User'}
                 </span>
                 <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
                   {replyingToMessage.content}

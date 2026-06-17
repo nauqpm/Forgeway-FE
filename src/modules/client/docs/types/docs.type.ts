@@ -1,24 +1,14 @@
-// ──────────────────────────────────────────────────────────────
-// Version-history entry — mirrors BE VersionHistoryEntryDto
-// ──────────────────────────────────────────────────────────────
 export interface VersionHistoryEntry {
   editedBy: string;
   editedAt: string;
   changes: string;
 }
 
-// ──────────────────────────────────────────────────────────────
-// Document — maps to BE PageResponseDto
-//
-// BE returns `_id` as the unique identifier.  We keep `id` as an
-// alias so every FE component can reference `doc.id` uniformly.
-// The mapping happens inside `pages.service.ts`.
-// ──────────────────────────────────────────────────────────────
 export interface Document {
-  id: string; // mapped from BE `_id`
+  id: string;
   title: string;
-  content: string; // Raw HTML from TipTap
-  parentId: string | null; // null = root page
+  content: string;
+  parentId: string | null;
   workspaceId: string;
   slug: string;
   authorId: string;
@@ -32,9 +22,6 @@ export interface Document {
   updatedAt: string;
 }
 
-// ──────────────────────────────────────────────────────────────
-// Raw BE response shape (before mapping)
-// ──────────────────────────────────────────────────────────────
 export interface PageApiResponse {
   _id: string;
   title: string;
@@ -52,9 +39,6 @@ export interface PageApiResponse {
   updatedAt: string;
 }
 
-// ──────────────────────────────────────────────────────────────
-// Create-page payload
-// ──────────────────────────────────────────────────────────────
 export interface CreatePagePayload {
   title: string;
   content?: string;
@@ -65,9 +49,6 @@ export interface CreatePagePayload {
   labels?: string[];
 }
 
-// ──────────────────────────────────────────────────────────────
-// Update-page payload (partial)
-// ──────────────────────────────────────────────────────────────
 export interface UpdatePagePayload {
   title?: string;
   content?: string;
@@ -75,44 +56,26 @@ export interface UpdatePagePayload {
   labels?: string[];
 }
 
-// ──────────────────────────────────────────────────────────────
-// Zustand store state + actions
-// ──────────────────────────────────────────────────────────────
 export interface DocsState {
-  documents: Document[];
   selectedDocumentId: string | null;
   selectedImportedDocumentId: string | null;
   expandedNodes: string[];
   searchQuery: string;
-  isSaving: boolean;
-  isLoading: boolean;
   recentDocumentIds: string[];
-  /** Track which parent IDs have had their children lazy-loaded */
-  loadedChildrenOf: string[];
+  draftDocuments: Document[];
 
-  // ── Sync actions (pure state) ──────────────────────────────
-  setDocuments: (documents: Document[]) => void;
-  selectDocument: (id: string | null) => void;
+  selectDocument: (id: string | null, documents?: Document[]) => void;
   selectImportedDocument: (id: string | null) => void;
   toggleExpand: (id: string) => void;
+  ensureExpanded: (id: string) => void;
   setSearchQuery: (query: string) => void;
-  setIsSaving: (saving: boolean) => void;
-  setIsLoading: (loading: boolean) => void;
-
-  // ── Async actions (call API) ───────────────────────────────
-  loadRootPages: (workspaceId: string) => Promise<void>;
-  loadChildren: (parentId: string) => Promise<void>;
-  createDocument: (
-    workspaceId: string,
-    parentId?: string | null,
-  ) => Promise<Document | null>;
-  updateDocument: (
+  addDraftDocument: (document: Document) => void;
+  updateDraftDocument: (
     id: string,
-    updates: Partial<Pick<Document, "title" | "content">>,
-  ) => Promise<void>;
-  saveDocument: (id: string) => Promise<Document | null>;
-  deleteDocument: (id: string) => Promise<void>;
-  renameDocument: (id: string, newTitle: string) => Promise<void>;
+    updates: Partial<Pick<Document, "title" | "content" | "slug" | "parentId">>,
+  ) => void;
+  replaceDraftDocument: (id: string, document: Document) => void;
+  removeDraftDocument: (id: string) => void;
 }
 
 export interface DocumentVersion {
@@ -126,4 +89,3 @@ export interface DocumentVersion {
   createdBy: { _id: string; fullName: string };
   createdAt: string;
 }
-

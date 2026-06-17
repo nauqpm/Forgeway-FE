@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { findWorkspaceByRouteKey, useCurrentWorkspace } from "./useWorkspaces";
 import {
   WORKSPACE_ROLE_PERMISSIONS,
   WorkspacePermission,
@@ -60,19 +60,18 @@ export function useWorkspacePermission(
   workspaceOverride?: WorkspacePermissionSource | null,
 ) {
   const { user } = useAuth();
-  const { currentWorkspace, workspaces } = useWorkspaceStore();
+  const { currentWorkspace, workspaces } = useCurrentWorkspace();
 
   const workspace = useMemo(() => {
     if (workspaceOverride) return workspaceOverride;
-    if (currentWorkspace?.slug === workspaceKey || currentWorkspace?._id === workspaceKey) {
+    if (
+      currentWorkspace?._id === workspaceKey ||
+      currentWorkspace?.key === workspaceKey ||
+      currentWorkspace?.slug === workspaceKey
+    ) {
       return currentWorkspace;
     }
-    return workspaces.find(
-      (item) =>
-        item._id === workspaceKey ||
-        item.slug === workspaceKey ||
-        ("key" in item && item.key === workspaceKey),
-    );
+    return findWorkspaceByRouteKey(workspaces, workspaceKey);
   }, [currentWorkspace, workspaceKey, workspaceOverride, workspaces]);
 
   const role = useMemo(() => {
