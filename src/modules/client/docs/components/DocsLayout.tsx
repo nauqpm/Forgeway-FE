@@ -2,41 +2,25 @@
 
 import { useEffect, useState } from "react";
 import { useDocsStore } from "../store/docs.store";
-import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 import DocsSidebar from "./DocsSidebar";
 import TiptapEditor from "../editor/TiptapEditor";
 import DocsDashboard from "./DocsDashboard";
 import ImportedDocumentViewer from "./ImportedDocumentViewer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
-import { documentService } from "../services/documentService";
-import { DocumentItem } from "../types/document.type";
 
 export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
   const { selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
   const { documents, isLoading } = useWorkspaceDocs(workspaceId);
+  const uploadedDocsQuery = useUploadedWorkspaceDocsQuery(workspaceId);
   const [mounted, setMounted] = useState(false);
-  const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
 
   useEffect(() => {
     setMounted(true);
   }, [workspaceId]);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const list = await documentService.getByWorkspace(workspaceId);
-        setUploadedDocs(list);
-      } catch {
-        setUploadedDocs([]);
-      }
-    };
-    load();
-    const onChanged = () => load();
-    window.addEventListener("docs_uploads_changed", onChanged);
-    return () => window.removeEventListener("docs_uploads_changed", onChanged);
-  }, [workspaceId]);
-
+  const uploadedDocs = uploadedDocsQuery.data ?? [];
   const selectedImportedDoc = uploadedDocs.find((doc) => doc._id === selectedImportedDocumentId) ?? null;
 
   if (!mounted) return null;

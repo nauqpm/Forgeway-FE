@@ -5,7 +5,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { queryKeys } from "@/common/constants/queryKeys";
 import { pagesService } from "../services/pages.service";
+import { documentService } from "../services/documentService";
 import { useDocsStore } from "../store/docs.store";
+import type { DocumentItem } from "../types/document.type";
 import type { CreatePagePayload, Document, UpdatePagePayload } from "../types/docs.type";
 
 const isTemporaryDocument = (id: string) => id.startsWith("temp-");
@@ -53,6 +55,14 @@ export function useWorkspaceDocsQuery(workspaceId: string, enabled = true) {
   return useQuery<Document[]>({
     queryKey: queryKeys.docs.list(workspaceId),
     queryFn: () => pagesService.getWorkspacePages(workspaceId),
+    enabled: enabled && !!workspaceId,
+  });
+}
+
+export function useUploadedWorkspaceDocsQuery(workspaceId: string, enabled = true) {
+  return useQuery<DocumentItem[]>({
+    queryKey: queryKeys.docs.uploadedByWorkspace(workspaceId),
+    queryFn: () => documentService.getByWorkspace(workspaceId),
     enabled: enabled && !!workspaceId,
   });
 }

@@ -5,38 +5,41 @@ import DocsSearch from "./DocsSearch";
 import DocsTree from "./DocsTree";
 import RecentDocs from "./RecentDocs";
 import { ChevronLeft, ChevronRight, Download, FileText, Layout, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { toast } from "react-hot-toast";
-import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { queryKeys } from "@/common/constants/queryKeys";
+import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 
 export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
   const { selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
   const { documents } = useWorkspaceDocs(workspaceId);
+  const uploadedDocsQuery = useUploadedWorkspaceDocsQuery(workspaceId);
+  const queryClient = useQueryClient();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
   const [removeTarget, setRemoveTarget] = useState<DocumentItem | null>(null);
-  const [removing, setRemoving] = useState(false);
 
   const rootDocs = documents.filter((doc) => doc.parentId === null);
   const { searchQuery } = useDocsStore();
+  const uploadedDocs = useMemo(() => uploadedDocsQuery.data ?? [], [uploadedDocsQuery.data]);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const list = await documentService.getByWorkspace(workspaceId);
-        setUploadedDocs(list);
-      } catch {
-        setUploadedDocs([]);
+  const removeImportedDocumentMutation = useMutation({
+    mutationFn: (documentId: string) => documentService.detach(documentId, workspaceId),
+    onSuccess: (_updatedDocument, documentId) => {
+      queryClient.setQueryData<DocumentItem[]>(queryKeys.docs.uploadedByWorkspace(workspaceId), (current = []) =>
+        current.filter((doc) => doc._id !== documentId),
+      );
+      if (selectedImportedDocumentId === documentId) {
+        selectImportedDocument(null);
       }
-    };
-    load();
-    const onChanged = () => load();
-    window.addEventListener("docs_uploads_changed", onChanged);
-    return () => window.removeEventListener("docs_uploads_changed", onChanged);
-  }, [workspaceId]);
+      setRemoveTarget(null);
+      toast.success("Removed from workspace");
+    },
+    onError: () => toast.error("Failed to remove document"),
+  });
 
   const filteredDocs = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -64,18 +67,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
   const handleRemoveImportedDocument = async () => {
     if (!removeTarget) return;
 
-    setRemoving(true);
-    try {
-      await documentService.detach(removeTarget._id, workspaceId);
-      setUploadedDocs((curr) => curr.filter((doc) => doc._id !== removeTarget._id));
-      window.dispatchEvent(new Event("docs_uploads_changed"));
-      setRemoveTarget(null);
-      toast.success("Removed from workspace");
-    } catch {
-      toast.error("Failed to remove document");
-    } finally {
-      setRemoving(false);
-    }
+    removeImportedDocumentMutation.mutate(removeTarget._id);
   };
 
   return (
@@ -217,7 +209,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
         <div
           className="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4"
           onClick={() => {
-            if (!removing) setRemoveTarget(null);
+            if (!removeImportedDocumentMutation.isPending) setRemoveTarget(null);
           }}
         >
           <div
@@ -249,7 +241,7 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
             <div className="mt-5 flex justify-end gap-2">
               <button
                 type="button"
-                disabled={removing}
+                disabled={removeImportedDocumentMutation.isPending}
                 onClick={() => setRemoveTarget(null)}
                 className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60"
               >
@@ -257,11 +249,11 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
               </button>
               <button
                 type="button"
-                disabled={removing}
+                disabled={removeImportedDocumentMutation.isPending}
                 onClick={handleRemoveImportedDocument}
                 className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-semibold text-white transition-colors hover:bg-[#8F2927] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {removing ? "Removing..." : "Remove"}
+                {removeImportedDocumentMutation.isPending ? "Removing..." : "Remove"}
               </button>
             </div>
           </div>

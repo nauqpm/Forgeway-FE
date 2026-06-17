@@ -12,7 +12,7 @@ import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { Document } from "../types/docs.type";
 import { Pencil, Trash2 } from "lucide-react";
-import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 
 export default function DocsDashboard({ workspaceId }: { workspaceId: string }) {
   const {
@@ -32,11 +32,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const uploadedDocsQuery = useQuery({
-    queryKey: queryKeys.docs.uploadedByWorkspace(workspaceId),
-    queryFn: () => documentService.getByWorkspace(workspaceId),
-    enabled: !!workspaceId,
-  });
+  const uploadedDocsQuery = useUploadedWorkspaceDocsQuery(workspaceId);
 
   const personalDocsQuery = useQuery({
     queryKey: queryKeys.docs.library(),
@@ -51,7 +47,6 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
       Promise.all(documentIds.map((id) => documentService.attach(id, [workspaceId]))),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.docs.uploadedByWorkspace(workspaceId) });
-      window.dispatchEvent(new Event("docs_uploads_changed"));
       setShowLibraryModal(false);
       toast.success("Imported from library");
     },
@@ -66,7 +61,6 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
       );
       selectImportedDocument(null);
       setDeleteTarget(null);
-      window.dispatchEvent(new Event("docs_uploads_changed"));
       toast.success("Removed from workspace");
     },
     onError: () => toast.error("Failed to remove document"),
