@@ -149,7 +149,7 @@ export const useTaskAttachments = ({
           })
           .catch((caught) => {
             if (controller.signal.aborted) return null;
-            const uploadError = attachmentService.getUploadErrorMessage(caught);
+            const uploadError = attachmentService.getUploadErrorMessage(caught, undefined, file);
             setUploadErrorMessage(uploadError);
             updateQueueItem(queueItem.id, {
               progress: 100,

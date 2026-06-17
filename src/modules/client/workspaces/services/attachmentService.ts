@@ -104,6 +104,17 @@ const ALLOWED_ATTACHMENT_MIME_TYPES = new Set([
   "video/mp4",
 ]);
 
+const ADDITIONAL_ATTACHMENT_MIME_TYPES_BY_EXTENSION = new Map([
+  [
+    ".mp4",
+    new Set([
+      "application/mp4",
+      "application/octet-stream",
+      "video/x-m4v",
+    ]),
+  ],
+]);
+
 const getFileExtension = (fileName: string) => {
   const dotIndex = fileName.lastIndexOf(".");
   return dotIndex >= 0 ? fileName.slice(dotIndex).toLowerCase() : "";
@@ -115,6 +126,9 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return typeof message === "string" && message.trim() ? message : fallback;
 };
 
+const SERVER_UPLOAD_LIMIT_MESSAGE =
+  "File is too large for the server upload limit. Please upload a smaller file.";
+
 const validateUploadFile = (file: File) => {
   const extension = getFileExtension(file.name);
   const mimeType = (file.type || "").toLowerCase();
@@ -123,7 +137,9 @@ const validateUploadFile = (file: File) => {
     return "Invalid file format. Please upload a supported file type.";
   }
 
-  if (!ALLOWED_ATTACHMENT_MIME_TYPES.has(mimeType)) {
+  const extensionMimeTypes = ADDITIONAL_ATTACHMENT_MIME_TYPES_BY_EXTENSION.get(extension);
+
+  if (!ALLOWED_ATTACHMENT_MIME_TYPES.has(mimeType) && !extensionMimeTypes?.has(mimeType)) {
     return "Invalid file format. Please upload a supported file type.";
   }
 
@@ -134,7 +150,7 @@ const validateUploadFile = (file: File) => {
   return null;
 };
 
-const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please try again.") => {
+const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please try again.", file?: File) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const status = (error as any)?.response?.status;
   const message = getErrorMessage(error, fallback).toLowerCase();
@@ -152,7 +168,7 @@ const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please
   }
 
   if (status === 413) {
-    return "File is too large. Please upload a smaller attachment.";
+    return SERVER_UPLOAD_LIMIT_MESSAGE;
   }
 
   if (status === 401 || status === 403) {
@@ -160,7 +176,11 @@ const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please
   }
 
   if (!status) {
-    return "Network issue while uploading attachment. Please check your connection and try again.";
+    if (file && file.size <= MAX_ATTACHMENT_SIZE && validateUploadFile(file) === null) {
+      return SERVER_UPLOAD_LIMIT_MESSAGE;
+    }
+
+    return "Upload could not complete. Please try again.";
   }
 
   if (status >= 500) {
@@ -194,10 +214,7 @@ export const attachmentService = {
 
     const response = await api.post(apiRoutes.TASKS.BOARD_TASK_ATTACHMENTS(workspaceId, taskId), formData, {
       ...config,
-      headers: {
-        ...config.headers,
-        "Content-Type": "multipart/form-data",
-      },
+      headers: config.headers,
       onUploadProgress: (event) => {
         if (!onProgress || !event.total) return;
         onProgress(Math.min(100, Math.round((event.loaded * 100) / event.total)));
