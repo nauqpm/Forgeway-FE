@@ -369,7 +369,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     return selectedTaskDetail ?? selectedIssue;
   }, [selectedIssue, selectedTaskDetail, workspace]);
 
-  const columns = boardData?.columns || [];
+  const columns = useMemo(() => boardData?.columns ?? [], [boardData?.columns]);
 
   const setColumns = useCallback(
     (updater: CacheUpdater<BoardColumn[]>) => {
@@ -426,7 +426,10 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
 
 
 
-  const issues = (shouldUseFallbackTaskSearch && fallbackTasksData ? fallbackTasksData : tasksData) || [];
+  const issues = useMemo(
+    () => (shouldUseFallbackTaskSearch && fallbackTasksData ? fallbackTasksData : tasksData) ?? [],
+    [fallbackTasksData, shouldUseFallbackTaskSearch, tasksData],
+  );
 
   const setIssues = useCallback(
     (updater: CacheUpdater<Issue[]>) => {

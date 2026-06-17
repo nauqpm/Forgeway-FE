@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { getActiveMeetingAPI, Meeting } from "../services/meeting.api";
 import { chatSocketClient } from "@/lib/socket/chat.client";
 import { MEETING_EVENTS } from "@/lib/socket/socket.events";
@@ -20,7 +20,7 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchMeeting = async () => {
+  const fetchMeeting = useCallback(async () => {
     setIsLoading(true);
 
     try {
@@ -31,7 +31,7 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [channelId]);
 
   useEffect(() => {
     fetchMeeting();
@@ -103,7 +103,7 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
       socket.off(MEETING_EVENTS.USER_JOINED, handleParticipantChange);
       socket.off(MEETING_EVENTS.USER_LEFT, handleParticipantChange);
     };
-  }, [channelId]);
+  }, [channelId, fetchMeeting]);
 
   if (!activeMeeting && !isLoading) return null;
 

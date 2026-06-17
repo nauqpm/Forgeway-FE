@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import type { Editor } from "@tiptap/react";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 import type { PageComment } from "../services/commentsService";
@@ -41,7 +41,7 @@ export default function AnchoredCommentsRail({
   const currentUserId = user?.id || "";
   const [positions, setPositions] = useState<AnchoredCommentPosition[]>([]);
 
-  const measure = () => {
+  const measure = useCallback(() => {
     const editorDom = editor?.view?.dom;
     if (!editorDom || !pageElement) {
       setPositions([]);
@@ -67,11 +67,11 @@ export default function AnchoredCommentsRail({
       .sort((a, b) => a.top - b.top);
 
     setPositions(next);
-  };
+  }, [comments, editor, pageElement]);
 
   useLayoutEffect(() => {
     measure();
-  }, [editor, pageElement, comments, activeCommentId]);
+  }, [measure, activeCommentId]);
 
   useEffect(() => {
     if (!editor) return;
@@ -86,7 +86,7 @@ export default function AnchoredCommentsRail({
       editor.off("selectionUpdate", rerender);
       window.removeEventListener("resize", rerender);
     };
-  }, [editor, pageElement, comments]);
+  }, [editor, measure]);
 
   if (!positions.length) return null;
 

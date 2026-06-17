@@ -8,7 +8,7 @@
 import { useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from "../stores/authStore";
+import { useAuthStore, useSecurityStore, useSessionStore } from "../stores/authStore";
 import { usePermissionStore } from "../../permission/stores/permissionStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { getQueryClient } from "@/common/providers/QueryProvider";
@@ -25,7 +25,6 @@ export const useAuth = () => {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, isInitialized, setUser, setLoading, setInitialized, clearAuth } =
     useAuthStore();
-  const { setMfaChallenge } = useMfaStore();
   const { resetFailedAttempts } = useSecurityStore();
   const { setGlobalPermissions } = usePermissionStore();
 
@@ -101,7 +100,6 @@ export const useAuth = () => {
       router,
       setUser,
       setLoading,
-      setMfaChallenge,
       resetFailedAttempts,
       setGlobalPermissions,
     ]

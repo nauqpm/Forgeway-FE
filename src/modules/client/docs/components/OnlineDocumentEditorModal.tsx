@@ -220,7 +220,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
     }
     loadContent();
     void loadVersions();
-  }, [open, editor, doc._id, doc.name, loadContent]);
+  }, [open, editor, doc._id, doc.name, loadContent, loadVersions]);
 
   useEffect(() => {
     if (!open) return;

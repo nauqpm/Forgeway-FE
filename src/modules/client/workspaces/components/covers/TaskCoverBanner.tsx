@@ -55,7 +55,7 @@ export default function TaskCoverBanner<TIssue extends CoverableIssue>({
     return () => {
       cancelled = true;
     };
-  }, [issue.id, workspaceId]);
+  }, [issue.cover, issue.id, onIssueCoverChange, workspaceId]);
 
   if (!issue.cover) return null;
 
