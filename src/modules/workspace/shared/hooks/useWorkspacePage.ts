@@ -79,7 +79,7 @@ export function useWorkspacePage(workspaceKey: string, tab: string[] | undefined
   const { filters, setFilters, taskFilters } = useTaskFilters(workspaceId ?? "");
 
   const {
-    issues, setIssues, sprints, setSprints, columns, setColumns, filteredIssues,
+    issues, setIssues, sprints, columns, setColumns, filteredIssues,
     isTaskBoardFetching, isBoardLoading, boardData, tasksError, activeIssueDetail,
     syncTaskReorder, patchSelectedTaskView, isDraggingIssueRef,
   } = useWorkspaceIssues({
