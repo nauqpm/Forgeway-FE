@@ -112,7 +112,6 @@ export const createDMAPI = async (targetUserId: string): Promise<Channel> => {
   };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const searchUsersAPI = async (search?: string): Promise<SearchUser[]> => {
   try {
     const response = await api.get('/chat/users/search', {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -100,7 +100,7 @@ export default function ProjectBoardPage() {
     staleTime: 30_000,
   });
 
-  const tasks = tasksData || [];
+  const tasks = useMemo(() => tasksData ?? [], [tasksData]);
 
   const getTasksByColumn = useCallback(
     (columnId: string) => tasks.filter((t) => t.boardColumnId === columnId),

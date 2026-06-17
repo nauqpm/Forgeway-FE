@@ -43,8 +43,7 @@ export const useSelectionHandlers = ({
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, status: newStatus } : i));
     selectedTaskIds.forEach((taskId) => {
       taskService
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .updateBoardTask(workspaceId, taskId, { status: newStatus } as any)
+        .updateBoardTask(workspaceId, taskId, { status: newStatus } as Partial<Issue>)
         .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() }))
         .catch(console.error);
     });
@@ -55,8 +54,7 @@ export const useSelectionHandlers = ({
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, sprintId } : i));
     selectedTaskIds.forEach((taskId) => {
       taskService
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .updateBoardTask(workspaceId, taskId, { sprintId } as any)
+        .updateBoardTask(workspaceId, taskId, { sprintId } as Partial<Issue>)
         .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() }))
         .catch(console.error);
     });

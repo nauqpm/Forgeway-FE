@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useState, useEffect, useMemo, useRef } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -99,12 +99,11 @@ export default function DataGridListView({
   // Inline editing state
   const [editingCell, setEditingCell] = useState<{ rowId: string; col: string } | null>(null);
   const [editValue, setEditValue] = useState('');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const saveEdit = (rowId: string, field: string, value: any) => {
+  const saveEdit = useCallback((rowId: string, field: string, value: unknown) => {
     void (onUpdateIssue && onUpdateIssue(rowId, { [field]: value }));
     setEditingCell(null);
     setEditValue('');
-  };
+  }, [onUpdateIssue]);
 
   // Footer Inline Create state
   const [isCreating, setIsCreating] = useState(false);
@@ -492,7 +491,7 @@ export default function DataGridListView({
         </button>
       ),
     },
-  ], [onClickTask, onUpdateIssue, normalizedMembers, boardColumns, editingCell, editValue, canEditTask, canDeleteTask, workspaceId]);
+  ], [onClickTask, onUpdateIssue, normalizedMembers, boardColumns, editingCell, editValue, canEditTask, canDeleteTask, workspaceId, saveEdit]);
 
   const table = useReactTable({
     data: issues,

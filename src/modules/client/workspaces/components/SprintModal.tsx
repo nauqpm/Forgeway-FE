@@ -48,7 +48,7 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
         });
       }
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, sprintCount]);
 
   const handleDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const dur = e.target.value;
