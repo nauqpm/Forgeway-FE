@@ -7,6 +7,7 @@ import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
 import api from '@/lib/axiosIns';
 import StickerPicker from './StickerPicker';
+import { toast } from 'react-hot-toast';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -45,6 +46,10 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
 
   const handleSend = () => {
     if (!content.trim()) return;
+    if (content.length > 4000) {
+      toast.error('Message cannot exceed 4000 characters');
+      return;
+    }
     sendMessage(channelId, content.trim(), undefined, replyingToMessage?._id);
     setContent('');
     setReplyingToMessage(null);
@@ -83,20 +88,16 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     search: string,
     callback: (data: { id: string; display: string; email?: string; phone?: string; avatar?: string }[]) => void
   ) => {
-    // Chỉ gợi ý khi người dùng bắt đầu nhập từ khóa tìm kiếm sau dấu @
-    if (!search || !search.trim()) {
-      callback([]);
-      return;
-    }
+    const query = search || '';
 
     if (mentionSearchTimeoutRef.current) {
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
-    mentionSearchTimeoutRef.current = setTimeout(async () => {
+    const fetchMembers = async () => {
       try {
         const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
-          params: { q: search }
+          params: { q: query }
         });
         const members = response.data || [];
         
@@ -111,8 +112,8 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
           };
         });
 
-        // Thêm tùy chọn @All nếu từ khóa khớp
-        if ('all'.startsWith(search.toLowerCase())) {
+        // Thêm tùy chọn @All nếu từ khóa khớp hoặc khi truy vấn trống
+        if (!query || 'all'.startsWith(query.toLowerCase())) {
           mappedMembers.unshift({
             id: 'All',
             display: 'All',
@@ -122,12 +123,18 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
           });
         }
 
-        callback(mappedMembers);
+        callback(mappedMembers.slice(0, 10));
       } catch (err) {
         console.error('Failed to search mention members:', err);
         callback([]);
       }
-    }, 250);
+    };
+
+    if (!query) {
+      fetchMembers();
+    } else {
+      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 250);
+    }
   };
 
   return (
@@ -170,6 +177,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
               placeholder={channelName ? `Message into #${channelName}...` : 'Type a message...'}
               className="chat-m w-full bg-transparent"
               a11ySuggestionsListLabel="Suggested mentions"
+              maxLength={4000}
             >
               <Mention
                 trigger="@"

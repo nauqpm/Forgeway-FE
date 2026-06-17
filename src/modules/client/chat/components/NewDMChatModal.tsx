@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Search, User, Loader2, Users } from 'lucide-react';
+import { X, Search, User, Loader2 } from 'lucide-react';
 import { createDMAPI, searchUsersAPI } from '../services/chatService';
 import { useChatStore } from '@/stores/chatStore';
 
@@ -33,19 +33,26 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen && search) {
+    if (!isOpen) return;
+
+    if (search) {
       const timer = setTimeout(() => {
         setLoading(true);
         searchUsersAPI(search)
           .then(data => {
-            setUsers(Array.isArray(data) ? data : []);
+            setUsers(Array.isArray(data) ? data.slice(0, 10) : []);
           })
           .finally(() => setLoading(false));
       }, 300); // Debounce search to optimize performance
 
       return () => clearTimeout(timer);
-    } else if (!search) {
-      setUsers([]);
+    } else {
+      setLoading(true);
+      searchUsersAPI('')
+        .then(data => {
+          setUsers(Array.isArray(data) ? data.slice(0, 10) : []);
+        })
+        .finally(() => setLoading(false));
     }
   }, [isOpen, search]);
 
@@ -110,14 +117,11 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
               <Loader2 className="w-6 h-6 animate-spin" />
               <p className="text-xs">Loading...</p>
             </div>
-          ) : !search ? (
-            <div className="py-12 text-center text-[#787774] flex flex-col items-center justify-center gap-2">
-              <Users className="w-8 h-8 opacity-30 text-[#ABABAB] mb-1" />
-              <p className="text-sm font-medium">Search by name, email, or phone</p>
-            </div>
           ) : users.length === 0 ? (
             <div className="py-10 text-center text-[#787774]">
-              <p className="text-sm italic">No users found matching &quot;{search}&quot;</p>
+              <p className="text-sm italic">
+                {search ? `No users found matching "${search}"` : 'No users available'}
+              </p>
             </div>
           ) : (
             <div className="space-y-0.5">
