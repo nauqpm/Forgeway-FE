@@ -2,7 +2,7 @@
 
 import { ChevronLeft, ChevronRight, AlignJustify } from 'lucide-react';
 import type FullCalendar from '@fullcalendar/react';
-import { CalendarFilters, CalendarViewType } from '@/modules/client/workspaces/types/calendar.type';
+import { CalendarFilters, CalendarViewType } from '@/modules/workspace/shared/types/calendar.type';
 
 interface CalendarToolbarProps {
   calendarRef: React.RefObject<FullCalendar>;

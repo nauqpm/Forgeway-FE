@@ -1,8 +1,8 @@
 "use client";
 
 import CalendarView from '@/modules/admin-shared/components/common/components/CalendarView';
-import { Issue } from '@/modules/client/workspaces/types/issue.type';
-import { Sprint } from '@/modules/client/workspaces/types/sprint.type';
+import { Issue } from '@/modules/workspace/shared/types/issue.type';
+import { Sprint } from '@/modules/workspace/shared/types/sprint.type';
 
 interface CalendarTabProps {
   issues: Issue[];

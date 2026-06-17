@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useQuery } from "@tanstack/react-query";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { queryKeys } from "@/shared/constants/queryKeys";

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import { ChevronDown, Plus, Check, Building2 } from "lucide-react";
 
 export default function WorkspaceSwitcher() {

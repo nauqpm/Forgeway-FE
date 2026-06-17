@@ -9,7 +9,7 @@ import Image from "next/image";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import { useChatChannels } from "@/modules/client/chat/hooks/useChatQueries";
 import {
   LayoutDashboard,

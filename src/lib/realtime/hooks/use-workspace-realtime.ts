@@ -17,7 +17,7 @@ import {
   workspaceIdOf,
   type WorkspaceRealtimeEnvelope,
 } from '../utils/workspace-realtime-cache.utils';
-import type { Workspace } from '@/modules/client/workspaces/types/workspace.type';
+import type { Workspace } from '@/modules/workspace/shared/types/workspace.type';
 
 type UseWorkspaceRealtimeOptions = {
   enabled?: boolean;

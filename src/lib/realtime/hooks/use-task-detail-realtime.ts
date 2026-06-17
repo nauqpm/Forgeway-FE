@@ -10,11 +10,11 @@ import type {
   PaginatedActivitiesResponse,
   TaskActivity,
   TaskComment,
-} from '@/modules/client/workspaces/services/taskService';
-import type { TaskAttachment } from '@/modules/client/workspaces/types/attachment.type';
-import type { Issue } from '@/modules/client/workspaces/types/issue.type';
-import type { TaskCover } from '@/modules/client/workspaces/types/task-cover.type';
-import type { TaskDetailResponse } from '@/modules/client/workspaces/types/task-detail.type';
+} from '@/modules/workspace/shared/services/taskService';
+import type { TaskAttachment } from '@/modules/workspace/shared/types/attachment.type';
+import type { Issue } from '@/modules/workspace/shared/types/issue.type';
+import type { TaskCover } from '@/modules/workspace/shared/types/task-cover.type';
+import type { TaskDetailResponse } from '@/modules/workspace/shared/types/task-detail.type';
 import {
   prependActivity,
   removeAttachment,

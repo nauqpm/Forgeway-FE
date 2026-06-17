@@ -12,13 +12,13 @@ import CalendarToolbar from './CalendarToolbar';
 import UnscheduledSidebar from './UnscheduledSidebar';
 import CalendarEventContent from './CalendarEventContent';
 
-import { Issue } from '@/modules/client/workspaces/types/issue.type';
-import { Sprint } from '@/modules/client/workspaces/types/sprint.type';
-import { CalendarViewType, CalendarFilters } from '@/modules/client/workspaces/types/calendar.type';
-import { useCalendarData } from '@/modules/client/workspaces/hooks/useCalendarData';
-import { useCalendarHandlers } from '@/modules/client/workspaces/hooks/useCalendarHandlers';
-import { useAssignees } from '@/modules/client/workspaces/hooks/useAssignees';
-import { toCalendarDateKey } from '@/modules/client/workspaces/utils/calendarDateKey';
+import { Issue } from '@/modules/workspace/shared/types/issue.type';
+import { Sprint } from '@/modules/workspace/shared/types/sprint.type';
+import { CalendarViewType, CalendarFilters } from '@/modules/workspace/shared/types/calendar.type';
+import { useCalendarData } from '@/modules/workspace/shared/hooks/useCalendarData';
+import { useCalendarHandlers } from '@/modules/workspace/shared/hooks/useCalendarHandlers';
+import { useAssignees } from '@/modules/workspace/shared/hooks/useAssignees';
+import { toCalendarDateKey } from '@/modules/workspace/shared/utils/calendarDateKey';
 
 // Minimal event shape used by the popover — works for both EventApi and OverflowEntry
 type MorePopoverState = {

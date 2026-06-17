@@ -1,4 +1,4 @@
-import type { Issue } from '@/modules/client/workspaces/types/issue.type';
+import type { Issue } from '@/modules/workspace/shared/types/issue.type';
 
 export type TaskSummaryPayload = {
   id: string;

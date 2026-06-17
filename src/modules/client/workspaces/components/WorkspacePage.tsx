@@ -7,8 +7,8 @@ import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceCo
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
 import WorkspaceModals from "@/modules/client/workspaces/components/WorkspaceModals";
-import { getWorkspaceTemplate } from "@/modules/client/workspaces/types/workspace.type";
-import { Issue } from "@/modules/client/workspaces/types/issue.type";
+import { getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
+import { Issue } from "@/modules/workspace/shared/types/issue.type";
 import type { useWorkspacePage } from "@/modules/client/workspaces/hooks/useWorkspacePage";
 
 const BulkActionBar = dynamic(

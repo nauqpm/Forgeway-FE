@@ -34,7 +34,7 @@ const ArchiveTab = dynamic(() => import("./tabs/ArchiveTab"), {
   loading: tabLoading,
 });
 const DocsLayout = dynamic(
-  () => import("../../docs").then((module) => module.DocsLayout),
+  () => import("@/modules/docs").then((module) => module.DocsLayout),
   {
     ssr: false,
     loading: tabLoading,

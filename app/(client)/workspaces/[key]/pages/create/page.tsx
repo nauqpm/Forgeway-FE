@@ -9,7 +9,7 @@ import { ArrowLeft, Plus, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
+import { resolveWorkspaceFromRouteKey } from "@/modules/workspace/shared/services/resolveWorkspace";
 import { queryKeys } from "@/shared/constants/queryKeys";
 
 export default function CreateWorkspacePage({ params }: { params: Promise<{ key: string }> }) {

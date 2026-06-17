@@ -1,1 +1,1 @@
-export type { Task as Issue } from "./task.type";
+export * from "@/modules/workspace/shared/types/issue.type";

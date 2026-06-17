@@ -1,8 +1,1 @@
-export type CalendarViewType = 'dayGridMonth' | 'dayGridWeek';
-
-export interface CalendarFilters {
-  search: string;
-  assignees: string[];
-  types: string[];
-  statuses: string[];
-}
+export * from "@/modules/workspace/shared/types/calendar.type";

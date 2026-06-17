@@ -9,7 +9,7 @@ import * as awarenessProtocol from "y-protocols/awareness";
 import { Editor } from "@tiptap/react";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
-import { editorStorageService } from "@/modules/client/docs/services/editorStorage.service";
+import { editorStorageService } from "@/modules/docs/services/editorStorage.service";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 import { toast } from "react-hot-toast";
 

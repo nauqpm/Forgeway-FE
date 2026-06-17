@@ -6,7 +6,7 @@ import { Loader2, Link2, X, Check } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { DocumentItem } from "../types/document.type";
 import { documentService } from "../services/documentService";
-import { useWorkspaces } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useWorkspaces } from "@/modules/workspace/shared/hooks/useWorkspaces";
 
 type Props = {
   doc: DocumentItem;

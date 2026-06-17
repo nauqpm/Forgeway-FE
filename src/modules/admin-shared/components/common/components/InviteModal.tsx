@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 import RoleChanger, {
   WorkspaceRoleValue,
 } from "@/modules/client/workspaces/components/RoleChanger";
-import { inviteService } from "@/modules/client/workspaces/services/inviteService";
+import { inviteService } from "@/modules/workspace/shared/services/inviteService";
 
 const EMAIL_SPLIT_REGEX = /[\s,;]+/;
 

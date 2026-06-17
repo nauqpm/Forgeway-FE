@@ -1,5 +1,5 @@
 import type { QueryKey } from '@tanstack/react-query';
-import type { Issue } from '@/modules/client/workspaces/types/issue.type';
+import type { Issue } from '@/modules/workspace/shared/types/issue.type';
 
 export type TaskCacheQuery = [QueryKey, Issue[] | undefined];
 

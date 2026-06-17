@@ -6,8 +6,8 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { Hash, Megaphone, Loader2 } from 'lucide-react';
 import { getWorkspaceUI } from '@/shared/utils/workSpaceUI';
 import { useSearchParams } from 'next/navigation';
-import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
-import { useWorkspaces } from '@/modules/client/workspaces/hooks/useWorkspaces';
+import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
+import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import type { Channel } from '@/modules/client/chat/types/chat.types';
 

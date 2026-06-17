@@ -7,7 +7,7 @@ import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { SPRINT_EVENTS } from '@/lib/socket/socket.events';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { queryKeys } from '@/shared/constants/queryKeys';
-import type { Sprint } from '@/modules/client/workspaces/types/sprint.type';
+import type { Sprint } from '@/modules/workspace/shared/types/sprint.type';
 import {
   isActiveSprint,
   mapSprintPayload,

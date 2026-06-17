@@ -8,7 +8,7 @@ import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { ArrowLeft, LayoutGrid, Zap } from "lucide-react";
 import Link from "next/link";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 
 export default function CreateProjectPage() {
   const router = useRouter();

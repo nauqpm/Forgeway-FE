@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { useWorkspacePage } from "@/modules/client/workspaces/hooks/useWorkspacePage";
+import { useWorkspacePage } from "@/modules/workspace/shared/hooks/useWorkspacePage";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import WorkspacePage from "@/modules/client/workspaces/components/WorkspacePage";
 

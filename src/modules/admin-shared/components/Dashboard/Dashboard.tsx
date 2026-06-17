@@ -11,13 +11,13 @@ import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { toast } from "react-hot-toast";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
-import { boardService } from "@/modules/client/workspaces/services/boardService";
-import { taskService } from "@/modules/client/workspaces/services/taskService";
-import { sprintService } from "@/modules/client/workspaces/services/sprintService";
-import type { Issue } from "@/modules/client/workspaces/types/issue.type";
-import type { Sprint } from "@/modules/client/workspaces/types/sprint.type";
-import type { BoardColumn } from "@/modules/client/workspaces/types/board.type";
-import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
+import { boardService } from "@/modules/workspace/shared/services/boardService";
+import { taskService } from "@/modules/workspace/shared/services/taskService";
+import { sprintService } from "@/modules/workspace/shared/services/sprintService";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
+import type { Sprint } from "@/modules/workspace/shared/types/sprint.type";
+import type { BoardColumn } from "@/modules/workspace/shared/types/board.type";
+import { enrichTaskDetailUsers } from "@/modules/workspace/shared/utils/taskDetailUsers";
 
 
 export interface AdminDashboardProps {

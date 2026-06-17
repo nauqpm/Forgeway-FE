@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
-import { useDocumentsPage } from "@/modules/client/docs/hooks/useDocumentsPage";
-import DocumentToolbar from "@/modules/client/docs/components/DocumentToolbar";
-import DocumentGrid from "@/modules/client/docs/components/DocumentGrid";
-import DocumentModals from "@/modules/client/docs/components/DocumentModals";
+import { useDocumentsPage } from "@/modules/docs/hooks/useDocumentsPage";
+import DocumentToolbar from "@/modules/docs/components/DocumentToolbar";
+import DocumentGrid from "@/modules/docs/components/DocumentGrid";
+import DocumentModals from "@/modules/docs/components/DocumentModals";
 
 export default function DocumentsLibraryPage() {
   usePageTitle("Documents");

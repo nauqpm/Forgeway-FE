@@ -8,8 +8,8 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import type { Workspace } from "@/stores/workspaceStore";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
-import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
+import { workspaceService } from "@/modules/workspace/shared/services/workspaceService";
 
 interface Member {
   userId: { _id: string; email: string; fullName?: string };

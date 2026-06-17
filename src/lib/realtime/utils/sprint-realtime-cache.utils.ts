@@ -1,5 +1,5 @@
 import type { RealtimeEnvelope } from '@/lib/socket/socket.types';
-import type { Sprint } from '@/modules/client/workspaces/types/sprint.type';
+import type { Sprint } from '@/modules/workspace/shared/types/sprint.type';
 
 export type SprintSummaryPayload = Partial<Sprint> & {
   id?: string;

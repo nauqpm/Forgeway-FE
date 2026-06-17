@@ -1,4 +1,4 @@
-import { ForYouPage } from "@/modules/client/for-you";
+import { ForYouPage } from "@/modules/for-you";
 
 export const metadata = { title: 'For You' };
 

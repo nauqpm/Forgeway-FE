@@ -9,7 +9,7 @@ import { notificationService } from "@/modules/notifications/services/notificati
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
 import { useWorkspaceRealtime } from "@/lib/realtime/hooks/use-workspace-realtime";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import {
   ChevronDown,
   LayoutDashboard,
@@ -29,7 +29,7 @@ import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "../apple-icon.png";
 import { usePathname, useRouter } from "next/navigation";
-import { Filters } from "@/modules/client/workspaces/types/filter.type";
+import { Filters } from "@/modules/workspace/shared/types/filter.type";
 
 import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 

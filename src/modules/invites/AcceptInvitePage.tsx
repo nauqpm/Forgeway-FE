@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/modules/auth/shared/hooks/useAuth';
-import { inviteService, InviteDetails } from '@/modules/client/workspaces/services/inviteService';
+import { inviteService, InviteDetails } from '@/modules/workspace/shared/services/inviteService';
 import toast from 'react-hot-toast';
 import { Loader2, CheckCircle, XCircle, AlertCircle, Building2, UserPlus } from 'lucide-react';
 

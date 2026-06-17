@@ -1,10 +1,10 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Issue } from "@/modules/client/workspaces/types/issue.type";
-import { Sprint } from "@/modules/client/workspaces/types/sprint.type";
-import { BoardColumn } from "@/modules/client/workspaces/types/board.type";
-import { Workspace, WorkspaceTab, getWorkspaceTemplate } from "@/modules/client/workspaces/types/workspace.type";
+import { Issue } from "@/modules/workspace/shared/types/issue.type";
+import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
+import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
+import { Workspace, WorkspaceTab, getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
 
 const CreateTaskModal = dynamic(
   () => import("@/modules/client/workspaces/components/tasks/CreateTaskModal"),

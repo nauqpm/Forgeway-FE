@@ -5,9 +5,9 @@ import Image from "next/image";
 import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 import ThemeToggle from "./ThemeToggle";
 import UserMenu from "./UserMenu";
-import { Filters } from "@/modules/client/workspaces/types/filter.type";
+import { Filters } from "@/modules/workspace/shared/types/filter.type";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 
 type SearchAssigneeUser = {
   _id?: string;
