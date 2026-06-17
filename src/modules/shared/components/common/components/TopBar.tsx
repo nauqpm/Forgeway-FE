@@ -90,7 +90,7 @@ export default function TopBar() {
           style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
         >
           <div className="px-3 py-2.5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{user?.fullName || "User"}</p>
+            <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{user?.fullName || user?.email || "User"}</p>
             <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{user?.email}</p>
           </div>
           <button

@@ -6,6 +6,7 @@ import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
 import api from '@/lib/axiosIns';
+import StickerPicker from './StickerPicker';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -16,6 +17,7 @@ interface MessageInputProps {
 
 export default function MessageInput({ channelId, channelName }: MessageInputProps) {
   const [content, setContent] = useState('');
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef<number>(0);
@@ -51,6 +53,12 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
+  const handleSelectSticker = (stickerUrl: string) => {
+    sendMessage(channelId, stickerUrl, undefined, replyingToMessage?._id, 'sticker');
+    setReplyingToMessage(null);
+    setShowStickerPicker(false);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -58,7 +66,9 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
-  const handleChange = (e: { target: { value: string } }) => {
+  const handleChange = (
+    e: { target: { value: string } }
+  ) => {
     setContent(e.target.value);
 
     // Throttle typing event
@@ -121,83 +131,13 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   };
 
   return (
-    <div className="p-4 bg-white dark:bg-[#202020]">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            .chat-m {
-              font-family: inherit;
-              font-size: 0.875rem;
-              line-height: 1.25rem;
-              color: #111111;
-            }
-            .dark .chat-m {
-              color: #E8E8E7;
-            }
-            .chat-m__control {
-              min-height: 24px;
-              font-family: inherit;
-              font-size: 0.875rem;
-              line-height: 1.25rem;
-            }
-            .chat-m__highlighter {
-              padding: 0px;
-              border: 1px solid transparent;
-              font-family: inherit;
-              font-size: 0.875rem;
-              line-height: 1.25rem;
-            }
-            .chat-m__input {
-              width: 100%;
-              outline: none;
-              border: 1px solid transparent;
-              background: transparent;
-              color: inherit;
-              font-family: inherit;
-              font-size: 0.875rem;
-              line-height: 1.25rem;
-              resize: none;
-              padding: 0px;
-              margin: 0px;
-              min-height: 24px;
-              max-h: 200px;
-              overflow-y: auto !important;
-            }
-            .chat-m__suggestions__list {
-              background: #ffffff;
-              border: 1px solid #EAEAEA;
-              border-radius: 8px;
-              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-              overflow: hidden;
-              z-index: 100;
-              position: absolute;
-              min-width: 260px;
-              margin-top: 4px;
-              bottom: 100%;
-              margin-bottom: 8px;
-            }
-            .chat-m__suggestions__item {
-              padding: 0px;
-              cursor: pointer;
-            }
-            .chat-m__suggestions__item--focused {
-              background: #F0F0EE;
-            }
-
-            .dark .chat-m__suggestions__list {
-              background: #252525;
-              border-color: rgba(255, 255, 255, 0.08);
-              box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24);
-            }
-            .dark .chat-m__suggestions__item {
-              color: #E8E8E7;
-            }
-            .dark .chat-m__suggestions__item--focused {
-              background: rgba(255, 255, 255, 0.06);
-            }
-          `,
-        }}
-      />
+    <div className="p-4 bg-white dark:bg-[#202020] relative">
+      {showStickerPicker && (
+        <StickerPicker
+          onSelectSticker={handleSelectSticker}
+          onClose={() => setShowStickerPicker(false)}
+        />
+      )}
       <div className="border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-visible flex flex-col focus-within:border-[#ABABAB] dark:focus-within:border-[#3B82F6] transition-colors">
         {/* Input Area */}
         <div className="p-3 bg-[#FBFBFA] dark:bg-[#252525] flex flex-col gap-2 rounded-[8px]">
@@ -205,7 +145,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
             <div className="flex items-center justify-between bg-[#F0F0EE] dark:bg-white/5 rounded-[6px] px-3 py-2 border-l-4 border-[#2563EB] text-xs mb-1">
               <div className="flex flex-col min-w-0">
                 <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  Replying to {replyingToMessage.senderId.fullName}
+                  Replying to {replyingToMessage.senderId.fullName || replyingToMessage.senderId.email || 'User'}
                 </span>
                 <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
                   {replyingToMessage.content}
@@ -297,10 +237,19 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
           {/* Toolbar */}
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-1">
-              <button className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors">
+              <button 
+                disabled
+                title="Coming soon"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Paperclip className="w-4 h-4" />
               </button>
-              <button className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors">
+              <button 
+                type="button"
+                onClick={() => setShowStickerPicker(prev => !prev)}
+                title="Stickers"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors"
+              >
                 <Smile className="w-4 h-4" />
               </button>
             </div>

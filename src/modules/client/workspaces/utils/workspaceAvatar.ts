@@ -11,8 +11,9 @@ export interface WorkspaceSampleAvatar {
   url: string;
 }
 
+// Matches backend DEFAULT_WORKSPACE_AVATAR (WORKSPACE_SAMPLE_AVATARS[1])
 export const DEFAULT_WORKSPACE_AVATAR_URL =
-  "https://res.cloudinary.com/sdlcplatform/image/upload/sdlc-platform/sample%20avater%20workspace/viewavatar.png";
+  "https://res.cloudinary.com/sdlcplatform/image/upload/sdlc-platform/sample%20avater%20workspace/viewavatar-1.png";
 
 export const getWorkspaceAvatarUrl = (workspace?: WorkspaceAvatarSource | null) =>
   workspace?.avatar || DEFAULT_WORKSPACE_AVATAR_URL;

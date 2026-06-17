@@ -49,7 +49,7 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
 
   const menuItems = [
     { icon: LayoutDashboard, label: "Dashboard", onClick: () => navigate("/dashboard") },
-    { icon: User, label: "Profile", onClick: () => navigate("/account") },
+    { icon: User, label: "Profile", onClick: () => navigate("/settings") },
     { icon: Settings, label: "Settings", onClick: () => navigate("/settings") },
   ];
 

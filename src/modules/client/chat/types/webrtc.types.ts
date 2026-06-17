@@ -37,6 +37,9 @@ export interface MeetingSocketParticipant {
   userId: string;
   displayName?: string;
   name?: string;
+  isAudioOn?: boolean;
+  isVideoOn?: boolean;
+  isMuted?: boolean;
 }
 
 export interface MeetingStartedPayload {
@@ -57,6 +60,9 @@ export interface MeetingUserPayload {
   type?: MeetingType;
   displayName?: string;
   name?: string;
+  isAudioOn?: boolean;
+  isVideoOn?: boolean;
+  isMuted?: boolean;
   participants?: MeetingSocketParticipant[];
 }
 

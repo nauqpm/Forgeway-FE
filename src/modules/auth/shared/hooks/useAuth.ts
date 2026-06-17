@@ -12,6 +12,7 @@ import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from "..
 import { usePermissionStore } from "../../permission/stores/permissionStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { getQueryClient } from "@/common/providers/QueryProvider";
+import { chatSocketClient } from "@/lib/socket/chat.client";
 import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from "../services/authService";
 import { clearTokens } from "../services/tokenService";
 import { getMyPermissionsAPI } from "../../permission/services/permissionService";
@@ -182,6 +183,7 @@ export const useAuth = () => {
       useSecurityStore.getState().clearSecurityState();
       useWorkspaceStore.getState().clearWorkspace();
       getQueryClient()?.clear();
+      chatSocketClient.disconnect();
       router.push(AUTH_ROUTES.LOGIN);
     }
   }, [clearAuth, router]);

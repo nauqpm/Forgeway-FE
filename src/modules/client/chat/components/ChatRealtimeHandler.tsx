@@ -40,8 +40,6 @@ export default function ChatRealtimeHandler() {
     setTyping,
     updateChannel,
     incrementUnread,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    channels: _channels,
     addChannel
   } = useChatStore();
 

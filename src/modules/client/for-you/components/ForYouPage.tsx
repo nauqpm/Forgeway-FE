@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, LayoutDashboard, Loader2, Plus, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, BookOpen, LayoutDashboard, Loader2, Plus } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import { useWorkspaceAvatarSync } from "@/hooks/useWorkspaceAvatarSync";
 
 export type ForYouWorkspace = {
   id?: string;
@@ -18,6 +19,7 @@ export type ForYouWorkspace = {
   role?: string;
   relationship?: string;
   ownershipLabel?: string;
+  avatar?: string | null;
 };
 
 type ForYouResponse = {
@@ -35,8 +37,8 @@ const roleLabel = (workspace: ForYouWorkspace) =>
   workspace.ownershipLabel || workspace.relationship || workspace.role?.replace(/_/g, " ") || "Workspace";
 
 export default function ForYouPage() {
-  const { setWorkspaces } = useWorkspaceStore();
-  const [workspaces, setForYouWorkspaces] = useState<ForYouWorkspace[]>([]);
+  const [rawWorkspaces, setForYouWorkspaces] = useState<ForYouWorkspace[]>([]);
+  const workspaces = useWorkspaceAvatarSync(rawWorkspaces);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,8 +57,6 @@ export default function ForYouPage() {
         const nextWorkspaces = Array.isArray(payload) ? payload : (payload.workspaces ?? []);
 
         setForYouWorkspaces(nextWorkspaces);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setWorkspaces(nextWorkspaces as any);
       } catch {
         if (!cancelled) {
           setForYouWorkspaces([]);
@@ -72,7 +72,7 @@ export default function ForYouPage() {
     return () => {
       cancelled = true;
     };
-  }, [setWorkspaces]);
+  }, []);
 
   const stats = useMemo(() => {
     const owned = workspaces.filter(
@@ -87,25 +87,27 @@ export default function ForYouPage() {
 
   if (loading) {
     return (
-      <div className="app-page-medium flex min-h-[50vh] items-center justify-center">
+      <div className="flex-1 flex min-h-[50vh] items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
       </div>
     );
   }
 
   return (
+    <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">
     <div className="app-page-medium">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">Your workspaces</h1>
+          <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-1">For You</h1>
+          <p className="text-sm text-[#787774] dark:text-[#9B9A97]">Showing {workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''}</p>
         </div>
 
         <Link
           href="/workspaces/create"
-          className="inline-flex items-center justify-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[0.8125rem] font-semibold text-white transition hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB]"
+          className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] shadow-sm"
         >
           <Plus className="h-4 w-4" />
-          Create workspace
+          Create New Workspace
         </Link>
       </div>
 
@@ -151,8 +153,6 @@ export default function ForYouPage() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {workspaces.map((workspace) => {
             const routeKey = workspaceRouteKeyOf(workspace);
-            const isOwner =
-              ["owner", "owned"].includes((workspace.relationship || "").toLowerCase()) || workspace.role === "owner";
 
             return (
               <Link
@@ -162,9 +162,7 @@ export default function ForYouPage() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex min-w-0 items-start gap-4">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-[#2563EB] dark:bg-[#3B82F6] text-white">
-                      {isOwner ? <ShieldCheck className="h-5 w-5" /> : <Users className="h-5 w-5" />}
-                    </div>
+                    <WorkspaceAvatar workspace={workspace} size="md" className="shrink-0" />
                     <div className="min-w-0">
                       <h3 className="truncate text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-colors">
                         {workspace.name}
@@ -198,6 +196,7 @@ export default function ForYouPage() {
           })}
         </div>
       )}
+    </div>
     </div>
   );
 }
