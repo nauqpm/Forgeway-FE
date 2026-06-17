@@ -4,7 +4,7 @@ import { User, Key, AlertCircle, Loader2 } from "lucide-react";
 import { useAppProfile } from "../hooks/useAppProfile";
 import { ProfileInfoForm } from "./ProfileInfoForm";
 import { ChangePasswordForm } from "./ChangePasswordForm";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 
 export function ProfilePage() {
   const { user } = useAuth();

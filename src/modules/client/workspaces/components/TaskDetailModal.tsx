@@ -14,7 +14,7 @@ import TaskCoverBanner from "./covers/TaskCoverBanner";
 import StatusPicker from "@/shared/components/StatusPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { queryKeys } from "@/shared/constants/queryKeys";

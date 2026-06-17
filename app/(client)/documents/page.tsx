@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useDocumentsPage } from "@/modules/client/docs/hooks/useDocumentsPage";
 import DocumentToolbar from "@/modules/client/docs/components/DocumentToolbar";

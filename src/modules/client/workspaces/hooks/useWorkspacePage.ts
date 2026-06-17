@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useEffect, useRef } from "react";
 import { toast } from "react-hot-toast";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useAssignees } from "@/modules/client/workspaces/hooks/useAssignees";
 import { useTaskHandlers } from "@/modules/client/workspaces/hooks/useTaskHandlers";
 import { useSprintHandlers } from "@/modules/client/workspaces/hooks/useSprintHandlers";

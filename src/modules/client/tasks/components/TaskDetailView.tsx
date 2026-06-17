@@ -10,7 +10,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import StatusPicker from "@/shared/components/StatusPicker";
 import { typeColors, priorityOptions } from "../types/taskDetail.type";
 import type { TaskDetailPageProps } from "../hooks/useTaskDetailPage";

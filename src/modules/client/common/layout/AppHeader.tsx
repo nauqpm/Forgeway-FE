@@ -6,7 +6,7 @@ import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdow
 import ThemeToggle from "./ThemeToggle";
 import UserMenu from "./UserMenu";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 
 type SearchAssigneeUser = {

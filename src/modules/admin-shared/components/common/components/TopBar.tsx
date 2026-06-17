@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { Search, Bell, Settings, LogOut, User } from "lucide-react";
 import NotificationPanel from "./NotificationPanel";
 import { notificationService } from "@/modules/notifications/services/notification.service";

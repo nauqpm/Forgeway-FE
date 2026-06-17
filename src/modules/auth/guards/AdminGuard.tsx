@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 
 interface AdminGuardProps {

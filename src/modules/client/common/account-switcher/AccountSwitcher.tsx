@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { LogIn, Repeat, UserCircle2, X } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import type { SavedAccount } from "@/modules/auth/services/account-switcher.service";
 

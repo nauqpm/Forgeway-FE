@@ -19,7 +19,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useTheme } from "@/shared/hooks/useTheme";
 import NotificationPanel from "@/modules/notifications/components/NotificationPanel";
 import { notificationService } from "@/modules/notifications/services/notification.service";

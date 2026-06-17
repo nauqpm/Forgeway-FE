@@ -15,7 +15,7 @@ import TaskCoverBanner from "./covers/TaskCoverBanner";
 import StatusPicker from "@/shared/components/StatusPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
 import {
   getUserDisplayName,

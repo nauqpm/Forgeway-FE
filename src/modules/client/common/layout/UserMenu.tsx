@@ -3,7 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LayoutDashboard, User, Settings, LogOut, Repeat, Shield, X } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Settings, ShieldAlert, Users } from "lucide-react";
 
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 
 import { useWorkspaceSettingsPage } from "@/modules/client/workspaces/settings/hooks/useWorkspaceSettingsPage";

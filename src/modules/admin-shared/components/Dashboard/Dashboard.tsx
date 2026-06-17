@@ -7,7 +7,7 @@ import { BookOpen, CheckCircle2, Loader2 } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { queryKeys } from "@/shared/constants/queryKeys";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { toast } from "react-hot-toast";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";

@@ -7,7 +7,7 @@ import { Users, UserPlus, Search, X, Loader2, ChevronDown, Trash2, ShieldCheck }
 import { toast } from "react-hot-toast";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { WORKSPACE_PERMISSIONS } from "../constants/workspacePermissions";
 import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
 

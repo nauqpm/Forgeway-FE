@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { findWorkspaceByRouteKey, useCurrentWorkspace } from "./useWorkspaces";
 import {
   WORKSPACE_ROLE_PERMISSIONS,

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import Sidebar from "@/modules/admin-shared/components/common/components/Sidebar";
 import NotificationPanel from "@/modules/admin-shared/components/common/components/NotificationPanel";
 import { notificationService } from "@/modules/notifications/services/notification.service";

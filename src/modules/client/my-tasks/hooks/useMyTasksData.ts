@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { Task } from "../types/myTasks.type";

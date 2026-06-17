@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import api from "@/lib/axiosIns";
 import { Key, LogOut, Shield, User } from "lucide-react";
