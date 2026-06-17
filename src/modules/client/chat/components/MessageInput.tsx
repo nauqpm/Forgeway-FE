@@ -5,8 +5,9 @@ import { Send, Smile, Paperclip, X } from 'lucide-react';
 import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
-import api from '@/lib/axiosIns';
 import StickerPicker from './StickerPicker';
+import { useQueryClient } from '@tanstack/react-query';
+import { fetchMentionMembers } from '@/modules/client/chat/hooks/useChatQueries';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -19,6 +20,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   const [content, setContent] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
+  const queryClient = useQueryClient();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef<number>(0);
   const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -34,6 +36,9 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
 
   const replyingToMessage = useChatStore(state => state.replyingToMessage);
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+  const replyingSender = typeof replyingToMessage?.senderId === 'object' && replyingToMessage.senderId
+    ? replyingToMessage.senderId
+    : null;
 
   // Auto-resize input when content changes
   useEffect(() => {
@@ -95,34 +100,8 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
 
     mentionSearchTimeoutRef.current = setTimeout(async () => {
       try {
-        const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
-          params: { q: search }
-        });
-        const members = response.data || [];
-        
-        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
-          const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
-          return {
-            id: m._id || m.id,
-            display,
-            email: m.email,
-            phone: m.phone,
-            avatar: m.avatar
-          };
-        });
-
-        // Thêm tùy chọn @All nếu từ khóa khớp
-        if ('all'.startsWith(search.toLowerCase())) {
-          mappedMembers.unshift({
-            id: 'All',
-            display: 'All',
-            email: 'Mention everyone in this channel',
-            phone: '',
-            avatar: 'special-all'
-          });
-        }
-
-        callback(mappedMembers);
+        const members = await fetchMentionMembers(queryClient, channelId, search);
+        callback(members);
       } catch (err) {
         console.error('Failed to search mention members:', err);
         callback([]);
@@ -145,7 +124,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
             <div className="flex items-center justify-between bg-[#F0F0EE] dark:bg-white/5 rounded-[6px] px-3 py-2 border-l-4 border-[#2563EB] text-xs mb-1">
               <div className="flex flex-col min-w-0">
                 <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  Replying to {replyingToMessage.senderId.fullName || replyingToMessage.senderId.email || 'User'}
+                  Replying to {replyingSender?.fullName || replyingSender?.email || 'User'}
                 </span>
                 <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
                   {replyingToMessage.content}
