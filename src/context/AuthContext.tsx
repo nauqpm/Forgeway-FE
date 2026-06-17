@@ -6,12 +6,12 @@ import {
   useContext,
   ReactNode,
 } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { AuthUser, Permission, UserRole } from "@/modules/auth/shared/types/auth.types";
-import { useAuth as useModuleAuth } from "@/modules/auth/shared/hooks/useAuth";
+import { AUTH_ME_QUERY_KEY, useAuth as useModuleAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 import { usePermissionStore } from "@/modules/auth/permission/stores/permissionStore";
-import { getMyPermissionsAPI } from "@/modules/auth/permission/services/permissionService";
 import { handleSsoCallbackAPI } from "@/modules/auth/sso/services/ssoService";
 
 interface User {
@@ -55,36 +55,32 @@ const normalizeUser = (
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const moduleAuth = useModuleAuth();
   const { setUser } = useAuthStore();
   const {
     globalPermissions,
-    setGlobalPermissions,
   } = usePermissionStore();
 
   const fetchUserPermissions = useCallback(async (): Promise<Permission[]> => {
-    try {
-      const { permissions } = await getMyPermissionsAPI();
-      setGlobalPermissions(permissions);
-      const currentUser = useAuthStore.getState().user;
-      if (currentUser) {
-        setUser({ ...currentUser, permissions });
+    return moduleAuth.fetchPermissions();
+  }, [moduleAuth]);
+
+  const ssoCallbackMutation = useMutation({
+    mutationFn: handleSsoCallbackAPI,
+    onSuccess: async (response) => {
+      if (response.user) {
+        queryClient.setQueryData(AUTH_ME_QUERY_KEY, response.user);
+        setUser(response.user);
+        await fetchUserPermissions();
       }
-      return permissions;
-    } catch {
-      setGlobalPermissions([]);
-      return [];
-    }
-  }, [setGlobalPermissions, setUser]);
+    },
+  });
 
   const login = useCallback(
     async (token?: string) => {
       if (token) {
-        const response = await handleSsoCallbackAPI(token);
-        if (response.user) {
-          setUser(response.user);
-          await fetchUserPermissions();
-        }
+        await ssoCallbackMutation.mutateAsync(token);
         router.replace("/");
         return;
       }
@@ -93,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await fetchUserPermissions();
       router.replace("/");
     },
-    [fetchUserPermissions, moduleAuth, router, setUser],
+    [fetchUserPermissions, moduleAuth, router, ssoCallbackMutation],
   );
 
   const logout = useCallback(async () => {
@@ -144,7 +140,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         hasAdminAccess,
         hasPermission,
         fetchUserPermissions,
-        isLoadingPermissions: moduleAuth.isLoading || !moduleAuth.isInitialized,
+        isLoadingPermissions:
+          moduleAuth.isLoading ||
+          !moduleAuth.isInitialized ||
+          moduleAuth.isLoadingPermissions,
         verifyToken,
       }}
     >

@@ -2,34 +2,42 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { ArrowLeft, LayoutGrid, Zap } from "lucide-react";
 import Link from "next/link";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 
 export default function CreateProjectPage() {
   const router = useRouter();
-  const { currentWorkspace } = useWorkspaceStore();
+  const queryClient = useQueryClient();
+  const { currentWorkspace } = useCurrentWorkspace();
   const [form, setForm] = useState({ name: "", key: "", description: "", type: "kanban" as "kanban" | "scrum" });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const createProjectMutation = useMutation({
+    mutationFn: (newProject: typeof form) =>
+      api.post(apiRoutes.PROJECTS.BASE, { ...newProject, workspaceId: currentWorkspace?._id }),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.list(currentWorkspace?._id) });
+      router.push(`/projects/${res.data._id}`);
+    },
+    onError: (e: unknown) => {
+      const message = (e as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(message || "Failed to create project");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentWorkspace) return;
-    setLoading(true);
     setError("");
-    try {
-      const res = await api.post(apiRoutes.PROJECTS.BASE, { ...form, workspaceId: currentWorkspace._id });
-      router.push(`/projects/${res.data._id}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      setError(e.response?.data?.message || "Failed to create project");
-    } finally {
-      setLoading(false);
-    }
+    createProjectMutation.mutate(form);
   };
+
+  const loading = createProjectMutation.isPending;
 
   if (!currentWorkspace) return <div className="app-main text-center text-gray-500">Select a workspace first</div>;
 

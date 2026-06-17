@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
 import { Bell, Check, FileText, Loader2, MoreHorizontal, X } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import {
   AppNotification,
   notificationService,
   NotificationType,
+  NotificationListResponse,
 } from "@/common/services/notification.service";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 
@@ -232,78 +235,95 @@ export default function NotificationPanel({
   onUnreadCountChange,
 }: NotificationPanelProps) {
   const router = useRouter();
-  const [notifications, setNotifications] = useState<NotificationViewModel[]>([]);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<NotificationCategory>("DIRECT");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [inviteActionId, setInviteActionId] = useState<string | null>(null);
 
   const menuRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
+  const { data: listData, isLoading, error: queryError } = useQuery({
+    queryKey: queryKeys.notifications.list(),
+    queryFn: () => notificationService.list(1, 30),
+    staleTime: 30_000,
+  });
+
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: queryKeys.notifications.unreadCount(),
+    queryFn: () => notificationService.unreadCount(),
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (onUnreadCountChange) {
+      onUnreadCountChange(unreadCount);
+    }
+  }, [unreadCount, onUnreadCountChange]);
+
+  const error = queryError ? "Could not load notifications." : null;
+
+  const notifications = useMemo(() => {
+    return (listData?.notifications || []).map(mapNotification);
+  }, [listData]);
+
   const handleRealtimeCreated = useCallback((notification?: AppNotification) => {
     if (!notification) return;
 
-    setNotifications((items) => {
-      const viewModel = mapNotification(notification);
-      const exists = items.some((item) => item.id === viewModel.id);
-      if (exists) {
-        return items.map((item) => item.id === viewModel.id ? viewModel : item);
-      }
-      return [viewModel, ...items];
+    queryClient.setQueryData<NotificationListResponse>(queryKeys.notifications.list(), (current) => {
+      if (!current) return current;
+      const exists = current.notifications.some((item) => item.id === notification.id);
+      const nextNotifications = exists
+        ? current.notifications.map((item) => item.id === notification.id ? notification : item)
+        : [notification, ...current.notifications];
+      return {
+        ...current,
+        notifications: nextNotifications,
+      };
     });
-  }, []);
+
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+  }, [queryClient]);
 
   const handleRealtimeRead = useCallback((notificationId?: string) => {
     if (!notificationId) return;
 
-    setNotifications((items) =>
-      items.map((item) => item.id === notificationId ? { ...item, isRead: true } : item),
-    );
-  }, []);
+    queryClient.setQueryData<NotificationListResponse>(queryKeys.notifications.list(), (current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        notifications: current.notifications.map((item) =>
+          item.id === notificationId
+            ? { ...item, readAt: new Date().toISOString() }
+            : item
+        ),
+      };
+    });
+
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+  }, [queryClient]);
 
   const handleRealtimeReadAll = useCallback(() => {
-    setNotifications((items) => items.map((item) => ({ ...item, isRead: true })));
-  }, []);
+    queryClient.setQueryData<NotificationListResponse>(queryKeys.notifications.list(), (current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        notifications: current.notifications.map((item) => ({
+          ...item,
+          readAt: new Date().toISOString(),
+        })),
+      };
+    });
+
+    queryClient.setQueryData<number>(queryKeys.notifications.unreadCount(), 0);
+  }, [queryClient]);
 
   useNotificationRealtime({
     onCreated: handleRealtimeCreated,
     onRead: handleRealtimeRead,
     onReadAll: handleRealtimeReadAll,
   });
-
-  const refreshUnreadCount = async () => {
-    if (!onUnreadCountChange) return;
-    const count = await notificationService.unreadCount();
-    onUnreadCountChange(count);
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadNotifications = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const result = await notificationService.list(1, 30);
-        if (!mounted) return;
-        setNotifications(result.notifications.map(mapNotification));
-        await refreshUnreadCount();
-      } catch {
-        if (mounted) setError("Could not load notifications.");
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    loadNotifications();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
@@ -320,34 +340,80 @@ export default function NotificationPanel({
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [onClose]);
 
-  const markAllAsRead = async () => {
-    const previous = notifications;
-    setNotifications((items) => items.map((item) => ({ ...item, isRead: true })));
-    setShowMenu(false);
-    try {
-      await notificationService.markAllAsRead();
-      await refreshUnreadCount();
-    } catch {
-      setNotifications(previous);
-    }
-  };
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => notificationService.markAllAsRead(),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.list() });
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.unreadCount() });
 
-  const markAsRead = async (id: string) => {
-    const target = notifications.find((notification) => notification.id === id);
-    if (!target || target.isRead) return;
+      const previousListData = queryClient.getQueryData<NotificationListResponse>(queryKeys.notifications.list());
+      const previousUnreadCount = queryClient.getQueryData<number>(queryKeys.notifications.unreadCount());
 
-    setNotifications((items) =>
-      items.map((item) => item.id === id ? { ...item, isRead: true } : item),
-    );
-    try {
-      await notificationService.markAsRead(id);
-      await refreshUnreadCount();
-    } catch {
-      setNotifications((items) =>
-        items.map((item) => item.id === id ? { ...item, isRead: false } : item),
-      );
-    }
-  };
+      if (previousListData) {
+        queryClient.setQueryData<NotificationListResponse>(queryKeys.notifications.list(), {
+          ...previousListData,
+          notifications: previousListData.notifications.map((n) => ({
+            ...n,
+            readAt: new Date().toISOString(),
+          })),
+        });
+      }
+
+      queryClient.setQueryData<number>(queryKeys.notifications.unreadCount(), 0);
+
+      return { previousListData, previousUnreadCount };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousListData) {
+        queryClient.setQueryData(queryKeys.notifications.list(), context.previousListData);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousUnreadCount);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+    },
+  });
+
+  const markAsReadMutation = useMutation({
+    mutationFn: (id: string) => notificationService.markAsRead(id),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.list() });
+      await queryClient.cancelQueries({ queryKey: queryKeys.notifications.unreadCount() });
+
+      const previousListData = queryClient.getQueryData<NotificationListResponse>(queryKeys.notifications.list());
+      const previousUnreadCount = queryClient.getQueryData<number>(queryKeys.notifications.unreadCount());
+
+      if (previousListData) {
+        queryClient.setQueryData<NotificationListResponse>(queryKeys.notifications.list(), {
+          ...previousListData,
+          notifications: previousListData.notifications.map((n) =>
+            n.id === id ? { ...n, readAt: new Date().toISOString() } : n
+          ),
+        });
+      }
+
+      if (typeof previousUnreadCount === "number" && previousUnreadCount > 0) {
+        queryClient.setQueryData<number>(queryKeys.notifications.unreadCount(), previousUnreadCount - 1);
+      }
+
+      return { previousListData, previousUnreadCount };
+    },
+    onError: (err, id, context) => {
+      if (context?.previousListData) {
+        queryClient.setQueryData(queryKeys.notifications.list(), context.previousListData);
+      }
+      if (context?.previousUnreadCount !== undefined) {
+        queryClient.setQueryData(queryKeys.notifications.unreadCount(), context.previousUnreadCount);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+    },
+  });
 
   const updateInviteNotification = (
     id: string,
@@ -355,25 +421,30 @@ export default function NotificationPanel({
     message: string,
   ) => {
     persistInviteNotificationState(id, { status, message });
-    setNotifications((items) =>
-      items.map((item) =>
-        item.id === id && item.inviteData
-          ? {
-              ...item,
-              isRead: true,
-              inviteData: {
-                ...item.inviteData,
-                status,
-                statusMessage: message,
-              },
-            }
-          : item,
-      ),
-    );
+    queryClient.setQueryData<NotificationListResponse>(queryKeys.notifications.list(), (current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        notifications: current.notifications.map((item) =>
+          item.id === id && item.type === "WORKSPACE_INVITED"
+            ? {
+                ...item,
+                readAt: item.readAt || new Date().toISOString(),
+                metadata: {
+                  ...item.metadata,
+                  status,
+                },
+              }
+            : item
+        ),
+      };
+    });
   };
 
   const handleNotificationClick = async (notification: NotificationViewModel) => {
-    await markAsRead(notification.id);
+    if (!notification.isRead) {
+      await markAsReadMutation.mutateAsync(notification.id);
+    }
 
     if (!notification.href) return;
 
@@ -390,6 +461,78 @@ export default function NotificationPanel({
     handleNotificationClick(notification);
   };
 
+  const acceptInviteMutation = useMutation({
+    mutationFn: ({ inviteId }: { inviteId: string; notificationId: string }) =>
+      notificationService.acceptWorkspaceInvite(inviteId),
+    onMutate: ({ notificationId }) => {
+      setInviteActionId(`${notificationId}:accept`);
+    },
+    onSuccess: async (data, { notificationId }) => {
+      updateInviteNotification(notificationId, "accepted", "Invitation accepted.");
+      
+      await notificationService.markAsRead(notificationId);
+      
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+      toast.success("Workspace invitation accepted.");
+      onClose();
+      
+      const notification = notifications.find((n) => n.id === notificationId);
+      const workspaceKey = notification?.inviteData?.workspaceKey;
+      router.push(workspaceKey ? `/workspaces/${encodeURIComponent(workspaceKey)}` : "/workspaces");
+    },
+    onError: (error, { notificationId }) => {
+      const failure = getInviteFailureState(error, "Could not accept invitation.");
+      if (failure.status) {
+        updateInviteNotification(notificationId, failure.status, failure.message);
+        notificationService.markAsRead(notificationId).finally(() => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+        });
+      }
+      toast.error(failure.message);
+    },
+    onSettled: () => {
+      setInviteActionId(null);
+    },
+  });
+
+  const declineInviteMutation = useMutation({
+    mutationFn: ({ inviteId }: { inviteId: string; notificationId: string }) =>
+      notificationService.declineWorkspaceInvite(inviteId),
+    onMutate: ({ notificationId }) => {
+      setInviteActionId(`${notificationId}:decline`);
+    },
+    onSuccess: async (data, { notificationId }) => {
+      updateInviteNotification(notificationId, "declined", "Invitation declined.");
+      
+      await notificationService.markAsRead(notificationId);
+      
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+      toast.success("Workspace invitation declined.");
+    },
+    onError: (error, { notificationId }) => {
+      const failure = getInviteFailureState(error, "Could not decline invitation.");
+      if (failure.status) {
+        updateInviteNotification(notificationId, failure.status, failure.message);
+        notificationService.markAsRead(notificationId).finally(() => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.list() });
+          queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+        });
+      }
+      toast.error(failure.message);
+    },
+    onSettled: () => {
+      setInviteActionId(null);
+    },
+  });
+
+  const markAllAsRead = () => {
+    markAllAsReadMutation.mutate();
+    setShowMenu(false);
+  };
+
   const handleAcceptInvite = async (
     event: ReactMouseEvent<HTMLButtonElement>,
     notification: NotificationViewModel,
@@ -400,32 +543,7 @@ export default function NotificationPanel({
       toast.error("Invitation is missing.");
       return;
     }
-
-    setInviteActionId(`${notification.id}:accept`);
-    try {
-      await notificationService.acceptWorkspaceInvite(inviteId);
-      updateInviteNotification(notification.id, "accepted", "Invitation accepted.");
-      if (!notification.isRead) {
-        await notificationService.markAsRead(notification.id);
-      }
-      await refreshUnreadCount();
-      toast.success("Workspace invitation accepted.");
-      onClose();
-      const workspaceKey = notification.inviteData?.workspaceKey;
-      router.push(workspaceKey ? `/workspaces/${encodeURIComponent(workspaceKey)}` : "/workspaces");
-    } catch (error) {
-      const failure = getInviteFailureState(error, "Could not accept invitation.");
-      if (failure.status) {
-        updateInviteNotification(notification.id, failure.status, failure.message);
-        if (!notification.isRead) {
-          await notificationService.markAsRead(notification.id);
-          await refreshUnreadCount();
-        }
-      }
-      toast.error(failure.message);
-    } finally {
-      setInviteActionId(null);
-    }
+    acceptInviteMutation.mutate({ inviteId, notificationId: notification.id });
   };
 
   const handleDeclineInvite = async (
@@ -438,29 +556,7 @@ export default function NotificationPanel({
       toast.error("Invitation is missing.");
       return;
     }
-
-    setInviteActionId(`${notification.id}:decline`);
-    try {
-      await notificationService.declineWorkspaceInvite(inviteId);
-      updateInviteNotification(notification.id, "declined", "Invitation declined.");
-      if (!notification.isRead) {
-        await notificationService.markAsRead(notification.id);
-      }
-      await refreshUnreadCount();
-      toast.success("Workspace invitation declined.");
-    } catch (error) {
-      const failure = getInviteFailureState(error, "Could not decline invitation.");
-      if (failure.status) {
-        updateInviteNotification(notification.id, failure.status, failure.message);
-        if (!notification.isRead) {
-          await notificationService.markAsRead(notification.id);
-          await refreshUnreadCount();
-        }
-      }
-      toast.error(failure.message);
-    } finally {
-      setInviteActionId(null);
-    }
+    declineInviteMutation.mutate({ inviteId, notificationId: notification.id });
   };
 
   const filteredNotifications = useMemo(() => {

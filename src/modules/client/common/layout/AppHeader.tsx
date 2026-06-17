@@ -7,7 +7,7 @@ import ThemeToggle from "./ThemeToggle";
 import UserMenu from "./UserMenu";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
 import { useAuth } from "@/context/AuthContext";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 
 type SearchAssigneeUser = {
   _id?: string;
@@ -42,14 +42,11 @@ export default function AppHeader({
   workspaceKey,
 }: AppHeaderProps) {
   const { user } = useAuth();
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace, workspaces } = useCurrentWorkspace();
   
   const activeWorkspaceKey = workspaceKey || currentWorkspace?.key || currentWorkspace?.slug || "AL";
   
-  const searchProjects = (useWorkspaceStore.getState().workspaces.length > 0 
-    ? useWorkspaceStore.getState().workspaces 
-    : currentWorkspace ? [currentWorkspace] : []
-  )
+  const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
     .filter(Boolean)
     .map((workspace) => {
       const id = workspace._id || (workspace as { id?: string }).id;

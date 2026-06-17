@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { BookOpen, CheckCircle2, Loader2 } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "react-hot-toast";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
@@ -16,7 +18,7 @@ import type { Issue } from "@/modules/client/workspaces/types/issue.type";
 import type { Sprint } from "@/modules/client/workspaces/types/sprint.type";
 import type { BoardColumn } from "@/modules/client/workspaces/types/board.type";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
-import { useWorkspaceAvatarSync } from "@/hooks/useWorkspaceAvatarSync";
+
 
 export interface AdminDashboardProps {
   className?: string;
@@ -36,14 +38,32 @@ type ForYouWorkspace = {
   avatar?: string | null;
 };
 
+type ForYouResponse = {
+  success?: boolean;
+  workspaces?: ForYouWorkspace[];
+};
+
 type UserDashboardStats = {
   tasksAssigned?: number;
   tasksByStatus?: Record<string, number>;
   tasksByPriority?: Record<string, number>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  recentlyCompleted?: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  recentActivity?: any[];
+  recentlyCompleted?: DashboardActivity[];
+  recentActivity?: DashboardActivity[];
+};
+
+type DashboardActivity = {
+  _id?: string;
+  id?: string;
+  key?: string;
+  title?: string;
+  columnId?: string;
+  status?: string;
+  workspaceId?: string | { _id?: string; id?: string };
+};
+
+type WorkspaceNameSource = ForYouWorkspace & {
+  title?: string;
+  label?: string;
 };
 
 type DashboardTask = {
@@ -55,8 +75,8 @@ type DashboardTask = {
   meta: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const normalizePayload = <T,>(payload: any): T => payload?.data?.data ?? payload?.data ?? payload;
+const normalizePayload = <T,>(payload: { data?: { data?: T } | T }): T =>
+  (payload?.data as { data?: T })?.data ?? (payload?.data as T);
 
 const workspaceIdOf = (workspace: ForYouWorkspace) => workspace.id || workspace._id || "";
 
@@ -88,8 +108,8 @@ const toDashboardTask = (
 ): DashboardTask => {
   const workspaceId = workspaceIdOf(workspace);
   const workspaceKey = workspaceRouteKeyOf(workspace);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const wsName = (workspace as any).name ?? (workspace as any).title ?? (workspace as any).label ?? "Workspace";
+  const workspaceName = workspace as WorkspaceNameSource;
+  const wsName = workspaceName.name ?? workspaceName.title ?? workspaceName.label ?? "Workspace";
   const statusLabel = resolveStatusLabel(issue, columnMap);
 
   return {
@@ -103,14 +123,8 @@ const toDashboardTask = (
 };
 
 export default function AdminDashboard({ className = "" }: AdminDashboardProps) {
+  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [rawWorkspaces, setDashboardWorkspaces] = useState<ForYouWorkspace[]>([]);
-  const workspaces = useWorkspaceAvatarSync(rawWorkspaces);
-  const [assignedTasks, setAssignedTasks] = useState<DashboardTask[]>([]);
-  const [workedTasks, setWorkedTasks] = useState<DashboardTask[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_userStats, setUserStats] = useState<UserDashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
 
   const [selectedDashboardTask, setSelectedDashboardTask] = useState<DashboardTask | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -122,115 +136,103 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [modalLoading, setModalLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const dashboardQuery = useQuery({
+    queryKey: queryKeys.admin.dashboardForUser(user?.id ?? "anonymous"),
+    queryFn: async () => {
+      const [forYouResponse, userDashboardResponse] = await Promise.all([
+        api.get(apiRoutes.FOR_YOU).catch(() => ({ data: { workspaces: [] } })),
+        api.get(apiRoutes.DASHBOARD.USER).catch(() => ({ data: {} })),
+      ]);
 
-    const loadDashboard = async () => {
-      setLoading(true);
+      const forYouPayload = normalizePayload<ForYouResponse | ForYouWorkspace[]>(forYouResponse);
+      const workspaces: ForYouWorkspace[] = Array.isArray(forYouPayload)
+        ? forYouPayload
+        : (forYouPayload?.workspaces ?? []);
+      const userStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
 
-      try {
-        const [forYouResponse, userDashboardResponse] = await Promise.all([
-          api.get(apiRoutes.FOR_YOU).catch(() => ({ data: { workspaces: [] } })),
-          api.get(apiRoutes.DASHBOARD.USER).catch(() => ({ data: {} })),
-        ]);
-
-        if (cancelled) return;
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const forYouPayload = normalizePayload<any>(forYouResponse);
-        const nextWorkspaces: ForYouWorkspace[] = Array.isArray(forYouPayload)
-          ? forYouPayload
-          : (forYouPayload?.workspaces ?? []);
-        const nextUserStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
-
-        setDashboardWorkspaces(nextWorkspaces);
-        setUserStats(nextUserStats);
-
-        if (!user?.id || nextWorkspaces.length === 0) {
-          setAssignedTasks([]);
-          setWorkedTasks([]);
-          return;
-        }
-
-        const workspaceDataList = await Promise.all(
-          nextWorkspaces.slice(0, 6).map(async (workspace) => {
-            const workspaceId = workspaceIdOf(workspace);
-            if (!workspaceId) return { tasks: [] as Issue[], columnMap: {} as Record<string, string>, workspace };
-
-            const [tasks, boardData] = await Promise.all([
-              taskService
-                .getBoardTasks(workspaceId, {
-                  assigneeId: user.id,
-                  page: 1,
-                  limit: 5,
-                  sortBy: "updatedAt",
-                  sortOrder: "desc",
-                })
-                .catch(() => [] as Issue[]),
-              boardService.getBoardByWorkspace(workspaceId).catch(() => ({ columns: [] })),
-            ]);
-
-            const columnMap: Record<string, string> = {};
-            for (const col of boardData.columns ?? []) {
-              if (col.id) columnMap[col.id] = col.name;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              if ((col as any)._id) columnMap[(col as any)._id] = col.name;
-            }
-
-            return { tasks, columnMap, workspace };
-          })
-        );
-
-        if (cancelled) return;
-
-        const globalColumnMap: Record<string, string> = {};
-        for (const { columnMap } of workspaceDataList) {
-          Object.assign(globalColumnMap, columnMap);
-        }
-
-        const assignedGroups = workspaceDataList.map(({ tasks, workspace }) =>
-          (tasks as Issue[]).map((task) => toDashboardTask(task, workspace, "assigned", globalColumnMap))
-        );
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const rawWorked: any[] = Array.isArray(nextUserStats?.recentActivity)
-          ? nextUserStats.recentActivity
-          : Array.isArray(nextUserStats?.recentlyCompleted)
-            ? nextUserStats.recentlyCompleted
-            : [];
-
-        const completedTasks = rawWorked
-          .map((activity) => {
-            const rawWsId =
-              typeof activity.workspaceId === "string"
-                ? activity.workspaceId
-                : (activity.workspaceId?._id ?? activity.workspaceId?.id ?? "");
-            const workspace = nextWorkspaces.find((item) => workspaceIdOf(item) === rawWsId) || nextWorkspaces[0];
-            if (!workspace) return null;
-            const proxy = {
-              id: activity._id ?? activity.id ?? "",
-              key: activity.key ?? "",
-              title: activity.title ?? "",
-              columnId: activity.columnId ?? "",
-              status: activity.status ?? "",
-            } as Issue;
-            return toDashboardTask(proxy, workspace, "worked", globalColumnMap);
-          })
-          .filter(Boolean) as DashboardTask[];
-
-        setAssignedTasks(assignedGroups.flat().slice(0, 10));
-        setWorkedTasks(completedTasks.slice(0, 10));
-      } finally {
-        if (!cancelled) setLoading(false);
+      if (!user?.id || workspaces.length === 0) {
+        return { workspaces, userStats, assignedTasks: [] as DashboardTask[], workedTasks: [] as DashboardTask[] };
       }
-    };
 
-    loadDashboard();
+      const workspaceDataList = await Promise.all(
+        workspaces.slice(0, 6).map(async (workspace) => {
+          const workspaceId = workspaceIdOf(workspace);
+          if (!workspaceId) return { tasks: [] as Issue[], columnMap: {} as Record<string, string>, workspace };
 
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
+          const [tasks, boardData] = await Promise.all([
+            taskService
+              .getBoardTasks(workspaceId, {
+                assigneeId: user.id,
+                page: 1,
+                limit: 5,
+                sortBy: "updatedAt",
+                sortOrder: "desc",
+              })
+              .catch(() => [] as Issue[]),
+            boardService.getBoardByWorkspace(workspaceId).catch(() => ({ columns: [] })),
+          ]);
+
+          const columnMap: Record<string, string> = {};
+          for (const col of boardData.columns ?? []) {
+            if (col.id) columnMap[col.id] = col.name;
+            const mongoId = (col as BoardColumn & { _id?: string })._id;
+            if (mongoId) columnMap[mongoId] = col.name;
+          }
+
+          return { tasks, columnMap, workspace };
+        }),
+      );
+
+      const globalColumnMap: Record<string, string> = {};
+      for (const { columnMap } of workspaceDataList) {
+        Object.assign(globalColumnMap, columnMap);
+      }
+
+      const assignedTasks = workspaceDataList
+        .map(({ tasks, workspace }) =>
+          (tasks as Issue[]).map((task) => toDashboardTask(task, workspace, "assigned", globalColumnMap)),
+        )
+        .flat()
+        .slice(0, 10);
+
+      const rawWorked: DashboardActivity[] = Array.isArray(userStats?.recentActivity)
+        ? userStats.recentActivity
+        : Array.isArray(userStats?.recentlyCompleted)
+          ? userStats.recentlyCompleted
+          : [];
+
+      const workedTasks = rawWorked
+        .map((activity) => {
+          const rawWsId =
+            typeof activity.workspaceId === "string"
+              ? activity.workspaceId
+              : (activity.workspaceId?._id ?? activity.workspaceId?.id ?? "");
+          const workspace = workspaces.find((item) => workspaceIdOf(item) === rawWsId) || workspaces[0];
+          if (!workspace) return null;
+          const proxy = {
+            id: activity._id ?? activity.id ?? "",
+            key: activity.key ?? "",
+            title: activity.title ?? "",
+            columnId: activity.columnId ?? "",
+            status: activity.status ?? "",
+          } as Issue;
+          return toDashboardTask(proxy, workspace, "worked", globalColumnMap);
+        })
+        .filter(Boolean) as DashboardTask[];
+
+      return {
+        workspaces,
+        userStats,
+        assignedTasks,
+        workedTasks: workedTasks.slice(0, 10),
+      };
+    },
+  });
+
+
+  const workspaces = useMemo(() => dashboardQuery.data?.workspaces ?? [], [dashboardQuery.data?.workspaces]);
+  const assignedTasks = useMemo(() => dashboardQuery.data?.assignedTasks ?? [], [dashboardQuery.data?.assignedTasks]);
+  const workedTasks = useMemo(() => dashboardQuery.data?.workedTasks ?? [], [dashboardQuery.data?.workedTasks]);
 
   const displayWorkspaces = useMemo(() => workspaces.slice(0, 4).map(toWorkspaceCard), [workspaces]);
 
@@ -283,8 +285,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
       await taskService.archiveBoardTask(workspaceId, issue.id);
       toast.success("Work item archived");
       
-      setAssignedTasks(prev => prev.filter(t => t.id !== selectedDashboardTask?.id));
-      setWorkedTasks(prev => prev.filter(t => t.id !== selectedDashboardTask?.id));
+      await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboardForUser(user?.id ?? "anonymous") });
       
       setIsTaskModalOpen(false);
       setSelectedDashboardTask(null);
@@ -295,7 +296,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     }
   };
 
-  if (loading) return null;
+  if (dashboardQuery.isLoading) return null;
 
   return (
     <div className={`app-page-medium pt-6 ${className}`}>

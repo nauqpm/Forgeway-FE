@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Paperclip, Plus, RefreshCw } from "lucide-react";
+import { AlertCircle, Paperclip, Plus, RefreshCw, X } from "lucide-react";
 import { useAttachmentDropzone } from "../../hooks/useAttachmentDropzone";
 import { useTaskAttachments } from "../../hooks/useTaskAttachments";
 import { isPreviewableAttachment, TaskAttachment } from "../../types/attachment.type";
@@ -43,6 +43,8 @@ export default function TaskAttachmentsPanel({
     isLoading,
     error,
     refetch,
+    uploadErrorMessage,
+    clearUploadError,
     uploadFiles,
     clearQueueItem,
     canDeleteAttachment,
@@ -132,6 +134,21 @@ export default function TaskAttachmentsPanel({
       {error && (
         <div className="rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.2)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.12)] px-3 py-2 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
           Could not load attachments.
+        </div>
+      )}
+
+      {uploadErrorMessage && (
+        <div className="flex items-start gap-2 rounded-[6px] border border-[#F5C6C7] dark:border-[rgba(159,47,45,0.32)] bg-[#FDEBEC] dark:bg-[rgba(159,47,45,0.16)] px-3 py-2 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <p className="min-w-0 flex-1">{uploadErrorMessage}</p>
+          <button
+            type="button"
+            onClick={clearUploadError}
+            className="rounded-[4px] p-0.5 text-[#9F2F2D] transition-colors hover:bg-[#F5C6C7] dark:text-[#F87171] dark:hover:bg-[rgba(159,47,45,0.24)]"
+            aria-label="Dismiss upload error"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 

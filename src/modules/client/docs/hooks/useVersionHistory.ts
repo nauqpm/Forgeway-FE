@@ -1,12 +1,11 @@
-// Hook managing document version history in the editor,
-// providing functions to fetch saved versions, create a new version, and restore to a specific version,
-// while tracking loading state and handling errors when interacting with version history API.
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { pagesService } from "../services/pages.service";
 import type { DocumentVersion } from "../types/docs.type";
-import { toast } from "react-hot-toast";
 
 interface UseVersionHistoryProps {
   pageId: string | undefined;
@@ -14,47 +13,53 @@ interface UseVersionHistoryProps {
 }
 
 export function useVersionHistory({ pageId, enabled = true }: UseVersionHistoryProps) {
-  const [versions, setVersions] = useState<DocumentVersion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchVersions = useCallback(async () => {
-    if (!pageId) return;
-    setIsLoading(true);
-    try {
-      const data = await pagesService.getVersions(pageId);
-      setVersions(data);
-    } catch (error) {
-      console.error("Failed to fetch page versions:", error);
-      toast.error("Failed to load version history");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [pageId]);
+  const versionsQuery = useQuery<DocumentVersion[]>({
+    queryKey: queryKeys.docs.versions(pageId ?? ""),
+    queryFn: () => pagesService.getVersions(pageId!),
+    enabled: enabled && !!pageId,
+  });
+
+  const createVersionMutation = useMutation({
+    mutationFn: (label: string) => pagesService.createVersion(pageId!, label),
+    onSuccess: (newVersion) => {
+      queryClient.setQueryData<DocumentVersion[]>(queryKeys.docs.versions(pageId ?? ""), (current = []) => [
+        newVersion,
+        ...current,
+      ]);
+    },
+  });
+
+  const restoreVersionMutation = useMutation({
+    mutationFn: (versionId: string) => pagesService.restoreVersion(pageId!, versionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.docs.versions(pageId ?? "") });
+    },
+  });
 
   const createVersion = useCallback(
     async (label: string) => {
       if (!pageId) return null;
       try {
-        const newVer = await pagesService.createVersion(pageId, label);
+        const newVersion = await createVersionMutation.mutateAsync(label);
         toast.success(`Version created: "${label}"`);
-        setVersions((prev) => [newVer, ...prev]);
-        return newVer;
+        return newVersion;
       } catch (error) {
         console.error("Failed to create version:", error);
         toast.error("Failed to create new version");
         throw error;
       }
     },
-    [pageId]
+    [createVersionMutation, pageId],
   );
 
   const restoreVersion = useCallback(
     async (versionId: string) => {
       if (!pageId) return null;
       try {
-        const restoredDoc = await pagesService.restoreVersion(pageId, versionId);
+        const restoredDoc = await restoreVersionMutation.mutateAsync(versionId);
         toast.success("Version restored successfully! Reloading...");
-        // Reload page to re-initialize editor with restored state
         setTimeout(() => {
           window.location.reload();
         }, 1000);
@@ -65,19 +70,13 @@ export function useVersionHistory({ pageId, enabled = true }: UseVersionHistoryP
         throw error;
       }
     },
-    [pageId]
+    [pageId, restoreVersionMutation],
   );
 
-  useEffect(() => {
-    if (enabled && pageId) {
-      void fetchVersions();
-    }
-  }, [pageId, enabled, fetchVersions]);
-
   return {
-    versions,
-    isLoading,
-    fetchVersions,
+    versions: versionsQuery.data ?? [],
+    isLoading: versionsQuery.isLoading,
+    fetchVersions: versionsQuery.refetch,
     createVersion,
     restoreVersion,
   };

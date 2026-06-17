@@ -69,6 +69,13 @@ async function getPageById(id: string): Promise<Document> {
   return mapPage(raw);
 }
 
+/** Fetch a single page by slug */
+async function getPageBySlug(slug: string): Promise<Document> {
+  const res = await api.get(apiRoutes.PAGES.BY_SLUG(slug));
+  const raw: PageApiResponse = res.data?.data ?? res.data;
+  return mapPage(raw);
+}
+
 /** Create a new page */
 async function createPage(payload: CreatePagePayload): Promise<Document> {
   const res = await api.post(apiRoutes.PAGES.BASE, payload);
@@ -204,6 +211,7 @@ export const pagesService = {
   getRootPages,
   getChildren,
   getPageById,
+  getPageBySlug,
   createPage,
   updatePage,
   deletePage,

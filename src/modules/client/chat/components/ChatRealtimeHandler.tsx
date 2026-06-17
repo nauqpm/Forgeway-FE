@@ -1,31 +1,29 @@
 'use client';
 
 import { useEffect, useCallback, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { chatSocketClient } from '@/lib/socket/chat.client';
 import { SOCKET_EVENTS } from '@/lib/socket/socket.events';
 import { useChatStore } from '@/stores/chatStore';
-import { getChannelsAPI, getChannelAPI } from '@/modules/client/chat/services/chatService';
+import { getChannelAPI } from '@/modules/client/chat/services/chatService';
+import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
+import {
+  updateChannelInCache,
+  updateMessageInCache,
+  upsertChannelInCache,
+  upsertMessageInCache,
+} from '@/modules/client/chat/utils/chatQueryCache';
+import { queryKeys } from '@/common/constants/queryKeys';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import type { Channel, Message } from '@/modules/client/chat/types/chat.types';
 
 const fetchingChannels = new Set<string>();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const fetchAndAddChannel = (channelId: string, addChannelAction: (channel: any) => void) => {
-  if (fetchingChannels.has(channelId)) return;
-  fetchingChannels.add(channelId);
-
-  getChannelAPI(channelId)
-    .then(channel => {
-      addChannelAction(channel);
-      chatSocketClient.joinChannel(channelId);
-    })
-    .catch(err => {
-      console.error("Failed to fetch new channel details", err);
-    })
-    .finally(() => {
-      fetchingChannels.delete(channelId);
-    });
+const getSenderId = (message: Message) => {
+  const sender = message.senderId;
+  if (!sender) return null;
+  return typeof sender === 'object' ? sender._id || sender.id || null : sender;
 };
 
 /**
@@ -33,95 +31,94 @@ const fetchAndAddChannel = (channelId: string, addChannelAction: (channel: any) 
  * This should be placed in a high-level layout to ensure listeners are always active.
  */
 export default function ChatRealtimeHandler() {
-  const { 
-    addMessage,
-    updateMessage,
-    deleteMessage,
-    setTyping,
-    updateChannel,
-    incrementUnread,
-    addChannel
-  } = useChatStore();
-
+  const queryClient = useQueryClient();
+  const { data: channels = [] } = useChatChannels();
+  const setTyping = useChatStore(state => state.setTyping);
   const user = useAuthStore(state => state.user);
-  const setChannels = useChatStore(state => state.setChannels);
-
-  useEffect(() => {
-    if (!user) return;
-    getChannelsAPI()
-      .then(allChannels => {
-        setChannels(allChannels);
-        const channelIds = allChannels.map(c => c._id);
-        chatSocketClient.joinChannels(channelIds);
-      })
-      .catch(err => {
-        console.error("Failed to load channels in background", err);
-      });
-  }, [user, setChannels]);
-
   const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  useEffect(() => {
+    if (!user || channels.length === 0) return;
+    chatSocketClient.joinChannels(channels.map(channel => channel._id));
+  }, [channels, user]);
+
+  const ensureChannelInCache = useCallback((channelId: string) => {
+    const cachedChannels = queryClient.getQueryData<Channel[]>(queryKeys.chat.channels()) || [];
+    const exists = cachedChannels.some(channel => (channel._id || channel.id) === channelId);
+    if (exists || fetchingChannels.has(channelId)) return;
+
+    fetchingChannels.add(channelId);
+    getChannelAPI(channelId)
+      .then(channel => {
+        upsertChannelInCache(queryClient, channel);
+        chatSocketClient.joinChannel(channelId);
+      })
+      .catch(err => {
+        console.error("Failed to fetch new channel details", err);
+        queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+      })
+      .finally(() => {
+        fetchingChannels.delete(channelId);
+      });
+  }, [queryClient]);
 
   const markAsRead = useCallback((channelId: string) => {
     const socket = chatSocketClient.getSocket();
     if (socket?.connected) {
       socket.emit(SOCKET_EVENTS.READ, { channelId });
-      updateChannel(channelId, { unreadCount: 0 });
     }
-  }, [updateChannel]);
+    updateChannelInCache(queryClient, channelId, () => ({ unreadCount: 0 }));
+  }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNewMessage = useCallback((envelope: any) => {
-    const message = envelope.data || envelope;
+    const message = (envelope.data || envelope) as Message;
     if (!message?.channelId) return;
-    
-    addMessage(message.channelId, message);
-    
-    const { activeChannelId, channels } = useChatStore.getState();
-    const isCurrentChannel = activeChannelId === message.channelId;
-    const channelExists = channels.some(c => c._id === message.channelId);
 
-    // If it's a new DM channel not in our list, fetch and add it
-    if (!channelExists) {
-      fetchAndAddChannel(message.channelId, addChannel);
-    }
+    upsertMessageInCache(queryClient, message.channelId, message);
+    ensureChannelInCache(message.channelId);
+
+    const activeChannelId = useChatStore.getState().activeChannelId;
+    const isCurrentChannel = activeChannelId === message.channelId;
+    const senderId = getSenderId(message);
+    const currentUser = useAuthStore.getState().user;
+    const currentUserId = (currentUser as { id: string; _id?: string } | null)?._id || currentUser?.id;
+    const isMyOwnMessage = senderId && currentUserId && senderId.toString() === currentUserId.toString();
 
     if (isCurrentChannel) {
       markAsRead(message.channelId);
-    } else {
-      const senderIdStr = typeof message.senderId === 'object' && message.senderId
-        ? (message.senderId._id || message.senderId.id)
-        : message.senderId;
-      const currentUser = useAuthStore.getState().user;
-      const currentUserId = (currentUser as { id: string; _id?: string } | null)?._id || currentUser?.id;
-      const isMyOwnMessage = senderIdStr && currentUserId && senderIdStr.toString() === currentUserId.toString();
-
-      if (!isMyOwnMessage) {
-        incrementUnread(message.channelId);
-      }
     }
-    
-    updateChannel(message.channelId, { lastMessage: message });
-  }, [addMessage, updateChannel, incrementUnread, markAsRead, addChannel]);
+
+    updateChannelInCache(queryClient, message.channelId, (channel) => ({
+      lastMessage: message,
+      unreadCount: isCurrentChannel || isMyOwnMessage
+        ? channel.unreadCount || 0
+        : (channel.unreadCount || 0) + 1,
+    }));
+  }, [ensureChannelInCache, markAsRead, queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMessageEdited = useCallback((envelope: any) => {
-    const message = envelope.data || envelope;
+    const message = (envelope.data || envelope) as Message;
     if (!message?._id || !message?.channelId) return;
-    updateMessage(message.channelId, message._id, message);
-  }, [updateMessage]);
+    updateMessageInCache(queryClient, message.channelId, message._id, () => message);
+  }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMessageDeleted = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.messageId || !data?.channelId) return;
-    deleteMessage(data.channelId, data.messageId);
-    
-    // Update sidebar lastMessage if the backend sent the updated one
+
+    updateMessageInCache(queryClient, data.channelId, data.messageId, () => ({
+      deletedAt: new Date().toISOString(),
+    }));
+
     if (data.lastMessage !== undefined) {
-      updateChannel(data.channelId, { lastMessage: data.lastMessage || undefined });
+      updateChannelInCache(queryClient, data.channelId, () => ({
+        lastMessage: data.lastMessage || undefined,
+      }));
     }
-  }, [deleteMessage, updateChannel]);
+  }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleUserTyping = useCallback((envelope: any) => {
@@ -135,34 +132,34 @@ export default function ChatRealtimeHandler() {
     const data = envelope.data || envelope;
     if (!data?.channelId) return;
 
-    const { channels } = useChatStore.getState();
-    const channelExists = channels.some(c => c._id === data.channelId);
+    const cachedChannels = queryClient.getQueryData<Channel[]>(queryKeys.chat.channels()) || [];
+    const existingChannel = cachedChannels.find(channel => (channel._id || channel.id) === data.channelId);
 
-    if (!channelExists) {
-      fetchAndAddChannel(data.channelId, addChannel);
-    } else {
-      if (data.unreadCount !== undefined) {
-        updateChannel(data.channelId, { 
-          unreadCount: data.unreadCount,
-          ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
-        });
-      } else if (data.increment !== undefined) {
-        const existingChannel = channels.find(c => c._id === data.channelId);
-        const currentCount = existingChannel?.unreadCount || 0;
-        updateChannel(data.channelId, { 
-          unreadCount: currentCount + data.increment,
-          ...(data.lastMessage ? { lastMessage: data.lastMessage } : {})
-        });
-      }
+    if (!existingChannel) {
+      ensureChannelInCache(data.channelId);
+      return;
     }
-  }, [updateChannel, addChannel]);
+
+    updateChannelInCache(queryClient, data.channelId, (channel) => {
+      const unreadCount = data.unreadCount !== undefined
+        ? data.unreadCount
+        : (channel.unreadCount || 0) + (data.increment || 0);
+
+      return {
+        unreadCount,
+        ...(data.lastMessage ? { lastMessage: data.lastMessage } : {}),
+      };
+    });
+  }, [ensureChannelInCache, queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleReactionUpdated = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     if (!data?.messageId || !data?.channelId) return;
-    updateMessage(data.channelId, data.messageId, { reactions: data.reactions });
-  }, [updateMessage]);
+    updateMessageInCache(queryClient, data.channelId, data.messageId, () => ({
+      reactions: data.reactions,
+    }));
+  }, [queryClient]);
 
   const handleRateLimited = useCallback((payload: { retryAfterMs?: number }) => {
     if (rateLimitIntervalRef.current) {
@@ -222,14 +219,14 @@ export default function ChatRealtimeHandler() {
       }
     };
   }, [
-    handleNewMessage, 
-    handleMessageEdited, 
-    handleMessageDeleted, 
-    handleUserTyping, 
+    handleNewMessage,
+    handleMessageEdited,
+    handleMessageDeleted,
+    handleUserTyping,
     handleUnreadUpdate,
     handleReactionUpdated,
-    handleRateLimited
+    handleRateLimited,
   ]);
 
-  return null; // This component doesn't render anything
+  return null;
 }

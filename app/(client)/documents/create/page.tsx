@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -32,7 +33,6 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 export default function CreateOnlineDocumentPage() {
   usePageTitle('New Document');
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [isDirty, setIsDirty] = useState(false);
 
@@ -49,6 +49,20 @@ export default function CreateOnlineDocumentPage() {
     onUpdate: () => setIsDirty(true),
   });
 
+  const createDocumentMutation = useMutation({
+    mutationFn: ({ name, content }: { name: string; content: string }) =>
+      documentService.createOnline(name, content),
+    onSuccess: () => {
+      setIsDirty(false);
+      toast.success("Document created successfully");
+      router.push("/documents");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Failed to create document"));
+    },
+  });
+
+  const loading = createDocumentMutation.isPending;
   const hasUnsavedChanges = isDirty || loading;
 
   useEffect(() => {
@@ -67,21 +81,8 @@ export default function CreateOnlineDocumentPage() {
     e.preventDefault();
     if (!title.trim()) return;
 
-    setLoading(true);
-    try {
-      const content = editor ? sanitizeEditorHtml(editor.getHTML()) : "<p></p>";
-      await documentService.createOnline(
-        title.trim(),
-        content,
-      );
-      setIsDirty(false);
-      toast.success("Document created successfully");
-      router.push("/documents");
-    } catch (error) {
-      toast.error(getErrorMessage(error, "Failed to create document"));
-    } finally {
-      setLoading(false);
-    }
+    const content = editor ? sanitizeEditorHtml(editor.getHTML()) : "<p></p>";
+    createDocumentMutation.mutate({ name: title.trim(), content });
   };
 
   return (

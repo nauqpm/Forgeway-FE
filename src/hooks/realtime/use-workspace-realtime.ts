@@ -2,11 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { WORKSPACE_EVENTS } from '@/lib/socket/socket.events';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { queryKeys } from '@/common/constants/queryKeys';
 import {
   mapWorkspacePayload,
   removeWorkspace,
@@ -15,6 +17,7 @@ import {
   workspaceIdOf,
   type WorkspaceRealtimeEnvelope,
 } from './workspace-realtime-cache.utils';
+import type { Workspace } from '@/modules/client/workspaces/types/workspace.type';
 
 type UseWorkspaceRealtimeOptions = {
   enabled?: boolean;
@@ -35,28 +38,20 @@ export function useWorkspaceRealtime({
   enabled = true,
 }: UseWorkspaceRealtimeOptions = {}) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const currentUserId = useAuthStore((state) => state.user?.id);
-  const workspaces = useWorkspaceStore((state) => state.workspaces);
-  const currentWorkspace = useWorkspaceStore((state) => state.currentWorkspace);
-  const setWorkspaces = useWorkspaceStore((state) => state.setWorkspaces);
-  const setCurrentWorkspace = useWorkspaceStore(
-    (state) => state.setCurrentWorkspace,
-  );
+  const currentWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
+  const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
 
   // Use refs to store latest state values to avoid stale closures
-  const workspacesRef = useRef(workspaces);
-  const currentWorkspaceRef = useRef(currentWorkspace);
+  const currentWorkspaceIdRef = useRef(currentWorkspaceId);
   const handledEventIdsRef = useRef<Set<string>>(new Set());
   const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep refs in sync with state
   useEffect(() => {
-    workspacesRef.current = workspaces;
-  }, [workspaces]);
-
-  useEffect(() => {
-    currentWorkspaceRef.current = currentWorkspace;
-  }, [currentWorkspace]);
+    currentWorkspaceIdRef.current = currentWorkspaceId;
+  }, [currentWorkspaceId]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -92,34 +87,23 @@ export function useWorkspaceRealtime({
       redirectTimerRef.current = null;
     };
 
+    const updateWorkspacesCache = (updater: (current: Workspace[]) => Workspace[]) => {
+      queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (current = []) => updater(current));
+    };
+
     const syncWorkspace = (workspaceId: string, workspace?: ReturnType<typeof mapWorkspacePayload>) => {
       if (!workspace) return;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nextWorkspaces = upsertWorkspace(workspacesRef.current as any, workspace) as any;
-      setWorkspaces(nextWorkspaces);
-
-      const currentWs = currentWorkspaceRef.current;
-      if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
-        /* eslint-disable @typescript-eslint/no-explicit-any */
-        setCurrentWorkspace({
-          ...currentWs,
-          ...workspace,
-          members: workspace.members ?? currentWs?.members ?? [],
-        } as any);
-        /* eslint-enable @typescript-eslint/no-explicit-any */
-      }
+      updateWorkspacesCache((current) => upsertWorkspace(current, workspace as Workspace) as Workspace[]);
+      if (!currentWorkspaceIdRef.current) setCurrentWorkspaceId(workspaceId);
     };
 
     const removeWorkspaceFromState = (workspaceId: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nextWorkspaces = removeWorkspace(workspacesRef.current as any, workspaceId) as any;
-      setWorkspaces(nextWorkspaces);
+      updateWorkspacesCache((current) => removeWorkspace(current, workspaceId) as Workspace[]);
 
-      const currentWs = currentWorkspaceRef.current;
-      if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
+      if (currentWorkspaceIdRef.current === workspaceId) {
         realtimeSocketClient.leaveCurrentWorkspace();
-        setCurrentWorkspace(null);
+        setCurrentWorkspaceId(null);
         router.push('/dashboard');
       }
     };
@@ -157,17 +141,14 @@ export function useWorkspaceRealtime({
       const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
       if (!workspaceId) return;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const nextWorkspaces = removeWorkspace(workspacesRef.current as any, workspaceId) as any;
-      setWorkspaces(nextWorkspaces);
+      updateWorkspacesCache((current) => removeWorkspace(current, workspaceId) as Workspace[]);
 
-      const currentWs = currentWorkspaceRef.current;
-      if (workspaceIdOf(currentWs ?? {}) !== workspaceId) return;
+      if (currentWorkspaceIdRef.current !== workspaceId) return;
 
       clearRedirectTimer();
       redirectTimerRef.current = setTimeout(() => {
         realtimeSocketClient.leaveCurrentWorkspace();
-        setCurrentWorkspace(null);
+        setCurrentWorkspaceId(null);
         router.push('/dashboard');
       }, REDIRECT_DELAY_MS);
     };
@@ -180,21 +161,13 @@ export function useWorkspaceRealtime({
       const nextRole = envelope.data.nextRole ?? envelope.data.member?.role;
       if (!workspaceId || !userId || !nextRole) return;
 
-      const nextWorkspaces = workspacesRef.current.map((ws) =>
-        workspaceIdOf(ws) === workspaceId
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ? updateWorkspaceMemberRole(ws as any, userId, nextRole) as any
-          : ws
+      updateWorkspacesCache((current) =>
+        current.map((ws) =>
+          workspaceIdOf(ws) === workspaceId
+            ? updateWorkspaceMemberRole(ws, userId, nextRole) as Workspace
+            : ws
+        )
       );
-      setWorkspaces(nextWorkspaces);
-
-      const currentWs = currentWorkspaceRef.current;
-      if (workspaceIdOf(currentWs ?? {}) === workspaceId) {
-        if (currentWs) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setCurrentWorkspace(updateWorkspaceMemberRole(currentWs as any, userId, nextRole) as any);
-        }
-      }
     };
 
     socket.on(WORKSPACE_EVENTS.CREATED, handleWorkspaceUpsert);
@@ -220,8 +193,8 @@ export function useWorkspaceRealtime({
   }, [
     currentUserId,
     enabled,
+    queryClient,
     router,
-    setCurrentWorkspace,
-    setWorkspaces,
+    setCurrentWorkspaceId,
   ]);
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Check, Loader2, Plus, Search, Tag, Trash2, X } from "lucide-react";
+import { queryKeys } from "@/common/constants/queryKeys";
 import type { Issue } from "../../types/issue.type";
 import type { TaskLabel } from "../../types/label.type";
 import { labelService } from "../../services/labelService";
@@ -26,32 +28,69 @@ export default function TaskLabelModal({
   onClose,
   onSaved,
 }: TaskLabelModalProps) {
-  const [labels, setLabels] = useState<TaskLabel[]>([]);
+  const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState("");
   const [newLabelName, setNewLabelName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [deletingIds, setDeletingIds] = useState<string[]>([]);
   const [labelToDelete, setLabelToDelete] = useState<TaskLabel | null>(null);
+
+  const labelsKey = queryKeys.workspaces.labels(workspaceId);
+  const labelsQuery = useQuery({
+    queryKey: labelsKey,
+    queryFn: () => labelService.listLabels(workspaceId),
+    enabled: isOpen && !!workspaceId,
+  });
+  const labels = useMemo(() => labelsQuery.data ?? [], [labelsQuery.data]);
+
+  const createLabelMutation = useMutation({
+    mutationFn: (name: string) => labelService.createLabel(workspaceId, name),
+    onSuccess: (createdLabel) => {
+      queryClient.setQueryData<TaskLabel[]>(labelsKey, (current = []) => [...current, createdLabel]);
+      setSelectedIds((current) => [...current, createdLabel.id]);
+      setNewLabelName("");
+      toast.success("Label created");
+    },
+    onError: (error) => toast.error(extractApiError(error, "Could not create label")),
+  });
+
+  const deleteLabelMutation = useMutation({
+    mutationFn: (label: TaskLabel) => labelService.deleteLabel(workspaceId, label.id).then(() => label),
+    onSuccess: (label) => {
+      queryClient.setQueryData<TaskLabel[]>(labelsKey, (current = []) =>
+        current.filter((item) => item.id !== label.id),
+      );
+      const nextSelectedIds = selectedIds.filter((id) => id !== label.id);
+      const nextIssueLabels = (issue.labels ?? []).filter((item) => item.id !== label.id);
+      setSelectedIds(nextSelectedIds);
+      onSaved({ ...issue, labels: nextIssueLabels, labelIds: nextSelectedIds });
+      setLabelToDelete(null);
+      toast.success("Label deleted");
+    },
+    onError: (error) => toast.error(extractApiError(error, "Could not delete label")),
+  });
+
+  const saveLabelsMutation = useMutation({
+    mutationFn: async (): Promise<Issue> => taskService.replaceTaskLabels(workspaceId, issue.id, selectedIds),
+    onSuccess: (updatedIssue) => {
+      const selectedLabels = labels.filter((label) => selectedIds.includes(label.id));
+      onSaved({
+        ...updatedIssue,
+        labels: selectedLabels,
+        labelIds: selectedIds,
+      });
+      toast.success("Label updated");
+      onClose();
+    },
+    onError: (error) => toast.error(extractApiError(error, "Could not update label")),
+  });
 
   useEffect(() => {
     if (!isOpen) return;
     setSelectedIds(issue.labelIds ?? issue.labels?.map((label) => label.id) ?? []);
     setQuery("");
     setNewLabelName("");
-    setDeletingIds([]);
     setLabelToDelete(null);
-    setLoading(true);
-    labelService
-      .listLabels(workspaceId)
-      .then(setLabels)
-      .catch((error) => {
-        toast.error(error?.response?.data?.message || "Could not load labels");
-      })
-      .finally(() => setLoading(false));
-  }, [isOpen, issue, workspaceId]);
+  }, [isOpen, issue]);
 
   const filteredLabels = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -74,58 +113,16 @@ export default function TaskLabelModal({
       setNewLabelName("");
       return;
     }
-    setCreating(true);
-    try {
-      const createdLabel = await labelService.createLabel(workspaceId, name);
-      setLabels((current) => [...current, createdLabel]);
-      setSelectedIds((current) => [...current, createdLabel.id]);
-      setNewLabelName("");
-      toast.success("Label created");
-    } catch (error) {
-      toast.error(extractApiError(error, "Could not create label"));
-    } finally {
-      setCreating(false);
-    }
+    createLabelMutation.mutate(name);
   };
 
   const confirmDeleteLabel = async () => {
     if (!labelToDelete) return;
-    const label = labelToDelete;
-    setDeletingIds((current) => [...current, label.id]);
-    try {
-      await labelService.deleteLabel(workspaceId, label.id);
-      const nextLabels = labels.filter((item) => item.id !== label.id);
-      const nextSelectedIds = selectedIds.filter((id) => id !== label.id);
-      const nextIssueLabels = (issue.labels ?? []).filter((item) => item.id !== label.id);
-      setLabels(nextLabels);
-      setSelectedIds(nextSelectedIds);
-      onSaved({ ...issue, labels: nextIssueLabels, labelIds: nextSelectedIds });
-      setLabelToDelete(null);
-      toast.success("Label deleted");
-    } catch (error) {
-      toast.error(extractApiError(error, "Could not delete label"));
-    } finally {
-      setDeletingIds((current) => current.filter((id) => id !== label.id));
-    }
+    deleteLabelMutation.mutate(labelToDelete);
   };
 
   const handleSave = async () => {
-    setSaving(true);
-    try {
-      const updatedIssue = await taskService.replaceTaskLabels(workspaceId, issue.id, selectedIds);
-      const selectedLabels = labels.filter((label) => selectedIds.includes(label.id));
-      onSaved({
-        ...updatedIssue,
-        labels: selectedLabels,
-        labelIds: selectedIds,
-      });
-      toast.success("Label updated");
-      onClose();
-    } catch (error) {
-      toast.error(extractApiError(error, "Could not update label"));
-    } finally {
-      setSaving(false);
-    }
+    saveLabelsMutation.mutate();
   };
 
   if (!isOpen) return null;
@@ -178,10 +175,10 @@ export default function TaskLabelModal({
             <button
               type="button"
               onClick={handleCreateLabel}
-              disabled={creating || !newLabelName.trim()}
+              disabled={createLabelMutation.isPending || !newLabelName.trim()}
               className="inline-flex h-10 items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {createLabelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Add
             </button>
           </div>
@@ -197,7 +194,7 @@ export default function TaskLabelModal({
           </div>
 
           <div className="max-h-72 overflow-y-auto rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] p-1">
-            {loading ? (
+            {labelsQuery.isLoading ? (
               <div className="flex h-28 items-center justify-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Loading labels
@@ -229,12 +226,12 @@ export default function TaskLabelModal({
                     <button
                       type="button"
                       onClick={() => setLabelToDelete(label)}
-                      disabled={deletingIds.includes(label.id)}
+                      disabled={deleteLabelMutation.isPending && deleteLabelMutation.variables?.id === label.id}
                       className="shrink-0 rounded-[4px] p-1 text-[#ABABAB] transition-colors hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] hover:text-[#9F2F2D] dark:hover:text-[#F87171] disabled:cursor-not-allowed disabled:opacity-50"
                       aria-label={`Delete ${label.name}`}
                       title="Delete label"
                     >
-                      {deletingIds.includes(label.id) ? (
+                      {deleteLabelMutation.isPending && deleteLabelMutation.variables?.id === label.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Trash2 className="h-4 w-4" />
@@ -272,7 +269,7 @@ export default function TaskLabelModal({
                 <button
                   type="button"
                   onClick={() => setLabelToDelete(null)}
-                  disabled={deletingIds.includes(labelToDelete.id)}
+                  disabled={deleteLabelMutation.isPending}
                   className={cancelBtnCls}
                 >
                   Cancel
@@ -280,10 +277,10 @@ export default function TaskLabelModal({
                 <button
                   type="button"
                   onClick={confirmDeleteLabel}
-                  disabled={deletingIds.includes(labelToDelete.id)}
+                  disabled={deleteLabelMutation.isPending}
                   className="inline-flex items-center gap-2 rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#8F2927] dark:hover:bg-[#F87171]/80 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {deletingIds.includes(labelToDelete.id) && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {deleteLabelMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                   Delete
                 </button>
               </div>
@@ -298,10 +295,10 @@ export default function TaskLabelModal({
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saveLabelsMutation.isPending}
             className="inline-flex items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+            {saveLabelsMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Save
           </button>
         </div>

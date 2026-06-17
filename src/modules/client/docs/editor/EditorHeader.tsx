@@ -3,12 +3,12 @@
 // and control buttons to switch between view/edit modes, open version history, toggle suggestions mode, etc.
 "use client";
 
-import { useDocsStore } from "../store/docs.store";
 import { Document } from "../types/docs.type";
 import { ChevronRight, Globe, Loader2, Eye, Pencil, Cloud, Check, AlertCircle, History, Bookmark, FileText, Download, Upload, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { EditorMode } from "./TiptapEditor";
 import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
+import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 
 interface EditorHeaderProps {
   doc: Document;
@@ -212,9 +212,7 @@ export default function EditorHeader({
   isImportingDocx,
   onImportDocx,
 }: EditorHeaderProps) {
-  const { documents } = useDocsStore();
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_title, setTitle] = useState(doc.title);
+  const { documents } = useWorkspaceDocs(doc.workspaceId);
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [versionLabel, setVersionLabel] = useState("");
 
@@ -233,10 +231,6 @@ export default function EditorHeader({
       console.error(err);
     }
   };
-
-  useEffect(() => {
-    setTitle(doc.title);
-  }, [doc.id, doc.title]);
 
   const getBreadcrumbs = (currentDoc: Document): Document[] => {
     const breadcrumbs: Document[] = [currentDoc];

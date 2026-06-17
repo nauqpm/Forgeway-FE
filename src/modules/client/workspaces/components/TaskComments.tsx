@@ -10,6 +10,7 @@ import { taskService, TaskComment } from "../services/taskService";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 type MentionMember = {
   id: string;
@@ -159,8 +160,8 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
 
-  const commentsKey = useMemo(() => ["taskComments", workspaceId, taskId], [workspaceId, taskId]);
-  const membersKey = useMemo(() => ["workspaceMembers", workspaceId], [workspaceId]);
+  const commentsKey = useMemo(() => queryKeys.tasks.detailComments(workspaceId, taskId), [workspaceId, taskId]);
+  const membersKey = useMemo(() => queryKeys.workspaces.members(workspaceId), [workspaceId]);
 
   const { data: comments = [], isFetching: isLoadingComments } = useQuery({
     queryKey: commentsKey,

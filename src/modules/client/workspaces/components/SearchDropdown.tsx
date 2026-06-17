@@ -5,7 +5,8 @@ import { CheckSquare, FolderKanban, Kanban, Search, SlidersHorizontal, Sparkles,
 import { useQueries } from "@tanstack/react-query";
 import { Filters, TaskFilters } from "../types/filter.type";
 import { taskService } from "../services/taskService";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useCurrentWorkspace } from "../hooks/useWorkspaces";
+import { queryKeys } from "@/common/constants/queryKeys";
 import RecentItem from "./RecentItem";
 import TaskFilterPanel from "./TaskFilterPanel";
 
@@ -153,7 +154,7 @@ export default function SearchDropdown({
     Array.isArray(filters.workspaceKeys)
       ? filters.workspaceKeys
       : [activeWorkspaceKey].filter(Boolean);
-  const { currentWorkspace } = useWorkspaceStore();
+  const { currentWorkspace } = useCurrentWorkspace();
   const workspaceTargets = activeWorkspaceKeys
     .map((key) => {
       const project = projects.find((item) => item.key === key);
@@ -171,7 +172,7 @@ export default function SearchDropdown({
 
   const searchQueries = useQueries({
     queries: workspaceTargets.map((target) => ({
-      queryKey: ["search-dropdown-tasks", target.id, suggestionTaskFilters],
+      queryKey: queryKeys.tasks.searchDropdown(target.id, suggestionTaskFilters as unknown as Record<string, unknown>),
       queryFn: () => taskService.getBoardTasks(target.id, suggestionTaskFilters),
       enabled: isOpen,
       staleTime: 15_000,
@@ -189,7 +190,7 @@ export default function SearchDropdown({
 
   const fallbackQueries = useQueries({
     queries: workspaceTargets.map((target) => ({
-      queryKey: ["search-dropdown-fallback-tasks", target.id, fallbackTaskFilters],
+      queryKey: queryKeys.tasks.searchDropdownFallback(target.id, fallbackTaskFilters as unknown as Record<string, unknown>),
       queryFn: () => taskService.getBoardTasks(target.id, fallbackTaskFilters),
       enabled: shouldUseFallbackSearch,
       staleTime: 15_000,

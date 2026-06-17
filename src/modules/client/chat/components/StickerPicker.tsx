@@ -1,27 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import api from '@/lib/axiosIns';
 import { Loader2, Smile } from 'lucide-react';
-
-interface Sticker {
-  _id: string;
-  packId: string;
-  code: string;
-  url: string;
-  isAnimated: boolean;
-  width: number;
-  height: number;
-}
-
-interface StickerPack {
-  _id: string;
-  key: string;
-  name: string;
-  description?: string;
-  bannerUrl: string;
-  isActive: boolean;
-  displayOrder: number;
-  stickers: Sticker[];
-}
+import { useStickers } from '@/modules/client/chat/hooks/useChatQueries';
 
 function getStaticUrl(url: string): string {
   if (!url) return '';
@@ -38,32 +17,16 @@ interface StickerPickerProps {
 }
 
 export default function StickerPicker({ onSelectSticker, onClose }: StickerPickerProps) {
-  const [packs, setPacks] = useState<StickerPack[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: packs = [], isLoading: loading, isError } = useStickers();
   const [activePackId, setActivePackId] = useState<string | null>(null);
   const [hoveredStickerId, setHoveredStickerId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    async function fetchStickers() {
-      try {
-        setLoading(true);
-        const response = await api.get('/chat/stickers');
-        const data = response.data || [];
-        setPacks(data);
-        if (data.length > 0) {
-          setActivePackId(data[0]._id);
-        }
-      } catch (err) {
-        console.error('Failed to load stickers:', err);
-        setError('Cannot load stickers. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+    if (!activePackId && packs.length > 0) {
+      setActivePackId(packs[0]._id);
     }
-    fetchStickers();
-  }, []);
+  }, [activePackId, packs]);
 
   // Close on clicking outside
   useEffect(() => {
@@ -106,9 +69,9 @@ export default function StickerPicker({ onSelectSticker, onClose }: StickerPicke
             <Loader2 className="w-6 h-6 animate-spin text-[#2563EB]" />
             <span>Loading sticker packs...</span>
           </div>
-        ) : error ? (
+        ) : isError ? (
           <div className="w-full h-full flex items-center justify-center text-xs text-red-500 p-4 text-center">
-            {error}
+            Cannot load stickers. Please try again.
           </div>
         ) : packs.length === 0 ? (
           <div className="w-full h-full flex items-center justify-center text-xs text-[#787774]">

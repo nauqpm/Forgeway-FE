@@ -17,7 +17,7 @@ import { workspaceService } from "../../services/workspaceService";
 import type { WorkspaceSampleAvatar } from "../../utils/workspaceAvatar";
 import WorkspaceAvatar from "./WorkspaceAvatar";
 import WorkspaceAvatarPicker from "./WorkspaceAvatarPicker";
-import { useChatStore } from "@/stores/chatStore";
+import { useChatChannels } from "@/modules/client/chat/hooks/useChatQueries";
 
 interface HeaderProps {
   workspace: Workspace;
@@ -36,7 +36,7 @@ const Header = ({
   canUpdateWorkspace = false,
   onWorkspaceUpdated,
 }: HeaderProps) => {
-  const channels = useChatStore((state) => state.channels);
+  const { data: channels = [] } = useChatChannels();
 
   const workspaceUnreadCount = React.useMemo(() => {
     const wsId = workspace._id || workspaceId;

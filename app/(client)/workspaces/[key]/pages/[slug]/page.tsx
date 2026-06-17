@@ -1,52 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { usePageTitle } from "@/hooks/usePageTitle";
-import api from "@/lib/axiosIns";
-import { apiRoutes } from "@/config/apiRoutes";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { ArrowLeft, Edit3, Clock, Eye } from "lucide-react";
-
-interface Page {
-  _id: string;
-  title: string;
-  content: string;
-  slug: string;
-  status: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  authorId?: any;
-  labels: string[];
-  version: number;
-  viewCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import { usePageTitle } from "@/hooks/usePageTitle";
+import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import { useDocumentBySlugQuery } from "@/modules/client/docs/hooks/useWorkspaceDocs";
 
 export default function PageViewPage() {
   const params = useParams();
   const slug = params.slug as string;
   const workspaceKey = params.key as string;
-  const [page, setPage] = useState<Page | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: page, isLoading } = useDocumentBySlugQuery(workspaceKey, slug, !!slug);
+
   usePageTitle(page?.title || "Page");
 
-  useEffect(() => {
-    const fetchPage = async () => {
-      try {
-        const res = await api.get(apiRoutes.PAGES.BY_SLUG(slug));
-        setPage(res.data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPage();
-  }, [slug]);
-
-  if (loading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinner />;
   if (!page) return <div className="app-main text-center text-gray-500">Page not found</div>;
 
   return (
@@ -78,12 +47,12 @@ export default function PageViewPage() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{page.title}</h1>
 
         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
-          {page.authorId && (
+          {page.lastEditedBy && (
             <div className="flex items-center gap-1.5">
               <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
-                {page.authorId.fullName?.charAt(0) || "?"}
+                {page.lastEditedBy.fullName?.charAt(0) || "?"}
               </div>
-              <span>{page.authorId.fullName || "Unknown"}</span>
+              <span>{page.lastEditedBy.fullName || "Unknown"}</span>
             </div>
           )}
           <div className="flex items-center gap-1.5">
@@ -92,9 +61,8 @@ export default function PageViewPage() {
           </div>
           <div className="flex items-center gap-1.5">
             <Eye className="w-4 h-4" />
-            <span>{page.viewCount} views</span>
+            <span>v{page.version}</span>
           </div>
-          <span>v{page.version}</span>
         </div>
 
         {page.labels.length > 0 && (

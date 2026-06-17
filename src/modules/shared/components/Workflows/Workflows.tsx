@@ -1,23 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useQuery } from "@tanstack/react-query";
+import { BarChart3, ArrowRight } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
-import { BarChart3, ArrowRight } from "lucide-react";
+import type { Workspace } from "@/stores/workspaceStore";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { workspaceService } from "@/modules/client/workspaces/services/workspaceService";
 
 interface Workflow {
   _id: string;
   name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  projectId?: any;
+  projectId?: { _id?: string; name?: string } | null;
   statuses: { id: string; name: string; color: string }[];
-}
-
-interface Project {
-  _id: string;
-  name?: string;
 }
 
 export interface AdminWorkflowsProps {
@@ -25,53 +22,40 @@ export interface AdminWorkflowsProps {
 }
 
 export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) {
-  const { currentWorkspace, setWorkspaces } = useWorkspaceStore();
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { currentWorkspace } = useCurrentWorkspace();
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    api
-      .get(apiRoutes.WORKSPACES.BASE)
-      .then((res) => {
-        if (cancelled) return;
-        setWorkspaces(res.data);
-        const ws = currentWorkspace || (res.data.length > 0 ? res.data[0] : null);
-        if (!ws) {
-          setLoading(false);
-          return;
-        }
-        return api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${ws._id}`);
-      })
-      .then((res) => {
-        if (cancelled || !res) return;
-        const projects = Array.isArray(res.data) ? res.data : [];
-        if (projects.length === 0) { setLoading(false); return; }
-        return Promise.all(projects.map((p: Project) =>
-          api.get(apiRoutes.WORKFLOWS.BY_PROJECT(p._id)).catch((err) => {
-          console.error("Failed to fetch workflow:", err);
-          return null;
-        })
-        ));
-      })
-      .then((results) => {
-        if (cancelled || !results) return;
-        const wfs: Workflow[] = [];
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        results.forEach((wfRes: any) => {
-          if (wfRes?.data) wfs.push(wfRes.data);
-        });
-        setWorkflows(wfs);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch workflows:", err);
-      })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [setWorkspaces]);
+  const workspacesQuery = useQuery<Workspace[]>({
+    queryKey: queryKeys.workspaces.list(),
+    queryFn: workspaceService.listMine,
+  });
 
-  if (loading) return <LoadingSpinner />;
+  const activeWorkspace = currentWorkspace ?? workspacesQuery.data?.[0] ?? null;
+
+  const workflowsQuery = useQuery<Workflow[]>({
+    queryKey: activeWorkspace ? [...queryKeys.admin.workflows(), activeWorkspace._id] : [...queryKeys.admin.workflows(), "none"],
+    queryFn: async () => {
+      const projectsRes = await api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${activeWorkspace!._id}`);
+      const projects = Array.isArray(projectsRes.data) ? projectsRes.data : [];
+      if (projects.length === 0) return [];
+
+      const results = await Promise.all(
+        projects.map((project: { _id: string }) =>
+          api.get(apiRoutes.WORKFLOWS.BY_PROJECT(project._id)).catch(() => null),
+        ),
+      );
+
+      return results
+        .map((result) => result?.data)
+        .filter(Boolean);
+    },
+    enabled: !!activeWorkspace?._id,
+  });
+
+  if (workspacesQuery.isLoading || workflowsQuery.isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  const workflows = workflowsQuery.data ?? [];
 
   return (
     <div className={`app-page-narrow ${className}`}>
@@ -86,25 +70,25 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
         </div>
       ) : (
         <div className="space-y-4">
-          {workflows.map((wf) => (
+          {workflows.map((workflow) => (
             <div
-              key={wf._id}
+              key={workflow._id}
               className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8"
             >
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{wf.name}</h3>
-                  <p className="text-sm text-[#ABABAB] dark:text-[#6B6B6B]">{wf.projectId?.name}</p>
+                  <h3 className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{workflow.name}</h3>
+                  <p className="text-sm text-[#ABABAB] dark:text-[#6B6B6B]">{workflow.projectId?.name}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                {wf.statuses.map((status, i) => (
+                {workflow.statuses.map((status, index) => (
                   <div key={status.id} className="flex items-center">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] whitespace-nowrap">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: status.color }} />
                       <span className="text-sm font-medium text-[#787774] dark:text-[#9B9A97]">{status.name}</span>
                     </div>
-                    {i < wf.statuses.length - 1 && (
+                    {index < workflow.statuses.length - 1 && (
                       <ArrowRight className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B] mx-1" />
                     )}
                   </div>

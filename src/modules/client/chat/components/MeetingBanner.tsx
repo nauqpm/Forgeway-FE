@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { getActiveMeetingAPI, Meeting } from "../services/meeting.api";
+import React, { useEffect } from "react";
 import { chatSocketClient } from "@/lib/socket/chat.client";
 import { MEETING_EVENTS } from "@/lib/socket/socket.events";
 import {
@@ -11,31 +10,20 @@ import {
   unwrapSocketPayload,
 } from "../types/webrtc.types";
 import { Loader2, Video } from "lucide-react";
+import { useActiveMeeting } from "@/modules/client/chat/hooks/useChatQueries";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
+import type { Meeting } from "../services/meeting.api";
 
 interface MeetingBannerProps {
   channelId: string;
 }
 
 export default function MeetingBanner({ channelId }: MeetingBannerProps) {
-  const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const fetchMeeting = async () => {
-    setIsLoading(true);
-
-    try {
-      const meeting = await getActiveMeetingAPI(channelId);
-      setActiveMeeting(meeting);
-    } catch {
-      setActiveMeeting(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const queryClient = useQueryClient();
+  const { data: activeMeeting = null, isLoading } = useActiveMeeting(channelId);
 
   useEffect(() => {
-    fetchMeeting();
-
     const socket = chatSocketClient.getSocket();
     if (!socket) return;
 
@@ -45,7 +33,7 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
     ) => {
       const data = unwrapSocketPayload(envelope);
       if (data.channelId === channelId) {
-        void fetchMeeting();
+        queryClient.invalidateQueries({ queryKey: queryKeys.chat.activeMeeting(channelId) });
       }
     };
 
@@ -54,7 +42,7 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
       envelope: MeetingEndedPayload | { data: MeetingEndedPayload },
     ) => {
       const data = unwrapSocketPayload(envelope);
-      setActiveMeeting((current) =>
+      queryClient.setQueryData<Meeting | null>(queryKeys.chat.activeMeeting(channelId), (current) =>
         current?._id === data.meetingId ? null : current,
       );
     };
@@ -66,7 +54,7 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
       const data = unwrapSocketPayload(envelope);
       if (!data.participants) return;
 
-      setActiveMeeting((current) =>
+      queryClient.setQueryData<Meeting | null>(queryKeys.chat.activeMeeting(channelId), (current) =>
         current?._id === data.meetingId
           ? {
               ...current,
@@ -103,7 +91,7 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
       socket.off(MEETING_EVENTS.USER_JOINED, handleParticipantChange);
       socket.off(MEETING_EVENTS.USER_LEFT, handleParticipantChange);
     };
-  }, [channelId]);
+  }, [channelId, queryClient]);
 
   if (!activeMeeting && !isLoading) return null;
 

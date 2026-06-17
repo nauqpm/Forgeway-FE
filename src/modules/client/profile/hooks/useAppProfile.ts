@@ -1,43 +1,66 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axiosIns";
+import { queryKeys } from "@/common/constants/queryKeys";
 import type { AppUserProfile, UpdateProfilePayload, ChangePasswordPayload } from "../types/profile.types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
 export function useAppProfile() {
-  const [profile, setProfile] = useState<AppUserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
+  const [localError, setLocalError] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchProfile = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const {
+    data: profileData,
+    isLoading: loading,
+    error: queryError,
+    refetch,
+  } = useQuery<AppUserProfile>({
+    queryKey: queryKeys.profile.detail(),
+    queryFn: async () => {
       const res = await api.get("/users/me");
-      setProfile(res.data?.data ?? res.data);
-    } catch {
-      setError("Could not load profile information");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      return res.data?.data ?? res.data;
+    },
+  });
 
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+  const updateInfoMutation = useMutation({
+    mutationFn: async (payload: UpdateProfilePayload) => {
+      const res = await api.put("/users/me", payload);
+      return res.data?.data ?? res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.profile.detail(), data);
+    },
+  });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async (payload: ChangePasswordPayload) => {
+      await api.put("/users/me", {
+        currentPassword: payload.currentPassword,
+        password: payload.password,
+      });
+    },
+  });
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (avatarUrl: string) => {
+      const res = await api.put("/users/me", { avatar: avatarUrl });
+      return res.data?.data ?? res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(queryKeys.profile.detail(), data);
+    },
+  });
 
   const updateInfo = useCallback(
     async (payload: UpdateProfilePayload): Promise<{ success: boolean; fieldErrors?: Record<string, string> }> => {
       try {
-        setSaving(true);
-        setError(null);
-        const res = await api.put("/users/me", payload);
-        setProfile(res.data?.data ?? res.data);
+        setLocalError(null);
+        await updateInfoMutation.mutateAsync(payload);
         return { success: true };
       } catch (e: unknown) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,37 +85,33 @@ export function useAppProfile() {
             }
           });
 
-          if (genericError) setError(genericError);
+          if (genericError) setLocalError(genericError);
           return { success: false, fieldErrors };
         }
 
         const msg = errData?.message ?? "Update failed";
-        setError(msg);
+        setLocalError(msg);
         return { success: false };
-      } finally {
-        setSaving(false);
       }
     },
-    []
+    [updateInfoMutation]
   );
 
   const uploadAvatar = useCallback(
     async (file: File): Promise<boolean> => {
       // Client-side validation
       if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-        setError("Only image files are accepted (JPG, PNG, GIF, WEBP)");
+        setLocalError("Only image files are accepted (JPG, PNG, GIF, WEBP)");
         return false;
       }
       if (file.size > MAX_FILE_SIZE) {
-        setError("Image must not exceed 10MB");
+        setLocalError("Image must not exceed 10MB");
         return false;
       }
 
-      const previousAvatar = profile?.avatar;
-
       try {
         setAvatarUploading(true);
-        setError(null);
+        setLocalError(null);
 
         // Phase 1: upload file
         const form = new FormData();
@@ -108,7 +127,7 @@ export function useAppProfile() {
         let avatarUrl: string = uploadRes.data?.data?.url ?? uploadRes.data?.url ?? uploadRes.data?.data?.path;
 
         if (!avatarUrl) {
-          setError("Image upload failed because the server did not return a URL");
+          setLocalError("Image upload failed because the server did not return a URL");
           return false;
         }
         if (!avatarUrl.startsWith("http") && !avatarUrl.startsWith("https")) {
@@ -116,27 +135,19 @@ export function useAppProfile() {
         }
 
         // Phase 2: save URL to profile
-        try {
-          const res = await api.put("/users/me", { avatar: avatarUrl });
-          setProfile(res.data?.data ?? res.data);
-          return true;
-        } catch (e: unknown) {
-          // Phase 2 failed — revert to old avatar in UI
-          setProfile((prev) => (prev ? { ...prev, avatar: previousAvatar } : prev));
-          const msg =
-            (e as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-            "Image uploaded but was not saved to your profile. Please try again";
-          setError(msg);
-          return false;
-        }
-      } catch {
-        setError("Image upload failed");
+        await uploadAvatarMutation.mutateAsync(avatarUrl);
+        return true;
+      } catch (e: unknown) {
+        const msg =
+          (e as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+          "Image upload failed";
+        setLocalError(msg);
         return false;
       } finally {
         setAvatarUploading(false);
       }
     },
-    [profile?.avatar]
+    [uploadAvatarMutation]
   );
 
   const changePassword = useCallback(
@@ -148,12 +159,8 @@ export function useAppProfile() {
       message?: string;
     }> => {
       try {
-        setSaving(true);
-        setError(null);
-        await api.put("/users/me", {
-          currentPassword: payload.currentPassword,
-          password: payload.password,
-        });
+        setLocalError(null);
+        await changePasswordMutation.mutateAsync(payload);
         return { success: true };
       } catch (e: unknown) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -173,22 +180,23 @@ export function useAppProfile() {
             }
           });
 
-          if (genericError) setError(genericError);
+          if (genericError) setLocalError(genericError);
           return { success: false, fieldErrors };
         }
 
         const msg = errData?.message ?? "Password change failed";
-        setError(msg);
+        setLocalError(msg);
         return { success: false, message: msg };
-      } finally {
-        setSaving(false);
       }
     },
-    []
+    [changePasswordMutation]
   );
 
+  const saving = updateInfoMutation.isPending || changePasswordMutation.isPending;
+  const error = localError || (queryError ? "Could not load profile information" : null);
+
   return {
-    profile,
+    profile: profileData ?? null,
     loading,
     saving,
     avatarUploading,
@@ -196,6 +204,6 @@ export function useAppProfile() {
     updateInfo,
     uploadAvatar,
     changePassword,
-    refreshProfile: fetchProfile,
+    refreshProfile: refetch,
   };
 }

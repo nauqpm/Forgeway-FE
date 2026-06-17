@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { taskCoverService } from "../services/taskCoverService";
 import type { TaskCover } from "../types/task-cover.type";
 import { extractApiError } from "@/common/utils/apiError";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 type CoverableIssue = {
   id: string;
@@ -29,9 +30,9 @@ export function useTaskCoverActions<TIssue extends CoverableIssue>({
   const [saving, setSaving] = useState(false);
 
   const invalidateCoverCaches = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
     if (issue.key) {
-      queryClient.invalidateQueries({ queryKey: ["taskDetail", workspaceId, issue.key] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.detail(workspaceId, issue.key) });
     }
   }, [issue.key, queryClient, workspaceId]);
 

@@ -1,27 +1,32 @@
 "use client";
 
 import { useCallback, useEffect, useState, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/shared/components/common/components/Sidebar";
-import api from "@/lib/axiosIns";
-import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/shared/components/common/components/NotificationPanel";
 import { notificationService } from "@/common/services/notification.service";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 import { useWorkspaceRealtime } from "@/hooks/realtime/use-workspace-realtime";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import {
+  ChevronDown,
   LayoutDashboard,
   Loader2,
   Menu,
   Sun,
   Moon,
   Monitor,
+  Repeat,
+  Shield,
   User,
   Settings,
   LogOut,
+  X,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import appleIcon from "../apple-icon.png";
 import { usePathname, useRouter } from "next/navigation";
 import { Filters } from "@/modules/client/workspaces/types/filter.type";
@@ -30,6 +35,9 @@ import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdow
 
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
 import { useTheme } from "@/hooks/useTheme";
+import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
+import { useAccountSwitcherStore } from "@/common/stores/account-switcher.store";
+import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 
 type SearchAssigneeUser = {
   _id?: string;
@@ -63,22 +71,20 @@ const DEFAULT_FILTERS: Filters = {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
-  const {
-    currentWorkspace,
-    setWorkspaces,
-    workspaces,
-    workspacesLoaded,
-  } = useWorkspaceStore();
+  const queryClient = useQueryClient();
+  const { currentWorkspace, workspaces, isLoading: isWorkspacesLoading } = useCurrentWorkspace();
   const { theme, setTheme } = useTheme();
 
 
   // UI State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showSwitcher, setShowSwitcher] = useState(false);
+  const [hasFetchedSwitcher, setHasFetchedSwitcher] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const accountsCount = useAccountSwitcherStore((s) => s.accounts.length);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -91,6 +97,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
   const [isTaskSearchReady, setIsTaskSearchReady] = useState(false);
   const taskSearchHydrationPathRef = useRef<string | null>(null);
+  const { data: unreadNotificationCount = 0 } = useQuery({
+    queryKey: queryKeys.notifications.unreadCount(),
+    queryFn: () => notificationService.unreadCount(),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
 
   // Default workspace keys for search
   const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
@@ -145,6 +157,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         !userMenuRef.current.contains(e.target as Node)
       ) {
         setShowUserMenu(false);
+        setShowSwitcher(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -153,11 +166,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const refreshUnreadNotificationCount = useCallback(() => {
     if (!isAuthenticated) return;
-    notificationService
-      .unreadCount()
-      .then(setUnreadNotificationCount)
-      .catch(() => setUnreadNotificationCount(0));
-  }, [isAuthenticated]);
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+  }, [isAuthenticated, queryClient]);
 
   // Setup real-time connections
   useNotificationRealtime({
@@ -167,22 +177,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     onReadAll: refreshUnreadNotificationCount,
   });
   useWorkspaceRealtime({ enabled: isAuthenticated });
-
-  // Load workspaces on mount
-  useEffect(() => {
-    refreshUnreadNotificationCount();
-  }, [refreshUnreadNotificationCount]);
-
-  useEffect(() => {
-    if (isAuthenticated && !workspacesLoaded) {
-      api
-        .get(apiRoutes.WORKSPACES.BASE)
-        .then((res) => {
-          setWorkspaces(res.data?.data ?? res.data);
-        })
-        .catch(() => {});
-    }
-  }, [isAuthenticated, workspacesLoaded, setWorkspaces]);
 
   // Auth redirect
   useEffect(() => {
@@ -197,7 +191,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       setIsTaskSearchReady(false);
       return;
     }
-    if (!workspaceKey && !workspacesLoaded) return;
+    if (!workspaceKey && isWorkspacesLoading) return;
 
     const hydrationPath = pathname || "";
     if (taskSearchHydrationPathRef.current === hydrationPath) return;
@@ -242,7 +236,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [
     pathname,
     workspaceKey,
-    workspacesLoaded,
+    isWorkspacesLoading,
     defaultSearchWorkspaceKeys.join(","),
   ]);
 
@@ -418,71 +412,148 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* User avatar + dropdown */}
             <div className="relative" ref={userMenuRef}>
               <button
+                type="button"
                 onClick={() => setShowUserMenu((v) => !v)}
-                className="w-9 h-9 rounded-full overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] hover:ring-2 hover:ring-[#2563EB]/25 transition flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white text-sm font-medium"
+                className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-[#444444] dark:text-gray-200 transition hover:bg-[#DBEAFE] dark:hover:bg-white/10"
+                aria-label="User menu"
+                aria-expanded={showUserMenu}
               >
-                {user?.avatar ? (
-                  <img
-                    src={user.avatar}
-                    alt="avatar"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span>
-                    {user?.fullName?.charAt(0).toUpperCase() ??
+                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-sm font-semibold text-white">
+                  {user?.avatar ? (
+                    <img
+                      src={user.avatar}
+                      alt="avatar"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    user?.fullName?.charAt(0).toUpperCase() ??
                       user?.email?.charAt(0).toUpperCase() ??
-                      "U"}
-                  </span>
-                )}
+                      "U"
+                  )}
+                </div>
+                <span className="hidden max-w-36 truncate text-sm font-medium sm:block">
+                  {user?.fullName ?? user?.email}
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] py-1 z-50">
-                  <div className="px-4 py-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                    <p className="text-sm font-medium text-[#111111] dark:text-[#E8E8E7] truncate">
-                      {user?.fullName ?? "User"}
-                    </p>
-                    <p className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">
-                      {user?.email}
-                    </p>
+                <div className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-xl border border-[#EAEAEA] bg-white py-2 shadow-xl shadow-black/10 dark:border-white/[0.08] dark:bg-[#202020] dark:shadow-black/40">
+                  <div className="flex items-start gap-2 border-b border-[#EAEAEA] px-4 py-2 dark:border-white/[0.06]">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                        {user?.fullName ?? "User"}
+                      </p>
+                      <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">
+                        {user?.email}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowSwitcher((v) => !v)}
+                      title="Switch account"
+                      aria-label="Switch account"
+                      aria-expanded={showSwitcher}
+                      className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-md transition ${
+                        showSwitcher
+                          ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-indigo-500/15 dark:text-indigo-300"
+                          : "text-[#2563EB] hover:bg-[#EFF6FF] dark:text-indigo-300 dark:hover:bg-indigo-500/10"
+                      }`}
+                    >
+                      {showSwitcher ? <X className="h-3.5 w-3.5" /> : <Repeat className="h-4 w-4" />}
+                      {accountsCount > 0 && !showSwitcher && (
+                        <span className="absolute -right-0.5 -top-0.5 min-w-[14px] rounded-full bg-[#2563EB] px-1 text-[9px] font-semibold leading-[14px] text-white dark:bg-indigo-500">
+                          {accountsCount}
+                        </span>
+                      )}
+                    </button>
                   </div>
-                  <button
+
+                  {showSwitcher && (
+                    <div className="border-b border-[#EAEAEA] dark:border-white/[0.06]">
+                      <AccountSwitcher
+                        open={showSwitcher}
+                        hasFetched={hasFetchedSwitcher}
+                        setHasFetched={setHasFetchedSwitcher}
+                        onCloseMenu={() => {
+                          setShowUserMenu(false);
+                          setShowSwitcher(false);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#252525]"
                     onClick={() => {
-                      router.push("/dashboard");
                       setShowUserMenu(false);
+                      setShowSwitcher(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
-                    <LayoutDashboard className="w-4 h-4" /> Dashboard
-                  </button>
-                  <button
+                    <LayoutDashboard className="h-4 w-4 text-[#2563EB]" />
+                    Dashboard
+                  </Link>
+
+                  <Link
+                    href="/profile"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#252525]"
                     onClick={() => {
-                      router.push("/profile");
                       setShowUserMenu(false);
+                      setShowSwitcher(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
-                    <User className="w-4 h-4" /> Profile
-                  </button>
-                  <button
+                    <User className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                    Profile
+                  </Link>
+
+                  <Link
+                    href="/settings"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#252525]"
                     onClick={() => {
-                      router.push("/settings");
                       setShowUserMenu(false);
+                      setShowSwitcher(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                   >
-                    <Settings className="w-4 h-4" /> Settings
-                  </button>
-                  <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] my-1" />
-                  <button
-                    onClick={() => {
-                      logout();
-                      setShowUserMenu(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#9F2F2D] dark:text-[#F87171] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" /> Log out
-                  </button>
+                    <Settings className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                    Settings
+                  </Link>
+
+                  {IS_SUPER_ADMIN(user?.role) && (
+                    <div className="mt-2 border-t border-[#EAEAEA] pt-2 dark:border-white/[0.06]">
+                      <a
+                        href={ADMIN_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          setShowSwitcher(false);
+                        }}
+                        className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#2563EB] transition hover:bg-[#EFF6FF] dark:text-indigo-300 dark:hover:bg-indigo-500/10"
+                      >
+                        <Shield className="h-4 w-4" />
+                        Admin
+                        <span className="ml-auto text-[10px] uppercase tracking-wider text-[#9B9A97] dark:text-[#6B6B6B]">
+                          -&gt;
+                        </span>
+                      </a>
+                    </div>
+                  )}
+
+                  <div className="mt-2 border-t border-[#EAEAEA] pt-2 dark:border-white/[0.06]">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        setShowSwitcher(false);
+                        void logout();
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-red-500 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Log out
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -492,7 +563,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {showNotifications && (
           <NotificationPanel
             onClose={() => setShowNotifications(false)}
-            onUnreadCountChange={setUnreadNotificationCount}
+            onUnreadCountChange={(count) =>
+              queryClient.setQueryData(queryKeys.notifications.unreadCount(), count)
+            }
           />
         )}
 
