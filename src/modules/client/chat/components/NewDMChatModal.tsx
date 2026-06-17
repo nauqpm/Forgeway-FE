@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Search, User, Loader2, Users } from 'lucide-react';
-import { useCreateDM, useSearchUsers } from '@/modules/client/chat/hooks/useChatQueries';
-
+import { X, Search, User, Loader2 } from 'lucide-react';
+import { useSearchUsers, useCreateDM } from '../hooks/useChatQueries';
+import type { SearchUser } from '@/modules/client/chat/types/chat.types';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -13,6 +13,15 @@ interface NewChatModalProps {
 export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   const { data: users = [], isFetching: loading } = useSearchUsers(debouncedSearch);
   const createDMMutation = useCreateDM();
   const creating = createDMMutation.isPending;
@@ -25,30 +34,10 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    if (!search.trim()) {
-      setDebouncedSearch('');
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [isOpen, search]);
-
   const handleStartChat = async (targetUserId: string) => {
     if (!targetUserId) return;
     try {
-      const channel = await createDMMutation.mutateAsync(targetUserId);
-      console.log('DM Channel Created/Retrieved:', channel);
-      
-      if (!channel.members || channel.members.length === 0) {
-        console.warn('Backend returned DM channel without populated members!');
-      }
-
+      await createDMMutation.mutateAsync(targetUserId);
       onClose();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -93,24 +82,19 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
               <Loader2 className="w-6 h-6 animate-spin" />
               <p className="text-xs">Loading...</p>
             </div>
-          ) : !search ? (
-            <div className="py-12 text-center text-[#787774] flex flex-col items-center justify-center gap-2">
-              <Users className="w-8 h-8 opacity-30 text-[#ABABAB] mb-1" />
-              <p className="text-sm font-medium">Search by name, email, or phone</p>
-            </div>
           ) : users.length === 0 ? (
             <div className="py-10 text-center text-[#787774]">
-              <p className="text-sm italic">No users found matching &quot;{search}&quot;</p>
+              <p className="text-sm italic">
+                {search ? `No users found matching "${search}"` : 'No users available'}
+              </p>
             </div>
           ) : (
             <div className="space-y-0.5">
-              {users.map((user, idx) => (
+              {users.map((user: SearchUser, idx: number) => (
                 <button
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  key={user._id || (user as any).id || `u-${idx}`}
+                  key={user._id || user.id || `u-${idx}`}
                   disabled={creating}
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  onClick={() => handleStartChat(user._id || (user as any).id)}
+                  onClick={() => handleStartChat(user._id || user.id || '')}
                   className="w-full flex items-center gap-3 p-2.5 rounded-[8px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors group text-left disabled:opacity-50"
                 >
                   <div className="w-10 h-10 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-bold shadow-sm overflow-hidden">
