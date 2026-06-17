@@ -7,7 +7,6 @@ import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
 import StickerPicker from './StickerPicker';
 import { toast } from 'react-hot-toast';
-import { useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axiosIns';
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -20,7 +19,6 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   const [content, setContent] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
-  const queryClient = useQueryClient();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef<number>(0);
   const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);

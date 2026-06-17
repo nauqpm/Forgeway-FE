@@ -42,8 +42,8 @@ export const useSelectionHandlers = ({
   const handleBulkStatusChange = (newStatus: string) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, status: newStatus } : i));
     selectedTaskIds.forEach((taskId) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       taskService
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .updateBoardTask(workspaceId, taskId, { status: newStatus } as any)
         .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() }))
         .catch(console.error);
@@ -54,8 +54,8 @@ export const useSelectionHandlers = ({
   const handleBulkMoveSprint = (sprintId: string | null) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, sprintId } : i));
     selectedTaskIds.forEach((taskId) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       taskService
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .updateBoardTask(workspaceId, taskId, { sprintId } as any)
         .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() }))
         .catch(console.error);

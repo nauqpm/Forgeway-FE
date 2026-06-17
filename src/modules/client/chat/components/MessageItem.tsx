@@ -2,10 +2,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '@/stores/chatStore';
-import type { ChatUser, Message } from '@/modules/client/chat/types/chat.types';
+import type { ChatUser, Message, Channel } from '@/modules/client/chat/types/chat.types';
 import { format } from 'date-fns';
 import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle } from 'lucide-react';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
+import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
@@ -32,8 +33,8 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
 
   const activeChannelId = useChatStore(state => state.activeChannelId);
-  const channels = useChatStore(state => state.channels);
-  const activeChannel = channels.find(c => c._id === activeChannelId);
+  const { data: channels = [] } = useChatChannels();
+  const activeChannel = channels.find((c: Channel) => c._id === activeChannelId);
   const channelMembers = activeChannel?.members || [];
 
   const getReactionTooltip = (userIds: string[]) => {
@@ -41,7 +42,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
       if (String(id) === String(currentUserId)) {
         return 'You';
       }
-      const member = channelMembers.find(m => String(m._id || (m as { id?: string }).id) === String(id));
+      const member = channelMembers.find((m: ChatUser) => String(m._id || (m as { id?: string }).id) === String(id));
       return member ? (member.fullName || member.email) : 'Unknown User';
     });
     return names.join('\n');
