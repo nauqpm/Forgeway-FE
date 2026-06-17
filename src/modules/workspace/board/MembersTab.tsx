@@ -13,7 +13,7 @@ import InviteModal from "@/modules/admin-shared/components/common/components/Inv
 import {
   inviteService,
   PendingInvite,
-} from "@/modules/client/workspaces/services/inviteService";
+} from "@/modules/workspace/shared/services/inviteService";
 import { extractApiError } from "@/shared/utils/apiError";
 import { queryKeys } from "@/shared/constants/queryKeys";
 

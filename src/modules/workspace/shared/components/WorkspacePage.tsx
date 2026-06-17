@@ -9,7 +9,7 @@ import Tabs from "@/modules/workspace/shared/components/Tabs";
 import WorkspaceModals from "./WorkspaceModals";
 import { getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
-import type { useWorkspacePage } from "@/modules/client/workspaces/hooks/useWorkspacePage";
+import type { useWorkspacePage } from "@/modules/workspace/shared/hooks/useWorkspacePage";
 
 const BulkActionBar = dynamic(
   () => import("@/modules/admin-shared/components/common/components/BulkActionBar"),

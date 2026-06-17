@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { ADMIN_URL } from "@/lib/admin-url";
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
-import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
+import AccountSwitcher from "@/shared/components/layout/account-switcher/AccountSwitcher";
 
 export default function Header() {
   const { isAuthenticated, isLoading, user, logout } = useAuth();

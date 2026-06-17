@@ -6,7 +6,7 @@ import { LayoutDashboard, User, Settings, LogOut, Repeat, Shield, X } from "luci
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
-import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
+import AccountSwitcher from "@/shared/components/layout/account-switcher/AccountSwitcher";
 
 interface UserMenuProps {
   className?: string;

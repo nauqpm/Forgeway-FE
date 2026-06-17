@@ -4,7 +4,7 @@ import { Loader2, Trash2, UserPlus, Users, X } from "lucide-react";
 
 import InviteModal from "@/modules/admin-shared/components/common/components/InviteModal";
 import RoleChanger from "@/modules/workspace/shared/components/RoleChanger";
-import { PendingInvite } from "@/modules/client/workspaces/services/inviteService";
+import { PendingInvite } from "@/modules/workspace/shared/services/inviteService";
 import {
   WorkspaceMember,
   InviteRole,

@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
+import { resolveWorkspaceFromRouteKey } from "@/modules/workspace/shared/services/resolveWorkspace";
 import {
   WorkspaceInfo,
   WorkspaceSettingsForm,

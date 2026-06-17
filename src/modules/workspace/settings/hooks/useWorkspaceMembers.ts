@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { inviteService, PendingInvite } from "@/modules/client/workspaces/services/inviteService";
+import { inviteService, PendingInvite } from "@/modules/workspace/shared/services/inviteService";
 import {
   WorkspaceMember,
   InviteRole,

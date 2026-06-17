@@ -37,7 +37,7 @@ import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHa
 import { useTheme } from "@/shared/hooks/useTheme";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
-import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
+import AccountSwitcher from "@/shared/components/layout/account-switcher/AccountSwitcher";
 
 type SearchAssigneeUser = {
   _id?: string;
