@@ -41,7 +41,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
       const member = channelMembers.find(m => String(m._id || (m as { id?: string }).id) === String(id));
       return member ? (member.fullName || member.email) : 'Unknown User';
     });
-    return names.join(', ');
+    return names.join('\n');
   };
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
