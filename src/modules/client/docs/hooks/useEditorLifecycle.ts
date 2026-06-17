@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditor, Editor } from "@tiptap/react";
 import { getEditorExtensions, getCollaborativeEditorExtensions } from "../editor/editorExtensions";
 import type * as Y from "yjs";
-import imageService from "@/common/services/imageService";
+import imageService from "@/shared/utils/imageService";
 import { toast } from "react-hot-toast";
 import { EditorView } from "@tiptap/pm/view";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 
 const tabLoading = () => <LoadingSpinner />;
 

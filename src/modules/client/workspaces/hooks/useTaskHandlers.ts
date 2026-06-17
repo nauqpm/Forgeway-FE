@@ -1,10 +1,10 @@
 import { useRef, useCallback } from "react";
 import { useQueryClient, type QueryKey } from "@tanstack/react-query";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
 import { toast } from "react-hot-toast";
-import { extractApiError } from "@/common/utils/apiError";
+import { extractApiError } from "@/shared/utils/apiError";
 
 interface CreateIssueForm {
   title: string;

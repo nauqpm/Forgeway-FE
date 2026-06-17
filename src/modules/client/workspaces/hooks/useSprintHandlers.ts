@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { sprintService } from "../services/sprintService";
 import { Sprint, CreateSprintInput, UpdateSprintInput } from "../types/sprint.type";
 import { toast } from "react-hot-toast";

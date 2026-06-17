@@ -3,7 +3,7 @@
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { pagesService } from "../services/pages.service";
 import type { DocumentVersion } from "../types/docs.type";
 

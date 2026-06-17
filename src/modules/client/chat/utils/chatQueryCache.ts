@@ -1,5 +1,5 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 import type { Channel, Message, MessagesPage } from '@/modules/client/chat/types/chat.types';
 
 const getMessageId = (message: Pick<Message, '_id' | 'id'>) => message._id || message.id;

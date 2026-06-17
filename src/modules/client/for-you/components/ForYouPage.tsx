@@ -6,7 +6,7 @@ import { ArrowRight, BookOpen, LayoutDashboard, Loader2, Plus } from "lucide-rea
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
 
 export type ForYouWorkspace = {

@@ -3,8 +3,8 @@ import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { taskCoverService } from "../services/taskCoverService";
 import type { TaskCover } from "../types/task-cover.type";
-import { extractApiError } from "@/common/utils/apiError";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { extractApiError } from "@/shared/utils/apiError";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 type CoverableIssue = {
   id: string;

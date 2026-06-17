@@ -13,8 +13,8 @@ import {
 import { CheckSquare, Columns, FileText, MoreHorizontal, Search } from "lucide-react";
 
 import { Issue } from "../../../types/issue.type";
-import CustomDatePicker from "@/common/components/CustomDatePicker";
-import StatusPicker from "@/common/components/StatusPicker";
+import CustomDatePicker from "@/shared/components/CustomDatePicker";
+import StatusPicker from "@/shared/components/StatusPicker";
 
 type BoardColumn = { id: string; name: string; order: number; mappedStatuses?: string[]; isDone?: boolean };
 

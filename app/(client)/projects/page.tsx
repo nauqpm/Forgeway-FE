@@ -1,7 +1,7 @@
 "use client";
 
 import { usePageTitle } from "@/hooks/usePageTitle";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import { useProjectsPage } from "@/modules/client/projects/hooks/useProjectsPage";
 import ProjectsView from "@/modules/client/projects/components/ProjectsView";
 

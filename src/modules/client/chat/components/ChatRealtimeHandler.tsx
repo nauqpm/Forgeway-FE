@@ -13,7 +13,7 @@ import {
   upsertChannelInCache,
   upsertMessageInCache,
 } from '@/modules/client/chat/utils/chatQueryCache';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import type { Channel, Message } from '@/modules/client/chat/types/chat.types';

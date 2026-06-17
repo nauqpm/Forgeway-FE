@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import { useProjectDetailPage } from "@/modules/client/projects/hooks/useProjectDetailPage";
 import ProjectDetailView from "@/modules/client/projects/components/ProjectDetailView";
 

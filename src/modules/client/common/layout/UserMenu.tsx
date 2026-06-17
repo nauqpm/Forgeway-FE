@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { LayoutDashboard, User, Settings, LogOut, Repeat, Shield, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
-import { useAccountSwitcherStore } from "@/common/stores/account-switcher.store";
+import { useAccountSwitcherStore } from "@/shared/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 
 interface UserMenuProps {

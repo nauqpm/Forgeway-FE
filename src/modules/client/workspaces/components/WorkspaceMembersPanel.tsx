@@ -2,7 +2,7 @@
 
 import { useState, useEffect, MouseEvent } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { Users, UserPlus, Search, X, Loader2, ChevronDown, Trash2, ShieldCheck } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/lib/axiosIns";

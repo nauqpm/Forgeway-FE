@@ -16,7 +16,7 @@ import { getWorkspaceTemplate } from "@/modules/client/workspaces/types/workspac
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import type { BoardColumn } from "@/modules/client/workspaces/types/board.type";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 export default function TaskDetailDeepLinkPage() {
   usePageTitle("Task Detail");

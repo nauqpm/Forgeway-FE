@@ -6,7 +6,7 @@ import { Clock, Loader2 } from "lucide-react";
 
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import type { TaskLabel } from "../types/label.type";
 import { labelService } from "../services/labelService";
 import { taskService, TaskActivity } from "../services/taskService";

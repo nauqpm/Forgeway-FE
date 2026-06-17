@@ -8,7 +8,7 @@ import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { WORKSPACE_EVENTS } from '@/lib/socket/socket.events';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 import {
   mapWorkspacePayload,
   removeWorkspace,

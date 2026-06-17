@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Camera, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
-import CustomDatePicker from "@/common/components/CustomDatePicker";
+import CustomDatePicker from "@/shared/components/CustomDatePicker";
 import type {
   AppUserProfile,
   UpdateProfilePayload,

@@ -3,14 +3,14 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { BookOpen, Plus, Globe, Lock, ChevronRight, Columns, Repeat } from "lucide-react";
 import type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
 import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 
 const getWorkspaceType = (workspace: Workspace) =>

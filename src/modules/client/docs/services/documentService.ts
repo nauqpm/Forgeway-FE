@@ -4,7 +4,7 @@ import api from '@/lib/axiosIns';
 import { apiRoutes } from "@/config/apiRoutes";
 import { DocumentItem } from "../types/document.type";
 import type { DocumentVersion } from "../types/docs.type";
-import { extractResponseData } from "@/common/utils/apiError";
+import { extractResponseData } from "@/shared/utils/apiError";
 
 /**
  * Normalize API response to extract data from various response envelope formats

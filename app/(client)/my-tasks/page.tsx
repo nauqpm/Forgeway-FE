@@ -3,7 +3,7 @@
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useMyTasksPage } from "@/modules/client/my-tasks/hooks/useMyTasksPage";
 import MyTasksView from "@/modules/client/my-tasks/components/MyTasksView";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 
 export default function MyTasksPage() {
   usePageTitle("My Tasks");

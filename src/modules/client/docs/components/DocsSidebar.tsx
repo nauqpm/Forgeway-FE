@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { toast } from "react-hot-toast";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 
 export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {

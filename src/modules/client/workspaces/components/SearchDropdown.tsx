@@ -6,7 +6,7 @@ import { useQueries } from "@tanstack/react-query";
 import { Filters, TaskFilters } from "../types/filter.type";
 import { taskService } from "../services/taskService";
 import { useCurrentWorkspace } from "../hooks/useWorkspaces";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import RecentItem from "./RecentItem";
 import TaskFilterPanel from "./TaskFilterPanel";
 

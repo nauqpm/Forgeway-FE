@@ -24,7 +24,7 @@ import {
   upsertAttachment,
   upsertComment,
 } from './task-detail-cache.utils';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 
 type TaskDetailEventData = {
   workspaceId: string;

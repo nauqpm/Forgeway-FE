@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
 import Header from "@/modules/client/workspaces/components/common/Header";
 import Tabs from "@/modules/client/workspaces/components/common/Tabs";
@@ -12,7 +12,7 @@ import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import type { useWorkspacePage } from "@/modules/client/workspaces/hooks/useWorkspacePage";
 
 const BulkActionBar = dynamic(
-  () => import("@/modules/shared/components/common/components/BulkActionBar"),
+  () => import("@/modules/admin-shared/components/common/components/BulkActionBar"),
   { ssr: false },
 );
 

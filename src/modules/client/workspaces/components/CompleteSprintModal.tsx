@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 import { sprintService } from '../services/sprintService';
 import { Sprint } from '../types/sprint.type';
 

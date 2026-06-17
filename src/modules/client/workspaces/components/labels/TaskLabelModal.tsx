@@ -4,12 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { Check, Loader2, Plus, Search, Tag, Trash2, X } from "lucide-react";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import type { Issue } from "../../types/issue.type";
 import type { TaskLabel } from "../../types/label.type";
 import { labelService } from "../../services/labelService";
 import { taskService } from "../../services/taskService";
-import { extractApiError } from "@/common/utils/apiError";
+import { extractApiError } from "@/shared/utils/apiError";
 
 type TaskLabelModalProps = {
   isOpen: boolean;

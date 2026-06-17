@@ -9,13 +9,13 @@ import { apiRoutes } from "@/config/apiRoutes";
 import RoleChanger, {
   WorkspaceRoleValue,
 } from "@/modules/client/workspaces/components/RoleChanger";
-import InviteModal from "@/modules/shared/components/common/components/InviteModal";
+import InviteModal from "@/modules/admin-shared/components/common/components/InviteModal";
 import {
   inviteService,
   PendingInvite,
 } from "@/modules/client/workspaces/services/inviteService";
-import { extractApiError } from "@/common/utils/apiError";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { extractApiError } from "@/shared/utils/apiError";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 interface MemberUser {
   _id: string;

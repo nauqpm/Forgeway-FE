@@ -5,10 +5,10 @@ import { toast } from "react-hot-toast";
 import AssigneePicker, {
   resolveMemberName,
   toAssigneePickerUsers,
-} from "@/common/components/AssigneePicker";
-import TypePicker from "@/common/components/TypePicker";
-import PriorityPicker from "@/common/components/PriorityPicker";
-import CustomDatePicker from "@/common/components/CustomDatePicker";
+} from "@/shared/components/AssigneePicker";
+import TypePicker from "@/shared/components/TypePicker";
+import PriorityPicker from "@/shared/components/PriorityPicker";
+import CustomDatePicker from "@/shared/components/CustomDatePicker";
 import TaskLabelsField from "./labels/TaskLabelsField";
 import {
   toDateInputValue,

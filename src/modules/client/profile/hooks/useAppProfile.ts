@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axiosIns";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import type { AppUserProfile, UpdateProfilePayload, ChangePasswordPayload } from "../types/profile.types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB

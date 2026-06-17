@@ -2,10 +2,10 @@
 
 import { FileText, X } from "lucide-react";
 import { Workspace } from "../../types/workspace.type";
-import StatusPicker from "@/common/components/StatusPicker";
-import TypePicker from "@/common/components/TypePicker";
-import PriorityPicker from "@/common/components/PriorityPicker";
-import AssigneePicker, { toAssigneePickerUsers, AssigneePickerMember } from "@/common/components/AssigneePicker";
+import StatusPicker from "@/shared/components/StatusPicker";
+import TypePicker from "@/shared/components/TypePicker";
+import PriorityPicker from "@/shared/components/PriorityPicker";
+import AssigneePicker, { toAssigneePickerUsers, AssigneePickerMember } from "@/shared/components/AssigneePicker";
 import { BoardColumn } from "../../types/board.type";
 
 type CreateTaskModalProps = {

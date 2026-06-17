@@ -12,11 +12,11 @@ import {
 import { TaskDetailResponse } from "../types/task-detail.type";
 import type { Issue } from "../types/issue.type";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
-import StatusPicker from "@/common/components/StatusPicker";
+import StatusPicker from "@/shared/components/StatusPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
-import { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
+import { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
 import {
   getUserDisplayName,
   formatDateTime,

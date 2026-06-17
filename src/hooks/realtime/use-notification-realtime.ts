@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { NOTIFICATION_EVENTS } from '@/lib/socket/socket.events';
 import type { RealtimeEnvelope } from '@/lib/socket/socket.types';
-import type { AppNotification } from '@/common/services/notification.service';
+import type { AppNotification } from '@/modules/notifications/services/notification.service';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
 type NotificationEventData = {

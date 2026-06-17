@@ -37,7 +37,7 @@ import {
   Search,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import imageService from "@/common/services/imageService";
+import imageService from "@/shared/utils/imageService";
 import { useToolbarState } from "../hooks/useToolbarState";
 import LinkEditorPopover from "./LinkEditorPopover";
 import TableGridPicker from "./TableGridPicker";

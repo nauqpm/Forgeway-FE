@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { toast } from "react-hot-toast";
-import CustomDatePicker from '@/common/components/CustomDatePicker';
+import CustomDatePicker from '@/shared/components/CustomDatePicker';
 
 interface SprintModalProps {
   isOpen: boolean;

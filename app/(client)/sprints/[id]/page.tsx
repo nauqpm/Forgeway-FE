@@ -4,7 +4,7 @@ import { use } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useSprintDetailPage } from "@/modules/client/sprints/hooks/useSprintDetailPage";
 import SprintDetailView from "@/modules/client/sprints/components/SprintDetailView";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 
 export default function SprintDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

@@ -3,19 +3,19 @@
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Trash2 } from "lucide-react";
-import AssigneePicker, { toAssigneePickerUsers } from "../../../../../common/components/AssigneePicker";
+import AssigneePicker, { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
 import { useMemo } from "react";
 import FilterMenu from "../FilterMenu";
-import StatusPicker from "@/common/components/StatusPicker";
-import PriorityPicker from "@/common/components/PriorityPicker";
-import TypePicker from "@/common/components/TypePicker";
+import StatusPicker from "@/shared/components/StatusPicker";
+import PriorityPicker from "@/shared/components/PriorityPicker";
+import TypePicker from "@/shared/components/TypePicker";
 import { compareIssueRank } from "../../utils/dragUtils";
 import type { BoardColumn } from "../../types/board.type";
 import { Sprint } from "../../types/sprint.type";
 import type { Issue } from "../../types/issue.type";
 import type { Workspace } from "../../types/workspace.type";
 import type { Filters } from "../../types/filter.type";
-import type { AssigneePickerUser } from "../../../../../common/components/AssigneePicker";
+import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
 
 type BacklogTabProps = {
   data: {

@@ -11,13 +11,13 @@ import {
 } from "lucide-react";
 import { TaskDetailResponse } from "../types/task-detail.type";
 import TaskCoverBanner from "./covers/TaskCoverBanner";
-import StatusPicker from "@/common/components/StatusPicker";
+import StatusPicker from "@/shared/components/StatusPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
 import { getUserDisplayName, formatDateTime, type WorkspaceMember, type SprintOption } from "./task-detail-shared";

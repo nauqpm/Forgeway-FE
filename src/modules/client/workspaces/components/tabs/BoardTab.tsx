@@ -23,8 +23,8 @@ import {
   X,
   PlayCircle,
 } from "lucide-react";
-import AssigneePicker from "@/common/components/AssigneePicker";
-import type { AssigneePickerUser } from "@/common/components/AssigneePicker";
+import AssigneePicker from "@/shared/components/AssigneePicker";
+import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
 
 const normalizeObjectId = (value: unknown): string => {
   if (!value) return "";

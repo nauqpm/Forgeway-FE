@@ -10,7 +10,7 @@ import { taskService, TaskComment } from "../services/taskService";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 type MentionMember = {
   id: string;

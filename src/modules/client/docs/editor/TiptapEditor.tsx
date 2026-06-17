@@ -34,7 +34,7 @@ import VersionHistorySidebar from "./VersionHistorySidebar";
 import SuggestionsSidebar from "./SuggestionsSidebar";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 
-import { extractApiError } from "@/common/utils/apiError";
+import { extractApiError } from "@/shared/utils/apiError";
 
 export type EditorMode = "read" | "edit";
 

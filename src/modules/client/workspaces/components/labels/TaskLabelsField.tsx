@@ -7,7 +7,7 @@ import type { Issue } from "../../types/issue.type";
 import type { TaskDetailResponse } from "../../types/task-detail.type";
 import type { TaskLabel } from "../../types/label.type";
 import TaskLabelModal from "./TaskLabelModal";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 type TaskLabelsFieldProps = {
   workspaceId: string;

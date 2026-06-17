@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { DocumentItem } from "../types/document.type";
 import { documentService } from "../services/documentService";
 import OnlineDocumentEditorModal from "./OnlineDocumentEditorModal";

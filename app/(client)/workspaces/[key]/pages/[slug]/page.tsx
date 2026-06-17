@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Edit3, Clock, Eye } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import { useDocumentBySlugQuery } from "@/modules/client/docs/hooks/useWorkspaceDocs";
 
 export default function PageViewPage() {

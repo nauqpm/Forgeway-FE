@@ -7,7 +7,7 @@ import { realtimeSocketClient } from '@/lib/socket/socket.client';
 import { TASK_EVENTS } from '@/lib/socket/socket.events';
 import type { RealtimeEnvelope } from '@/lib/socket/socket.types';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 import type { Issue } from '@/modules/client/workspaces/types/issue.type';
 import {
   findTaskInCache,

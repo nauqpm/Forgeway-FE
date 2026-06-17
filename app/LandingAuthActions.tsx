@@ -21,11 +21,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
-import NotificationPanel from "@/common/components/NotificationPanel";
-import { notificationService } from "@/common/services/notification.service";
+import NotificationPanel from "@/modules/notifications/components/NotificationPanel";
+import { notificationService } from "@/modules/notifications/services/notification.service";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
-import { useAccountSwitcherStore } from "@/common/stores/account-switcher.store";
+import { useAccountSwitcherStore } from "@/shared/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 
 function ThemeToggleButton() {

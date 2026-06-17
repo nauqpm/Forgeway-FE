@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 export default function CreateWorkspacePage({ params }: { params: Promise<{ key: string }> }) {
   usePageTitle("New Page");

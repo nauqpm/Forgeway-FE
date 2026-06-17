@@ -6,7 +6,7 @@ import { BoardColumn } from "@/modules/client/workspaces/types/board.type";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { LEGACY_EVENTS } from "@/lib/socket/socket.events";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 type BoardCacheData = {
   boardId: string;

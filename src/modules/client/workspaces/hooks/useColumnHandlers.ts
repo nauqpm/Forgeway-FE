@@ -1,6 +1,6 @@
 import { RefObject } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { boardService } from "../services/boardService";
 import { BoardColumn } from "../types/board.type";
 import { toast } from "react-hot-toast";

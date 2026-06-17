@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
-import Sidebar from "@/modules/shared/components/common/components/Sidebar";
-import NotificationPanel from "@/modules/shared/components/common/components/NotificationPanel";
-import { notificationService } from "@/common/services/notification.service";
-import { queryKeys } from "@/common/constants/queryKeys";
+import Sidebar from "@/modules/admin-shared/components/common/components/Sidebar";
+import NotificationPanel from "@/modules/admin-shared/components/common/components/NotificationPanel";
+import { notificationService } from "@/modules/notifications/services/notification.service";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 import { useWorkspaceRealtime } from "@/hooks/realtime/use-workspace-realtime";
 import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
@@ -36,7 +36,7 @@ import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdow
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
 import { useTheme } from "@/hooks/useTheme";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
-import { useAccountSwitcherStore } from "@/common/stores/account-switcher.store";
+import { useAccountSwitcherStore } from "@/shared/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 
 type SearchAssigneeUser = {

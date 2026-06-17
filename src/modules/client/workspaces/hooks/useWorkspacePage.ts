@@ -28,7 +28,7 @@ import {
   getUserEmail,
   sameNonEmpty,
 } from "@/modules/client/workspaces/utils/workspaceUtils";
-import { toAssigneePickerUsers } from "@/common/components/AssigneePicker";
+import { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
 
 export function useWorkspacePage(workspaceKey: string, tab: string[] | undefined) {
   const { user } = useAuth();

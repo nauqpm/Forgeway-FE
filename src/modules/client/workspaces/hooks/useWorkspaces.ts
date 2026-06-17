@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import { workspaceService } from "../services/workspaceService";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import type { Workspace } from "../types/workspace.type";

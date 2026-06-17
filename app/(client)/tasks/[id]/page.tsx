@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useTaskDetailPage } from "@/modules/client/tasks/hooks/useTaskDetailPage";
 import TaskDetailView from "@/modules/client/tasks/components/TaskDetailView";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 
 export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
