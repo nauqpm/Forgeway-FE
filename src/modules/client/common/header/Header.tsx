@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { ADMIN_URL } from "@/lib/admin-url";
-import { useAccountSwitcherStore } from "@/shared/stores/account-switcher.store";
+import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 
 export default function Header() {

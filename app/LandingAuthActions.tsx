@@ -25,7 +25,7 @@ import NotificationPanel from "@/modules/notifications/components/NotificationPa
 import { notificationService } from "@/modules/notifications/services/notification.service";
 import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
-import { useAccountSwitcherStore } from "@/shared/stores/account-switcher.store";
+import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 
 function ThemeToggleButton() {

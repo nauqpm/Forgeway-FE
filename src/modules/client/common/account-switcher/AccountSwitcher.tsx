@@ -3,7 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { LogIn, Repeat, UserCircle2, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useAccountSwitcherStore } from "@/shared/stores/account-switcher.store";
+import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import type { SavedAccount } from "@/modules/auth/services/account-switcher.service";
 
 function fmtTime(d: string | Date): string {

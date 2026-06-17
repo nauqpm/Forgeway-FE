@@ -36,7 +36,7 @@ import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdow
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
-import { useAccountSwitcherStore } from "@/shared/stores/account-switcher.store";
+import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
 
 type SearchAssigneeUser = {
