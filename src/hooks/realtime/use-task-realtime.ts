@@ -78,6 +78,7 @@ export function useTaskRealtime(
             exact: true,
           });
         }
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
         return;
       }
 
@@ -112,6 +113,7 @@ export function useTaskRealtime(
           (current: Issue | undefined) => current ? { ...current, ...issue } : current
         );
       }
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
       onTaskUpserted?.(issue);
     };
 
@@ -176,6 +178,7 @@ export function useTaskRealtime(
               (current: Issue | undefined) => current ? { ...current, ...issue } : current
             );
           }
+          queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
           onTaskUpserted?.(issue);
         });
       } catch {

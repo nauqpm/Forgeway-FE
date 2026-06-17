@@ -86,6 +86,7 @@ export default function TaskDetailDeepLinkPage() {
       queryClient.setQueryData(queryKeys.tasks.detail(workspaceKey, taskKey), (current: typeof taskDetailQuery.data) =>
         current ? { ...current, issue: refreshedIssue } : current,
       );
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
     },
   });
 

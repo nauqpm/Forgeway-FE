@@ -100,6 +100,45 @@ const resolveStatusLabel = (issue: Issue, columnMap: Record<string, string> = {}
   return "No status";
 };
 
+const normalizeStatusKey = (value?: string | null) =>
+  (value ?? "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+
+const isDoneStatusKey = (value?: string | null) => {
+  const normalized = normalizeStatusKey(value);
+  return normalized === "done" || normalized === "completed" || normalized === "complete";
+};
+
+const getDoneColumnIds = (columns: BoardColumn[] = []) => {
+  const doneColumnIds = new Set<string>();
+
+  for (const column of columns) {
+    const mongoId = (column as BoardColumn & { _id?: string })._id;
+    const isDoneColumn =
+      column.isDone ||
+      isDoneStatusKey(column.name) ||
+      column.mappedStatuses?.some(isDoneStatusKey);
+
+    if (!isDoneColumn) continue;
+    if (column.id) doneColumnIds.add(column.id);
+    if (mongoId) doneColumnIds.add(mongoId);
+  }
+
+  return doneColumnIds;
+};
+
+const isDoneIssue = (
+  issue: Issue,
+  columnMap: Record<string, string> = {},
+  doneColumnIds: Set<string> = new Set(),
+) => {
+  if (isDoneStatusKey(issue.status) || isDoneStatusKey(issue.columnId)) return true;
+  if (issue.status && doneColumnIds.has(issue.status)) return true;
+  if (issue.columnId && doneColumnIds.has(issue.columnId)) return true;
+  if (issue.status && isDoneStatusKey(columnMap[issue.status])) return true;
+  if (issue.columnId && isDoneStatusKey(columnMap[issue.columnId])) return true;
+  return false;
+};
+
 const toDashboardTask = (
   issue: Issue,
   workspace: ForYouWorkspace,
@@ -151,20 +190,32 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
       const userStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
 
       if (!user?.id || workspaces.length === 0) {
-        return { workspaces, userStats, assignedTasks: [] as DashboardTask[], workedTasks: [] as DashboardTask[] };
+        return {
+          workspaces,
+          userStats,
+          assignedTasks: [] as DashboardTask[],
+          completedAssignedTasks: [] as DashboardTask[],
+        };
       }
 
       const workspaceDataList = await Promise.all(
         workspaces.slice(0, 6).map(async (workspace) => {
           const workspaceId = workspaceIdOf(workspace);
-          if (!workspaceId) return { tasks: [] as Issue[], columnMap: {} as Record<string, string>, workspace };
+          if (!workspaceId) {
+            return {
+              tasks: [] as Issue[],
+              columnMap: {} as Record<string, string>,
+              doneColumnIds: new Set<string>(),
+              workspace,
+            };
+          }
 
           const [tasks, boardData] = await Promise.all([
             taskService
               .getBoardTasks(workspaceId, {
                 assigneeId: user.id,
                 page: 1,
-                limit: 5,
+                limit: 100,
                 sortBy: "updatedAt",
                 sortOrder: "desc",
               })
@@ -179,7 +230,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
             if (mongoId) columnMap[mongoId] = col.name;
           }
 
-          return { tasks, columnMap, workspace };
+          return { tasks, columnMap, doneColumnIds: getDoneColumnIds(boardData.columns), workspace };
         }),
       );
 
@@ -195,36 +246,19 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         .flat()
         .slice(0, 10);
 
-      const rawWorked: DashboardActivity[] = Array.isArray(userStats?.recentActivity)
-        ? userStats.recentActivity
-        : Array.isArray(userStats?.recentlyCompleted)
-          ? userStats.recentlyCompleted
-          : [];
-
-      const workedTasks = rawWorked
-        .map((activity) => {
-          const rawWsId =
-            typeof activity.workspaceId === "string"
-              ? activity.workspaceId
-              : (activity.workspaceId?._id ?? activity.workspaceId?.id ?? "");
-          const workspace = workspaces.find((item) => workspaceIdOf(item) === rawWsId) || workspaces[0];
-          if (!workspace) return null;
-          const proxy = {
-            id: activity._id ?? activity.id ?? "",
-            key: activity.key ?? "",
-            title: activity.title ?? "",
-            columnId: activity.columnId ?? "",
-            status: activity.status ?? "",
-          } as Issue;
-          return toDashboardTask(proxy, workspace, "worked", globalColumnMap);
-        })
-        .filter(Boolean) as DashboardTask[];
+      const completedAssignedTasks = workspaceDataList
+        .map(({ tasks, workspace, columnMap, doneColumnIds }) =>
+          (tasks as Issue[])
+            .filter((task) => isDoneIssue(task, columnMap, doneColumnIds))
+            .map((task) => toDashboardTask(task, workspace, "worked", globalColumnMap)),
+        )
+        .flat();
 
       return {
         workspaces,
         userStats,
         assignedTasks,
-        workedTasks: workedTasks.slice(0, 10),
+        completedAssignedTasks,
       };
     },
   });
@@ -232,7 +266,10 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
 
   const workspaces = useMemo(() => dashboardQuery.data?.workspaces ?? [], [dashboardQuery.data?.workspaces]);
   const assignedTasks = useMemo(() => dashboardQuery.data?.assignedTasks ?? [], [dashboardQuery.data?.assignedTasks]);
-  const workedTasks = useMemo(() => dashboardQuery.data?.workedTasks ?? [], [dashboardQuery.data?.workedTasks]);
+  const completedAssignedTasks = useMemo(
+    () => dashboardQuery.data?.completedAssignedTasks ?? [],
+    [dashboardQuery.data?.completedAssignedTasks],
+  );
 
   const displayWorkspaces = useMemo(() => workspaces.slice(0, 4).map(toWorkspaceCard), [workspaces]);
 
@@ -351,7 +388,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
           </div>
           <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
             <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recently completed</p>
-            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{workedTasks.length}</p>
+            <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{completedAssignedTasks.length}</p>
           </div>
           <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
             <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recommended workspaces</p>
@@ -428,6 +465,9 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
                   if (wsId && updatedIssue.id) {
                     await taskService.updateBoardTask(wsId, updatedIssue.id, updatedIssue);
                     setSelectedTaskDetail({ ...selectedTaskDetail, ...updatedIssue });
+                    await queryClient.invalidateQueries({
+                      queryKey: queryKeys.admin.dashboardForUser(user?.id ?? "anonymous"),
+                    });
                   }
                 }}
                 onArchiveIssue={handleArchiveIssue}
