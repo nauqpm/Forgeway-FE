@@ -9,7 +9,7 @@ import { BookOpen, Plus, Globe, Lock, ChevronRight, Columns, Repeat } from "luci
 import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
-import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 

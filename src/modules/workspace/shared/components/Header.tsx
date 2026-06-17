@@ -11,10 +11,10 @@ import {
   MessageSquare,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { Workspace } from "../../types/workspace.type";
+import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import InviteModal from "@/modules/admin-shared/components/common/components/InviteModal";
-import { workspaceService } from "../../services/workspaceService";
-import type { WorkspaceSampleAvatar } from "../../utils/workspaceAvatar";
+import { workspaceService } from "@/modules/workspace/shared/services/workspaceService";
+import type { WorkspaceSampleAvatar } from "@/modules/workspace/shared/utils/workspaceAvatar";
 import WorkspaceAvatar from "./WorkspaceAvatar";
 import WorkspaceAvatarPicker from "./WorkspaceAvatarPicker";
 import { useChatChannels } from "@/modules/client/chat/hooks/useChatQueries";

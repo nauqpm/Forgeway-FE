@@ -8,7 +8,7 @@ import appleIcon from "../../../../../../app/apple-icon.png";
 import Image from "next/image";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
-import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import { useChatChannels } from "@/modules/client/chat/hooks/useChatQueries";
 import {

@@ -1,12 +1,12 @@
 "use client";
 
 import { FileText, X } from "lucide-react";
-import { Workspace } from "../../types/workspace.type";
+import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import StatusPicker from "@/shared/components/StatusPicker";
 import TypePicker from "@/shared/components/TypePicker";
 import PriorityPicker from "@/shared/components/PriorityPicker";
 import AssigneePicker, { toAssigneePickerUsers, AssigneePickerMember } from "@/shared/components/AssigneePicker";
-import { BoardColumn } from "../../types/board.type";
+import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 
 type CreateTaskModalProps = {
   showCreateIssue: boolean;

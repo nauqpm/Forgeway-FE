@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 
-import type { WorkspaceAvatarSource } from "../../utils/workspaceAvatar";
+import type { WorkspaceAvatarSource } from "@/modules/workspace/shared/utils/workspaceAvatar";
 import {
   DEFAULT_WORKSPACE_AVATAR_URL,
   getWorkspaceAvatarInitial,
-} from "../../utils/workspaceAvatar";
+} from "@/modules/workspace/shared/utils/workspaceAvatar";
 
 export type WorkspaceAvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 

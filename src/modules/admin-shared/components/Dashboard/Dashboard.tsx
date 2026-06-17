@@ -10,7 +10,7 @@ import { queryKeys } from "@/shared/constants/queryKeys";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { toast } from "react-hot-toast";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
-import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
 import { boardService } from "@/modules/workspace/shared/services/boardService";
 import { taskService } from "@/modules/workspace/shared/services/taskService";
 import { sprintService } from "@/modules/workspace/shared/services/sprintService";

@@ -1,4 +1,4 @@
-import { isPreviewableAttachment, TaskAttachment } from "../../types/attachment.type";
+import { isPreviewableAttachment, TaskAttachment } from "@/modules/workspace/shared/types/attachment.type";
 import AttachmentActions from "./AttachmentActions";
 import AttachmentFileIcon from "./AttachmentFileIcon";
 import { formatAttachmentDate, formatAttachmentSize } from "./attachmentFormatters";

@@ -1,5 +1,5 @@
 import { Download, Eye, Trash2 } from "lucide-react";
-import { TaskAttachment } from "../../types/attachment.type";
+import { TaskAttachment } from "@/modules/workspace/shared/types/attachment.type";
 
 interface AttachmentActionsProps {
   attachment: TaskAttachment;

@@ -12,10 +12,10 @@ import {
   Tag,
   Trash2,
 } from "lucide-react";
-import type { BoardColumn } from "../../types/board.type";
-import type { Issue } from "../../types/issue.type";
-import type { TaskCover } from "../../types/task-cover.type";
-import { useTaskCoverActions } from "../../hooks/useTaskCoverActions";
+import type { BoardColumn } from "@/modules/workspace/shared/types/board.type";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
+import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import { useTaskCoverActions } from "@/modules/workspace/shared/hooks/useTaskCoverActions";
 import TaskCoverPickerPortal from "./TaskCoverPickerPortal";
 
 type BoardTaskActionMenuProps = {

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Check, ChevronRight, X } from "lucide-react";
-import type { TaskCover } from "../../types/task-cover.type";
-import { isImageCover } from "../../types/task-cover.type";
+import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import { isImageCover } from "@/modules/workspace/shared/types/task-cover.type";
 
 type CoverTab = "colors" | "images";
 

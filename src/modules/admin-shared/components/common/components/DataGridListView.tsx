@@ -18,7 +18,7 @@ import PriorityPicker from '@/shared/components/PriorityPicker';
 import BulkActionBar from './BulkActionBar';
 import AssigneePicker, { AssigneePickerMember, toAssigneePickerUsers } from '@/shared/components/AssigneePicker';
 import CustomDatePicker from '@/shared/components/CustomDatePicker';
-import TaskLabelsField from '@/modules/client/workspaces/components/labels/TaskLabelsField';
+import TaskLabelsField from '@/modules/workspace/tasks/labels/TaskLabelsField';
 import StatusPicker from '@/shared/components/StatusPicker';
 
 type WorkspaceMember = AssigneePickerMember;

@@ -2,8 +2,8 @@
 
 import { ArrowLeft, Columns, Repeat } from "lucide-react";
 import Link from "next/link";
-import WorkspaceAvatarPicker from "@/modules/client/workspaces/components/common/WorkspaceAvatarPicker";
-import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import WorkspaceAvatarPicker from "@/modules/workspace/shared/components/WorkspaceAvatarPicker";
+import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
 import type { CreateWorkspacePageProps } from "@/modules/client/workspaces/hooks/useCreateWorkspacePage";
 
 export default function CreateWorkspaceView({

@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 
-import type { WorkspaceSampleAvatar } from "../../utils/workspaceAvatar";
+import type { WorkspaceSampleAvatar } from "@/modules/workspace/shared/utils/workspaceAvatar";
 
 interface WorkspaceAvatarPickerProps {
   avatars: WorkspaceSampleAvatar[];

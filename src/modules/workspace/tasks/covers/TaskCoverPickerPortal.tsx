@@ -3,7 +3,7 @@
 import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import TaskCoverPopover from "./TaskCoverPopover";
-import type { TaskCover } from "../../types/task-cover.type";
+import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
 
 type TaskCoverPickerPortalProps = {
   anchorRect: DOMRect | null;

@@ -11,8 +11,8 @@ import { Sprint } from "../../types/sprint.type";
 import type { TaskCover } from "../../types/task-cover.type";
 import DeleteColumnModal from "../DeleteColumnModal";
 import BoardFilters from "../BoardFilters";
-import BoardTaskActionMenu from "../covers/BoardTaskActionMenu";
-import TaskLabelModal from "../labels/TaskLabelModal";
+import BoardTaskActionMenu from "@/modules/workspace/tasks/covers/BoardTaskActionMenu";
+import TaskLabelModal from "@/modules/workspace/tasks/labels/TaskLabelModal";
 import { compareIssueRank } from "../../utils/dragUtils";
 
 import {

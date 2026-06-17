@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Download, Loader2, X } from "lucide-react";
-import { useAttachmentPreview } from "../../hooks/useAttachmentPreview";
-import { TaskAttachment } from "../../types/attachment.type";
+import { useAttachmentPreview } from "@/modules/workspace/shared/hooks/useAttachmentPreview";
+import { TaskAttachment } from "@/modules/workspace/shared/types/attachment.type";
 
 interface AttachmentPreviewLightboxProps {
   workspaceId: string;

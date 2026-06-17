@@ -7,7 +7,7 @@ import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 import { Workspace, WorkspaceTab, getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
 
 const CreateTaskModal = dynamic(
-  () => import("@/modules/client/workspaces/components/tasks/CreateTaskModal"),
+  () => import("@/modules/workspace/tasks/create/CreateTaskModal"),
   { ssr: false },
 );
 const SprintModal = dynamic(() => import("@/modules/client/workspaces/components/SprintModal"), { ssr: false });

@@ -9,7 +9,7 @@ import AssigneePicker, {
 import TypePicker from "@/shared/components/TypePicker";
 import PriorityPicker from "@/shared/components/PriorityPicker";
 import CustomDatePicker from "@/shared/components/CustomDatePicker";
-import TaskLabelsField from "./labels/TaskLabelsField";
+import TaskLabelsField from "@/modules/workspace/tasks/labels/TaskLabelsField";
 import {
   toDateInputValue,
   getIssueAssigneeId,

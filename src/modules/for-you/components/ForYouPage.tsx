@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { queryKeys } from "@/shared/constants/queryKeys";
-import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
+import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
 
 export type ForYouWorkspace = {
   id?: string;

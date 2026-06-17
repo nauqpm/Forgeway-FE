@@ -2,9 +2,9 @@
 
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, Paperclip, Plus, RefreshCw, X } from "lucide-react";
-import { useAttachmentDropzone } from "../../hooks/useAttachmentDropzone";
-import { useTaskAttachments } from "../../hooks/useTaskAttachments";
-import { isPreviewableAttachment, TaskAttachment } from "../../types/attachment.type";
+import { useAttachmentDropzone } from "@/modules/workspace/shared/hooks/useAttachmentDropzone";
+import { useTaskAttachments } from "@/modules/workspace/shared/hooks/useTaskAttachments";
+import { isPreviewableAttachment, TaskAttachment } from "@/modules/workspace/shared/types/attachment.type";
 import AttachmentDocumentList from "./AttachmentDocumentList";
 import AttachmentDropOverlay from "./AttachmentDropOverlay";
 import AttachmentImageGrid from "./AttachmentImageGrid";

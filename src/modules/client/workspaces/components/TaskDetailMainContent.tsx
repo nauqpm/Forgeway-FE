@@ -3,7 +3,7 @@
 import React from "react";
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
 import TaskDescription from "@/modules/admin-shared/components/common/components/TaskDescription";
-import TaskAttachmentsPanel from "./attachments/TaskAttachmentsPanel";
+import TaskAttachmentsPanel from "@/modules/workspace/tasks/attachments/TaskAttachmentsPanel";
 import TaskComments from "./TaskComments";
 import TaskActivityHistory from "./TaskActivityHistory";
 import { getIssueAssigneeId } from "./task-detail-shared";

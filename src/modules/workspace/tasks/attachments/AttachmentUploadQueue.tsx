@@ -1,5 +1,5 @@
 import { CheckCircle2, X, XCircle } from "lucide-react";
-import { UploadQueueItem } from "../../types/attachment.type";
+import { UploadQueueItem } from "@/modules/workspace/shared/types/attachment.type";
 import AttachmentFileIcon from "./AttachmentFileIcon";
 import { formatAttachmentSize } from "./attachmentFormatters";
 

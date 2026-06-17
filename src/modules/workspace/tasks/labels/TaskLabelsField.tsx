@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Tag } from "lucide-react";
-import type { Issue } from "../../types/issue.type";
-import type { TaskDetailResponse } from "../../types/task-detail.type";
-import type { TaskLabel } from "../../types/label.type";
+import type { Issue } from "@/modules/workspace/shared/types/issue.type";
+import type { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
+import type { TaskLabel } from "@/modules/workspace/shared/types/label.type";
 import TaskLabelModal from "./TaskLabelModal";
 import { queryKeys } from "@/shared/constants/queryKeys";
 

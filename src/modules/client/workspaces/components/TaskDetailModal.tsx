@@ -10,7 +10,7 @@ import {
   Archive,
 } from "lucide-react";
 import { TaskDetailResponse } from "../types/task-detail.type";
-import TaskCoverBanner from "./covers/TaskCoverBanner";
+import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
 import StatusPicker from "@/shared/components/StatusPicker";
 import type { TaskCover } from "../types/task-cover.type";
 import type { TaskStatusColumn } from "../utils/taskStatusColumns";

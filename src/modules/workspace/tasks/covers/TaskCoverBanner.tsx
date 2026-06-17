@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
-import type { TaskCover } from "../../types/task-cover.type";
+import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
 import TaskCoverPickerPortal from "./TaskCoverPickerPortal";
-import { useTaskCoverActions } from "../../hooks/useTaskCoverActions";
-import { taskCoverService } from "../../services/taskCoverService";
+import { useTaskCoverActions } from "@/modules/workspace/shared/hooks/useTaskCoverActions";
+import { taskCoverService } from "@/modules/workspace/shared/services/taskCoverService";
 
 type CoverableIssue = {
   id: string;

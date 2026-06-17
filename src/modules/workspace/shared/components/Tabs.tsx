@@ -3,7 +3,7 @@ import {
   getWorkspaceTemplate,
   Workspace,
   WorkspaceTab,
-} from "../../types/workspace.type";
+} from "@/modules/workspace/shared/types/workspace.type";
 
 interface TabProps {
   workspace: Workspace;
