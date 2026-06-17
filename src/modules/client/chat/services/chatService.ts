@@ -1,5 +1,12 @@
 import api from '@/lib/axiosIns';
-import type { Channel, Message } from '@/stores/chatStore';
+import type {
+  Channel,
+  ChatMember,
+  MentionMember,
+  Message,
+  SearchUser,
+  StickerPack,
+} from '@/modules/client/chat/types/chat.types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeArray = <T>(res: any): T[] => {
@@ -18,7 +25,7 @@ const normalizeArray = <T>(res: any): T[] => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const normalizeUsers = (users: any[]): any[] => {
+const normalizeUsers = (users: any[]): SearchUser[] => {
   return users.map(user => ({
     ...user,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -104,7 +111,7 @@ export const createDMAPI = async (targetUserId: string): Promise<Channel> => {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const searchUsersAPI = async (search?: string): Promise<any[]> => {
+export const searchUsersAPI = async (search?: string): Promise<SearchUser[]> => {
   try {
     const response = await api.get('/chat/users/search', {
       params: { q: search, ...getCacheBustParam() }
@@ -128,9 +135,49 @@ export const deleteMessageAPI = async (messageId: string): Promise<void> => {
   await api.delete(`/chat/messages/${messageId}`);
 };
 
-export const getChannelMembersAPI = async (channelId: string): Promise<unknown[]> => {
+export const getChannelMembersAPI = async (channelId: string): Promise<ChatMember[]> => {
   const response = await api.get(`/chat/channels/${channelId}/members`);
   const data = response.data?.data ?? response.data;
   return Array.isArray(data) ? data : [];
 };
 
+export const getMentionMembersAPI = async (
+  channelId: string,
+  search: string
+): Promise<MentionMember[]> => {
+  const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
+    params: { q: search }
+  });
+  const members = Array.isArray(response.data) ? response.data : normalizeArray<SearchUser>(response);
+
+  const mappedMembers = members.map((member) => {
+    const id = member._id || member.id || '';
+    const display = member.fullName?.trim() || member.email?.split('@')[0] || String(id || 'User');
+
+    return {
+      id,
+      display,
+      email: member.email,
+      phone: member.phone,
+      avatar: member.avatar,
+    };
+  }).filter(member => Boolean(member.id));
+
+  if ('all'.startsWith(search.toLowerCase())) {
+    mappedMembers.unshift({
+      id: 'All',
+      display: 'All',
+      email: 'Mention everyone in this channel',
+      phone: '',
+      avatar: 'special-all',
+    });
+  }
+
+  return mappedMembers;
+};
+
+export const getStickersAPI = async (): Promise<StickerPack[]> => {
+  const response = await api.get('/chat/stickers');
+  const data = response.data?.data ?? response.data;
+  return Array.isArray(data) ? data : [];
+};
