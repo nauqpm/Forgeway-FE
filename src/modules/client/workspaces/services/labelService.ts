@@ -7,6 +7,16 @@ const normalizeResponseData = <T>(payload: any): T => {
   return payload?.data?.data ?? payload?.data ?? payload;
 };
 
+const MAX_LABEL_NAME_LENGTH = 25;
+
+const validateLabelName = (name: string) => {
+  const trimmedName = name.trim();
+  if (trimmedName.length > MAX_LABEL_NAME_LENGTH) {
+    throw new Error(`Label name must be ${MAX_LABEL_NAME_LENGTH} characters or fewer.`);
+  }
+  return trimmedName;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const toLabel = (raw: any): TaskLabel => ({
   id: raw.id ?? raw._id ?? "",
@@ -30,13 +40,13 @@ export const labelService = {
   },
 
   async createLabel(workspaceId: string, name: string): Promise<TaskLabel> {
-    const response = await api.post(apiRoutes.WORKSPACES.LABELS(workspaceId), { name });
+    const response = await api.post(apiRoutes.WORKSPACES.LABELS(workspaceId), { name: validateLabelName(name) });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return toLabel(normalizeResponseData<any>(response));
   },
 
   async updateLabel(workspaceId: string, labelId: string, name: string): Promise<TaskLabel> {
-    const response = await api.patch(apiRoutes.WORKSPACES.LABEL(workspaceId, labelId), { name });
+    const response = await api.patch(apiRoutes.WORKSPACES.LABEL(workspaceId, labelId), { name: validateLabelName(name) });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return toLabel(normalizeResponseData<any>(response));
   },
