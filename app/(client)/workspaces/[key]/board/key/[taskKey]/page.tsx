@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";

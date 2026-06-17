@@ -15,7 +15,7 @@ import {
   sprintIdOf,
   upsertSprint,
   type SprintRealtimeEnvelope,
-} from './sprint-realtime-cache.utils';
+} from '../utils/sprint-realtime-cache.utils';
 
 type UseSprintRealtimeOptions = {
   onSprintCreated?: (sprint: Sprint) => void;

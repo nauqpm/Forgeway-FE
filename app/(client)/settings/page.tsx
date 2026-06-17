@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import api from "@/lib/axiosIns";
 import { Key, LogOut, Shield, User } from "lucide-react";
 import ThemeSwitcher from "@/shared/components/ThemeSwitcher";

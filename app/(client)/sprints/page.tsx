@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useQuery } from "@tanstack/react-query";
 import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import api from "@/lib/axiosIns";

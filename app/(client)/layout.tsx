@@ -7,8 +7,8 @@ import Sidebar from "@/modules/admin-shared/components/common/components/Sidebar
 import NotificationPanel from "@/modules/admin-shared/components/common/components/NotificationPanel";
 import { notificationService } from "@/modules/notifications/services/notification.service";
 import { queryKeys } from "@/shared/constants/queryKeys";
-import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
-import { useWorkspaceRealtime } from "@/hooks/realtime/use-workspace-realtime";
+import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
+import { useWorkspaceRealtime } from "@/lib/realtime/hooks/use-workspace-realtime";
 import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import {
   ChevronDown,
@@ -34,7 +34,7 @@ import { Filters } from "@/modules/client/workspaces/types/filter.type";
 import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
 
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
 import { useAccountSwitcherStore } from "@/shared/stores/account-switcher.store";
 import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";

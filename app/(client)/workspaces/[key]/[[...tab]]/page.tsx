@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { useWorkspacePage } from "@/modules/client/workspaces/hooks/useWorkspacePage";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import WorkspacePage from "@/modules/client/workspaces/components/WorkspacePage";
 
 export default function WorkspaceDetailPage({ params }: { params: Promise<{ key: string; tab?: string[] }> }) {

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { Sun, Moon, Monitor } from "lucide-react";
 
 export default function ThemeSwitcher() {

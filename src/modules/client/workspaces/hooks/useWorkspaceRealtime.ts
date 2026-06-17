@@ -3,11 +3,11 @@
 import { useCallback } from "react";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import { Sprint } from "@/modules/client/workspaces/types/sprint.type";
-import { useWorkspaceSocket } from "@/hooks/useWorkspaceSocket";
-import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
-import { useSprintRealtime } from "@/hooks/realtime/use-sprint-realtime";
-import { sprintIdOf } from "@/hooks/realtime/sprint-realtime-cache.utils";
-import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
+import { useWorkspaceSocket } from "@/modules/client/workspaces/hooks/useWorkspaceSocket";
+import { useTaskRealtime } from "@/lib/realtime/hooks/use-task-realtime";
+import { useSprintRealtime } from "@/lib/realtime/hooks/use-sprint-realtime";
+import { sprintIdOf } from "@/lib/realtime/utils/sprint-realtime-cache.utils";
+import { sortIssuesByRank, taskIdOf } from "@/lib/realtime/utils/task-realtime-cache.utils";
 
 interface UseWorkspaceRealtimeParams {
   workspaceId: string | undefined;

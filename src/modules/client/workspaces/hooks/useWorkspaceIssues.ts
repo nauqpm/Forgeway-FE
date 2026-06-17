@@ -15,7 +15,7 @@ import { filterTasks } from "@/modules/client/workspaces/utils/filterTasks";
 import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
 import { TaskReorderSyncInput } from "@/modules/client/workspaces/utils/dragUtils";
 import { useWorkspaceRealtime } from "@/modules/client/workspaces/hooks/useWorkspaceRealtime";
-import { sortIssuesByRank, taskIdOf } from "@/hooks/realtime/task-realtime-cache.utils";
+import { sortIssuesByRank, taskIdOf } from "@/lib/realtime/utils/task-realtime-cache.utils";
 import { clearOptimisticIssueOrder, isNoopReorderError } from "@/modules/client/workspaces/utils/workspaceUtils";
 
 interface UseWorkspaceIssuesParams {

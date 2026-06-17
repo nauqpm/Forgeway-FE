@@ -16,7 +16,7 @@ import {
   upsertWorkspace,
   workspaceIdOf,
   type WorkspaceRealtimeEnvelope,
-} from './workspace-realtime-cache.utils';
+} from '../utils/workspace-realtime-cache.utils';
 import type { Workspace } from '@/modules/client/workspaces/types/workspace.type';
 
 type UseWorkspaceRealtimeOptions = {

@@ -18,11 +18,11 @@ import {
   shouldApplyEvent,
   shouldApplyReorderEvent,
   upsertTask,
-} from './task-realtime-cache.utils';
+} from '../utils/task-realtime-cache.utils';
 import {
   mapTaskSummaryToIssue,
   type TaskSummaryPayload,
-} from './task-realtime.mapper';
+} from '../utils/task-realtime.mapper';
 
 type TaskEventContext = {
   workspaceId: string;

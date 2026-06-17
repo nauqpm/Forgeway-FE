@@ -23,7 +23,7 @@ import {
   updateTaskLabels,
   upsertAttachment,
   upsertComment,
-} from './task-detail-cache.utils';
+} from '../utils/task-detail-cache.utils';
 import { queryKeys } from '@/shared/constants/queryKeys';
 
 type TaskDetailEventData = {

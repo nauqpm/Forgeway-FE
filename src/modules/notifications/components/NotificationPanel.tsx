@@ -13,7 +13,7 @@ import {
   NotificationType,
   NotificationListResponse,
 } from "@/modules/notifications/services/notification.service";
-import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
+import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
 
 interface NotificationPanelProps {
   onClose: () => void;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useFontSize, type FontScale } from "@/hooks/useFontSize";
+import { useFontSize, type FontScale } from "@/shared/hooks/useFontSize";
 
 const OPTIONS: { id: FontScale; label: string; description: string; preview: string }[] = [
   { id: "sm",  label: "Small",   description: "Compact text",  preview: "A" },

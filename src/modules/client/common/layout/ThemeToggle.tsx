@@ -1,7 +1,7 @@
 'use client';
 
 import { Sun, Moon, Monitor } from "lucide-react";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/shared/hooks/useTheme";
 
 interface ThemeToggleProps {
   className?: string;

@@ -4,7 +4,7 @@ import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft, Settings, ShieldAlert, Users } from "lucide-react";
 
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useAuth } from "@/context/AuthContext";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 

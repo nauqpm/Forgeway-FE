@@ -2,7 +2,7 @@
 
 import { FormEvent, use, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Save } from "lucide-react";

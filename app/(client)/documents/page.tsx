@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useDocumentsPage } from "@/modules/client/docs/hooks/useDocumentsPage";
 import DocumentToolbar from "@/modules/client/docs/components/DocumentToolbar";
 import DocumentGrid from "@/modules/client/docs/components/DocumentGrid";
