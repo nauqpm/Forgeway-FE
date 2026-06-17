@@ -4,12 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { X, Search, User, Loader2, Users } from 'lucide-react';
 import { useCreateDM, useSearchUsers } from '@/modules/client/chat/hooks/useChatQueries';
 
-interface UserData {
-  _id: string;
-  fullName: string;
-  email: string;
-  avatar?: string;
-}
 
 interface NewChatModalProps {
   isOpen: boolean;
