@@ -1,10 +1,11 @@
 'use client';
 
 // =============================================================================
-// useMfa HOOK — MFA verification and setup orchestration
+// useMfa HOOK - MFA verification and setup orchestration
 // =============================================================================
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useAuthStore, useMfaStore } from '../../shared/stores/authStore';
 import {
@@ -21,153 +22,100 @@ import type { MfaMethod, UserRole } from '../../shared/types/auth.types';
 
 const MFA_REQUIRED_ROLES: UserRole[] = ['super_admin'];
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  const err = error as { response?: { data?: { message?: string } }; message?: string };
+  return err.response?.data?.message || err.message || fallback;
+};
+
 export const useMfa = () => {
   const router = useRouter();
   const { mfaRequired, mfaToken, method, setupData, setMfaSetup, clearMfa } =
     useMfaStore();
   const { user, setUser } = useAuthStore();
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // ─── Verify MFA Code ───────────────────────────────────────────────────────
-
-  const verifyMfa = useCallback(
-    async (code: string, mfaMethod?: MfaMethod) => {
+  const verifyMfaMutation = useMutation({
+    mutationFn: async ({ code, mfaMethod }: { code: string; mfaMethod?: MfaMethod }) => {
       if (!mfaToken) {
-        setError('Your MFA session has expired. Please sign in again.');
-        return;
+        throw new Error('Your MFA session has expired. Please sign in again.');
       }
 
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await verifyMfaAPI({
-          mfaToken,
-          code,
-          method: mfaMethod || method || 'totp',
-        });
-
-        // MFA verified — set user and redirect
-        setUser(response.user);
-        clearMfa();
-        router.push(AUTH_ROUTES.HOME);
-        return response;
-      } catch (err: unknown) {
-        const error = err as { response?: { data?: { message?: string } } };
-        setError(error.response?.data?.message || 'Invalid verification code');
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+      return verifyMfaAPI({
+        mfaToken,
+        code,
+        method: mfaMethod || method || 'totp',
+      });
     },
-    [mfaToken, method, setUser, clearMfa, router],
-  );
-
-  // ─── Setup TOTP ────────────────────────────────────────────────────────────
-
-  const setupTotp = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await setupTotpAPI();
-      setMfaSetup(data);
-      return data;
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Could not set up TOTP');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [setMfaSetup]);
-
-  // ─── Confirm TOTP Setup ────────────────────────────────────────────────────
-
-  const confirmTotp = useCallback(async (code: string) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await confirmTotpSetupAPI(code);
-      return result;
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Incorrect verification code');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // ─── Request Email OTP ─────────────────────────────────────────────────────
-
-  const requestEmailOtp = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await requestEmailOtpAPI();
-      return result;
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Could not send OTP');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // ─── Disable MFA ───────────────────────────────────────────────────────────
-
-  const disableMfa = useCallback(async () => {
-    if (user?.role && MFA_REQUIRED_ROLES.includes(user.role)) {
-      setError('The current role requires MFA and it cannot be disabled.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await disableMfaAPI();
+    onSuccess: (response) => {
+      setUser(response.user);
       clearMfa();
-      return result;
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Could not disable MFA');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [clearMfa, user]);
+      router.push(AUTH_ROUTES.HOME);
+    },
+  });
 
-  // ─── Backup Codes ──────────────────────────────────────────────────────────
+  const setupTotpMutation = useMutation({
+    mutationFn: setupTotpAPI,
+    onSuccess: setMfaSetup,
+  });
 
-  const getBackupCodes = useCallback(async () => {
-    setLoading(true);
-    try {
+  const confirmTotpMutation = useMutation({
+    mutationFn: confirmTotpSetupAPI,
+  });
+
+  const requestEmailOtpMutation = useMutation({
+    mutationFn: requestEmailOtpAPI,
+  });
+
+  const disableMfaMutation = useMutation({
+    mutationFn: async () => {
+      if (user?.role && MFA_REQUIRED_ROLES.includes(user.role)) {
+        throw new Error('The current role requires MFA and it cannot be disabled.');
+      }
+
+      return disableMfaAPI();
+    },
+    onSuccess: clearMfa,
+  });
+
+  const getBackupCodesMutation = useMutation({
+    mutationFn: async () => {
       const result = await getBackupCodesAPI();
       return result.backupCodes;
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Could not get backup codes');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+  });
 
-  const regenerateBackupCodes = useCallback(async () => {
-    setLoading(true);
-    try {
+  const regenerateBackupCodesMutation = useMutation({
+    mutationFn: async () => {
       const result = await regenerateBackupCodesAPI();
       return result.backupCodes;
-    } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      setError(error.response?.data?.message || 'Could not regenerate backup codes');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+  });
+
+  const clearError = useCallback(() => {
+    verifyMfaMutation.reset();
+    setupTotpMutation.reset();
+    confirmTotpMutation.reset();
+    requestEmailOtpMutation.reset();
+    disableMfaMutation.reset();
+    getBackupCodesMutation.reset();
+    regenerateBackupCodesMutation.reset();
+  }, [
+    verifyMfaMutation,
+    setupTotpMutation,
+    confirmTotpMutation,
+    requestEmailOtpMutation,
+    disableMfaMutation,
+    getBackupCodesMutation,
+    regenerateBackupCodesMutation,
+  ]);
+
+  const activeError =
+    verifyMfaMutation.error ||
+    setupTotpMutation.error ||
+    confirmTotpMutation.error ||
+    requestEmailOtpMutation.error ||
+    disableMfaMutation.error ||
+    getBackupCodesMutation.error ||
+    regenerateBackupCodesMutation.error;
 
   return {
     // State
@@ -175,18 +123,26 @@ export const useMfa = () => {
     mfaToken,
     method,
     setupData,
-    loading,
-    error,
+    loading:
+      verifyMfaMutation.isPending ||
+      setupTotpMutation.isPending ||
+      confirmTotpMutation.isPending ||
+      requestEmailOtpMutation.isPending ||
+      disableMfaMutation.isPending ||
+      getBackupCodesMutation.isPending ||
+      regenerateBackupCodesMutation.isPending,
+    error: activeError ? getErrorMessage(activeError, 'MFA action failed') : null,
 
     // Actions
-    verifyMfa,
-    setupTotp,
-    confirmTotp,
-    requestEmailOtp,
-    disableMfa,
-    getBackupCodes,
-    regenerateBackupCodes,
+    verifyMfa: (code: string, mfaMethod?: MfaMethod) =>
+      verifyMfaMutation.mutateAsync({ code, mfaMethod }),
+    setupTotp: () => setupTotpMutation.mutateAsync(),
+    confirmTotp: (code: string) => confirmTotpMutation.mutateAsync(code),
+    requestEmailOtp: () => requestEmailOtpMutation.mutateAsync(),
+    disableMfa: () => disableMfaMutation.mutateAsync(),
+    getBackupCodes: () => getBackupCodesMutation.mutateAsync(),
+    regenerateBackupCodes: () => regenerateBackupCodesMutation.mutateAsync(),
     clearMfa,
-    clearError: () => setError(null),
+    clearError,
   };
 };

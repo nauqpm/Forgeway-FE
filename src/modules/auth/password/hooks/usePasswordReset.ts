@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+
+import { useMutation } from "@tanstack/react-query";
 import {
   requestPasswordResetAPI,
   verifyOtpAPI,
@@ -21,117 +22,121 @@ interface UsePasswordResetReturn {
   clearSuccess: () => void;
 }
 
+const getPasswordResetError = (
+  err: unknown,
+  context: "request" | "verify" | "reset",
+) => {
+  const error = err as {
+    response?: { status?: number; data?: { code?: string; message?: string } };
+    message?: string;
+  };
+  const status = error.response?.status;
+  const code = error.response?.data?.code;
+
+  if (code === "RATE_LIMITED" || status === 429) {
+    return "You are acting too quickly. Please try again in a few minutes.";
+  }
+
+  if (context === "request") {
+    if (code === "EMAIL_NOT_VERIFIED") {
+      return "Email has not been verified. Please verify your email before resetting your password.";
+    }
+    if (status === 400 || status === 404) {
+      return "Unable to send OTP for an invalid email address.";
+    }
+    return "Could not send OTP right now. Please try again later.";
+  }
+
+  if (context === "verify") {
+    if (status === 401 || status === 403) {
+      return "OTP is invalid or expired.";
+    }
+    if (status === 400) {
+      return "Please check the OTP again.";
+    }
+    return "OTP verification failed. Please try again.";
+  }
+
+  if (code === "PASSWORD_TOO_WEAK") {
+    return "New password does not meet the security requirements.";
+  }
+  if (status === 401 || status === 403) {
+    return "Password reset session is invalid or expired. Please request a new OTP.";
+  }
+  if (status === 400) {
+    return "Could not reset password. Please check the information again.";
+  }
+  return "Password reset failed. Please try again later.";
+};
+
+const withPasswordResetError = async <T,>(
+  action: () => Promise<T>,
+  context: "request" | "verify" | "reset",
+) => {
+  try {
+    return await action();
+  } catch (err) {
+    throw new Error(getPasswordResetError(err, context));
+  }
+};
+
 export const usePasswordReset = (): UsePasswordResetReturn => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const requestPasswordResetMutation = useMutation({
+    mutationFn: (email: string) =>
+      withPasswordResetError(
+        () => requestPasswordResetAPI({ email }),
+        "request",
+      ),
+  });
 
-  const clearError = () => setError(null);
-  const clearSuccess = () => setSuccess(false);
+  const verifyOtpMutation = useMutation({
+    mutationFn: ({ email, otp }: { email: string; otp: string }) =>
+      withPasswordResetError(
+        () => verifyOtpAPI(email, otp),
+        "verify",
+      ),
+  });
 
-  const requestPasswordReset = async (email: string) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-    try {
-      const response = await requestPasswordResetAPI({ email });
-      setSuccess(true);
-      return response;
-    } catch (err: unknown) {
-      const error = err as {
-        response?: { status?: number; data?: { code?: string; message?: string } };
-      };
-      const status = error.response?.status;
-      const code = error.response?.data?.code;
+  const resetPasswordMutation = useMutation({
+    mutationFn: ({ email, otp, newPassword }: { email: string; otp: string; newPassword: string }) =>
+      withPasswordResetError(async () => {
+        const verified = await verifyOtpAPI(email, otp);
+        return resetPasswordWithGrantAPI({
+          resetGrant: verified.resetGrant,
+          newPassword,
+        });
+      }, "reset"),
+  });
 
-      if (code === "RATE_LIMITED" || status === 429) {
-        setError("You are acting too quickly. Please try again in a few minutes.");
-      } else if (code === "EMAIL_NOT_VERIFIED") {
-        setError("Email has not been verified. Please verify your email before resetting your password.");
-      } else if (status === 400 || status === 404) {
-        setError("Unable to send OTP for an invalid email address.");
-      } else {
-        setError("Could not send OTP right now. Please try again later.");
-      }
-      throw err;
-    } finally {
-      setLoading(false);
-    }
+  const activeError =
+    requestPasswordResetMutation.error ||
+    verifyOtpMutation.error ||
+    resetPasswordMutation.error;
+
+  const clearError = () => {
+    requestPasswordResetMutation.reset();
+    verifyOtpMutation.reset();
+    resetPasswordMutation.reset();
   };
 
-  const verifyOtp = async (email: string, otp: string) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-    try {
-      const response = await verifyOtpAPI(email, otp);
-      setSuccess(true);
-      return response;
-    } catch (err: unknown) {
-      const error = err as {
-        response?: { status?: number; data?: { code?: string } };
-      };
-      const status = error.response?.status;
-      const code = error.response?.data?.code;
-
-      if (code === "RATE_LIMITED" || status === 429) {
-        setError("You are acting too quickly. Please try again in a few minutes.");
-      } else if (status === 401 || status === 403) {
-        setError("OTP is invalid or expired.");
-      } else if (status === 400) {
-        setError("Please check the OTP again.");
-      } else {
-        setError("OTP verification failed. Please try again.");
-      }
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const resetPasswordWithOtp = async (email: string, otp: string, newPassword: string) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-    try {
-      const verified = await verifyOtpAPI(email, otp);
-      const response = await resetPasswordWithGrantAPI({
-        resetGrant: verified.resetGrant,
-        newPassword,
-      });
-      setSuccess(true);
-      return response;
-    } catch (err: unknown) {
-      const error = err as {
-        response?: { status?: number; data?: { code?: string } };
-      };
-      const status = error.response?.status;
-      const code = error.response?.data?.code;
-
-      if (code === "RATE_LIMITED" || status === 429) {
-        setError("You are acting too quickly. Please try again in a few minutes.");
-      } else if (code === "PASSWORD_TOO_WEAK") {
-        setError("New password does not meet the security requirements.");
-      } else if (status === 401 || status === 403) {
-        setError("Password reset session is invalid or expired. Please request a new OTP.");
-      } else if (status === 400) {
-        setError("Could not reset password. Please check the information again.");
-      } else {
-        setError("Password reset failed. Please try again later.");
-      }
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
+  const clearSuccess = clearError;
 
   return {
-    loading,
-    error,
-    success,
-    requestPasswordReset,
-    verifyOtp,
-    resetPasswordWithOtp,
+    loading:
+      requestPasswordResetMutation.isPending ||
+      verifyOtpMutation.isPending ||
+      resetPasswordMutation.isPending,
+    error: activeError instanceof Error ? activeError.message : null,
+    success:
+      requestPasswordResetMutation.isSuccess ||
+      verifyOtpMutation.isSuccess ||
+      resetPasswordMutation.isSuccess,
+    requestPasswordReset: (email: string) =>
+      requestPasswordResetMutation.mutateAsync(email),
+    verifyOtp: (email: string, otp: string) =>
+      verifyOtpMutation.mutateAsync({ email, otp }),
+    resetPasswordWithOtp: (email: string, otp: string, newPassword: string) =>
+      resetPasswordMutation.mutateAsync({ email, otp, newPassword }),
     clearError,
     clearSuccess,
   };
