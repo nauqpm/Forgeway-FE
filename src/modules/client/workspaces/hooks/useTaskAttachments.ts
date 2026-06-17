@@ -99,13 +99,30 @@ export const useTaskAttachments = ({
       const nextItems = files.map((file) => ({
         file,
         queueItem: toQueueItem(file),
+        validationError: attachmentService.validateUploadFile(file),
       }));
       if (nextItems.length === 0) return;
 
       setUploadErrorMessage(null);
-      setQueueSafely((current) => [...nextItems.map(({ queueItem }) => queueItem), ...current]);
+      const uploadQueueItems: UploadQueueItem[] = nextItems.map(({ queueItem, validationError }) =>
+        validationError
+          ? {
+              ...queueItem,
+              progress: 100,
+              status: "error",
+              error: validationError,
+            }
+          : queueItem,
+      );
+      const firstValidationError = nextItems.find(({ validationError }) => validationError)?.validationError;
 
-      const uploadJobs = nextItems.map(({ file, queueItem }) => {
+      if (firstValidationError) {
+        setUploadErrorMessage(firstValidationError);
+      }
+
+      setQueueSafely((current) => [...uploadQueueItems, ...current]);
+
+      const uploadJobs = nextItems.filter(({ validationError }) => !validationError).map(({ file, queueItem }) => {
         const controller = new AbortController();
         uploadControllersRef.current = {
           ...uploadControllersRef.current,
