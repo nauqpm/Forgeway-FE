@@ -199,8 +199,9 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     resolveComment,
     unresolveComment,
   } = usePageComments({
+    workspaceId,
     pageId: persistedPageId,
-    enabled: !!persistedPageId,
+    enabled: !!workspaceId && !!persistedPageId,
   });
 
   // ── Version History Hook ───────────────────────────────────

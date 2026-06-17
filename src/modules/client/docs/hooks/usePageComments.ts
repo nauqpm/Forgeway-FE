@@ -10,25 +10,32 @@ import {
 } from "../services/commentsService";
 
 interface UsePageCommentsProps {
+  workspaceId: string | undefined;
   pageId: string | undefined;
   enabled?: boolean;
 }
 
-export function usePageComments({ pageId, enabled = true }: UsePageCommentsProps) {
+export function usePageComments({
+  workspaceId,
+  pageId,
+  enabled = true,
+}: UsePageCommentsProps) {
   const queryClient = useQueryClient();
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
 
   const commentsQuery = useQuery<PageComment[]>({
-    queryKey: queryKeys.docs.comments(pageId ?? ""),
-    queryFn: () => pageCommentsService.getThreadedComments(pageId!),
-    enabled: enabled && !!pageId,
+    queryKey: queryKeys.docs.comments(`${workspaceId ?? ""}:${pageId ?? ""}`),
+    queryFn: () => pageCommentsService.getThreadedComments(workspaceId!, pageId!),
+    enabled: enabled && !!workspaceId && !!pageId,
   });
 
   const invalidateComments = useCallback(async () => {
-    if (!pageId) return;
-    await queryClient.invalidateQueries({ queryKey: queryKeys.docs.comments(pageId) });
-  }, [pageId, queryClient]);
+    if (!workspaceId || !pageId) return;
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.docs.comments(`${workspaceId}:${pageId}`),
+    });
+  }, [pageId, queryClient, workspaceId]);
 
   const addCommentMutation = useMutation({
     mutationFn: (payload: CreatePageCommentPayload) => pageCommentsService.createComment(payload),
@@ -37,9 +44,10 @@ export function usePageComments({ pageId, enabled = true }: UsePageCommentsProps
 
   const addComment = useCallback(
     async (content: string, inlineId?: string) => {
-      if (!pageId) return null;
+      if (!workspaceId || !pageId) return null;
       try {
         return await addCommentMutation.mutateAsync({
+          workspaceId,
           content,
           targetType: "page",
           targetId: pageId,
@@ -50,15 +58,20 @@ export function usePageComments({ pageId, enabled = true }: UsePageCommentsProps
         return null;
       }
     },
-    [addCommentMutation, pageId],
+    [addCommentMutation, pageId, workspaceId],
   );
 
   const replyToComment = useCallback(
     async (parentId: string, content: string) => {
-      if (!pageId) return null;
+      if (!workspaceId || !pageId) return null;
 
       try {
-        const reply = await pageCommentsService.replyToComment(parentId, content, pageId);
+        const reply = await pageCommentsService.replyToComment(
+          workspaceId,
+          parentId,
+          content,
+          pageId,
+        );
         await invalidateComments();
         return reply;
       } catch (err) {
@@ -66,7 +79,7 @@ export function usePageComments({ pageId, enabled = true }: UsePageCommentsProps
         return null;
       }
     },
-    [invalidateComments, pageId],
+    [invalidateComments, pageId, workspaceId],
   );
 
   const updateComment = useCallback(

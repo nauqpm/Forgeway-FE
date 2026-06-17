@@ -20,6 +20,13 @@ const authConfig = (accessToken?: string | null) =>
       : {},
   });
 
+const formDataConfig = (accessToken?: string | null) => ({
+  headers: {
+    ...authConfig(accessToken).headers,
+    "Content-Type": undefined,
+  },
+});
+
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 
 const BLOCKED_ATTACHMENT_EXTENSIONS = new Set([
@@ -123,6 +130,9 @@ const getFileExtension = (fileName: string) => {
 const getErrorMessage = (error: unknown, fallback: string) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const message = (error as any)?.response?.data?.message || (error as any)?.message;
+  if (Array.isArray(message)) {
+    return message.filter((item) => typeof item === "string").join(" ");
+  }
   return typeof message === "string" && message.trim() ? message : fallback;
 };
 
@@ -162,6 +172,10 @@ const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please
 
     if (message.includes("file too large") || message.includes("too large") || message.includes("size")) {
       return "File is too large. Please upload a smaller attachment.";
+    }
+
+    if (message.includes("multipart") || message.includes("boundary") || message.includes("form")) {
+      return "Could not read the uploaded file. Please try uploading it again.";
     }
 
     return "Could not upload this attachment. Please check the file and try again.";
@@ -210,11 +224,9 @@ export const attachmentService = {
   }: AttachmentUploadInput): Promise<TaskAttachment> {
     const formData = new FormData();
     formData.append("file", file);
-    const config = authConfig(accessToken);
 
     const response = await api.post(apiRoutes.TASKS.BOARD_TASK_ATTACHMENTS(workspaceId, taskId), formData, {
-      ...config,
-      headers: config.headers,
+      ...formDataConfig(accessToken),
       onUploadProgress: (event) => {
         if (!onProgress || !event.total) return;
         onProgress(Math.min(100, Math.round((event.loaded * 100) / event.total)));
