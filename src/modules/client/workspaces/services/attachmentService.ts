@@ -12,18 +12,162 @@ import {
 const normalizeResponseData = <T>(payload: any): T => payload?.data?.data ?? payload?.data ?? payload;
 
 const authConfig = (accessToken?: string | null) =>
-  accessToken
-    ? {
-        headers: {
+  ({
+    headers: accessToken
+      ? {
           Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    : undefined;
+        }
+      : {},
+  });
+
+const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+
+const BLOCKED_ATTACHMENT_EXTENSIONS = new Set([
+  ".ade",
+  ".adp",
+  ".app",
+  ".apk",
+  ".bat",
+  ".bin",
+  ".cmd",
+  ".com",
+  ".cpl",
+  ".dll",
+  ".dmg",
+  ".exe",
+  ".gadget",
+  ".hta",
+  ".ins",
+  ".iso",
+  ".jar",
+  ".js",
+  ".jse",
+  ".lib",
+  ".lnk",
+  ".msi",
+  ".msp",
+  ".mst",
+  ".pif",
+  ".ps1",
+  ".scr",
+  ".sh",
+  ".sys",
+  ".vb",
+  ".vbe",
+  ".vbs",
+  ".ws",
+  ".wsf",
+]);
+
+const ALLOWED_ATTACHMENT_EXTENSIONS = new Set([
+  ".csv",
+  ".doc",
+  ".docx",
+  ".gif",
+  ".jpeg",
+  ".jpg",
+  ".json",
+  ".md",
+  ".mp4",
+  ".pdf",
+  ".png",
+  ".ppt",
+  ".pptx",
+  ".rtf",
+  ".svg",
+  ".txt",
+  ".webp",
+  ".xls",
+  ".xlsx",
+  ".zip",
+]);
+
+const ALLOWED_ATTACHMENT_MIME_TYPES = new Set([
+  "application/json",
+  "application/msword",
+  "application/pdf",
+  "application/rtf",
+  "application/vnd.ms-excel",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/zip",
+  "image/gif",
+  "image/jpeg",
+  "image/png",
+  "image/svg+xml",
+  "image/webp",
+  "text/csv",
+  "text/markdown",
+  "text/plain",
+  "video/mp4",
+]);
+
+const getFileExtension = (fileName: string) => {
+  const dotIndex = fileName.lastIndexOf(".");
+  return dotIndex >= 0 ? fileName.slice(dotIndex).toLowerCase() : "";
+};
 
 const getErrorMessage = (error: unknown, fallback: string) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const message = (error as any)?.response?.data?.message || (error as any)?.message;
   return typeof message === "string" && message.trim() ? message : fallback;
+};
+
+const validateUploadFile = (file: File) => {
+  const extension = getFileExtension(file.name);
+  const mimeType = (file.type || "").toLowerCase();
+
+  if (!extension || BLOCKED_ATTACHMENT_EXTENSIONS.has(extension) || !ALLOWED_ATTACHMENT_EXTENSIONS.has(extension)) {
+    return "Invalid file format. Please upload a supported file type.";
+  }
+
+  if (!ALLOWED_ATTACHMENT_MIME_TYPES.has(mimeType)) {
+    return "Invalid file format. Please upload a supported file type.";
+  }
+
+  if (file.size > MAX_ATTACHMENT_SIZE) {
+    return "File is too large. Please upload a smaller attachment.";
+  }
+
+  return null;
+};
+
+const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please try again.") => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const status = (error as any)?.response?.status;
+  const message = getErrorMessage(error, fallback).toLowerCase();
+
+  if (status === 400) {
+    if (message.includes("file extension") || message.includes("file type") || message.includes("mime type")) {
+      return "Invalid file format. Please upload a supported file type.";
+    }
+
+    if (message.includes("file too large") || message.includes("too large") || message.includes("size")) {
+      return "File is too large. Please upload a smaller attachment.";
+    }
+
+    return "Could not upload this attachment. Please check the file and try again.";
+  }
+
+  if (status === 413) {
+    return "File is too large. Please upload a smaller attachment.";
+  }
+
+  if (status === 401 || status === 403) {
+    return "You do not have permission to upload attachments to this task.";
+  }
+
+  if (!status) {
+    return "Network issue while uploading attachment. Please check your connection and try again.";
+  }
+
+  if (status >= 500) {
+    return "Server issue while uploading attachment. Please try again later.";
+  }
+
+  return getErrorMessage(error, fallback);
 };
 
 export const attachmentService = {
@@ -46,11 +190,12 @@ export const attachmentService = {
   }: AttachmentUploadInput): Promise<TaskAttachment> {
     const formData = new FormData();
     formData.append("file", file);
+    const config = authConfig(accessToken);
 
     const response = await api.post(apiRoutes.TASKS.BOARD_TASK_ATTACHMENTS(workspaceId, taskId), formData, {
-      ...authConfig(accessToken),
+      ...config,
       headers: {
-        ...authConfig(accessToken)?.headers,
+        ...config.headers,
         "Content-Type": "multipart/form-data",
       },
       onUploadProgress: (event) => {
@@ -93,10 +238,13 @@ export const attachmentService = {
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = fileName;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
+    try {
+      document.body.appendChild(anchor);
+      anchor.click();
+    } finally {
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    }
   },
 
   async deleteAttachment({
@@ -108,5 +256,7 @@ export const attachmentService = {
     await api.delete(apiRoutes.TASKS.BOARD_TASK_ATTACHMENT(workspaceId, taskId, attachmentId), authConfig(accessToken));
   },
 
+  validateUploadFile,
   getErrorMessage,
+  getUploadErrorMessage,
 };

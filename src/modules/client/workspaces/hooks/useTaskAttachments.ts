@@ -41,6 +41,7 @@ export const useTaskAttachments = ({
 }: UseTaskAttachmentsOptions) => {
   const queryClient = useQueryClient();
   const [uploadingFiles, setUploadingFiles] = useState<UploadQueueItem[]>([]);
+  const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(true);
   const taskScopeRef = useRef(`${workspaceId}:${taskId}`);
   const uploadControllersRef = useRef<Record<string, AbortController>>({});
@@ -58,6 +59,7 @@ export const useTaskAttachments = ({
     Object.values(uploadControllersRef.current).forEach((controller) => controller.abort());
     uploadControllersRef.current = {};
     setUploadingFiles([]);
+    setUploadErrorMessage(null);
     taskScopeRef.current = nextScope;
   }, [taskId, workspaceId]);
 
@@ -98,12 +100,30 @@ export const useTaskAttachments = ({
       const nextItems = files.map((file) => ({
         file,
         queueItem: toQueueItem(file),
+        validationError: attachmentService.validateUploadFile(file),
       }));
       if (nextItems.length === 0) return;
 
-      setQueueSafely((current) => [...nextItems.map(({ queueItem }) => queueItem), ...current]);
+      setUploadErrorMessage(null);
+      const uploadQueueItems: UploadQueueItem[] = nextItems.map(({ queueItem, validationError }) =>
+        validationError
+          ? {
+              ...queueItem,
+              progress: 100,
+              status: "error",
+              error: validationError,
+            }
+          : queueItem,
+      );
+      const firstValidationError = nextItems.find(({ validationError }) => validationError)?.validationError;
 
-      const uploadJobs = nextItems.map(({ file, queueItem }) => {
+      if (firstValidationError) {
+        setUploadErrorMessage(firstValidationError);
+      }
+
+      setQueueSafely((current) => [...uploadQueueItems, ...current]);
+
+      const uploadJobs = nextItems.filter(({ validationError }) => !validationError).map(({ file, queueItem }) => {
         const controller = new AbortController();
         uploadControllersRef.current = {
           ...uploadControllersRef.current,
@@ -129,9 +149,12 @@ export const useTaskAttachments = ({
           })
           .catch((caught) => {
             if (controller.signal.aborted) return null;
+            const uploadError = attachmentService.getUploadErrorMessage(caught);
+            setUploadErrorMessage(uploadError);
             updateQueueItem(queueItem.id, {
+              progress: 100,
               status: "error",
-              error: attachmentService.getErrorMessage(caught, "Upload failed."),
+              error: uploadError,
             });
             return null;
           })
@@ -235,6 +258,8 @@ export const useTaskAttachments = ({
     isLoading: attachmentsQuery.isFetching,
     error: attachmentsQuery.error,
     refetch: attachmentsQuery.refetch,
+    uploadErrorMessage,
+    clearUploadError: () => setUploadErrorMessage(null),
     uploadFiles,
     clearQueueItem,
     canDeleteAttachment,
