@@ -20,6 +20,7 @@ type TaskLabelModalProps = {
 };
 
 const inputCls = "h-10 w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-3 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]";
+const MAX_LABEL_NAME_LENGTH = 25;
 
 export default function TaskLabelModal({
   isOpen,
@@ -104,9 +105,19 @@ export default function TaskLabelModal({
     );
   };
 
+  const trimmedNewLabelName = newLabelName.trim();
+  const isNewLabelTooLong = trimmedNewLabelName.length > MAX_LABEL_NAME_LENGTH;
+  const newLabelError = isNewLabelTooLong
+    ? `Label name must be ${MAX_LABEL_NAME_LENGTH} characters or fewer.`
+    : "";
+  const canCreateLabel =
+    Boolean(trimmedNewLabelName) &&
+    !isNewLabelTooLong &&
+    !createLabelMutation.isPending;
+
   const handleCreateLabel = async () => {
-    const name = newLabelName.trim();
-    if (!name) return;
+    const name = trimmedNewLabelName;
+    if (!name || isNewLabelTooLong) return;
     const existing = labels.find((label) => label.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       setSelectedIds((current) => current.includes(existing.id) ? current : [...current, existing.id]);
@@ -160,27 +171,47 @@ export default function TaskLabelModal({
         </div>
 
         <div className="space-y-4 p-5">
-          <div className="flex gap-2">
-            <input
-              autoFocus
-              value={newLabelName}
-              onChange={(e) => setNewLabelName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleCreateLabel();
-                if (e.key === "Escape") onClose();
-              }}
-              placeholder="Write label"
-              className={inputCls}
-            />
-            <button
-              type="button"
-              onClick={handleCreateLabel}
-              disabled={createLabelMutation.isPending || !newLabelName.trim()}
-              className="inline-flex h-10 items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
+          <div className="space-y-1.5">
+            <div className="flex gap-2">
+              <input
+                autoFocus
+                value={newLabelName}
+                onChange={(e) => setNewLabelName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreateLabel();
+                  if (e.key === "Escape") onClose();
+                }}
+                placeholder="Write label"
+                maxLength={MAX_LABEL_NAME_LENGTH + 1}
+                aria-invalid={isNewLabelTooLong}
+                aria-describedby="label-name-limit"
+                className={`${inputCls} ${
+                  isNewLabelTooLong
+                    ? "border-[#9F2F2D] focus:border-[#9F2F2D] dark:border-[#F87171] dark:focus:border-[#F87171]"
+                    : ""
+                }`}
+              />
+              <button
+                type="button"
+                onClick={handleCreateLabel}
+                disabled={!canCreateLabel}
+                className="inline-flex h-10 items-center gap-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] px-3 text-[0.8125rem] font-medium text-white transition-colors hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {createLabelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                Add
+              </button>
+            </div>
+            <div
+              id="label-name-limit"
+              className={`flex items-center justify-between gap-3 text-[0.6875rem] ${
+                isNewLabelTooLong
+                  ? "text-[#9F2F2D] dark:text-[#F87171]"
+                  : "text-[#787774] dark:text-[#9B9A97]"
+              }`}
             >
-              {createLabelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Add
-            </button>
+              <span>{newLabelError || `Maximum ${MAX_LABEL_NAME_LENGTH} characters.`}</span>
+              <span>{Math.min(newLabelName.length, MAX_LABEL_NAME_LENGTH + 1)}/{MAX_LABEL_NAME_LENGTH}</span>
+            </div>
           </div>
 
           <div className="relative">

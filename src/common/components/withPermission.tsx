@@ -86,8 +86,6 @@ export const withPermission = (
       hasPermission,
       router,
       fetchUserPermissions,
-      resource,
-      action,
       isLoadingPermissions,
     ]);
 
