@@ -2,9 +2,11 @@
 
 import { FileText } from "lucide-react";
 import { useDocsStore } from "../store/docs.store";
+import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 
-export default function RecentDocs() {
-  const { documents, recentDocumentIds, selectDocument, selectedDocumentId } = useDocsStore();
+export default function RecentDocs({ workspaceId }: { workspaceId: string }) {
+  const { recentDocumentIds, selectDocument, selectedDocumentId } = useDocsStore();
+  const { documents } = useWorkspaceDocs(workspaceId);
 
   const recentDocs = recentDocumentIds
     .map(id => documents.find(d => d.id === id))
@@ -22,7 +24,7 @@ export default function RecentDocs() {
           doc && (
             <li key={doc.id}>
               <button
-                onClick={() => selectDocument(doc.id)}
+                onClick={() => selectDocument(doc.id, documents)}
                 className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[0.8125rem] transition-all ${
                   selectedDocumentId === doc.id
                     ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium"

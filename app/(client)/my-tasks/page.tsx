@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -61,8 +63,6 @@ type GroupBy = "status" | "project" | "priority" | "none";
 export default function MyTasksPage() {
   usePageTitle("My Tasks");
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [groupBy, setGroupBy] = useState<GroupBy>("status");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -70,23 +70,17 @@ export default function MyTasksPage() {
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"priority" | "dueDate" | "updated">("priority");
 
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-    const fetchTasks = async () => {
-      try {
-        const res = await api.get(apiRoutes.TASKS.ASSIGNEE(user.id));
-        setTasks(res.data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTasks();
-  }, [user?.id]);
+  const { data: tasksData, isLoading } = useQuery({
+    queryKey: queryKeys.tasks.myTasks(user?.id ?? ""),
+    queryFn: async () => {
+      const res = await api.get(apiRoutes.TASKS.ASSIGNEE(user!.id));
+      return res.data as Task[];
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
+  const tasks = tasksData || [];
 
   const priorityOrder: Record<string, number> = { highest: 0, high: 1, medium: 2, low: 3, lowest: 4 };
 
@@ -138,7 +132,7 @@ export default function MyTasksPage() {
     lowest: "Lowest Priority",
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="app-page-wide">

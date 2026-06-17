@@ -1,27 +1,14 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
-import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
-import api from "@/lib/axiosIns";
-import { apiRoutes } from "@/config/apiRoutes";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import { ChevronDown, Plus, Check, Building2 } from "lucide-react";
 
 export default function WorkspaceSwitcher() {
-  const { workspaces, currentWorkspace, setWorkspaces, setCurrentWorkspace, workspacesLoaded } = useWorkspaceStore();
-  const { user } = useAuth();
+  const { workspaces, currentWorkspace, setCurrentWorkspaceId } = useCurrentWorkspace();
   const router = useRouter();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const loaded = useRef(false);
-
-  useEffect(() => {
-    if (loaded.current || !user || workspacesLoaded) return;
-    loaded.current = true;
-    api.get(apiRoutes.WORKSPACES.BASE).then((res) => {
-      setWorkspaces(res.data);
-    }).catch(console.error);
-  }, [user, setWorkspaces, workspacesLoaded]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -60,7 +47,7 @@ export default function WorkspaceSwitcher() {
             <button
               key={ws._id}
               onClick={() => {
-                setCurrentWorkspace(ws);
+                setCurrentWorkspaceId(ws._id);
                 setShowDropdown(false);
               }}
               className={`w-full flex items-center justify-between px-3 py-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors ${

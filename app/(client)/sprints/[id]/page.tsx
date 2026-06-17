@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axiosIns";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import {
   ArrowLeft,
@@ -39,6 +41,16 @@ interface SprintStats {
   completedPoints: number;
 }
 
+interface SprintTask {
+  status?: string;
+  storyPoints?: number;
+}
+
+interface SprintDetailData {
+  sprint: Sprint;
+  stats: SprintStats;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const statusConfig: Record<string, { color: string; bg: string; icon: any }> = {
   planning: { color: "text-slate-700", bg: "bg-slate-100", icon: Target },
@@ -49,11 +61,8 @@ const statusConfig: Record<string, { color: string; bg: string; icon: any }> = {
 export default function SprintDetailPage({ params }: { params: Promise<{ id: string }> }) {
   usePageTitle("Sprint");
   const router = useRouter();
-  const [sprint, setSprint] = useState<Sprint | null>(null);
-  const [stats, setStats] = useState<SprintStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [sprintId, setSprintId] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     router.replace("/workspaces");
@@ -63,67 +72,60 @@ export default function SprintDetailPage({ params }: { params: Promise<{ id: str
     params.then((p) => setSprintId(p.id));
   }, [params]);
 
-  useEffect(() => {
-    if (!sprintId) return;
-    const fetchData = async () => {
-      try {
-        const sprintRes = await api.get(apiRoutes.SPRINTS.BY_ID(sprintId));
-        const nextSprint = sprintRes.data as Sprint;
-        const sprintWorkspaceId =
-          typeof nextSprint.workspaceId === "string"
-            ? nextSprint.workspaceId
-            : (nextSprint.workspaceId?._id ?? nextSprint.projectId._id);
-        const tasksRes = await api.get(apiRoutes.TASKS.BY_SPRINT(sprintWorkspaceId, sprintId));
-        setSprint(nextSprint);
-        const tasks = tasksRes.data;
-        setStats({
+  const sprintDetailQuery = useQuery({
+    queryKey: queryKeys.sprints.detail(sprintId ?? ""),
+    enabled: !!sprintId,
+    queryFn: async () => {
+      const sprintRes = await api.get(apiRoutes.SPRINTS.BY_ID(sprintId!));
+      const nextSprint = sprintRes.data as Sprint;
+      const sprintWorkspaceId =
+        typeof nextSprint.workspaceId === "string"
+          ? nextSprint.workspaceId
+          : (nextSprint.workspaceId?._id ?? nextSprint.projectId._id);
+      const tasksRes = await api.get(apiRoutes.TASKS.BY_SPRINT(sprintWorkspaceId, sprintId!));
+      const tasks = tasksRes.data as SprintTask[];
+      const completedTasks = tasks.filter((task) => task.status === "done" || task.status === "completed");
+
+      return {
+        sprint: nextSprint,
+        stats: {
           totalTasks: tasks.length,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          completedTasks: tasks.filter((t: any) => t.status === "done" || t.status === "completed").length,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          totalPoints: tasks.reduce((sum: number, t: any) => sum + (t.storyPoints || 0), 0),
-          completedPoints: tasks
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .filter((t: any) => t.status === "done" || t.status === "completed")
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .reduce((sum: number, t: any) => sum + (t.storyPoints || 0), 0),
-        });
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, [sprintId]);
+          completedTasks: completedTasks.length,
+          totalPoints: tasks.reduce((sum, task) => sum + (task.storyPoints || 0), 0),
+          completedPoints: completedTasks.reduce((sum, task) => sum + (task.storyPoints || 0), 0),
+        } satisfies SprintStats,
+      } satisfies SprintDetailData;
+    },
+  });
+
+  const updateSprintStatusMutation = useMutation({
+    mutationFn: (status: "start" | "complete") =>
+      api.put(status === "start" ? apiRoutes.SPRINTS.START(sprintId!) : apiRoutes.SPRINTS.COMPLETE(sprintId!)),
+    onSuccess: (res) => {
+      queryClient.setQueryData<SprintDetailData>(
+        queryKeys.sprints.detail(sprintId ?? ""),
+        (current) => current ? { ...current, sprint: res.data as Sprint } : current,
+      );
+    },
+    onError: (error) => console.error(error),
+  });
 
   const handleStartSprint = async () => {
     if (!sprintId) return;
-    setActionLoading(true);
-    try {
-      const res = await api.put(apiRoutes.SPRINTS.START(sprintId));
-      setSprint(res.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setActionLoading(false);
-    }
+    updateSprintStatusMutation.mutate("start");
   };
 
   const handleCompleteSprint = async () => {
     if (!sprintId) return;
-    setActionLoading(true);
-    try {
-      const res = await api.put(apiRoutes.SPRINTS.COMPLETE(sprintId));
-      setSprint(res.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setActionLoading(false);
-    }
+    updateSprintStatusMutation.mutate("complete");
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (!sprintId || sprintDetailQuery.isLoading) return <LoadingSpinner />;
+
+  const sprint = sprintDetailQuery.data?.sprint ?? null;
+  const stats = sprintDetailQuery.data?.stats ?? null;
+  const actionLoading = updateSprintStatusMutation.isPending;
+
   if (!sprint)
     return (
       <div className="flex flex-col items-center justify-center py-20">

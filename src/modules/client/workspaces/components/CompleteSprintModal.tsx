@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { X, AlertTriangle, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { queryKeys } from '@/common/constants/queryKeys';
 import { sprintService } from '../services/sprintService';
 import { Sprint } from '../types/sprint.type';
 
@@ -33,32 +35,29 @@ export default function CompleteSprintModal({
   sprints,
   workspaceId,
 }: CompleteSprintModalProps) {
-  const [loading, setLoading] = useState(false);
-  const [preview, setPreview] = useState<PreviewData | null>(null);
   const [moveToSprintId, setMoveToSprintId] = useState<string>('');
+  const previewQuery = useQuery<PreviewData>({
+    queryKey: queryKeys.sprints.completePreview(workspaceId, sprint?._id ?? ''),
+    queryFn: () => sprintService.getCompleteSprintPreview(workspaceId, sprint!._id),
+    enabled: isOpen && !!sprint && !!workspaceId,
+  });
 
   useEffect(() => {
-    if (isOpen && sprint && workspaceId) {
-      setLoading(true);
-      setPreview(null);
+    if (isOpen && sprint) {
       setMoveToSprintId('');
-      sprintService
-        .getCompleteSprintPreview(workspaceId, sprint._id)
-        .then((data) => {
-          setPreview(data);
-        })
-        .catch((err) => {
-          console.error(err);
-          toast.error('Could not load sprint preview');
-          onClose();
-        })
-        .finally(() => {
-          setLoading(false);
-        });
     }
-  }, [isOpen, sprint, workspaceId]);
+  }, [isOpen, sprint]);
+
+  useEffect(() => {
+    if (!previewQuery.isError) return;
+    console.error(previewQuery.error);
+    toast.error('Could not load sprint preview');
+    onClose();
+  }, [onClose, previewQuery.error, previewQuery.isError]);
 
   if (!isOpen || !sprint) return null;
+
+  const preview = previewQuery.data ?? null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,7 +87,7 @@ export default function CompleteSprintModal({
           </button>
         </div>
 
-        {loading ? (
+        {previewQuery.isLoading ? (
           <div className="p-12 flex flex-col items-center justify-center gap-3">
             <Loader2 className="w-6 h-6 text-[#2563EB] animate-spin" />
             <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Loading sprint preview...</p>

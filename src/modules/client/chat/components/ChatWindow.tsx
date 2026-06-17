@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { getMessagesAPI } from '@/modules/client/chat/services/chatService';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
@@ -13,6 +12,7 @@ import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
 import Link from 'next/link';
+import { useWorkspaces } from '@/modules/client/workspaces/hooks/useWorkspaces';
 
 export default function ChatWindow() {
   // Use specific selectors to prevent unnecessary re-renders and reference changes
@@ -23,7 +23,7 @@ export default function ChatWindow() {
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
   const setMessages = useChatStore(state => state.setMessages);
   
-  const { workspaces } = useWorkspaceStore();
+  const { data: workspaces = [] } = useWorkspaces();
   const currentUserId = useAuthStore(state => state.user?.id);
   const userRole = useAuthStore(state => state.user?.role);
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();

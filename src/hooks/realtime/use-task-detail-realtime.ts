@@ -24,6 +24,7 @@ import {
   upsertAttachment,
   upsertComment,
 } from './task-detail-cache.utils';
+import { queryKeys } from '@/common/constants/queryKeys';
 
 type TaskDetailEventData = {
   workspaceId: string;
@@ -78,7 +79,7 @@ export function useTaskDetailRealtime({
     ) => {
       if (!taskKey) return;
       queryClient.setQueryData<TaskDetailResponse>(
-        ['taskDetail', workspaceId, taskKey],
+        queryKeys.tasks.detail(workspaceId, taskKey),
         updater,
       );
     };
@@ -86,7 +87,7 @@ export function useTaskDetailRealtime({
     const handleCommentUpserted = (envelope: TaskDetailEnvelope) => {
       if (!isCurrentTaskEvent(envelope) || !envelope.data.comment) return;
       queryClient.setQueryData<TaskComment[]>(
-        ['taskComments', workspaceId, taskId],
+        queryKeys.tasks.detailComments(workspaceId, taskId),
         (current) => upsertComment(current, envelope.data.comment as TaskComment),
       );
     };
@@ -94,7 +95,7 @@ export function useTaskDetailRealtime({
     const handleCommentDeleted = (envelope: TaskDetailEnvelope) => {
       if (!isCurrentTaskEvent(envelope)) return;
       queryClient.setQueryData<TaskComment[]>(
-        ['taskComments', workspaceId, taskId],
+        queryKeys.tasks.detailComments(workspaceId, taskId),
         (current) => removeComment(current, envelope.data.commentId),
       );
     };
@@ -102,7 +103,7 @@ export function useTaskDetailRealtime({
     const handleAttachmentAdded = (envelope: TaskDetailEnvelope) => {
       if (!isCurrentTaskEvent(envelope) || !envelope.data.attachment) return;
       queryClient.setQueryData<TaskAttachment[]>(
-        ['taskAttachments', workspaceId, taskId],
+        queryKeys.tasks.attachments(workspaceId, taskId),
         (current) => upsertAttachment(current, envelope.data.attachment as TaskAttachment),
       );
     };
@@ -110,7 +111,7 @@ export function useTaskDetailRealtime({
     const handleAttachmentDeleted = (envelope: TaskDetailEnvelope) => {
       if (!isCurrentTaskEvent(envelope)) return;
       queryClient.setQueryData<TaskAttachment[]>(
-        ['taskAttachments', workspaceId, taskId],
+        queryKeys.tasks.attachments(workspaceId, taskId),
         (current) => removeAttachment(current, envelope.data.attachmentId),
       );
     };
@@ -120,7 +121,7 @@ export function useTaskDetailRealtime({
       const labelIds = envelope.data.labelIds ?? [];
       updateTaskDetail((current) => updateTaskLabels(current, labelIds, envelope.data.task));
       queryClient.setQueriesData<Issue[]>(
-        { queryKey: ['tasks', workspaceId] },
+        { queryKey: queryKeys.tasks.byWorkspace(workspaceId) },
         (current) =>
           current?.map((issue) =>
             (issue.id || issue._id) === taskId ? { ...issue, labelIds } : issue,
@@ -132,7 +133,7 @@ export function useTaskDetailRealtime({
       if (!isCurrentTaskEvent(envelope)) return;
       updateTaskDetail((current) => updateTaskCover(current, envelope.data.cover ?? null));
       queryClient.setQueriesData<Issue[]>(
-        { queryKey: ['tasks', workspaceId] },
+        { queryKey: queryKeys.tasks.byWorkspace(workspaceId) },
         (current) =>
           current?.map((issue) =>
             (issue.id || issue._id) === taskId
@@ -145,7 +146,7 @@ export function useTaskDetailRealtime({
     const handleActivityCreated = (envelope: TaskDetailEnvelope) => {
       if (!isCurrentTaskEvent(envelope) || !envelope.data.activity) return;
       queryClient.setQueriesData<PaginatedActivitiesResponse>(
-        { queryKey: ['taskActivities', workspaceId, taskId] },
+        { queryKey: queryKeys.tasks.activities(workspaceId, taskId) },
         (current) => prependActivity(current, envelope.data.activity as TaskActivity),
       );
     };

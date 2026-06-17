@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { useParams } from "next/navigation";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
@@ -50,25 +51,27 @@ const typeColors: Record<string, string> = {
 export default function ProjectBoardPage() {
   usePageTitle("Project");
   const params = useParams();
+  const queryClient = useQueryClient();
   const projectId = params.id as string;
-  useWorkspaceStore();
-  const [project, setProject] = useState<Project | null>(null);
-  const [board, setBoard] = useState<Board | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
 
-  const fetchData = async () => {
-    try {
-      const [projRes, boardRes, taskRes] = await Promise.all([
-        api.get(apiRoutes.PROJECTS.BY_ID(projectId)),
-        api.get(`${apiRoutes.BOARDS.BASE}?projectId=${projectId}`),
-        api.get(apiRoutes.TASKS.BY_PROJECT(projectId)),
-      ]);
-      setProject(projRes.data);
+  const { data: project, isLoading: isProjectLoading } = useQuery({
+    queryKey: queryKeys.projects.detail(projectId),
+    queryFn: async () => {
+      const res = await api.get(apiRoutes.PROJECTS.BY_ID(projectId));
+      return res.data as Project;
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
+  const { data: board, isLoading: isBoardLoading } = useQuery({
+    queryKey: queryKeys.projects.board(projectId),
+    queryFn: async () => {
+      const boardRes = await api.get(`${apiRoutes.BOARDS.BASE}?projectId=${projectId}`);
       if (boardRes.data.length > 0) {
-        setBoard(boardRes.data[0]);
+        return boardRes.data[0] as Board;
       } else {
         const newBoard = await api.post(apiRoutes.BOARDS.BASE, {
           projectId,
@@ -80,19 +83,24 @@ export default function ProjectBoardPage() {
             { id: "done", name: "Done", order: 3 },
           ],
         });
-        setBoard(newBoard.data);
+        return newBoard.data as Board;
       }
-      setTasks(taskRes.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, [projectId]);
+  const { data: tasksData, isLoading: isTasksLoading } = useQuery({
+    queryKey: queryKeys.projects.tasks(projectId),
+    queryFn: async () => {
+      const res = await api.get(apiRoutes.TASKS.BY_PROJECT(projectId));
+      return res.data as Task[];
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  });
+
+  const tasks = tasksData || [];
 
   const getTasksByColumn = useCallback(
     (columnId: string) => tasks.filter((t) => t.boardColumnId === columnId),
@@ -108,6 +116,31 @@ export default function ProjectBoardPage() {
     setDragOverColumn(columnId);
   };
   const handleDragLeave = () => setDragOverColumn(null);
+
+  const moveTaskMutation = useMutation({
+    mutationFn: ({ taskId, columnId }: { taskId: string; columnId: string }) =>
+      api.put(apiRoutes.TASKS.MOVE(taskId), { boardId: board?._id, boardColumnId: columnId }),
+    onMutate: async ({ taskId, columnId }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.projects.tasks(projectId) });
+      const previousTasks = queryClient.getQueryData<Task[]>(queryKeys.projects.tasks(projectId));
+      if (previousTasks) {
+        queryClient.setQueryData<Task[]>(
+          queryKeys.projects.tasks(projectId),
+          previousTasks.map((t) => (t._id === taskId ? { ...t, boardColumnId: columnId } : t))
+        );
+      }
+      return { previousTasks };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousTasks) {
+        queryClient.setQueryData(queryKeys.projects.tasks(projectId), context.previousTasks);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tasks(projectId) });
+    },
+  });
+
   const handleDrop = async (e: React.DragEvent, columnId: string) => {
     e.preventDefault();
     setDragOverColumn(null);
@@ -115,21 +148,14 @@ export default function ProjectBoardPage() {
       setDraggedTask(null);
       return;
     }
-    setTasks((prev) => prev.map((t) => (t._id === draggedTask._id ? { ...t, boardColumnId: columnId } : t)));
+    const taskId = draggedTask._id;
     setDraggedTask(null);
-    try {
-      await api.put(apiRoutes.TASKS.MOVE(draggedTask._id), { boardId: board?._id, boardColumnId: columnId });
-    } catch {
-      fetchData();
-    }
+    moveTaskMutation.mutate({ taskId, columnId });
   };
 
-  const handleCreateTask = async (columnId: string) => {
-    if (!project) return;
-    const title = prompt("Task title:");
-    if (!title?.trim()) return;
-    try {
-      const res = await api.post(apiRoutes.TASKS.BASE, {
+  const createTaskMutation = useMutation({
+    mutationFn: ({ title, columnId }: { title: string; columnId: string }) =>
+      api.post(apiRoutes.TASKS.BASE, {
         title,
         projectId,
         boardId: board?._id,
@@ -137,12 +163,24 @@ export default function ProjectBoardPage() {
         type: "task",
         priority: "medium",
         status: columnId,
-      });
-      setTasks((prev) => [...prev, res.data]);
-    } catch (e) {
-      console.error(e);
-    }
+      }),
+    onSuccess: (res) => {
+      queryClient.setQueryData<Task[]>(queryKeys.projects.tasks(projectId), (current = []) => [
+        ...current,
+        res.data,
+      ]);
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.tasks(projectId) });
+    },
+  });
+
+  const handleCreateTask = async (columnId: string) => {
+    if (!project) return;
+    const title = prompt("Task title:");
+    if (!title?.trim()) return;
+    createTaskMutation.mutate({ title, columnId });
   };
+
+  const loading = isProjectLoading || isBoardLoading || isTasksLoading;
 
   if (loading) return <LoadingSpinner />;
   if (!project) return <div className="app-main text-center text-gray-500">Project not found</div>;

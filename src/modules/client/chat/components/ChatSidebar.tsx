@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useChatStore, Channel } from '@/stores/chatStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { getChannelsAPI } from '@/modules/client/chat/services/chatService';
 import { Hash, Megaphone, Loader2 } from 'lucide-react';
@@ -10,12 +9,13 @@ import { getWorkspaceUI } from '@/utils/workSpaceUI';
 import { useSearchParams } from 'next/navigation';
 import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
 import { chatSocketClient } from '@/lib/socket/chat.client';
+import { useWorkspaces } from '@/modules/client/workspaces/hooks/useWorkspaces';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 export default function ChatSidebar() {
   const { channels, setChannels, activeChannelId, setActiveChannel } = useChatStore();
-  const { workspaces } = useWorkspaceStore();
+  const { data: workspaces = [] } = useWorkspaces();
   const authUser = useAuthStore(state => state.user);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentUserId = (authUser as any)?._id || authUser?.id;

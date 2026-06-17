@@ -6,6 +6,7 @@ import { BoardColumn } from "@/modules/client/workspaces/types/board.type";
 import { Issue } from "@/modules/client/workspaces/types/issue.type";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { LEGACY_EVENTS } from "@/lib/socket/socket.events";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 type BoardCacheData = {
   boardId: string;
@@ -93,8 +94,8 @@ export function useWorkspaceSocket(workspaceId?: string) {
     realtimeSocketClient.switchWorkspace(workspaceId);
 
     const invalidateWorkspaceQueries = () => {
-      queryClient.invalidateQueries({ queryKey: ["board", workspaceId] });
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.board.byWorkspace(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
     };
 
     const unsubscribeReconnect = realtimeSocketClient.onReconnect(() => {
@@ -105,7 +106,7 @@ export function useWorkspaceSocket(workspaceId?: string) {
     const applyDelta = (delta: BoardDelta) => {
       if (delta.workspaceId !== workspaceId) return;
 
-      queryClient.setQueryData<BoardCacheData>(["board", workspaceId], (current) => {
+      queryClient.setQueryData<BoardCacheData>(queryKeys.board.byWorkspace(workspaceId), (current) => {
         if (!current) return current;
 
         switch (delta.action) {
@@ -146,7 +147,7 @@ export function useWorkspaceSocket(workspaceId?: string) {
         }
       });
 
-      queryClient.setQueriesData<Issue[]>({ queryKey: ["tasks", workspaceId] }, (current) => {
+      queryClient.setQueriesData<Issue[]>({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) }, (current) => {
         switch (delta.action) {
           case "task:created":
           case "task:updated":

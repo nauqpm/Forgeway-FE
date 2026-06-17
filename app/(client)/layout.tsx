@@ -1,15 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
 import Sidebar from "@/modules/shared/components/common/components/Sidebar";
-import api from "@/lib/axiosIns";
-import { apiRoutes } from "@/config/apiRoutes";
 import NotificationPanel from "@/modules/shared/components/common/components/NotificationPanel";
 import { notificationService } from "@/common/services/notification.service";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
 import { useWorkspaceRealtime } from "@/hooks/realtime/use-workspace-realtime";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import {
   LayoutDashboard,
   Loader2,
@@ -63,19 +63,14 @@ const DEFAULT_FILTERS: Filters = {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
-  const {
-    currentWorkspace,
-    setWorkspaces,
-    workspaces,
-    workspacesLoaded,
-  } = useWorkspaceStore();
+  const queryClient = useQueryClient();
+  const { currentWorkspace, workspaces, isLoading: isWorkspacesLoading } = useCurrentWorkspace();
   const { theme, setTheme } = useTheme();
 
 
   // UI State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -91,6 +86,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
   const [isTaskSearchReady, setIsTaskSearchReady] = useState(false);
   const taskSearchHydrationPathRef = useRef<string | null>(null);
+  const { data: unreadNotificationCount = 0 } = useQuery({
+    queryKey: queryKeys.notifications.unreadCount(),
+    queryFn: () => notificationService.unreadCount(),
+    enabled: isAuthenticated,
+    staleTime: 30_000,
+  });
 
   // Default workspace keys for search
   const searchProjects = (workspaces.length > 0 ? workspaces : currentWorkspace ? [currentWorkspace] : [])
@@ -153,11 +154,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const refreshUnreadNotificationCount = useCallback(() => {
     if (!isAuthenticated) return;
-    notificationService
-      .unreadCount()
-      .then(setUnreadNotificationCount)
-      .catch(() => setUnreadNotificationCount(0));
-  }, [isAuthenticated]);
+    queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
+  }, [isAuthenticated, queryClient]);
 
   // Setup real-time connections
   useNotificationRealtime({
@@ -167,22 +165,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     onReadAll: refreshUnreadNotificationCount,
   });
   useWorkspaceRealtime({ enabled: isAuthenticated });
-
-  // Load workspaces on mount
-  useEffect(() => {
-    refreshUnreadNotificationCount();
-  }, [refreshUnreadNotificationCount]);
-
-  useEffect(() => {
-    if (isAuthenticated && !workspacesLoaded) {
-      api
-        .get(apiRoutes.WORKSPACES.BASE)
-        .then((res) => {
-          setWorkspaces(res.data?.data ?? res.data);
-        })
-        .catch(() => {});
-    }
-  }, [isAuthenticated, workspacesLoaded, setWorkspaces]);
 
   // Auth redirect
   useEffect(() => {
@@ -197,7 +179,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       setIsTaskSearchReady(false);
       return;
     }
-    if (!workspaceKey && !workspacesLoaded) return;
+    if (!workspaceKey && isWorkspacesLoading) return;
 
     const hydrationPath = pathname || "";
     if (taskSearchHydrationPathRef.current === hydrationPath) return;
@@ -242,7 +224,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [
     pathname,
     workspaceKey,
-    workspacesLoaded,
+    isWorkspacesLoading,
     defaultSearchWorkspaceKeys.join(","),
   ]);
 
@@ -492,7 +474,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {showNotifications && (
           <NotificationPanel
             onClose={() => setShowNotifications(false)}
-            onUnreadCountChange={setUnreadNotificationCount}
+            onUnreadCountChange={(count) =>
+              queryClient.setQueryData(queryKeys.notifications.unreadCount(), count)
+            }
           />
         )}
 

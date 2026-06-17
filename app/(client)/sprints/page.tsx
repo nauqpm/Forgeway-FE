@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useQuery } from "@tanstack/react-query";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { Zap, Clock, CheckCircle, Calendar, Play, ArrowRight } from "lucide-react";
@@ -24,22 +26,16 @@ interface Sprint {
 export default function SprintsPage() {
   usePageTitle("Sprints");
   const router = useRouter();
-  const { currentWorkspace } = useWorkspaceStore();
-  const [sprints, setSprints] = useState<Sprint[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { currentWorkspace } = useCurrentWorkspace();
 
   useEffect(() => {
     router.replace("/workspaces");
   }, [router]);
 
-  useEffect(() => {
-    if (!currentWorkspace?._id) {
-      setLoading(false);
-      return;
-    }
-    const fetch = async () => {
-      try {
-        const res = await api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${currentWorkspace._id}`);
+  const { data: sprints = [], isLoading } = useQuery({
+    queryKey: queryKeys.sprints.byWorkspace(currentWorkspace?._id ?? ""),
+    queryFn: async () => {
+        const res = await api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${currentWorkspace!._id}`);
         const all: Sprint[] = [];
         for (const proj of res.data) {
           if (proj.type === "scrum") {
@@ -49,16 +45,13 @@ export default function SprintsPage() {
             } catch {}
           }
         }
-        setSprints(all);
-      } catch {
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, [currentWorkspace?._id]);
+        return all;
+    },
+    enabled: !!currentWorkspace?._id,
+    staleTime: 30_000,
+  });
 
-  if (loading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinner />;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const config: Record<string, { color: string; bg: string; icon: any }> = {

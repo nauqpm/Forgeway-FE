@@ -6,10 +6,10 @@ import LoadingSpinner from "@/modules/shared/components/common/components/Loadin
 import Link from "next/link";
 import WorkspaceContent from "@/modules/client/workspaces/components/WorkspaceContent";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { toast } from "react-hot-toast";
 import { boardService } from "@/modules/client/workspaces/services/boardService";
 import { BoardColumn } from "@/modules/client/workspaces/types/board.type";
-import { sprintService } from "@/modules/client/workspaces/services/sprintService";
 import { DropResult } from "@hello-pangea/dnd";
 
 import { getWorkspaceTemplate, Workspace, WorkspaceTab } from "@/modules/client/workspaces/types/workspace.type";
@@ -27,7 +27,6 @@ import { removeRestoredArchiveItem } from "@/modules/client/workspaces/utils/arc
 import {
   handleBoardDragEnd,
   handleBacklogDragEnd,
-  compareIssueRank,
   TaskReorderSyncInput,
 } from "@/modules/client/workspaces/utils/dragUtils";
 
@@ -41,7 +40,6 @@ import { WORKSPACE_PERMISSIONS } from "@/modules/client/workspaces/constants/wor
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { useTaskRealtime } from "@/hooks/realtime/use-task-realtime";
 import { useSprintRealtime } from "@/hooks/realtime/use-sprint-realtime";
-import { sprintIdOf } from "@/hooks/realtime/sprint-realtime-cache.utils";
 import {
   sortIssuesByRank,
   taskIdOf,
@@ -108,6 +106,8 @@ const normalizeRole = (role?: string | null) =>
     .toLowerCase()
     .replace(/[-\s]+/g, "_") ?? null;
 
+type CacheUpdater<T> = T | ((current: T) => T);
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getUserObject = (member: any) =>
   member?.userId ?? member?.user ?? member?.member ?? member;
@@ -157,10 +157,35 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
         ? (tab?.[2] ?? null)
         : null;
 
-  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
+  const { data: resolvedWorkspace, isLoading: isWorkspaceLoading } = useQuery({
+    queryKey: queryKeys.workspaces.bySlug(workspaceKey),
+    queryFn: async () => {
+      const nextWorkspace = await resolveWorkspaceFromRouteKey(workspaceKey);
+      let workspaceMembers = nextWorkspace.members ?? [];
+      try {
+        const membersResponse = await api.get(
+          apiRoutes.WORKSPACES.MEMBERS(nextWorkspace._id),
+        );
+        workspaceMembers =
+          membersResponse.data?.data ??
+          membersResponse.data ??
+          workspaceMembers;
+      } catch {
+        // Ignored
+      }
+      return {
+        ...nextWorkspace,
+        members: workspaceMembers,
+      } as Workspace;
+    },
+    enabled: !!workspaceKey,
+    staleTime: 30_000,
+  });
+
+  const workspace = resolvedWorkspace ?? null;
   const workspaceApiId = workspace?._id;
-  const { setCurrentWorkspace, updateWorkspaceAvatar } = useWorkspaceStore();
-  const [loading, setLoading] = useState(true);
+  const loading = isWorkspaceLoading;
   const [activeTab, setActiveTab] = useState<WorkspaceTab>(
     initialTab || "board",
   );
@@ -214,12 +239,9 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
   }, [getWorkspaceTabUrl, workspace]);
-  const [sprints, setSprints] = useState<Sprint[]>([]);
-  const [issues, setIssues] = useState<Issue[]>([]);
   const isDraggingIssueRef = useRef(false);
   const reorderInFlightRef = useRef(new Set<string>());
   const pendingReorderRef = useRef(new Map<string, TaskReorderSyncInput>());
-
   const [showCreateIssue, setShowCreateIssue] = useState(false);
   const [newIssueForm, setNewIssueForm] = useState<{
     title: string;
@@ -263,25 +285,20 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   const columnsEndRef = useRef<HTMLDivElement>(null);
 
   const { data: boardData, isLoading: isBoardLoading } = useQuery({
-    queryKey: ["board", workspaceApiId],
+    queryKey: queryKeys.board.byWorkspace(workspaceApiId ?? ""),
     queryFn: () => boardService.getBoardByWorkspace(workspaceApiId!),
     enabled: !!workspaceApiId,
     staleTime: 30_000,
   });
 
-  const { data: sprintsData } = useQuery({
-    queryKey: ["sprints", workspaceApiId],
-    queryFn: () => sprintService.listSprints(workspaceApiId!),
-    enabled: !!workspaceApiId && workspace?.type === "scrum",
-    staleTime: 30_000,
-  });
+
 
   const {
     data: tasksData,
     error: tasksError,
     isFetching: isTasksFetching,
   } = useQuery({
-    queryKey: ["tasks", workspaceApiId, taskFilters],
+    queryKey: queryKeys.tasks.byWorkspace(workspaceApiId ?? "", taskFilters as unknown as Record<string, unknown>),
     queryFn: () => taskService.getBoardTasks(workspaceApiId!, taskFilters),
     enabled: !!workspaceApiId,
     staleTime: 30_000,
@@ -294,7 +311,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     tasksData.length === 0;
   const { data: fallbackTasksData, isFetching: isFallbackTasksFetching } =
     useQuery({
-      queryKey: ["tasks-fallback-search", workspaceApiId, fallbackTaskFilters],
+      queryKey: queryKeys.tasks.byWorkspace(workspaceApiId ?? "", fallbackTaskFilters as unknown as Record<string, unknown>),
       queryFn: () =>
         taskService.getBoardTasks(workspaceApiId!, fallbackTaskFilters),
       enabled: shouldUseFallbackTaskSearch,
@@ -308,7 +325,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
 
   const { data: archivePageData, isFetching: isArchivedTasksFetching } =
     useQuery({
-      queryKey: ["archivedTasks", workspaceApiId, archivePage],
+      queryKey: queryKeys.tasks.archived(workspaceApiId ?? "", archivePage),
       queryFn: () =>
         taskService.getArchivedTasks(workspaceApiId!, {
           page: archivePage,
@@ -337,7 +354,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   }, []);
 
   const { data: selectedTaskDetail } = useQuery({
-    queryKey: ["taskDetail", workspaceApiId, selectedTaskKey],
+    queryKey: queryKeys.tasks.detail(workspaceApiId ?? "", selectedTaskKey ?? ""),
     queryFn: () =>
       taskService.getBoardTaskDetail(workspaceApiId!, selectedTaskKey!),
     enabled: !!workspaceApiId && !!selectedTaskKey,
@@ -352,7 +369,22 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     return selectedTaskDetail ?? selectedIssue;
   }, [selectedIssue, selectedTaskDetail, workspace]);
 
-  const [columns, setColumns] = useState<BoardColumn[]>([]);
+  const columns = boardData?.columns || [];
+
+  const setColumns = useCallback(
+    (updater: CacheUpdater<BoardColumn[]>) => {
+      const queryKey = queryKeys.board.byWorkspace(workspaceApiId ?? "");
+      queryClient.setQueryData<{ boardId: string; columns: BoardColumn[] }>(queryKey, (current) => {
+        if (!current) return current;
+        const nextColumns = typeof updater === "function" ? updater(current.columns) : updater;
+        return {
+          ...current,
+          columns: nextColumns,
+        };
+      });
+    },
+    [queryClient, workspaceApiId]
+  );
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
   const patchSelectedTaskView = useCallback(
@@ -364,43 +396,18 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           ? { ...current, ...issue }
           : current,
       );
-
-      if (!workspaceApiId || !issue.key) return;
-      if (!workspaceApiId || !issue.key) return;
-
-      queryClient.setQueryData(
-        ["taskDetail", workspaceApiId, issue.key],
-        (current: Issue | undefined) =>
-          current ? { ...current, ...issue } : current,
-      );
     },
-    [queryClient, workspaceApiId],
+    [],
   );
 
   const handleRealtimeTaskUpserted = useCallback(
     (issue: Issue) => {
-      const nextIssueId = taskIdOf(issue);
-
-      setIssues((current) => {
-        const next = current.some((item) => taskIdOf(item) === nextIssueId)
-          ? current.map((item) =>
-              taskIdOf(item) === nextIssueId ? { ...item, ...issue } : item,
-            )
-          : [...current, issue];
-
-        // Skip re-sort during active drag — changing Draggable indices mid-drag
-        // causes @hello-pangea/dnd to use stale source.index vs current position.
-        return isDraggingIssueRef.current ? next : sortIssuesByRank(next);
-      });
       patchSelectedTaskView(issue);
     },
     [patchSelectedTaskView],
   );
 
   const handleRealtimeTaskRemoved = useCallback((taskId: string) => {
-    setIssues((current) =>
-      current.filter((issue) => issue.id !== taskId && issue._id !== taskId),
-    );
     setSelectedIssue((current) =>
       current && (current.id === taskId || current._id === taskId)
         ? null
@@ -409,70 +416,30 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     setSelectedTaskIds((current) => current.filter((id) => id !== taskId));
   }, []);
 
-  const handleRealtimeSprintCreated = useCallback((sprint: Sprint) => {
-    const nextSprintId = sprintIdOf(sprint);
-
-    setSprints((current) => {
-      const exists = current.some((item) => sprintIdOf(item) === nextSprintId);
-
-      if (exists) {
-        return current.map((item) => (sprintIdOf(item) === nextSprintId ? { ...item, ...sprint } : item));
-      }
-
-      return [...current, sprint];
-    });
-  }, []);
-
-  const handleRealtimeSprintDeleted = useCallback((sprintId: string) => {
-    setSprints((current) => current.filter((sprint) => sprintIdOf(sprint) !== sprintId));
-  }, []);
-
   useWorkspaceSocket(workspaceApiId);
   useTaskRealtime(workspaceApiId, {
     onTaskRemoved: handleRealtimeTaskRemoved,
     onTaskUpserted: handleRealtimeTaskUpserted,
   });
-  useSprintRealtime(workspaceApiId, {
-    onSprintCreated: handleRealtimeSprintCreated,
-    onSprintUpdated: handleRealtimeSprintCreated,
-    onSprintStarted: handleRealtimeSprintCreated,
-    onSprintDeleted: handleRealtimeSprintDeleted,
-  });
+  useSprintRealtime(workspaceApiId);
 
-  useEffect(() => {
-    if (boardData?.columns) {
-      setColumns(boardData.columns);
-    }
-  }, [boardData]);
 
-  useEffect(() => {
-    if (sprintsData) setSprints(sprintsData);
-  }, [sprintsData]);
 
-  useEffect(() => {
-    const nextTasksData =
-      shouldUseFallbackTaskSearch && fallbackTasksData
-        ? fallbackTasksData
-        : tasksData;
 
-    if (!nextTasksData) return;
-    if (isDraggingIssueRef.current) return;
+  const issues = (shouldUseFallbackTaskSearch && fallbackTasksData ? fallbackTasksData : tasksData) || [];
 
-    setIssues(nextTasksData);
-    if (selectedTaskKey && !selectedIssue) {
-      const matchingIssue = nextTasksData.find(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (issue: any) => issue.key === selectedTaskKey,
-      );
-      if (matchingIssue) setSelectedIssue(matchingIssue);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    fallbackTasksData,
-    selectedTaskKey,
-    shouldUseFallbackTaskSearch,
-    tasksData,
-  ]); // isDraggingIssue intentionally omitted: firing on drag-end would overwrite optimistic state with stale server data
+  const setIssues = useCallback(
+    (updater: CacheUpdater<Issue[]>) => {
+      const queryKey = queryKeys.tasks.byWorkspace(workspaceApiId ?? "", taskFilters as unknown as Record<string, unknown>);
+      queryClient.setQueryData<Issue[]>(queryKey, (current = []) => {
+        if (typeof updater === "function") {
+          return updater(current);
+        }
+        return updater;
+      });
+    },
+    [queryClient, workspaceApiId, taskFilters]
+  );
 
   const [listViewMode, setListViewMode] = useState<"grid" | "split">("grid");
   const [listGridDrawerOpen, setListGridDrawerOpen] = useState(false);
@@ -531,14 +498,15 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
 
   const handleWorkspaceUpdated = useCallback(
     (updatedWorkspace: Workspace) => {
-      setWorkspace(updatedWorkspace);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setCurrentWorkspace(updatedWorkspace as any);
-      if (updatedWorkspace._id && updatedWorkspace.avatar) {
-        updateWorkspaceAvatar(updatedWorkspace._id, updatedWorkspace.avatar);
-      }
+      queryClient.setQueryData(queryKeys.workspaces.bySlug(workspaceKey), updatedWorkspace);
+      queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (current = []) =>
+        current.map((workspace) =>
+          workspace._id === updatedWorkspace._id ? { ...workspace, ...updatedWorkspace } : workspace,
+        ),
+      );
+      if (updatedWorkspace._id) setCurrentWorkspaceId(updatedWorkspace._id);
     },
-    [setCurrentWorkspace, updateWorkspaceAvatar],
+    [queryClient, workspaceKey, setCurrentWorkspaceId],
   );
 
   const {
@@ -547,12 +515,10 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     handleUpdateIssueDate,
     updateIssueDirectly,
     handleQuickCreateTask,
-    handleQuickCreateCalendarTask,
     handleCreateTaskFromList,
+    handleQuickCreateCalendarTask,
   } = useTaskHandlers({
     workspaceId: workspaceApiId ?? "",
-    issues,
-    setIssues,
     setShowCreateIssue,
     setNewIssueForm,
     setSelectedIssue,
@@ -656,12 +622,8 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           patchSelectedTaskView(updatedTask);
 
           if (!hasQueuedReorder) {
-            setIssues((current) =>
-              sortIssuesByRank(
-                current.map((issue) => (issue.id === updatedTask.id ? updatedTask : clearOptimisticIssueOrder(issue)))
-              )
-            );
-            queryClient.setQueriesData<Issue[]>({ queryKey: ["tasks", workspaceApiId] }, (current) =>
+            const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceApiId);
+            queryClient.setQueriesData<Issue[]>({ queryKey: queryKeyPrefix }, (current) =>
               Array.isArray(current)
                 ? sortIssuesByRank(
                     current.map((issue) =>
@@ -673,22 +635,26 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           }
 
           queryClient.invalidateQueries({
-            queryKey: ["taskActivities", workspaceApiId, taskId],
+            queryKey: queryKeys.tasks.activities(workspaceApiId, taskId),
           });
         })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch((error: any) => {
-          setIssues((current) => current.map(clearOptimisticIssueOrder));
+          const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceApiId);
+          queryClient.setQueriesData<Issue[]>(
+            { queryKey: queryKeyPrefix },
+            (current) => (Array.isArray(current) ? current.map(clearOptimisticIssueOrder) : current)
+          );
 
           if (isNoopReorderError(error)) {
             queryClient.invalidateQueries({
-              queryKey: ["tasks", workspaceApiId],
+              queryKey: queryKeyPrefix,
             });
             return;
           }
 
           queryClient.invalidateQueries({
-            queryKey: ["tasks", workspaceApiId],
+            queryKey: queryKeyPrefix,
           });
           toast.error(
             error?.response?.data?.message || "Could not update task position",
@@ -706,6 +672,27 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     },
     [patchSelectedTaskView, queryClient, workspaceApiId]
   );
+
+  const {
+    sprints,
+    handleCreateSprint,
+    handleSaveSprint,
+    handleEditSprint,
+    handleDeleteSprint,
+    handleStartSprint,
+    handleCompleteSprint,
+    handleConfirmStartSprint,
+    handleConfirmCompleteSprint,
+    startSprintTarget,
+    setStartSprintTarget,
+    completeSprintTarget,
+    setCompleteSprintTarget,
+  } = useSprintHandlers({
+    workspaceId: workspaceApiId ?? "",
+    editingSprint,
+    setEditingSprint,
+    setIsSprintModalOpen,
+  });
 
   const activeSprint = sprints.find((s) => s.status === "active") ?? null;
 
@@ -725,42 +712,25 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
 
   const { handleAddColumn, handleRenameColumn, handleDeleteColumn, handleMoveColumn } = useColumnHandlers({
     workspaceId: workspaceApiId ?? "",
-    columns,
     newColumnName,
-    setColumns,
     setNewColumnName,
     setShowCreateColumn,
     columnsEndRef,
   });
 
-  const {
-    handleCreateSprint,
-    handleSaveSprint,
-    handleEditSprint,
-    handleDeleteSprint,
-    handleStartSprint,
-    handleCompleteSprint,
-    handleConfirmStartSprint,
-    handleConfirmCompleteSprint,
-    startSprintTarget,
-    setStartSprintTarget,
-    completeSprintTarget,
-    setCompleteSprintTarget,
-  } = useSprintHandlers({
-    workspaceId: workspaceApiId ?? "",
-    sprints,
-    editingSprint,
-    setSprints,
-    setEditingSprint,
-    setIsSprintModalOpen,
-    setIssues,
-  });
-
   const handleBacklogDragEndWithSync = (result: DropResult) => {
+    const queryKey = queryKeys.tasks.byWorkspace(workspaceApiId ?? "", taskFilters as unknown as Record<string, unknown>);
     handleBacklogDragEnd({
       result,
       issues: filteredIssues,
-      setIssues,
+      setIssues: (updater) => {
+        queryClient.setQueryData<Issue[]>(queryKey, (current = []) => {
+          if (typeof updater === "function") {
+            return updater(current);
+          }
+          return updater;
+        });
+      },
       onTaskReorder: syncTaskReorder,
       onSprintAssign: (taskId, sprintId) => {
         if (workspaceApiId) {
@@ -772,13 +742,13 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
             .then((updatedTask: any) => {
               patchSelectedTaskView(updatedTask);
               queryClient.invalidateQueries({
-                queryKey: ["taskActivities", workspaceApiId, taskId],
+                queryKey: queryKeys.tasks.activities(workspaceApiId, taskId),
               });
             })
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             .catch((error: any) => {
               queryClient.invalidateQueries({
-                queryKey: ["tasks", workspaceApiId],
+                queryKey: queryKey,
               });
               toast.error(
                 error?.response?.data?.message ||
@@ -789,7 +759,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
       },
     });
     isDraggingIssueRef.current = false;
-    setIssues((current) => [...current].sort(compareIssueRank));
   };
 
   const handleArchiveIssue = async (issue: Issue) => {
@@ -800,10 +769,9 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
 
     try {
       await taskService.archiveBoardTask(workspaceApiId, issue.id);
-      setIssues((current) => current.filter((item) => item.id !== issue.id));
       setSelectedIssue(null);
       resetArchiveList();
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceApiId) });
       toast.success("Work item archived");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -824,13 +792,6 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
         workspaceApiId,
         issue.id,
       );
-      setIssues((current) =>
-        current.some((item) => item.id === restoredIssue.id)
-          ? current.map((item) =>
-              item.id === restoredIssue.id ? restoredIssue : item,
-            )
-          : [...current, restoredIssue],
-      );
       const nextArchive = removeRestoredArchiveItem({
         items: archivedItems,
         total: archiveTotal,
@@ -838,7 +799,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
       });
       setArchivedItems(nextArchive.items);
       setArchiveTotal(nextArchive.total);
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceApiId) });
       toast.success("Work item restored");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -856,13 +817,12 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
 
     try {
       await taskService.deleteBoardTask(workspaceApiId, issue.id);
-      setIssues((current) => current.filter((item) => item.id !== issue.id));
       setSelectedTaskIds((current) => current.filter((id) => id !== issue.id));
       setSelectedIssue((current) =>
         current?.id === issue.id ? null : current,
       );
       resetArchiveList();
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceApiId) });
       toast.success("Work item deleted");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -881,17 +841,14 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
         ? current.filter((issue) => !idsToDelete.has(issue.id))
         : current;
 
-    setIssues((current) => removeDeletedIssues(current) ?? []);
     setSelectedTaskIds((current) => current.filter((id) => !idsToDelete.has(id)));
     setSelectedIssue((current) =>
       current && idsToDelete.has(current.id) ? null : current,
     );
+
+    const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceApiId);
     queryClient.setQueriesData<Issue[]>(
-      { queryKey: ["tasks", workspaceApiId] },
-      removeDeletedIssues,
-    );
-    queryClient.setQueriesData<Issue[]>(
-      { queryKey: ["tasks-fallback-search", workspaceApiId] },
+      { queryKey: queryKeyPrefix },
       removeDeletedIssues,
     );
 
@@ -901,10 +858,7 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     const failedCount = results.filter((result) => result.status === "rejected").length;
 
     resetArchiveList();
-    queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-    queryClient.invalidateQueries({
-      queryKey: ["tasks-fallback-search", workspaceApiId],
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
 
     if (failedCount > 0) {
       toast.error(`Could not delete ${failedCount} work item${failedCount > 1 ? "s" : ""}`);
@@ -965,18 +919,14 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           )
         : current;
 
-    setIssues((current) => applyUpdates(current) ?? []);
+    const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceApiId);
     setSelectedIssue((current) =>
       current && idsToUpdate.has(current.id)
         ? { ...current, ...normalizedUpdates }
         : current,
     );
     queryClient.setQueriesData<Issue[]>(
-      { queryKey: ["tasks", workspaceApiId] },
-      applyUpdates,
-    );
-    queryClient.setQueriesData<Issue[]>(
-      { queryKey: ["tasks-fallback-search", workspaceApiId] },
+      { queryKey: queryKeyPrefix },
       applyUpdates,
     );
 
@@ -997,25 +947,17 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
           ? current.map((issue) => savedById.get(issue.id) ?? issue)
           : current;
 
-      setIssues((current) => mergeSavedIssues(current) ?? []);
       setSelectedIssue((current) =>
         current ? savedById.get(current.id) ?? current : current,
       );
       queryClient.setQueriesData<Issue[]>(
-        { queryKey: ["tasks", workspaceApiId] },
-        mergeSavedIssues,
-      );
-      queryClient.setQueriesData<Issue[]>(
-        { queryKey: ["tasks-fallback-search", workspaceApiId] },
+        { queryKey: queryKeyPrefix },
         mergeSavedIssues,
       );
     }
 
     if (failedCount > 0) {
-      queryClient.invalidateQueries({ queryKey: ["tasks", workspaceApiId] });
-      queryClient.invalidateQueries({
-        queryKey: ["tasks-fallback-search", workspaceApiId],
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
       toast.error(`Could not update ${failedCount} work item${failedCount > 1 ? "s" : ""}`);
     }
   };
@@ -1027,7 +969,15 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
     workspaceId: workspaceApiId ?? "",
     issues,
     selectedTaskIds,
-    setIssues,
+    setIssues: (updater) => {
+      const queryKey = queryKeys.tasks.byWorkspace(workspaceApiId ?? "", taskFilters as unknown as Record<string, unknown>);
+      queryClient.setQueryData<Issue[]>(queryKey, (current = []) => {
+        if (typeof updater === "function") {
+          return updater(current);
+        }
+        return updater;
+      });
+    },
     setSelectedTaskIds,
   });
 
@@ -1039,61 +989,24 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
   }, [activeTab, listViewMode]);
 
   useEffect(() => {
-    if (!workspaceKey) return;
-
-    let isActive = true;
-    setLoading(true);
-
-    resolveWorkspaceFromRouteKey(workspaceKey)
-      .then(async (nextWorkspace) => {
-        let workspaceMembers = nextWorkspace.members ?? [];
-
-        try {
-          const membersResponse = await api.get(
-            apiRoutes.WORKSPACES.MEMBERS(nextWorkspace._id),
-          );
-          workspaceMembers =
-            membersResponse.data?.data ??
-            membersResponse.data ??
-            workspaceMembers;
-        } catch {
-          workspaceMembers = nextWorkspace.members ?? [];
-        }
-
-        const workspaceWithMembers = {
-          ...nextWorkspace,
-          members: workspaceMembers,
-        };
-        if (!isActive) return;
-
-        setWorkspace(workspaceWithMembers);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setCurrentWorkspace(workspaceWithMembers as any);
-        if (!initialTab) {
-          const defaultTab = getDefaultWorkspaceTab(nextWorkspace);
-          setActiveTab(defaultTab);
-          const nextUrl = initialTaskKey
-            ? getTaskDetailUrl(defaultTab, initialTaskKey)
-            : getWorkspaceTabUrl(defaultTab);
-          window.history.replaceState(null, "", nextUrl);
-        }
-      })
-      .catch(() => {})
-      .catch(() => {})
-      .finally(() => {
-        if (isActive) setLoading(false);
-      });
-
-    return () => {
-      isActive = false;
-    };
+    if (resolvedWorkspace) {
+      setCurrentWorkspaceId(resolvedWorkspace._id);
+      if (!initialTab) {
+        const defaultTab = getDefaultWorkspaceTab(resolvedWorkspace);
+        setActiveTab(defaultTab);
+        const nextUrl = initialTaskKey
+          ? getTaskDetailUrl(defaultTab, initialTaskKey)
+          : getWorkspaceTabUrl(defaultTab);
+        window.history.replaceState(null, "", nextUrl);
+      }
+    }
   }, [
     getTaskDetailUrl,
     getWorkspaceTabUrl,
     initialTab,
     initialTaskKey,
-    setCurrentWorkspace,
-    workspaceKey,
+    setCurrentWorkspaceId,
+    resolvedWorkspace,
   ]);
 
   if (loading || isBoardLoading) return <LoadingSpinner />;
@@ -1205,25 +1118,23 @@ export default function WorkspaceDetailPage({ params }: { params: Promise<{ key:
                   if (workspaceApiId) {
                     taskService
                       .moveBoardTask(workspaceApiId, taskId, { columnId })
-                    taskService
-                      .moveBoardTask(workspaceApiId, taskId, { columnId })
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      .then((updatedTask: any) => {
+                      .then((updatedTask: Issue) => {
                         patchSelectedTaskView(updatedTask);
                         queryClient.invalidateQueries({
-                          queryKey: ["taskActivities", workspaceApiId, taskId],
+                          queryKey: queryKeys.tasks.activities(workspaceApiId, taskId),
                         });
                       })
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       .catch((error: any) => {
+                        const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceApiId);
                         if (isNoopReorderError(error)) {
                           queryClient.invalidateQueries({
-                            queryKey: ["tasks", workspaceApiId],
+                            queryKey: queryKeyPrefix,
                           });
                           return;
                         }
                         queryClient.invalidateQueries({
-                          queryKey: ["tasks", workspaceApiId],
+                          queryKey: queryKeyPrefix,
                         });
                         toast.error(
                           error?.response?.data?.message ||

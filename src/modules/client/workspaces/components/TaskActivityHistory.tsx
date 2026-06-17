@@ -6,6 +6,7 @@ import { Clock, Loader2 } from "lucide-react";
 
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import type { TaskLabel } from "../types/label.type";
 import { labelService } from "../services/labelService";
 import { taskService, TaskActivity } from "../services/taskService";
@@ -401,7 +402,7 @@ export default function TaskActivityHistory({
   }, [workspaceId, taskId]);
 
   const { data, isFetching, error } = useQuery({
-    queryKey: ["taskActivities", workspaceId, taskId, taskKey, page],
+    queryKey: queryKeys.tasks.activitiesPage(workspaceId, taskId, taskKey ?? "", page),
     queryFn: async () => {
       try {
         return await taskService.getTaskActivities(workspaceId, taskId, page, PAGE_LIMIT);
@@ -418,7 +419,7 @@ export default function TaskActivityHistory({
   });
 
   const { data: members = [] } = useQuery({
-    queryKey: ["workspaceMembers", workspaceId],
+    queryKey: queryKeys.workspaces.members(workspaceId),
     queryFn: async () => {
       const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
       return normalizeMembersPayload(response.data?.data ?? response.data);
@@ -428,14 +429,14 @@ export default function TaskActivityHistory({
   });
 
   const { data: workspaceLabels = [] } = useQuery({
-    queryKey: ["workspaceLabels", workspaceId],
+    queryKey: queryKeys.workspaces.labels(workspaceId),
     queryFn: () => labelService.listLabels(workspaceId),
     enabled: Boolean(workspaceId),
     staleTime: 60_000,
   });
 
   const { data: fetchedBoardColumns = [] } = useQuery<BoardColumn[]>({
-    queryKey: ["board", workspaceId],
+    queryKey: queryKeys.board.byWorkspace(workspaceId),
     queryFn: async () => {
       const response = await api.get(apiRoutes.WORKSPACES.BOARD(workspaceId));
       const raw = response.data?.data ?? response.data;

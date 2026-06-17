@@ -8,12 +8,12 @@ import {
   MoreHorizontal,
   Trash,
   Edit2,
-  Loader2,
 } from "lucide-react";
 import { useDocsStore } from "../store/docs.store";
 import { Document } from "../types/docs.type";
 import DocsTree from "./DocsTree";
 import { motion, AnimatePresence } from "framer-motion";
+import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 
 interface DocsTreeItemProps {
   doc: Document;
@@ -27,31 +27,24 @@ export default function DocsTreeItem({
   level,
 }: DocsTreeItemProps) {
   const {
-    documents,
     selectedDocumentId,
     expandedNodes,
-    loadedChildrenOf,
     toggleExpand,
     selectDocument,
-    createDocument,
-    deleteDocument,
-    renameDocument,
-    loadChildren,
   } = useDocsStore();
+  const { documents, createDocument, deleteDocument, renameDocument } = useWorkspaceDocs(workspaceId);
 
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(doc.title);
   const [showMenu, setShowMenu] = useState(false);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-  const [isLoadingChildren, setIsLoadingChildren] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
   const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const children = documents.filter((d) => d.parentId === doc.id);
-  const hasLoadedChildren = loadedChildrenOf.includes(doc.id);
-  const hasChildren = children.length > 0 || !hasLoadedChildren;
+  const hasChildren = children.length > 0;
   const isExpanded = expandedNodes.includes(doc.id);
   const isSelected = selectedDocumentId === doc.id;
 
@@ -75,29 +68,19 @@ export default function DocsTreeItem({
   const handleToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (!isExpanded && !hasLoadedChildren) {
-      setIsLoadingChildren(true);
-      await loadChildren(doc.id);
-      setIsLoadingChildren(false);
-    }
-
     toggleExpand(doc.id);
   };
 
   const handleSelect = () => {
-    selectDocument(doc.id);
+    selectDocument(doc.id, documents);
   };
 
   const handleAddChild = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (!hasLoadedChildren) {
-      await loadChildren(doc.id);
-    }
-
-    const newDoc = await createDocument(workspaceId, doc.id);
+    const newDoc = await createDocument(doc.id);
     if (!isExpanded) toggleExpand(doc.id);
-    if (newDoc) selectDocument(newDoc.id);
+    if (newDoc) selectDocument(newDoc.id, [...documents, newDoc]);
     setShowMenu(false);
   };
 
@@ -167,16 +150,12 @@ export default function DocsTreeItem({
             className={`w-5 h-5 flex items-center justify-center rounded-[3px] transition-colors ${isSelected ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#ABABAB] dark:text-[#6B6B6B]"} ${hasChildren ? "hover:bg-[#EAEAEA]/50 dark:hover:bg-white/6" : "opacity-0 cursor-default"}`}
             onClick={handleToggle}
           >
-            {isLoadingChildren ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <motion.div
-                animate={{ rotate: isExpanded ? 90 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronRight className="w-3.5 h-3.5" />
-              </motion.div>
-            )}
+            <motion.div
+              animate={{ rotate: isExpanded ? 90 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </motion.div>
           </button>
 
           <FileText

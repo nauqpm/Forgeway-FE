@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/common/constants/queryKeys";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
 import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
 import { Plus, LayoutGrid, List, Search, Folder } from "lucide-react";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -22,36 +24,28 @@ interface Project {
 
 export default function ProjectsPage() {
   usePageTitle("Projects");
-  const { currentWorkspace } = useWorkspaceStore();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { currentWorkspace } = useCurrentWorkspace();
   const [view, setView] = useState<"grid" | "list">("grid");
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    if (!currentWorkspace?._id) {
-      setLoading(false);
-      return;
-    }
-    const fetchProjects = async () => {
-      try {
-        const res = await api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${currentWorkspace._id}`);
-        setProjects(res.data);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProjects();
-  }, [currentWorkspace?._id]);
+  const { data: projectsData, isLoading } = useQuery({
+    queryKey: queryKeys.projects.list(currentWorkspace?._id),
+    queryFn: async () => {
+      const res = await api.get(`${apiRoutes.PROJECTS.BASE}?workspaceId=${currentWorkspace?._id}`);
+      return res.data as Project[];
+    },
+    enabled: !!currentWorkspace?._id,
+    staleTime: 30_000,
+  });
+
+  const projects = projectsData || [];
 
   const filtered = projects.filter(
     (p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.key.toLowerCase().includes(search.toLowerCase())
   );
 
   if (!currentWorkspace) return <div className="app-main text-center text-gray-500">Select a workspace first</div>;
-  if (loading) return <LoadingSpinner />;
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="app-page-wide">

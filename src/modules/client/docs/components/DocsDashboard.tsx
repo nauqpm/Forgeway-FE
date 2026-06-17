@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { useDocsStore } from "../store/docs.store";
 import DashboardHeader from "./DashboardHeader";
 import DashboardGroup from "./DashboardGroup";
@@ -10,21 +12,18 @@ import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { Document } from "../types/docs.type";
 import { Pencil, Trash2 } from "lucide-react";
+import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 
 export default function DocsDashboard({ workspaceId }: { workspaceId: string }) {
   const {
-    documents,
     selectDocument,
     selectImportedDocument,
-    createDocument,
-    renameDocument,
-    deleteDocument,
   } = useDocsStore();
+  const { documents, createDocument, renameDocument, deleteDocument } = useWorkspaceDocs(workspaceId);
+  const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "az">("newest");
-  const [uploadedDocs, setUploadedDocs] = useState<DocumentItem[]>([]);
-  const [personalDocs, setPersonalDocs] = useState<DocumentItem[]>([]);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
   const [selectedLibraryIds, setSelectedLibraryIds] = useState<string[]>([]);
   const [renameTarget, setRenameTarget] = useState<Document | null>(null);
@@ -33,28 +32,39 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const loadUploadedDocs = useCallback(async () => {
-    try {
-      const list = await documentService.getByWorkspace(workspaceId);
-      setUploadedDocs(list);
-    } catch {
-      setUploadedDocs([]);
-    }
-  }, [workspaceId]);
+  const uploadedDocsQuery = useUploadedWorkspaceDocsQuery(workspaceId);
 
-  const loadPersonalDocs = useCallback(async () => {
-    try {
-      const list = await documentService.listMine();
-      setPersonalDocs(list);
-    } catch {
-      setPersonalDocs([]);
-    }
-  }, []);
+  const personalDocsQuery = useQuery({
+    queryKey: queryKeys.docs.library(),
+    queryFn: documentService.listMine,
+  });
 
-  useEffect(() => {
-    loadUploadedDocs();
-    loadPersonalDocs();
-  }, [loadPersonalDocs, loadUploadedDocs]);
+  const uploadedDocs = useMemo(() => uploadedDocsQuery.data ?? [], [uploadedDocsQuery.data]);
+  const personalDocs = useMemo(() => personalDocsQuery.data ?? [], [personalDocsQuery.data]);
+
+  const attachDocumentsMutation = useMutation({
+    mutationFn: (documentIds: string[]) =>
+      Promise.all(documentIds.map((id) => documentService.attach(id, [workspaceId]))),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.docs.uploadedByWorkspace(workspaceId) });
+      setShowLibraryModal(false);
+      toast.success("Imported from library");
+    },
+    onError: () => toast.error("Failed to import from library"),
+  });
+
+  const detachDocumentMutation = useMutation({
+    mutationFn: (documentId: string) => documentService.detach(documentId, workspaceId),
+    onSuccess: (_updatedDocument, documentId) => {
+      queryClient.setQueryData<DocumentItem[]>(queryKeys.docs.uploadedByWorkspace(workspaceId), (current = []) =>
+        current.filter((item) => item._id !== documentId),
+      );
+      selectImportedDocument(null);
+      setDeleteTarget(null);
+      toast.success("Removed from workspace");
+    },
+    onError: () => toast.error("Failed to remove document"),
+  });
 
   const filteredDocs = useMemo(() => {
     const result = documents.filter((doc) =>
@@ -119,8 +129,8 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   );
 
   const handleCreate = async () => {
-    const newDoc = await createDocument(workspaceId);
-    if (newDoc) selectDocument(newDoc.id);
+    const newDoc = await createDocument();
+    if (newDoc) selectDocument(newDoc.id, [...documents, newDoc]);
   };
 
   const handleRename = (id: string, currentTitle: string) => {
@@ -177,18 +187,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
     const doc = deleteTarget;
 
     if (doc.source === "import") {
-      try {
-        await documentService.detach(doc.id, workspaceId);
-        setUploadedDocs((current) => current.filter((item) => item._id !== doc.id));
-        selectImportedDocument(null);
-        setDeleteTarget(null);
-        window.dispatchEvent(new Event("docs_uploads_changed"));
-        toast.success("Removed from workspace");
-      } catch {
-        toast.error("Failed to remove document");
-      } finally {
-        setDeleting(false);
-      }
+      detachDocumentMutation.mutate(doc.id);
       return;
     }
 
@@ -206,7 +205,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
       selectImportedDocument(id);
       return;
     }
-    selectDocument(id);
+    selectDocument(id, documents);
   };
 
   const importableLibraryDocs = useMemo(() => {
@@ -266,18 +265,10 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
               </button>
               <button
                 className="px-3 py-2 rounded-[6px] bg-[#2563EB] dark:bg-[#3B82F6] text-[0.8125rem] font-medium text-white hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                disabled={!selectedLibraryIds.length}
-                onClick={async () => {
-                  await Promise.all(
-                    selectedLibraryIds.map((id) => documentService.attach(id, [workspaceId])),
-                  );
-                  await loadUploadedDocs();
-                  window.dispatchEvent(new Event("docs_uploads_changed"));
-                  setShowLibraryModal(false);
-                  toast.success("Imported from library");
-                }}
+                disabled={!selectedLibraryIds.length || attachDocumentsMutation.isPending}
+                onClick={() => attachDocumentsMutation.mutate(selectedLibraryIds)}
               >
-                Import
+                {attachDocumentsMutation.isPending ? "Importing..." : "Import"}
               </button>
             </div>
           </div>
@@ -369,9 +360,9 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
                 className="rounded-[6px] border border-[#EAEAEA] dark:border-white/8 px-4 py-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] transition hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60">
                 Cancel
               </button>
-              <button type="button" disabled={deleting} onClick={handleDeleteDocument}
+              <button type="button" disabled={deleting || detachDocumentMutation.isPending} onClick={handleDeleteDocument}
                 className="rounded-[6px] bg-[#9F2F2D] px-4 py-2 text-[0.8125rem] font-semibold text-white transition hover:bg-[#7F2422] disabled:cursor-not-allowed disabled:opacity-60">
-                {deleting ? (deleteTarget.source === "import" ? "Removing..." : "Deleting...") : (deleteTarget.source === "import" ? "Remove" : "Delete")}
+                {deleting || detachDocumentMutation.isPending ? (deleteTarget.source === "import" ? "Removing..." : "Deleting...") : (deleteTarget.source === "import" ? "Remove" : "Delete")}
               </button>
             </div>
           </div>

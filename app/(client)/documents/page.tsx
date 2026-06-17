@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
 import { toast } from "react-hot-toast";
@@ -22,6 +23,7 @@ import { DocumentItem } from "@/modules/client/docs/types/document.type";
 import ImportedDocumentViewer from "@/modules/client/docs/components/ImportedDocumentViewer";
 import OnlineDocumentEditorModal from "@/modules/client/docs/components/OnlineDocumentEditorModal";
 import DocumentWorkspaceLinkModal from "@/modules/client/docs/components/DocumentWorkspaceLinkModal";
+import { queryKeys } from "@/common/constants/queryKeys";
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (error && typeof error === "object" && "response" in error) {
@@ -34,33 +36,57 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 export default function DocumentsLibraryPage() {
   usePageTitle("Documents");
   const { user } = useAuth();
-  const [documents, setDocuments] = useState<DocumentItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "name" | "size">("newest");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editingDoc, setEditingDoc] = useState<DocumentItem | null>(null);
   const [viewingDoc, setViewingDoc] = useState<DocumentItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DocumentItem | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [renameTarget, setRenameTarget] = useState<DocumentItem | null>(null);
   const [renameName, setRenameName] = useState("");
-  const [renaming, setRenaming] = useState(false);
   const [linkingDoc, setLinkingDoc] = useState<DocumentItem | null>(null);
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const list = await documentService.listMine();
-      setDocuments(list);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: documents = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.docs.library(),
+    queryFn: documentService.listMine,
+    staleTime: 30_000,
+  });
 
-  useEffect(() => {
-    load();
-  }, []);
+  const deleteMutation = useMutation({
+    mutationFn: (documentId: string) => documentService.delete(documentId),
+    onSuccess: (_data, documentId) => {
+      queryClient.setQueryData<DocumentItem[]>(queryKeys.docs.library(), (current = []) =>
+        current.filter((doc) => doc._id !== documentId),
+      );
+      setViewingDoc((current) => (current?._id === documentId ? null : current));
+      setDeleteTarget(null);
+      toast.success("Document deleted");
+    },
+    onError: () => {
+      toast.error("Delete document failed");
+    },
+  });
+
+  const renameMutation = useMutation({
+    mutationFn: ({ documentId, name }: { documentId: string; name: string }) =>
+      documentService.rename(documentId, name),
+    onSuccess: (_data, { documentId, name }) => {
+      queryClient.setQueryData<DocumentItem[]>(queryKeys.docs.library(), (current = []) =>
+        current.map((doc) => (doc._id === documentId ? { ...doc, name } : doc)),
+      );
+      setViewingDoc((current) => (current?._id === documentId ? { ...current, name } : current));
+      setRenameTarget(null);
+      setRenameName("");
+      toast.success("Document renamed");
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error, "Rename document failed"));
+    },
+  });
+
+  const deleting = deleteMutation.isPending;
+  const renaming = renameMutation.isPending;
 
   useEffect(() => {
     const close = () => setOpenMenuId(null);
@@ -110,18 +136,7 @@ export default function DocumentsLibraryPage() {
   const handleDeleteDocument = async () => {
     if (!deleteTarget) return;
 
-    setDeleting(true);
-    try {
-      await documentService.delete(deleteTarget._id);
-      setViewingDoc((current) => (current?._id === deleteTarget._id ? null : current));
-      setDeleteTarget(null);
-      toast.success("Document deleted");
-      await load();
-    } catch {
-      toast.error("Delete document failed");
-    } finally {
-      setDeleting(false);
-    }
+    deleteMutation.mutate(deleteTarget._id);
   };
 
   const openRenameDialog = (doc: DocumentItem) => {
@@ -150,21 +165,7 @@ export default function DocumentsLibraryPage() {
       return;
     }
 
-    setRenaming(true);
-    try {
-      await documentService.rename(renameTarget._id, nextName);
-      setViewingDoc((current) =>
-        current?._id === renameTarget._id ? { ...current, name: nextName } : current,
-      );
-      setRenameTarget(null);
-      setRenameName("");
-      toast.success("Document renamed");
-      await load();
-    } catch (error) {
-      toast.error(getErrorMessage(error, "Rename document failed"));
-    } finally {
-      setRenaming(false);
-    }
+    renameMutation.mutate({ documentId: renameTarget._id, name: nextName });
   };
 
   return (
@@ -349,7 +350,7 @@ export default function DocumentsLibraryPage() {
           open={Boolean(editingDoc)}
           onClose={() => setEditingDoc(null)}
           onSaved={async () => {
-            await load();
+            await queryClient.invalidateQueries({ queryKey: queryKeys.docs.library() });
           }}
         />
       )}
@@ -513,7 +514,7 @@ export default function DocumentsLibraryPage() {
           open={Boolean(linkingDoc)}
           onClose={() => setLinkingDoc(null)}
           onSaved={async () => {
-            await load();
+            await queryClient.invalidateQueries({ queryKey: queryKeys.docs.library() });
           }}
         />
       )}

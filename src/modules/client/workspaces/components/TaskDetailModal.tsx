@@ -17,6 +17,7 @@ import type { TaskStatusColumn } from "../utils/taskStatusColumns";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
+import { queryKeys } from "@/common/constants/queryKeys";
 import { useTaskDetailRealtime } from "@/hooks/realtime/use-task-detail-realtime";
 import { useTaskDetailRealtimeRoom } from "@/hooks/realtime/use-task-detail-realtime-room";
 import { getUserDisplayName, formatDateTime, type WorkspaceMember, type SprintOption } from "./task-detail-shared";
@@ -56,7 +57,7 @@ export default function TaskDetailModal({
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
 
   const { data: fetchedWorkspaceMembers = [] } = useQuery<WorkspaceMember[]>({
-    queryKey: ["workspaceMembers", workspaceId],
+    queryKey: queryKeys.workspaces.members(workspaceId),
     queryFn: async () => {
       const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
       return response.data?.data ?? response.data ?? [];
