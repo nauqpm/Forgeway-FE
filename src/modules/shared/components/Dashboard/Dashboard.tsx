@@ -125,7 +125,6 @@ const toDashboardTask = (
 export default function AdminDashboard({ className = "" }: AdminDashboardProps) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("assigned");
 
   const [selectedDashboardTask, setSelectedDashboardTask] = useState<DashboardTask | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -230,12 +229,6 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     },
   });
 
-  const tabs = [
-    { label: "Assigned to me", key: "assigned" },
-    { label: "Starred", key: "starred" },
-    { label: "Worked on", key: "worked" },
-    { label: "Viewed", key: "viewed" },
-  ].filter((tab) => tab.key !== "starred");
 
   const workspaces = useMemo(() => dashboardQuery.data?.workspaces ?? [], [dashboardQuery.data?.workspaces]);
   const assignedTasks = useMemo(() => dashboardQuery.data?.assignedTasks ?? [], [dashboardQuery.data?.assignedTasks]);

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, LayoutDashboard, Loader2, Plus, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, BookOpen, LayoutDashboard, Loader2, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
