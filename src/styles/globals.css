@@ -1000,6 +1000,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 }
 .chat-m__control {
   min-height: 24px;
+  max-height: 200px;
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -1010,6 +1011,9 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.25rem;
+  max-height: 200px;
+  overflow: hidden !important;
+  box-sizing: border-box;
 }
 .chat-m__input {
   width: 100%;
@@ -1026,6 +1030,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   min-height: 24px;
   max-height: 200px;
   overflow-y: auto !important;
+  box-sizing: border-box;
 }
 .chat-m__suggestions__list {
   background: #ffffff;

@@ -136,6 +136,22 @@ class RealtimeSocketClient {
     socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
       this.lastError = reason;
       this.setStatus("disconnected");
+
+      if (reason === "io server disconnect") {
+        // The server disconnected us, likely because the token expired.
+        // Try to refresh the token and reconnect.
+        void refreshSocketAuth()
+          .then(() => {
+            this.applyLatestAuth();
+            if (!socket.connected) {
+              this.setStatus("connecting");
+              socket.connect();
+            }
+          })
+          .catch(() => {
+            this.disconnect();
+          });
+      }
     });
 
     socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {

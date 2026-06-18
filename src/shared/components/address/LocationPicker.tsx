@@ -132,7 +132,7 @@ const LocationPicker = ({
     };
 
     fetchDistricts();
-  }, [value.province]);
+  }, [value.province, value.district, wards.length]);
 
   // Fetch ward list when selecting a district
   useEffect(() => {

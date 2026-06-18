@@ -2,10 +2,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '@/stores/chatStore';
-import type { ChatUser, Message } from '@/modules/client/chat/types/chat.types';
+import type { ChatUser, Message, Channel } from '@/modules/client/chat/types/chat.types';
 import { format } from 'date-fns';
 import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle } from 'lucide-react';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
+import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
@@ -16,7 +17,7 @@ interface MessageItemProps {
   isMine: boolean;
 }
 
-const QUICK_EMOJIS = ['❤️', '👍', '😂', '😢', '❓'];
+const QUICK_EMOJIS = ['❤️', '👍', '😂', '😢', '❓', '😮'];
 
 export default function MessageItem({ message, isSameUserAsPrevious, isMine }: MessageItemProps) {
   const sender = typeof message.senderId === 'object' && message.senderId
@@ -30,6 +31,22 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
   const { sendReaction, sendDeleteMessage } = useChatRealtime();
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+
+  const activeChannelId = useChatStore(state => state.activeChannelId);
+  const { data: channels = [] } = useChatChannels();
+  const activeChannel = channels.find((c: Channel) => c._id === activeChannelId);
+  const channelMembers = activeChannel?.members || [];
+
+  const getReactionTooltip = (userIds: string[]) => {
+    const names = userIds.map(id => {
+      if (String(id) === String(currentUserId)) {
+        return 'You';
+      }
+      const member = channelMembers.find((m: ChatUser) => String(m._id || (m as { id?: string }).id) === String(id));
+      return member ? (member.fullName || member.email) : 'Unknown User';
+    });
+    return names.join('\n');
+  };
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [positionBelow, setPositionBelow] = useState(false);
@@ -158,6 +175,11 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     setShowEmojiPicker(false);
   };
 
+  const hasReactions = !isDeleted && message.reactions && Object.keys(message.reactions).length > 0;
+  const spacingClasses = !isSameUserAsPrevious
+    ? (hasReactions ? 'mt-2.5 pt-1 pb-2' : 'mt-2.5 pt-1 pb-1')
+    : (hasReactions ? 'mt-0.5 pt-0.5 pb-2' : 'mt-0.5 pt-0.5 pb-0.5');
+
   return (
     <div 
       id={`msg-${message._id}`}
@@ -166,7 +188,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
         shouldHighlight 
           ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4" 
           : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4",
-        !isSameUserAsPrevious ? 'mt-3' : ''
+        spacingClasses
       )}
     >
       
@@ -314,7 +336,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
         )}
         
         <div className={cn(
-          "text-[0.875rem] leading-normal break-words whitespace-pre-wrap",
+          "text-[0.875rem] leading-normal break-words whitespace-pre-wrap w-full",
           isDeleted ? "text-[#ABABAB] dark:text-[#6B6B6B] italic text-[0.8125rem]" : ""
         )}>
           {isDeleted ? (
@@ -364,6 +386,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
                 <button 
                   key={emoji}
                   onClick={() => handleToggleReaction(emoji)}
+                  title={getReactionTooltip(userIds)}
                   className={cn(
                     "flex items-center gap-1 px-1.5 py-0.5 rounded-[6px] border transition-colors",
                     hasReacted

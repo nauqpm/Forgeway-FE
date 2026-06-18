@@ -1,5 +1,7 @@
 import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 interface Props {
   workspaceId: string;
@@ -16,6 +18,8 @@ export const useSelectionHandlers = ({
   setIssues,
   setSelectedTaskIds,
 }: Props) => {
+  const queryClient = useQueryClient();
+
   const toggleTaskSelection = (taskId: string, e?: React.ChangeEvent) => {
     if (e) e.stopPropagation();
     setSelectedTaskIds((prev) =>
@@ -38,8 +42,10 @@ export const useSelectionHandlers = ({
   const handleBulkStatusChange = (newStatus: string) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, status: newStatus } : i));
     selectedTaskIds.forEach((taskId) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      taskService.updateBoardTask(workspaceId, taskId, { status: newStatus } as any).catch(console.error);
+      taskService
+        .updateBoardTask(workspaceId, taskId, { status: newStatus } as Partial<Issue>)
+        .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() }))
+        .catch(console.error);
     });
     setSelectedTaskIds([]);
   };
@@ -47,8 +53,10 @@ export const useSelectionHandlers = ({
   const handleBulkMoveSprint = (sprintId: string | null) => {
     setIssues(issues.map((i) => selectedTaskIds.includes(i.id) ? { ...i, sprintId } : i));
     selectedTaskIds.forEach((taskId) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      taskService.updateBoardTask(workspaceId, taskId, { sprintId } as any).catch(console.error);
+      taskService
+        .updateBoardTask(workspaceId, taskId, { sprintId } as Partial<Issue>)
+        .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() }))
+        .catch(console.error);
     });
     setSelectedTaskIds([]);
   };
@@ -58,7 +66,10 @@ export const useSelectionHandlers = ({
     setIssues(issues.filter((i) => !ids.includes(i.id)));
     setSelectedTaskIds([]);
     ids.forEach((taskId) => {
-      taskService.deleteBoardTask(workspaceId, taskId).catch(console.error);
+      taskService
+        .deleteBoardTask(workspaceId, taskId)
+        .then(() => queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() }))
+        .catch(console.error);
     });
   };
 

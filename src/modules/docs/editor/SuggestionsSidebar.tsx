@@ -80,7 +80,7 @@ export default function SuggestionsSidebar({ editor }: SuggestionsSidebarProps) 
     });
 
     return Object.values(suggestionsMap);
-  }, [editor, editor?.state.doc]);
+  }, [editor]);
 
   const formatTime = (dateStr: string) => {
     try {

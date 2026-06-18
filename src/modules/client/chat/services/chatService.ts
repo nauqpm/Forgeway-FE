@@ -68,11 +68,13 @@ export const getChannelAPI = async (channelId: string): Promise<Channel> => {
 
 export const getMessagesAPI = async (
   channelId: string,
-  params?: { limit?: number; cursor?: string }
+  params?: { limit?: number; cursor?: string },
+  config?: import('axios').AxiosRequestConfig
 ): Promise<{ messages: Message[]; nextCursor: string | null }> => {
   // Removed _t to avoid 400 Bad Request on strict BE validation
   const response = await api.get(`/chat/channels/${channelId}/messages`, {
-    params
+    params,
+    ...config
   });
   const body = response.data?.data ?? response.data;
   const messagesData = Array.isArray(body?.messages) ? body.messages : (Array.isArray(body) ? body : []);
@@ -110,7 +112,6 @@ export const createDMAPI = async (targetUserId: string): Promise<Channel> => {
   };
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const searchUsersAPI = async (search?: string): Promise<SearchUser[]> => {
   try {
     const response = await api.get('/chat/users/search', {
