@@ -101,6 +101,23 @@ export default function MeetingPage() {
     window.setTimeout(leaveMeetingPage, 800);
   }, [connectionError, leaveMeetingPage]);
 
+  // Handle page refresh/close warning
+  useEffect(() => {
+    if (!hasJoined) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = ''; // Required for most modern browsers to show the default warning
+      return '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasJoined]);
+
   const handleEndForAll = () => {
     if (confirm("Are you sure you want to end this meeting for everyone?")) {
       setIsEndingMeeting(true);
