@@ -14,6 +14,7 @@ import { useActiveMeeting } from "@/modules/client/chat/hooks/useChatQueries";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/common/constants/queryKeys";
 import type { Meeting } from "../services/meeting.api";
+import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 
 interface MeetingBannerProps {
   channelId: string;
@@ -22,6 +23,7 @@ interface MeetingBannerProps {
 export default function MeetingBanner({ channelId }: MeetingBannerProps) {
   const queryClient = useQueryClient();
   const { data: activeMeeting = null, isLoading } = useActiveMeeting(channelId);
+  const currentUserId = useAuthStore((state) => state.user?.id);
 
   useEffect(() => {
     const socket = chatSocketClient.getSocket();
@@ -109,6 +111,14 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
   };
 
   const participantCount = activeMeeting?.participants?.length || 0;
+  const isParticipant = activeMeeting?.participants?.some(
+    (p) => String(p.userId) === String(currentUserId)
+  );
+  
+  // Fallback matches MAX_MESH_CLIENTS on the server (currently 2 for testing)
+  const maxParticipants = activeMeeting?.maxParticipants ?? 2;
+  const isRoomFull = !isParticipant && participantCount >= maxParticipants;
+
   const meetingLabel =
     activeMeeting?.type === "voice"
       ? "Active Voice Call"
@@ -133,11 +143,15 @@ export default function MeetingBanner({ channelId }: MeetingBannerProps) {
       </div>
       <button
         onClick={handleJoin}
-        disabled={!activeMeeting || isLoading}
+        disabled={!activeMeeting || isLoading || isRoomFull}
         className="px-4 py-1.5 text-sm font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-md transition-colors shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? (
           <Loader2 className="w-4 h-4 animate-spin" />
+        ) : isRoomFull ? (
+          "Room Full"
+        ) : isParticipant ? (
+          "Rejoin Meeting"
         ) : (
           "Join Meeting"
         )}

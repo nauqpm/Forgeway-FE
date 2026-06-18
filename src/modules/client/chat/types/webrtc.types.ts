@@ -21,7 +21,7 @@ export interface WebRTCState {
   isConnecting: boolean;
   connectionError: string | null;
   capacityWarning: boolean;
-  mediaStatus: 'pending' | 'ready' | 'audio-only' | 'unavailable';
+  mediaStatus: 'pending' | 'ready' | 'audio-only' | 'video-only' | 'unavailable';
 }
 
 export interface WebRTCActions {

@@ -20,6 +20,7 @@ export interface Meeting {
   status: 'waiting' | 'active' | 'ended';
   type: MeetingType;
   participants: MeetingParticipant[];
+  maxParticipants?: number;
   startedAt: string;
   endedAt?: string;
 }

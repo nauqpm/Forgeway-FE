@@ -60,7 +60,7 @@ export function useWebRTC(
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [capacityWarning, setCapacityWarning] = useState(false);
   const [mediaStatus, setMediaStatus] = useState<
-    "pending" | "ready" | "audio-only" | "unavailable"
+    "pending" | "ready" | "audio-only" | "video-only" | "unavailable"
   >("pending");
 
   const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
@@ -120,24 +120,46 @@ export function useWebRTC(
       setMediaStatus("ready");
       return stream;
     } catch {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: false,
-          audio: true,
-        });
-        isAudioOnRef.current = true;
-        isVideoOnRef.current = false;
-        setIsAudioOn(true);
-        setIsVideoOn(false);
-        setMediaStatus("audio-only");
-        return stream;
-      } catch {
+      if (meetingType === "voice") {
         isAudioOnRef.current = false;
         isVideoOnRef.current = false;
         setIsAudioOn(false);
         setIsVideoOn(false);
         setMediaStatus("unavailable");
         return new MediaStream();
+      }
+      // meeting type = video
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+        isAudioOnRef.current = false;
+        isVideoOnRef.current = true;
+        setIsAudioOn(false);
+        setIsVideoOn(true);
+        setMediaStatus("video-only");
+        return stream;
+      } catch {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true,
+          });
+          isAudioOnRef.current = true;
+          isVideoOnRef.current = false;
+          setIsAudioOn(true);
+          setIsVideoOn(false);
+          setMediaStatus("audio-only");
+          return stream;
+        } catch {
+          isAudioOnRef.current = false;
+          isVideoOnRef.current = false;
+          setIsAudioOn(false);
+          setIsVideoOn(false);
+          setMediaStatus("unavailable");
+          return new MediaStream();
+        }
       }
     }
   }, [meetingType]);
@@ -230,7 +252,10 @@ export function useWebRTC(
 
       try {
         const pc = createPeerConnection(remotePeerId);
-        const offer = await pc.createOffer();
+        const offer = await pc.createOffer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: meetingType === "video",
+        });
         await pc.setLocalDescription(offer);
 
         chatSocketClient.getSocket()?.emit(RTC_EVENTS.OFFER, {
@@ -521,7 +546,10 @@ export function useWebRTC(
         await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         await processPendingIce(data.senderId, pc);
 
-        const answer = await pc.createAnswer();
+        const answer = await pc.createAnswer({
+          offerToReceiveAudio: true,
+          offerToReceiveVideo: meetingType === "video",
+        });
         await pc.setLocalDescription(answer);
 
         socket.emit(RTC_EVENTS.ANSWER, {
@@ -620,13 +648,54 @@ export function useWebRTC(
         isAudioOn: isAudioOnRef.current,
         isVideoOn: isVideoOnRef.current,
       },
-      (response?: { ok?: boolean; message?: string }) => {
+      (response?: { 
+        ok?: boolean; 
+        message?: string;
+        roomFull?: boolean;
+        isFirstInTheCall?: boolean;
+        membersOnCall?: number;
+        maxParticipants?: number;
+        existingUsers?: string[];
+        participants?: Array<{userId: string; isAudioOn?: boolean; isVideoOn?: boolean}>;
+      }) => {
         if (!isMounted) return;
+
+        if (response?.roomFull) {
+          const limit = response.maxParticipants ?? response.membersOnCall ?? 'the maximum';
+          setConnectionError(`Room is full. Maximum ${limit} participants allowed.`);
+          setIsConnecting(false);
+          return;
+        }
 
         if (!response || response.ok !== false) {
           hasJoinedMeetingRef.current = true;
           emitLocalMediaState();
           setIsConnecting(false);
+
+          if (response?.participants) {
+            setRemoteStreams((previous) => {
+              const next = new Map(previous);
+              response.participants!.forEach((p) => {
+                if (String(p.userId) !== userId) {
+                  const existing = next.get(String(p.userId));
+                  next.set(String(p.userId), {
+                    userId: String(p.userId),
+                    stream: existing?.stream ?? null,
+                    isAudioOn: p.isAudioOn ?? existing?.isAudioOn ?? true,
+                    isVideoOn: p.isVideoOn ?? existing?.isVideoOn ?? meetingType === "video",
+                    displayName: existing?.displayName,
+                  });
+                }
+              });
+              return next;
+            });
+          }
+
+          const max = response?.maxParticipants;
+          const current = response?.membersOnCall;
+          if (max !== undefined && current !== undefined && current >= max) {
+            setCapacityWarning(true);
+          }
           return;
         }
 
