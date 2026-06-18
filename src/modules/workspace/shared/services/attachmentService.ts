@@ -21,10 +21,7 @@ const authConfig = (accessToken?: string | null) =>
   });
 
 const formDataConfig = (accessToken?: string | null) => ({
-  headers: {
-    ...authConfig(accessToken).headers,
-    "Content-Type": undefined,
-  },
+  headers: authConfig(accessToken).headers,
 });
 
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
@@ -163,7 +160,8 @@ const validateUploadFile = (file: File) => {
 const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please try again.", file?: File) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const status = (error as any)?.response?.status;
-  const message = getErrorMessage(error, fallback).toLowerCase();
+  const serverMessage = getErrorMessage(error, "");
+  const message = (serverMessage || fallback).toLowerCase();
 
   if (status === 400) {
     if (message.includes("file extension") || message.includes("file type") || message.includes("mime type")) {
@@ -178,7 +176,7 @@ const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please
       return "Could not read the uploaded file. Please try uploading it again.";
     }
 
-    return "Could not upload this attachment. Please check the file and try again.";
+    return serverMessage || "Could not upload this attachment. Please check the file and try again.";
   }
 
   if (status === 413) {
@@ -203,7 +201,6 @@ const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please
 
   return getErrorMessage(error, fallback);
 };
-
 export const attachmentService = {
   async listAttachments({ workspaceId, taskId, accessToken }: AttachmentRequestContext): Promise<TaskAttachment[]> {
     const response = await api.get(
