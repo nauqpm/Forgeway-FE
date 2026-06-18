@@ -245,7 +245,6 @@ const [workspaceOpen, setWorkspaceOpen] = useState(true);
               <Link
                 href="/workspaces/create"
                 onClick={() => {
-                  setShowCreateMenu(false);
                   onMobileClose();
                 }}
                 className="w-full flex items-center justify-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white py-2 px-3 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors text-[0.8125rem] font-medium"
