@@ -184,6 +184,8 @@ body {
     max-width: var(--app-medium-content);
     margin-left: auto;
     margin-right: auto;
+    padding-left: calc(var(--app-page-pad) * 0.5);
+    padding-right: calc(var(--app-page-pad) * 0.5);
   }
 
   .app-page-wide {
