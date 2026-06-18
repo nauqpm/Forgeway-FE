@@ -27,12 +27,12 @@ export function useDashboardData() {
     queryKey: queryKeys.admin.dashboardForUser(user?.id ?? "anonymous"),
     queryFn: async () => {
       const [forYouResponse, userDashboardResponse] = await Promise.all([
-        api.get(apiRoutes.FOR_YOU).catch(() => ({ data: { workspaces: [] } })),
+        api.get(apiRoutes.FOR_YOU).catch(() => ({ data: [] as ForYouWorkspace[] })),
         api.get(apiRoutes.DASHBOARD.USER).catch(() => ({ data: {} })),
       ]);
 
       const workspaces: ForYouWorkspace[] = extractWorkspaces(
-        normalizePayload<ReturnType<typeof extractWorkspaces> extends (infer T)[] ? T[] : never>(forYouResponse),
+        normalizePayload<ForYouWorkspace[]>(forYouResponse),
       );
       const userStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
 
