@@ -74,6 +74,17 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Always send cookies
     config.withCredentials = true;
+    if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+      const headers = config.headers as InternalAxiosRequestConfig["headers"] & {
+        delete?: (header: string) => void;
+      };
+      if (typeof headers?.delete === "function") {
+        headers.delete("Content-Type");
+      } else if (headers) {
+        delete (headers as Record<string, unknown>)["Content-Type"];
+        delete (headers as Record<string, unknown>)["content-type"];
+      }
+    }
     return config;
   },
   (error) => Promise.reject(error)

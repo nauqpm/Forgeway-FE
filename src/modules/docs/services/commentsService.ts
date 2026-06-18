@@ -36,6 +36,7 @@ export interface PageComment {
 }
 
 export interface CreatePageCommentPayload {
+  workspaceId: string;
   content: string;
   targetType: 'page';
   targetId: string;
@@ -49,8 +50,13 @@ export interface CreatePageCommentPayload {
 // ──────────────────────────────────────────────────────────────
 
 /** Fetch all comments for a page as threaded list (root + replies) */
-async function getThreadedComments(pageId: string): Promise<PageComment[]> {
-  const res = await api.get(apiRoutes.COMMENTS.THREADED('page', pageId));
+async function getThreadedComments(
+  workspaceId: string,
+  pageId: string,
+): Promise<PageComment[]> {
+  const res = await api.get(apiRoutes.COMMENTS.THREADED('page', pageId), {
+    params: { workspaceId },
+  });
   const data = res.data?.data ?? res.data;
   return Array.isArray(data) ? data : [];
 }
@@ -63,11 +69,13 @@ async function createComment(payload: CreatePageCommentPayload): Promise<PageCom
 
 /** Reply to an existing comment */
 async function replyToComment(
+  workspaceId: string,
   parentId: string,
   content: string,
   pageId: string,
 ): Promise<PageComment> {
   return createComment({
+    workspaceId,
     content,
     targetType: 'page',
     targetId: pageId,
@@ -99,8 +107,13 @@ async function unresolveComment(id: string): Promise<PageComment> {
 }
 
 /** Get comment count for a page */
-async function getCommentCount(pageId: string): Promise<number> {
-  const res = await api.get(apiRoutes.COMMENTS.COUNT('page', pageId));
+async function getCommentCount(
+  workspaceId: string,
+  pageId: string,
+): Promise<number> {
+  const res = await api.get(apiRoutes.COMMENTS.COUNT('page', pageId), {
+    params: { workspaceId },
+  });
   const data = res.data?.data ?? res.data;
   return data?.count ?? 0;
 }

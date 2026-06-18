@@ -20,6 +20,10 @@ const authConfig = (accessToken?: string | null) =>
       : {},
   });
 
+const formDataConfig = (accessToken?: string | null) => ({
+  headers: authConfig(accessToken).headers,
+});
+
 const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
 
 const BLOCKED_ATTACHMENT_EXTENSIONS = new Set([
@@ -123,6 +127,9 @@ const getFileExtension = (fileName: string) => {
 const getErrorMessage = (error: unknown, fallback: string) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const message = (error as any)?.response?.data?.message || (error as any)?.message;
+  if (Array.isArray(message)) {
+    return message.filter((item) => typeof item === "string").join(" ");
+  }
   return typeof message === "string" && message.trim() ? message : fallback;
 };
 
@@ -153,7 +160,8 @@ const validateUploadFile = (file: File) => {
 const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please try again.", file?: File) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const status = (error as any)?.response?.status;
-  const message = getErrorMessage(error, fallback).toLowerCase();
+  const serverMessage = getErrorMessage(error, "");
+  const message = (serverMessage || fallback).toLowerCase();
 
   if (status === 400) {
     if (message.includes("file extension") || message.includes("file type") || message.includes("mime type")) {
@@ -164,7 +172,11 @@ const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please
       return "File is too large. Please upload a smaller attachment.";
     }
 
-    return "Could not upload this attachment. Please check the file and try again.";
+    if (message.includes("multipart") || message.includes("boundary") || message.includes("form")) {
+      return "Could not read the uploaded file. Please try uploading it again.";
+    }
+
+    return serverMessage || "Could not upload this attachment. Please check the file and try again.";
   }
 
   if (status === 413) {
@@ -189,7 +201,6 @@ const getUploadErrorMessage = (error: unknown, fallback = "Upload failed. Please
 
   return getErrorMessage(error, fallback);
 };
-
 export const attachmentService = {
   async listAttachments({ workspaceId, taskId, accessToken }: AttachmentRequestContext): Promise<TaskAttachment[]> {
     const response = await api.get(
@@ -210,11 +221,9 @@ export const attachmentService = {
   }: AttachmentUploadInput): Promise<TaskAttachment> {
     const formData = new FormData();
     formData.append("file", file);
-    const config = authConfig(accessToken);
 
     const response = await api.post(apiRoutes.TASKS.BOARD_TASK_ATTACHMENTS(workspaceId, taskId), formData, {
-      ...config,
-      headers: config.headers,
+      ...formDataConfig(accessToken),
       onUploadProgress: (event) => {
         if (!onProgress || !event.total) return;
         onProgress(Math.min(100, Math.round((event.loaded * 100) / event.total)));
