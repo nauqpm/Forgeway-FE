@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../shared/stores/authStore';
+import { useAuth } from '../shared/hooks/useAuth';
 import { AUTH_ROUTES } from '../shared/constants/auth-routes';
 import { Loader2 } from 'lucide-react';
 
@@ -28,7 +28,7 @@ interface AuthGuardProps {
  */
 const AuthGuard: React.FC<AuthGuardProps> = ({ children, fallback }) => {
   const router = useRouter();
-  const { isAuthenticated, isLoading, isInitialized } = useAuthStore();
+  const { isAuthenticated, isLoading, isInitialized } = useAuth();
 
   // Step 2: check and redirect if not signed in
   useEffect(() => {

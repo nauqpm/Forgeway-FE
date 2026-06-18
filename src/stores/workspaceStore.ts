@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
+import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 
-export type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
+export type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 
 export interface Project {
   _id: string;

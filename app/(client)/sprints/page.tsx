@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useQuery } from "@tanstack/react-query";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { queryKeys } from "@/common/constants/queryKeys";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import { queryKeys } from "@/shared/constants/queryKeys";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { Zap, Clock, CheckCircle, Calendar, Play, ArrowRight } from "lucide-react";
 

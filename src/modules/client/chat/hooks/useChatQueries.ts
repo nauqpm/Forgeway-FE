@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, useInfiniteQuery, type QueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 import {
   createDMAPI,
   getChannelMembersAPI,
@@ -26,11 +26,11 @@ export const useChatChannels = () => {
 export const useChatMessages = (channelId: string | null) => {
   return useInfiniteQuery<MessagesPage>({
     queryKey: queryKeys.chat.messages(channelId || ''),
-    queryFn: ({ pageParam }) =>
+    queryFn: ({ pageParam, signal }) =>
       getMessagesAPI(channelId as string, {
         limit: 20,
         cursor: typeof pageParam === 'string' ? pageParam : undefined,
-      }),
+      }, { signal }),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
     enabled: Boolean(channelId),
@@ -52,7 +52,6 @@ export const useSearchUsers = (searchQuery: string) => {
   return useQuery({
     queryKey: queryKeys.chat.searchUsers(trimmedQuery),
     queryFn: () => searchUsersAPI(trimmedQuery),
-    enabled: Boolean(trimmedQuery),
     staleTime: 30_000,
   });
 };

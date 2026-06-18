@@ -24,6 +24,8 @@ export default function MeetingPage() {
   
   const [meetingCreatorId, setMeetingCreatorId] = useState<string | null>(null);
   const [meetingType, setMeetingType] = useState<MeetingType | null>(null);
+  const [isRoomFull, setIsRoomFull] = useState<boolean>(false);
+  const [isAlreadyParticipant, setIsAlreadyParticipant] = useState<boolean>(false);
   const [isMeetingLoading, setIsMeetingLoading] = useState(true);
   const [initError, setInitError] = useState<string | null>(null);
   const [isEndingMeeting, setIsEndingMeeting] = useState(false);
@@ -61,6 +63,13 @@ export default function MeetingPage() {
 
         setMeetingCreatorId(meeting.createdBy);
         setMeetingType(meeting.type ?? 'video');
+        
+        const participantCount = meeting.participants.length;
+        const maxAllowed = meeting.maxParticipants ?? 6;
+        const isParticipant = meeting.participants.some(p => String(p.userId) === String(currentUserId));
+        
+        setIsAlreadyParticipant(isParticipant);
+        setIsRoomFull(!isParticipant && participantCount >= maxAllowed);
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : 'Failed to fetch meeting details.';
@@ -153,6 +162,18 @@ export default function MeetingPage() {
                 name={currentUserName}
                 isLocal={true}
               />
+              {(mediaStatus === 'audio-only' || mediaStatus === 'unavailable') && (
+                <div className="absolute inset-x-0 bottom-0 bg-amber-500/90 text-amber-950 p-2 text-sm font-medium flex items-center justify-center gap-2 z-20 backdrop-blur-sm">
+                  <AlertTriangle className="w-4 h-4" />
+                  Camera is unavailable or in use by another application
+                </div>
+              )}
+              {mediaStatus === 'video-only' && (
+                <div className="absolute inset-x-0 bottom-0 bg-amber-500/90 text-amber-950 p-2 text-sm font-medium flex items-center justify-center gap-2 z-20 backdrop-blur-sm">
+                  <AlertTriangle className="w-4 h-4" />
+                  Microphone is unavailable or in use by another application
+                </div>
+              )}
             </div>
             
             <div className="flex items-center gap-4">
@@ -190,9 +211,10 @@ export default function MeetingPage() {
             
             <button
               onClick={() => setHasJoined(true)}
-              className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-600/20 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+              disabled={isRoomFull}
+              className={`w-full py-3 px-6 text-white rounded-xl font-bold shadow-lg transition-all transform ${isRoomFull ? 'bg-gray-600 cursor-not-allowed opacity-70' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 hover:scale-[1.02] active:scale-[0.98]'}`}
             >
-              Join Now
+              {isRoomFull ? 'Room is Full' : isAlreadyParticipant ? 'Rejoin Now' : 'Join Now'}
             </button>
             <button
               onClick={leaveMeetingPage}
@@ -226,13 +248,15 @@ export default function MeetingPage() {
         </div>
       )}
 
-      {(connectionError || mediaStatus === 'audio-only' || mediaStatus === 'unavailable') && (
+      {(connectionError || mediaStatus === 'audio-only' || mediaStatus === 'video-only' || mediaStatus === 'unavailable') && (
         <div className="shrink-0 bg-[#111827] border-b border-[#2A2B3D] px-4 py-2 text-sm text-[#E5E7EB] flex items-center justify-center gap-2">
           <AlertTriangle className="w-4 h-4 text-amber-400" />
           <span>
             {connectionError ||
               (mediaStatus === 'audio-only'
                 ? 'Camera is unavailable. You are connected with microphone only.'
+                : mediaStatus === 'video-only'
+                ? 'Microphone is unavailable. You are connected with camera only.'
                 : 'Camera and microphone are unavailable. You can stay in the meeting without media.')}
           </span>
         </div>

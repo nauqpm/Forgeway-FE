@@ -3,7 +3,7 @@ import Link from "next/link";
 import appleIcon from "./apple-icon.png";
 import { HeroAuthActions, NavAuthActions } from "./LandingAuthActions";
 import AdminNavLink from "./AdminNavLink";
-import BackToTop from "@/modules/client/common/back-to-top/BackToTop";
+import BackToTop from "@/shared/components/back-to-top/BackToTop";
 import {
   Activity,
   BarChart3,

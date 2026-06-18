@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MicOff, Mic, User } from 'lucide-react';
 
 interface VideoTileProps {
@@ -11,12 +11,25 @@ interface VideoTileProps {
 
 export default function VideoTile({ stream, isAudioOn, isVideoOn, name, isLocal }: VideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [trackCount, setTrackCount] = useState(0);
+
+  useEffect(() => {
+    if (!stream) return;
+    const updateCount = () => setTrackCount(stream.getTracks().length);
+    stream.addEventListener('addtrack', updateCount);
+    stream.addEventListener('removetrack', updateCount);
+    updateCount();
+    return () => {
+      stream.removeEventListener('addtrack', updateCount);
+      stream.removeEventListener('removetrack', updateCount);
+    };
+  }, [stream]);
 
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
-  }, [stream]);
+  }, [stream, trackCount]);
 
   return (
     <div className="relative w-full h-full bg-[#1A1B26] rounded-xl overflow-hidden shadow-sm border border-[#2A2B3D] flex items-center justify-center group">

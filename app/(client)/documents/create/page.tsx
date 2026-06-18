@@ -2,15 +2,15 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { ArrowLeft, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { documentService } from "@/modules/client/docs/services/documentService";
-import EditorToolbar from "@/modules/client/docs/editor/EditorToolbar";
-import { getEditorExtensions } from "@/modules/client/docs/editor/editorExtensions";
+import { documentService } from "@/modules/docs/services/documentService";
+import EditorToolbar from "@/modules/docs/editor/EditorToolbar";
+import { getEditorExtensions } from "@/modules/docs/editor/editorExtensions";
 
 const sanitizeEditorHtml = (html: string): string => {
   if (typeof window === "undefined") return html;

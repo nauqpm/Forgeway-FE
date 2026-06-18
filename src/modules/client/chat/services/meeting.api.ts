@@ -1,5 +1,4 @@
-import api from '@/lib/axiosIns';
-import axios from 'axios';
+import api, { isAxiosError } from '@/lib/axiosIns';
 import { MeetingType } from '../types/webrtc.types';
 
 export interface MeetingParticipant {
@@ -20,6 +19,7 @@ export interface Meeting {
   status: 'waiting' | 'active' | 'ended';
   type: MeetingType;
   participants: MeetingParticipant[];
+  maxParticipants?: number;
   startedAt: string;
   endedAt?: string;
 }
@@ -32,7 +32,7 @@ export class MeetingApiError extends Error {
 }
 
 const getMeetingApiError = (error: unknown, fallback: string): MeetingApiError => {
-  if (axios.isAxiosError(error)) {
+  if (isAxiosError(error)) {
     const message =
       (error.response?.data as { message?: string } | undefined)?.message ||
       error.message ||
@@ -68,7 +68,7 @@ export const getActiveMeetingAPI = async (channelId: string): Promise<Meeting | 
     const response = await api.get(`/meetings/channel/${channelId}/active`);
     return readMeetingResponse(response);
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
+    if (isAxiosError(error) && error.response?.status === 404) {
       return null;
     }
 
@@ -81,7 +81,7 @@ export const getMeetingByIdAPI = async (meetingId: string): Promise<Meeting | nu
     const response = await api.get(`/meetings/${meetingId}`);
     return readMeetingResponse(response);
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
+    if (isAxiosError(error) && error.response?.status === 404) {
       return null;
     }
 

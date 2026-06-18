@@ -6,9 +6,8 @@ import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
 import StickerPicker from './StickerPicker';
-import { useQueryClient } from '@tanstack/react-query';
-import { fetchMentionMembers } from '@/modules/client/chat/hooks/useChatQueries';
-
+import { toast } from 'react-hot-toast';
+import api from '@/lib/axiosIns';
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MessageInputProps {
@@ -20,7 +19,6 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   const [content, setContent] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
-  const queryClient = useQueryClient();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const lastTypingSentRef = useRef<number>(0);
   const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,6 +48,10 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
 
   const handleSend = () => {
     if (!content.trim()) return;
+    if (content.length > 4000) {
+      toast.error('Message cannot exceed 4000 characters');
+      return;
+    }
     sendMessage(channelId, content.trim(), undefined, replyingToMessage?._id);
     setContent('');
     setReplyingToMessage(null);
@@ -58,8 +60,8 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
-  const handleSelectSticker = (stickerUrl: string) => {
-    sendMessage(channelId, stickerUrl, undefined, replyingToMessage?._id, 'sticker');
+  const handleSelectSticker = (stickerId: string) => {
+    sendMessage(channelId, '', undefined, replyingToMessage?._id, 'sticker', stickerId);
     setReplyingToMessage(null);
     setShowStickerPicker(false);
   };
@@ -88,32 +90,60 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     search: string,
     callback: (data: { id: string; display: string; email?: string; phone?: string; avatar?: string }[]) => void
   ) => {
-    // Chỉ gợi ý khi người dùng bắt đầu nhập từ khóa tìm kiếm sau dấu @
-    if (!search || !search.trim()) {
-      callback([]);
-      return;
-    }
+    const query = search || '';
 
     if (mentionSearchTimeoutRef.current) {
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
-    mentionSearchTimeoutRef.current = setTimeout(async () => {
+    const fetchMembers = async () => {
       try {
-        const members = await fetchMentionMembers(queryClient, channelId, search);
-        callback(members);
+        const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
+          params: { q: query }
+        });
+        const members = response.data || [];
+        
+        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
+          const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
+          return {
+            id: m._id || m.id,
+            display,
+            email: m.email,
+            phone: m.phone,
+            avatar: m.avatar
+          };
+        });
+
+        // Thêm tùy chọn @All nếu từ khóa khớp hoặc khi truy vấn trống
+        if (!query || 'all'.startsWith(query.toLowerCase())) {
+          mappedMembers.unshift({
+            id: 'All',
+            display: 'All',
+            email: 'Mention everyone in this channel',
+            phone: '',
+            avatar: 'special-all'
+          });
+        }
+
+        callback(mappedMembers.slice(0, 10));
       } catch (err) {
         console.error('Failed to search mention members:', err);
         callback([]);
       }
-    }, 250);
+    };
+
+    if (!query) {
+      fetchMembers();
+    } else {
+      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 250);
+    }
   };
 
   return (
     <div className="p-4 bg-white dark:bg-[#202020] relative">
       {showStickerPicker && (
         <StickerPicker
-          onSelectSticker={handleSelectSticker}
+          onSelectSticker={(id) => handleSelectSticker(id)}
           onClose={() => setShowStickerPicker(false)}
         />
       )}
@@ -149,6 +179,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
               placeholder={channelName ? `Message into #${channelName}...` : 'Type a message...'}
               className="chat-m w-full bg-transparent"
               a11ySuggestionsListLabel="Suggested mentions"
+              maxLength={4000}
             >
               <Mention
                 trigger="@"

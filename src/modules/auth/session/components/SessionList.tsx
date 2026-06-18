@@ -1,45 +1,52 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getSessionsAPI, revokeSessionAPI, revokeAllOtherSessionsAPI } from '../services/sessionService';
 import { useTimezone } from '../hooks/useTimezone';
-import type { Session } from '../../shared/types/auth.types';
 import { Monitor, Smartphone, Loader2, Trash2, X } from 'lucide-react';
 
+const AUTH_SESSIONS_QUERY_KEY = ['auth', 'sessions'] as const;
+
 const SessionList: React.FC = () => {
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [revoking, setRevoking] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const { formatRelative } = useTimezone();
 
-  const loadSessions = useCallback(async () => {
-    setLoading(true);
-    try {
+  const sessionsQuery = useQuery({
+    queryKey: AUTH_SESSIONS_QUERY_KEY,
+    queryFn: async () => {
       const { sessions } = await getSessionsAPI();
-      setSessions(sessions);
-    } catch { /* Error handled silently */ }
-    finally { setLoading(false); }
-  }, []);
+      return sessions;
+    },
+  });
 
-  useEffect(() => { loadSessions(); }, [loadSessions]);
+  const revokeSessionMutation = useMutation({
+    mutationFn: revokeSessionAPI,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: AUTH_SESSIONS_QUERY_KEY });
+    },
+  });
 
-  const handleRevoke = async (id: string) => {
-    setRevoking(id);
-    try { await revokeSessionAPI(id); setSessions((s) => s.filter((x) => x.id !== id)); }
-    catch { /* Error handled silently */ }
-    finally { setRevoking(null); }
-  };
+  const revokeAllMutation = useMutation({
+    mutationFn: revokeAllOtherSessionsAPI,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: AUTH_SESSIONS_QUERY_KEY });
+    },
+  });
 
-  const handleRevokeAll = async () => {
-    setRevoking('all');
-    try { await revokeAllOtherSessionsAPI(); setSessions((s) => s.filter((x) => x.isCurrent)); }
-    catch { /* Error handled silently */ }
-    finally { setRevoking(null); }
-  };
+  const sessions = sessionsQuery.data ?? [];
+  const revokingId = revokeSessionMutation.isPending ? revokeSessionMutation.variables : null;
+  const isRevokingAll = revokeAllMutation.isPending;
 
-  if (loading) return (
+  if (sessionsQuery.isLoading) return (
     <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] py-4">
       <Loader2 className="w-4 h-4 animate-spin" />Loading...
+    </div>
+  );
+
+  if (sessionsQuery.isError) return (
+    <div className="text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171] py-4">
+      Could not load login sessions.
     </div>
   );
 
@@ -49,8 +56,8 @@ const SessionList: React.FC = () => {
         <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Login sessions</h3>
         {sessions.filter((s) => !s.isCurrent).length > 0 && (
           <button
-            onClick={handleRevokeAll}
-            disabled={revoking === 'all'}
+            onClick={() => revokeAllMutation.mutate()}
+            disabled={isRevokingAll}
             className="text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171] hover:underline flex items-center gap-1 disabled:opacity-50"
           >
             <X className="w-3.5 h-3.5" />Sign out all
@@ -81,16 +88,16 @@ const SessionList: React.FC = () => {
                 )}
               </p>
               <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
-                {s.ipAddress} · {formatRelative(s.lastActiveAt)}
+                {s.ipAddress} &middot; {formatRelative(s.lastActiveAt)}
               </p>
             </div>
             {!s.isCurrent && (
               <button
-                onClick={() => handleRevoke(s.id)}
-                disabled={revoking === s.id}
+                onClick={() => revokeSessionMutation.mutate(s.id)}
+                disabled={revokingId === s.id || isRevokingAll}
                 className="flex-shrink-0 p-2 rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#9F2F2D] dark:hover:text-[#F87171] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] disabled:opacity-50 transition-colors"
               >
-                {revoking === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                {revokingId === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
             )}
           </div>

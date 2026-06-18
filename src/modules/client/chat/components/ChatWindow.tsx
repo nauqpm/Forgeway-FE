@@ -8,10 +8,10 @@ import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
 import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
-import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
+import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
 import Link from 'next/link';
-import { useWorkspaces } from '@/modules/client/workspaces/hooks/useWorkspaces';
+import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels, useChatMessages } from '@/modules/client/chat/hooks/useChatQueries';
 
 export default function ChatWindow() {
@@ -29,6 +29,7 @@ export default function ChatWindow() {
     hasNextPage,
     isFetchingNextPage,
     fetchNextPage,
+    refetch,
   } = useChatMessages(activeChannelId);
   const { data: workspaces = [] } = useWorkspaces();
   const currentUserId = useAuthStore(state => state.user?.id);
@@ -37,6 +38,8 @@ export default function ChatWindow() {
   const [showMembers, setShowMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const shouldScrollToBottomRef = useRef(true);
+  const lastMessageIdRef = useRef<string | null>(null);
+  const prevChannelIdRef = useRef<string | null>(null);
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
   
@@ -69,14 +72,25 @@ export default function ChatWindow() {
   }, [activeChannelId]); // Strictly ONLY run when activeChannelId changes to prevent polling loops
 
   useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    const lastMsgId = lastMsg ? lastMsg._id : null;
+
+    const channelChanged = activeChannelId !== prevChannelIdRef.current;
+    const lastMsgChanged = lastMsgId !== lastMessageIdRef.current;
+
+    prevChannelIdRef.current = activeChannelId;
+    lastMessageIdRef.current = lastMsgId;
+
     if (shouldScrollToBottomRef.current) {
       if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        if (channelChanged || lastMsgChanged) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
       }
     } else {
       shouldScrollToBottomRef.current = true;
     }
-  }, [messages]);
+  }, [messages, activeChannelId]);
 
   useEffect(() => {
     const interval = setInterval(clearOldTyping, 2000);
@@ -288,20 +302,51 @@ export default function ChatWindow() {
       {/* Active Meeting Banner */}
       <MeetingBanner channelId={activeChannelId} />
 
+      {/* Sync/Load Error Banner (when there is cached history) */}
+      {errorMessage && messages.length > 0 && (
+        <div className="bg-red-50 dark:bg-red-950/20 border-b border-red-100 dark:border-red-900/30 px-4 py-2 flex items-center justify-between gap-3 text-xs text-red-600 dark:text-red-400">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 flex-shrink-0" />
+            <span>Failed to sync latest messages. Showing cached history.</span>
+          </div>
+          <button
+            onClick={() => refetch()}
+            disabled={loading}
+            className="px-2 py-1 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/70 text-red-700 dark:text-red-300 rounded font-medium transition-colors disabled:opacity-50"
+          >
+            {loading ? "Retrying..." : "Retry"}
+          </button>
+        </div>
+      )}
+
       {/* Messages area */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
         {loading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
           </div>
-        ) : errorMessage ? (
+        ) : errorMessage && messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full p-4 text-center">
             <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-3">
               <Info className="w-6 h-6 text-red-500" />
             </div>
-            <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic">
+            <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic mb-4">
               {errorMessage}
             </p>
+            <button
+              onClick={() => refetch()}
+              disabled={loading}
+              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-[6px] transition-colors flex items-center gap-2 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                "Retry"
+              )}
+            </button>
           </div>
         ) : (
           <div className="py-4">
