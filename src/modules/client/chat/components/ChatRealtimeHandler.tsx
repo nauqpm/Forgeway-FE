@@ -89,12 +89,18 @@ export default function ChatRealtimeHandler() {
       markAsRead(message.channelId);
     }
 
-    updateChannelInCache(queryClient, message.channelId, (channel) => ({
-      lastMessage: message,
-      unreadCount: isCurrentChannel || isMyOwnMessage
-        ? channel.unreadCount || 0
-        : (channel.unreadCount || 0) + 1,
-    }));
+    updateChannelInCache(queryClient, message.channelId, (channel) => {
+      const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
+      const newMsgId = message._id || message.id;
+      const isAlreadyProcessed = lastMsgId && newMsgId && String(lastMsgId) === String(newMsgId);
+
+      return {
+        lastMessage: message,
+        unreadCount: isCurrentChannel || isMyOwnMessage || isAlreadyProcessed
+          ? channel.unreadCount || 0
+          : (channel.unreadCount || 0) + 1,
+      };
+    });
   }, [ensureChannelInCache, markAsRead, queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,8 +147,14 @@ export default function ChatRealtimeHandler() {
     }
 
     updateChannelInCache(queryClient, data.channelId, (channel) => {
+      const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
+      const newMsgId = data.lastMessage?._id || data.lastMessage?.id;
+      const isAlreadyProcessed = lastMsgId && newMsgId && String(lastMsgId) === String(newMsgId);
+
       const unreadCount = data.unreadCount !== undefined
         ? data.unreadCount
+        : isAlreadyProcessed
+        ? channel.unreadCount || 0
         : (channel.unreadCount || 0) + (data.increment || 0);
 
       return {
