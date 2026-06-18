@@ -1,5 +1,5 @@
 // /src/config/api.ts
-import axios, { AxiosError, InternalAxiosRequestConfig, isAxiosError } from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 export { isAxiosError } from "axios";
 import { useAuthStore, useSessionStore } from "@/modules/auth/shared/stores/authStore";
 
