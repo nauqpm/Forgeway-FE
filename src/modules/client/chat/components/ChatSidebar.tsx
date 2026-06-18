@@ -5,7 +5,7 @@ import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { Hash, Megaphone, Loader2 } from 'lucide-react';
 import { getWorkspaceUI } from '@/shared/utils/workSpaceUI';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
@@ -23,6 +23,8 @@ export default function ChatSidebar() {
   const currentUserId = (authUser as any)?._id || authUser?.id;
   const [activeTab, setActiveTab] = useState<'all' | 'channels' | 'dms'>('all');
 
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const paramWorkspaceId = searchParams.get('workspaceId');
 
@@ -37,10 +39,17 @@ export default function ChatSidebar() {
         if (wsChannel) {
           setActiveChannel(wsChannel._id);
           lastWorkspaceIdRef.current = paramWorkspaceId;
+
+          // Clear workspaceId from URL to clean it up
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('workspaceId');
+          const query = params.toString();
+          const newUrl = query ? `${pathname}?${query}` : pathname;
+          router.replace(newUrl);
         }
       }
     }
-  }, [paramWorkspaceId, channels, setActiveChannel]);
+  }, [paramWorkspaceId, channels, setActiveChannel, pathname, router, searchParams]);
 
   const sortedChannels = useMemo(() => {
     /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -93,7 +102,7 @@ export default function ChatSidebar() {
 
     const isMine = String(msgSenderId) === String(currentUserId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const senderName = (lastMsg.senderId as any)?.fullName || "User";
+    const senderName = (lastMsg.senderId as any)?.fullName || (lastMsg as any).senderName || "User";
     const formattedContent = lastMsg.deletedAt 
       ? "[Message deleted]" 
       : lastMsg.type === 'sticker'

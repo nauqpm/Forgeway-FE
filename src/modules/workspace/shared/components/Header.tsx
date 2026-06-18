@@ -18,6 +18,8 @@ import type { WorkspaceSampleAvatar } from "@/modules/workspace/shared/utils/wor
 import WorkspaceAvatar from "./WorkspaceAvatar";
 import WorkspaceAvatarPicker from "./WorkspaceAvatarPicker";
 import { useChatChannels } from "@/modules/client/chat/hooks/useChatQueries";
+import { useRouter } from "next/navigation";
+import { useChatStore } from "@/stores/chatStore";
 
 interface HeaderProps {
   workspace: Workspace;
@@ -36,7 +38,20 @@ const Header = ({
   canUpdateWorkspace = false,
   onWorkspaceUpdated,
 }: HeaderProps) => {
+  const router = useRouter();
   const { data: channels = [] } = useChatChannels();
+
+  const handleChatClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const wsId = workspace._id || workspaceId;
+    const wsChannel = channels.find(
+      (c) => c.type === "workspace" && String(c.workspaceId) === String(wsId)
+    );
+    if (wsChannel) {
+      useChatStore.getState().setActiveChannel(wsChannel._id);
+    }
+    router.push("/chat");
+  };
 
   const workspaceUnreadCount = React.useMemo(() => {
     const wsId = workspace._id || workspaceId;
@@ -149,7 +164,8 @@ const Header = ({
       </div>
       <div className="flex flex-wrap gap-2 lg:justify-end">
         <Link
-          href={`/chat?workspaceId=${workspace._id}`}
+          href="/chat"
+          onClick={handleChatClick}
           className="inline-flex items-center gap-2 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] text-[#111111] dark:text-[#E8E8E7] px-4 py-2 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] font-medium text-[0.8125rem] transition-colors shadow-sm"
         >
           <MessageSquare className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
