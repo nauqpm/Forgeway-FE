@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import appleIcon from "../apple-icon.png";
+import sdlcLogo from "../Logo_AutomationLand_AI_SDLC-removebg.png";
 import { usePathname, useRouter } from "next/navigation";
 import { Filters } from "@/modules/workspace/shared/types/filter.type";
 
@@ -329,25 +329,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             {/* Logo in topbar — desktop only, slides in when sidebar is collapsed */}
             <div
-              className={`hidden lg:flex items-center gap-2 flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+              className={`hidden lg:flex items-center flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
                 sidebarCollapsed
-                  ? "max-w-[16.25rem] opacity-100"
+                  ? "max-w-[12rem] opacity-100"
                   : "max-w-0 opacity-0 pointer-events-none"
               }`}
             >
-              <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1">
+              <Link href="/" className="flex items-center px-1">
                 <Image
-                  src={appleIcon}
-                  alt="SDLC Platform"
-                  width={38}
-                  height={38}
-                  className="h-9 w-9 rounded-[8px] object-contain"
+                  src={sdlcLogo}
+                  alt="AutomationLand AI SDLC"
+                  height={36}
+                  width={160}
+                  className="h-9 w-auto object-contain"
+                  priority
                 />
-              </span>
-              <span className="flex flex-col text-base font-bold leading-[0.95] tracking-tight text-[#2563EB] dark:text-[#60A5FA] whitespace-nowrap">
-                <span className="text-2xl">SDLC</span>
-                <span>PLATFORM</span>
-              </span>
+              </Link>
             </div>
 
             {/* Search bar */}

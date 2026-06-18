@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import appleIcon from "../../../../../../app/apple-icon.png";
+import sdlcLogo from "../../../../../../app/Logo_AutomationLand_AI_SDLC-removebg.png";
 import Image from "next/image";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
@@ -88,6 +88,7 @@ const NavItem = ({
     <Link
       href={item.href}
       onClick={onMobileClose}
+      title={collapsed ? item.label : undefined}
       className={`flex items-center gap-3 px-3 py-2 rounded-[6px] transition-all group relative ${collapsed ? 'justify-center' : ''} ${
         isActive ? navActiveClass : navInactiveClass
       }`}
@@ -202,21 +203,16 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
             <Link
               href="/"
               onClick={onMobileClose}
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded-[8px] whitespace-nowrap"
+              className="flex items-center px-3 py-1.5 rounded-[8px] whitespace-nowrap"
             >
-              <span className="grid h-11 w-11 flex-shrink-0 place-items-center p-1">
-                <Image
-                  src={appleIcon}
-                  alt="SDLC Platform"
-                  width={38}
-                  height={38}
-                  className="h-9 w-9 rounded-[8px] object-contain"
-                />
-              </span>
-              <span className="flex flex-col text-base font-bold leading-[0.95] tracking-tight text-[#2563EB] dark:text-[#60A5FA]">
-                <span className="text-2xl">SDLC</span>
-                <span>PLATFORM</span>
-              </span>
+              <Image
+                src={sdlcLogo}
+                alt="AutomationLand AI SDLC"
+                height={36}
+                width={160}
+                className="h-9 w-auto object-contain"
+                priority
+              />
             </Link>
           </div>
 
@@ -262,12 +258,14 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
           )}
           {collapsed && (
             <div className="px-3 mb-3 flex justify-center">
-              <button
-                onClick={() => setShowCreateMenu(!showCreateMenu)}
+              <Link
+                href="/workspaces/create"
+                onClick={onMobileClose}
+                title="Create workspace"
                 className="w-9 h-9 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] flex items-center justify-center hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
               >
                 <Plus className="w-4 h-4" />
-              </button>
+              </Link>
             </div>
           )}
 
@@ -293,25 +291,27 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
 
               {/* Workspaces */}
               <div>
-                <button
-                  onClick={() => setWorkspaceOpen(!workspaceOpen)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors ${collapsed ? "justify-center" : ""}`}
-                >
-                  <BookOpen className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
-
-                  {!collapsed && (
-                    <>
-                      <span className="text-[0.8125rem] font-medium flex-1 text-left">
-                        Workspaces
-                      </span>
-                      {workspaceOpen ? (
-                        <ChevronDown className="w-4 h-4" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4" />
-                      )}
-                    </>
-                  )}
-              </button>
+                {collapsed ? (
+                  <Link
+                    href="/workspaces"
+                    onClick={onMobileClose}
+                    title="Workspaces"
+                    className={`w-full flex items-center justify-center px-3 py-2 rounded-[6px] transition-colors ${
+                      pathname.startsWith('/workspaces') ? navActiveClass : `text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`
+                    }`}
+                  >
+                    <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
+                  </Link>
+                ) : (
+                  <button
+                    onClick={() => setWorkspaceOpen(!workspaceOpen)}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+                  >
+                    <BookOpen className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
+                    <span className="text-[0.8125rem] font-medium flex-1 text-left">Workspaces</span>
+                    {workspaceOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </button>
+                )}
               {/* SUB NAV */}
               {workspaceOpen && !collapsed && (
                 <div className="ml-6 mt-1 space-y-0.5">
