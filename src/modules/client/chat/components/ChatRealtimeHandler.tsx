@@ -99,7 +99,7 @@ export default function ChatRealtimeHandler() {
       const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
       const newMsgId = message._id || message.id;
       
-      const lastMsgTime = new Date(channel.lastMessage?.createdAt || (channel.lastMessage as any)?.sentAt || 0).getTime();
+      const lastMsgTime = new Date(channel.lastMessage?.createdAt || channel.lastMessage?.sentAt || 0).getTime();
       const newMsgTime = new Date(message.createdAt).getTime();
 
       const isAlreadyProcessed = 
@@ -125,7 +125,7 @@ export default function ChatRealtimeHandler() {
       const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
       const editedMsgId = message._id || message.id;
       
-      const lastMsgTime = new Date(channel.lastMessage?.createdAt || (channel.lastMessage as any)?.sentAt || 0).getTime();
+      const lastMsgTime = new Date(channel.lastMessage?.createdAt || channel.lastMessage?.sentAt || 0).getTime();
       const editedMsgTime = new Date(message.createdAt).getTime();
 
       const isLastMessage = 
@@ -184,7 +184,7 @@ export default function ChatRealtimeHandler() {
       const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
       const newMsgId = data.lastMessage?._id || data.lastMessage?.id;
       
-      const lastMsgTime = new Date(channel.lastMessage?.createdAt || (channel.lastMessage as any)?.sentAt || 0).getTime();
+      const lastMsgTime = new Date(channel.lastMessage?.createdAt || channel.lastMessage?.sentAt || 0).getTime();
       const newMsgTime = new Date(data.lastMessage?.createdAt || data.lastMessage?.sentAt || 0).getTime();
 
       const isAlreadyProcessed = 

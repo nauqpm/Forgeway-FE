@@ -60,7 +60,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
-  const handleSelectSticker = (stickerId: string, stickerUrl: string) => {
+  const handleSelectSticker = (stickerId: string) => {
     sendMessage(channelId, '', undefined, replyingToMessage?._id, 'sticker', stickerId);
     setReplyingToMessage(null);
     setShowStickerPicker(false);
@@ -143,7 +143,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     <div className="p-4 bg-white dark:bg-[#202020] relative">
       {showStickerPicker && (
         <StickerPicker
-          onSelectSticker={handleSelectSticker}
+          onSelectSticker={(id) => handleSelectSticker(id)}
           onClose={() => setShowStickerPicker(false)}
         />
       )}

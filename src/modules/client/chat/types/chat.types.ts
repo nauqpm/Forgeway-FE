@@ -28,6 +28,7 @@ export interface Message {
   updatedAt?: string;
   deletedAt?: string | null;
   reactions?: Record<string, string[]>;
+  sentAt?: string;
 }
 
 export interface Channel {
