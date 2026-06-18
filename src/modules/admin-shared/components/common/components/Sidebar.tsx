@@ -132,8 +132,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   }, [channels]);
 
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
-  const [showCreateMenu, setShowCreateMenu] = useState(false);
-  const [workspaceOpen, setWorkspaceOpen] = useState(true);
+const [workspaceOpen, setWorkspaceOpen] = useState(true);
 
   const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
   const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: '0px' });
