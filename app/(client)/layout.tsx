@@ -1,15 +1,15 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/context/AuthContext";
-import Sidebar from "@/modules/shared/components/common/components/Sidebar";
-import NotificationPanel from "@/modules/shared/components/common/components/NotificationPanel";
-import { notificationService } from "@/common/services/notification.service";
-import { queryKeys } from "@/common/constants/queryKeys";
-import { useNotificationRealtime } from "@/hooks/realtime/use-notification-realtime";
-import { useWorkspaceRealtime } from "@/hooks/realtime/use-workspace-realtime";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
+import Sidebar from "@/modules/admin-shared/components/common/components/Sidebar";
+import NotificationPanel from "@/modules/admin-shared/components/common/components/NotificationPanel";
+import { notificationService } from "@/modules/notifications/services/notification.service";
+import { queryKeys } from "@/shared/constants/queryKeys";
+import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
+import { useWorkspaceRealtime } from "@/lib/realtime/hooks/use-workspace-realtime";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import {
   ChevronDown,
   LayoutDashboard,
@@ -29,15 +29,15 @@ import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "../apple-icon.png";
 import { usePathname, useRouter } from "next/navigation";
-import { Filters } from "@/modules/client/workspaces/types/filter.type";
+import { Filters } from "@/modules/workspace/shared/types/filter.type";
 
-import SearchDropdown from "@/modules/client/workspaces/components/SearchDropdown";
+import SearchDropdown from "@/modules/workspace/shared/components/SearchDropdown";
 
 import ChatRealtimeHandler from "@/modules/client/chat/components/ChatRealtimeHandler";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme } from "@/shared/hooks/useTheme";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
-import { useAccountSwitcherStore } from "@/common/stores/account-switcher.store";
-import AccountSwitcher from "@/modules/client/common/account-switcher/AccountSwitcher";
+import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
+import AccountSwitcher from "@/shared/components/layout/account-switcher/AccountSwitcher";
 
 type SearchAssigneeUser = {
   _id?: string;

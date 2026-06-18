@@ -1,5 +1,5 @@
-import { AdminGuard } from "@/common/components/AdminGuard";
-import { WorkspaceSettings } from "@/modules/shared";
+import { AdminGuard } from "@/modules/auth/guards/AdminGuard";
+import { WorkspaceSettings } from "@/modules/admin-shared";
 
 export const metadata = { title: 'Workspace Settings' };
 

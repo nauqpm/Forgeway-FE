@@ -1,7 +1,7 @@
 "use client";
 
 import { Shield } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
 
 export default function AdminNavLink() {

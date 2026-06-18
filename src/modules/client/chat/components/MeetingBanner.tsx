@@ -12,7 +12,7 @@ import {
 import { Loader2, Video } from "lucide-react";
 import { useActiveMeeting } from "@/modules/client/chat/hooks/useChatQueries";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import type { Meeting } from "../services/meeting.api";
 
 interface MeetingBannerProps {

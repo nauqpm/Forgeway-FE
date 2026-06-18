@@ -1,10 +1,9 @@
 import "@/styles/globals.css";
 import "@/styles/suneditor.min.css";
 import { Geist, Geist_Mono } from "next/font/google";
-import QueryProvider from "@/common/providers/QueryProvider";
-import { AuthProvider } from "@/context/AuthContext";
-import TokenHandler from "@/common/components/TokenHandler";
-import ToastProvider from "@/common/providers/ToastProvider";
+import QueryProvider from "@/shared/providers/QueryProvider";
+import TokenHandler from "@/modules/auth/shared/components/TokenHandler";
+import ToastProvider from "@/shared/providers/ToastProvider";
 import { Suspense } from "react";
 
 const geistSans = Geist({
@@ -79,11 +78,9 @@ export default function RootLayout({
       <body className="">
         <Suspense>
           <QueryProvider>
-            <AuthProvider>
-              <TokenHandler />
-              <ToastProvider />
-              {children}
-            </AuthProvider>
+            <TokenHandler />
+            <ToastProvider />
+            {children}
           </QueryProvider>
         </Suspense>
       </body>

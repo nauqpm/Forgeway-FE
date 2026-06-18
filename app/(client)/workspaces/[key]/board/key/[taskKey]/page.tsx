@@ -2,21 +2,21 @@
 
 import { useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import { useParams, useRouter } from "next/navigation";
 import { AlertCircle, ArrowLeft } from "lucide-react";
-import TaskDetailModal from "@/modules/client/workspaces/components/TaskDetailModal";
+import TaskDetailModal from "@/modules/workspace/tasks/detail/TaskDetailModal";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
-import { boardService } from "@/modules/client/workspaces/services/boardService";
-import { taskService } from "@/modules/client/workspaces/services/taskService";
-import { TaskDetailResponse } from "@/modules/client/workspaces/types/task-detail.type";
-import { getWorkspaceTemplate } from "@/modules/client/workspaces/types/workspace.type";
-import { enrichTaskDetailUsers } from "@/modules/client/workspaces/utils/taskDetailUsers";
-import { Issue } from "@/modules/client/workspaces/types/issue.type";
-import type { BoardColumn } from "@/modules/client/workspaces/types/board.type";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { resolveWorkspaceFromRouteKey } from "@/modules/workspace/shared/services/resolveWorkspace";
+import { boardService } from "@/modules/workspace/shared/services/boardService";
+import { taskService } from "@/modules/workspace/shared/services/taskService";
+import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
+import { getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
+import { enrichTaskDetailUsers } from "@/modules/workspace/shared/utils/taskDetailUsers";
+import { Issue } from "@/modules/workspace/shared/types/issue.type";
+import type { BoardColumn } from "@/modules/workspace/shared/types/board.type";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 export default function TaskDetailDeepLinkPage() {
   usePageTitle("Task Detail");

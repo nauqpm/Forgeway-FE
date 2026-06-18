@@ -1,5 +1,5 @@
 import type { InfiniteData, QueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 import type { Channel, Message, MessagesPage } from '@/modules/client/chat/types/chat.types';
 
 const getMessageId = (message: Pick<Message, '_id' | 'id'>) => message._id || message.id;
@@ -40,14 +40,14 @@ export const upsertMessageInCache = (
   channelId: string,
   message: Message
 ) => {
+  console.log("chatQueryCache: upsertMessageInCache called", { channelId, message });
   queryClient.setQueryData<InfiniteData<MessagesPage>>(
     queryKeys.chat.messages(channelId),
     (current) => {
+      console.log("chatQueryCache: current messages cache data is", current);
       if (!current) {
-        return {
-          pages: [{ messages: [message], nextCursor: null }],
-          pageParams: [undefined],
-        };
+        console.log("chatQueryCache: current cache is empty, doing nothing to avoid cache pollution");
+        return undefined;
       }
 
       const messageId = getMessageId(message);
@@ -93,11 +93,12 @@ export const updateMessageInCache = (
         ...current,
         pages: current.pages.map((page) => ({
           ...page,
-          messages: page.messages.map((message) =>
-            getMessageId(message) === messageId
+          messages: page.messages.map((message) => {
+            const isMatch = getMessageId(message) === messageId;
+            return isMatch
               ? { ...message, ...getUpdates(message) }
-              : message
-          ),
+              : message;
+          }),
         })),
       };
     }

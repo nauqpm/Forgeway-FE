@@ -2,16 +2,16 @@
 
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { usePageTitle } from "@/hooks/usePageTitle";
-import LoadingSpinner from "@/modules/shared/components/common/components/LoadingSpinner";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
+import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import Link from "next/link";
 import { BookOpen, Plus, Globe, Lock, ChevronRight, Columns, Repeat } from "lucide-react";
-import type { Workspace } from "@/modules/client/workspaces/types/workspace.type";
+import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
-import WorkspaceAvatar from "@/modules/client/workspaces/components/common/WorkspaceAvatar";
-import { queryKeys } from "@/common/constants/queryKeys";
-import { useCurrentWorkspace } from "@/modules/client/workspaces/hooks/useWorkspaces";
+import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
+import { queryKeys } from "@/shared/constants/queryKeys";
+import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 
 const getWorkspaceType = (workspace: Workspace) =>
   workspace.template ?? workspace.type ?? "kanban";
