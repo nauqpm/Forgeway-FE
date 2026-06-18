@@ -8,10 +8,10 @@ import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
 import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
-import { getWorkspaceAvatarUrl } from '@/modules/client/workspaces/utils/workspaceAvatar';
+import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
 import Link from 'next/link';
-import { useWorkspaces } from '@/modules/client/workspaces/hooks/useWorkspaces';
+import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels, useChatMessages } from '@/modules/client/chat/hooks/useChatQueries';
 
 export default function ChatWindow() {

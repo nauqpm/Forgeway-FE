@@ -84,7 +84,7 @@ export const useAuth = () => {
   const { user, isAuthenticated, isInitialized, setUser, setInitialized, clearAuth } = useAuthStore();
   const { setMfaChallenge } = useMfaStore();
   const { resetFailedAttempts } = useSecurityStore();
-  const { setGlobalPermissions } = usePermissionStore();
+  const { setGlobalPermissions, globalPermissions } = usePermissionStore();
 
   const authMeQuery = useQuery<AuthUser>({
     queryKey: AUTH_ME_QUERY_KEY,
@@ -275,6 +275,39 @@ export const useAuth = () => {
     await refreshUser();
   }, [refreshUser]);
 
+  const verifyToken = useCallback(async (): Promise<void> => {
+    const u = await refreshUser();
+    if (!u) await logout();
+  }, [refreshUser, logout]);
+
+  const effectivePermissions = globalPermissions.length > 0 ? globalPermissions : user?.permissions ?? [];
+
+  const hasPermission = useCallback((resource: string, action: string): boolean => {
+    if (!user) return false;
+    if ((user.role as string) === 'super_admin' || (user.role as string) === 'admin') return true;
+    return effectivePermissions.some(
+      (p) =>
+        (p.resource === resource || p.resource === '*') &&
+        (p.action === action || p.action === '*'),
+    );
+  }, [user, effectivePermissions]);
+
+  const hasAdminAccess = useCallback((): boolean => {
+    if (!user) return false;
+    return (user.role as string) === 'super_admin' || (user.role as string) === 'admin' || effectivePermissions.length > 0;
+  }, [user, effectivePermissions]);
+
+  const loginWithSsoToken = useCallback(async (token: string): Promise<void> => {
+    const { handleSsoCallbackAPI } = await import('@/modules/auth/sso/services/ssoService');
+    const response = await handleSsoCallbackAPI(token);
+    if (response.user) {
+      queryClient.setQueryData(AUTH_ME_QUERY_KEY, response.user);
+      setUser(response.user);
+      await fetchPermissions();
+    }
+    router.replace('/');
+  }, [queryClient, setUser, fetchPermissions, router]);
+
   return {
     user,
     isAuthenticated,
@@ -285,13 +318,19 @@ export const useAuth = () => {
       registerMutation.isPending ||
       logoutMutation.isPending,
     isInitialized,
+    token: null as string | null,
     permissions: permissionsQuery.data ?? [],
     isLoadingPermissions: permissionsQuery.isLoading || permissionsQuery.isFetching,
     login,
+    loginWithSsoToken,
     register,
     logout,
     refreshUser,
     initializeAuth,
     fetchPermissions,
+    fetchUserPermissions: fetchPermissions,
+    verifyToken,
+    hasPermission,
+    hasAdminAccess,
   };
 };

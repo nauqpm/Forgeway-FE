@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import api from "@/lib/axiosIns";
 import { Key, LogOut, Shield, User } from "lucide-react";
-import ThemeSwitcher from "@/common/components/ThemeSwitcher";
-import FontSizeControl from "@/common/components/FontSizeControl";
+import ThemeSwitcher from "@/shared/components/ThemeSwitcher";
+import FontSizeControl from "@/shared/components/FontSizeControl";
 
 export default function SettingsPage() {
   usePageTitle("Settings");

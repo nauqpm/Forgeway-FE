@@ -1,172 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { usePageTitle } from "@/hooks/usePageTitle";
 import Link from "next/link";
-import { toast } from "react-hot-toast";
-import { useAuth } from "@/context/AuthContext";
-import {
-  Download,
-  FileImage,
-  FileSpreadsheet,
-  FileText,
-  FileType2,
-  MoreHorizontal,
-  Pencil,
-  Search,
-  Trash2,
-  X,
-} from "lucide-react";
-import { documentService } from "@/modules/client/docs/services/documentService";
-import { DocumentItem } from "@/modules/client/docs/types/document.type";
-import ImportedDocumentViewer from "@/modules/client/docs/components/ImportedDocumentViewer";
-import OnlineDocumentEditorModal from "@/modules/client/docs/components/OnlineDocumentEditorModal";
-import DocumentWorkspaceLinkModal from "@/modules/client/docs/components/DocumentWorkspaceLinkModal";
-import { queryKeys } from "@/common/constants/queryKeys";
-
-const getErrorMessage = (error: unknown, fallback: string): string => {
-  if (error && typeof error === "object" && "response" in error) {
-    const res = (error as { response?: { data?: { message?: string; error?: string } } }).response;
-    return res?.data?.message || res?.data?.error || fallback;
-  }
-  return fallback;
-};
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
+import { useDocumentsPage } from "@/modules/docs/hooks/useDocumentsPage";
+import DocumentToolbar from "@/modules/docs/components/DocumentToolbar";
+import DocumentGrid from "@/modules/docs/components/DocumentGrid";
+import DocumentModals from "@/modules/docs/components/DocumentModals";
 
 export default function DocumentsLibraryPage() {
   usePageTitle("Documents");
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"newest" | "name" | "size">("newest");
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [editingDoc, setEditingDoc] = useState<DocumentItem | null>(null);
-  const [viewingDoc, setViewingDoc] = useState<DocumentItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<DocumentItem | null>(null);
-  const [renameTarget, setRenameTarget] = useState<DocumentItem | null>(null);
-  const [renameName, setRenameName] = useState("");
-  const [linkingDoc, setLinkingDoc] = useState<DocumentItem | null>(null);
-
-  const { data: documents = [], isLoading: loading } = useQuery({
-    queryKey: queryKeys.docs.library(),
-    queryFn: documentService.listMine,
-    staleTime: 30_000,
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (documentId: string) => documentService.delete(documentId),
-    onSuccess: (_data, documentId) => {
-      queryClient.setQueryData<DocumentItem[]>(queryKeys.docs.library(), (current = []) =>
-        current.filter((doc) => doc._id !== documentId),
-      );
-      setViewingDoc((current) => (current?._id === documentId ? null : current));
-      setDeleteTarget(null);
-      toast.success("Document deleted");
-    },
-    onError: () => {
-      toast.error("Delete document failed");
-    },
-  });
-
-  const renameMutation = useMutation({
-    mutationFn: ({ documentId, name }: { documentId: string; name: string }) =>
-      documentService.rename(documentId, name),
-    onSuccess: (_data, { documentId, name }) => {
-      queryClient.setQueryData<DocumentItem[]>(queryKeys.docs.library(), (current = []) =>
-        current.map((doc) => (doc._id === documentId ? { ...doc, name } : doc)),
-      );
-      setViewingDoc((current) => (current?._id === documentId ? { ...current, name } : current));
-      setRenameTarget(null);
-      setRenameName("");
-      toast.success("Document renamed");
-    },
-    onError: (error) => {
-      toast.error(getErrorMessage(error, "Rename document failed"));
-    },
-  });
-
-  const deleting = deleteMutation.isPending;
-  const renaming = renameMutation.isPending;
-
-  useEffect(() => {
-    const close = () => setOpenMenuId(null);
-    window.addEventListener("click", close);
-    return () => window.removeEventListener("click", close);
-  }, []);
-
-  const filtered = useMemo(() => {
-    const searched = documents.filter((d) =>
-      d.name.toLowerCase().includes(query.toLowerCase().trim()),
-    );
-
-    const sorted = [...searched];
-    if (sortBy === "name") {
-      sorted.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortBy === "size") {
-      sorted.sort((a, b) => b.size - a.size);
-    } else {
-      sorted.sort(
-        (a, b) =>
-          new Date(b.updatedAt || b.createdAt || 0).getTime() -
-          new Date(a.updatedAt || a.createdAt || 0).getTime(),
-      );
-    }
-    return sorted;
-  }, [documents, query, sortBy]);
-
-  const formatSize = (size: number) => {
-    const kb = size / 1024;
-    if (kb < 1024) return `${kb.toFixed(1)} KB`;
-    return `${(kb / 1024).toFixed(1)} MB`;
-  };
-
-  const formatDate = (value?: string) => {
-    if (!value) return "--";
-    return new Date(value).toLocaleDateString();
-  };
-
-  const getFileIcon = (extension: string) => {
-    const ext = extension.toLowerCase();
-    if ([".png", ".jpg", ".jpeg", ".webp"].includes(ext)) return FileImage;
-    if ([".xls", ".xlsx"].includes(ext)) return FileSpreadsheet;
-    if ([".ppt", ".pptx"].includes(ext)) return FileType2;
-    return FileText;
-  };
-
-  const handleDeleteDocument = async () => {
-    if (!deleteTarget) return;
-
-    deleteMutation.mutate(deleteTarget._id);
-  };
-
-  const openRenameDialog = (doc: DocumentItem) => {
-    setRenameTarget(doc);
-    setRenameName(doc.name);
-  };
-
-  const closeRenameDialog = () => {
-    if (renaming) return;
-    setRenameTarget(null);
-    setRenameName("");
-  };
-
-  const handleRenameDocument = async () => {
-    if (!renameTarget) return;
-
-    const nextName = renameName.trim();
-    if (!nextName) {
-      toast.error("Document name is required");
-      return;
-    }
-
-    if (nextName === renameTarget.name) {
-      setRenameTarget(null);
-      setRenameName("");
-      return;
-    }
-
-    renameMutation.mutate({ documentId: renameTarget._id, name: nextName });
-  };
+  const page = useDocumentsPage();
 
   return (
     <div className="space-y-6">
@@ -180,29 +25,6 @@ export default function DocumentsLibraryPage() {
               Management your documents, create online documents or upload files to keep all your important information in one place.
             </p>
           </div>
-          {/*
-          <label className="ml-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700">
-            <Upload className="h-4 w-4" />
-            Add new document
-            <input
-              type="file"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                try {
-                  await documentService.upload(file);
-                  await load();
-                  toast.success("Document uploaded successfully");
-                } catch {
-                  toast.error("Failed to upload document");
-                } finally {
-                  e.target.value = "";
-                }
-              }}
-            />
-          </label>
-          */}
           <Link
             href="/documents/create"
             className="inline-flex cursor-pointer items-center gap-2 rounded-[6px] bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
@@ -212,312 +34,44 @@ export default function DocumentsLibraryPage() {
         </div>
       </div>
 
-      <div className="rounded-[8px] border border-[#EAEAEA] bg-white p-4 dark:border-white/[0.06] dark:bg-[#252525]">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[16.25rem] flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search documents..."
-              className="w-full rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] py-2.5 pl-9 pr-3 text-sm text-[#111111] outline-none transition-colors focus:border-[#2563EB] focus:bg-white dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
-            />
-          </div>
-          <select
-            value={sortBy}
-            onChange={(e) =>
-              setSortBy(e.target.value as "newest" | "name" | "size")
-            }
-            className="rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-3 py-2.5 text-sm text-[#111111] outline-none transition-colors focus:border-[#2563EB] focus:bg-white dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
-          >
-            <option value="newest">Newest</option>
-            <option value="name">Name (A-Z)</option>
-            <option value="size">Size (Largest)</option>
-          </select>
-        </div>
-      </div>
+      <DocumentToolbar
+        query={page.query}
+        setQuery={page.setQuery}
+        sortBy={page.sortBy}
+        setSortBy={page.setSortBy}
+      />
 
-      {loading ? (
-        <div className="rounded-[8px] border border-[#EAEAEA] bg-white p-10 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
-          Loading documents...
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-white p-10 text-center text-sm text-[#787774] dark:border-white/[0.08] dark:bg-[#252525] dark:text-[#9B9A97]">
-          No matching documents found.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((doc) => {
-            const Icon = getFileIcon(doc.extension);
-            return (
-              <div
-                key={doc._id}
-                role="button"
-                tabIndex={0}
-                onClick={() => setViewingDoc(doc)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setViewingDoc(doc);
-                  }
-                }}
-                className="group relative cursor-pointer rounded-[8px] border border-[#EAEAEA] bg-white p-4 transition-colors hover:border-[#2563EB]/25 hover:bg-[#F9F9F8] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 dark:border-white/[0.06] dark:bg-[#252525] dark:hover:border-[#3B82F6]/25 dark:hover:bg-[#2A2A2A]"
-              >
-                <div className="mb-3 flex items-start justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-[6px] bg-[#EFF6FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]">
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setOpenMenuId((curr) =>
-                        curr === doc._id ? null : doc._id,
-                      );
-                    }}
-                    className="rounded-[4px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] hover:text-[#787774] dark:text-[#6B6B6B] dark:hover:bg-white/5 dark:hover:text-[#9B9A97]"
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                </div>
-                {openMenuId === doc._id && (
-                  <div
-                    onClick={(e) => e.stopPropagation()}
-                    className="absolute right-4 top-12 z-20 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]"
-                  >
-                    <a
-                      href={documentService.downloadUrl(doc._id)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      Download
-                    </a>
-                    {doc.documentType === "online" && user?.id === doc.uploadedBy && (
-                      <button
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenMenuId(null);
-                          setEditingDoc(doc);
-                        }}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        Edit 
-                      </button>
-                    )}
-                    <button
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(null);
-                        openRenameDialog(doc);
-                      }}
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                      Rename 
-                    </button>
-                    <button
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(null);
-                        setDeleteTarget(doc);
-                      }}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Delete
-                    </button>
-                  </div>
-                )}
+      <DocumentGrid
+        documents={page.filtered}
+        isLoading={page.isLoading}
+        openMenuId={page.openMenuId}
+        setOpenMenuId={page.setOpenMenuId}
+        currentUserId={user?.id}
+        onView={page.setViewingDoc}
+        onEdit={(doc) => { page.setOpenMenuId(null); page.setEditingDoc(doc); }}
+        onRename={(doc) => { page.setOpenMenuId(null); page.openRenameDialog(doc); }}
+        onDelete={(doc) => { page.setOpenMenuId(null); page.setDeleteTarget(doc); }}
+      />
 
-                <p className="line-clamp-2 min-h-10 text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  {doc.name}
-                </p>
-                <p className="mt-1 text-xs text-[#787774] dark:text-[#9B9A97]">
-                  {doc.extension.toUpperCase()} · {formatSize(doc.size)}
-                </p>
-                <p className="mt-1 text-xs text-[#ABABAB] dark:text-[#6B6B6B]">
-                  Date uploaded: {formatDate(doc.updatedAt || doc.createdAt)}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-      {editingDoc && (
-        <OnlineDocumentEditorModal
-          doc={editingDoc}
-          open={Boolean(editingDoc)}
-          onClose={() => setEditingDoc(null)}
-          onSaved={async () => {
-            await queryClient.invalidateQueries({ queryKey: queryKeys.docs.library() });
-          }}
-        />
-      )}
-      {renameTarget && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onClick={closeRenameDialog}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="rename-document-title"
-            className="w-full max-w-md rounded-[8px] border border-[#EAEAEA] bg-white p-5 dark:border-white/[0.06] dark:bg-[#252525]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]">
-                <Pencil className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h2 id="rename-document-title" className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  Rename document
-                </h2>
-                <p className="mt-1 text-sm text-[#787774] dark:text-[#9B9A97]">
-                  Enter a new name for this document.
-                </p>
-              </div>
-            </div>
-
-            <input
-              autoFocus
-              value={renameName}
-              disabled={renaming}
-              onChange={(e) => setRenameName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleRenameDocument();
-                }
-                if (e.key === "Escape") {
-                  closeRenameDialog();
-                }
-              }}
-              className="mt-5 w-full rounded-[6px] border border-[#EAEAEA] bg-[#F9F9F8] px-3 py-2.5 text-sm text-[#111111] outline-none transition-colors focus:border-[#2563EB] focus:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#E8E8E7] dark:focus:border-[#3B82F6]"
-              placeholder="Document name"
-            />
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                disabled={renaming}
-                onClick={closeRenameDialog}
-                className="rounded-[6px] border border-[#EAEAEA] px-4 py-2 text-sm font-semibold text-[#787774] transition-colors hover:bg-[#F7F6F3] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.06] dark:text-[#9B9A97] dark:hover:bg-white/5"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={renaming}
-                onClick={handleRenameDocument}
-                className="rounded-[6px] bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
-              >
-                {renaming ? "Renaming..." : "Rename"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {deleteTarget && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
-          onClick={() => {
-            if (!deleting) setDeleteTarget(null);
-          }}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-document-title"
-            className="w-full max-w-md rounded-[8px] border border-[#EAEAEA] bg-white p-5 dark:border-white/[0.06] dark:bg-[#252525]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
-                <Trash2 className="h-5 w-5" />
-              </div>
-              <div className="min-w-0">
-                <h2 id="delete-document-title" className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  Delete document?
-                </h2>
-                <p className="mt-1 text-sm text-[#787774] dark:text-[#9B9A97]">
-                  This will permanently delete{" "}
-                  <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                    {deleteTarget.name}
-                  </span>
-                  . This action cannot be undone.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={() => setDeleteTarget(null)}
-                className="rounded-[6px] border border-[#EAEAEA] px-4 py-2 text-sm font-semibold text-[#787774] transition-colors hover:bg-[#F7F6F3] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.06] dark:text-[#9B9A97] dark:hover:bg-white/5"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={handleDeleteDocument}
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {viewingDoc && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4"
-          onClick={() => setViewingDoc(null)}
-        >
-          <div
-            className="flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-[8px] bg-white dark:bg-[#252525]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between gap-3 border-b border-[#EAEAEA] px-4 py-3 dark:border-white/[0.06]">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
-                  {viewingDoc.name}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {viewingDoc.extension.toUpperCase()} ·{" "}
-                  {formatSize(viewingDoc.size)}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setViewingDoc(null)}
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-gray-800"
-                  aria-label="Close"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-            <div className="min-h-0 flex-1">
-              <ImportedDocumentViewer doc={viewingDoc} showBackButton={false} />
-            </div>
-          </div>
-        </div>
-      )}
-      {linkingDoc && (
-        <DocumentWorkspaceLinkModal
-          doc={linkingDoc}
-          open={Boolean(linkingDoc)}
-          onClose={() => setLinkingDoc(null)}
-          onSaved={async () => {
-            await queryClient.invalidateQueries({ queryKey: queryKeys.docs.library() });
-          }}
-        />
-      )}
+      <DocumentModals
+        editingDoc={page.editingDoc}
+        setEditingDoc={page.setEditingDoc}
+        viewingDoc={page.viewingDoc}
+        setViewingDoc={page.setViewingDoc}
+        deleteTarget={page.deleteTarget}
+        setDeleteTarget={page.setDeleteTarget}
+        renameTarget={page.renameTarget}
+        renameName={page.renameName}
+        setRenameName={page.setRenameName}
+        linkingDoc={page.linkingDoc}
+        setLinkingDoc={page.setLinkingDoc}
+        deleting={page.deleting}
+        renaming={page.renaming}
+        onDelete={page.handleDelete}
+        onRename={page.handleRename}
+        onSaved={page.refetch}
+        closeRenameDialog={page.closeRenameDialog}
+      />
     </div>
   );
 }

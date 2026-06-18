@@ -4,8 +4,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import type { ChatUser, Message, Channel } from '@/modules/client/chat/types/chat.types';
 import { format } from 'date-fns';
-import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle } from 'lucide-react';
+import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle, Pencil } from 'lucide-react';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
+import { MentionsInput, Mention } from 'react-mentions';
+import api from '@/lib/axiosIns';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
@@ -29,7 +31,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
 
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
-  const { sendReaction, sendDeleteMessage } = useChatRealtime();
+  const { sendReaction, sendDeleteMessage, sendEditMessage } = useChatRealtime();
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
 
   const activeChannelId = useChatStore(state => state.activeChannelId);
@@ -51,7 +53,19 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [positionBelow, setPositionBelow] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
   const pickerRef = useRef<HTMLDivElement>(null);
+  const editInputRef = useRef<HTMLTextAreaElement>(null);
+  const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (mentionSearchTimeoutRef.current) {
+        clearTimeout(mentionSearchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const replyParent = message.replyToId && typeof message.replyToId === 'object'
     ? (message.replyToId as Message)
@@ -132,6 +146,14 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   }, [showEmojiPicker]);
 
   useEffect(() => {
+    if (isEditing && editInputRef.current) {
+      const len = editInputRef.current.value.length;
+      editInputRef.current.focus();
+      editInputRef.current.setSelectionRange(len, len);
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
     if (showEmojiPicker && pickerRef.current) {
       const parent = pickerRef.current.parentElement;
       if (parent) {
@@ -155,6 +177,69 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
 
   const handleDelete = () => {
     setShowDeleteConfirm(true);
+  };
+
+  const handleMentionSearch = (
+    search: string,
+    callback: (data: { id: string; display: string; email?: string; phone?: string; avatar?: string }[]) => void
+  ) => {
+    const query = search || '';
+
+    if (mentionSearchTimeoutRef.current) {
+      clearTimeout(mentionSearchTimeoutRef.current);
+    }
+
+    const fetchMembers = async () => {
+      try {
+        const response = await api.get(`/chat/channels/${message.channelId}/mention-members`, {
+          params: { q: query }
+        });
+        const members = response.data || [];
+        
+        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
+          const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
+          return {
+            id: m._id || m.id,
+            display,
+            email: m.email,
+            phone: m.phone,
+            avatar: m.avatar
+          };
+        });
+
+        if (!query || 'all'.startsWith(query.toLowerCase())) {
+          mappedMembers.unshift({
+            id: 'All',
+            display: 'All',
+            email: 'Mention everyone in this channel',
+            phone: '',
+            avatar: 'special-all'
+          });
+        }
+
+        callback(mappedMembers.slice(0, 10));
+      } catch (err) {
+        console.error('Failed to search mention members:', err);
+        callback([]);
+      }
+    };
+
+    if (!query) {
+      fetchMembers();
+    } else {
+      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 250);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    const trimmed = editContent.trim();
+    if (!trimmed) return;
+    try {
+      sendEditMessage(message.channelId, message._id, trimmed);
+    } catch (err) {
+      console.error("Failed to edit message:", err);
+    }
+    setIsEditing(false);
   };
 
   const confirmDelete = () => {
@@ -239,13 +324,25 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             <Reply className="w-3.5 h-3.5" />
           </button>
           {isMine && (
-            <button 
-              onClick={handleDelete}
-              className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-red-50 dark:hover:bg-red-900/20 text-[#787774] hover:text-red-500 transition-colors" 
-              title="Delete message"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            <>
+              <button 
+                onClick={() => {
+                  setIsEditing(true);
+                  setEditContent(message.content);
+                }}
+                className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" 
+                title="Edit message"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button 
+                onClick={handleDelete}
+                className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-red-50 dark:hover:bg-red-900/20 text-[#787774] hover:text-red-500 transition-colors" 
+                title="Delete message"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
           )}
         </div>
       )}
@@ -335,24 +432,125 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
           </div>
         )}
         
-        <div className={cn(
-          "text-[0.875rem] leading-normal break-words whitespace-pre-wrap w-full",
-          isDeleted ? "text-[#ABABAB] dark:text-[#6B6B6B] italic text-[0.8125rem]" : ""
-        )}>
-          {isDeleted ? (
-            "[Message deleted]"
-          ) : message.type === 'sticker' ? (
-            <div className="relative group/sticker max-w-[120px] max-h-[120px] rounded-lg overflow-hidden my-1">
-              <img
-                src={message.content}
-                alt="sticker"
-                className="max-w-[120px] max-h-[120px] object-contain transition-transform duration-200 hover:scale-105"
-              />
+        {isEditing ? (
+          <div className="w-full mt-1.5 flex flex-col gap-2">
+            <div className="w-full p-2 bg-white dark:bg-[#202020] border border-[#2563EB] dark:border-[#3B82F6] rounded-md focus-within:ring-1 focus-within:ring-[#2563EB] overflow-visible">
+              <MentionsInput
+                inputRef={editInputRef}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSaveEdit();
+                  } else if (e.key === 'Escape') {
+                    setIsEditing(false);
+                  }
+                }}
+                className="chat-m w-full bg-transparent"
+                a11ySuggestionsListLabel="Suggested mentions"
+                maxLength={4000}
+              >
+                <Mention
+                  trigger="@"
+                  data={handleMentionSearch}
+                  markup="[@__display__](__id__)"
+                  renderSuggestion={(
+                    suggestion,
+                    _search,
+                    highlightedDisplay,
+                  ) => {
+                    const avatarUrl = (suggestion as { id: string | number; display: string; avatar?: string; email?: string }).avatar;
+                    const email = (suggestion as { id: string | number; display: string; avatar?: string; email?: string }).email;
+                    const isAll = suggestion.id === 'All' || suggestion.id === 'all';
+
+                    return (
+                      <div className="flex items-center gap-3 py-1.5 px-3 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors w-full text-left">
+                        <div className={cn(
+                          "w-9 h-9 rounded-full overflow-hidden flex items-center justify-center text-white text-sm font-bold shadow-sm shrink-0",
+                          isAll ? "bg-[#F59E0B]" : "bg-[#2563EB] dark:bg-[#3B82F6]"
+                        )}>
+                          {isAll ? (
+                            <span className="text-[14px]">@</span>
+                          ) : avatarUrl ? (
+                            <img 
+                              src={avatarUrl} 
+                              alt={suggestion.display} 
+                              className="w-full h-full object-cover" 
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                const parent = (e.target as HTMLImageElement).parentElement;
+                                if (parent && !parent.querySelector('.mention-avatar-fallback')) {
+                                  const span = document.createElement('span');
+                                  span.className = 'mention-avatar-fallback';
+                                  span.innerText = suggestion.display?.toString().charAt(0).toUpperCase() || 'U';
+                                  parent.appendChild(span);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <span>{suggestion.display?.toString().charAt(0).toUpperCase()}</span>
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0 flex flex-col text-left">
+                          <span className="font-semibold text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] truncate leading-tight">
+                            {isAll ? "@All" : highlightedDisplay}
+                          </span>
+                          {email && (
+                            <span className="text-[0.75rem] text-[#787774] dark:text-[#9B9A97] truncate leading-tight mt-0.5">
+                              {email}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }}
+                  className="text-[#2563EB] bg-[#EFF6FF] dark:text-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)] font-medium"
+                  displayTransform={(id, display) => `@${display}`}
+                />
+              </MentionsInput>
             </div>
-          ) : (
-            <span className="text-[#111111] dark:text-[#E8E8E7]">{renderMessageContent(message.content)}</span>
-          )}
-        </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setIsEditing(false)}
+                className="px-2.5 py-1 text-xs font-medium text-[#555555] dark:text-[#AAAAAA] bg-[#F0F0EE] dark:bg-white/[0.08] hover:bg-[#E5E5E3] dark:hover:bg-white/[0.12] rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="px-2.5 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 rounded transition-colors shadow-sm"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={cn(
+            "text-[0.875rem] leading-normal break-words whitespace-pre-wrap w-full",
+            isDeleted ? "text-[#ABABAB] dark:text-[#6B6B6B] italic text-[0.8125rem]" : ""
+          )}>
+            {isDeleted ? (
+              "[Message deleted]"
+            ) : message.type === 'sticker' ? (
+              <div className="relative group/sticker max-w-[120px] max-h-[120px] rounded-lg overflow-hidden my-1">
+                <img
+                  src={message.stickerId && typeof message.stickerId === 'object' ? message.stickerId.url : message.content}
+                  alt="sticker"
+                  className="max-w-[120px] max-h-[120px] object-contain transition-transform duration-200 hover:scale-105"
+                />
+              </div>
+            ) : (
+              <span className="text-[#111111] dark:text-[#E8E8E7]">
+                {renderMessageContent(message.content)}
+                {message.updatedAt && message.updatedAt !== message.createdAt && (
+                  <span className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] ml-1.5 select-none font-normal italic">(edited)</span>
+                )}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Attachments */}
         {!isDeleted && message.attachments && message.attachments.length > 0 && (

@@ -2,15 +2,15 @@
 
 import { FormEvent, use, useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { usePageTitle } from "@/hooks/usePageTitle";
+import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Save } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { resolveWorkspaceFromRouteKey } from "@/modules/client/workspaces/services/resolveWorkspace";
-import { queryKeys } from "@/common/constants/queryKeys";
+import { resolveWorkspaceFromRouteKey } from "@/modules/workspace/shared/services/resolveWorkspace";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 export default function CreateWorkspacePage({ params }: { params: Promise<{ key: string }> }) {
   usePageTitle("New Page");

@@ -13,7 +13,7 @@ import {
   upsertChannelInCache,
   upsertMessageInCache,
 } from '@/modules/client/chat/utils/chatQueryCache';
-import { queryKeys } from '@/common/constants/queryKeys';
+import { queryKeys } from '@/shared/constants/queryKeys';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import type { Channel, Message } from '@/modules/client/chat/types/chat.types';
@@ -72,14 +72,20 @@ export default function ChatRealtimeHandler() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNewMessage = useCallback((envelope: any) => {
+    console.log("ChatRealtimeHandler: Received chat.message.sent event", envelope);
     const message = (envelope.data || envelope) as Message;
-    if (!message?.channelId) return;
+    if (!message?.channelId) {
+      console.warn("ChatRealtimeHandler: Message does not have channelId", message);
+      return;
+    }
 
+    console.log("ChatRealtimeHandler: Upserting message to cache", message.channelId, message);
     upsertMessageInCache(queryClient, message.channelId, message);
     ensureChannelInCache(message.channelId);
 
     const activeChannelId = useChatStore.getState().activeChannelId;
-    const isCurrentChannel = activeChannelId === message.channelId;
+    console.log("ChatRealtimeHandler: activeChannelId is", activeChannelId);
+    const isCurrentChannel = activeChannelId && message.channelId && String(activeChannelId) === String(message.channelId);
     const senderId = getSenderId(message);
     const currentUser = useAuthStore.getState().user;
     const currentUserId = (currentUser as { id: string; _id?: string } | null)?._id || currentUser?.id;
@@ -89,12 +95,24 @@ export default function ChatRealtimeHandler() {
       markAsRead(message.channelId);
     }
 
-    updateChannelInCache(queryClient, message.channelId, (channel) => ({
-      lastMessage: message,
-      unreadCount: isCurrentChannel || isMyOwnMessage
-        ? channel.unreadCount || 0
-        : (channel.unreadCount || 0) + 1,
-    }));
+    updateChannelInCache(queryClient, message.channelId, (channel) => {
+      const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
+      const newMsgId = message._id || message.id;
+      
+      const lastMsgTime = new Date(channel.lastMessage?.createdAt || channel.lastMessage?.sentAt || 0).getTime();
+      const newMsgTime = new Date(message.createdAt).getTime();
+
+      const isAlreadyProcessed = 
+        (lastMsgId && newMsgId && String(lastMsgId) === String(newMsgId)) ||
+        (lastMsgTime > 0 && lastMsgTime === newMsgTime);
+
+      return {
+        lastMessage: message,
+        unreadCount: isCurrentChannel || isMyOwnMessage || isAlreadyProcessed
+          ? channel.unreadCount || 0
+          : (channel.unreadCount || 0) + 1,
+      };
+    });
   }, [ensureChannelInCache, markAsRead, queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -102,6 +120,28 @@ export default function ChatRealtimeHandler() {
     const message = (envelope.data || envelope) as Message;
     if (!message?._id || !message?.channelId) return;
     updateMessageInCache(queryClient, message.channelId, message._id, () => message);
+
+    updateChannelInCache(queryClient, message.channelId, (channel) => {
+      const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
+      const editedMsgId = message._id || message.id;
+      
+      const lastMsgTime = new Date(channel.lastMessage?.createdAt || channel.lastMessage?.sentAt || 0).getTime();
+      const editedMsgTime = new Date(message.createdAt).getTime();
+
+      const isLastMessage = 
+        (lastMsgId && editedMsgId && String(lastMsgId) === String(editedMsgId)) || 
+        (lastMsgTime > 0 && lastMsgTime === editedMsgTime);
+
+      if (isLastMessage) {
+        return {
+          lastMessage: {
+            ...channel.lastMessage,
+            ...message,
+          },
+        };
+      }
+      return {};
+    });
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,8 +181,20 @@ export default function ChatRealtimeHandler() {
     }
 
     updateChannelInCache(queryClient, data.channelId, (channel) => {
+      const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
+      const newMsgId = data.lastMessage?._id || data.lastMessage?.id;
+      
+      const lastMsgTime = new Date(channel.lastMessage?.createdAt || channel.lastMessage?.sentAt || 0).getTime();
+      const newMsgTime = new Date(data.lastMessage?.createdAt || data.lastMessage?.sentAt || 0).getTime();
+
+      const isAlreadyProcessed = 
+        (lastMsgId && newMsgId && String(lastMsgId) === String(newMsgId)) ||
+        (lastMsgTime > 0 && lastMsgTime === newMsgTime);
+
       const unreadCount = data.unreadCount !== undefined
         ? data.unreadCount
+        : isAlreadyProcessed
+        ? channel.unreadCount || 0
         : (channel.unreadCount || 0) + (data.increment || 0);
 
       return {

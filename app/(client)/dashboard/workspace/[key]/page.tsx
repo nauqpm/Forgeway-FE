@@ -1,5 +1,5 @@
-import { AdminGuard } from "@/common/components/AdminGuard";
-import { KanbanBoard } from "@/modules/shared";
+import { AdminGuard } from "@/modules/auth/guards/AdminGuard";
+import { KanbanBoard } from "@/modules/admin-shared";
 
 export const metadata = { title: 'Workspace Board' };
 
