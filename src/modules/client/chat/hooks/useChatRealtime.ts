@@ -57,6 +57,13 @@ export function useChatRealtime() {
     }
   }, []);
 
+  const sendEditMessage = useCallback((channelId: string, messageId: string, content: string) => {
+    const socket = chatSocketClient.connect();
+    if (socket) {
+      socket.emit(SOCKET_EVENTS.EDIT, { channelId, messageId, content });
+    }
+  }, []);
+
   return {
     sendMessage,
     sendTyping,
@@ -65,6 +72,7 @@ export function useChatRealtime() {
     leaveChannel,
     sendReaction,
     sendDeleteMessage,
+    sendEditMessage,
     isConnected: chatSocketClient.getSocket()?.connected ?? false
   };
 }
