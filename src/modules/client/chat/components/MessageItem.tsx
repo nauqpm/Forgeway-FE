@@ -344,7 +344,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
           ) : message.type === 'sticker' ? (
             <div className="relative group/sticker max-w-[120px] max-h-[120px] rounded-lg overflow-hidden my-1">
               <img
-                src={message.content}
+                src={message.stickerId && typeof message.stickerId === 'object' ? message.stickerId.url : message.content}
                 alt="sticker"
                 className="max-w-[120px] max-h-[120px] object-contain transition-transform duration-200 hover:scale-105"
               />

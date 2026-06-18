@@ -22,6 +22,7 @@ export interface Message {
   content: string;
   attachments?: Attachment[];
   type: 'text' | 'system' | string;
+  stickerId?: Sticker;
   replyToId?: string | Message;
   createdAt: string;
   updatedAt?: string;

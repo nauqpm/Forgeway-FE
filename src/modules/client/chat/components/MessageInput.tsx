@@ -60,8 +60,8 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     }
   };
 
-  const handleSelectSticker = (stickerUrl: string) => {
-    sendMessage(channelId, stickerUrl, undefined, replyingToMessage?._id, 'sticker');
+  const handleSelectSticker = (stickerId: string, stickerUrl: string) => {
+    sendMessage(channelId, '', undefined, replyingToMessage?._id, 'sticker', stickerId);
     setReplyingToMessage(null);
     setShowStickerPicker(false);
   };

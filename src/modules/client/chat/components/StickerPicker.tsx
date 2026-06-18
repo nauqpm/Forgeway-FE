@@ -12,7 +12,7 @@ function getStaticUrl(url: string): string {
 }
 
 interface StickerPickerProps {
-  onSelectSticker: (url: string) => void;
+  onSelectSticker: (id: string, url: string) => void;
   onClose: () => void;
 }
 
@@ -88,7 +88,7 @@ export default function StickerPicker({ onSelectSticker, onClose }: StickerPicke
               return (
                 <div
                   key={sticker._id}
-                  onClick={() => onSelectSticker(sticker.url)}
+                  onClick={() => onSelectSticker(sticker._id, sticker.url)}
                   onMouseEnter={() => setHoveredStickerId(sticker._id)}
                   onMouseLeave={() => setHoveredStickerId(null)}
                   className="aspect-square flex items-center justify-center rounded-lg hover:bg-[#F0F0EE] dark:hover:bg-white/5 cursor-pointer p-1.5 transition-all relative group"
