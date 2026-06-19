@@ -100,3 +100,21 @@ export const createMeetingAPI = async (
     throw getMeetingApiError(error, 'Could not start the meeting.');
   }
 };
+
+export interface LivekitConnectionDetails {
+  serverUrl: string;
+  roomName: string;
+  participantName: string;
+  participantToken: string;
+}
+
+export const getMeetingConnectionDetailsAPI = async (
+  meetingId: string,
+): Promise<LivekitConnectionDetails> => {
+  try {
+    const response = await api.post(`/meetings/${meetingId}/connection-details`);
+    return response.data as LivekitConnectionDetails;
+  } catch (error) {
+    throw getMeetingApiError(error, 'Could not get connection details for the meeting.');
+  }
+};

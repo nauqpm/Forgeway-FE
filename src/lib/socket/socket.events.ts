@@ -111,16 +111,10 @@ export const MEETING_EVENTS = {
   USER_AUDIO_CHANGED: 'meeting.user.audio_changed',
   USER_VIDEO_CHANGED: 'meeting.user.video_changed',
   ENDED: 'meeting.ended',
-  CAPACITY_WARNING: 'meeting.capacity_warning',
   STARTED: 'meeting.started',
 } as const;
 
-export const RTC_EVENTS = {
-  // Socket commands (client → server)
-  OFFER: 'rtc.offer',
-  ANSWER: 'rtc.answer',
-  ICE: 'rtc.ice',
-} as const;
+
 
 export const SOCKET_EVENTS = {
   ...SOCKET_LIFECYCLE,
