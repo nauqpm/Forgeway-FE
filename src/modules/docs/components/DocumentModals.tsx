@@ -3,7 +3,6 @@ import { DocumentItem } from "../types/document.type";
 import ImportedDocumentViewer from "./ImportedDocumentViewer";
 import OnlineDocumentEditorModal from "./OnlineDocumentEditorModal";
 import DocumentWorkspaceLinkModal from "./DocumentWorkspaceLinkModal";
-import { documentService } from "../services/documentService";
 
 function formatSize(size: number) {
   const kb = size / 1024;
@@ -197,12 +196,6 @@ export default function DocumentModals({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <a
-                  href={documentService.downloadUrl(viewingDoc._id)}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-gray-800"
-                >
-                  Download
-                </a>
                 <button
                   type="button"
                   onClick={() => setViewingDoc(null)}
