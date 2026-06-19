@@ -14,8 +14,7 @@ import { EditorView } from "@tiptap/pm/view";
 const toImageUrl = (url: string) => {
   if (!url) return "";
   if (/^https?:\/\//i.test(url)) return url;
-  const base = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SERVER_URL || "";
-  return `${base}${url}`;
+  return url.startsWith("/") ? url : `/${url}`;
 };
 
 const cleanPastedHTML = (html: string): string => {

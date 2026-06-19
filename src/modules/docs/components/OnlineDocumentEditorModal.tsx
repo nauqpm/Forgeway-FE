@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useEditor, EditorContent } from "@tiptap/react";
 import {
   Bookmark,
@@ -62,6 +63,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
   const [isPublishing, setIsPublishing] = useState(false);
   const [isExportingDocx, setIsExportingDocx] = useState(false);
   const [isImportingDocx, setIsImportingDocx] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const activeDocIdRef = useRef<string | null>(null);
 
   const editor = useEditor({
@@ -248,11 +250,26 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
 
-  if (!open) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-[#202020]">
-      <div className="flex h-full flex-col overflow-hidden">
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  if (!open || !mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] h-[100dvh] w-[100vw] bg-white dark:bg-[#202020]">
+      <div className="flex h-dvh w-full flex-col overflow-hidden">
         <div className="flex items-center justify-between border-b border-[#EAEAEA] bg-white px-5 py-3 dark:border-white/[0.06] dark:bg-[#202020] print:hidden">
           <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <span>Library</span>
@@ -353,7 +370,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
                 Loading content...
               </div>
             ) : (
-              <div className="mx-auto w-full max-w-[75rem] px-6 py-16 lg:px-10">
+              <div className="mx-auto w-full max-w-[75rem] px-6 py-8 lg:px-10">
               <div className="mb-10">
                 <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B] print:hidden">
                   Document Title
@@ -454,5 +471,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
         </div>
       )}
     </div>
+    ,
+    document.body,
   );
 }
