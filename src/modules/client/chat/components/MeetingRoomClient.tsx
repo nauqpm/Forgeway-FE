@@ -4,16 +4,21 @@ import React, { useState, useEffect } from 'react';
 import {
   LiveKitRoom,
   VideoConference,
-  PreJoin,
   LocalUserChoices,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import {
   getMeetingConnectionDetailsAPI,
   LivekitConnectionDetails,
+  MeetingApiError,
+  endMeetingAPI,
 } from '../services/meeting.api';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useSessionStore } from '@/modules/auth/shared/stores/authStore';
+import { useAuth } from '@/modules/auth/shared/hooks/useAuth';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { CustomPreJoin } from './CustomPreJoin';
 
 interface MeetingRoomClientProps {
   meetingId: string;
@@ -25,21 +30,37 @@ export const MeetingRoomClient: React.FC<MeetingRoomClientProps> = ({
   onLeave,
 }) => {
   const [preJoinChoices, setPreJoinChoices] = useState<LocalUserChoices | null>(null);
-  const [connectionDetails, setConnectionDetails] = useState<LivekitConnectionDetails | null>(
-    null,
-  );
+  const [connectionDetails, setConnectionDetails] = useState<LivekitConnectionDetails | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isEnding, setIsEnding] = useState(false);
 
-  // Once user submits PreJoin form, we fetch token
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { user, isAuthenticated, isLoading, isInitialized } = useAuth();
+  
+  const userDisplayName = user?.fullName || user?.email || 'Guest';
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (isInitialized && !isLoading && !isAuthenticated) {
+      const currentUrl = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+      router.replace(`/login?callbackUrl=${encodeURIComponent(currentUrl)}`);
+    }
+  }, [isInitialized, isLoading, isAuthenticated, router, pathname, searchParams]);
   useEffect(() => {
     if (preJoinChoices && !connectionDetails && !isConnecting) {
       const connectToRoom = async () => {
         try {
           setIsConnecting(true);
-          const details = await getMeetingConnectionDetailsAPI(meetingId);
+          const details = await getMeetingConnectionDetailsAPI(meetingId, userDisplayName);
           setConnectionDetails(details);
         } catch (error) {
           console.error('Failed to get connection details:', error);
+          if (error instanceof MeetingApiError && error.status === 401) {
+            useSessionStore.getState().openSessionExpiredModal();
+            return;
+          }
           toast.error('Failed to connect to the meeting. Please try again.');
           setPreJoinChoices(null);
         } finally {
@@ -49,21 +70,41 @@ export const MeetingRoomClient: React.FC<MeetingRoomClientProps> = ({
 
       connectToRoom();
     }
-  }, [preJoinChoices, meetingId, connectionDetails, isConnecting]);
+  }, [preJoinChoices, meetingId, connectionDetails, isConnecting, userDisplayName]);
+
+  const handleEndMeeting = async () => {
+    if (!window.confirm('Are you sure you want to end the meeting for everyone?')) return;
+    try {
+      setIsEnding(true);
+      await endMeetingAPI(meetingId);
+      toast.success('Meeting ended for all participants.');
+      if (onLeave) onLeave();
+      else {
+        window.close();
+        window.location.href = '/';
+      }
+    } catch (err) {
+      toast.error('Failed to end meeting. You may not have permission.');
+    } finally {
+      setIsEnding(false);
+    }
+  };
+
+  if (!isInitialized || isLoading || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-screen bg-gray-900 text-white">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
   if (!preJoinChoices) {
     return (
       <div className="flex items-center justify-center h-full min-h-screen bg-gray-900 text-white p-4">
-        <div className="w-full max-w-2xl bg-gray-800 rounded-xl overflow-hidden shadow-2xl p-6">
-          <h2 className="text-2xl font-semibold mb-6 text-center">Join Meeting</h2>
-          <PreJoin
-            onSubmit={(choices) => setPreJoinChoices(choices)}
-            onValidate={(values) => {
-              // Can validate username or other things if needed. We already get identity from token.
-              return true;
-            }}
-          />
-        </div>
+        <CustomPreJoin 
+          userDisplayName={userDisplayName} 
+          onSubmit={(choices) => setPreJoinChoices(choices)} 
+        />
       </div>
     );
   }
@@ -79,8 +120,22 @@ export const MeetingRoomClient: React.FC<MeetingRoomClientProps> = ({
     );
   }
 
+  const showEndMeeting = connectionDetails?.canEndMeeting === true;
+
   return (
-    <div className="h-screen w-full bg-black" data-lk-theme="default">
+    <div className="h-screen w-full bg-black relative" data-lk-theme="default">
+      {showEndMeeting && (
+        <div className="absolute top-4 left-4 z-50">
+          <button
+            onClick={handleEndMeeting}
+            disabled={isEnding}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium text-sm transition-colors flex items-center gap-2 shadow-lg"
+          >
+            {isEnding && <Loader2 className="w-4 h-4 animate-spin" />}
+            End Meeting for All
+          </button>
+        </div>
+      )}
       <LiveKitRoom
         serverUrl={connectionDetails.serverUrl}
         token={connectionDetails.participantToken}

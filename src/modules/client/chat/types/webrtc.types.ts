@@ -38,11 +38,11 @@ export interface MeetingUserPayload {
   participants?: MeetingSocketParticipant[];
 }
 
-export interface MeetingTogglePayload {
-  meetingId?: string;
-  userId: string;
-  isOn: boolean;
-}
+// export interface MeetingTogglePayload {
+//   meetingId?: string;
+//   userId: string;
+//   isOn: boolean;
+// }
 
 
 export type SocketEnvelope<T> = T | { data: T };
