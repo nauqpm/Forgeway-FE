@@ -103,6 +103,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     enabled: isAuthenticated,
     staleTime: 30_000,
   });
+  const handleUnreadNotificationCountChange = useCallback(
+    (count: number) => {
+      queryClient.setQueryData(queryKeys.notifications.unreadCount(), count);
+    },
+    [queryClient],
+  );
 
   // Default workspace keys for search
   const searchProjects = useMemo(
@@ -567,9 +573,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {showNotifications && (
           <NotificationPanel
             onClose={() => setShowNotifications(false)}
-            onUnreadCountChange={(count) =>
-              queryClient.setQueryData(queryKeys.notifications.unreadCount(), count)
-            }
+            onUnreadCountChange={handleUnreadNotificationCountChange}
           />
         )}
 
