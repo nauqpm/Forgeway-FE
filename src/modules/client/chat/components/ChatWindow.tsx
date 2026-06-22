@@ -258,15 +258,6 @@ export default function ChatWindow() {
 
         <div className="flex items-center gap-3 text-[#787774] dark:text-[#9B9A97]">
           <Link
-            href={`/meeting/init?channel=${activeChannelId}&type=voice`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
-            title="Start voice meeting"
-          >
-            <Phone className="w-4 h-4" />
-          </Link>
-          <Link
             href={`/meeting/init?channel=${activeChannelId}&type=video`}
             target="_blank"
             rel="noopener noreferrer"

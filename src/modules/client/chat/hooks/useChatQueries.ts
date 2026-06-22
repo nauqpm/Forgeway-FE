@@ -10,7 +10,7 @@ import {
   resetUnreadCountAPI,
   searchUsersAPI,
 } from '@/modules/client/chat/services/chatService';
-import { getActiveMeetingAPI } from '@/modules/client/chat/services/meeting.api';
+import { getActiveMeetingAPI } from '@/modules/client/meeting/services/meeting.api';
 import { useChatStore } from '@/stores/chatStore';
 import type { MentionMember, MessagesPage } from '@/modules/client/chat/types/chat.types';
 import { updateChannelInCache, upsertChannelInCache } from '@/modules/client/chat/utils/chatQueryCache';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Loader2, Mic, MicOff, Video, VideoOff, PhoneOff, LogOut, Users, UsersRound } from 'lucide-react';
 
-import { MeetingType } from '@/modules/client/chat/types/webrtc.types';
+import { MeetingType } from '@/modules/client/meeting/types/webrtc.types';
 
 interface MeetingControlsProps {
   isAudioOn: boolean;

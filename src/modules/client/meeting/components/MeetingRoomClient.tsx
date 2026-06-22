@@ -18,7 +18,7 @@ import { toast } from 'react-hot-toast';
 import { useSessionStore } from '@/modules/auth/shared/stores/authStore';
 import { useAuth } from '@/modules/auth/shared/hooks/useAuth';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { CustomPreJoin } from './CustomPreJoin';
+import { CustomPreJoin } from '../../chat/components/CustomPreJoin';
 
 interface MeetingRoomClientProps {
   meetingId: string;

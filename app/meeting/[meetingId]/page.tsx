@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useParams } from 'next/navigation';
-import { MeetingRoomClient } from '@/modules/client/chat/components/MeetingRoomClient';
+import { MeetingRoomClient } from '@/modules/client/meeting/components/MeetingRoomClient';
 
 export default function MeetingPage() {
   const params = useParams();

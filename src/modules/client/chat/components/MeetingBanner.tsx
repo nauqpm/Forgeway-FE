@@ -8,12 +8,12 @@ import {
   MeetingStartedPayload,
   MeetingUserPayload,
   unwrapSocketPayload,
-} from "../types/webrtc.types";
+} from "../../meeting/types/webrtc.types";
 import { Loader2, Video } from "lucide-react";
 import { useActiveMeeting } from "@/modules/client/chat/hooks/useChatQueries";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/shared/constants/queryKeys";
-import type { Meeting } from "../services/meeting.api";
+import type { Meeting } from "../../meeting/services/meeting.api";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 
 interface MeetingBannerProps {
