@@ -15,6 +15,7 @@ const getApiErrorMessage = (error: unknown, fallback: string): string => {
 
 interface UseSprintHandlersProps {
   workspaceId: string;
+  enabled: boolean;
   editingSprint: Sprint | null;
   setEditingSprint: React.Dispatch<React.SetStateAction<Sprint | null>>;
   setIsSprintModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -22,6 +23,7 @@ interface UseSprintHandlersProps {
 
 export const useSprintHandlers = ({
   workspaceId,
+  enabled,
   editingSprint,
   setEditingSprint,
   setIsSprintModalOpen,
@@ -33,7 +35,7 @@ export const useSprintHandlers = ({
   const { data: sprints = [] } = useQuery<Sprint[]>({
     queryKey: queryKeys.sprints.byWorkspace(workspaceId),
     queryFn: () => sprintService.listSprints(workspaceId),
-    enabled: !!workspaceId,
+    enabled: enabled && !!workspaceId,
     staleTime: 30_000,
   });
 
