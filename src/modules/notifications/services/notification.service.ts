@@ -1,7 +1,12 @@
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 
-export type NotificationType = "TASK_ASSIGNED" | "COMMENT_MENTIONED" | "TASK_COMMENT_CREATED" | "WORKSPACE_INVITED";
+export type NotificationType =
+  | "TASK_ASSIGNED"
+  | "TASK_STATUS_CHANGED"
+  | "COMMENT_MENTIONED"
+  | "TASK_COMMENT_CREATED"
+  | "WORKSPACE_INVITED";
 
 export interface NotificationActor {
   id: string;
@@ -32,6 +37,8 @@ export interface AppNotification {
     inviteId?: string;
     role?: string;
     status?: string;
+    fromStatus?: string;
+    toStatus?: string;
     [key: string]: unknown;
   };
   readAt?: string | Date | null;
