@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as R
 import { useRouter } from "next/navigation";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
-import { Bell, Check, FileText, Loader2, MoreHorizontal, X } from "lucide-react";
+import { ArrowRight, Bell, Check, FileText, Loader2, MoreHorizontal, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import {
@@ -14,6 +14,10 @@ import {
   NotificationListResponse,
 } from "@/modules/notifications/services/notification.service";
 import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
+import {
+  getTaskStatusTransition,
+  TaskStatusTransition,
+} from "@/modules/notifications/utils/notification-status.utils";
 
 interface NotificationPanelProps {
   onClose: () => void;
@@ -40,6 +44,7 @@ interface NotificationViewModel {
   isRead: boolean;
   category: NotificationCategory;
   type: "STANDARD" | "INVITE";
+  statusTransition?: TaskStatusTransition;
   inviteData?: {
     inviteId?: string;
     workspaceKey?: string;
@@ -76,6 +81,8 @@ function actionText(type: NotificationType): string {
   switch (type) {
     case "TASK_ASSIGNED":
       return "assigned a task to you";
+    case "TASK_STATUS_CHANGED":
+      return "changed the task status";
     case "COMMENT_MENTIONED":
       return "mentioned you in a comment";
     case "TASK_COMMENT_CREATED":
@@ -197,6 +204,10 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
     href: buildNotificationHref(notification),
     category: DIRECT_TYPES.includes(notification.type) ? "DIRECT" : "WATCHING",
     type: notification.type === "WORKSPACE_INVITED" ? "INVITE" : "STANDARD",
+    statusTransition:
+      notification.type === "TASK_STATUS_CHANGED"
+        ? getTaskStatusTransition(metadata)
+        : undefined,
     inviteData: notification.type === "WORKSPACE_INVITED"
       ? {
           inviteId: typeof metadata.inviteId === "string" ? metadata.inviteId : notification.entityId,
@@ -711,6 +722,18 @@ export default function NotificationPanel({
                                   <FileText className="w-3.5 h-3.5 text-[#2563EB] dark:text-[#3B82F6] flex-shrink-0" />
                                   <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
                                     {notification.target.key ? `${notification.target.key}: ` : ""}{notification.target.title}
+                                  </span>
+                                </div>
+                              )}
+
+                              {notification.statusTransition && (
+                                <div className="mt-1.5 flex w-fit items-center gap-2 text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
+                                  <span className="rounded-[4px] border border-[#EAEAEA] bg-[#F9F9F8] px-1.5 py-0.5 dark:border-white/[0.06] dark:bg-[#252525]">
+                                    {notification.statusTransition.from}
+                                  </span>
+                                  <ArrowRight className="h-3.5 w-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+                                  <span className="rounded-[4px] border border-[#EAEAEA] bg-[#F9F9F8] px-1.5 py-0.5 dark:border-white/[0.06] dark:bg-[#252525]">
+                                    {notification.statusTransition.to}
                                   </span>
                                 </div>
                               )}

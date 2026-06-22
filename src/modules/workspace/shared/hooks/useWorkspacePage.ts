@@ -18,7 +18,11 @@ import { useWorkspaceArchive } from "@/modules/workspace/shared/hooks/useWorkspa
 import { useWorkspaceBulkActions } from "@/modules/workspace/shared/hooks/useWorkspaceBulkActions";
 import { useDragHandlers } from "@/modules/workspace/shared/hooks/useDragHandlers";
 import { WORKSPACE_PERMISSIONS } from "@/modules/workspace/shared/constants/workspacePermissions";
-import { Workspace, WorkspaceTab } from "@/modules/workspace/shared/types/workspace.type";
+import {
+  getWorkspaceTemplate,
+  Workspace,
+  WorkspaceTab,
+} from "@/modules/workspace/shared/types/workspace.type";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
 import {
   isHiddenWorkspaceTab,
@@ -76,6 +80,7 @@ export function useWorkspacePage(workspaceKey: string, tab: string[] | undefined
   }, [workspace]);
 
   const workspaceId = workspace?._id;
+  const workspaceTemplate = workspace ? getWorkspaceTemplate(workspace) : undefined;
   const { filters, setFilters, taskFilters } = useTaskFilters(workspaceId ?? "");
 
   const {
@@ -83,7 +88,7 @@ export function useWorkspacePage(workspaceKey: string, tab: string[] | undefined
     isTaskBoardFetching, isBoardLoading, boardData, tasksError, activeIssueDetail,
     syncTaskReorder, patchSelectedTaskView, isDraggingIssueRef,
   } = useWorkspaceIssues({
-    workspaceId, workspaceType: workspace?.type, taskFilters, filters, workspace,
+    workspaceId, workspaceType: workspaceTemplate, taskFilters, filters, workspace,
     selectedIssue, selectedTaskKey, setSelectedIssue, setSelectedTaskIds,
   });
 
@@ -131,7 +136,13 @@ export function useWorkspacePage(workspaceKey: string, tab: string[] | undefined
   const { handleCreateSprint, handleSaveSprint, handleEditSprint, handleDeleteSprint,
     handleStartSprint, handleCompleteSprint, handleConfirmStartSprint, handleConfirmCompleteSprint,
     startSprintTarget, setStartSprintTarget, completeSprintTarget, setCompleteSprintTarget } =
-    useSprintHandlers({ workspaceId: workspaceId ?? "", editingSprint, setEditingSprint, setIsSprintModalOpen });
+    useSprintHandlers({
+      workspaceId: workspaceId ?? "",
+      enabled: workspaceTemplate === "scrum",
+      editingSprint,
+      setEditingSprint,
+      setIsSprintModalOpen,
+    });
 
   const { toggleTaskSelection, toggleSprintSelection } = useSelectionHandlers({
     workspaceId: workspaceId ?? "", issues, selectedTaskIds, setIssues, setSelectedTaskIds,

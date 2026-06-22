@@ -177,8 +177,7 @@ const toggleInlineMarkSkippingSpaces = (editor: Editor, markName: "underline" | 
 const toImageUrl = (url: string) => {
   if (!url) return "";
   if (/^https?:\/\//i.test(url)) return url;
-  const base = process.env.NEXT_PUBLIC_API_URL || "";
-  return `${base}${url}`;
+  return url.startsWith("/") ? url : `/${url}`;
 };
 
 export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
