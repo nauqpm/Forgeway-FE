@@ -3,8 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { createMeetingAPI, getActiveMeetingAPI } from '@/modules/client/chat/services/meeting.api';
-import { MeetingType } from '@/modules/client/chat/types/webrtc.types';
+import { createMeetingAPI, getActiveMeetingAPI } from '@/modules/client/meeting/services/meeting.api';
+import { MeetingType } from '@/modules/client/meeting/types/webrtc.types';
 import toast from 'react-hot-toast';
 
 export default function MeetingInitPage() {

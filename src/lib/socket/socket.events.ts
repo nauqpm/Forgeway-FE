@@ -99,28 +99,22 @@ export const CHAT_EVENTS = {
 
 export const MEETING_EVENTS = {
   // Socket commands (client → server)
-  JOIN: 'meeting.join',
-  LEAVE: 'meeting.leave',
-  END: 'meeting.end',
-  TOGGLE_AUDIO: 'meeting.toggle.audio',
-  TOGGLE_VIDEO: 'meeting.toggle.video',
+  // JOIN: 'meeting.join',
+  // LEAVE: 'meeting.leave',
+  // END: 'meeting.end',
+  // TOGGLE_AUDIO: 'meeting.toggle.audio',
+  // TOGGLE_VIDEO: 'meeting.toggle.video',
 
   // Server → client broadcasts
   USER_JOINED: 'meeting.user.joined',
   USER_LEFT: 'meeting.user.left',
-  USER_AUDIO_CHANGED: 'meeting.user.audio_changed',
-  USER_VIDEO_CHANGED: 'meeting.user.video_changed',
+  // USER_AUDIO_CHANGED: 'meeting.user.audio_changed',
+  // USER_VIDEO_CHANGED: 'meeting.user.video_changed',
   ENDED: 'meeting.ended',
-  CAPACITY_WARNING: 'meeting.capacity_warning',
   STARTED: 'meeting.started',
 } as const;
 
-export const RTC_EVENTS = {
-  // Socket commands (client → server)
-  OFFER: 'rtc.offer',
-  ANSWER: 'rtc.answer',
-  ICE: 'rtc.ice',
-} as const;
+
 
 export const SOCKET_EVENTS = {
   ...SOCKET_LIFECYCLE,

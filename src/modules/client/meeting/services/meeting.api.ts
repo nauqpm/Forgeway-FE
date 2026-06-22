@@ -65,7 +65,7 @@ const readMeetingResponse = (response: { data?: unknown }): Meeting | null => {
 
 export const getActiveMeetingAPI = async (channelId: string): Promise<Meeting | null> => {
   try {
-    const response = await api.get(`/meetings/channel/${channelId}/active`);
+    const response = await api.get(`/meetings?channelId=${encodeURIComponent(channelId)}`);
     return readMeetingResponse(response);
   } catch (error) {
     if (isAxiosError(error) && error.response?.status === 404) {
@@ -94,9 +94,37 @@ export const createMeetingAPI = async (
   type: MeetingType = 'video',
 ): Promise<Meeting | null> => {
   try {
-    const response = await api.post(`/chat/channels/${channelId}/meeting`, { type });
+    const response = await api.post(`/meetings`, { channelId, type });
     return readMeetingResponse(response);
   } catch (error) {
     throw getMeetingApiError(error, 'Could not start the meeting.');
+  }
+};
+
+export const endMeetingAPI = async (meetingId: string): Promise<void> => {
+  try {
+    await api.post(`/meetings/${meetingId}/end`);
+  } catch (error) {
+    throw getMeetingApiError(error, 'Could not end the meeting.');
+  }
+};
+
+export interface LivekitConnectionDetails {
+  serverUrl: string;
+  roomName: string;
+  participantName: string;
+  participantToken: string;
+  canEndMeeting: boolean;
+}
+
+export const getMeetingConnectionDetailsAPI = async (
+  meetingId: string,
+  name?: string,
+): Promise<LivekitConnectionDetails> => {
+  try {
+    const response = await api.post(`/meetings/${meetingId}/connection-details`, { name });
+    return response.data as LivekitConnectionDetails;
+  } catch (error) {
+    throw getMeetingApiError(error, 'Could not get connection details for the meeting.');
   }
 };

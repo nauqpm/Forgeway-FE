@@ -3,35 +3,7 @@
  * Consumed by the useWebRTC hook and MeetingPage.
  */
 
-export interface RemotePeer {
-  userId: string;
-  stream: MediaStream | null;
-  isAudioOn: boolean;
-  isVideoOn: boolean;
-  displayName?: string;
-}
-
 export type MeetingType = 'voice' | 'video';
-
-export interface WebRTCState {
-  localStream: MediaStream | null;
-  remoteStreams: Map<string, RemotePeer>;
-  isAudioOn: boolean;
-  isVideoOn: boolean;
-  isConnecting: boolean;
-  connectionError: string | null;
-  capacityWarning: boolean;
-  mediaStatus: 'pending' | 'ready' | 'audio-only' | 'video-only' | 'unavailable';
-}
-
-export interface WebRTCActions {
-  toggleAudio: () => void;
-  toggleVideo: () => void;
-  leave: () => void;
-  endForAll: () => void;
-}
-
-export type UseWebRTCReturn = WebRTCState & WebRTCActions;
 
 export interface MeetingSocketParticipant {
   userId: string;
@@ -66,26 +38,12 @@ export interface MeetingUserPayload {
   participants?: MeetingSocketParticipant[];
 }
 
-export interface MeetingTogglePayload {
-  meetingId?: string;
-  userId: string;
-  isOn: boolean;
-}
+// export interface MeetingTogglePayload {
+//   meetingId?: string;
+//   userId: string;
+//   isOn: boolean;
+// }
 
-export interface RtcSessionPayload {
-  meetingId?: string;
-  senderId: string;
-  targetUserId?: string;
-  sdp: RTCSessionDescriptionInit;
-  displayName?: string;
-}
-
-export interface RtcIcePayload {
-  meetingId?: string;
-  senderId: string;
-  targetUserId?: string;
-  candidate: RTCIceCandidateInit;
-}
 
 export type SocketEnvelope<T> = T | { data: T };
 
