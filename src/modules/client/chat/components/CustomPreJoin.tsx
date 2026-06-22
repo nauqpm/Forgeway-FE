@@ -8,7 +8,6 @@ import {
 } from '@livekit/components-react';
 import { Track, LocalVideoTrack, LocalAudioTrack, facingModeFromLocalTrack } from 'livekit-client';
 import { LocalUserChoices } from '@livekit/components-core';
-import { Button } from '@/shared/components/ui/Button'; // fallback if exists, or standard button
 
 interface CustomPreJoinProps {
   userDisplayName: string;

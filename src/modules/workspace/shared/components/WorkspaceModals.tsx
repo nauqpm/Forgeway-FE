@@ -59,7 +59,7 @@ interface WorkspaceModalsProps {
   handleConfirmStartSprint: (startDate: string, endDate: string) => void;
   completeSprintTarget: Sprint | null;
   setCompleteSprintTarget: (sprint: Sprint | null) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   handleConfirmCompleteSprint: (moveToSprintId?: string) => void;
   activeIssueDetail: Issue | null | undefined;
   closeTaskDetail: () => void;

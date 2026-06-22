@@ -6,7 +6,7 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
-import { Hash, Megaphone, Loader2, Info, Search, Phone, Video, Users } from 'lucide-react';
+import { Hash, Megaphone, Loader2, Info, Search, Video, Users } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';

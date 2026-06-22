@@ -83,8 +83,9 @@ export const MeetingRoomClient: React.FC<MeetingRoomClientProps> = ({
         window.close();
         window.location.href = '/';
       }
-    } catch (err) {
-      toast.error('Failed to end meeting. You may not have permission.');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to end meeting. You may not have permission.';
+      toast.error(errorMessage || 'Failed to end meeting. You may not have permission.');
     } finally {
       setIsEnding(false);
     }
