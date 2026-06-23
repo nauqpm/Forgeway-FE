@@ -39,6 +39,7 @@ interface NotificationViewModel {
   actor: { name: string; avatar?: string };
   actionText: string;
   target?: { id?: string; key?: string; title?: string; type: string };
+  messageSnippet?: string;
   href?: string;
   createdAt: string;
   isRead: boolean;
@@ -136,6 +137,7 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getInviteFailureState(
   error: unknown,
   fallback: string,
@@ -193,6 +195,7 @@ function buildNotificationHref(notification: AppNotification): string | undefine
 function mapNotification(notification: AppNotification): NotificationViewModel {
   const name = actorName(notification);
   const metadata = notification.metadata ?? {};
+  const isChatNotification = ["THREAD_REPLY", "CHAT_MENTIONED"].includes(notification.type);
   const taskKey = typeof metadata.taskKey === "string" ? metadata.taskKey : undefined;
   const taskTitle = typeof metadata.taskTitle === "string" ? metadata.taskTitle : notification.message;
   const workspaceName =
@@ -208,6 +211,10 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
     ? rawInviteMessage
     : undefined;
 
+  const cleanMessage = typeof notification.message === "string"
+    ? notification.message.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')
+    : undefined;
+
   return {
     id: notification.id,
     actor: {
@@ -215,7 +222,7 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
       avatar: notification.actor?.avatar || initials(name),
     },
     actionText: actionText(notification.type),
-    target: taskKey || taskTitle
+    target: !isChatNotification && (taskKey || taskTitle)
       ? {
           id: typeof metadata.taskId === "string" ? metadata.taskId : notification.entityId,
           key: taskKey,
@@ -223,6 +230,7 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
           type: "Task",
         }
       : undefined,
+    messageSnippet: isChatNotification ? cleanMessage : undefined,
     createdAt: notification.createdAt,
     isRead: Boolean(notification.readAt),
     href: buildNotificationHref(notification),
@@ -747,6 +755,12 @@ export default function NotificationPanel({
                                   <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
                                     {notification.target.key ? `${notification.target.key}: ` : ""}{notification.target.title}
                                   </span>
+                                </div>
+                              )}
+
+                              {notification.messageSnippet && (
+                                <div className="mt-1.5 px-2.5 py-1.5 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.75rem] text-[#787774] dark:text-[#9B9A97] italic max-w-full truncate">
+                                  {notification.messageSnippet}
                                 </div>
                               )}
 
