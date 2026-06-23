@@ -4,6 +4,17 @@ import { queryKeys } from "@/shared/constants/queryKeys";
 import { boardService } from "../services/boardService";
 import { BoardColumn } from "../types/board.type";
 import { toast } from "react-hot-toast";
+import { extractApiError, extractApiErrorCode } from "@/shared/utils/apiError";
+import { COLUMN_NAME_MESSAGES, hasDuplicateColumnName, normalizeColumnDisplayName } from "../utils/columnName";
+
+const getColumnErrorMessage = (error: unknown, fallback: string): string => {
+  const code = extractApiErrorCode(error, "");
+
+  if (code === "INVALID_COLUMN_NAME") return COLUMN_NAME_MESSAGES.INVALID;
+  if (code === "DUPLICATE_COLUMN_NAME") return COLUMN_NAME_MESSAGES.DUPLICATE;
+
+  return extractApiError(error, fallback);
+};
 
 interface UseColumnHandlersProps {
   workspaceId: string;
@@ -29,21 +40,21 @@ export const useColumnHandlers = ({
       await queryClient.cancelQueries({ queryKey: boardQueryKey });
       const previousBoard = queryClient.getQueryData<{ boardId: string; columns: BoardColumn[] }>(boardQueryKey);
       const currentColumns = previousBoard?.columns || [];
-      
+
       const newColumn: BoardColumn = {
         id: `temp-${Date.now()}`,
         name,
         order: currentColumns.length,
         mappedStatuses: [name],
       };
-      
+
       if (previousBoard) {
         queryClient.setQueryData(boardQueryKey, {
           ...previousBoard,
           columns: [...currentColumns, newColumn],
         });
       }
-      
+
       setNewColumnName("");
       setShowCreateColumn(false);
 
@@ -57,18 +68,20 @@ export const useColumnHandlers = ({
 
       return { previousBoard };
     },
-    onError: (err, newTodo, context) => {
+    onError: (err, name, context) => {
       if (context?.previousBoard) {
         queryClient.setQueryData(boardQueryKey, context.previousBoard);
       }
-      toast.error("Error creating column: " + err.message);
+      setNewColumnName(name);
+      setShowCreateColumn(true);
+      toast.error(getColumnErrorMessage(err, "Could not create column."));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: boardQueryKey });
     },
     onSuccess: () => {
       toast.success("Column added");
-    }
+    },
   });
 
   const renameColumnMutation = useMutation({
@@ -77,11 +90,11 @@ export const useColumnHandlers = ({
     onMutate: async ({ columnId, name }) => {
       await queryClient.cancelQueries({ queryKey: boardQueryKey });
       const previousBoard = queryClient.getQueryData<{ boardId: string; columns: BoardColumn[] }>(boardQueryKey);
-      
+
       if (previousBoard) {
         queryClient.setQueryData(boardQueryKey, {
           ...previousBoard,
-          columns: previousBoard.columns.map(c => c.id === columnId ? { ...c, name } : c),
+          columns: previousBoard.columns.map((c) => (c.id === columnId ? { ...c, name } : c)),
         });
       }
 
@@ -91,14 +104,14 @@ export const useColumnHandlers = ({
       if (context?.previousBoard) {
         queryClient.setQueryData(boardQueryKey, context.previousBoard);
       }
-      toast.error("Error renaming column: " + err.message);
+      toast.error(getColumnErrorMessage(err, "Could not rename column."));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: boardQueryKey });
     },
     onSuccess: () => {
       toast.success("Column renamed");
-    }
+    },
   });
 
   const deleteColumnMutation = useMutation({
@@ -107,11 +120,11 @@ export const useColumnHandlers = ({
     onMutate: async ({ columnId }) => {
       await queryClient.cancelQueries({ queryKey: boardQueryKey });
       const previousBoard = queryClient.getQueryData<{ boardId: string; columns: BoardColumn[] }>(boardQueryKey);
-      
+
       if (previousBoard) {
         queryClient.setQueryData(boardQueryKey, {
           ...previousBoard,
-          columns: previousBoard.columns.filter(c => c.id !== columnId),
+          columns: previousBoard.columns.filter((c) => c.id !== columnId),
         });
       }
 
@@ -130,7 +143,7 @@ export const useColumnHandlers = ({
     },
     onSuccess: () => {
       toast.success("Column deleted");
-    }
+    },
   });
 
   const moveColumnMutation = useMutation({
@@ -149,19 +162,39 @@ export const useColumnHandlers = ({
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: boardQueryKey });
-    }
+    },
   });
 
   const handleAddColumn = () => {
-    if (!newColumnName.trim()) {
-      setShowCreateColumn(false);
+    const normalizedName = normalizeColumnDisplayName(newColumnName);
+    if (!normalizedName) {
+      toast.error(COLUMN_NAME_MESSAGES.INVALID);
       return;
     }
-    createColumnMutation.mutate(newColumnName.trim());
+
+    const board = queryClient.getQueryData<{ columns: BoardColumn[] }>(boardQueryKey);
+    if (hasDuplicateColumnName(board?.columns ?? [], normalizedName)) {
+      toast.error(COLUMN_NAME_MESSAGES.DUPLICATE);
+      return;
+    }
+
+    createColumnMutation.mutate(normalizedName);
   };
 
   const handleRenameColumn = (columnId: string, name: string) => {
-    renameColumnMutation.mutate({ columnId, name });
+    const normalizedName = normalizeColumnDisplayName(name);
+    if (!normalizedName) {
+      toast.error(COLUMN_NAME_MESSAGES.INVALID);
+      return;
+    }
+
+    const board = queryClient.getQueryData<{ columns: BoardColumn[] }>(boardQueryKey);
+    if (hasDuplicateColumnName(board?.columns ?? [], normalizedName, columnId)) {
+      toast.error(COLUMN_NAME_MESSAGES.DUPLICATE);
+      return;
+    }
+
+    renameColumnMutation.mutate({ columnId, name: normalizedName });
   };
 
   const handleDeleteColumn = (columnId: string, migrateTo?: string) => {
