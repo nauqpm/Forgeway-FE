@@ -186,6 +186,15 @@ export function useWorkspaceRealtime({
     socket.on(WORKSPACE_EVENTS.MEMBER_REMOVED, handleMemberRemoved);
     socket.on(WORKSPACE_EVENTS.MEMBER_ROLE_UPDATED, handleMemberRoleUpdated);
 
+    const unsubscribeReconnect = realtimeSocketClient.onReconnect(() => {
+      const workspaceId = currentWorkspaceIdRef.current;
+      if (!workspaceId) return;
+
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.members(workspaceId),
+      });
+    });
+
     return () => {
       socket.off(WORKSPACE_EVENTS.CREATED, handleWorkspaceUpsert);
       socket.off(WORKSPACE_EVENTS.UPDATED, handleWorkspaceUpsert);
@@ -195,6 +204,7 @@ export function useWorkspaceRealtime({
       socket.off(WORKSPACE_EVENTS.MEMBER_ADDED, handleMemberAdded);
       socket.off(WORKSPACE_EVENTS.MEMBER_REMOVED, handleMemberRemoved);
       socket.off(WORKSPACE_EVENTS.MEMBER_ROLE_UPDATED, handleMemberRoleUpdated);
+      unsubscribeReconnect();
       clearRedirectTimer();
     };
   }, [
