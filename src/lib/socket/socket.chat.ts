@@ -27,17 +27,13 @@ export class ChatRoomManager {
 
     newChannelIds.forEach(id => this.joinedChannelIds.add(id));
     if (socket.connected) {
-      newChannelIds.forEach(channelId => {
-        socket.emit(SOCKET_EVENTS.JOIN, { channelId });
-      });
+      socket.emit(SOCKET_EVENTS.JOIN, { channelIds: newChannelIds });
     }
   }
 
   rejoin(socket: Socket): void {
     if (this.joinedChannelIds.size === 0) return;
-    this.joinedChannelIds.forEach(channelId => {
-      socket.emit(SOCKET_EVENTS.JOIN, { channelId });
-    });
+    socket.emit(SOCKET_EVENTS.JOIN, { channelIds: Array.from(this.joinedChannelIds) });
   }
 
   leave(socket: Socket): void {
