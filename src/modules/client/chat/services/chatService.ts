@@ -182,3 +182,110 @@ export const getStickersAPI = async (): Promise<StickerPack[]> => {
   const data = response.data?.data ?? response.data;
   return Array.isArray(data) ? data : [];
 };
+
+export const createChannelAPI = async (body: {
+  name: string;
+  workspaceId: string;
+  isPrivate?: boolean;
+  description?: string;
+}): Promise<Channel> => {
+  const response = await api.post('/chat/channels', body);
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id,
+    unreadCount: data.unreadCount || 0,
+  };
+};
+
+export const updateChannelAPI = async (
+  channelId: string,
+  body: { name?: string; description?: string; isPrivate?: boolean }
+): Promise<Channel> => {
+  const response = await api.patch(`/chat/channels/${channelId}`, body);
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id,
+    unreadCount: data.unreadCount || 0,
+  };
+};
+
+export const deleteChannelAPI = async (channelId: string): Promise<void> => {
+  await api.delete(`/chat/channels/${channelId}`);
+};
+
+export const joinChannelAPI = async (channelId: string): Promise<Channel> => {
+  const response = await api.post(`/chat/channels/${channelId}/join`);
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id,
+    unreadCount: data.unreadCount || 0,
+  };
+};
+
+export const leaveChannelAPI = async (channelId: string): Promise<void> => {
+  await api.post(`/chat/channels/${channelId}/leave`);
+};
+
+export const inviteMembersAPI = async (
+  channelId: string,
+  userIds: string[]
+): Promise<Channel> => {
+  const response = await api.post(`/chat/channels/${channelId}/invite`, { userIds });
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id,
+    unreadCount: data.unreadCount || 0,
+  };
+};
+
+export const kickMemberAPI = async (
+  channelId: string,
+  userId: string
+): Promise<Channel> => {
+  const response = await api.delete(`/chat/channels/${channelId}/members/${userId}`);
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id,
+    unreadCount: data.unreadCount || 0,
+  };
+};
+
+export const updateMemberRoleAPI = async (
+  channelId: string,
+  userId: string,
+  role: 'channel_admin' | 'channel_member'
+): Promise<Channel> => {
+  const response = await api.patch(`/chat/channels/${channelId}/members/${userId}`, { role });
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id,
+    unreadCount: data.unreadCount || 0,
+  };
+};
+
+export const getThreadRepliesAPI = async (
+  channelId: string,
+  messageId: string
+): Promise<Message[]> => {
+  const response = await api.get(`/chat/channels/${channelId}/messages/${messageId}/replies`);
+  const data = normalizeArray<Message>(response);
+  return data.map((item: Message & { id?: string }) => ({
+    ...item,
+    _id: item._id || item.id,
+  }));
+};
+
+export const getActiveThreadsAPI = async (channelId: string): Promise<Message[]> => {
+  const response = await api.get(`/chat/channels/${channelId}/threads`);
+  const data = normalizeArray<Message>(response);
+  return data.map((item: Message & { id?: string }) => ({
+    ...item,
+    _id: item._id || item.id,
+  }));
+};

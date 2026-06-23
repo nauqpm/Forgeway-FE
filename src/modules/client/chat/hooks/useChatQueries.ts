@@ -9,6 +9,8 @@ import {
   getStickersAPI,
   resetUnreadCountAPI,
   searchUsersAPI,
+  getThreadRepliesAPI,
+  getActiveThreadsAPI,
 } from '@/modules/client/chat/services/chatService';
 import { getActiveMeetingAPI } from '@/modules/client/meeting/services/meeting.api';
 import { useChatStore } from '@/stores/chatStore';
@@ -123,5 +125,23 @@ export const useMarkChannelRead = () => {
     onSettled: (_data, _error, channelId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(channelId) });
     },
+  });
+};
+
+export const useThreadReplies = (channelId: string | null, messageId: string | null) => {
+  return useQuery({
+    queryKey: queryKeys.chat.threadReplies(channelId || '', messageId || ''),
+    queryFn: () => getThreadRepliesAPI(channelId as string, messageId as string),
+    enabled: Boolean(channelId && messageId),
+    staleTime: 5_000,
+  });
+};
+
+export const useActiveThreads = (channelId: string | null) => {
+  return useQuery({
+    queryKey: queryKeys.chat.activeThreads(channelId || ''),
+    queryFn: () => getActiveThreadsAPI(channelId as string),
+    enabled: Boolean(channelId),
+    staleTime: 10_000,
   });
 };

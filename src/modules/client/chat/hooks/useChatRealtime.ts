@@ -20,10 +20,18 @@ export function useChatRealtime() {
     }
   }, []);
 
-  const sendMessage = useCallback((channelId: string, content: string, attachments?: { url: string; filename: string; mimetype: string; size: number }[], replyToId?: string, type?: string, stickerId?: string) => {
+  const sendMessage = useCallback((
+    channelId: string,
+    content: string,
+    attachments?: { url: string; filename: string; mimetype: string; size: number }[],
+    replyToId?: string,
+    type?: string,
+    stickerId?: string,
+    threadParentId?: string
+  ) => {
     const socket = chatSocketClient.connect();
     if (socket) {
-      socket.emit(SOCKET_EVENTS.SEND, { channelId, content, attachments, replyToId, type, stickerId });
+      socket.emit(SOCKET_EVENTS.SEND, { channelId, content, attachments, replyToId, type, stickerId, threadParentId });
     }
   }, []);
 

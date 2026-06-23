@@ -95,6 +95,16 @@ export const CHAT_EVENTS = {
   JOIN: 'chat.join',
   JOINED: 'chat.joined',
   LEAVE: 'chat.leave',
+
+  // Thread & Channel Custom Events
+  THREAD_REPLY_CREATED: 'chat.thread.reply.created',
+  CHANNEL_CREATED: 'chat.channel.created',
+  CHANNEL_UPDATED: 'chat.channel.updated',
+  CHANNEL_DELETED: 'chat.channel.deleted',
+  CHANNEL_MEMBER_ADDED: 'chat.channel.member.added',
+  CHANNEL_MEMBER_REMOVED: 'chat.channel.member.removed',
+  KICKED_FROM_CHANNEL: 'chat.kicked.from.channel',
+  CHANNEL_VISIBILITY_CHANGED: 'chat.channel.visibility.changed',
 } as const;
 
 export const MEETING_EVENTS = {
