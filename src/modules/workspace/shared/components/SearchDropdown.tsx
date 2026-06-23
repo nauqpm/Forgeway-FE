@@ -335,7 +335,7 @@ export default function SearchDropdown({
                 </section>
 
                 <section>
-                  <h3 className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Recent boards, projects, filters and plans</h3>
+                  <h3 className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Recent boards, workspaces,filters and plans</h3>
                   {(projects.length > 0 ? projects : [{ id: activeWorkspaceKey, name: `${activeWorkspaceKey} board`, key: activeWorkspaceKey }])
                     .slice(0, 6)
                     .map((project, index) => (
