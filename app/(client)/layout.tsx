@@ -5,7 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import Sidebar from "@/modules/admin-shared/components/common/components/Sidebar";
 import NotificationPanel from "@/modules/admin-shared/components/common/components/NotificationPanel";
-import { notificationService } from "@/modules/notifications/services/notification.service";
+import {
+  notificationService,
+  type AppNotification,
+  type NotificationListResponse,
+} from "@/modules/notifications/services/notification.service";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
 import { useWorkspaceRealtime } from "@/lib/realtime/hooks/use-workspace-realtime";
@@ -182,10 +186,35 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
   }, [isAuthenticated, queryClient]);
 
+  const handleNotificationCreated = useCallback((notification?: AppNotification) => {
+    if (!isAuthenticated || !notification) return;
+
+    const listKey = queryKeys.notifications.list();
+    const current = queryClient.getQueryData<NotificationListResponse>(listKey);
+
+    if (!current) {
+      queryClient.invalidateQueries({ queryKey: listKey });
+    } else {
+      queryClient.setQueryData<NotificationListResponse>(listKey, {
+        ...current,
+        total: current.notifications.some((item) => item.id === notification.id)
+          ? current.total
+          : current.total + 1,
+        notifications: current.notifications.some((item) => item.id === notification.id)
+          ? current.notifications.map((item) =>
+              item.id === notification.id ? notification : item,
+            )
+          : [notification, ...current.notifications],
+      });
+    }
+
+    refreshUnreadNotificationCount();
+  }, [isAuthenticated, queryClient, refreshUnreadNotificationCount]);
+
   // Setup real-time connections
   useNotificationRealtime({
     enabled: isAuthenticated,
-    onCreated: refreshUnreadNotificationCount,
+    onCreated: handleNotificationCreated,
     onRead: refreshUnreadNotificationCount,
     onReadAll: refreshUnreadNotificationCount,
   });

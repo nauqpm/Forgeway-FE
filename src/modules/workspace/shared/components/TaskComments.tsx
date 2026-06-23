@@ -3,8 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MentionsInput, Mention } from "react-mentions";
-import { Check, Loader2, Pencil, Trash2, X } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { AlertCircle, Check, Loader2, Pencil, Trash2, X } from "lucide-react";
 
 import { taskService, TaskComment } from "../services/taskService";
 import api from "@/lib/axiosIns";
@@ -42,6 +41,17 @@ type CreateCommentInput = {
 const normalizeResponse = <T,>(payload: unknown): T => {
   const p = payload as Record<string, unknown>;
   return (p?.data ? ((p.data as Record<string, unknown>)?.data ?? p.data) : payload) as T;
+};
+
+const getCommentErrorMessage = (error: unknown, fallback: string): string => {
+  const candidate = error as {
+    response?: { data?: { message?: string | string[] } };
+    message?: string;
+  };
+  const apiMessage = candidate.response?.data?.message;
+
+  if (Array.isArray(apiMessage)) return apiMessage[0] ?? fallback;
+  return apiMessage || candidate.message || fallback;
 };
 
 const toMentionMember = (m: RawMemberDto): MentionMember | null => {
@@ -159,6 +169,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   const [editContent, setEditContent] = useState("");
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const commentsKey = useMemo(() => queryKeys.tasks.detailComments(workspaceId, taskId), [workspaceId, taskId]);
   const membersKey = useMemo(() => queryKeys.workspaces.members(workspaceId), [workspaceId]);
@@ -191,6 +202,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
     mutationFn: ({ content, mentions, parentId }: CreateCommentInput) =>
       taskService.createComment(workspaceId, taskId, content, parentId ?? null, mentions),
     onMutate: async ({ content, mentions, parentId }) => {
+      setActionError(null);
       await queryClient.cancelQueries({ queryKey: commentsKey });
       const prev = queryClient.getQueryData<TaskComment[]>(commentsKey) ?? [];
       const optimistic: TaskComment = {
@@ -217,9 +229,9 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       queryClient.setQueryData<TaskComment[]>(commentsKey, [...prev, optimistic]);
       return { prev };
     },
-    onError: (_err, _vars, ctx) => {
+    onError: (error, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
-      toast.error("Failed to post comment");
+      setActionError(getCommentErrorMessage(error, "Failed to post comment."));
     },
     onSuccess: (_data, variables) => {
       if (variables.parentId) {
@@ -239,6 +251,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       return taskService.updateComment(workspaceId, taskId, commentId, content);
     },
     onMutate: async ({ commentId, content }) => {
+      setActionError(null);
       await queryClient.cancelQueries({ queryKey: commentsKey });
       const prev = queryClient.getQueryData<TaskComment[]>(commentsKey) ?? [];
       queryClient.setQueryData<TaskComment[]>(
@@ -247,10 +260,9 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       );
       return { prev };
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (err: any, _vars, ctx) => {
+    onError: (error, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
-      toast.error(err?.response?.data?.message || err?.message || "Failed to update comment");
+      setActionError(getCommentErrorMessage(error, "Failed to update comment."));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: commentsKey });
@@ -265,6 +277,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       return taskService.deleteComment(workspaceId, taskId, commentId);
     },
     onMutate: async (commentId) => {
+      setActionError(null);
       await queryClient.cancelQueries({ queryKey: commentsKey });
       const prev = queryClient.getQueryData<TaskComment[]>(commentsKey) ?? [];
       queryClient.setQueryData<TaskComment[]>(
@@ -273,10 +286,9 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       );
       return { prev };
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (err: any, _vars, ctx) => {
+    onError: (error, _vars, ctx) => {
       if (ctx?.prev) queryClient.setQueryData(commentsKey, ctx.prev);
-      toast.error(err?.response?.data?.message || err?.message || "Failed to delete comment");
+      setActionError(getCommentErrorMessage(error, "Failed to delete comment."));
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: commentsKey });
@@ -552,6 +564,24 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
 
   return (
     <div className="space-y-4">
+      {actionError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="flex items-start gap-3 rounded-[6px] border border-[#FCA5A5] bg-[#FEF2F2] px-3 py-2.5 text-[0.8125rem] text-[#991B1B] dark:border-[#7F1D1D] dark:bg-[rgba(127,29,29,0.18)] dark:text-[#FCA5A5]"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span className="min-w-0 flex-1 break-words">{actionError}</span>
+          <button
+            type="button"
+            onClick={() => setActionError(null)}
+            className="rounded-[4px] p-0.5 transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+            aria-label="Dismiss comment error"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       {!isArchived && (
         <>
           <div className="flex gap-4 pt-2">
