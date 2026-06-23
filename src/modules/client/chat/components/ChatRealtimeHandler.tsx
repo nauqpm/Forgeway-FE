@@ -289,6 +289,41 @@ export default function ChatRealtimeHandler() {
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChannelVisibilityChanged = useCallback(async (envelope: any) => {
+    const data = envelope.data || envelope;
+    if (!data?.channelId) return;
+
+    const currentUserId = user?.id || (user as any)?._id;
+    const isAffected = data.affectedUserIds?.includes(String(currentUserId));
+
+    if (data.isPrivate && isAffected) {
+      // 1. User is not a member of this private channel. Remove it from sidebar.
+      queryClient.setQueryData<Channel[]>(queryKeys.chat.channels(), (current = []) =>
+        current.filter(item => (item._id || item.id) !== data.channelId)
+      );
+
+      // 2. If user is currently viewing it, kick them out
+      const activeChannelId = useChatStore.getState().activeChannelId;
+      if (activeChannelId === data.channelId) {
+        useChatStore.getState().setActiveChannel(null);
+        toast.error("This channel is now private.");
+      }
+    } else {
+      // 3. User is still allowed to view it (either it's public now or user is member/admin)
+      try {
+        const channel = await getChannelAPI(data.channelId);
+        upsertChannelInCache(queryClient, channel);
+      } catch (err) {
+        console.error("Failed to fetch updated channel details on visibility change", err);
+        // Fallback: Remove if fetch fails due to auth/access issues
+        queryClient.setQueryData<Channel[]>(queryKeys.chat.channels(), (current = []) =>
+          current.filter(item => (item._id || item.id) !== data.channelId)
+        );
+      }
+    }
+  }, [queryClient, user]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleKickedFromChannel = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     const channelId = data.channelId || data.id;
@@ -355,7 +390,7 @@ export default function ChatRealtimeHandler() {
     socket.on(SOCKET_EVENTS.CHANNEL_DELETED, handleChannelDeleted);
     socket.on(SOCKET_EVENTS.CHANNEL_MEMBER_ADDED, handleChannelUpdated); // Reuse update logic to refresh member list
     socket.on(SOCKET_EVENTS.CHANNEL_MEMBER_REMOVED, handleChannelUpdated);
-    socket.on(SOCKET_EVENTS.CHANNEL_VISIBILITY_CHANGED, handleChannelUpdated);
+    socket.on(SOCKET_EVENTS.CHANNEL_VISIBILITY_CHANGED, handleChannelVisibilityChanged);
     socket.on(SOCKET_EVENTS.KICKED_FROM_CHANNEL, handleKickedFromChannel);
 
     return () => {
@@ -373,7 +408,7 @@ export default function ChatRealtimeHandler() {
       socket.off(SOCKET_EVENTS.CHANNEL_DELETED, handleChannelDeleted);
       socket.off(SOCKET_EVENTS.CHANNEL_MEMBER_ADDED, handleChannelUpdated);
       socket.off(SOCKET_EVENTS.CHANNEL_MEMBER_REMOVED, handleChannelUpdated);
-      socket.off(SOCKET_EVENTS.CHANNEL_VISIBILITY_CHANGED, handleChannelUpdated);
+      socket.off(SOCKET_EVENTS.CHANNEL_VISIBILITY_CHANGED, handleChannelVisibilityChanged);
       socket.off(SOCKET_EVENTS.KICKED_FROM_CHANNEL, handleKickedFromChannel);
 
       if (rateLimitIntervalRef.current) {
@@ -393,6 +428,7 @@ export default function ChatRealtimeHandler() {
     handleChannelCreated,
     handleChannelUpdated,
     handleChannelDeleted,
+    handleChannelVisibilityChanged,
     handleKickedFromChannel,
   ]);
 
