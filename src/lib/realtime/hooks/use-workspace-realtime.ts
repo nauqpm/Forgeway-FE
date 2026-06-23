@@ -126,10 +126,17 @@ export function useWorkspaceRealtime({
 
     const handleMemberAdded = (envelope: WorkspaceRealtimeEnvelope) => {
       if (markHandled(envelope.eventId)) return;
+
+      const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
+      if (!workspaceId) return;
+
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.members(workspaceId),
+      });
+
       if (!isCurrentUserTarget(envelope, currentUserId)) return;
 
       clearRedirectTimer();
-      const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
       const workspace = mapWorkspacePayload(envelope.data.workspace);
       syncWorkspace(workspaceId, workspace);
     };
