@@ -277,7 +277,7 @@ export const getThreadRepliesAPI = async (
   const data = normalizeArray<Message>(response);
   return data.map((item: Message & { id?: string }) => ({
     ...item,
-    _id: item._id || item.id,
+    _id: item._id || item.id || '',
   }));
 };
 
@@ -286,6 +286,6 @@ export const getActiveThreadsAPI = async (channelId: string): Promise<Message[]>
   const data = normalizeArray<Message>(response);
   return data.map((item: Message & { id?: string }) => ({
     ...item,
-    _id: item._id || item.id,
+    _id: item._id || item.id || '',
   }));
 };

@@ -148,7 +148,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
               const timeDiff = previousReply
                 ? (new Date(reply.createdAt).getTime() - new Date(previousReply.createdAt).getTime()) / 1000 / 60
                 : 10;
-              const isSameUserAsPrevious = isSameUser && timeDiff < 5;
+              const isSameUserAsPrevious = !!(isSameUser && timeDiff < 5);
 
               return (
                 <MessageItem

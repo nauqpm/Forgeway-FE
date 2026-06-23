@@ -45,6 +45,22 @@ export default function ChatWindow() {
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as any)?._id || authUser?.id;
   const userRole = useAuthStore(state => state.user?.role);
+
+  const activeChannel = channels.find(c => c._id === activeChannelId);
+
+  const [joining, setJoining] = useState(false);
+
+  const isWorkspaceAdmin = useMemo(() => {
+    if (userRole === 'super_admin') return true;
+    if (!activeChannel?.workspaceId) return false;
+    const ws = workspaces.find(w => String(w._id || (w as any).id) === String(activeChannel.workspaceId));
+    if (!ws) return false;
+    const isOwner = String(ws.ownerId) === String(currentUserId);
+    const member = ws.members?.find((m: any) => String(m.userId?._id || m.userId?.id || m.userId) === String(currentUserId));
+    const role = isOwner ? 'workspace_admin' : (member?.role || 'member');
+    return role === 'workspace_admin';
+  }, [activeChannel?.workspaceId, workspaces, currentUserId, userRole]);
+
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [showMembers, setShowMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -52,18 +68,15 @@ export default function ChatWindow() {
   const lastMessageIdRef = useRef<string | null>(null);
   const prevChannelIdRef = useRef<string | null>(null);
 
-  const activeChannel = channels.find(c => c._id === activeChannelId);
-
-  const [joining, setJoining] = useState(false);
-
   const isMemberOfActiveChannel = useMemo(() => {
     if (!activeChannel) return false;
     if (activeChannel.type !== 'custom') return true;
+    if (isWorkspaceAdmin) return true;
     if (!activeChannel.channelMembers) return false;
     return activeChannel.channelMembers.some(
       m => String(m.userId) === String(currentUserId)
     );
-  }, [activeChannel, currentUserId]);
+  }, [activeChannel, currentUserId, isWorkspaceAdmin]);
 
   const handleJoinChannel = async () => {
     if (!activeChannelId) return;
@@ -470,16 +483,18 @@ export default function ChatWindow() {
         ) : !isMemberOfActiveChannel ? (
           <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06] flex flex-col items-center justify-center gap-3">
             <p className="text-[0.875rem] text-[#787774] dark:text-[#9B9A97] font-medium">
-              You are viewing <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">#{activeChannel.name}</span>. This is a public custom channel.
+              You are viewing <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">#{activeChannel.name}</span>. This is a {activeChannel.isPrivate ? 'private' : 'public'} custom channel.
             </p>
-            <button
-              onClick={handleJoinChannel}
-              disabled={joining}
-              className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer"
-            >
-              {joining && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Join Channel</span>
-            </button>
+            {(!activeChannel.isPrivate || isWorkspaceAdmin) && (
+              <button
+                onClick={handleJoinChannel}
+                disabled={joining}
+                className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {joining && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Join Channel</span>
+              </button>
+            )}
           </div>
         ) : (
           <MessageInput
