@@ -165,6 +165,29 @@ export const useTaskHandlers = ({
       return;
     }
 
+    const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceId);
+
+    // Snapshot for rollback
+    let previousQueriesData: [unknown, Issue[] | undefined][] = [];
+    try {
+      previousQueriesData = queryClient.getQueriesData<Issue[]>({ queryKey: queryKeyPrefix });
+    } catch { /* ignored */ }
+    const previousDetail = updatedIssue.key
+      ? queryClient.getQueryData<Issue>(queryKeys.tasks.detail(workspaceId, updatedIssue.key))
+      : undefined;
+
+    // Optimistic update — show new value immediately
+    queryClient.setQueriesData<Issue[]>(
+      { queryKey: queryKeyPrefix },
+      (current) => Array.isArray(current)
+        ? current.map((i) => (i.id === updatedIssue.id ? { ...i, ...updatedIssue } : i))
+        : current
+    );
+    setSelectedIssue(updatedIssue);
+    if (updatedIssue.key) {
+      queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, updatedIssue.key), updatedIssue);
+    }
+
     try {
       const savedIssue = await taskService.updateBoardTask(
         workspaceId,
@@ -172,28 +195,30 @@ export const useTaskHandlers = ({
         updatedIssue,
       );
 
-      const queryKeyPrefix = queryKeys.tasks.byWorkspace(workspaceId);
+      // Reconcile with server response
       queryClient.setQueriesData<Issue[]>(
         { queryKey: queryKeyPrefix },
-        (current) =>
-          Array.isArray(current)
-            ? current.map((i) => (i.id === savedIssue.id ? savedIssue : i))
-            : current
+        (current) => Array.isArray(current)
+          ? current.map((i) => (i.id === savedIssue.id ? savedIssue : i))
+          : current
       );
-
       setSelectedIssue(savedIssue);
-
       if (savedIssue.key) {
-        queryClient.setQueryData(
-          queryKeys.tasks.detail(workspaceId, savedIssue.key),
-          savedIssue
-        );
+        queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, savedIssue.key), savedIssue);
       }
 
       queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.activities(workspaceId, updatedIssue.id) });
       invalidateDashboard(queryClient);
     } catch (error) {
+      // Rollback on API failure
+      for (const [key, data] of previousQueriesData as [QueryKey, Issue[] | undefined][]) {
+        queryClient.setQueryData(key, data);
+      }
+      if (updatedIssue.key) {
+        queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, updatedIssue.key), previousDetail);
+      }
+      setSelectedIssue(previousDetail ?? null);
       toast.error(extractApiError(error, "Could not update task"));
     }
   };
