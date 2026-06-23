@@ -13,6 +13,7 @@ import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from "..
 import { usePermissionStore } from "../../permission/stores/permissionStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { chatSocketClient } from "@/lib/socket/chat.client";
+import { ADMIN_URL } from "@/lib/admin-url";
 import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from "../services/authService";
 import { clearTokens } from "../services/tokenService";
 import { getMyPermissionsAPI } from "../../permission/services/permissionService";
@@ -177,7 +178,7 @@ export const useAuth = () => {
       await fetchPermissions();
 
       if (currentUser.role === "super_admin") {
-        window.location.href = process.env.NEXT_PUBLIC_ADMIN_URL || "http://localhost:3001";
+        window.location.href = ADMIN_URL;
         return;
       }
 
