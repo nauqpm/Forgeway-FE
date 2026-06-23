@@ -1,9 +1,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { X, Search, Loader2, Users } from 'lucide-react';
+import { X, Search, Loader2, Users, UserPlus } from 'lucide-react';
 import { useChannelMembers } from '@/modules/client/chat/hooks/useChatQueries';
 import type { ChatMember } from '@/modules/client/chat/types/chat.types';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/shared/constants/queryKeys';
+import type { Channel } from '@/modules/client/chat/types/chat.types';
+import InviteChannelMembersModal from './InviteChannelMembersModal';
 
 interface MemberPanelProps {
   channelId: string;
@@ -63,6 +68,30 @@ const getRoleBadge = (role?: string) => {
 export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   const { data: members = [], isLoading } = useChannelMembers(channelId);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const queryClient = useQueryClient();
+  const authUser = useAuthStore(state => state.user);
+  const currentUserId = (authUser as any)?._id || authUser?.id;
+  const userRole = authUser?.role;
+
+  const channels = queryClient.getQueryData<Channel[]>(queryKeys.chat.channels()) || [];
+  const activeChannel = channels.find(c => c._id === channelId);
+
+  const currentUserMember = members.find(
+    (m) => String(m._id) === String(currentUserId)
+  );
+  const isChannelAdmin = currentUserMember?.role === 'channel_admin';
+
+  // Get workspace role
+  const workspaces = queryClient.getQueryData<any[]>(['workspaces']) || [];
+  const activeWorkspace = workspaces.find(w => String(w._id || w.id) === String(activeChannel?.workspaceId));
+  const wsMember = activeWorkspace?.members?.find((m: any) => String(m.userId) === String(currentUserId));
+  const wsRole = wsMember?.role;
+  const isWorkspaceAdmin = wsRole === 'workspace_admin' || activeWorkspace?.ownerId === currentUserId;
+
+  const canInvite = activeChannel?.type === 'custom' && (isChannelAdmin || isWorkspaceAdmin || userRole === 'super_admin');
+
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   const filteredMembers = useMemo(() => {
     if (!searchQuery.trim()) return members;
@@ -128,6 +157,19 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
         </div>
       </div>
 
+      {/* Invite Button */}
+      {canInvite && (
+        <div className="px-3 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-md transition-colors cursor-pointer"
+          >
+            <UserPlus className="w-3.5 h-3.5" />
+            <span>Add people</span>
+          </button>
+        </div>
+      )}
+
       {/* Member list */}
       <div className="flex-1 overflow-y-auto min-h-0">
         {isLoading ? (
@@ -188,6 +230,16 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
           </div>
         )}
       </div>
+
+      {showInviteModal && activeChannel && (
+        <InviteChannelMembersModal
+          isOpen={showInviteModal}
+          onClose={() => setShowInviteModal(false)}
+          channelId={channelId}
+          workspaceId={activeChannel.workspaceId || ''}
+          existingMemberIds={members.map(m => String(m._id))}
+        />
+      )}
     </div>
   );
 }
