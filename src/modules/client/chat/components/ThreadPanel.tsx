@@ -9,8 +9,6 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import type { Message, MessagesPage } from '@/modules/client/chat/types/chat.types';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
-import { chatSocketClient } from '@/lib/socket/chat.client';
-import { SOCKET_EVENTS } from '@/lib/socket/socket.events';
 
 interface ThreadPanelProps {
   channelId: string;
@@ -56,27 +54,6 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
 
     return null;
   }, [messageId, channelId, queryClient, replies]);
-
-  // Listen for socket events to update replies list in real-time
-  useEffect(() => {
-    const socket = chatSocketClient.connect();
-    if (!socket) return;
-
-    const handleCreated = (envelope: any) => {
-      const reply = (envelope.data || envelope) as Message;
-      if (reply.threadParentId === messageId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.chat.threadReplies(channelId, messageId)
-        });
-      }
-    };
-
-    socket.on(SOCKET_EVENTS.THREAD_REPLY_CREATED, handleCreated);
-
-    return () => {
-      socket.off(SOCKET_EVENTS.THREAD_REPLY_CREATED, handleCreated);
-    };
-  }, [channelId, messageId, queryClient]);
 
   // Scroll to bottom when replies list updates
   useEffect(() => {
