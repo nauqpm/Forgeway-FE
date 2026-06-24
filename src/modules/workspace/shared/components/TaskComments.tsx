@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MentionsInput, Mention } from "react-mentions";
 import { AlertCircle, Check, Loader2, Pencil, Trash2, X } from "lucide-react";
@@ -342,6 +342,15 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   }, []);
 
   const commentTree = useMemo(() => buildCommentTree(comments), [comments]);
+
+  useEffect(() => {
+    const commentId = window.location.hash.replace("#comment-", "");
+    if (!commentId || window.location.hash === "#") return;
+    document.getElementById(`comment-${commentId}`)?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [commentTree]);
   const currentUserName = user?.fullName || user?.email || "Current user";
   const renderCurrentUserAvatar = (className = "w-8 h-8") => (
     <div className={`${className} rounded-full flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden ${user?.avatar ? "" : "bg-[#2563EB] dark:bg-[#3B82F6] text-white"}`}>
@@ -365,7 +374,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
     const visualDepth = Math.min(depth, 3);
 
     return (
-      <div key={node.id} className="mt-4">
+      <div id={`comment-${node.id}`} key={node.id} className="mt-4 scroll-mt-6">
         <div className="flex gap-4" style={{ marginLeft: `${visualDepth * 1.5}rem` }}>
           <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden">
             {node.author?.avatar ? (

@@ -26,29 +26,31 @@ export default function SprintModal({ isOpen, onClose, onSave, initialData, spri
   });
 
   useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
-        setFormData({
-          name: initialData.name || '',
-          duration: initialData.duration || '2 weeks',
-          startDate: initialData.startDate ? initialData.startDate.split('T')[0] : '',
-          endDate: initialData.endDate ? initialData.endDate.split('T')[0] : '',
-          goal: initialData.goal || ''
-        });
-      } else {
-        const start = new Date();
-        const end = new Date();
-        end.setDate(start.getDate() + 14);
-        setFormData({
-          name: `Sprint ${sprintCount + 1}`,
-          duration: '2 weeks',
-          startDate: start.toISOString().split('T')[0],
-          endDate: end.toISOString().split('T')[0],
-          goal: ''
-        });
-      }
+    if (!isOpen) return;
+    if (initialData) {
+      setFormData({
+        name: initialData.name || '',
+        duration: initialData.duration || '2 weeks',
+        startDate: initialData.startDate ? initialData.startDate.split('T')[0] : '',
+        endDate: initialData.endDate ? initialData.endDate.split('T')[0] : '',
+        goal: initialData.goal || ''
+      });
+    } else {
+      const start = new Date();
+      const end = new Date();
+      end.setDate(start.getDate() + 14);
+      setFormData({
+        name: `Sprint ${sprintCount + 1}`,
+        duration: '2 weeks',
+        startDate: start.toISOString().split('T')[0],
+        endDate: end.toISOString().split('T')[0],
+        goal: ''
+      });
     }
-  }, [isOpen, initialData, sprintCount]);
+    // Only initialize when the modal opens — do not re-run on parent re-renders
+    // that create new initialData references (would reset in-progress user edits).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleDurationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const dur = e.target.value;

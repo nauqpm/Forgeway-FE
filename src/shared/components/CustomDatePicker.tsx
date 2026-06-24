@@ -100,8 +100,15 @@ export default function CustomDatePicker({
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
   const rootRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  // Tracks a locally-committed value not yet reflected back via the value prop.
+  // Prevents stale intermediate parent renders from flickering the input.
+  const pendingValueRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
+    if (pendingValueRef.current !== undefined) {
+      if (value === pendingValueRef.current) pendingValueRef.current = undefined;
+      else return;
+    }
     setInputValue(getDisplayValue(value));
     if (selectedDate) setViewMonth(selectedDate);
   }, [selectedDate, value]);
@@ -152,13 +159,16 @@ export default function CustomDatePicker({
   const today = useMemo(() => new Date(), []);
 
   const selectDate = (date: Date) => {
-    onChange(toDateKey(date));
+    const key = toDateKey(date);
+    pendingValueRef.current = key;
+    onChange(key);
     setInputValue(format(date, DISPLAY_FORMAT));
     setViewMonth(date);
     setIsOpen(false);
   };
 
   const clearDate = () => {
+    pendingValueRef.current = null;
     onChange(null);
     setInputValue("");
     setIsOpen(false);
@@ -167,6 +177,7 @@ export default function CustomDatePicker({
   const commitTypedDate = () => {
     const trimmed = inputValue.trim();
     if (!trimmed) {
+      pendingValueRef.current = null;
       onChange(null);
       return;
     }
@@ -177,7 +188,9 @@ export default function CustomDatePicker({
       return;
     }
 
-    onChange(toDateKey(parsed));
+    const key = toDateKey(parsed);
+    pendingValueRef.current = key;
+    onChange(key);
     setViewMonth(parsed);
     setInputValue(format(parsed, DISPLAY_FORMAT));
   };
@@ -291,7 +304,7 @@ export default function CustomDatePicker({
         onFocus={() => setIsOpen(true)}
         onClick={() => setIsOpen(true)}
         onChange={(event) => setInputValue(event.target.value)}
-        onBlur={commitTypedDate}
+        onBlur={() => { commitTypedDate(); setIsOpen(false); }}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             commitTypedDate();

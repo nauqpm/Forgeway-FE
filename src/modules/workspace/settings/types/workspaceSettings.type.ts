@@ -9,7 +9,7 @@ export interface WorkspaceInfo {
   description?: string;
   status?: WorkspaceStatus;
   access?: WorkspaceAccess;
-  visibility?: WorkspaceAccess;
+  // visibility?: WorkspaceAccess;
 }
 
 export interface WorkspaceSettingsForm {
