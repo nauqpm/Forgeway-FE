@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { X, Loader2, Lock, Globe } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Loader2, Lock, Globe, AlertCircle } from 'lucide-react';
 import { createChannelAPI } from '../services/chatService';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import { useChatStore } from '@/stores/chatStore';
 import toast from 'react-hot-toast';
+import { useChatChannels } from '../hooks/useChatQueries';
 
 interface CreateChannelModalProps {
   isOpen: boolean;
@@ -21,6 +22,17 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
   const [loading, setLoading] = useState(false);
   const queryClient = useQueryClient();
   const setActiveChannel = useChatStore(state => state.setActiveChannel);
+
+  const { data: channels = [] } = useChatChannels();
+  const customChannelsCount = useMemo(() => {
+    if (!workspaceId) return 0;
+    return channels.filter(
+      c => c.type === 'custom' && String(c.workspaceId) === String(workspaceId)
+    ).length;
+  }, [channels, workspaceId]);
+
+  const isLimitReached = customChannelsCount >= 20;
+  const isInputDisabled = loading || isLimitReached;
 
   // Reset state on open/close
   useEffect(() => {
@@ -69,9 +81,10 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
       
       toast.success(`Channel #${name} created successfully!`);
       onClose();
-    } catch (error: any) {
-      console.error('Failed to create channel:', error);
-      toast.error(error.response?.data?.message || error.message || 'Failed to create channel');
+    } catch (error) {
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      console.error('Failed to create channel:', err);
+      toast.error(err.response?.data?.message || err.message || 'Failed to create channel');
     } finally {
       setLoading(false);
     }
@@ -88,7 +101,12 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
       <div className="relative w-full max-w-md bg-white dark:bg-[#252525] rounded-[12px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <header className="px-4 h-14 flex items-center justify-between border-b border-[#EAEAEA] dark:border-white/[0.06]">
-          <h2 className="font-semibold text-[#111111] dark:text-[#E8E8E7]">Create a channel</h2>
+          <div className="flex flex-col">
+            <h2 className="font-semibold text-[#111111] dark:text-[#E8E8E7]">Create a channel</h2>
+            <span className="text-[10px] text-[#787774] dark:text-[#9B9A97]">
+              {customChannelsCount} of 20 channels created
+            </span>
+          </div>
           <button onClick={onClose} className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#787774] transition-colors">
             <X className="w-4 h-4" />
           </button>
@@ -96,6 +114,16 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
 
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {isLimitReached && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-[8px] text-xs text-red-600 dark:text-red-400">
+              <AlertCircle className="w-4.5 h-4.5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold">Channel limit reached</p>
+                <p className="mt-0.5 opacity-90">This workspace has reached the maximum limit of 20 custom channels.</p>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wider mb-1.5">
               Name
@@ -109,8 +137,8 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
                 placeholder="e.g. plan-launch"
                 value={name}
                 onChange={handleNameChange}
-                disabled={loading}
-                className="w-full pl-7 pr-4 h-10 bg-[#FBFBFA] dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:ring-1 focus:ring-[#2563EB] outline-none"
+                disabled={isInputDisabled}
+                className="w-full pl-7 pr-4 h-10 bg-[#FBFBFA] dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:ring-1 focus:ring-[#2563EB] outline-none disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
             <p className="text-[10px] text-[#787774] mt-1">
@@ -127,8 +155,8 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
               placeholder="What’s this channel about?"
               value={description}
               onChange={e => setDescription(e.target.value)}
-              disabled={loading}
-              className="w-full p-3 min-h-[80px] max-h-[140px] bg-[#FBFBFA] dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:ring-1 focus:ring-[#2563EB] outline-none resize-y"
+              disabled={isInputDisabled}
+              className="w-full p-3 min-h-[80px] max-h-[140px] bg-[#FBFBFA] dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] focus:ring-1 focus:ring-[#2563EB] outline-none resize-y disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -138,18 +166,20 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
               Visibility
             </label>
             <div className="space-y-2">
-              <label className={`flex items-start gap-3 p-3 rounded-[8px] border cursor-pointer transition-colors ${
-                !isPrivate 
-                  ? 'border-[#2563EB]/40 bg-[#2563EB]/5 dark:bg-[#2563EB]/10' 
-                  : 'border-[#EAEAEA] dark:border-white/[0.06] hover:bg-[#F7F6F3] dark:hover:bg-white/5'
+              <label className={`flex items-start gap-3 p-3 rounded-[8px] border transition-colors ${
+                isLimitReached 
+                  ? 'border-gray-200 dark:border-white/[0.04] opacity-50 cursor-not-allowed'
+                  : !isPrivate 
+                    ? 'border-[#2563EB]/40 bg-[#2563EB]/5 dark:bg-[#2563EB]/10 cursor-pointer' 
+                    : 'border-[#EAEAEA] dark:border-white/[0.06] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer'
               }`}>
                 <input
                   type="radio"
                   name="visibility"
                   checked={!isPrivate}
                   onChange={() => setIsPrivate(false)}
-                  disabled={loading}
-                  className="mt-1"
+                  disabled={isInputDisabled}
+                  className="mt-1 disabled:cursor-not-allowed"
                 />
                 <div>
                   <div className="flex items-center gap-1.5 font-medium text-[0.875rem] text-[#111111] dark:text-[#E8E8E7]">
@@ -162,18 +192,20 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
                 </div>
               </label>
 
-              <label className={`flex items-start gap-3 p-3 rounded-[8px] border cursor-pointer transition-colors ${
-                isPrivate 
-                  ? 'border-[#2563EB]/40 bg-[#2563EB]/5 dark:bg-[#2563EB]/10' 
-                  : 'border-[#EAEAEA] dark:border-white/[0.06] hover:bg-[#F7F6F3] dark:hover:bg-white/5'
+              <label className={`flex items-start gap-3 p-3 rounded-[8px] border transition-colors ${
+                isLimitReached 
+                  ? 'border-gray-200 dark:border-white/[0.04] opacity-50 cursor-not-allowed'
+                  : isPrivate 
+                    ? 'border-[#2563EB]/40 bg-[#2563EB]/5 dark:bg-[#2563EB]/10 cursor-pointer' 
+                    : 'border-[#EAEAEA] dark:border-white/[0.06] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer'
               }`}>
                 <input
                   type="radio"
                   name="visibility"
                   checked={isPrivate}
                   onChange={() => setIsPrivate(true)}
-                  disabled={loading}
-                  className="mt-1"
+                  disabled={isInputDisabled}
+                  className="mt-1 disabled:cursor-not-allowed"
                 />
                 <div>
                   <div className="flex items-center gap-1.5 font-medium text-[0.875rem] text-[#111111] dark:text-[#E8E8E7]">
@@ -200,8 +232,8 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
             </button>
             <button
               type="submit"
-              disabled={loading}
-              className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50"
+              disabled={isInputDisabled}
+              className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Create</span>

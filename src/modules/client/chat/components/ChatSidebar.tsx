@@ -7,8 +7,7 @@ import { Hash, Megaphone, Loader2, Lock, Plus, ChevronDown, ChevronRight } from 
 import { getWorkspaceUI } from '@/shared/utils/workSpaceUI';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
-import { useWorkspaces, useCurrentWorkspace } from '@/modules/workspace/shared/hooks/useWorkspaces';
-import { useWorkspacePermission } from '@/modules/workspace/shared/hooks/useWorkspacePermission';
+import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import type { Channel } from '@/modules/client/chat/types/chat.types';
 import CreateChannelModal from './CreateChannelModal';
@@ -66,15 +65,7 @@ export default function ChatSidebar() {
     return null;
   }, [paramWorkspaceId, activeChannelId, channels]);
 
-  const { role: workspaceRole } = useWorkspacePermission(activeWorkspaceId || '');
-  const isViewer = workspaceRole === 'viewer';
 
-  const customChannels = useMemo(() => {
-    if (!activeWorkspaceId) return [];
-    return sortedChannels.filter(
-      c => c.type === 'custom' && String(c.workspaceId) === String(activeWorkspaceId)
-    );
-  }, [sortedChannels, activeWorkspaceId]);
 
   const isChannelMember = (channel: Channel) => {
     if (!channel.channelMembers) return false;
@@ -312,7 +303,7 @@ export default function ChatSidebar() {
     );
   };
 
-  const totalCount = generalChannels.length + (workspaces?.length || 0) + dmChannels.length + (!isViewer ? customChannels.length : 0);
+  const totalCount = generalChannels.length + (workspaces?.length || 0) + dmChannels.length;
 
   return (
     <div className="flex flex-col h-full min-h-0 overflow-hidden bg-[#FBFBFA] dark:bg-[#252525]">
@@ -420,6 +411,9 @@ export default function ChatSidebar() {
                         </div>
                         <span className="font-bold text-sm text-[#111111] dark:text-[#E8E8E7] truncate">
                           {ws.name}
+                        </span>
+                        <span className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] flex-shrink-0">
+                          ({wsCustomChannels.length}/20)
                         </span>
                       </div>
 
