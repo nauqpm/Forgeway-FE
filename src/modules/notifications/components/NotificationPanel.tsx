@@ -137,7 +137,6 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getInviteFailureState(
   error: unknown,
   fallback: string,
