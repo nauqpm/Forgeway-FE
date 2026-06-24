@@ -1,19 +1,28 @@
 import React from "react";
-import { ChevronDown, Clock, Flag, FolderKanban, UserCircle, Users } from "lucide-react";
+import { ChevronDown, Clock, FileText, Flag, FolderKanban, MessageSquare, UserCircle, Users } from "lucide-react";
 import { Filters } from "../types/filter.type";
+import type { GlobalSearchType } from "../services/globalSearch.service";
 
 type TaskFilterPanelProps = {
   filters: Filters;
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
-  projects: { id: string; name: string; key: string }[];
+  workspaces: { id: string; name: string; key: string }[];
   assignees: { id: string; name: string; avatar?: string }[];
   workspaceKey: string;
   selectedWorkspaceKey?: string | null;
   selectedWorkspaceKeys?: string[];
   onSelectWorkspace?: (workspaceKey: string) => void;
   onToggleWorkspace?: (workspaceKey: string) => void;
+  onSetWorkspaceKeys?: (workspaceKeys: string[]) => void;
   currentUserId?: string;
   currentUserName?: string;
+  activeTab: "Work" | "Docs";
+  documentTypes: GlobalSearchType[];
+  onDocumentTypesChange: (types: GlobalSearchType[]) => void;
+  documentLastUpdated?: string | null;
+  onDocumentLastUpdatedChange: (value: string | null) => void;
+  documentAuthorIds: string[];
+  onDocumentAuthorIdsChange: (authorIds: string[]) => void;
 };
 
 const lastUpdatedOptions = ["Any time", "Today", "Yesterday", "Past 7 days", "Past 30 days", "Past year"];
@@ -47,17 +56,22 @@ function CheckboxRow({
   detail,
   avatar,
   onChange,
+  inputType = "checkbox",
+  name,
 }: {
   checked: boolean;
   label: string;
   detail?: string;
   avatar?: string;
   onChange: () => void;
+  inputType?: "checkbox" | "radio";
+  name?: string;
 }) {
   return (
     <label className="flex cursor-pointer items-center gap-3 rounded-[6px] px-2 py-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]">
       <input
-        type="checkbox"
+        type={inputType}
+        name={name}
         checked={checked}
         onChange={onChange}
         className="h-4 w-4 rounded accent-[#2563EB]"
@@ -78,16 +92,25 @@ function CheckboxRow({
 export default function TaskFilterPanel({
   filters,
   setFilters,
-  projects,
+  workspaces,
   assignees,
   workspaceKey,
   selectedWorkspaceKey,
   selectedWorkspaceKeys,
   onSelectWorkspace,
   onToggleWorkspace,
+  onSetWorkspaceKeys,
   currentUserId,
   currentUserName,
+  activeTab,
+  documentTypes,
+  onDocumentTypesChange,
+  documentLastUpdated,
+  onDocumentLastUpdatedChange,
+  documentAuthorIds,
+  onDocumentAuthorIdsChange,
 }: TaskFilterPanelProps) {
+  const [showAllWorkspaces, setShowAllWorkspaces] = React.useState(false);
   const toggleArray = (field: "assignees" | "statuses" | "types" | "priorities", value: string) => {
     setFilters((prev) => {
       const current = prev[field];
@@ -103,40 +126,143 @@ export default function TaskFilterPanel({
     Array.isArray(selectedWorkspaceKeys)
       ? selectedWorkspaceKeys
       : [selectedWorkspaceKey || workspaceKey].filter(Boolean);
+  const availableWorkspaces = workspaces.length > 0
+    ? workspaces
+    : [{ id: workspaceKey, name: workspaceKey, key: workspaceKey }];
+  const selectedWorkspaceCount = availableWorkspaces.filter((workspace) => activeWorkspaceKeys.includes(workspace.key)).length;
+  const allWorkspacesSelected = availableWorkspaces.length > 0 && selectedWorkspaceCount === availableWorkspaces.length;
+  const visibleWorkspaces = showAllWorkspaces ? availableWorkspaces : availableWorkspaces.slice(0, 8);
+  const hiddenWorkspaceCount = Math.max(availableWorkspaces.length - 8, 0);
+
+  const toggleDocumentType = (type: "page" | "comment") => {
+    const nextTypes = documentTypes.includes(type)
+      ? documentTypes.filter((currentType) => currentType !== type)
+      : [...documentTypes, type];
+
+    // Keep at least one document content type selected so the search scope is always explicit.
+    if (nextTypes.length > 0) onDocumentTypesChange(nextTypes);
+  };
+
+  if (activeTab === "Docs") {
+    return (
+      <div className="space-y-4">
+        <Section title="Document scope" icon={FolderKanban}>
+          <p className="px-2 text-[0.8125rem] leading-5 text-[#787774] dark:text-[#9B9A97]">
+            Searching documents in all workspaces you own or are a member of.
+          </p>
+        </Section>
+
+        <Section title="Content type" icon={FileText}>
+          <CheckboxRow
+            checked={documentTypes.includes("page")}
+            label="Pages"
+            detail="Workspace documents"
+            onChange={() => toggleDocumentType("page")}
+          />
+          <CheckboxRow
+            checked={documentTypes.includes("comment")}
+            label="Comments"
+            detail="Comments on documents"
+            onChange={() => toggleDocumentType("comment")}
+          />
+        </Section>
+
+        <Section title="Last updated" icon={Clock}>
+          {lastUpdatedOptions.map((option) => (
+            <CheckboxRow
+              key={option}
+              checked={(documentLastUpdated || "Any time") === option}
+              label={option}
+              inputType="radio"
+              name="documentLastUpdated"
+              onChange={() => onDocumentLastUpdatedChange(option === "Any time" ? null : option)}
+            />
+          ))}
+        </Section>
+
+        <Section title="Author" icon={MessageSquare}>
+          <CheckboxRow
+            checked={Boolean(currentUserId && documentAuthorIds.includes(currentUserId))}
+            label="Created by me"
+            detail={currentUserName}
+            avatar={(currentUserName || "Me").slice(0, 2).toUpperCase()}
+            onChange={() => {
+              if (!currentUserId) return;
+              onDocumentAuthorIdsChange(
+                documentAuthorIds.includes(currentUserId)
+                  ? documentAuthorIds.filter((id) => id !== currentUserId)
+                  : [...documentAuthorIds, currentUserId],
+              );
+            }}
+          />
+        </Section>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
+      <Section title="Work scope" icon={FolderKanban}>
+        <p className="px-2 text-[0.8125rem] leading-5 text-[#787774] dark:text-[#9B9A97]">
+          Searching work items in all selected workspaces.
+        </p>
+      </Section>
+
       <Section title="Last updated" icon={Clock}>
         {lastUpdatedOptions.map((option) => (
           <CheckboxRow
             key={option}
             checked={(filters.lastUpdated || "Any time") === option}
             label={option}
+            inputType="radio"
+            name="lastUpdated"
             onChange={() => setFilters((prev) => ({ ...prev, lastUpdated: option === "Any time" ? null : option }))}
           />
         ))}
       </Section>
 
-      <Section title="Filter by project" icon={FolderKanban}>
-        {(projects.length > 0 ? projects : [{ id: workspaceKey, name: `${workspaceKey} board`, key: workspaceKey }]).slice(0, 8).map((project, index) => (
+      <Section title="Filter by workspace" icon={FolderKanban}>
+        <div className="flex items-center justify-between px-2 pb-2 text-[0.6875rem]">
+          <span className="text-[#787774] dark:text-[#9B9A97]">
+            {selectedWorkspaceCount > 0 ? `Searching ${selectedWorkspaceCount} workspace${selectedWorkspaceCount === 1 ? "" : "s"}` : "No workspace selected"}
+          </span>
+          <span className="flex items-center gap-2 font-medium text-[#2563EB] dark:text-[#3B82F6]">
+            <button type="button" onClick={() => onSetWorkspaceKeys?.(availableWorkspaces.map((workspace) => workspace.key))} disabled={allWorkspacesSelected} className="disabled:cursor-not-allowed disabled:opacity-40">
+              Select all
+            </button>
+            <button type="button" onClick={() => onSetWorkspaceKeys?.([])} disabled={selectedWorkspaceCount === 0} className="disabled:cursor-not-allowed disabled:opacity-40">
+              Clear all
+            </button>
+          </span>
+        </div>
+        {visibleWorkspaces.map((workspace, index) => (
           <CheckboxRow
-            key={project.id || project.key || `${project.name}-${index}`}
-            checked={activeWorkspaceKeys.includes(project.key)}
-            label={project.name}
-            detail={project.key}
-            avatar={project.key.slice(0, 2).toUpperCase()}
+            key={workspace.id || workspace.key || `${workspace.name}-${index}`}
+            checked={activeWorkspaceKeys.includes(workspace.key)}
+            label={workspace.name}
+            detail={workspace.key}
+            avatar={workspace.key.slice(0, 2).toUpperCase()}
             onChange={() => {
               if (onToggleWorkspace) {
-                onToggleWorkspace(project.key);
+                onToggleWorkspace(workspace.key);
                 return;
               }
-              onSelectWorkspace?.(project.key);
+              onSelectWorkspace?.(workspace.key);
             }}
           />
         ))}
-        <button type="button" className="inline-flex items-center gap-1 px-2 py-1 text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6]">
-          Show more <ChevronDown className="h-4 w-4" />
-        </button>
+        {hiddenWorkspaceCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowAllWorkspaces((current) => !current)}
+            className="inline-flex items-center gap-1 px-2 py-1 text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6]"
+          >
+            {showAllWorkspaces
+              ? "Show fewer workspaces"
+              : `Show ${hiddenWorkspaceCount} more workspace${hiddenWorkspaceCount === 1 ? "" : "s"}`}
+            <ChevronDown className={`h-4 w-4 transition-transform ${showAllWorkspaces ? "rotate-180" : ""}`} />
+          </button>
+        )}
       </Section>
 
       <Section title="Filter by assignee" icon={Users}>

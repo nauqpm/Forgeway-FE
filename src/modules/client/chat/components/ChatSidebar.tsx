@@ -94,15 +94,13 @@ export default function ChatSidebar() {
     const lastMsg = channel.lastMessage;
     if (!lastMsg || (!lastMsg.content && !lastMsg.senderId)) return "Start a conversation";
     
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const msgSenderId = typeof lastMsg.senderId === 'object'
-      ? ((lastMsg.senderId as any)._id || (lastMsg.senderId as any).id)
-      : lastMsg.senderId;
-    /* eslint-enable @typescript-eslint/no-explicit-any */
+    const sender = lastMsg.senderId;
+    const msgSenderId = sender && typeof sender === 'object'
+      ? (sender._id || sender.id)
+      : sender;
 
     const isMine = String(msgSenderId) === String(currentUserId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const senderName = (lastMsg.senderId as any)?.fullName || (lastMsg as any).senderName || "User";
+    const senderName = (sender && typeof sender === 'object' ? sender.fullName : undefined) || (lastMsg as any).senderName || "User";
     const formattedContent = lastMsg.deletedAt 
       ? "[Message deleted]" 
       : lastMsg.type === 'sticker'

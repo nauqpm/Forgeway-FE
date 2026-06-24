@@ -96,7 +96,6 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
           authorId: doc.uploadedBy,
           lastEditedBy: null,
           version: 1,
-          status: "draft" as const,
           labels: [],
           versionHistory: [],
           source: "import" as const,

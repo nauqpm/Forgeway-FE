@@ -18,7 +18,7 @@ export interface Message {
   _id: string;
   id?: string;
   channelId: string;
-  senderId: ChatUser | string;
+  senderId: ChatUser | string | null;
   content: string;
   attachments?: Attachment[];
   type: 'text' | 'system' | string;

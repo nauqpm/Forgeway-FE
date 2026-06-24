@@ -144,7 +144,6 @@ export function useWorkspaceDocs(workspaceId: string) {
         authorId: "",
         lastEditedBy: null,
         version: 1,
-        status: "draft",
         labels: [],
         versionHistory: [],
         source: "docs",
@@ -193,7 +192,6 @@ export function useWorkspaceDocs(workspaceId: string) {
             workspaceId: document.workspaceId,
             parentId: document.parentId ?? undefined,
             slug: document.slug,
-            status: document.status,
             labels: document.labels,
           });
 

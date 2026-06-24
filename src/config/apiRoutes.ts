@@ -130,8 +130,6 @@ export const apiRoutes = {
         CHILDREN: (id: string) => `/pages/${id}/children`,
         BY_AUTHOR: (authorId: string) => `/pages/author/${authorId}`,
         MOVE: (id: string) => `/pages/${id}/move`,
-        PUBLISH: (id: string) => `/pages/${id}/publish`,
-        UNPUBLISH: (id: string) => `/pages/${id}/unpublish`,
         LABELS: (id: string) => `/pages/${id}/labels`,
         SYNC: (id: string) => `/pages/${id}/sync`,
         VERSIONS: (id: string) => `/pages/${id}/versions`,
@@ -156,6 +154,7 @@ export const apiRoutes = {
     },
     SEARCH: {
         BASE: '/search',
+        GLOBAL: '/search/global',
         TASKS: '/search/tasks',
         PROJECTS: '/search/projects',
         PAGES: '/search/pages',
