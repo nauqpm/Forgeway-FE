@@ -100,7 +100,10 @@ export default function ChatSidebar() {
       : sender;
 
     const isMine = String(msgSenderId) === String(currentUserId);
-    const senderName = (sender && typeof sender === 'object' ? sender.fullName : undefined) || (lastMsg as any).senderName || "User";
+    const senderName =
+      (sender && typeof sender === 'object' ? sender.fullName : undefined) ||
+      lastMsg.senderName ||
+      'User';
     const formattedContent = lastMsg.deletedAt 
       ? "[Message deleted]" 
       : lastMsg.type === 'sticker'
