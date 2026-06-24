@@ -140,7 +140,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
           ) : (
             replies.map((reply, idx) => {
               const previousReply = replies[idx - 1];
-              const getSenderId = (m: Message) => typeof m.senderId === 'object' ? m.senderId._id || m.senderId.id : m.senderId;
+              const getSenderId = (m: Message) => (m.senderId && typeof m.senderId === 'object') ? m.senderId._id || m.senderId.id : m.senderId;
               const currentSenderId = getSenderId(reply);
               const previousSenderId = previousReply ? getSenderId(previousReply) : null;
 

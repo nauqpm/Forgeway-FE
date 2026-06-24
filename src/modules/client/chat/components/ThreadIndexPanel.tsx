@@ -29,7 +29,7 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
 
     return threads.filter(thread => {
       // 1. User is the author of the parent message
-      const parentAuthor = typeof thread.senderId === 'object' ? thread.senderId._id || thread.senderId.id : thread.senderId;
+      const parentAuthor = (thread.senderId && typeof thread.senderId === 'object') ? thread.senderId._id || thread.senderId.id : thread.senderId;
       if (String(parentAuthor) === String(currentUserId)) return true;
 
       // 2. User is one of the reply participants
@@ -42,14 +42,14 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
   }, [threads, filter, currentUserId]);
 
   const getSenderName = (thread: Message) => {
-    if (typeof thread.senderId === 'object') {
+    if (thread.senderId && typeof thread.senderId === 'object') {
       return thread.senderId.fullName || thread.senderId.email || 'User';
     }
     return 'User';
   };
 
   const getSenderAvatar = (thread: Message) => {
-    if (typeof thread.senderId === 'object') {
+    if (thread.senderId && typeof thread.senderId === 'object') {
       return thread.senderId.avatar;
     }
     return undefined;
