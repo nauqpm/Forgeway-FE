@@ -9,6 +9,19 @@ import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import toast from 'react-hot-toast';
 
+interface ChannelCandidateUser {
+  _id?: string;
+  id?: string;
+  fullName?: string;
+  email?: string;
+  avatar?: string;
+}
+
+interface ChannelCandidateMember {
+  userId?: ChannelCandidateUser;
+  role?: string;
+}
+
 interface InviteChannelMembersModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -25,7 +38,7 @@ export default function InviteChannelMembersModal({
   existingMemberIds,
 }: InviteChannelMembersModalProps) {
   const queryClient = useQueryClient();
-  const [workspaceMembers, setWorkspaceMembers] = useState<any[]>([]);
+  const [workspaceMembers, setWorkspaceMembers] = useState<ChannelCandidateMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
@@ -57,15 +70,15 @@ export default function InviteChannelMembersModal({
   // Filter out existing channel members and apply search query
   const candidates = useMemo(() => {
     // Workspace member structures contain a `userId` sub-object
-    const nonMembers = workspaceMembers.filter((m: any) => {
-      const uId = m.userId?._id || m.userId?.id || m.userId;
+    const nonMembers = workspaceMembers.filter((m) => {
+      const uId = m.userId?._id || m.userId?.id;
       if (!uId) return false;
       return !existingMemberIds.includes(String(uId));
     });
 
     if (!search.trim()) return nonMembers;
     const q = search.toLowerCase();
-    return nonMembers.filter((m: any) => {
+    return nonMembers.filter((m) => {
       const user = m.userId || {};
       return (
         user.fullName?.toLowerCase().includes(q) ||
@@ -95,10 +108,11 @@ export default function InviteChannelMembersModal({
       });
 
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to invite members:', err);
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
       toast.error(
-        err.response?.data?.message || err.message || 'Failed to invite members'
+        error.response?.data?.message || error.message || 'Failed to invite members'
       );
     } finally {
       setInviting(false);
@@ -149,9 +163,9 @@ export default function InviteChannelMembersModal({
             </div>
           ) : (
             <div className="space-y-0.5">
-              {candidates.map((member: any) => {
+              {candidates.map((member) => {
                 const user = member.userId || {};
-                const userId = user._id || user.id;
+                const userId = user._id || user.id || '';
                 const isSelected = selectedUserIds.includes(userId);
                 return (
                   <button
