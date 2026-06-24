@@ -1,7 +1,6 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { ArrowLeft, Edit3, Clock, Eye } from "lucide-react";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
