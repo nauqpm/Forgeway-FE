@@ -6,7 +6,10 @@ import { useDashboardTaskModal } from "@/modules/admin-shared/hooks/useDashboard
 
 export function useForYouPage() {
   const dashboardQuery = useDashboardData();
-  const workspaces = dashboardQuery.data?.workspaces ?? [];
+  const workspaces = useMemo(
+    () => dashboardQuery.data?.workspaces ?? [],
+    [dashboardQuery.data?.workspaces],
+  );
   const assignedTasks = dashboardQuery.data?.assignedTasks ?? [];
   const completedAssignedTasks = dashboardQuery.data?.completedAssignedTasks ?? [];
 

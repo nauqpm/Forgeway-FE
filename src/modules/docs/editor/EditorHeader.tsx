@@ -217,7 +217,7 @@ export default function EditorHeader({
   const [versionLabel, setVersionLabel] = useState("");
 
   const handleOpenVersionModal = () => {
-    setVersionLabel(`Draft v${doc.version}`);
+    setVersionLabel(`Version ${doc.version}`);
     setShowVersionModal(true);
   };
 
@@ -470,7 +470,7 @@ export default function EditorHeader({
                 maxLength={100}
                 value={versionLabel}
                 onChange={(e) => setVersionLabel(e.target.value)}
-                placeholder="Enter version name (e.g. Draft 1...)"
+                placeholder="Enter version name (e.g. Review ready...)"
                 className="w-full text-xs px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-950 text-slate-800 dark:text-slate-200"
               />
             </div>

@@ -11,6 +11,7 @@ const NOTIFICATIONS = ["notifications"] as const;
 const ADMIN = ["admin"] as const;
 const STAFF = ["staff"] as const;
 const CHAT = ["chat"] as const;
+const SEARCH = ["search"] as const;
 
 export const queryKeys = {
   profile: {
@@ -118,5 +119,38 @@ export const queryKeys = {
     searchUsers: (query: string) => [...CHAT, "users", "search", query] as const,
     activeMeeting: (channelId: string) => [...CHAT, "meetings", "active", channelId] as const,
     stickers: () => [...CHAT, "stickers"] as const,
+  },
+  search: {
+    all: SEARCH,
+    global: (params: {
+      q: string;
+      types: readonly string[];
+      workspaceIds: readonly string[];
+      assigneeIds: readonly string[];
+      authorIds: readonly string[];
+      reporterId: string;
+      status: readonly string[];
+      taskType: readonly string[];
+      priority: readonly string[];
+      updatedAfter: string;
+      updatedBefore: string;
+      cursor: string;
+    }) =>
+      [
+        ...SEARCH,
+        "global",
+        params.q,
+        params.types,
+        params.workspaceIds,
+        params.assigneeIds,
+        params.authorIds,
+        params.reporterId,
+        params.status,
+        params.taskType,
+        params.priority,
+        params.updatedAfter,
+        params.updatedBefore,
+        params.cursor,
+      ] as const,
   },
 } as const;
