@@ -5,9 +5,11 @@ import { X, Search, Loader2, Users, UserPlus } from 'lucide-react';
 import { useChannelMembers } from '@/modules/client/chat/hooks/useChatQueries';
 import type { ChatMember } from '@/modules/client/chat/types/chat.types';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import type { AuthUser } from '@/modules/auth/shared/types/auth.types';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import type { Channel } from '@/modules/client/chat/types/chat.types';
+import type { Workspace, WorkspaceMember } from '@/modules/workspace/shared/types/workspace.type';
 import InviteChannelMembersModal from './InviteChannelMembersModal';
 
 interface MemberPanelProps {
@@ -70,8 +72,8 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
   const queryClient = useQueryClient();
-  const authUser = useAuthStore(state => state.user);
-  const currentUserId = (authUser as any)?._id || authUser?.id;
+  const authUser = useAuthStore(state => state.user) as (AuthUser & { _id?: string }) | null;
+  const currentUserId = authUser?._id || authUser?.id;
   const userRole = authUser?.role;
 
   const channels = queryClient.getQueryData<Channel[]>(queryKeys.chat.channels()) || [];
@@ -83,11 +85,17 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   const isChannelAdmin = currentUserMember?.role === 'channel_admin';
 
   // Get workspace role
-  const workspaces = queryClient.getQueryData<any[]>(['workspaces']) || [];
-  const activeWorkspace = workspaces.find(w => String(w._id || w.id) === String(activeChannel?.workspaceId));
-  const wsMember = activeWorkspace?.members?.find((m: any) => String(m.userId) === String(currentUserId));
+  const workspaces = queryClient.getQueryData<Workspace[]>(['workspaces']) || [];
+  const activeWorkspace = workspaces.find(
+    (w) => String(w._id) === String(activeChannel?.workspaceId)
+  );
+  const wsMember = activeWorkspace?.members?.find(
+    (m: WorkspaceMember) => String(m.userId) === String(currentUserId)
+  );
   const wsRole = wsMember?.role;
-  const isWorkspaceAdmin = wsRole === 'workspace_admin' || activeWorkspace?.ownerId === currentUserId;
+  const isWorkspaceAdmin =
+    wsRole === 'workspace_admin' ||
+    String(activeWorkspace?.ownerId) === String(currentUserId);
 
   const canInvite = activeChannel?.type === 'custom' && (isChannelAdmin || isWorkspaceAdmin || userRole === 'super_admin');
 
