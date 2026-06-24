@@ -32,7 +32,7 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
   const channel = channels.find(c => c._id === channelId);
 
   const authUser = useAuthStore(state => state.user);
-  const currentUserId = (authUser as any)?._id || authUser?.id;
+  const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
   const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
 
   // Filter threads

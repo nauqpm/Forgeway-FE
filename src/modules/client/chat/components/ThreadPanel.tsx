@@ -6,7 +6,7 @@ import { useThreadReplies, useChatChannels } from '../hooks/useChatQueries';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import type { Message, MessagesPage } from '@/modules/client/chat/types/chat.types';
+import type { Message, MessagesPage, ChatUser } from '@/modules/client/chat/types/chat.types';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 
@@ -19,7 +19,7 @@ interface ThreadPanelProps {
 export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPanelProps) {
   const queryClient = useQueryClient();
   const authUser = useAuthStore(state => state.user);
-  const currentUserId = (authUser as any)?._id || authUser?.id;
+  const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
 
   const { data: channels = [] } = useChatChannels();
   const channel = channels.find(c => c._id === channelId);
@@ -53,7 +53,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
     }
 
     return null;
-  }, [messageId, channelId, queryClient, replies]);
+  }, [messageId, channelId, queryClient]);
 
   // Scroll to bottom when replies list updates
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
             <MessageItem
               message={parentMessage}
               isSameUserAsPrevious={false}
-              isMine={String((parentMessage.senderId && typeof parentMessage.senderId === 'object') ? (parentMessage.senderId as any)._id || (parentMessage.senderId as any).id : parentMessage.senderId || '') === String(currentUserId)}
+              isMine={String((parentMessage.senderId && typeof parentMessage.senderId === 'object') ? (parentMessage.senderId as ChatUser)._id || (parentMessage.senderId as ChatUser).id : parentMessage.senderId || '') === String(currentUserId)}
               hideThreadBadge={true}
             />
           </div>

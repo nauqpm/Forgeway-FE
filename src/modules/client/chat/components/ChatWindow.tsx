@@ -19,7 +19,7 @@ import { queryKeys } from '@/shared/constants/queryKeys';
 import ThreadPanel from './ThreadPanel';
 import ThreadIndexPanel from './ThreadIndexPanel';
 import toast from 'react-hot-toast';
-import type { Channel } from '../types/chat.types';
+import type { Channel, ChatUser } from '../types/chat.types';
 
 export default function ChatWindow() {
   const queryClient = useQueryClient();
@@ -43,7 +43,7 @@ export default function ChatWindow() {
   } = useChatMessages(activeChannelId);
   const { data: workspaces = [] } = useWorkspaces();
   const authUser = useAuthStore(state => state.user);
-  const currentUserId = (authUser as any)?._id || authUser?.id;
+  const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
   const userRole = useAuthStore(state => state.user?.role);
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
@@ -53,11 +53,14 @@ export default function ChatWindow() {
   const isWorkspaceAdmin = useMemo(() => {
     if (userRole === 'super_admin') return true;
     if (!activeChannel?.workspaceId) return false;
-    const ws = workspaces.find(w => String(w._id || (w as any).id) === String(activeChannel.workspaceId));
+    const ws = workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(activeChannel.workspaceId));
     if (!ws) return false;
     const isOwner = String(ws.ownerId) === String(currentUserId);
-    const member = ws.members?.find((m: any) => String(m.userId?._id || m.userId?.id || m.userId) === String(currentUserId));
-    const role = isOwner ? 'workspace_admin' : (member?.role || 'member');
+    const member = ws.members?.find((m: { userId?: { _id?: string; id?: string } | string }) => {
+      const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+      return String(uId) === String(currentUserId);
+    });
+    const role = isOwner ? 'workspace_admin' : ((member as { role?: string })?.role || 'member');
     return role === 'workspace_admin';
   }, [activeChannel?.workspaceId, workspaces, currentUserId, userRole]);
 
@@ -88,8 +91,9 @@ export default function ChatWindow() {
         current.map(c => (c._id || c.id) === activeChannelId ? updatedChannel : c)
       );
       toast.success(`Joined #${activeChannel?.name || 'channel'}!`);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message || "Failed to join channel");
+    } catch (err) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(errorObj.response?.data?.message || errorObj.message || "Failed to join channel");
     } finally {
       setJoining(false);
     }
@@ -97,8 +101,7 @@ export default function ChatWindow() {
   
   const activeWorkspace = useMemo(() => {
     if (activeChannel?.type !== 'workspace' || !activeChannel?.workspaceId) return null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return workspaces.find(w => String(w._id || (w as any).id) === String(activeChannel.workspaceId));
+    return workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(activeChannel.workspaceId));
   }, [activeChannel, workspaces]);
 
   const messages = useMemo(() => {
@@ -227,7 +230,7 @@ export default function ChatWindow() {
 
   if (activeChannel.type === 'dm') {
     const members = activeChannel.members || [];
-    const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId));
+    const otherMember = members.find((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
 
     if (otherMember && typeof otherMember === 'object') {
       headerName = otherMember.fullName || otherMember.email || "Direct Message";
@@ -266,7 +269,7 @@ export default function ChatWindow() {
           ) : activeChannel.type === 'dm' ? (
             (() => {
               const members = activeChannel.members || [];
-              const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId));
+              const otherMember = members.find((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
               const displayAvatar = otherMember?.avatar;
               const initials = (otherMember?.fullName || otherMember?.email || "Deleted User").charAt(0).toUpperCase();
               return (

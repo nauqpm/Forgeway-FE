@@ -245,7 +245,7 @@ export default function ChatRealtimeHandler() {
       const filteredParticipants = prevParticipants.filter(p => p && String(p.userId) !== String(senderId));
       const newParticipants = [
         ...filteredParticipants,
-        { userId: senderId as any, fullName: senderName, avatar: senderAvatar || undefined }
+        { userId: senderId as string, fullName: senderName, avatar: senderAvatar || undefined }
       ].slice(-3); // Keep only the last 3 unique participants
 
       return {
@@ -293,7 +293,7 @@ export default function ChatRealtimeHandler() {
     const data = envelope.data || envelope;
     if (!data?.channelId) return;
 
-    const currentUserId = user?.id || (user as any)?._id;
+    const currentUserId = user?.id || (user as { _id?: string })?._id;
     const isAffected = data.affectedUserIds?.includes(String(currentUserId));
 
     if (data.isPrivate && isAffected) {

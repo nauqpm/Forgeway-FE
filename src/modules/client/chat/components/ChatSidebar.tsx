@@ -40,16 +40,16 @@ export default function ChatSidebar() {
     return [...(channels || [])].sort((a, b) => {
       const timeA = new Date(
         a.lastMessage?.createdAt ||
-        (a.lastMessage as any)?.sentAt ||
-        (a as any).updatedAt ||
-        (a as any).createdAt ||
+        a.lastMessage?.sentAt ||
+        a.updatedAt ||
+        a.createdAt ||
         0
       ).getTime();
       const timeB = new Date(
         b.lastMessage?.createdAt ||
-        (b.lastMessage as any)?.sentAt ||
-        (b as any).updatedAt ||
-        (b as any).createdAt ||
+        b.lastMessage?.sentAt ||
+        b.updatedAt ||
+        b.createdAt ||
         0
       ).getTime();
       return timeB - timeA;
@@ -361,7 +361,7 @@ export default function ChatSidebar() {
             <h3 className="px-2 mb-1 text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em]">Workspaces</h3>
             <div className="space-y-1">
               {workspaces.map((ws, idx) => {
-                const wsId = ws._id || (ws as any).id || `ws-${idx}`;
+                const wsId = ws._id || (ws as { id?: string }).id || `ws-${idx}`;
                 const isExpanded = !!expandedWorkspaces[wsId];
                 
                 const wsChannel = channels.find(c => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
@@ -374,7 +374,10 @@ export default function ChatSidebar() {
                 const totalWsUnread = wsChannelUnread + customUnreadSum;
 
                 const isOwner = ws.ownerId?.toString() === currentUserId;
-                const member = ws.members?.find((m: any) => String(m.userId?._id || m.userId?.id || m.userId) === String(currentUserId));
+                const member = ws.members?.find((m: { userId?: { _id?: string; id?: string } | string }) => {
+                  const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+                  return String(uId) === String(currentUserId);
+                });
                 const wsRole = isOwner ? 'workspace_admin' : (member?.role || 'member');
                 const isWsViewer = wsRole === 'viewer';
 
