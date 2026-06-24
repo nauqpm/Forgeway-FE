@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ import {
   Settings,
   LogOut,
   X,
+  Search,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -79,7 +80,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentWorkspace, workspaces, isLoading: isWorkspacesLoading } = useCurrentWorkspace();
   const { theme, setTheme } = useTheme();
 
-
   // UI State
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -89,6 +89,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [hasFetchedSwitcher, setHasFetchedSwitcher] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const accountsCount = useAccountSwitcherStore((s) => s.accounts.length);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -111,7 +112,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     (count: number) => {
       queryClient.setQueryData(queryKeys.notifications.unreadCount(), count);
     },
-    [queryClient],
+    [queryClient]
   );
 
   // Default workspace keys for search
@@ -125,7 +126,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           return id && key ? { id, name: workspace.name, key } : null;
         })
         .filter((workspace): workspace is { id: string; name: string; key: string } => Boolean(workspace)),
-    [currentWorkspace, workspaces],
+    [currentWorkspace, workspaces]
   );
   const defaultSearchWorkspaceKeys = useMemo(
     () => searchProjects.map((workspace) => workspace.key).filter(Boolean) as string[],
@@ -135,44 +136,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     .filter((member) => member && member.userId)
     .map((member) => {
       const memberUser = member.userId;
-      const memberUserProfile =
-        typeof memberUser === "string"
-          ? null
-          : (memberUser as SearchAssigneeUser);
+      const memberUserProfile = typeof memberUser === "string" ? null : (memberUser as SearchAssigneeUser);
       const memberId =
-        typeof memberUser === "string"
-          ? memberUser
-          : memberUserProfile?._id || memberUserProfile?.id || "member";
+        typeof memberUser === "string" ? memberUser : memberUserProfile?._id || memberUserProfile?.id || "member";
       const memberName =
         typeof memberUser === "string"
           ? memberUser
-          : memberUserProfile?.fullName ||
-            memberUserProfile?.name ||
-            memberUserProfile?.email ||
-            memberId;
+          : memberUserProfile?.fullName || memberUserProfile?.name || memberUserProfile?.email || memberId;
       const memberAvatar =
         typeof memberUser === "string"
           ? undefined
-          : memberUserProfile?.avatar ||
-            memberUserProfile?.avatarUrl ||
-            memberUserProfile?.image;
+          : memberUserProfile?.avatar || memberUserProfile?.avatarUrl || memberUserProfile?.image;
 
       return {
         id: memberId,
-        name:
-          memberId === user?.id
-            ? user?.fullName || user?.email || memberName
-            : memberName,
+        name: memberId === user?.id ? user?.fullName || user?.email || memberName : memberName,
         avatar: memberAvatar,
       };
     });
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(e.target as Node)
-      ) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setShowUserMenu(false);
         setShowSwitcher(false);
       }
@@ -186,30 +171,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount() });
   }, [isAuthenticated, queryClient]);
 
-  const handleNotificationCreated = useCallback((notification?: AppNotification) => {
-    if (!isAuthenticated || !notification) return;
+  const handleNotificationCreated = useCallback(
+    (notification?: AppNotification) => {
+      if (!isAuthenticated || !notification) return;
 
-    const listKey = queryKeys.notifications.list();
-    const current = queryClient.getQueryData<NotificationListResponse>(listKey);
+      const listKey = queryKeys.notifications.list();
+      const current = queryClient.getQueryData<NotificationListResponse>(listKey);
 
-    if (!current) {
-      queryClient.invalidateQueries({ queryKey: listKey });
-    } else {
-      queryClient.setQueryData<NotificationListResponse>(listKey, {
-        ...current,
-        total: current.notifications.some((item) => item.id === notification.id)
-          ? current.total
-          : current.total + 1,
-        notifications: current.notifications.some((item) => item.id === notification.id)
-          ? current.notifications.map((item) =>
-              item.id === notification.id ? notification : item,
-            )
-          : [notification, ...current.notifications],
-      });
-    }
+      if (!current) {
+        queryClient.invalidateQueries({ queryKey: listKey });
+      } else {
+        queryClient.setQueryData<NotificationListResponse>(listKey, {
+          ...current,
+          total: current.notifications.some((item) => item.id === notification.id) ? current.total : current.total + 1,
+          notifications: current.notifications.some((item) => item.id === notification.id)
+            ? current.notifications.map((item) => (item.id === notification.id ? notification : item))
+            : [notification, ...current.notifications],
+        });
+      }
 
-    refreshUnreadNotificationCount();
-  }, [isAuthenticated, queryClient, refreshUnreadNotificationCount]);
+      refreshUnreadNotificationCount();
+    },
+    [isAuthenticated, queryClient, refreshUnreadNotificationCount]
+  );
 
   // Setup real-time connections
   useNotificationRealtime({
@@ -277,35 +261,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }));
     taskSearchHydrationPathRef.current = hydrationPath;
     setIsTaskSearchReady(true);
-  }, [
-    pathname,
-    workspaceKey,
-    isWorkspacesLoading,
-    defaultSearchWorkspaceKeys,
-  ]);
+  }, [pathname, workspaceKey, isWorkspacesLoading, defaultSearchWorkspaceKeys]);
 
   // Sync filters to URL
   useEffect(() => {
-    if (!workspaceKey || !isTaskSearchReady || typeof window === "undefined")
-      return;
+    if (!workspaceKey || !isTaskSearchReady || typeof window === "undefined") return;
 
     const params = new URLSearchParams(window.location.search);
     const setOrDelete = (key: string, value?: string | null) => {
       if (value) params.set(key, value);
       else params.delete(key);
     };
-    const normalize = (value: string) =>
-      value.trim().toLowerCase().replace(/\s+/g, "");
+    const normalize = (value: string) => value.trim().toLowerCase().replace(/\s+/g, "");
 
     setOrDelete("search", taskSearchFilters.search.trim());
     setOrDelete("taskKey", taskSearchFilters.taskKey ?? undefined);
     params.delete("workspaceKeys");
     setOrDelete("status", taskSearchFilters.statuses.map(normalize).join(","));
     setOrDelete("type", taskSearchFilters.types.map(normalize).join(","));
-    setOrDelete(
-      "priority",
-      taskSearchFilters.priorities.map(normalize).join(","),
-    );
+    setOrDelete("priority", taskSearchFilters.priorities.map(normalize).join(","));
     setOrDelete("assigneeId", taskSearchFilters.assignees.join(","));
     setOrDelete("reporterId", taskSearchFilters.reporterId ?? undefined);
     setOrDelete("lastUpdated", taskSearchFilters.lastUpdated ?? undefined);
@@ -315,14 +289,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     else params.delete("archived");
 
     const query = params.toString();
-    window.history.replaceState(
-      null,
-      "",
-      query ? `${pathname}?${query}` : pathname,
-    );
-    window.dispatchEvent(
-      new CustomEvent("taskFiltersChanged", { detail: taskSearchFilters }),
-    );
+    window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
+    window.dispatchEvent(new CustomEvent("taskFiltersChanged", { detail: taskSearchFilters }));
   }, [isTaskSearchReady, pathname, taskSearchFilters, workspaceKey]);
 
   // Loading state
@@ -331,9 +299,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-[#F2FAFF] dark:bg-[#202020]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
-          <p className="text-sm text-[#787774] dark:text-[#9B9A97]">
-            Authenticating...
-          </p>
+          <p className="text-sm text-[#787774] dark:text-[#9B9A97]">Authenticating...</p>
         </div>
       </div>
     );
@@ -354,8 +320,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         data-sidebar={sidebarCollapsed ? "collapsed" : "expanded"}
         className="app-shell-offset transition-all duration-300 flex flex-col h-full"
       >
-        <header className="app-header bg-white dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+        <header className="app-header px-2 sm:px-3 md:px-4 bg-white dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
+          <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
             {/* Mobile menu */}
             <button
               onClick={() => setMobileOpen(true)}
@@ -364,12 +330,43 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Menu className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
             </button>
 
+            <button
+              onClick={() => setShowMobileSearch(true)}
+              className="lg:hidden p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px]"
+            >
+              <Search className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />
+            </button>
+
+            {showMobileSearch && (
+              <div className="fixed inset-0 z-[9999] bg-white dark:bg-[#202020] flex flex-col">
+                {/* top bar */}
+                <div className="flex items-center gap-2 p-3 border-b border-[#EAEAEA] dark:border-white/10">
+                  <button onClick={() => setShowMobileSearch(false)} className="p-2">
+                    <svg className="w-5 h-5 text-[#787774]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* dropdown search */}
+                <div className="flex-1 overflow-y-auto">
+                  <SearchDropdown
+                    filters={taskSearchFilters}
+                    setFilters={setTaskSearchFilters}
+                    projects={searchProjects}
+                    assignees={searchAssignees}
+                    workspaceKey={activeWorkspaceKey}
+                    currentUserId={user?.id}
+                    currentUserName={user?.fullName || user?.email}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Logo in topbar — desktop only, slides in when sidebar is collapsed */}
             <div
               className={`hidden lg:flex items-center flex-shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
-                sidebarCollapsed
-                  ? "max-w-[12rem] opacity-100"
-                  : "max-w-0 opacity-0 pointer-events-none"
+                sidebarCollapsed ? "max-w-[12rem] opacity-100" : "max-w-0 opacity-0 pointer-events-none"
               }`}
             >
               <Link href="/" className="flex items-center px-1">
@@ -385,7 +382,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Search bar */}
-            <div className="hidden w-[clamp(520px,44vw,680px)] md:block flex-shrink-0">
+            <div className="hidden md:block flex-1 max-w-[680px] min-w-[280px]">
               <SearchDropdown
                 filters={taskSearchFilters}
                 setFilters={setTaskSearchFilters}
@@ -399,19 +396,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-2 lg:gap-3 shrink-0">
             {/* Theme toggle */}
             <button
-              onClick={() =>
-                setTheme(
-                  theme === "light"
-                    ? "dark"
-                    : theme === "dark"
-                      ? "system"
-                      : "light",
-                )
-              }
-              className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
+              onClick={() => setTheme(theme === "light" ? "dark" : theme === "dark" ? "system" : "light")}
+              className="p-2 sm:p-2 md:p-2 lg:p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
               title={`Theme: ${theme}`}
             >
               {theme === "dark" ? (
@@ -443,9 +432,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </svg>
               {unreadNotificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-[#9F2F2D] text-white text-[0.625rem] leading-5 rounded-full text-center font-semibold">
-                  {unreadNotificationCount > 99
-                    ? "99+"
-                    : unreadNotificationCount}
+                  {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
                 </span>
               )}
             </button>
@@ -461,15 +448,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-sm font-semibold text-white">
                   {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt="avatar"
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
                   ) : (
-                    user?.fullName?.charAt(0).toUpperCase() ??
-                      user?.email?.charAt(0).toUpperCase() ??
-                      "U"
+                    (user?.fullName?.charAt(0).toUpperCase() ?? user?.email?.charAt(0).toUpperCase() ?? "U")
                   )}
                 </div>
                 <span className="hidden max-w-36 truncate text-sm font-medium sm:block">
@@ -485,9 +466,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
                         {user?.fullName ?? "User"}
                       </p>
-                      <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">
-                        {user?.email}
-                      </p>
+                      <p className="truncate text-xs text-[#787774] dark:text-[#9B9A97]">{user?.email}</p>
                     </div>
                     <button
                       type="button"
@@ -608,9 +587,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           />
         )}
 
-        <main className="flex-1 flex flex-col min-h-0 overflow-y-auto relative">
-          {children}
-        </main>
+        <main className="flex-1 flex flex-col min-h-0 overflow-y-auto relative">{children}</main>
       </div>
       <ChatRealtimeHandler />
     </div>
