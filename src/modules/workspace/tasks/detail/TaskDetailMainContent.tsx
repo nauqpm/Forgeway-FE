@@ -60,18 +60,16 @@ export default function TaskDetailMainContent({
       : "text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4";
 
   return (
-    <>
+    <div className="flex flex-col w-full min-w-0 gap-6">
       {/* Archived Banner */}
       {issue.isArchived && (
-        <div className="flex items-center justify-between bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] border-l-4 border-[#956400]/40 dark:border-[#F59E0B]/40 p-4 rounded-[6px]">
+        <div className="order-1 flex items-center justify-between bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] border-l-4 border-[#956400]/40 dark:border-[#F59E0B]/40 p-4 rounded-[6px]">
           <div className="flex items-center">
             <AlertTriangle className="h-5 w-5 text-[#956400] dark:text-[#F59E0B] mr-2" />
             <span className="text-[#956400] dark:text-[#F59E0B] text-sm font-medium">
               This task was archived by {issue.archivedByUser?.fullName || "Unknown"} on{" "}
-              {issue.archivedAt
-                ? new Date(issue.archivedAt).toLocaleDateString()
-                : "Unknown Date"}
-              . It is currently read-only.
+              {issue.archivedAt ? new Date(issue.archivedAt).toLocaleDateString() : "Unknown Date"}. It is currently
+              read-only.
             </span>
           </div>
           <button
@@ -87,7 +85,7 @@ export default function TaskDetailMainContent({
       )}
 
       {/* Title */}
-      <div>
+      <div className="order-2">
         {canEditTask && isEditingTitle && !issue.isArchived ? (
           <input
             autoFocus
@@ -117,33 +115,28 @@ export default function TaskDetailMainContent({
       </div>
 
       {/* Slot for injecting Status + Details between Title and Description (used by Drawer) */}
-      {afterTitle}
+      <div className="order-3">{afterTitle}</div>
 
       {/* Description */}
-      <div className="space-y-2">
-        <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-          Description
-        </h3>
-        <TaskDescription
-          initialContent={issue.description || ""}
-          onSave={onSaveDescription}
+      <div className="order-4 space-y-2">
+        <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Description</h3>
+        <TaskDescription initialContent={issue.description || ""} onSave={onSaveDescription} />
+      </div>
+
+      <div className="order-5 w-full">
+        <TaskAttachmentsPanel
+          workspaceId={workspaceId}
+          taskId={issue.id}
+          isArchived={!canEditTask || (issue.isArchived ?? false)}
+          currentUserId={user?.id}
+          accessToken={token}
         />
       </div>
 
-      <TaskAttachmentsPanel
-        workspaceId={workspaceId}
-        taskId={issue.id}
-        isArchived={!canEditTask || (issue.isArchived ?? false)}
-        currentUserId={user?.id}
-        accessToken={token}
-      />
-
       {/* Activity */}
-      <div className="space-y-4 pt-4">
+      <div className="order-6 space-y-4 pt-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-            Activity
-          </h3>
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h3>
           <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <span>Show:</span>
             <button
@@ -190,6 +183,6 @@ export default function TaskDetailMainContent({
           />
         )}
       </div>
-    </>
+    </div>
   );
 }

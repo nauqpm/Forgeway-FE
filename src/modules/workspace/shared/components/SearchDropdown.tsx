@@ -566,7 +566,7 @@ export default function SearchDropdown({
                       />
                     ))}
                   <RecentItem icon={Sparkles} title="Open issues" meta="Filter" />
-                </section>}
+                </section>
               </div>
 
             </div>

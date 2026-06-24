@@ -2,13 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  X,
-  MoreHorizontal,
-  FileText,
-  ChevronDown,
-  Archive,
-} from "lucide-react";
+import { X, MoreHorizontal, FileText, ChevronDown, Archive } from "lucide-react";
+import { createPortal } from "react-dom";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
 import StatusPicker from "@/shared/components/StatusPicker";
@@ -55,6 +50,11 @@ export default function TaskDetailModal({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: fetchedWorkspaceMembers = [] } = useQuery<WorkspaceMember[]>({
     queryKey: queryKeys.workspaces.members(workspaceId),
@@ -95,9 +95,7 @@ export default function TaskDetailModal({
   const canEditTask = Boolean(onUpdateIssue);
   const showSprintField = workspaceTemplate === "scrum";
 
-  const assigneeName =
-    issue.assigneeDisplayName ||
-    getUserDisplayName(issue.assignee, issue.assigneeId);
+  const assigneeName = issue.assigneeDisplayName || getUserDisplayName(issue.assignee, issue.assigneeId);
 
   const handleTitleBlur = () => {
     setIsEditingTitle(false);
@@ -106,7 +104,9 @@ export default function TaskDetailModal({
     }
   };
 
-  return (
+  if (!issue || !mounted) return null;
+
+  return createPortal (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/40 p-4 md:p-8 animate-in fade-in duration-200">
       <div
         className="w-full max-w-[min(100%,var(--app-content-max))] h-full max-h-[90vh] bg-white dark:bg-[#202020] text-[#787774] dark:text-[#9B9A97] flex flex-col rounded-[10px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06]"
@@ -210,9 +210,9 @@ export default function TaskDetailModal({
         />
 
         {/* Content Body */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto">
           {/* Left Column (Main) */}
-          <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] border-r border-[#EAEAEA] dark:border-white/[0.06] space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
+          <div className="flex-1 order-2 md:order-1 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] md:border-r border-[#EAEAEA] dark:border-white/[0.06] space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <TaskDetailMainContent
               issue={issue}
               workspaceId={workspaceId}
@@ -239,16 +239,14 @@ export default function TaskDetailModal({
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="workspace-detail-panel bg-[#F9F9F8] dark:bg-[#252525] p-[var(--workspace-surface-pad)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
+          <div className="w-full md:w-[360px] order-1 md:order-2 workspace-detail-panel bg-[#F9F9F8] dark:bg-[#252525] p-[var(--workspace-surface-pad)] scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <div className="flex items-center gap-2 mb-6">
               <StatusPicker
                 value={issue.status}
                 columnId={issue.columnId}
                 options={boardColumns.map((col) => ({ id: col.id, name: col.name }))}
                 disabled={!canEditTask || issue.isArchived}
-                onChange={(status, option) =>
-                  onUpdateIssue?.({ ...issue, columnId: option.id, status })
-                }
+                onChange={(status, option) => onUpdateIssue?.({ ...issue, columnId: option.id, status })}
               />
             </div>
 
@@ -279,6 +277,7 @@ export default function TaskDetailModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
