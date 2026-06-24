@@ -133,12 +133,12 @@ const Header = ({
             </span>
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] text-[0.625rem] font-medium ${
-                workspace.visibility === "private"
+                workspace.access === "private"
                   ? "bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.12)] text-[#956400] dark:text-[#F59E0B]"
                   : "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)] text-[#346538] dark:text-[#4ADE80]"
               }`}
             >
-              {workspace.visibility === "private" ? (
+              {workspace.access === "private" ? (
                 <>
                   <Lock className="w-3 h-3" /> Private
                 </>

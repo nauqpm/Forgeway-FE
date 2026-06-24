@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient, useInfiniteQuery, type QueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, useInfiniteQuery, type QueryClient, type QueryFunctionContext, type InfiniteData } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import {
   createDMAPI,
@@ -9,11 +9,15 @@ import {
   getStickersAPI,
   resetUnreadCountAPI,
   searchUsersAPI,
+  getThreadRepliesAPI,
+  getActiveThreadsAPI,
 } from '@/modules/client/chat/services/chatService';
 import { getActiveMeetingAPI } from '@/modules/client/meeting/services/meeting.api';
 import { useChatStore } from '@/stores/chatStore';
-import type { MentionMember, MessagesPage } from '@/modules/client/chat/types/chat.types';
+import type { MentionMember, MessagesPage, Message } from '@/modules/client/chat/types/chat.types';
 import { updateChannelInCache, upsertChannelInCache } from '@/modules/client/chat/utils/chatQueryCache';
+
+type ActiveThreadsResponse = { threads: Message[]; nextCursor: string | null };
 
 export const useChatChannels = () => {
   return useQuery({
@@ -123,5 +127,28 @@ export const useMarkChannelRead = () => {
     onSettled: (_data, _error, channelId) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(channelId) });
     },
+  });
+};
+
+export const useThreadReplies = (channelId: string | null, messageId: string | null) => {
+  return useQuery({
+    queryKey: queryKeys.chat.threadReplies(channelId || '', messageId || ''),
+    queryFn: () => getThreadRepliesAPI(channelId as string, messageId as string),
+    enabled: Boolean(channelId && messageId),
+    staleTime: 5_000,
+  });
+};
+
+export const useActiveThreads = (channelId: string | null) => {
+  return useInfiniteQuery<ActiveThreadsResponse, Error, InfiniteData<ActiveThreadsResponse>, readonly ["chat", "messages", "threads", string], string | undefined>({
+    queryKey: queryKeys.chat.activeThreads(channelId || ''),
+    queryFn: async ({ pageParam }: QueryFunctionContext<readonly ["chat", "messages", "threads", string], string | undefined>) =>
+      getActiveThreadsAPI(channelId as string, {
+        limit: 20,
+        cursor: typeof pageParam === 'string' ? pageParam : undefined,
+      }),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
+    enabled: Boolean(channelId),
   });
 };

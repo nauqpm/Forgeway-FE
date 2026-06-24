@@ -24,7 +24,6 @@ export interface Workspace {
   description?: string;
   avatar?: string;
   access?: "private" | "public";
-  visibility: "private" | "public";
   template?: "kanban" | "scrum";
   type?: "kanban" | "scrum";
   status?: "active" | "archived" | string;

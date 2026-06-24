@@ -213,6 +213,133 @@ export default function ChatRealtimeHandler() {
     }));
   }, [queryClient]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleThreadReplyCreated = useCallback((envelope: any) => {
+    console.log("ChatRealtimeHandler: Received chat.thread.reply.created", envelope);
+    const reply = (envelope.data || envelope) as Message;
+    const channelId = reply.channelId;
+    const parentId = reply.threadParentId;
+    if (!channelId || !parentId) return;
+
+    // 1. Add to thread replies query cache
+    queryClient.setQueryData<Message[]>(
+      queryKeys.chat.threadReplies(channelId, parentId),
+      (current = []) => {
+        const exists = current.some(m => (m._id || m.id) === (reply._id || reply.id));
+        if (exists) return current.map(m => (m._id || m.id) === (reply._id || reply.id) ? reply : m);
+        return [...current, reply];
+      }
+    );
+
+    // 2. Invalidate active threads list query
+    queryClient.invalidateQueries({ queryKey: queryKeys.chat.activeThreads(channelId) });
+
+    // 3. Update the parent message in the messages cache to reflect replyCount, lastReplyAt, lastReplyParticipants
+    const senderId = getSenderId(reply);
+    const sender = (reply.senderId && typeof reply.senderId === 'object') ? reply.senderId : null;
+    const senderName = sender?.fullName || 'Deleted User';
+    const senderAvatar = sender?.avatar || null;
+
+    updateMessageInCache(queryClient, channelId, parentId, (parentMsg) => {
+      const prevParticipants = parentMsg.lastReplyParticipants || [];
+      const filteredParticipants = prevParticipants.filter(p => p && String(p.userId) !== String(senderId));
+      const newParticipants = [
+        ...filteredParticipants,
+        { userId: senderId as string, fullName: senderName, avatar: senderAvatar || undefined }
+      ].slice(-3); // Keep only the last 3 unique participants
+
+      return {
+        replyCount: (parentMsg.replyCount || 0) + 1,
+        lastReplyAt: reply.createdAt,
+        lastReplyParticipants: newParticipants
+      };
+    });
+  }, [queryClient]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChannelCreated = useCallback((envelope: any) => {
+    const channel = (envelope.data || envelope) as Channel;
+    if (!channel?._id) return;
+    upsertChannelInCache(queryClient, channel);
+    chatSocketClient.joinChannel(channel._id);
+  }, [queryClient]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChannelUpdated = useCallback((envelope: any) => {
+    const channel = (envelope.data || envelope) as Channel;
+    if (!channel?._id) return;
+    upsertChannelInCache(queryClient, channel);
+  }, [queryClient]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChannelDeleted = useCallback((envelope: any) => {
+    const data = envelope.data || envelope;
+    const channelId = typeof data === 'string' ? data : (data.channelId || data._id || data.id);
+    if (!channelId) return;
+
+    queryClient.setQueryData<Channel[]>(queryKeys.chat.channels(), (current = []) =>
+      current.filter(item => (item._id || item.id) !== channelId)
+    );
+
+    const activeChannelId = useChatStore.getState().activeChannelId;
+    if (activeChannelId === channelId) {
+      useChatStore.getState().setActiveChannel(null);
+      toast.error("This channel has been deleted.");
+    }
+  }, [queryClient]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChannelVisibilityChanged = useCallback(async (envelope: any) => {
+    const data = envelope.data || envelope;
+    if (!data?.channelId) return;
+
+    const currentUserId = user?.id || (user as { _id?: string })?._id;
+    const isAffected = data.affectedUserIds?.includes(String(currentUserId));
+
+    if (data.isPrivate && isAffected) {
+      // 1. User is not a member of this private channel. Remove it from sidebar.
+      queryClient.setQueryData<Channel[]>(queryKeys.chat.channels(), (current = []) =>
+        current.filter(item => (item._id || item.id) !== data.channelId)
+      );
+
+      // 2. If user is currently viewing it, kick them out
+      const activeChannelId = useChatStore.getState().activeChannelId;
+      if (activeChannelId === data.channelId) {
+        useChatStore.getState().setActiveChannel(null);
+        toast.error("This channel is now private.");
+      }
+    } else {
+      // 3. User is still allowed to view it (either it's public now or user is member/admin)
+      try {
+        const channel = await getChannelAPI(data.channelId);
+        upsertChannelInCache(queryClient, channel);
+      } catch (err) {
+        console.error("Failed to fetch updated channel details on visibility change", err);
+        // Fallback: Remove if fetch fails due to auth/access issues
+        queryClient.setQueryData<Channel[]>(queryKeys.chat.channels(), (current = []) =>
+          current.filter(item => (item._id || item.id) !== data.channelId)
+        );
+      }
+    }
+  }, [queryClient, user]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleKickedFromChannel = useCallback((envelope: any) => {
+    const data = envelope.data || envelope;
+    const channelId = data.channelId || data.id;
+    if (!channelId) return;
+
+    queryClient.setQueryData<Channel[]>(queryKeys.chat.channels(), (current = []) =>
+      current.filter(item => (item._id || item.id) !== channelId)
+    );
+
+    const activeChannelId = useChatStore.getState().activeChannelId;
+    if (activeChannelId === channelId) {
+      useChatStore.getState().setActiveChannel(null);
+      toast.error("You have been removed from this channel.");
+    }
+  }, [queryClient]);
+
   const handleRateLimited = useCallback((payload: { retryAfterMs?: number }) => {
     if (rateLimitIntervalRef.current) {
       clearInterval(rateLimitIntervalRef.current);
@@ -256,6 +383,16 @@ export default function ChatRealtimeHandler() {
     socket.on(SOCKET_EVENTS.REACTION_UPDATED, handleReactionUpdated);
     socket.on(SOCKET_EVENTS.RATE_LIMITED, handleRateLimited);
 
+    // Thread & Custom Channel events
+    socket.on(SOCKET_EVENTS.THREAD_REPLY_CREATED, handleThreadReplyCreated);
+    socket.on(SOCKET_EVENTS.CHANNEL_CREATED, handleChannelCreated);
+    socket.on(SOCKET_EVENTS.CHANNEL_UPDATED, handleChannelUpdated);
+    socket.on(SOCKET_EVENTS.CHANNEL_DELETED, handleChannelDeleted);
+    socket.on(SOCKET_EVENTS.CHANNEL_MEMBER_ADDED, handleChannelUpdated); // Reuse update logic to refresh member list
+    socket.on(SOCKET_EVENTS.CHANNEL_MEMBER_REMOVED, handleChannelUpdated);
+    socket.on(SOCKET_EVENTS.CHANNEL_VISIBILITY_CHANGED, handleChannelVisibilityChanged);
+    socket.on(SOCKET_EVENTS.KICKED_FROM_CHANNEL, handleKickedFromChannel);
+
     return () => {
       socket.off(SOCKET_EVENTS.SENT, handleNewMessage);
       socket.off(SOCKET_EVENTS.EDITED, handleMessageEdited);
@@ -264,6 +401,15 @@ export default function ChatRealtimeHandler() {
       socket.off(SOCKET_EVENTS.UNREAD_UPDATE, handleUnreadUpdate);
       socket.off(SOCKET_EVENTS.REACTION_UPDATED, handleReactionUpdated);
       socket.off(SOCKET_EVENTS.RATE_LIMITED, handleRateLimited);
+
+      socket.off(SOCKET_EVENTS.THREAD_REPLY_CREATED, handleThreadReplyCreated);
+      socket.off(SOCKET_EVENTS.CHANNEL_CREATED, handleChannelCreated);
+      socket.off(SOCKET_EVENTS.CHANNEL_UPDATED, handleChannelUpdated);
+      socket.off(SOCKET_EVENTS.CHANNEL_DELETED, handleChannelDeleted);
+      socket.off(SOCKET_EVENTS.CHANNEL_MEMBER_ADDED, handleChannelUpdated);
+      socket.off(SOCKET_EVENTS.CHANNEL_MEMBER_REMOVED, handleChannelUpdated);
+      socket.off(SOCKET_EVENTS.CHANNEL_VISIBILITY_CHANGED, handleChannelVisibilityChanged);
+      socket.off(SOCKET_EVENTS.KICKED_FROM_CHANNEL, handleKickedFromChannel);
 
       if (rateLimitIntervalRef.current) {
         clearInterval(rateLimitIntervalRef.current);
@@ -278,6 +424,12 @@ export default function ChatRealtimeHandler() {
     handleUnreadUpdate,
     handleReactionUpdated,
     handleRateLimited,
+    handleThreadReplyCreated,
+    handleChannelCreated,
+    handleChannelUpdated,
+    handleChannelDeleted,
+    handleChannelVisibilityChanged,
+    handleKickedFromChannel,
   ]);
 
   return null;

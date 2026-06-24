@@ -39,6 +39,7 @@ interface NotificationViewModel {
   actor: { name: string; avatar?: string };
   actionText: string;
   target?: { id?: string; key?: string; title?: string; type: string };
+  messageSnippet?: string;
   href?: string;
   createdAt: string;
   isRead: boolean;
@@ -60,6 +61,8 @@ const DIRECT_TYPES: NotificationType[] = [
   "TASK_ASSIGNED",
   "COMMENT_MENTIONED",
   "WORKSPACE_INVITED",
+  "THREAD_REPLY",
+  "CHAT_MENTIONED",
 ];
 
 function actorName(notification: AppNotification): string {
@@ -89,6 +92,10 @@ function actionText(type: NotificationType): string {
       return "commented on a task";
     case "WORKSPACE_INVITED":
       return "invited you to a workspace";
+    case "THREAD_REPLY":
+      return "replied to a thread";
+    case "CHAT_MENTIONED":
+      return "mentioned you in a chat channel";
     default:
       return "sent you a notification";
   }
@@ -153,6 +160,24 @@ function buildNotificationHref(notification: AppNotification): string | undefine
   }
 
   const metadata = notification.metadata ?? {};
+
+  if (notification.type === "THREAD_REPLY") {
+    const channelId = typeof metadata.channelId === "string" ? metadata.channelId : undefined;
+    const messageId = typeof metadata.messageId === "string" ? metadata.messageId : undefined;
+    const parentId = typeof metadata.parentId === "string" ? metadata.parentId : undefined;
+    const actualParentId = parentId || metadata.threadParentId || messageId;
+    if (channelId && actualParentId) {
+      return `/chat?channelId=${encodeURIComponent(channelId)}&threadParentId=${encodeURIComponent(actualParentId as string)}`;
+    }
+  }
+
+  if (notification.type === "CHAT_MENTIONED") {
+    const channelId = typeof metadata.channelId === "string" ? metadata.channelId : undefined;
+    if (channelId) {
+      return `/chat?channelId=${encodeURIComponent(channelId)}`;
+    }
+  }
+
   const taskKey = typeof metadata.taskKey === "string" ? metadata.taskKey : undefined;
   const workspaceRouteKey =
     (typeof metadata.workspaceKey === "string" ? metadata.workspaceKey : undefined) ||
@@ -169,6 +194,7 @@ function buildNotificationHref(notification: AppNotification): string | undefine
 function mapNotification(notification: AppNotification): NotificationViewModel {
   const name = actorName(notification);
   const metadata = notification.metadata ?? {};
+  const isChatNotification = ["THREAD_REPLY", "CHAT_MENTIONED"].includes(notification.type);
   const taskKey = typeof metadata.taskKey === "string" ? metadata.taskKey : undefined;
   const taskTitle = typeof metadata.taskTitle === "string" ? metadata.taskTitle : notification.message;
   const workspaceName =
@@ -184,6 +210,10 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
     ? rawInviteMessage
     : undefined;
 
+  const cleanMessage = typeof notification.message === "string"
+    ? notification.message.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')
+    : undefined;
+
   return {
     id: notification.id,
     actor: {
@@ -191,7 +221,7 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
       avatar: notification.actor?.avatar || initials(name),
     },
     actionText: actionText(notification.type),
-    target: taskKey || taskTitle
+    target: !isChatNotification && (taskKey || taskTitle)
       ? {
           id: typeof metadata.taskId === "string" ? metadata.taskId : notification.entityId,
           key: taskKey,
@@ -199,6 +229,7 @@ function mapNotification(notification: AppNotification): NotificationViewModel {
           type: "Task",
         }
       : undefined,
+    messageSnippet: isChatNotification ? cleanMessage : undefined,
     createdAt: notification.createdAt,
     isRead: Boolean(notification.readAt),
     href: buildNotificationHref(notification),
@@ -464,7 +495,7 @@ export default function NotificationPanel({
   };
 
   const handleNotificationKeyDown = (
-    event: ReactKeyboardEvent<HTMLButtonElement>,
+    event: ReactKeyboardEvent<HTMLDivElement>,
     notification: NotificationViewModel,
   ) => {
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -693,9 +724,10 @@ export default function NotificationPanel({
                       const isInviteBusy = isAccepting || isDeclining;
 
                       return (
-                        <button
+                        <div
                           key={notification.id}
-                          type="button"
+                          role="button"
+                          tabIndex={0}
                           onClick={() => handleNotificationClick(notification)}
                           onKeyDown={(event) => handleNotificationKeyDown(event, notification)}
                           className={`w-full text-left relative p-3 rounded-[8px] transition-all group hover:bg-[#F9F9F8] dark:hover:bg-[#252525] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 ${!notification.isRead ? "bg-[#EFF6FF]/30 dark:bg-[rgba(37,99,235,0.06)]" : ""}`}
@@ -723,6 +755,12 @@ export default function NotificationPanel({
                                   <span className="text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97] truncate">
                                     {notification.target.key ? `${notification.target.key}: ` : ""}{notification.target.title}
                                   </span>
+                                </div>
+                              )}
+
+                              {notification.messageSnippet && (
+                                <div className="mt-1.5 px-2.5 py-1.5 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.75rem] text-[#787774] dark:text-[#9B9A97] italic max-w-full truncate">
+                                  {notification.messageSnippet}
                                 </div>
                               )}
 
@@ -779,7 +817,7 @@ export default function NotificationPanel({
                               <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1.5">{formatTime(notification.createdAt)}</p>
                             </div>
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>

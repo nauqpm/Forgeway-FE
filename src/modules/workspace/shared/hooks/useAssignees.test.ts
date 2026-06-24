@@ -22,7 +22,7 @@ const workspace: Workspace = {
   _id: "workspace-1",
   name: "Frontend",
   key: "FE",
-  visibility: "private",
+  access: "private",
   members: [
     {
       userId: {

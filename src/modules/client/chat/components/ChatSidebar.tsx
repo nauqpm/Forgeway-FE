@@ -3,13 +3,14 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { Hash, Megaphone, Loader2 } from 'lucide-react';
+import { Hash, Megaphone, Loader2, Lock, Plus, ChevronDown, ChevronRight } from 'lucide-react';
 import { getWorkspaceUI } from '@/shared/utils/workSpaceUI';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import type { Channel } from '@/modules/client/chat/types/chat.types';
+import CreateChannelModal from './CreateChannelModal';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -22,13 +23,72 @@ export default function ChatSidebar() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const currentUserId = (authUser as any)?._id || authUser?.id;
   const [activeTab, setActiveTab] = useState<'all' | 'channels' | 'dms'>('all');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createChannelWorkspaceId, setCreateChannelWorkspaceId] = useState('');
+  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Record<string, boolean>>({});
 
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const paramWorkspaceId = searchParams.get('workspaceId');
+  const paramChannelId = searchParams.get('channelId');
+  const paramThreadParentId = searchParams.get('threadParentId');
 
   const lastWorkspaceIdRef = useRef<string | null>(null);
+
+  const sortedChannels = useMemo(() => {
+    return [...(channels || [])].sort((a, b) => {
+      const timeA = new Date(
+        a.lastMessage?.createdAt ||
+        a.lastMessage?.sentAt ||
+        a.updatedAt ||
+        a.createdAt ||
+        0
+      ).getTime();
+      const timeB = new Date(
+        b.lastMessage?.createdAt ||
+        b.lastMessage?.sentAt ||
+        b.updatedAt ||
+        b.createdAt ||
+        0
+      ).getTime();
+      return timeB - timeA;
+    });
+  }, [channels]);
+
+  const activeWorkspaceId = useMemo(() => {
+    if (paramWorkspaceId) return paramWorkspaceId;
+    if (activeChannelId) {
+      const activeChannel = channels.find(c => c._id === activeChannelId);
+      if (activeChannel?.workspaceId) return String(activeChannel.workspaceId);
+    }
+    return null;
+  }, [paramWorkspaceId, activeChannelId, channels]);
+
+
+
+  const isChannelMember = (channel: Channel) => {
+    if (!channel.channelMembers) return false;
+    return channel.channelMembers.some(
+      m => String(m.userId) === String(currentUserId)
+    );
+  };
+
+  const toggleWorkspace = (wsId: string) => {
+    setExpandedWorkspaces(prev => ({
+      ...prev,
+      [wsId]: !prev[wsId]
+    }));
+  };
+
+  useEffect(() => {
+    if (activeWorkspaceId) {
+      setExpandedWorkspaces(prev => ({
+        ...prev,
+        [activeWorkspaceId]: true
+      }));
+    }
+  }, [activeWorkspaceId]);
 
   useEffect(() => {
     if (paramWorkspaceId && channels.length > 0) {
@@ -51,27 +111,28 @@ export default function ChatSidebar() {
     }
   }, [paramWorkspaceId, channels, setActiveChannel, pathname, router, searchParams]);
 
-  const sortedChannels = useMemo(() => {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    return [...(channels || [])].sort((a, b) => {
-      const timeA = new Date(
-        a.lastMessage?.createdAt ||
-        (a.lastMessage as any)?.sentAt ||
-        (a as any).updatedAt ||
-        (a as any).createdAt ||
-        0
-      ).getTime();
-      const timeB = new Date(
-        b.lastMessage?.createdAt ||
-        (b.lastMessage as any)?.sentAt ||
-        (b as any).updatedAt ||
-        (b as any).createdAt ||
-        0
-      ).getTime();
-      /* eslint-enable @typescript-eslint/no-explicit-any */
-      return timeB - timeA;
-    });
-  }, [channels]);
+  useEffect(() => {
+    if (paramChannelId && channels.length > 0) {
+      const channelExists = channels.some(c => c._id === paramChannelId);
+      if (channelExists) {
+        if (activeChannelId !== paramChannelId) {
+          setActiveChannel(paramChannelId);
+        }
+
+        if (paramThreadParentId) {
+          useChatStore.getState().setActiveThreadParentId(paramThreadParentId);
+        }
+
+        // Clear query parameters from URL
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete('channelId');
+        params.delete('threadParentId');
+        const query = params.toString();
+        const newUrl = query ? `${pathname}?${query}` : pathname;
+        router.replace(newUrl);
+      }
+    }
+  }, [paramChannelId, paramThreadParentId, channels, activeChannelId, setActiveChannel, pathname, router, searchParams]);
 
   if (isLoading) {
     return (
@@ -94,15 +155,16 @@ export default function ChatSidebar() {
     const lastMsg = channel.lastMessage;
     if (!lastMsg || (!lastMsg.content && !lastMsg.senderId)) return "Start a conversation";
     
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const msgSenderId = typeof lastMsg.senderId === 'object'
-      ? ((lastMsg.senderId as any)._id || (lastMsg.senderId as any).id)
-      : lastMsg.senderId;
-    /* eslint-enable @typescript-eslint/no-explicit-any */
+    const sender = lastMsg.senderId;
+    const msgSenderId = sender && typeof sender === 'object'
+      ? (sender._id || sender.id)
+      : sender;
 
     const isMine = String(msgSenderId) === String(currentUserId);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const senderName = (lastMsg.senderId as any)?.fullName || (lastMsg as any).senderName || "User";
+    const senderName =
+      (sender && typeof sender === 'object' ? sender.fullName : undefined) ||
+      lastMsg.senderName ||
+      'Deleted User';
     const formattedContent = lastMsg.deletedAt 
       ? "[Message deleted]" 
       : lastMsg.type === 'sticker'
@@ -131,13 +193,14 @@ export default function ChatSidebar() {
     if (type === 'dm' && channel) {
       const members = channel.members || [];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+      const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId));
       
       if (otherMember && typeof otherMember === 'object') {
         displayName = otherMember.fullName || otherMember.email || "Direct Message";
         displayAvatar = otherMember.avatar;
       } else {
-        displayName = name || "Direct Message";
+        displayName = "Deleted User";
+        displayAvatar = null;
       }
     } else if (!displayName) {
       displayName = "Channel";
@@ -150,6 +213,8 @@ export default function ChatSidebar() {
       Icon = ui.icon;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       _avatarBg = "bg-[#2563EB] dark:bg-[#3B82F6]";
+    } else if (type === 'custom') {
+      Icon = channel?.isPrivate ? Lock : Hash;
     }
 
     return (
@@ -294,14 +359,118 @@ export default function ChatSidebar() {
         {(activeTab === 'all' || activeTab === 'channels') && workspaces && workspaces.length > 0 && (
           <div>
             <h3 className="px-2 mb-1 text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em]">Workspaces</h3>
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {workspaces.map((ws, idx) => {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const wsId = ws._id || (ws as any).id || `ws-${idx}`;
+                const wsId = ws._id || (ws as { id?: string }).id || `ws-${idx}`;
+                const isExpanded = !!expandedWorkspaces[wsId];
+                
                 const wsChannel = channels.find(c => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
-                const targetChannelId = wsChannel ? wsChannel._id : wsId;
-                const unreadCount = wsChannel ? wsChannel.unreadCount : 0;
-                return renderChannelLink(targetChannelId, ws.name, 'workspace', unreadCount, wsChannel?.lastMessage, ws);
+                const wsCustomChannels = sortedChannels.filter(
+                  c => c.type === 'custom' && String(c.workspaceId) === String(wsId)
+                );
+
+                const wsChannelUnread = wsChannel ? wsChannel.unreadCount : 0;
+                const customUnreadSum = wsCustomChannels.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+                const totalWsUnread = wsChannelUnread + customUnreadSum;
+
+                const isOwner = ws.ownerId?.toString() === currentUserId;
+                const member = ws.members?.find((m: { userId?: { _id?: string; id?: string } | string }) => {
+                  const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+                  return String(uId) === String(currentUserId);
+                });
+                const wsRole = isOwner ? 'workspace_admin' : (member?.role || 'member');
+                const isWsViewer = wsRole === 'viewer';
+
+                return (
+                  <div key={wsId} className="space-y-0.5">
+                    {/* Workspace Accordion Header */}
+                    <div 
+                      className={cn(
+                        "w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer group text-[#787774] dark:text-[#9B9A97]"
+                      )}
+                      onClick={() => toggleWorkspace(wsId)}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                        {isExpanded ? (
+                          <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
+                        )}
+                        <div className="relative flex-shrink-0">
+                          <div className="w-6 h-6 rounded-[4px] text-white flex items-center justify-center text-[10px] font-bold bg-[#2563EB] dark:bg-[#3B82F6] overflow-hidden">
+                            <img 
+                              src={getWorkspaceAvatarUrl(ws)} 
+                              alt={ws.name} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                const parent = (e.target as HTMLImageElement).parentElement;
+                                if (parent && !parent.querySelector('span')) {
+                                  const span = document.createElement('span');
+                                  span.innerText = ws.name?.charAt(0).toUpperCase() || 'W';
+                                  parent.appendChild(span);
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                        <span className="font-bold text-sm text-[#111111] dark:text-[#E8E8E7] truncate">
+                          {ws.name}
+                        </span>
+                        <span className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] flex-shrink-0">
+                          ({wsCustomChannels.length}/20)
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {totalWsUnread > 0 && !isExpanded && (
+                          <span className="flex items-center justify-center min-w-[16px] h-4 px-1.5 bg-[#EF4444] text-white text-[8px] font-bold rounded-full">
+                            {totalWsUnread}
+                          </span>
+                        )}
+                        {!isWsViewer && wsCustomChannels.length < 20 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCreateChannelWorkspaceId(wsId);
+                              setIsCreateModalOpen(true);
+                            }}
+                            className="p-1 rounded hover:bg-[#EAEAEA] dark:hover:bg-white/10 text-[#787774] opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Create custom channel"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Expandable Workspace Channels */}
+                    {isExpanded && (
+                      <div className="pl-4 ml-4 border-l border-[#EAEAEA] dark:border-white/[0.06] space-y-0.5">
+                        {wsChannel && (
+                          renderChannelLink(wsChannel._id, wsChannel.name, 'workspace', wsChannel.unreadCount, wsChannel.lastMessage, ws)
+                        )}
+
+                        {!isWsViewer && wsCustomChannels.map((c, cIdx) => {
+                          const isMember = isChannelMember(c);
+                          const isPrivate = c.isPrivate;
+                          const dimClass = (!isMember && !isPrivate) ? "opacity-50 hover:opacity-80 transition-opacity" : "";
+                          return (
+                            <div key={c._id || `ws-custom-${cIdx}`} className={dimClass}>
+                              {renderChannelLink(c._id || `ws-custom-${cIdx}`, c.name, c.type, c.unreadCount, c.lastMessage)}
+                            </div>
+                          );
+                        })}
+
+                        {!isWsViewer && wsCustomChannels.length === 0 && (
+                          <div className="px-2 py-1.5 text-left">
+                            <p className="text-[10px] text-[#ABABAB] italic">No custom channels</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
               })}
             </div>
           </div>
@@ -322,6 +491,15 @@ export default function ChatSidebar() {
           </div>
         )}
       </div>
+
+      <CreateChannelModal
+        isOpen={isCreateModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setCreateChannelWorkspaceId('');
+        }}
+        workspaceId={createChannelWorkspaceId || activeWorkspaceId || ''}
+      />
     </div>
   );
 }

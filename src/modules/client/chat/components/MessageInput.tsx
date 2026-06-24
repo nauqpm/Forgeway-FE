@@ -13,9 +13,10 @@ const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filt
 interface MessageInputProps {
   channelId: string;
   channelName?: string;
+  threadParentId?: string;
 }
 
-export default function MessageInput({ channelId, channelName }: MessageInputProps) {
+export default function MessageInput({ channelId, channelName, threadParentId }: MessageInputProps) {
   const [content, setContent] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
@@ -52,7 +53,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
       toast.error('Message cannot exceed 4000 characters');
       return;
     }
-    sendMessage(channelId, content.trim(), undefined, replyingToMessage?._id);
+    sendMessage(channelId, content.trim(), undefined, replyingToMessage?._id, undefined, undefined, threadParentId);
     setContent('');
     setReplyingToMessage(null);
     if (textareaRef.current) {
@@ -61,7 +62,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
   };
 
   const handleSelectSticker = (stickerId: string) => {
-    sendMessage(channelId, '', undefined, replyingToMessage?._id, 'sticker', stickerId);
+    sendMessage(channelId, '', undefined, replyingToMessage?._id, 'sticker', stickerId, threadParentId);
     setReplyingToMessage(null);
     setShowStickerPicker(false);
   };
@@ -96,6 +97,17 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
+    const isAllMatch = !query || 'all'.startsWith(query.toLowerCase());
+    if (isAllMatch) {
+      callback([{
+        id: 'All',
+        display: 'All',
+        email: 'Mention everyone in this channel',
+        phone: '',
+        avatar: 'special-all'
+      }]);
+    }
+
     const fetchMembers = async () => {
       try {
         const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
@@ -115,7 +127,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
         });
 
         // Thêm tùy chọn @All nếu từ khóa khớp hoặc khi truy vấn trống
-        if (!query || 'all'.startsWith(query.toLowerCase())) {
+        if (isAllMatch) {
           mappedMembers.unshift({
             id: 'All',
             display: 'All',
@@ -135,7 +147,7 @@ export default function MessageInput({ channelId, channelName }: MessageInputPro
     if (!query) {
       fetchMembers();
     } else {
-      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 250);
+      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 150);
     }
   };
 

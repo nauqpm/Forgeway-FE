@@ -18,7 +18,8 @@ export interface Message {
   _id: string;
   id?: string;
   channelId: string;
-  senderId: ChatUser | string;
+  senderId: ChatUser | string | null;
+  senderName?: string;
   content: string;
   attachments?: Attachment[];
   type: 'text' | 'system' | string;
@@ -29,6 +30,14 @@ export interface Message {
   deletedAt?: string | null;
   reactions?: Record<string, string[]>;
   sentAt?: string;
+  threadParentId?: string;
+  replyCount?: number;
+  lastReplyAt?: string;
+  lastReplyParticipants?: {
+    userId: string;
+    fullName: string;
+    avatar?: string;
+  }[];
 }
 
 export interface Channel {
@@ -36,7 +45,14 @@ export interface Channel {
   id?: string;
   name: string;
   description?: string;
-  type: 'general' | 'announcement' | 'workspace' | 'dm' | string;
+  type: 'general' | 'announcement' | 'workspace' | 'dm' | 'custom' | string;
+  isPrivate?: boolean;
+  createdBy?: string;
+  channelMembers?: {
+    userId: string;
+    role: 'channel_admin' | 'channel_member';
+    joinedAt: string;
+  }[];
   workspaceId?: string;
   unreadCount: number;
   lastMessage?: Message;

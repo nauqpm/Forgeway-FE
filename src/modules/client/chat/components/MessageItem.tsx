@@ -4,12 +4,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import type { ChatUser, Message, Channel } from '@/modules/client/chat/types/chat.types';
 import { format } from 'date-fns';
-import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle, Pencil } from 'lucide-react';
+import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle, Pencil, MessageSquare } from 'lucide-react';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
 import { MentionsInput, Mention } from 'react-mentions';
 import api from '@/lib/axiosIns';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import { getMessageContext } from '@/modules/client/chat/utils/chatUtils';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -17,15 +18,23 @@ interface MessageItemProps {
   message: Message;
   isSameUserAsPrevious: boolean;
   isMine: boolean;
+  hideThreadBadge?: boolean;
+  showContextBadge?: boolean;
 }
 
 const QUICK_EMOJIS = ['❤️', '👍', '😂', '😢', '❓', '😮'];
 
-export default function MessageItem({ message, isSameUserAsPrevious, isMine }: MessageItemProps) {
-  const sender = typeof message.senderId === 'object' && message.senderId
+export default function MessageItem({
+  message,
+  isSameUserAsPrevious,
+  isMine,
+  hideThreadBadge = false,
+  showContextBadge = false
+}: MessageItemProps) {
+  const sender = (message.senderId && typeof message.senderId === 'object')
     ? message.senderId
-    : ({ _id: String(message.senderId || ''), fullName: 'User', email: '' } as ChatUser);
-  const displayName = sender.fullName || sender.email || 'User';
+    : ({ _id: String(message.senderId || ''), fullName: 'Deleted User', email: '' } as ChatUser);
+  const displayName = sender.fullName || sender.email || 'Deleted User';
   const initialLetter = displayName.charAt(0).toUpperCase();
   const isDeleted = Boolean(message.deletedAt);
 
@@ -33,6 +42,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
   const { sendReaction, sendDeleteMessage, sendEditMessage } = useChatRealtime();
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+  const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
 
   const activeChannelId = useChatStore(state => state.activeChannelId);
   const { data: channels = [] } = useChatChannels();
@@ -71,12 +81,12 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     ? (message.replyToId as Message)
     : null;
 
-  const replySender = typeof replyParent?.senderId === 'object' && replyParent.senderId
+  const replySender = (replyParent?.senderId && typeof replyParent.senderId === 'object')
     ? replyParent.senderId
     : null;
   const replyDisplayName = replySender
-    ? (replySender.fullName || replySender.email || 'User')
-    : 'User';
+    ? (replySender.fullName || replySender.email || 'Deleted User')
+    : 'Deleted User';
   const replyInitialLetter = replyDisplayName.charAt(0).toUpperCase();
 
   const isMentioned = (() => {
@@ -97,7 +107,8 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
 
   const shouldHighlight = isMentioned || isReplyToMe;
 
-  const renderMessageContent = (content: string) => {
+  const renderMessageContent = (content?: string) => {
+    if (!content) return '';
     const mentionRegex = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
     const parts = [];
     let lastIndex = 0;
@@ -189,6 +200,17 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
+    const isAllMatch = !query || 'all'.startsWith(query.toLowerCase());
+    if (isAllMatch) {
+      callback([{
+        id: 'All',
+        display: 'All',
+        email: 'Mention everyone in this channel',
+        phone: '',
+        avatar: 'special-all'
+      }]);
+    }
+
     const fetchMembers = async () => {
       try {
         const response = await api.get(`/chat/channels/${message.channelId}/mention-members`, {
@@ -207,7 +229,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
           };
         });
 
-        if (!query || 'all'.startsWith(query.toLowerCase())) {
+        if (isAllMatch) {
           mappedMembers.unshift({
             id: 'All',
             display: 'All',
@@ -227,7 +249,7 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
     if (!query) {
       fetchMembers();
     } else {
-      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 250);
+      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 150);
     }
   };
 
@@ -322,6 +344,14 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             title="Reply"
           >
             <Reply className="w-3.5 h-3.5" />
+          </button>
+
+          <button 
+            onClick={() => setActiveThreadParentId(message._id)}
+            className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" 
+            title="Reply in thread"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
           </button>
           {isMine && (
             <>
@@ -429,6 +459,15 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
               {format(new Date(message.createdAt), 'dd/MM/yyyy HH:mm')}
             </span>
+            {showContextBadge && (() => {
+              const contextName = getMessageContext(message.channelId, channels);
+              if (!contextName) return null;
+              return (
+                <span className="text-[10px] font-semibold bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.04]">
+                  in #{contextName}
+                </span>
+              );
+            })()}
           </div>
         )}
         
@@ -602,6 +641,35 @@ export default function MessageItem({ message, isSameUserAsPrevious, isMine }: M
             })}
           </div>
         )}
+        {/* Thread replies badge */}
+        {!isDeleted && !hideThreadBadge && message.replyCount && message.replyCount > 0 ? (
+          <button
+            onClick={() => setActiveThreadParentId(message._id)}
+            className="mt-2 flex items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-white/5 px-2.5 py-1 rounded-[6px] transition-colors border border-[#EAEAEA] dark:border-white/[0.06] text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] cursor-pointer"
+          >
+            <div className="flex -space-x-1.5 overflow-hidden">
+              {message.lastReplyParticipants?.filter(Boolean).map((p, idx) => (
+                <div 
+                  key={idx} 
+                  className="inline-block h-5 w-5 rounded-full ring-2 ring-white dark:ring-[#202020] bg-[#2563EB] overflow-hidden flex-shrink-0 flex items-center justify-center text-white font-bold" 
+                  title={p.fullName}
+                >
+                  {p.avatar ? (
+                    <img src={p.avatar} alt={p.fullName} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-[9px]">{p.fullName?.charAt(0).toUpperCase() || 'U'}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <span>
+              {message.replyCount} {message.replyCount === 1 ? 'reply' : 'replies'}
+            </span>
+            <span className="text-[10px] text-[#ABABAB] font-normal pl-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              View thread
+            </span>
+          </button>
+        ) : null}
       </div>
 
       {/* Delete Confirmation Modal */}

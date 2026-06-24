@@ -3,10 +3,12 @@ import type { Message } from '@/modules/client/chat/types/chat.types';
 
 interface ChatStore {
   activeChannelId: string | null;
+  activeThreadParentId: string | null; // null = closed, 'index' = thread index panel, string = specific thread parent msg id
   typingUsers: Record<string, Record<string, number>>; // channelId: { userId: timestamp }
   replyingToMessage: Message | null;
   
   setActiveChannel: (channelId: string | null) => void;
+  setActiveThreadParentId: (parentId: string | null) => void;
 
   setTyping: (channelId: string, userId: string) => void;
   removeTyping: (channelId: string, userId: string) => void;
@@ -17,10 +19,12 @@ interface ChatStore {
 
 export const useChatStore = create<ChatStore>((set) => ({
   activeChannelId: null,
+  activeThreadParentId: null,
   typingUsers: {},
   replyingToMessage: null,
 
-  setActiveChannel: (activeChannelId) => set({ activeChannelId }),
+  setActiveChannel: (activeChannelId) => set({ activeChannelId, activeThreadParentId: null }), // Close thread on channel change
+  setActiveThreadParentId: (activeThreadParentId) => set({ activeThreadParentId }),
 
   setTyping: (channelId, userId) => set((state) => ({
     typingUsers: {

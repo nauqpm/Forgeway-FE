@@ -69,7 +69,7 @@ export function useWorkspaceSettings(workspaceKey: string): UseWorkspaceSettings
           name: next.name || "",
           description: next.description || "",
           status: next.status || "active",
-          access: next.access || next.visibility || "public",
+          access: next.access || "public",
         });
       })
       .catch(() => {

@@ -20,7 +20,6 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
     title: "",
     content: "",
     labels: "",
-    status: "published" as "draft" | "published",
   });
   const [labelInput, setLabelInput] = useState("");
 
@@ -45,7 +44,6 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
         title: form.title.trim(),
         content: form.content,
         workspaceId,
-        status: form.status,
         labels,
       });
       return res.data?.data ?? res.data;
@@ -88,7 +86,7 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
       <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="mb-6 flex items-center gap-3">
         <Link
-          href={`/workspaces/${key}/docs`}
+          href={`/workspaces/${key}/pages`}
           className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           <ArrowLeft className="h-5 w-5 text-gray-500 dark:text-gray-400" />
@@ -168,34 +166,10 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
               </div>
             )}
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
-            <div className="flex gap-3">
-              {(["draft", "published"] as const).map((status) => (
-                <label
-                  key={status}
-                  className={`flex flex-1 cursor-pointer items-center gap-2 rounded-xl border p-3 transition-colors ${
-                    form.status === status
-                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20"
-                      : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="status"
-                    value={status}
-                    checked={form.status === status}
-                    onChange={() => setForm((curr) => ({ ...curr, status }))}
-                  />
-                  <span className="text-sm font-medium capitalize text-gray-800 dark:text-gray-200">{status}</span>
-                </label>
-              ))}
-            </div>
-          </div>
         </div>
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50 px-[var(--workspace-surface-pad)] py-4 dark:border-gray-700 dark:bg-gray-800">
           <Link
-            href={`/workspaces/${key}/docs`}
+            href={`/workspaces/${key}/pages`}
             className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             Cancel

@@ -6,7 +6,9 @@ export type NotificationType =
   | "TASK_STATUS_CHANGED"
   | "COMMENT_MENTIONED"
   | "TASK_COMMENT_CREATED"
-  | "WORKSPACE_INVITED";
+  | "WORKSPACE_INVITED"
+  | "THREAD_REPLY"
+  | "CHAT_MENTIONED";
 
 export interface NotificationActor {
   id: string;
@@ -24,7 +26,7 @@ export interface AppNotification {
   type: NotificationType;
   title: string;
   message?: string;
-  entityType: "task" | "comment" | "workspace" | "invite";
+  entityType: "task" | "comment" | "workspace" | "invite" | "message";
   entityId?: string;
   metadata?: {
     taskId?: string;
@@ -39,6 +41,11 @@ export interface AppNotification {
     status?: string;
     fromStatus?: string;
     toStatus?: string;
+    channelId?: string;
+    messageId?: string;
+    parentContent?: string;
+    replyContent?: string;
+    content?: string;
     [key: string]: unknown;
   };
   readAt?: string | Date | null;

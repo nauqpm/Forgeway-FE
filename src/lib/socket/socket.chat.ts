@@ -12,36 +12,34 @@ export class ChatRoomManager {
   join(socket: Socket, channelId: string): void {
     if (this.currentChannelId === channelId) return;
 
-    // We don't necessarily leave other rooms because we want to receive unread updates
     this.currentChannelId = channelId;
+    const alreadyJoined = this.joinedChannelIds.has(channelId);
     this.joinedChannelIds.add(channelId);
     
-    if (socket.connected) {
+    if (socket.connected && !alreadyJoined) {
       socket.emit(SOCKET_EVENTS.JOIN, { channelId });
     }
   }
 
   joinMultiple(socket: Socket, channelIds: string[]): void {
-    channelIds.forEach(id => this.joinedChannelIds.add(id));
+    const newChannelIds = channelIds.filter(id => !this.joinedChannelIds.has(id));
+    if (newChannelIds.length === 0) return;
+
+    newChannelIds.forEach(id => this.joinedChannelIds.add(id));
     if (socket.connected) {
-      channelIds.forEach(channelId => {
-        socket.emit(SOCKET_EVENTS.JOIN, { channelId });
-      });
+      socket.emit(SOCKET_EVENTS.JOIN, { channelIds: newChannelIds });
     }
   }
 
   rejoin(socket: Socket): void {
     if (this.joinedChannelIds.size === 0) return;
-    this.joinedChannelIds.forEach(channelId => {
-      socket.emit(SOCKET_EVENTS.JOIN, { channelId });
-    });
+    socket.emit(SOCKET_EVENTS.JOIN, { channelIds: Array.from(this.joinedChannelIds) });
   }
 
   leave(socket: Socket): void {
     if (!this.currentChannelId) return;
-    // Note: We might want to keep the room joined for unread updates 
-    // but for now let's follow the standard leave logic for the active one
     socket.emit(SOCKET_EVENTS.LEAVE, { channelId: this.currentChannelId });
+    this.joinedChannelIds.delete(this.currentChannelId);
     this.currentChannelId = undefined;
   }
 

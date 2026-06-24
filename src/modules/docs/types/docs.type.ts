@@ -14,7 +14,6 @@ export interface Document {
   authorId: string;
   lastEditedBy?: { _id: string; fullName: string } | null;
   version: number;
-  status: "draft" | "published";
   labels: string[];
   versionHistory: VersionHistoryEntry[];
   source?: "docs" | "import";
@@ -32,7 +31,6 @@ export interface PageApiResponse {
   authorId: string;
   lastEditedBy?: { _id: string; fullName?: string; username?: string } | null;
   version: number;
-  status: "draft" | "published";
   labels: string[];
   versionHistory: VersionHistoryEntry[];
   createdAt: string;
@@ -45,14 +43,12 @@ export interface CreatePagePayload {
   workspaceId?: string;
   parentId?: string | null;
   slug?: string;
-  status?: "draft" | "published";
   labels?: string[];
 }
 
 export interface UpdatePagePayload {
   title?: string;
   content?: string;
-  status?: "draft" | "published";
   labels?: string[];
 }
 

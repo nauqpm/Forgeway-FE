@@ -6,17 +6,27 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
-import { Hash, Megaphone, Loader2, Info, Search, Video, Users } from 'lucide-react';
+import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
 import Link from 'next/link';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels, useChatMessages } from '@/modules/client/chat/hooks/useChatQueries';
+import { joinChannelAPI } from '../services/chatService';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/shared/constants/queryKeys';
+import ThreadPanel from './ThreadPanel';
+import ThreadIndexPanel from './ThreadIndexPanel';
+import toast from 'react-hot-toast';
+import type { Channel, ChatUser } from '../types/chat.types';
 
 export default function ChatWindow() {
+  const queryClient = useQueryClient();
   // Use specific selectors to prevent unnecessary re-renders and reference changes
   const activeChannelId = useChatStore(state => state.activeChannelId);
+  const activeThreadParentId = useChatStore(state => state.activeThreadParentId);
+  const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
   const typingUsers = useChatStore(state => state.typingUsers);
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
   
@@ -32,8 +42,28 @@ export default function ChatWindow() {
     refetch,
   } = useChatMessages(activeChannelId);
   const { data: workspaces = [] } = useWorkspaces();
-  const currentUserId = useAuthStore(state => state.user?.id);
+  const authUser = useAuthStore(state => state.user);
+  const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
   const userRole = useAuthStore(state => state.user?.role);
+
+  const activeChannel = channels.find(c => c._id === activeChannelId);
+
+  const [joining, setJoining] = useState(false);
+
+  const isWorkspaceAdmin = useMemo(() => {
+    if (userRole === 'super_admin') return true;
+    if (!activeChannel?.workspaceId) return false;
+    const ws = workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(activeChannel.workspaceId));
+    if (!ws) return false;
+    const isOwner = String(ws.ownerId) === String(currentUserId);
+    const member = ws.members?.find((m: { userId?: { _id?: string; id?: string } | string }) => {
+      const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+      return String(uId) === String(currentUserId);
+    });
+    const role = isOwner ? 'workspace_admin' : ((member as { role?: string })?.role || 'member');
+    return role === 'workspace_admin';
+  }, [activeChannel?.workspaceId, workspaces, currentUserId, userRole]);
+
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [showMembers, setShowMembers] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -41,12 +71,37 @@ export default function ChatWindow() {
   const lastMessageIdRef = useRef<string | null>(null);
   const prevChannelIdRef = useRef<string | null>(null);
 
-  const activeChannel = channels.find(c => c._id === activeChannelId);
+  const isMemberOfActiveChannel = useMemo(() => {
+    if (!activeChannel) return false;
+    if (activeChannel.type !== 'custom') return true;
+    if (isWorkspaceAdmin) return true;
+    if (!activeChannel.channelMembers) return false;
+    return activeChannel.channelMembers.some(
+      m => String(m.userId) === String(currentUserId)
+    );
+  }, [activeChannel, currentUserId, isWorkspaceAdmin]);
+
+  const handleJoinChannel = async () => {
+    if (!activeChannelId) return;
+    setJoining(true);
+    try {
+      const updatedChannel = await joinChannelAPI(activeChannelId);
+      // Update channels list in cache
+      queryClient.setQueryData<Channel[]>(queryKeys.chat.channels(), (current = []) =>
+        current.map(c => (c._id || c.id) === activeChannelId ? updatedChannel : c)
+      );
+      toast.success(`Joined #${activeChannel?.name || 'channel'}!`);
+    } catch (err) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(errorObj.response?.data?.message || errorObj.message || "Failed to join channel");
+    } finally {
+      setJoining(false);
+    }
+  };
   
   const activeWorkspace = useMemo(() => {
     if (activeChannel?.type !== 'workspace' || !activeChannel?.workspaceId) return null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return workspaces.find(w => String(w._id || (w as any).id) === String(activeChannel.workspaceId));
+    return workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(activeChannel.workspaceId));
   }, [activeChannel, workspaces]);
 
   const messages = useMemo(() => {
@@ -175,14 +230,13 @@ export default function ChatWindow() {
 
   if (activeChannel.type === 'dm') {
     const members = activeChannel.members || [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+    const otherMember = members.find((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
 
     if (otherMember && typeof otherMember === 'object') {
       headerName = otherMember.fullName || otherMember.email || "Direct Message";
       headerDescription = otherMember.email || "Direct Message";
     } else {
-      headerName = activeChannel.name || "Direct Message";
+      headerName = "Deleted User";
       headerDescription = "Direct Message";
     }
   }
@@ -215,10 +269,9 @@ export default function ChatWindow() {
           ) : activeChannel.type === 'dm' ? (
             (() => {
               const members = activeChannel.members || [];
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+              const otherMember = members.find((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
               const displayAvatar = otherMember?.avatar;
-              const initials = (otherMember?.fullName || otherMember?.email || "DM").charAt(0).toUpperCase();
+              const initials = (otherMember?.fullName || otherMember?.email || "Deleted User").charAt(0).toUpperCase();
               return (
                 <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white font-bold text-sm shadow-sm">
                   {displayAvatar ? (
@@ -271,12 +324,30 @@ export default function ChatWindow() {
           
           <button 
             className={`p-1 transition-colors rounded-md ${
+              activeThreadParentId === 'index'
+                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
+                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+            }`}
+            title="View active threads"
+            onClick={() => {
+              setShowMembers(false);
+              setActiveThreadParentId(activeThreadParentId === 'index' ? null : 'index');
+            }}
+          >
+            <MessageSquare className="w-4 h-4" />
+          </button>
+
+          <button 
+            className={`p-1 transition-colors rounded-md ${
               showMembers 
                 ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
                 : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
             }`}
             title="View members"
-            onClick={() => setShowMembers(!showMembers)}
+            onClick={() => {
+              setActiveThreadParentId(null);
+              setShowMembers(!showMembers);
+            }}
           >
             <Users className="w-4 h-4" />
           </button>
@@ -410,6 +481,22 @@ export default function ChatWindow() {
               This channel is read-only. Only administrators can post updates.
             </p>
           </div>
+        ) : !isMemberOfActiveChannel ? (
+          <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06] flex flex-col items-center justify-center gap-3">
+            <p className="text-[0.875rem] text-[#787774] dark:text-[#9B9A97] font-medium">
+              You are viewing <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">#{activeChannel.name}</span>. This is a {activeChannel.isPrivate ? 'private' : 'public'} custom channel.
+            </p>
+            {(!activeChannel.isPrivate || isWorkspaceAdmin) && (
+              <button
+                onClick={handleJoinChannel}
+                disabled={joining}
+                className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {joining && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>Join Channel</span>
+              </button>
+            )}
+          </div>
         ) : (
           <MessageInput
             channelId={activeChannelId}
@@ -424,6 +511,23 @@ export default function ChatWindow() {
       <MemberPanel
         channelId={activeChannelId}
         onClose={() => setShowMembers(false)}
+      />
+    )}
+
+    {/* Thread List Index Panel */}
+    {activeThreadParentId === 'index' && activeChannelId && (
+      <ThreadIndexPanel
+        channelId={activeChannelId}
+        onClose={() => setActiveThreadParentId(null)}
+      />
+    )}
+
+    {/* Thread Detail Panel */}
+    {activeThreadParentId && activeThreadParentId !== 'index' && activeChannelId && (
+      <ThreadPanel
+        channelId={activeChannelId}
+        messageId={activeThreadParentId}
+        onClose={() => setActiveThreadParentId(null)}
       />
     )}
     </div>
