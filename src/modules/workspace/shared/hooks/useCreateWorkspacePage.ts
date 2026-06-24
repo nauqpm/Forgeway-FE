@@ -15,7 +15,7 @@ export interface CreateWorkspaceForm {
   key: string;
   description: string;
   avatar: string;
-  visibility: "public" | "private";
+  access: "public" | "private";
   template: "kanban" | "scrum";
 }
 
@@ -39,7 +39,7 @@ export function useCreateWorkspacePage(): CreateWorkspacePageProps {
     key: "",
     description: "",
     avatar: DEFAULT_WORKSPACE_AVATAR_URL,
-    visibility: "public",
+    access: "public",
     template: "kanban",
   });
   const [error, setError] = useState("");
@@ -97,7 +97,7 @@ export function useCreateWorkspacePage(): CreateWorkspacePageProps {
         description: form.description,
         avatar: form.avatar,
         type: form.template,
-        access: form.visibility === "public" ? "public" : "private",
+        access: form.access === "public" ? "public" : "private",
       });
       router.push("/workspaces");
     } catch {

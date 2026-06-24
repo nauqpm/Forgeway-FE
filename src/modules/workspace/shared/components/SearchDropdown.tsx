@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { CheckSquare, FolderKanban, Kanban, Search, SlidersHorizontal, Sparkles, Users } from "lucide-react";
+import { CheckSquare, FileText, Filter, FolderKanban, Kanban, Search, Sparkles, Users, UserRound } from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { Filters, TaskFilters } from "../types/filter.type";
 import { taskService } from "../services/taskService";
 import { useCurrentWorkspace } from "../hooks/useWorkspaces";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import RecentItem from "./RecentItem";
 import TaskFilterPanel from "./TaskFilterPanel";
+import { useGlobalSearch } from "../hooks/useGlobalSearch";
+import type { GlobalSearchItem, GlobalSearchType } from "../services/globalSearch.service";
 
 type SearchDropdownProps = {
   filters: Filters;
@@ -22,8 +25,48 @@ type SearchDropdownProps = {
   inputClassName?: string;
 };
 
-const apps = ["Task", "Docs"];
-const goToLinks = ["Boards", "Projects", "Filters", "Plans", "People"];
+const apps = ["Work", "Docs"];
+const documentSearchTypes: GlobalSearchType[] = ["page", "comment"];
+const taskSearchTypes: GlobalSearchType[] = ["task", "workspace", "board", "sprint", "user"];
+
+const taskStatusValues: Record<string, string> = {
+  "To Do": "todo",
+  "In Progress": "inprogress",
+  Testing: "testing",
+  Done: "done",
+};
+
+const getUpdatedRange = (lastUpdated?: string | null) => {
+  if (!lastUpdated || lastUpdated === "Any time") return {};
+
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const toIso = (date: Date) => date.toISOString();
+
+  if (lastUpdated === "Today") return { updatedAfter: toIso(startOfToday) };
+  if (lastUpdated === "Yesterday") {
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    return { updatedAfter: toIso(startOfYesterday), updatedBefore: toIso(startOfToday) };
+  }
+  if (lastUpdated === "Past 7 days") {
+    const start = new Date(startOfToday);
+    start.setDate(start.getDate() - 6);
+    return { updatedAfter: toIso(start) };
+  }
+  if (lastUpdated === "Past 30 days") {
+    const start = new Date(startOfToday);
+    start.setDate(start.getDate() - 29);
+    return { updatedAfter: toIso(start) };
+  }
+  if (lastUpdated === "Past year") {
+    const start = new Date(startOfToday);
+    start.setFullYear(start.getFullYear() - 1);
+    return { updatedAfter: toIso(start) };
+  }
+  return {};
+};
 
 const useDebouncedValue = <T,>(value: T, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -40,7 +83,7 @@ const toSuggestionTaskFilters = (filters: Filters, search: string): TaskFilters 
   status: filters.statuses,
   type: filters.types,
   priority: filters.priorities,
-  assigneeId: filters.assignees.length > 0 ? filters.assignees : filters.assigneeId ?? undefined,
+  assigneeId: filters.assignees.length > 0 ? filters.assignees : (filters.assigneeId ?? undefined),
   reporterId: filters.reporterId ?? undefined,
   search: search.trim() || undefined,
   backlog: filters.backlog,
@@ -52,7 +95,7 @@ const toFallbackTaskFilters = (filters: Filters): TaskFilters => ({
   status: filters.statuses,
   type: filters.types,
   priority: filters.priorities,
-  assigneeId: filters.assignees.length > 0 ? filters.assignees : filters.assigneeId ?? undefined,
+  assigneeId: filters.assignees.length > 0 ? filters.assignees : (filters.assigneeId ?? undefined),
   reporterId: filters.reporterId ?? undefined,
   backlog: filters.backlog,
   archived: filters.archived,
@@ -61,13 +104,9 @@ const toFallbackTaskFilters = (filters: Filters): TaskFilters => ({
 
 const normalizeSearch = (value: string) => value.trim().toLowerCase();
 
-const normalizeCompactSearch = (value: string) =>
-  normalizeSearch(value).replace(/[^a-z0-9]/g, "");
+const normalizeCompactSearch = (value: string) => normalizeSearch(value).replace(/[^a-z0-9]/g, "");
 
-const matchesFallbackSearch = (
-  task: { key: string; title: string; description?: string },
-  search: string,
-) => {
+const matchesFallbackSearch = (task: { key: string; title: string; description?: string }, search: string) => {
   const query = normalizeSearch(search);
   if (!query) return true;
 
@@ -145,28 +184,74 @@ export default function SearchDropdown({
   inputClassName = "h-12 text-base",
 }: SearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeApp, setActiveApp] = useState("Jira");
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [documentTypes, setDocumentTypes] = useState<GlobalSearchType[]>(documentSearchTypes);
+  const [documentLastUpdated, setDocumentLastUpdated] = useState<string | null>(null);
+  const [documentAuthorIds, setDocumentAuthorIds] = useState<string[]>([]);
+  const [activeApp, setActiveApp] = useState("Work");
+  const [activeResultIndex, setActiveResultIndex] = useState(-1);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+  const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const activeWorkspaceKey = filters.workspaceKey || workspaceKey;
-  const activeWorkspaceKeys =
-    Array.isArray(filters.workspaceKeys)
-      ? filters.workspaceKeys
-      : [activeWorkspaceKey].filter(Boolean);
+  const activeWorkspaceKeys = Array.isArray(filters.workspaceKeys)
+    ? filters.workspaceKeys
+    : [activeWorkspaceKey].filter(Boolean);
   const { currentWorkspace } = useCurrentWorkspace();
   const workspaceTargets = activeWorkspaceKeys
     .map((key) => {
       const project = projects.find((item) => item.key === key);
       const id =
-        project?.id ||
-        (currentWorkspace?.key === key || currentWorkspace?.slug === key
-          ? currentWorkspace?._id
-          : "");
+        project?.id || (currentWorkspace?.key === key || currentWorkspace?.slug === key ? currentWorkspace?._id : "");
       return id ? { id, key } : null;
     })
     .filter(Boolean) as { id: string; key: string }[];
   const debouncedSearch = useDebouncedValue(filters.search, 300);
+  const globalSearchEnabled = process.env.NEXT_PUBLIC_GLOBAL_SEARCH_ENABLED !== "false";
+  const assigneeIds = filters.assignees.length > 0
+    ? filters.assignees
+    : filters.assigneeId
+      ? [filters.assigneeId]
+      : [];
+  const workSearchFilters = {
+    assigneeIds,
+    reporterId: filters.reporterId ?? undefined,
+    status: filters.statuses.map((status) => taskStatusValues[status] ?? status.toLowerCase()),
+    taskType: filters.types.map((type) => type.toLowerCase()),
+    priority: filters.priorities.map((priority) => priority.toLowerCase()),
+    ...getUpdatedRange(filters.lastUpdated),
+  };
+  const hasTaskSpecificFilters =
+    workSearchFilters.assigneeIds.length > 0 ||
+    Boolean(workSearchFilters.reporterId) ||
+    workSearchFilters.status.length > 0 ||
+    workSearchFilters.taskType.length > 0 ||
+    workSearchFilters.priority.length > 0 ||
+    Boolean(workSearchFilters.updatedAfter);
+  const documentSearchFilters = {
+    authorIds: documentAuthorIds,
+    ...getUpdatedRange(documentLastUpdated),
+  };
+  const globalSearchTypes: GlobalSearchType[] = activeApp === "Docs"
+    ? documentTypes
+    : hasTaskSpecificFilters
+      ? ["task"]
+      : taskSearchTypes;
+  const isTaskWorkspaceScopeEmpty = activeApp === "Work" && workspaceTargets.length === 0;
+  const globalSearch = useGlobalSearch(
+    {
+      q: debouncedSearch,
+      types: globalSearchTypes,
+      // Documents are shared across every workspace the current user can access.
+      // Task search continues to honor the workspace filter in the right panel.
+      workspaceIds: activeApp === "Docs" ? undefined : workspaceTargets.map((target) => target.id),
+      ...(activeApp === "Work" ? workSearchFilters : {}),
+      ...(activeApp === "Docs" ? documentSearchFilters : {}),
+      limit: 24,
+    },
+    isOpen && globalSearchEnabled && !isTaskWorkspaceScopeEmpty
+  );
   const suggestionTaskFilters = toSuggestionTaskFilters(filters, debouncedSearch);
   const fallbackTaskFilters = toFallbackTaskFilters(filters);
 
@@ -190,7 +275,10 @@ export default function SearchDropdown({
 
   const fallbackQueries = useQueries({
     queries: workspaceTargets.map((target) => ({
-      queryKey: queryKeys.tasks.searchDropdownFallback(target.id, fallbackTaskFilters as unknown as Record<string, unknown>),
+      queryKey: queryKeys.tasks.searchDropdownFallback(
+        target.id,
+        fallbackTaskFilters as unknown as Record<string, unknown>
+      ),
       queryFn: () => taskService.getBoardTasks(target.id, fallbackTaskFilters),
       enabled: shouldUseFallbackSearch,
       staleTime: 15_000,
@@ -206,11 +294,51 @@ export default function SearchDropdown({
   const visibleTasks = taskResults
     .filter((task) => matchesLastUpdated(task.updatedAt, filters.lastUpdated))
     .slice(0, 8);
-  const isLoadingTasks = isFetchingTasks || isFetchingFallbackTasks;
+  const isLoadingTasks =
+    globalSearchEnabled && debouncedSearch.trim().length >= 2
+      ? globalSearch.isFetching
+      : isFetchingTasks || isFetchingFallbackTasks;
+  const globalItems = globalSearch.data?.items ?? [];
+  const visibleGlobalItems = globalItems.slice(0, 10);
+  const isGlobalSearchActive = globalSearchEnabled && debouncedSearch.trim().length >= 2 && !isTaskWorkspaceScopeEmpty;
+  const globalResultCount = globalSearch.data?.total ?? 0;
+  const hasSearchInput = filters.search.trim().length > 0;
+  const showEmptyStateSuggestions = !hasSearchInput;
+
+  const resultIcon = (item: GlobalSearchItem) => {
+    if (item.type === "page") return FileText;
+    if (item.type === "comment") return Sparkles;
+    if (item.type === "user") return UserRound;
+    if (item.type === "workspace" || item.type === "board") return Kanban;
+    if (item.type === "sprint") return Sparkles;
+    return CheckSquare;
+  };
+
+  const openGlobalResult = (item: GlobalSearchItem) => {
+    setIsOpen(false);
+    router.push(item.url);
+  };
+
+  const keyboardResults = isGlobalSearchActive ? visibleGlobalItems : visibleTasks;
+
+  const selectKeyboardResult = () => {
+    const result = keyboardResults[activeResultIndex];
+    if (!result) return;
+    if (isGlobalSearchActive) {
+      openGlobalResult(result as GlobalSearchItem);
+      return;
+    }
+    const task = result as (typeof visibleTasks)[number];
+    setFilters((prev) => ({ ...prev, search: task.key, taskKey: null }));
+    setIsOpen(false);
+  };
 
   useEffect(() => {
     const onPointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setIsOpen(false);
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+        setIsFilterPanelOpen(false);
+      }
     };
     document.addEventListener("mousedown", onPointerDown);
     return () => document.removeEventListener("mousedown", onPointerDown);
@@ -250,6 +378,7 @@ export default function SearchDropdown({
   }, [isOpen, updatePosition]);
 
   const handleSearchChange = (value: string) => {
+    setActiveResultIndex(-1);
     setFilters((prev) => ({
       ...prev,
       search: value,
@@ -257,26 +386,65 @@ export default function SearchDropdown({
     }));
   };
 
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") {
+      setIsOpen(false);
+      setIsFilterPanelOpen(false);
+      setActiveResultIndex(-1);
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (!keyboardResults.length) return;
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      setActiveResultIndex((current) => (current + direction + keyboardResults.length) % keyboardResults.length);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (activeResultIndex >= 0) {
+        selectKeyboardResult();
+      } else {
+        const query = filters.search.trim();
+        if (query.length >= 2) {
+          setIsOpen(false);
+          router.push(`/search?q=${encodeURIComponent(query)}`);
+        }
+      }
+    }
+  };
+
   return (
     <div ref={rootRef} className={`relative ${className}`}>
       <div ref={inputWrapRef} className="relative w-full">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
-          <input
-            value={filters.search}
-            onFocus={handleOpen}
-            onClick={handleOpen}
-            onChange={(event) => handleSearchChange(event.target.value)}
-            placeholder="Search"
-            className={`${inputClassName} w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#2A2A2A] pl-10 pr-11 font-medium text-[#111111] dark:text-[#E8E8E7] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]`}
-          />
-          <button
-            type="button"
-            onClick={() => (isOpen ? setIsOpen(false) : handleOpen())}
-            className="absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[4px] text-[#ABABAB] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
-            aria-label="Open task filters"
-          >
-            <SlidersHorizontal className="h-4 w-4" />
-          </button>
+        <input
+          value={filters.search}
+          maxLength={256}
+          onFocus={handleOpen}
+          onClick={handleOpen}
+          onChange={(event) => handleSearchChange(event.target.value)}
+          onKeyDown={handleInputKeyDown}
+          placeholder="Search"
+          className={`${inputClassName} w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#2A2A2A] pl-10 pr-11 font-medium text-[#111111] dark:text-[#E8E8E7] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]`}
+        />
+        <button
+          type="button"
+          onClick={() => {
+            if (!isOpen) handleOpen();
+            setIsFilterPanelOpen((current) => !current);
+          }}
+          className={`absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[4px] transition-colors ${
+            isFilterPanelOpen
+              ? "bg-[#DBEAFE] text-[#1D4ED8] dark:bg-[#1E3A5F] dark:text-[#BFDBFE]"
+              : "text-[#ABABAB] hover:bg-[#F7F6F3] hover:text-[#2563EB] dark:hover:bg-[#2E2E2E] dark:hover:text-[#3B82F6]"
+          }`}
+          aria-label="Toggle filters"
+          aria-expanded={isFilterPanelOpen}
+          title="Filters"
+        >
+          <Filter className="h-4 w-4" />
+        </button>
       </div>
 
       {isOpen && (
@@ -284,18 +452,21 @@ export default function SearchDropdown({
           style={{ ...dropdownStyle, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
           className="overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525]"
         >
-          <div className="grid h-[min(76vh,640px)] grid-cols-1 overflow-hidden lg:grid-cols-[minmax(320px,0.95fr)_minmax(340px,1.05fr)]">
-            <div className="min-h-0 overflow-y-auto border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] p-4 lg:border-b-0 lg:border-r">
+          <div className="relative h-[min(76vh,640px)] overflow-hidden">
+            <div className="h-full overflow-y-auto bg-white p-4 dark:bg-[#252525]">
               <div className="mb-4 flex rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] p-1">
                 {apps.map((app) => (
                   <button
                     key={app}
                     type="button"
-                    onClick={() => setActiveApp(app)}
-                    className={`flex-1 rounded-[4px] px-3 py-2 text-[0.8125rem] font-medium transition-colors ${
+                    onClick={() => {
+                      setActiveApp(app);
+                      setActiveResultIndex(-1);
+                    }}
+                    className={`relative flex-1 rounded-[4px] px-3 py-2 text-[0.8125rem] transition-colors ${
                       activeApp === app
-                        ? "bg-white dark:bg-[#252525] text-[#2563EB] dark:text-[#3B82F6]"
-                        : "text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                        ? "bg-[#DBEAFE] font-semibold text-[#1D4ED8] shadow-sm after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-[#2563EB] dark:bg-[#1E3A5F] dark:text-[#BFDBFE] dark:after:bg-[#60A5FA]"
+                        : "font-medium text-[#787774]/70 dark:text-[#9B9A97]/70 hover:bg-[#F7F6F3] hover:text-[#111111] dark:hover:bg-[#2E2E2E] dark:hover:text-[#E8E8E7]"
                     }`}
                   >
                     {app}
@@ -305,76 +476,123 @@ export default function SearchDropdown({
 
               <div className="space-y-5">
                 <section>
-                  <h3 className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Recently viewed</h3>
+                  <h3 className="mb-2 text-[0.6875rem] font-semibold tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">
+                    {isGlobalSearchActive
+                      ? `Results for “${debouncedSearch.trim()}”${globalSearch.isFetching ? "" : ` (${globalResultCount})`}`
+                      : isTaskWorkspaceScopeEmpty && hasSearchInput
+                        ? "SELECT A WORKSPACE TO SEARCH TASKS"
+                      : hasSearchInput
+                        ? "KEEP TYPING TO SEARCH"
+                        : "RECENTLY VIEWED"}
+                  </h3>
                   {isLoadingTasks && (
-                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Loading work items...</p>
+                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+                      Loading work items...
+                    </p>
                   )}
-                  {!isLoadingTasks && workspaceTargets.length === 0 && (
-                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Select a workspace to search work items.</p>
+                  {!globalSearchEnabled && !isLoadingTasks && workspaceTargets.length === 0 && (
+                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+                      Select a workspace to search work items.
+                    </p>
                   )}
-                  {!isLoadingTasks && workspaceTargets.length > 0 && visibleTasks.length === 0 && (
-                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">No work items match these filters.</p>
+                  {isTaskWorkspaceScopeEmpty && debouncedSearch.trim().length >= 2 && (
+                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+                      Select at least one workspace to search tasks.
+                    </p>
                   )}
-                  {visibleTasks.map((task) => (
-                    <RecentItem
-                      key={task.id}
-                      icon={CheckSquare}
-                      title={`${task.key} ${task.title}`}
-                      meta={`${task.type} · ${task.status} · ${task.priority}`}
-                      tone="red"
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          search: task.key,
-                          taskKey: null,
-                        }));
-                        setIsOpen(false);
-                      }}
-                    />
-                  ))}
+                  {isGlobalSearchActive &&
+                    !isLoadingTasks &&
+                    visibleGlobalItems.length === 0 && (
+                      <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+                        No accessible results found.
+                      </p>
+                    )}
+                  {!globalSearchEnabled &&
+                    !isLoadingTasks &&
+                    workspaceTargets.length > 0 &&
+                    visibleTasks.length === 0 && (
+                      <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+                        No work items match these filters.
+                      </p>
+                    )}
+                  {isGlobalSearchActive &&
+                    visibleGlobalItems.map((item, index) => (
+                      <RecentItem
+                        key={`${item.type}-${item.id}`}
+                        icon={resultIcon(item)}
+                        title={activeApp === "Docs" ? item.title : item.key ? `${item.key} ${item.title}` : item.title}
+                        meta={[item.type, item.workspaceName, item.description].filter(Boolean).join(" · ")}
+                        tone={item.type === "task" ? "red" : "gray"}
+                        active={activeResultIndex === index}
+                        onClick={() => openGlobalResult(item)}
+                      />
+                    ))}
+                  {(!globalSearchEnabled || debouncedSearch.trim().length < 2) &&
+                    visibleTasks.map((task, index) => (
+                      <RecentItem
+                        key={task.id}
+                        icon={CheckSquare}
+                        title={`${task.key} ${task.title}`}
+                        meta={`${task.type} · ${task.status} · ${task.priority}`}
+                        tone="red"
+                        active={activeResultIndex === index}
+                        onClick={() => {
+                          setFilters((prev) => ({
+                            ...prev,
+                            search: task.key,
+                            taskKey: null,
+                          }));
+                          setIsOpen(false);
+                        }}
+                      />
+                    ))}
                 </section>
 
-                <section>
-                  <h3 className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Recent boards, projects, filters and plans</h3>
-                  {(projects.length > 0 ? projects : [{ id: activeWorkspaceKey, name: `${activeWorkspaceKey} board`, key: activeWorkspaceKey }])
+                {showEmptyStateSuggestions && <section>
+                  <h3 className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">
+                    Recent boards, projects, filters and plans
+                  </h3>
+                  {(projects.length > 0
+                    ? projects
+                    : [{ id: activeWorkspaceKey, name: `${activeWorkspaceKey} board`, key: activeWorkspaceKey }]
+                  )
                     .slice(0, 6)
                     .map((project, index) => (
                       <RecentItem
                         key={project.id || project.key || `${project.name}-${index}`}
                         icon={project.key === activeWorkspaceKey ? Kanban : FolderKanban}
-                        title={project.key === activeWorkspaceKey ? `${project.key} board` : `${project.name} (${project.key})`}
+                        title={
+                          project.key === activeWorkspaceKey
+                            ? `${project.key} board`
+                            : `${project.name} (${project.key})`
+                        }
                         meta={project.key === activeWorkspaceKey ? "Board" : "Project"}
                         tone={project.key === activeWorkspaceKey ? "red" : "gray"}
                       />
                     ))}
                   <RecentItem icon={Sparkles} title="Open issues" meta="Filter" />
-                </section>
+                </section>}
               </div>
 
-              <div className="mt-5 border-t border-[#EAEAEA] dark:border-white/[0.06] pt-4">
-                <div className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:text-[#6B6B6B]">Go to all</div>
-                <div className="flex flex-wrap gap-2">
-                  {goToLinks.map((item) => (
-                    <button key={item} type="button" className="rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.08] px-2.5 py-1.5 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:border-[#2563EB]/30 hover:bg-[#EFF6FF] dark:hover:bg-[rgba(37,99,235,0.08)] hover:text-[#1F6C9F] dark:hover:text-[#93C5FD] transition-colors">
-                      {item}
-                    </button>
-                  ))}
-                </div>
-                <button type="button" className="mt-4 inline-flex items-center gap-2 text-[0.8125rem] font-semibold text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#3B82F6] transition-colors">
-                  <Search className="h-4 w-4" /> View all work items
-                </button>
-              </div>
             </div>
 
-            <div className="min-h-0 overflow-y-auto bg-[#F9F9F8] dark:bg-[#252525] p-4">
+            {isFilterPanelOpen && (
+            <aside className="absolute inset-y-0 right-0 z-10 w-full max-w-[360px] overflow-y-auto border-l border-[#EAEAEA] bg-[#F9F9F8] p-4 shadow-[-12px_0_24px_rgba(0,0,0,0.12)] dark:border-white/[0.06] dark:bg-[#252525] lg:w-[42%]">
               <TaskFilterPanel
                 filters={filters}
                 setFilters={setFilters}
-                projects={projects}
+                workspaces={projects}
                 assignees={assignees}
                 workspaceKey={workspaceKey}
                 selectedWorkspaceKey={activeWorkspaceKey}
                 selectedWorkspaceKeys={activeWorkspaceKeys}
+                onSetWorkspaceKeys={(workspaceKeys) => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    workspaceKey: workspaceKeys[0] ?? null,
+                    workspaceKeys,
+                  }));
+                }}
                 onSelectWorkspace={(nextWorkspaceKey) => {
                   setFilters((prev) => ({
                     ...prev,
@@ -400,12 +618,20 @@ export default function SearchDropdown({
                 }}
                 currentUserId={currentUserId}
                 currentUserName={currentUserName}
+                activeTab={activeApp as "Work" | "Docs"}
+                documentTypes={documentTypes}
+                onDocumentTypesChange={setDocumentTypes}
+                documentLastUpdated={documentLastUpdated}
+                onDocumentLastUpdatedChange={setDocumentLastUpdated}
+                documentAuthorIds={documentAuthorIds}
+                onDocumentAuthorIdsChange={setDocumentAuthorIds}
               />
               <div className="mt-4 flex items-center gap-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] px-3 py-2 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                 <Users className="h-4 w-4 text-[#2563EB] dark:text-[#3B82F6]" />
                 Filters apply to workspace tasks when you are inside a workspace.
               </div>
-            </div>
+            </aside>
+            )}
           </div>
         </div>
       )}

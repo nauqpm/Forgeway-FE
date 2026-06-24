@@ -17,6 +17,7 @@ import { TaskReorderSyncInput } from "@/modules/workspace/shared/utils/dragUtils
 import { useWorkspaceRealtime } from "@/modules/workspace/shared/hooks/useWorkspaceRealtime";
 import { sortIssuesByRank, taskIdOf } from "@/lib/realtime/utils/task-realtime-cache.utils";
 import { clearOptimisticIssueOrder, isNoopReorderError } from "@/modules/workspace/shared/utils/workspaceUtils";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 interface UseWorkspaceIssuesParams {
   workspaceId: string | undefined;
@@ -86,7 +87,7 @@ export function useWorkspaceIssues({
   const isTaskBoardFetching = isTasksFetching || isFallbackTasksFetching;
 
   const { data: selectedTaskDetail } = useQuery({
-    queryKey: ["taskDetail", workspaceId, selectedTaskKey],
+    queryKey: queryKeys.tasks.detail(workspaceId ?? "", selectedTaskKey ?? ""),
     queryFn: () => taskService.getBoardTaskDetail(workspaceId!, selectedTaskKey!),
     enabled: !!workspaceId && !!selectedTaskKey,
     staleTime: 30_000,
@@ -106,7 +107,7 @@ export function useWorkspaceIssues({
         current && taskIdOf(current) === nextIssueId ? { ...current, ...issue } : current);
       if (!workspaceId || !issue.key) return;
       queryClient.setQueryData(
-        ["taskDetail", workspaceId, issue.key],
+        queryKeys.tasks.detail(workspaceId, issue.key),
         (current: Issue | undefined) => (current ? { ...current, ...issue } : current),
       );
     },

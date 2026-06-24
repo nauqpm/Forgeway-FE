@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { resolveWorkspaceFromRouteKey } from "@/modules/workspace/shared/services/resolveWorkspace";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { Workspace, WorkspaceTab } from "@/modules/workspace/shared/types/workspace.type";
+import {
+  Workspace,
+  WorkspaceMember,
+  WorkspaceTab,
+} from "@/modules/workspace/shared/types/workspace.type";
 import { getDefaultWorkspaceTab } from "@/modules/workspace/shared/utils/workspaceUtils";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 interface UseWorkspaceDataParams {
   workspaceKey: string;
@@ -28,15 +34,40 @@ export function useWorkspaceData({
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [loading, setLoading] = useState(true);
   const { setCurrentWorkspace } = useWorkspaceStore();
+  const workspaceId = workspace?._id;
+
+  const { data: members } = useQuery<WorkspaceMember[]>({
+    queryKey: queryKeys.workspaces.members(workspaceId ?? "pending"),
+    queryFn: async () => {
+      const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId!));
+      return response.data?.data ?? response.data ?? [];
+    },
+    enabled: Boolean(workspaceId),
+    placeholderData: (previousMembers) =>
+      previousMembers ?? workspace?.members ?? [],
+    staleTime: 30_000,
+  });
 
   const handleWorkspaceUpdated = useCallback(
     (updatedWorkspace: Workspace) => {
-      setWorkspace(updatedWorkspace);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setCurrentWorkspace(updatedWorkspace as any);
+      setWorkspace((current) => ({
+        ...updatedWorkspace,
+        members: updatedWorkspace.members ?? current?.members ?? [],
+      }));
     },
-    [setCurrentWorkspace],
+    [],
   );
+
+  useEffect(() => {
+    if (!workspaceId) return;
+
+    setWorkspace((current) => {
+      if (!current || current._id !== workspaceId || !members) return current;
+      if (current.members === members) return current;
+      return { ...current, members };
+    });
+    setCurrentWorkspace({ _id: workspaceId });
+  }, [members, setCurrentWorkspace, workspaceId]);
 
   useEffect(() => {
     if (!workspaceKey) return;
@@ -44,26 +75,10 @@ export function useWorkspaceData({
     setLoading(true);
 
     resolveWorkspaceFromRouteKey(workspaceKey)
-      .then(async (nextWorkspace) => {
-        let workspaceMembers = nextWorkspace.members ?? [];
-        try {
-          const membersResponse = await api.get(
-            apiRoutes.WORKSPACES.MEMBERS(nextWorkspace._id),
-          );
-          workspaceMembers =
-            membersResponse.data?.data ??
-            membersResponse.data ??
-            workspaceMembers;
-        } catch {
-          workspaceMembers = nextWorkspace.members ?? [];
-        }
-
-        const workspaceWithMembers = { ...nextWorkspace, members: workspaceMembers };
+      .then((nextWorkspace) => {
         if (!isActive) return;
 
-        setWorkspace(workspaceWithMembers);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setCurrentWorkspace(workspaceWithMembers as any);
+        setWorkspace(nextWorkspace);
         if (!initialTab) {
           const defaultTab = getDefaultWorkspaceTab(nextWorkspace);
           setActiveTab(defaultTab);
@@ -86,7 +101,7 @@ export function useWorkspaceData({
     getWorkspaceTabUrl,
     initialTab,
     initialTaskKey,
-    setCurrentWorkspace,
+    setActiveTab,
     workspaceKey,
   ]);
 
