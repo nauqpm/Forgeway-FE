@@ -281,11 +281,22 @@ export const getThreadRepliesAPI = async (
   }));
 };
 
-export const getActiveThreadsAPI = async (channelId: string): Promise<Message[]> => {
-  const response = await api.get(`/chat/channels/${channelId}/threads`);
-  const data = normalizeArray<Message>(response);
-  return data.map((item: Message & { id?: string }) => ({
+export const getActiveThreadsAPI = async (
+  channelId: string,
+  params?: { limit?: number; cursor?: string }
+): Promise<{ threads: Message[]; nextCursor: string | null }> => {
+  const response = await api.get(`/chat/channels/${channelId}/threads`, { params });
+  const body = response.data?.data ?? response.data;
+  const threadsData = Array.isArray(body?.threads) ? body.threads : (Array.isArray(body) ? body : []);
+  const nextCursor = body?.nextCursor || null;
+
+  const threads = threadsData.map((item: Message & { id?: string }) => ({
     ...item,
     _id: item._id || item.id || '',
   }));
+
+  return {
+    threads,
+    nextCursor,
+  };
 };

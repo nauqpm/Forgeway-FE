@@ -138,10 +138,15 @@ export const useThreadReplies = (channelId: string | null, messageId: string | n
 };
 
 export const useActiveThreads = (channelId: string | null) => {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: queryKeys.chat.activeThreads(channelId || ''),
-    queryFn: () => getActiveThreadsAPI(channelId as string),
+    queryFn: ({ pageParam }) =>
+      getActiveThreadsAPI(channelId as string, {
+        limit: 20,
+        cursor: typeof pageParam === 'string' ? pageParam : undefined,
+      }),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
     enabled: Boolean(channelId),
-    staleTime: 10_000,
   });
 };

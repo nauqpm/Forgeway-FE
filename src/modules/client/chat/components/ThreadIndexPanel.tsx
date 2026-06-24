@@ -15,7 +15,19 @@ interface ThreadIndexPanelProps {
 
 export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPanelProps) {
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
-  const { data: threads = [], isLoading } = useActiveThreads(channelId);
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useActiveThreads(channelId);
+
+  const threads = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page.threads);
+  }, [data]);
+
   const { data: channels = [] } = useChatChannels();
   const channel = channels.find(c => c._id === channelId);
 
@@ -175,6 +187,25 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
               </button>
             );
           })
+        )}
+
+        {filteredThreads.length > 0 && hasNextPage && (
+          <div className="flex justify-center pt-2 pb-4">
+            <button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="px-4 py-1.5 text-xs font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] bg-[#F0F0EE] dark:bg-white/5 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded-[6px] transition-colors flex items-center gap-2 cursor-pointer w-full justify-center"
+            >
+              {isFetchingNextPage ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Loading...
+                </>
+              ) : (
+                "Load more threads"
+              )}
+            </button>
+          </div>
         )}
       </div>
     </div>
