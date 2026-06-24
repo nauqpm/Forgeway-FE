@@ -6,6 +6,7 @@ import { ArrowLeft, Edit3, Clock, Eye } from "lucide-react";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import { useDocumentBySlugQuery } from "@/modules/docs/hooks/useWorkspaceDocs";
+import PageSearchComments from "@/modules/docs/components/PageSearchComments";
 
 export default function PageViewPage() {
   const params = useParams();
@@ -29,11 +30,6 @@ export default function PageViewPage() {
           >
             <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </Link>
-          <span
-            className={`px-2 py-0.5 text-xs rounded-full ${page.status === "published" ? "bg-green-100 text-green-700" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"}`}
-          >
-            {page.status}
-          </span>
         </div>
         <Link
           href={`/workspaces/${workspaceKey}/pages/${slug}/edit`}
@@ -82,6 +78,7 @@ export default function PageViewPage() {
           }}
         />
       </article>
+      <PageSearchComments workspaceId={page.workspaceId} pageId={page.id} />
       </div>
     </div>
   );

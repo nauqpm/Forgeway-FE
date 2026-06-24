@@ -28,7 +28,6 @@ function mapPage(raw: PageApiResponse): Document {
         }
       : null,
     version: raw.version,
-    status: raw.status,
     labels: raw.labels ?? [],
     versionHistory: raw.versionHistory ?? [],
     source: 'docs',
@@ -83,7 +82,7 @@ async function createPage(payload: CreatePagePayload): Promise<Document> {
   return mapPage(raw);
 }
 
-/** Partially update a page (title, content, status, labels) */
+/** Partially update a page (title, content, labels) */
 async function updatePage(id: string, payload: UpdatePagePayload): Promise<Document> {
   const res = await api.patch(apiRoutes.PAGES.BY_ID(id), payload);
   const raw: PageApiResponse = res.data?.data ?? res.data;
@@ -93,13 +92,6 @@ async function updatePage(id: string, payload: UpdatePagePayload): Promise<Docum
 /** Delete a page and all its descendants */
 async function deletePage(id: string): Promise<void> {
   await api.delete(apiRoutes.PAGES.BY_ID(id));
-}
-
-/** Publish a page (set status to 'published') */
-async function publishPage(id: string): Promise<Document> {
-  const res = await api.post(apiRoutes.PAGES.PUBLISH(id));
-  const raw: PageApiResponse = res.data?.data ?? res.data;
-  return mapPage(raw);
 }
 
 /** Synchronize page state / autosave */
@@ -215,7 +207,6 @@ export const pagesService = {
   createPage,
   updatePage,
   deletePage,
-  publishPage,
   syncPage,
   createVersion,
   getVersions,

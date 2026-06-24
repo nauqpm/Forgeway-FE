@@ -5,7 +5,7 @@
 // =============================================================================
 // Composes React Query server state with small synchronous Zustand auth mirrors.
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -281,7 +281,10 @@ export const useAuth = () => {
     if (!u) await logout();
   }, [refreshUser, logout]);
 
-  const effectivePermissions = globalPermissions.length > 0 ? globalPermissions : user?.permissions ?? [];
+  const effectivePermissions = useMemo(
+    () => (globalPermissions.length > 0 ? globalPermissions : user?.permissions ?? []),
+    [globalPermissions, user?.permissions],
+  );
 
   const hasPermission = useCallback((resource: string, action: string): boolean => {
     if (!user) return false;
