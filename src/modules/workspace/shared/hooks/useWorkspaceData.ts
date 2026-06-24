@@ -101,6 +101,7 @@ export function useWorkspaceData({
     getWorkspaceTabUrl,
     initialTab,
     initialTaskKey,
+    setActiveTab,
     workspaceKey,
   ]);
 
