@@ -131,9 +131,10 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.members(channelId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
       setMemberToKick(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to kick member:', error);
-      toast.error(error?.response?.data?.message || 'Failed to remove member');
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err.response?.data?.message || 'Failed to remove member');
     } finally {
       setIsKicking(false);
     }
