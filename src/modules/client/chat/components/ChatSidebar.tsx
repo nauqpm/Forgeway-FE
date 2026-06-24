@@ -390,11 +390,11 @@ export default function ChatSidebar() {
                       )}
                       onClick={() => toggleWorkspace(wsId)}
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                         {isExpanded ? (
-                          <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200" />
+                          <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
                         ) : (
-                          <ChevronRight className="w-3.5 h-3.5 transition-transform duration-200" />
+                          <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
                         )}
                         <div className="relative flex-shrink-0">
                           <div className="w-6 h-6 rounded-[4px] text-white flex items-center justify-center text-[10px] font-bold bg-[#2563EB] dark:bg-[#3B82F6] overflow-hidden">
@@ -422,7 +422,7 @@ export default function ChatSidebar() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
                         {totalWsUnread > 0 && !isExpanded && (
                           <span className="flex items-center justify-center min-w-[16px] h-4 px-1.5 bg-[#EF4444] text-white text-[8px] font-bold rounded-full">
                             {totalWsUnread}
