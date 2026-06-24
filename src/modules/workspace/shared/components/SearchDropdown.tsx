@@ -12,6 +12,7 @@ import RecentItem from "./RecentItem";
 import TaskFilterPanel from "./TaskFilterPanel";
 import { useGlobalSearch } from "../hooks/useGlobalSearch";
 import type { GlobalSearchItem, GlobalSearchType } from "../services/globalSearch.service";
+import { pagesService } from "@/modules/docs/services/pages.service";
 
 type SearchDropdownProps = {
   filters: Filters;
@@ -294,10 +295,40 @@ export default function SearchDropdown({
   const visibleTasks = taskResults
     .filter((task) => matchesLastUpdated(task.updatedAt, filters.lastUpdated))
     .slice(0, 8);
+
+  const docsQueries = useQueries({
+    queries: workspaceTargets.map((target) => ({
+      queryKey: queryKeys.docs.list(target.id),
+      queryFn: () => pagesService.getWorkspacePages(target.id),
+      enabled: isOpen && activeApp === "Docs",
+      staleTime: 15_000,
+    })),
+  });
+
+  const allDocs = docsQueries.flatMap((query, index) =>
+    (query.data ?? []).map((doc) => ({
+      ...doc,
+      workspaceKey: workspaceTargets[index]?.key ?? activeWorkspaceKey,
+    }))
+  );
+
+  const visibleDocs = allDocs
+    .filter((doc) => {
+      const matchesAuthor = documentAuthorIds.length === 0 || documentAuthorIds.includes(doc.authorId);
+      const matchesUpdate = matchesLastUpdated(doc.updatedAt, documentLastUpdated);
+      return matchesAuthor && matchesUpdate;
+    })
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 8);
+
+  const isFetchingDocs = docsQueries.some((query) => query.isFetching);
+
   const isLoadingTasks =
     globalSearchEnabled && debouncedSearch.trim().length >= 2
       ? globalSearch.isFetching
-      : isFetchingTasks || isFetchingFallbackTasks;
+      : activeApp === "Docs"
+        ? isFetchingDocs
+        : isFetchingTasks || isFetchingFallbackTasks;
   const globalItems = globalSearch.data?.items ?? [];
   const visibleGlobalItems = globalItems.slice(0, 10);
   const isGlobalSearchActive = globalSearchEnabled && debouncedSearch.trim().length >= 2 && !isTaskWorkspaceScopeEmpty;
@@ -319,13 +350,31 @@ export default function SearchDropdown({
     router.push(item.url);
   };
 
-  const keyboardResults = isGlobalSearchActive ? visibleGlobalItems : visibleTasks;
+  const openDocResult = (doc: { slug: string; workspaceKey?: string }) => {
+    const targetWorkspaceKey = doc.workspaceKey || activeWorkspaceKey;
+    if (!targetWorkspaceKey) return;
+
+    setIsOpen(false);
+    router.push(
+      `/workspaces/${encodeURIComponent(targetWorkspaceKey)}/pages/${encodeURIComponent(doc.slug)}`
+    );
+  };
+
+  const keyboardResults = isGlobalSearchActive
+    ? visibleGlobalItems
+    : activeApp === "Docs"
+      ? visibleDocs
+      : visibleTasks;
 
   const selectKeyboardResult = () => {
     const result = keyboardResults[activeResultIndex];
     if (!result) return;
     if (isGlobalSearchActive) {
       openGlobalResult(result as GlobalSearchItem);
+      return;
+    }
+    if (activeApp === "Docs") {
+      openDocResult(result as (typeof visibleDocs)[number]);
       return;
     }
     const task = result as (typeof visibleTasks)[number];
@@ -487,12 +536,12 @@ export default function SearchDropdown({
                   </h3>
                   {isLoadingTasks && (
                     <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
-                      Loading work items...
+                      {activeApp === "Docs" ? "Loading docs..." : "Loading work items..."}
                     </p>
                   )}
                   {!globalSearchEnabled && !isLoadingTasks && workspaceTargets.length === 0 && (
                     <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
-                      Select a workspace to search work items.
+                      {activeApp === "Docs" ? "Select a workspace to search docs." : "Select a workspace to search work items."}
                     </p>
                   )}
                   {isTaskWorkspaceScopeEmpty && debouncedSearch.trim().length >= 2 && (
@@ -507,7 +556,15 @@ export default function SearchDropdown({
                         No accessible results found.
                       </p>
                     )}
-                  {!globalSearchEnabled &&
+                  {activeApp === "Docs" && !globalSearchEnabled &&
+                    !isLoadingTasks &&
+                    workspaceTargets.length > 0 &&
+                    visibleDocs.length === 0 && (
+                      <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+                        No docs match these filters.
+                      </p>
+                    )}
+                  {activeApp === "Work" && !globalSearchEnabled &&
                     !isLoadingTasks &&
                     workspaceTargets.length > 0 &&
                     visibleTasks.length === 0 && (
@@ -527,7 +584,19 @@ export default function SearchDropdown({
                         onClick={() => openGlobalResult(item)}
                       />
                     ))}
-                  {(!globalSearchEnabled || debouncedSearch.trim().length < 2) &&
+                  {activeApp === "Docs" && (!globalSearchEnabled || debouncedSearch.trim().length < 2) &&
+                    visibleDocs.map((doc, index) => (
+                      <RecentItem
+                        key={doc.id}
+                        icon={FileText}
+                        title={doc.title}
+                        meta={`Page · v${doc.version} · ${new Date(doc.updatedAt).toLocaleDateString()}`}
+                        tone="gray"
+                        active={activeResultIndex === index}
+                        onClick={() => openDocResult(doc)}
+                      />
+                    ))}
+                  {activeApp === "Work" && (!globalSearchEnabled || debouncedSearch.trim().length < 2) &&
                     visibleTasks.map((task, index) => (
                       <RecentItem
                         key={task.id}

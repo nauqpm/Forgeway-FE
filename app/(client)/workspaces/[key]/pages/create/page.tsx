@@ -86,7 +86,7 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
       <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="mb-6 flex items-center gap-3">
         <Link
-          href={`/workspaces/${key}/docs`}
+          href={`/workspaces/${key}/pages`}
           className="rounded-lg p-1.5 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           <ArrowLeft className="h-5 w-5 text-gray-500 dark:text-gray-400" />
@@ -169,7 +169,7 @@ export default function CreateWorkspacePage({ params }: { params: Promise<{ key:
         </div>
         <div className="flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50 px-[var(--workspace-surface-pad)] py-4 dark:border-gray-700 dark:bg-gray-800">
           <Link
-            href={`/workspaces/${key}/docs`}
+            href={`/workspaces/${key}/pages`}
             className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             Cancel

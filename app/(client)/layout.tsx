@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -128,8 +128,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     [currentWorkspace, workspaces],
   );
   const defaultSearchWorkspaceKeys = useMemo(
-    () => (workspaceKey ? [workspaceKey] : searchProjects.map((workspace) => workspace.key)).filter(Boolean) as string[],
-    [searchProjects, workspaceKey],
+    () => searchProjects.map((workspace) => workspace.key).filter(Boolean) as string[],
+    [searchProjects],
   );
   const searchAssignees = (currentWorkspace?.members ?? [])
     .filter((member) => member && member.userId)
@@ -233,7 +233,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       setIsTaskSearchReady(false);
       return;
     }
-    if (!workspaceKey && isWorkspacesLoading) return;
+    if (isWorkspacesLoading) return;
 
     const hydrationPath = pathname || "";
     if (taskSearchHydrationPathRef.current === hydrationPath) return;
@@ -257,7 +257,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       workspaceKeys:
         csv(params.get("workspaceKeys")).length > 0
           ? csv(params.get("workspaceKeys"))
-          : defaultSearchWorkspaceKeys,
+          : prev.workspaceKeys && prev.workspaceKeys.length > 0
+            ? prev.workspaceKeys
+            : defaultSearchWorkspaceKeys,
       search: params.get("search") || "",
       taskKey: params.get("taskKey") ?? null,
       statuses: csv(params.get("status")).map((item) => {

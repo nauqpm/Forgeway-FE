@@ -9,6 +9,12 @@ import type { GlobalSearchItem, GlobalSearchType } from "@/modules/workspace/sha
 
 const ALL_TYPES: GlobalSearchType[] = ["task", "page", "comment", "workspace", "board", "sprint", "user"];
 
+const cleanDescription = (value?: string) =>
+  (value ?? "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
 const iconFor = (item: GlobalSearchItem) => {
   if (item.type === "task") return CheckSquare;
   if (item.type === "page") return FileText;
@@ -109,7 +115,7 @@ export default function SearchPage() {
                   {item.key ? `${item.key} ${item.title}` : item.title}
                 </div>
                 <div className="mt-1 line-clamp-2 text-sm text-[#787774] dark:text-[#9B9A97]">
-                  {[item.type, item.workspaceName, item.description].filter(Boolean).join(" · ")}
+                  {[item.type, item.workspaceName, cleanDescription(item.description)].filter(Boolean).join(" · ")}
                 </div>
               </div>
             </Link>
