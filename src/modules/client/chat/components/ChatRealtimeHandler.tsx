@@ -236,8 +236,8 @@ export default function ChatRealtimeHandler() {
 
     // 3. Update the parent message in the messages cache to reflect replyCount, lastReplyAt, lastReplyParticipants
     const senderId = getSenderId(reply);
-    const sender = typeof reply.senderId === 'object' ? reply.senderId : null;
-    const senderName = sender?.fullName || 'User';
+    const sender = (reply.senderId && typeof reply.senderId === 'object') ? reply.senderId : null;
+    const senderName = sender?.fullName || 'Deleted User';
     const senderAvatar = sender?.avatar || null;
 
     updateMessageInCache(queryClient, channelId, parentId, (parentMsg) => {
