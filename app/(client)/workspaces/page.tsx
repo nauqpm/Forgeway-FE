@@ -130,7 +130,7 @@ export default function WorkspacesPage() {
                     <WorkspaceAvatar workspace={workspace} size="lg" className="shadow-inner" />
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        {workspace.visibility === "public" ? (
+                        {workspace.access === "public" ? (
                           <Globe className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
                         ) : (
                           <Lock className="w-3.5 h-3.5 text-amber-500" />
