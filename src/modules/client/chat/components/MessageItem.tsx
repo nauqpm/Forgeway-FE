@@ -199,6 +199,17 @@ export default function MessageItem({
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
+    const isAllMatch = !query || 'all'.startsWith(query.toLowerCase());
+    if (isAllMatch) {
+      callback([{
+        id: 'All',
+        display: 'All',
+        email: 'Mention everyone in this channel',
+        phone: '',
+        avatar: 'special-all'
+      }]);
+    }
+
     const fetchMembers = async () => {
       try {
         const response = await api.get(`/chat/channels/${message.channelId}/mention-members`, {
@@ -217,7 +228,7 @@ export default function MessageItem({
           };
         });
 
-        if (!query || 'all'.startsWith(query.toLowerCase())) {
+        if (isAllMatch) {
           mappedMembers.unshift({
             id: 'All',
             display: 'All',
@@ -237,7 +248,7 @@ export default function MessageItem({
     if (!query) {
       fetchMembers();
     } else {
-      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 250);
+      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 150);
     }
   };
 

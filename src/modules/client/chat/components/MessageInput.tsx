@@ -97,6 +97,17 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
+    const isAllMatch = !query || 'all'.startsWith(query.toLowerCase());
+    if (isAllMatch) {
+      callback([{
+        id: 'All',
+        display: 'All',
+        email: 'Mention everyone in this channel',
+        phone: '',
+        avatar: 'special-all'
+      }]);
+    }
+
     const fetchMembers = async () => {
       try {
         const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
@@ -116,7 +127,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
         });
 
         // Thêm tùy chọn @All nếu từ khóa khớp hoặc khi truy vấn trống
-        if (!query || 'all'.startsWith(query.toLowerCase())) {
+        if (isAllMatch) {
           mappedMembers.unshift({
             id: 'All',
             display: 'All',
@@ -136,7 +147,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     if (!query) {
       fetchMembers();
     } else {
-      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 250);
+      mentionSearchTimeoutRef.current = setTimeout(fetchMembers, 150);
     }
   };
 
