@@ -34,7 +34,7 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
 
       // 2. User is one of the reply participants
       if (thread.lastReplyParticipants) {
-        return thread.lastReplyParticipants.some(p => String(p.userId) === String(currentUserId));
+        return thread.lastReplyParticipants.some(p => p && String(p.userId) === String(currentUserId));
       }
 
       return false;
@@ -157,7 +157,7 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
 
                   {/* Avatars */}
                   <div className="flex -space-x-1.5 overflow-hidden">
-                    {thread.lastReplyParticipants?.map((p, idx) => (
+                    {thread.lastReplyParticipants?.filter(Boolean).map((p, idx) => (
                       <div
                         key={idx}
                         className="inline-block h-4.5 w-4.5 rounded-full ring-2 ring-white dark:ring-[#252525] bg-[#2563EB] overflow-hidden flex-shrink-0 flex items-center justify-center text-white font-bold text-[8px]"

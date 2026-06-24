@@ -242,7 +242,7 @@ export default function ChatRealtimeHandler() {
 
     updateMessageInCache(queryClient, channelId, parentId, (parentMsg) => {
       const prevParticipants = parentMsg.lastReplyParticipants || [];
-      const filteredParticipants = prevParticipants.filter(p => String(p.userId) !== String(senderId));
+      const filteredParticipants = prevParticipants.filter(p => p && String(p.userId) !== String(senderId));
       const newParticipants = [
         ...filteredParticipants,
         { userId: senderId as any, fullName: senderName, avatar: senderAvatar || undefined }

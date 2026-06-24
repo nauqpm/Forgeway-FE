@@ -111,7 +111,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
             <MessageItem
               message={parentMessage}
               isSameUserAsPrevious={false}
-              isMine={String(parentMessage.senderId === 'object' ? (parentMessage.senderId as any)._id : parentMessage.senderId) === String(currentUserId)}
+              isMine={String((parentMessage.senderId && typeof parentMessage.senderId === 'object') ? (parentMessage.senderId as any)._id || (parentMessage.senderId as any).id : parentMessage.senderId || '') === String(currentUserId)}
               hideThreadBadge={true}
             />
           </div>

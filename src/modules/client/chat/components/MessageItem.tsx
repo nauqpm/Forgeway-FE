@@ -31,10 +31,10 @@ export default function MessageItem({
   hideThreadBadge = false,
   showContextBadge = false
 }: MessageItemProps) {
-  const sender = typeof message.senderId === 'object' && message.senderId
+  const sender = (message.senderId && typeof message.senderId === 'object')
     ? message.senderId
-    : ({ _id: String(message.senderId || ''), fullName: 'User', email: '' } as ChatUser);
-  const displayName = sender.fullName || sender.email || 'User';
+    : ({ _id: String(message.senderId || ''), fullName: 'Deleted User', email: '' } as ChatUser);
+  const displayName = sender.fullName || sender.email || 'Deleted User';
   const initialLetter = displayName.charAt(0).toUpperCase();
   const isDeleted = Boolean(message.deletedAt);
 
@@ -81,12 +81,12 @@ export default function MessageItem({
     ? (message.replyToId as Message)
     : null;
 
-  const replySender = typeof replyParent?.senderId === 'object' && replyParent.senderId
+  const replySender = (replyParent?.senderId && typeof replyParent.senderId === 'object')
     ? replyParent.senderId
     : null;
   const replyDisplayName = replySender
-    ? (replySender.fullName || replySender.email || 'User')
-    : 'User';
+    ? (replySender.fullName || replySender.email || 'Deleted User')
+    : 'Deleted User';
   const replyInitialLetter = replyDisplayName.charAt(0).toUpperCase();
 
   const isMentioned = (() => {
@@ -107,7 +107,8 @@ export default function MessageItem({
 
   const shouldHighlight = isMentioned || isReplyToMe;
 
-  const renderMessageContent = (content: string) => {
+  const renderMessageContent = (content?: string) => {
+    if (!content) return '';
     const mentionRegex = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
     const parts = [];
     let lastIndex = 0;
@@ -647,7 +648,7 @@ export default function MessageItem({
             className="mt-2 flex items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-white/5 px-2.5 py-1 rounded-[6px] transition-colors border border-[#EAEAEA] dark:border-white/[0.06] text-xs font-semibold text-[#2563EB] dark:text-[#60A5FA] cursor-pointer"
           >
             <div className="flex -space-x-1.5 overflow-hidden">
-              {message.lastReplyParticipants?.map((p, idx) => (
+              {message.lastReplyParticipants?.filter(Boolean).map((p, idx) => (
                 <div 
                   key={idx} 
                   className="inline-block h-5 w-5 rounded-full ring-2 ring-white dark:ring-[#202020] bg-[#2563EB] overflow-hidden flex-shrink-0 flex items-center justify-center text-white font-bold" 

@@ -164,7 +164,7 @@ export default function ChatSidebar() {
     const senderName =
       (sender && typeof sender === 'object' ? sender.fullName : undefined) ||
       lastMsg.senderName ||
-      'User';
+      'Deleted User';
     const formattedContent = lastMsg.deletedAt 
       ? "[Message deleted]" 
       : lastMsg.type === 'sticker'
@@ -193,13 +193,14 @@ export default function ChatSidebar() {
     if (type === 'dm' && channel) {
       const members = channel.members || [];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+      const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId));
       
       if (otherMember && typeof otherMember === 'object') {
         displayName = otherMember.fullName || otherMember.email || "Direct Message";
         displayAvatar = otherMember.avatar;
       } else {
-        displayName = name || "Direct Message";
+        displayName = "Deleted User";
+        displayAvatar = null;
       }
     } else if (!displayName) {
       displayName = "Channel";

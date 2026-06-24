@@ -227,14 +227,13 @@ export default function ChatWindow() {
 
   if (activeChannel.type === 'dm') {
     const members = activeChannel.members || [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+    const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId));
 
     if (otherMember && typeof otherMember === 'object') {
       headerName = otherMember.fullName || otherMember.email || "Direct Message";
       headerDescription = otherMember.email || "Direct Message";
     } else {
-      headerName = activeChannel.name || "Direct Message";
+      headerName = "Deleted User";
       headerDescription = "Direct Message";
     }
   }
@@ -267,10 +266,9 @@ export default function ChatWindow() {
           ) : activeChannel.type === 'dm' ? (
             (() => {
               const members = activeChannel.members || [];
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId)) || members[0];
+              const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId));
               const displayAvatar = otherMember?.avatar;
-              const initials = (otherMember?.fullName || otherMember?.email || "DM").charAt(0).toUpperCase();
+              const initials = (otherMember?.fullName || otherMember?.email || "Deleted User").charAt(0).toUpperCase();
               return (
                 <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white font-bold text-sm shadow-sm">
                   {displayAvatar ? (
