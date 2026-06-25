@@ -119,8 +119,8 @@ export const queryKeys = {
     searchUsers: (query: string) => [...CHAT, "users", "search", query] as const,
     activeMeeting: (channelId: string) => [...CHAT, "meetings", "active", channelId] as const,
     stickers: () => [...CHAT, "stickers"] as const,
-    threadReplies: (channelId: string, messageId: string) => [...CHAT, "messages", "replies", channelId, messageId] as const,
-    activeThreads: (channelId: string) => [...CHAT, "messages", "threads", channelId] as const,
+    threadReplies: (channelId: string, messageId: string) => [...CHAT, "threads", "replies", channelId, messageId] as const,
+    activeThreads: (channelId: string) => [...CHAT, "threads", "active", channelId] as const,
   },
   search: {
     all: SEARCH,
