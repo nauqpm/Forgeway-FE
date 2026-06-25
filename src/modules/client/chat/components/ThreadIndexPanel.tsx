@@ -161,7 +161,9 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
 
                 {/* Parent Message Content Preview */}
                 <p className="text-xs text-[#555555] dark:text-[#AAAAAA] line-clamp-2 break-words">
-                  {thread.type === 'sticker' ? '[Sticker]' : thread.content}
+                  {thread.type === 'sticker'
+                    ? '[Sticker]'
+                    : (thread.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')}
                 </p>
 
                 {/* Replies Count & Avatars Footer */}
@@ -179,7 +181,7 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
                       .map((p, idx) => (
                       <div
                         key={idx}
-                        className="inline-block h-4.5 w-4.5 rounded-full ring-2 ring-white dark:ring-[#252525] bg-[#2563EB] overflow-hidden flex-shrink-0 flex items-center justify-center text-white font-bold text-[8px]"
+                        className="inline-block h-[18px] w-[18px] rounded-full ring-2 ring-white dark:ring-[#252525] bg-[#2563EB] overflow-hidden flex-shrink-0 flex items-center justify-center text-white font-bold text-[8px]"
                         title={p.fullName}
                       >
                         {p.avatar ? (

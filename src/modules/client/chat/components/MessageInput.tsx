@@ -169,7 +169,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
                   Replying to {replyingSender?.fullName || replyingSender?.email || 'User'}
                 </span>
                 <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
-                  {replyingToMessage.content}
+                  {(replyingToMessage.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')}
                 </span>
               </div>
               <button 
