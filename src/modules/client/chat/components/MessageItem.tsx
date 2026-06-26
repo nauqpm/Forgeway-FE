@@ -289,7 +289,7 @@ export default function MessageItem({
 
   const [isDownloading, setIsDownloading] = useState<string | null>(null);
 
-  const handleDownloadFile = async (file: { url: string; name?: string }) => {
+  const handleDownloadFile = async (file: { url: string; name?: string; mimeType?: string }) => {
     if (isDownloading) return;
     const filename = file.name || 'file';
     setIsDownloading(file.url);
@@ -298,16 +298,26 @@ export default function MessageItem({
         params: { url: file.url },
         responseType: 'blob',
       });
-      const blobUrl = URL.createObjectURL(response.data);
-      const anchor = document.createElement('a');
-      anchor.href = blobUrl;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      URL.revokeObjectURL(blobUrl);
+      const blob = response.data;
+      const mime = blob.type || file.mimeType || '';
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const isPreviewable = mime === 'application/pdf' || mime.startsWith('image/') || mime.startsWith('text/');
+      
+      if (isPreviewable) {
+        window.open(blobUrl, '_blank');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000); // 5 minutes delay
+      } else {
+        const anchor = document.createElement('a');
+        anchor.href = blobUrl;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(blobUrl);
+      }
     } catch (err) {
-      console.error('Failed to download file:', err);
+      console.error('Failed to download or preview file:', err);
       // Fallback
       window.open(file.url, '_blank');
     } finally {
