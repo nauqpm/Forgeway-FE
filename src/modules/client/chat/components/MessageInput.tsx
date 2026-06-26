@@ -9,6 +9,8 @@ import StickerPicker from './StickerPicker';
 import { toast } from 'react-hot-toast';
 import { useChatChannels } from '../hooks/useChatQueries';
 import api from '@/lib/axiosIns';
+import imageService from '@/shared/utils/imageService';
+import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MessageInputProps {
@@ -19,14 +21,28 @@ interface MessageInputProps {
 
 export default function MessageInput({ channelId, channelName, threadParentId }: MessageInputProps) {
   const { data: channels = [] } = useChatChannels();
+  const { data: workspaces = [] } = useWorkspaces();
   const isDM = channels.find(c => c._id === channelId)?.type === 'dm';
 
   const [content, setContent] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const lastTypingSentRef = useRef<number>(0);
   const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    id: string;
+    url: string;
+    name: string;
+    size: number;
+    mimeType: string;
+    isImage: boolean;
+    status: 'uploading' | 'completed';
+    progress: number;
+    key: string;
+  }[]>([]);
 
   // Clear timeout on unmount
   useEffect(() => {
@@ -51,14 +67,167 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     }
   }, [content]);
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    // Find channel workspace details
+    const currentChannel = channels.find(c => c._id === channelId);
+    const workspaceId = currentChannel?.workspaceId;
+    const currentWorkspace = workspaces.find(w => w._id === workspaceId);
+    const workspaceName = currentWorkspace?.name;
+
+    const filesToUpload = Array.from(selectedFiles);
+
+    for (const file of filesToUpload) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`Tệp "${file.name}" vượt quá giới hạn 10MB!`);
+        continue;
+      }
+
+      const tempKey = Math.random().toString(36).substring(2, 9) + '-' + Date.now();
+      const isImg = file.type.startsWith('image/');
+      const localPreviewUrl = isImg ? URL.createObjectURL(file) : undefined;
+
+      // Add uploading placeholder
+      const newFileItem = {
+        key: tempKey,
+        id: '',
+        url: localPreviewUrl || '',
+        name: file.name,
+        size: file.size,
+        mimeType: file.type,
+        isImage: isImg,
+        status: 'uploading' as const,
+        progress: 0
+      };
+
+      setUploadedFiles(prev => [...prev, newFileItem]);
+
+      try {
+        if (isImg) {
+          const response = await imageService.uploadImage(
+            file,
+            true, // compress
+            workspaceId,
+            'channel',
+            channelId,
+            channelName,
+            workspaceName,
+            (progress) => {
+              setUploadedFiles(prev => prev.map(f => f.key === tempKey ? { ...f, progress } : f));
+            }
+          );
+
+          setUploadedFiles(prev => prev.map(f => f.key === tempKey ? {
+            ...f,
+            id: response._id,
+            url: response.url,
+            status: 'completed',
+            progress: 100,
+            mimeType: response.mimetype || file.type
+          } : f));
+        } else {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('targetType', 'channel');
+          formData.append('targetId', channelId);
+          if (workspaceId) formData.append('workspaceId', workspaceId);
+          if (workspaceName) formData.append('workspaceName', workspaceName);
+          if (channelName) formData.append('targetName', channelName);
+
+          const response = await api.post('/attachments', formData, {
+            onUploadProgress: (event) => {
+              if (event.total) {
+                const progress = Math.min(100, Math.round((event.loaded * 100) / event.total));
+                setUploadedFiles(prev => prev.map(f => f.key === tempKey ? { ...f, progress } : f));
+              }
+            }
+          });
+
+          const att = response.data;
+          setUploadedFiles(prev => prev.map(f => f.key === tempKey ? {
+            ...f,
+            id: att._id,
+            url: att.url,
+            status: 'completed',
+            progress: 100,
+            mimeType: att.mimeType || att.mimetype || file.type
+          } : f));
+        }
+        toast.success(`Tải lên tệp "${file.name}" thành công!`);
+      } catch (err) {
+        console.error('File upload failed:', err);
+        toast.error(`Tải lên tệp "${file.name}" thất bại!`);
+        setUploadedFiles(prev => prev.filter(f => f.key !== tempKey));
+      }
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveFile = async (key: string) => {
+    const fileToRemove = uploadedFiles.find(f => f.key === key);
+    if (!fileToRemove) return;
+
+    setUploadedFiles(prev => prev.filter(f => f.key !== key));
+
+    if (fileToRemove.id) {
+      try {
+        if (fileToRemove.isImage) {
+          await api.delete(`/imagesapi/${fileToRemove.id}`);
+        } else {
+          await api.delete(`/attachments/${fileToRemove.id}`);
+        }
+      } catch (err) {
+        console.error('Failed to delete file from server:', err);
+      }
+    }
+  };
+
   const handleSend = () => {
-    if (!content.trim()) return;
+    const hasFiles = uploadedFiles.some(f => f.status === 'completed');
+    if (!content.trim() && !hasFiles) return;
     if (content.length > 4000) {
       toast.error('Message cannot exceed 4000 characters');
       return;
     }
-    sendMessage(channelId, content.trim(), undefined, replyingToMessage?._id, undefined, undefined, threadParentId);
+
+    const isUploading = uploadedFiles.some(f => f.status === 'uploading');
+    if (isUploading) {
+      toast.error('Vui lòng đợi tệp tải lên hoàn tất!');
+      return;
+    }
+
+    const completedAttachments = uploadedFiles
+      .filter(f => f.status === 'completed')
+      .map(file => ({
+        url: file.url,
+        name: file.name,
+        size: file.size,
+        mimeType: file.mimeType
+      }));
+
+    let type = 'text';
+    if (!content.trim() && completedAttachments.length === 1) {
+      const isImg = uploadedFiles.find(f => f.status === 'completed')?.isImage;
+      type = isImg ? 'image' : 'file';
+    }
+
+    sendMessage(
+      channelId,
+      content.trim(),
+      completedAttachments.length > 0 ? completedAttachments : undefined,
+      replyingToMessage?._id,
+      type,
+      undefined,
+      threadParentId
+    );
+
     setContent('');
+    setUploadedFiles([]);
     setReplyingToMessage(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -186,6 +355,54 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
             </div>
           )}
 
+          {/* File Previews */}
+          {uploadedFiles.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2 p-1 max-h-[160px] overflow-y-auto">
+              {uploadedFiles.map((file) => (
+                <div 
+                  key={file.key} 
+                  className="flex items-center gap-2 p-1.5 bg-[#F0F0EE] dark:bg-white/5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.04] max-w-[200px] relative group shadow-sm"
+                >
+                  {file.isImage ? (
+                    <img 
+                      src={file.url} 
+                      alt={file.name} 
+                      className="w-10 h-10 rounded object-cover border border-[#D9D9D7] dark:border-white/[0.08] shrink-0" 
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-[#E3E3E0] dark:bg-white/10 rounded flex items-center justify-center shrink-0">
+                      <Paperclip className="w-5 h-5 text-[#787774]" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0 pr-4">
+                    <p className="text-[11px] font-medium truncate text-[#111111] dark:text-[#E8E8E7]">
+                      {file.name}
+                    </p>
+                    <p className="text-[9px] text-[#787774] dark:text-[#9B9A97]">
+                      {file.status === 'uploading' ? `Uploading (${file.progress}%)` : `${Math.round(file.size / 1024)} KB`}
+                    </p>
+                    {file.status === 'uploading' && (
+                      <div className="mt-1 w-full bg-black/10 dark:bg-white/10 rounded-full h-1">
+                        <div 
+                          className="bg-[#2563EB] h-1 rounded-full transition-all duration-200" 
+                          style={{ width: `${file.progress}%` }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFile(file.key)}
+                    className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 transition-colors shadow-sm"
+                    title="Remove file"
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="w-full relative">
             <MentionsInput
               inputRef={textareaRef}
@@ -264,12 +481,21 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-1">
               <button 
-                disabled
-                title="Coming soon"
-                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadedFiles.some(f => f.status === 'uploading')}
+                title="Upload file (Max 10MB)"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors disabled:opacity-50"
               >
                 <Paperclip className="w-4 h-4" />
               </button>
+              <input 
+                type="file"
+                ref={fileInputRef}
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
               <button 
                 type="button"
                 onClick={() => setShowStickerPicker(prev => !prev)}
@@ -282,7 +508,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
             
             <button 
               onClick={handleSend}
-              disabled={!content.trim()}
+              disabled={(!content.trim() && !uploadedFiles.some(f => f.status === 'completed')) || uploadedFiles.some(f => f.status === 'uploading')}
               className="p-1.5 bg-[#111111] text-white dark:bg-[#E8E8E7] dark:text-[#111111] rounded-[6px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="w-4 h-4" />

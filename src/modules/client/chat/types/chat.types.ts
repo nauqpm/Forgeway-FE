@@ -9,8 +9,8 @@ export interface ChatUser {
 
 export interface Attachment {
   url: string;
-  filename: string;
-  mimetype: string;
+  name: string;
+  mimeType: string;
   size: number;
 }
 

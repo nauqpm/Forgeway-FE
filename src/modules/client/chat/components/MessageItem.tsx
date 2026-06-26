@@ -287,6 +287,34 @@ export default function MessageItem({
     setShowEmojiPicker(false);
   };
 
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
+
+  const handleDownloadFile = async (file: { url: string; name?: string }) => {
+    if (isDownloading) return;
+    const filename = file.name || 'file';
+    setIsDownloading(file.url);
+    try {
+      const response = await api.get('/attachments/download-by-url', {
+        params: { url: file.url },
+        responseType: 'blob',
+      });
+      const blobUrl = URL.createObjectURL(response.data);
+      const anchor = document.createElement('a');
+      anchor.href = blobUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Failed to download file:', err);
+      // Fallback
+      window.open(file.url, '_blank');
+    } finally {
+      setIsDownloading(null);
+    }
+  };
+
   const hasReactions = !isDeleted && message.reactions && Object.keys(message.reactions).length > 0;
   const spacingClasses = !isSameUserAsPrevious
     ? (hasReactions ? 'mt-2.5 pt-1 pb-2' : 'mt-2.5 pt-1 pb-1')
@@ -629,23 +657,39 @@ export default function MessageItem({
         {/* Attachments */}
         {!isDeleted && message.attachments && message.attachments.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2 justify-start">
-            {message.attachments.map((file, idx) => (
-              <div key={idx} className="max-w-[300px] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden bg-white dark:bg-[#252525]">
-                {file.mimetype.startsWith('image/') ? (
-                  <img src={file.url} alt={file.filename} className="max-h-[300px] object-contain" />
-                ) : (
-                  <div className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#F0F0EE] dark:bg-white/8 rounded flex items-center justify-center">
-                      <Paperclip className="w-5 h-5 text-[#787774]" />
+            {message.attachments.map((file, idx) => {
+              const mime = file.mimeType || '';
+              const filename = file.name || 'File';
+              const isImg = mime.startsWith('image/');
+              return (
+                <div key={idx} className="max-w-full sm:max-w-[350px] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden bg-white dark:bg-[#252525] shadow-sm">
+                  {isImg ? (
+                    <img 
+                      src={file.url} 
+                      alt={filename} 
+                      className="w-full h-auto max-h-[300px] object-contain block hover:opacity-95 transition-opacity cursor-pointer" 
+                      onClick={() => window.open(file.url, '_blank')}
+                    />
+                  ) : (
+                    <div className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#F0F0EE] dark:bg-white/8 rounded flex items-center justify-center">
+                        <Paperclip className="w-5 h-5 text-[#787774]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <button 
+                          onClick={() => handleDownloadFile(file)}
+                          disabled={isDownloading === file.url}
+                          className="text-xs font-medium hover:underline text-[#2563EB] dark:text-[#3B82F6] block truncate text-left w-full disabled:opacity-60 disabled:no-underline"
+                        >
+                          {isDownloading === file.url ? 'Downloading...' : filename}
+                        </button>
+                        <p className="text-[10px] text-[#787774] dark:text-[#9B9A97]">{Math.round(file.size / 1024)} KB</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium truncate">{file.filename}</p>
-                      <p className="text-[10px] text-[#787774]">{Math.round(file.size / 1024)} KB</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

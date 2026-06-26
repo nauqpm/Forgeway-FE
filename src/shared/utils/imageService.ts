@@ -173,7 +173,8 @@ const imageService = {
     targetType?: string,
     targetId?: string,
     targetName?: string,
-    workspaceName?: string
+    workspaceName?: string,
+    onProgress?: (progress: number) => void
   ): Promise<ImageResponse> => {
     const formData = new FormData();
 
@@ -198,6 +199,11 @@ const imageService = {
 
       const response = await api.post('/imagesapi/upload', formData, {
         timeout: 30000, // 30 seconds timeout
+        onUploadProgress: (event) => {
+          if (onProgress && event.total) {
+            onProgress(Math.min(100, Math.round((event.loaded * 100) / event.total)));
+          }
+        },
       });
 
       return imageService.normalizeImageResponse(response.data);
