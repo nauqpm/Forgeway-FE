@@ -40,6 +40,10 @@ const getAuthErrorCode = (error: unknown): string | undefined => {
 const handleLoginError = (error: unknown) => {
   const errorCode = getAuthErrorCode(error);
 
+  if (errorCode === AuthErrorCode.LOGIN_RETRY_LATER) {
+    return;
+  }
+
   if (errorCode === AuthErrorCode.EMAIL_NOT_VERIFIED) {
     toast.error("Please verify your email before signing in.");
   } else if (errorCode === AuthErrorCode.RATE_LIMITED) {
@@ -84,7 +88,6 @@ export const useAuth = () => {
   const queryClient = useQueryClient();
   const { user, isAuthenticated, isInitialized, setUser, setInitialized, clearAuth } = useAuthStore();
   const { setMfaChallenge } = useMfaStore();
-  const { resetFailedAttempts } = useSecurityStore();
   const { setGlobalPermissions, globalPermissions } = usePermissionStore();
 
   const authMeQuery = useQuery<AuthUser>({
@@ -174,7 +177,6 @@ export const useAuth = () => {
       queryClient.setQueryData(AUTH_ME_QUERY_KEY, currentUser);
       setUser(currentUser);
       setInitialized(true);
-      resetFailedAttempts();
       await fetchPermissions();
 
       if (currentUser.role === "super_admin") {

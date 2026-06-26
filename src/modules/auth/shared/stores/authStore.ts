@@ -1,11 +1,9 @@
 import { create } from 'zustand';
-import type { 
-  AuthUser, 
-  MfaMethod, 
-  MfaSetupResponse, 
-  LockoutInfo 
+import type {
+  AuthUser,
+  MfaMethod,
+  MfaSetupResponse,
 } from '../types/auth.types';
-import { PASSWORD_POLICY } from '../../password/constants/password-policy';
 import { persist } from 'zustand/middleware';
 
 // ============================================================================
@@ -89,105 +87,22 @@ export const useMfaStore = create<MfaState & MfaActions>((set) => ({
 // ============================================================================
 // ─── SECURITY STORE ─────────────────────────────────────────────────────────
 // ============================================================================
-// Tracks account lockout and suspension state for the login flow.
+// Tracks lightweight security messaging for the auth flow.
 
 interface SecurityState {
-  lockoutInfo: LockoutInfo | null;
-  failedAttempts: number;
   suspendedMessage: string | null;
 }
 
 interface SecurityActions {
-  setLockout: (info: LockoutInfo) => void;
-  incrementFailedAttempts: () => void;
-  resetFailedAttempts: () => void;
-  checkAndResetLockout: () => void;
   setSuspendedMessage: (message: string | null) => void;
   clearSecurityState: () => void;
 }
 
-export const useSecurityStore = create<SecurityState & SecurityActions>()(
-  persist(
-    (set, get) => ({
-      // ── State ──
-      lockoutInfo: null,
-      failedAttempts: 0,
-      suspendedMessage: null,
-
-      // ── Actions ──
-      setLockout: (lockoutInfo) =>
-        set({
-          lockoutInfo,
-          failedAttempts: Math.max(0, lockoutInfo.maxAttempts - lockoutInfo.remainingAttempts),
-        }),
-
-      /**
-       * Increase failed login attempts and update lockout status.
-       * 
-       * Detailed steps:
-       * 1. Calculate current attempts plus one in `next`.
-       * 2. Check whether `next` is greater than or equal to the allowed limit.
-       *    - Set the account state to locked.
-       *    - Set the lock duration.
-       *    - Set remaining attempts to 0.
-       * 3. If the attempt limit has not been reached:
-       *    - Keep the account unlocked.
-       *    - Decrease remaining attempts.
-       */
-      incrementFailedAttempts: () => {
-        const next = get().failedAttempts + 1;
-        const max = PASSWORD_POLICY.MAX_FAILED_ATTEMPTS;
-        
-        if (next >= max) {
-          // Lock for 15 minutes
-          const lockedUntil = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-          set({
-            failedAttempts: next,
-            lockoutInfo: {
-              isLocked: true,
-              remainingAttempts: 0,
-              maxAttempts: max,
-              lockedUntil,
-            },
-          });
-        } else {
-          set({
-            failedAttempts: next,
-            lockoutInfo: {
-              isLocked: false,
-              remainingAttempts: max - next,
-              maxAttempts: max,
-            },
-          });
-        }
-      },
-
-      resetFailedAttempts: () => set({ failedAttempts: 0, lockoutInfo: null }),
-
-      checkAndResetLockout: () => {
-        const { lockoutInfo } = get();
-        if (lockoutInfo?.isLocked && lockoutInfo.lockedUntil) {
-          const now = Date.now();
-          const until = new Date(lockoutInfo.lockedUntil).getTime();
-          if (now >= until) {
-            set({ lockoutInfo: null, failedAttempts: 0 });
-          }
-        }
-      },
-
-      setSuspendedMessage: (suspendedMessage) => set({ suspendedMessage }),
-      clearSecurityState: () => set({
-        lockoutInfo: null,
-        failedAttempts: 0,
-        suspendedMessage: null,
-      }),
-    }),
-    {
-      name: 'al-task-security',
-    }
-  )
-);
-
+export const useSecurityStore = create<SecurityState & SecurityActions>((set) => ({
+  suspendedMessage: null,
+  setSuspendedMessage: (suspendedMessage) => set({ suspendedMessage }),
+  clearSecurityState: () => set({ suspendedMessage: null }),
+}));
 
 // ============================================================================
 // ─── SESSION STORE ──────────────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import api from '@/lib/axiosIns';
+import { AuthErrorCode } from '../types/auth.types';
 import type {
   LoginRequest,
   LoginResponse,
@@ -11,6 +12,7 @@ import type {
   UpdateProfileRequest,
   AuthUser,
   AuthApiError,
+  LoginRetryDetails,
 } from '../types/auth.types';
 
 export const loginAPI = async (data: LoginRequest): Promise<LoginResponse> => {
@@ -87,6 +89,38 @@ export const resendVerifyEmailAPI = async (email: string): Promise<{ message: st
   return response.data;
 };
 
+
+const toPositiveNumber = (value: unknown): number | null => {
+  const numberValue = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numberValue) && numberValue > 0 ? Math.ceil(numberValue) : null;
+};
+
+export const extractLoginRetryDetails = (error: unknown): LoginRetryDetails | null => {
+  const err = error as {
+    response?: {
+      data?: AuthApiError;
+      headers?: Record<string, string | number | undefined>;
+    };
+  };
+
+  const data = err.response?.data;
+  const code = data?.code;
+  const details = data?.details ?? {};
+  const retryAfterFromBody = toPositiveNumber(details.retryAfterSeconds);
+  const retryAfterFromHeader = toPositiveNumber(err.response?.headers?.['retry-after']);
+  const retryAfterSeconds = retryAfterFromBody ?? retryAfterFromHeader;
+
+  if (!retryAfterSeconds) return null;
+
+  const retryAtFromBody = typeof details.retryAt === 'string' ? details.retryAt : null;
+  const retryAt = retryAtFromBody ?? new Date(Date.now() + retryAfterSeconds * 1000).toISOString();
+
+  if (code === AuthErrorCode.LOGIN_RETRY_LATER || code === AuthErrorCode.INVALID_CREDENTIALS) {
+    return { retryAfterSeconds, retryAt };
+  }
+
+  return null;
+};
 export const extractAuthError = (error: unknown): AuthApiError => {
   const err = error as { response?: { data?: AuthApiError }; message?: string };
   if (err.response?.data?.code) {

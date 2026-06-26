@@ -203,18 +203,14 @@ export interface TimezonePreference {
 
 // ─── Security / Lockout ──────────────────────────────────────────────────────
 
-export interface LockoutInfo {
-  email?: string;
-  isLocked: boolean;
-  lockedUntil?: string; // ISO UTC string
-  remainingAttempts: number;
-  maxAttempts: number;
+export interface LoginRetryDetails {
+  retryAfterSeconds: number;
+  retryAt: string;
 }
-
-// ─── Auth Error Codes ────────────────────────────────────────────────────────
 
 export enum AuthErrorCode {
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
+  LOGIN_RETRY_LATER = 'LOGIN_RETRY_LATER',
   ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
   USER_SUSPENDED = 'USER_SUSPENDED',
   USER_DEACTIVATED = 'USER_DEACTIVATED',
