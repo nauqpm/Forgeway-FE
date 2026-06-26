@@ -325,6 +325,88 @@ export default function MessageItem({
     }
   };
 
+  const [expandedPreviews, setExpandedPreviews] = useState<Record<string, boolean>>({});
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
+  const [loadingPreviews, setLoadingPreviews] = useState<Record<string, boolean>>({});
+  const previewUrlsRef = useRef<Record<string, string>>({});
+
+  useEffect(() => {
+    previewUrlsRef.current = previewUrls;
+  }, [previewUrls]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(previewUrlsRef.current).forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []);
+
+  // Automatically load previews on mount
+  useEffect(() => {
+    if (isDeleted || !message.attachments) return;
+
+    message.attachments.forEach(file => {
+      const mime = file.mimeType || '';
+      const isPdf = mime === 'application/pdf';
+      const isTxt = mime.startsWith('text/');
+      const canPreview = isPdf || isTxt;
+
+      if (canPreview && file.url) {
+        setExpandedPreviews(prev => ({ ...prev, [file.url]: true }));
+        setLoadingPreviews(prev => ({ ...prev, [file.url]: true }));
+
+        const loadInitialPreview = async () => {
+          try {
+            const response = await api.get('/attachments/download-by-url', {
+              params: { url: file.url },
+              responseType: 'blob',
+            });
+            const blob = response.data;
+            const blobUrl = URL.createObjectURL(blob);
+            setPreviewUrls(prev => ({ ...prev, [file.url]: blobUrl }));
+          } catch (err) {
+            console.error('Failed to load initial preview:', err);
+          } finally {
+            setLoadingPreviews(prev => ({ ...prev, [file.url]: false }));
+          }
+        };
+        loadInitialPreview();
+      }
+    });
+  }, [message.attachments, isDeleted]);
+
+  const togglePreview = async (url: string) => {
+    if (expandedPreviews[url]) {
+      setExpandedPreviews(prev => ({ ...prev, [url]: false }));
+      if (previewUrls[url]) {
+        URL.revokeObjectURL(previewUrls[url]);
+        setPreviewUrls(prev => {
+          const next = { ...prev };
+          delete next[url];
+          return next;
+        });
+      }
+      return;
+    }
+
+    setExpandedPreviews(prev => ({ ...prev, [url]: true }));
+    if (previewUrls[url]) return;
+
+    setLoadingPreviews(prev => ({ ...prev, [url]: true }));
+    try {
+      const response = await api.get('/attachments/download-by-url', {
+        params: { url },
+        responseType: 'blob',
+      });
+      const blob = response.data;
+      const blobUrl = URL.createObjectURL(blob);
+      setPreviewUrls(prev => ({ ...prev, [url]: blobUrl }));
+    } catch (err) {
+      console.error('Failed to load preview:', err);
+    } finally {
+      setLoadingPreviews(prev => ({ ...prev, [url]: false }));
+    }
+  };
+
   const hasReactions = !isDeleted && message.reactions && Object.keys(message.reactions).length > 0;
   const spacingClasses = !isSameUserAsPrevious
     ? (hasReactions ? 'mt-2.5 pt-1 pb-2' : 'mt-2.5 pt-1 pb-1')
@@ -671,8 +753,20 @@ export default function MessageItem({
               const mime = file.mimeType || '';
               const filename = file.name || 'File';
               const isImg = mime.startsWith('image/');
+              const isPdf = mime === 'application/pdf';
+              const isTxt = mime.startsWith('text/');
+              const canPreview = isPdf || isTxt;
+              const isExpanded = !!expandedPreviews[file.url];
+              const isLoading = !!loadingPreviews[file.url];
+
               return (
-                <div key={idx} className="max-w-full sm:max-w-[350px] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden bg-white dark:bg-[#252525] shadow-sm">
+                <div 
+                  key={idx} 
+                  className={cn(
+                    "border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden bg-white dark:bg-[#252525] shadow-sm transition-all duration-200",
+                    isImg ? "max-w-full sm:max-w-[350px]" : isExpanded ? "w-full sm:w-[480px] max-w-full" : "max-w-full sm:max-w-[350px]"
+                  )}
+                >
                   {isImg ? (
                     <img 
                       src={file.url} 
@@ -681,20 +775,65 @@ export default function MessageItem({
                       onClick={() => window.open(file.url, '_blank')}
                     />
                   ) : (
-                    <div className="p-3 flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#F0F0EE] dark:bg-white/8 rounded flex items-center justify-center">
-                        <Paperclip className="w-5 h-5 text-[#787774]" />
+                    <div className="flex flex-col w-full">
+                      <div className="p-3 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-[#F0F0EE] dark:bg-white/8 rounded flex items-center justify-center shrink-0">
+                          <Paperclip className="w-5 h-5 text-[#787774]" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 w-full">
+                            <button 
+                              onClick={() => handleDownloadFile(file)}
+                              disabled={isDownloading === file.url}
+                              className="text-xs font-medium hover:underline text-[#2563EB] dark:text-[#3B82F6] block truncate text-left disabled:opacity-60 disabled:no-underline flex-1"
+                            >
+                              {isDownloading === file.url ? 'Downloading...' : filename}
+                            </button>
+                            {canPreview && (
+                              <button
+                                onClick={() => togglePreview(file.url)}
+                                className="w-5 h-5 flex items-center justify-center rounded hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors shrink-0"
+                                title={isExpanded ? "Collapse preview" : "Expand preview"}
+                              >
+                                {isLoading && !previewUrls[file.url] ? (
+                                  <span className="w-2.5 h-2.5 border border-[#787774] border-t-transparent rounded-full animate-spin" />
+                                ) : (
+                                  <span className="text-[9px] select-none">{isExpanded ? '▲' : '▼'}</span>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-[#787774] dark:text-[#9B9A97]">{Math.round(file.size / 1024)} KB</p>
+                        </div>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <button 
-                          onClick={() => handleDownloadFile(file)}
-                          disabled={isDownloading === file.url}
-                          className="text-xs font-medium hover:underline text-[#2563EB] dark:text-[#3B82F6] block truncate text-left w-full disabled:opacity-60 disabled:no-underline"
-                        >
-                          {isDownloading === file.url ? 'Downloading...' : filename}
-                        </button>
-                        <p className="text-[10px] text-[#787774] dark:text-[#9B9A97]">{Math.round(file.size / 1024)} KB</p>
-                      </div>
+                      
+                      {/* Expanded Preview Container */}
+                      {isExpanded && (
+                        <div className="px-3 pb-3 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#FAF9F6] dark:bg-[#1C1C1C]">
+                          <div className="mt-3 rounded-[6px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-white h-[300px] flex items-center justify-center">
+                            {previewUrls[file.url] ? (
+                              isPdf ? (
+                                <iframe 
+                                  src={previewUrls[file.url]} 
+                                  className="w-full h-full border-none" 
+                                  title={filename}
+                                />
+                              ) : (
+                                <iframe 
+                                  src={previewUrls[file.url]} 
+                                  className="w-full h-full border-none bg-white p-3 font-mono text-[11px] overflow-auto" 
+                                  title={filename}
+                                />
+                              )
+                            ) : (
+                              <div className="flex flex-col items-center gap-2 text-[#787774]">
+                                <span className="w-5 h-5 border-2 border-[#787774] border-t-transparent rounded-full animate-spin" />
+                                <span className="text-[10px]">Loading preview...</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
