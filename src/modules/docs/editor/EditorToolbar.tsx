@@ -1,4 +1,4 @@
-// Component representing the document editor toolbar, 
+1// Component representing the document editor toolbar, 
 // including buttons and dropdowns to format text, insert images, create tables, align paragraphs, etc.
 "use client";
 
@@ -60,6 +60,9 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 type Props = {
   editor: Editor | null;
   onToggleFindReplace?: () => void;
+  workspaceId?: string;
+  pageId?: string;
+  pageTitle?: string;
 };
 
 type ToolbarButtonProps = {
@@ -180,7 +183,13 @@ const toImageUrl = (url: string) => {
   return url.startsWith("/") ? url : `/${url}`;
 };
 
-export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
+export default function EditorToolbar({
+  editor,
+  onToggleFindReplace,
+  workspaceId,
+  pageId,
+  pageTitle,
+}: Props) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const linkButtonRef = useRef<HTMLButtonElement | null>(null);
   const tableButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -267,7 +276,14 @@ export default function EditorToolbar({ editor, onToggleFindReplace }: Props) {
       return;
     }
     try {
-      const result = await imageService.uploadImage(file, true);
+      const result = await imageService.uploadImage(
+        file,
+        true,
+        workspaceId,
+        "page",
+        pageId,
+        pageTitle
+      );
       const imageUrl = toImageUrl(result.imageUrl || result.url || "");
       if (!imageUrl) { toast.error("Failed to get image URL after upload"); return; }
       runWithUndoBoundary(() => {

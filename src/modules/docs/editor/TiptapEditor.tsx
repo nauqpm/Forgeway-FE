@@ -79,7 +79,12 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     editEditor,
     createCollaborativeEditor,
     destroyCollaborativeEditor,
-  } = useEditorLifecycle(document?.content || "");
+  } = useEditorLifecycle(
+    document?.content || "",
+    document?.workspaceId,
+    document?.id,
+    document?.title
+  );
 
   useEffect(() => {
     if (readEditor && document?.id && mode === "read") {
@@ -502,6 +507,9 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
               <EditorToolbar
                 editor={activeEditor}
                 onToggleFindReplace={() => setFindReplaceOpen(!findReplaceOpen)}
+                workspaceId={document?.workspaceId}
+                pageId={document?.id}
+                pageTitle={document?.title}
               />
             ) : null
           }
