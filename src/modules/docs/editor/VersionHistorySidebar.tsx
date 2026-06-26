@@ -54,7 +54,7 @@ export default function VersionHistorySidebar({
     <div className="flex flex-col h-full bg-white dark:bg-gray-950 text-slate-700 dark:text-slate-200">
       {/* Header */}
       <div className="p-4 border-b border-gray-200/60 dark:border-gray-800 flex items-center gap-2">
-        <History className="w-4.5 h-4.5 text-indigo-500" />
+        <History className="w-[18px] h-[18px] text-indigo-500" />
         <h3 className="font-semibold text-slate-800 dark:text-slate-100 text-sm">Version History</h3>
       </div>
 

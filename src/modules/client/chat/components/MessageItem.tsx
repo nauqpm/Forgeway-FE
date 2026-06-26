@@ -10,9 +10,14 @@ import { MentionsInput, Mention } from 'react-mentions';
 import api from '@/lib/axiosIns';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { getMessageContext } from '@/modules/client/chat/utils/chatUtils';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
+
+const getMessageContext = (messageChannelId: string, channels: Channel[]): string | null => {
+  if (!messageChannelId || !channels) return null;
+  const channel = channels.find(c => String(c._id || c.id) === String(messageChannelId));
+  return channel ? channel.name : null;
+};
 
 interface MessageItemProps {
   message: Message;

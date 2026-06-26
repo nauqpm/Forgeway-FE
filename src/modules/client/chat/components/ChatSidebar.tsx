@@ -297,7 +297,7 @@ export default function ChatSidebar() {
         </div>
 
         {unreadCount > 0 && (
-          <span className="flex items-center justify-center min-w-[18px] h-4.5 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full border-2 border-white dark:border-[#252525]">
+          <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full border-2 border-white dark:border-[#252525]">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}

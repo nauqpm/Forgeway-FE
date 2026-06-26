@@ -7,6 +7,7 @@ import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
 import StickerPicker from './StickerPicker';
 import { toast } from 'react-hot-toast';
+import { useChatChannels } from '../hooks/useChatQueries';
 import api from '@/lib/axiosIns';
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -17,6 +18,9 @@ interface MessageInputProps {
 }
 
 export default function MessageInput({ channelId, channelName, threadParentId }: MessageInputProps) {
+  const { data: channels = [] } = useChatChannels();
+  const isDM = channels.find(c => c._id === channelId)?.type === 'dm';
+
   const [content, setContent] = useState('');
   const [showStickerPicker, setShowStickerPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
@@ -97,7 +101,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
-    const isAllMatch = !query || 'all'.startsWith(query.toLowerCase());
+    const isAllMatch = !isDM && (!query || 'all'.startsWith(query.toLowerCase()));
     if (isAllMatch) {
       callback([{
         id: 'All',
@@ -169,7 +173,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
                   Replying to {replyingSender?.fullName || replyingSender?.email || 'User'}
                 </span>
                 <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
-                  {replyingToMessage.content}
+                  {(replyingToMessage.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')}
                 </span>
               </div>
               <button 

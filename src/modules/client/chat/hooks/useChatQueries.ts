@@ -140,9 +140,9 @@ export const useThreadReplies = (channelId: string | null, messageId: string | n
 };
 
 export const useActiveThreads = (channelId: string | null) => {
-  return useInfiniteQuery<ActiveThreadsResponse, Error, InfiniteData<ActiveThreadsResponse>, readonly ["chat", "messages", "threads", string], string | undefined>({
+  return useInfiniteQuery<ActiveThreadsResponse, Error, InfiniteData<ActiveThreadsResponse>, readonly ["chat", "threads", "active", string], string | undefined>({
     queryKey: queryKeys.chat.activeThreads(channelId || ''),
-    queryFn: async ({ pageParam }: QueryFunctionContext<readonly ["chat", "messages", "threads", string], string | undefined>) =>
+    queryFn: async ({ pageParam }: QueryFunctionContext<readonly ["chat", "threads", "active", string], string | undefined>) =>
       getActiveThreadsAPI(channelId as string, {
         limit: 20,
         cursor: typeof pageParam === 'string' ? pageParam : undefined,

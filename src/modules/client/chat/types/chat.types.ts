@@ -22,7 +22,7 @@ export interface Message {
   senderName?: string;
   content: string;
   attachments?: Attachment[];
-  type: 'text' | 'system' | string;
+  type: 'text' | 'system' | 'sticker' | 'file';
   stickerId?: Sticker;
   replyToId?: string | Message;
   createdAt: string;

@@ -116,7 +116,7 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {isLimitReached && (
             <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-[8px] text-xs text-red-600 dark:text-red-400">
-              <AlertCircle className="w-4.5 h-4.5 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-[18px] h-[18px] flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-semibold">Channel limit reached</p>
                 <p className="mt-0.5 opacity-90">This workspace has reached the maximum limit of 20 custom channels.</p>
