@@ -1,4 +1,3 @@
-1// Component representing the document editor toolbar, 
 // including buttons and dropdowns to format text, insert images, create tables, align paragraphs, etc.
 "use client";
 
