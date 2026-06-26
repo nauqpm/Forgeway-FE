@@ -31,7 +31,7 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
 
   const [visibleCount, setVisibleCount] = useState(tabs.length);
   const [showMore, setShowMore] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 180 });
 
   const moreBtnRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -52,6 +52,18 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
     return () => window.removeEventListener("resize", updateTabs);
   }, [tabs.length]);
 
+  const updateMoreMenuPosition = () => {
+    const rect = moreBtnRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const menuWidth = Math.min(220, window.innerWidth - 16);
+    setPosition({
+      top: rect.bottom + 6,
+      left: Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8),
+      width: menuWidth,
+    });
+  };
+
   const visibleTabs = tabs.slice(0, visibleCount);
   const hiddenTabs = tabs.slice(visibleCount);
 
@@ -71,6 +83,18 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!showMore) return;
+
+    updateMoreMenuPosition();
+    window.addEventListener("resize", updateMoreMenuPosition);
+    window.addEventListener("scroll", updateMoreMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateMoreMenuPosition);
+      window.removeEventListener("scroll", updateMoreMenuPosition, true);
+    };
+  }, [showMore]);
+
   return (
     <div className="mb-2 w-full overflow-x-auto pb-1">
       <div className="flex items-center gap-1">
@@ -85,20 +109,12 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
         ))}
 
         {hiddenTabs.length > 0 && (
-          <div className="relative z-50">
+          <div className="relative">
             <button
               className="whitespace-nowrap px-3 py-2 text-[0.8125rem] font-medium transition-all sm:px-5 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
               ref={moreBtnRef}
               onClick={() => {
-                const rect = moreBtnRef.current?.getBoundingClientRect();
-
-                if (rect) {
-                  setPosition({
-                    top: rect.bottom + 6,
-                    left: rect.left,
-                  });
-                }
-
+                updateMoreMenuPosition();
                 setShowMore((prev) => !prev);
               }}
             >
@@ -117,8 +133,9 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
                       position: "fixed",
                       top: position.top,
                       left: position.left,
+                      width: position.width,
                     }}
-                    className="z-[9999] pointer-events-auto min-w-[180px] rounded-lg border border-[#E5E5E5] bg-white shadow-lg dark:border-[#333] dark:bg-[#202020]"
+                    className="pointer-events-auto z-[100000] overflow-hidden rounded-lg border border-[#E5E5E5] bg-white shadow-lg dark:border-[#333] dark:bg-[#202020]"
                   >
                     {hiddenTabs.map((tab) => (
                       <button

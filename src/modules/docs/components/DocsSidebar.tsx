@@ -4,7 +4,7 @@ import { useDocsStore } from "../store/docs.store";
 import DocsSearch from "./DocsSearch";
 import DocsTree from "./DocsTree";
 import RecentDocs from "./RecentDocs";
-import { ChevronLeft, ChevronRight, Download, FileText, Layout, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, FileText, Layout, Trash2, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,7 +16,7 @@ import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWor
 
 export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
   const { selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
-  const { documents } = useWorkspaceDocs(workspaceId);
+  const { documents, createDocument } = useWorkspaceDocs(workspaceId);
   const uploadedDocsQuery = useUploadedWorkspaceDocsQuery(workspaceId);
   const queryClient = useQueryClient();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -70,15 +70,20 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
     removeImportedDocumentMutation.mutate(removeTarget._id);
   };
 
+  const handleCreate = async () => {
+    const newDoc = await createDocument();
+    if (newDoc) selectDocument(newDoc.id, [...documents, newDoc]);
+  };
+
   return (
     <motion.aside
       initial={false}
-      animate={{ width: isCollapsed ? 0 : 260 }}
-      className="relative flex-shrink-0 flex flex-col bg-white dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] h-full overflow-visible group"
+      animate={{ width: isCollapsed ? 0 : "100%" }}
+      className={`relative flex-shrink-0 flex flex-col bg-white dark:bg-[#252525] md:border-r border-[#EAEAEA] dark:border-white/[0.06] h-full overflow-visible group ${isCollapsed ? "" : "md:!w-[260px]"}`}
     >
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute -right-3 top-10 z-[80] flex h-6 w-6 items-center justify-center rounded-full border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-opacity ${
+        className={`hidden md:flex absolute -right-3 top-10 z-[80] h-6 w-6 items-center justify-center rounded-full border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-opacity ${
           isCollapsed ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         }`}
         aria-label={isCollapsed ? "Expand docs sidebar" : "Collapse docs sidebar"}
@@ -151,6 +156,13 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                       <h3 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest">
                         Documents in Workspace
                       </h3>
+                      <button 
+                        onClick={handleCreate}
+                        className="p-1 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors"
+                        title="Create new document"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                     <DocsTree docs={rootDocs} workspaceId={workspaceId} level={0} />
                   </div>

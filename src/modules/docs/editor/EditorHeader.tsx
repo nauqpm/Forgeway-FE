@@ -4,11 +4,12 @@
 "use client";
 
 import { Document } from "../types/docs.type";
-import { ChevronRight, Globe, Loader2, Eye, Pencil, Cloud, Check, AlertCircle, History, Bookmark, FileText, Download, Upload, MessageSquare } from "lucide-react";
+import { ChevronLeft, ChevronRight, Globe, Loader2, Eye, Pencil, Cloud, Check, AlertCircle, History, Bookmark, FileText, Download, Upload, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { EditorMode } from "./TiptapEditor";
 import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
 import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { useDocsStore } from "../store/docs.store";
 
 interface EditorHeaderProps {
   doc: Document;
@@ -213,6 +214,7 @@ export default function EditorHeader({
   onImportDocx,
 }: EditorHeaderProps) {
   const { documents } = useWorkspaceDocs(doc.workspaceId);
+  const { selectDocument } = useDocsStore();
   const [showVersionModal, setShowVersionModal] = useState(false);
   const [versionLabel, setVersionLabel] = useState("");
 
@@ -255,7 +257,13 @@ export default function EditorHeader({
       <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 dark:border-gray-800">
         {/* Left — Breadcrumbs */}
         <div className="flex items-center text-[12px] text-gray-500 dark:text-gray-400 overflow-hidden flex-1">
-          <Globe className="w-3.5 h-3.5 mr-2 text-gray-400 dark:text-gray-500" />
+          <button 
+            className="md:hidden mr-2 p-1 -ml-2 text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors"
+            onClick={() => selectDocument(null)}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <Globe className="w-3.5 h-3.5 mr-2 hidden md:block text-gray-400 dark:text-gray-500" />
           <span className="hover:underline cursor-pointer">Workspace</span>
           {breadcrumbs.map((b, index) => (
             <span key={b.id} className="flex items-center shrink-0">
