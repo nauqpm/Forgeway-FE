@@ -10,9 +10,14 @@ import { MentionsInput, Mention } from 'react-mentions';
 import api from '@/lib/axiosIns';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { getMessageContext } from '@/modules/client/chat/utils/chatUtils';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
+
+const getMessageContext = (messageChannelId: string, channels: Channel[]): string | null => {
+  if (!messageChannelId || !channels) return null;
+  const channel = channels.find(c => String(c._id || c.id) === String(messageChannelId));
+  return channel ? channel.name : null;
+};
 
 interface MessageItemProps {
   message: Message;
@@ -282,10 +287,78 @@ export default function MessageItem({
     setShowEmojiPicker(false);
   };
 
+  const [isDownloading, setIsDownloading] = useState<string | null>(null);
+
+  const handleDownloadFile = async (file: { url: string; name?: string; mimeType?: string }) => {
+    if (isDownloading) return;
+    const filename = file.name || 'file';
+    setIsDownloading(file.url);
+    try {
+      const response = await api.get('/attachments/download-by-url', {
+        params: { url: file.url },
+        responseType: 'blob',
+      });
+      const blob = response.data;
+      const mime = blob.type || file.mimeType || '';
+      const blobUrl = URL.createObjectURL(blob);
+      
+      const isPreviewable = mime === 'application/pdf' || mime.startsWith('image/') || mime.startsWith('text/');
+      
+      if (isPreviewable) {
+        window.open(blobUrl, '_blank');
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000); // 5 minutes delay
+      } else {
+        const anchor = document.createElement('a');
+        anchor.href = blobUrl;
+        anchor.download = filename;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(blobUrl);
+      }
+    } catch (err) {
+      console.error('Failed to download or preview file:', err);
+      // Fallback
+      window.open(file.url, '_blank');
+    } finally {
+      setIsDownloading(null);
+    }
+  };
+
   const hasReactions = !isDeleted && message.reactions && Object.keys(message.reactions).length > 0;
   const spacingClasses = !isSameUserAsPrevious
     ? (hasReactions ? 'mt-2.5 pt-1 pb-2' : 'mt-2.5 pt-1 pb-1')
     : (hasReactions ? 'mt-0.5 pt-0.5 pb-2' : 'mt-0.5 pt-0.5 pb-0.5');
+
+  if (message.type === 'system') {
+    return (
+      <div 
+        id={`msg-${message._id}`}
+        className="flex items-center justify-center w-full my-4 px-4 gap-4"
+      >
+        <div className="flex-1 h-px bg-[#EAEAEA] dark:bg-white/[0.06]"></div>
+        <div className="bg-[#F0F0EE] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] text-[0.7rem] sm:text-[0.75rem] px-3 py-1.5 sm:py-1 rounded-2xl border border-[#EAEAEA] dark:border-white/[0.04] shadow-sm flex items-start sm:items-center gap-2 justify-center text-left sm:text-center max-w-[90%] md:max-w-[75%]">
+          <div className="mt-0.5 sm:mt-0 shrink-0">
+            {sender.avatar ? (
+              <img src={sender.avatar} alt={displayName} className="w-4 h-4 rounded-full object-cover" />
+            ) : (
+              <div className="w-4 h-4 rounded-full bg-[#2563EB] flex items-center justify-center text-[9px] text-white font-bold">
+                {initialLetter}
+              </div>
+            )}
+          </div>
+          <span className="flex-1 break-words leading-snug sm:leading-normal">
+            <strong className="font-medium text-[#111111] dark:text-[#E8E8E7]">{displayName}</strong>{' '}
+            {renderMessageContent(message.content)}
+            <span className="inline-block text-[#ABABAB] dark:text-[#6B6B6B] ml-1.5 text-[0.65rem] sm:text-[0.6875rem] font-normal whitespace-nowrap">
+              {format(new Date(message.createdAt), 'HH:mm')}
+            </span>
+          </span>
+        </div>
+        <div className="flex-1 h-px bg-[#EAEAEA] dark:bg-white/[0.06]"></div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -594,23 +667,39 @@ export default function MessageItem({
         {/* Attachments */}
         {!isDeleted && message.attachments && message.attachments.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2 justify-start">
-            {message.attachments.map((file, idx) => (
-              <div key={idx} className="max-w-[300px] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden bg-white dark:bg-[#252525]">
-                {file.mimetype.startsWith('image/') ? (
-                  <img src={file.url} alt={file.filename} className="max-h-[300px] object-contain" />
-                ) : (
-                  <div className="p-3 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#F0F0EE] dark:bg-white/8 rounded flex items-center justify-center">
-                      <Paperclip className="w-5 h-5 text-[#787774]" />
+            {message.attachments.map((file, idx) => {
+              const mime = file.mimeType || '';
+              const filename = file.name || 'File';
+              const isImg = mime.startsWith('image/');
+              return (
+                <div key={idx} className="max-w-full sm:max-w-[350px] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden bg-white dark:bg-[#252525] shadow-sm">
+                  {isImg ? (
+                    <img 
+                      src={file.url} 
+                      alt={filename} 
+                      className="w-full h-auto max-h-[300px] object-contain block hover:opacity-95 transition-opacity cursor-pointer" 
+                      onClick={() => window.open(file.url, '_blank')}
+                    />
+                  ) : (
+                    <div className="p-3 flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#F0F0EE] dark:bg-white/8 rounded flex items-center justify-center">
+                        <Paperclip className="w-5 h-5 text-[#787774]" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <button 
+                          onClick={() => handleDownloadFile(file)}
+                          disabled={isDownloading === file.url}
+                          className="text-xs font-medium hover:underline text-[#2563EB] dark:text-[#3B82F6] block truncate text-left w-full disabled:opacity-60 disabled:no-underline"
+                        >
+                          {isDownloading === file.url ? 'Downloading...' : filename}
+                        </button>
+                        <p className="text-[10px] text-[#787774] dark:text-[#9B9A97]">{Math.round(file.size / 1024)} KB</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium truncate">{file.filename}</p>
-                      <p className="text-[10px] text-[#787774]">{Math.round(file.size / 1024)} KB</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

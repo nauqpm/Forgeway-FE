@@ -29,7 +29,13 @@ const cleanPastedHTML = (html: string): string => {
   return clean;
 };
 
-const uploadAndInsertImage = async (view: EditorView, file: File) => {
+const uploadAndInsertImage = async (
+  view: EditorView,
+  file: File,
+  workspaceId?: string,
+  pageId?: string,
+  pageTitle?: string
+) => {
   const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
   const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
@@ -55,7 +61,14 @@ const uploadAndInsertImage = async (view: EditorView, file: File) => {
   view.dispatch(tr);
 
   try {
-    const result = await imageService.uploadImage(file, true);
+    const result = await imageService.uploadImage(
+      file,
+      true,
+      workspaceId,
+      "page",
+      pageId,
+      pageTitle
+    );
     const serverUrl = toImageUrl(result.imageUrl || result.url || "");
     if (!serverUrl) {
       throw new Error("Failed to get image URL");
@@ -96,7 +109,12 @@ const uploadAndInsertImage = async (view: EditorView, file: File) => {
   }
 };
 
-export function useEditorLifecycle(initialContent: string) {
+export function useEditorLifecycle(
+  initialContent: string,
+  workspaceId?: string,
+  pageId?: string,
+  pageTitle?: string
+) {
   const readEditor = useEditor({
     immediatelyRender: false,
     extensions: getEditorExtensions(""),
@@ -147,7 +165,7 @@ export function useEditorLifecycle(initialContent: string) {
             const file = files[0];
             if (file && file.type.startsWith("image/")) {
               event.preventDefault();
-              void uploadAndInsertImage(view, file);
+              void uploadAndInsertImage(view, file, workspaceId, pageId, pageTitle);
               return true;
             }
             return false;
@@ -162,7 +180,7 @@ export function useEditorLifecycle(initialContent: string) {
                 const file = item.getAsFile();
                 if (file) {
                   event.preventDefault();
-                  void uploadAndInsertImage(view, file);
+                  void uploadAndInsertImage(view, file, workspaceId, pageId, pageTitle);
                   return true;
                 }
               }
@@ -187,7 +205,7 @@ export function useEditorLifecycle(initialContent: string) {
     editEditorRef.current = editor;
     setEditorUpdateTick((t) => t + 1);
     return editor;
-  }, []);
+  }, [workspaceId, pageId, pageTitle]);
 
   const destroyCollaborativeEditor = useCallback(() => {
     if (editEditorRef.current) {

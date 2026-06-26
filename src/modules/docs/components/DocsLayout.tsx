@@ -27,9 +27,11 @@ export default function DocsLayout({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="flex h-[calc(100vh-200px)] min-h-[37.5rem] w-full bg-white dark:bg-[#252525] rounded-[8px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06]">
-      <DocsSidebar workspaceId={workspaceId} />
+      <div className={`flex-shrink-0 flex-col md:flex ${selectedDocumentId || selectedImportedDocumentId ? "hidden" : "flex w-full md:w-auto"}`}>
+        <DocsSidebar workspaceId={workspaceId} />
+      </div>
 
-      <main className="flex-1 flex flex-col bg-white dark:bg-[#252525] overflow-hidden relative">
+      <main className={`flex-col bg-white dark:bg-[#252525] overflow-hidden relative ${selectedDocumentId || selectedImportedDocumentId ? "flex flex-1 w-full" : "hidden md:flex md:flex-1"}`}>
         {isLoading && documents.length === 0 ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center gap-3 text-[#ABABAB] dark:text-[#6B6B6B]">

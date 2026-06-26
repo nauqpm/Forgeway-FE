@@ -168,6 +168,7 @@ export function useCollaborativePage({
         activeDocumentId,
         (response) => {
           if (!response.ok) return;
+          if (!editor || editor.isDestroyed) return;
 
           if (response.yjsState && response.yjsState.length > 0) {
             Yjs.applyUpdate(ydoc, new Uint8Array(response.yjsState), "remote");

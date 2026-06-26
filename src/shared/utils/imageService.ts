@@ -166,7 +166,16 @@ const imageService = {
   /**
    * Upload a single image file
    */
-  uploadImage: async (file: File, compress: boolean = true): Promise<ImageResponse> => {
+  uploadImage: async (
+    file: File,
+    compress: boolean = true,
+    workspaceId?: string,
+    targetType?: string,
+    targetId?: string,
+    targetName?: string,
+    workspaceName?: string,
+    onProgress?: (progress: number) => void
+  ): Promise<ImageResponse> => {
     const formData = new FormData();
 
     try {
@@ -182,14 +191,19 @@ const imageService = {
       }
 
       formData.append("file", processedFile);
+      if (workspaceId) formData.append("workspaceId", workspaceId);
+      if (targetType) formData.append("targetType", targetType);
+      if (targetId) formData.append("targetId", targetId);
+      if (targetName) formData.append("targetName", targetName);
+      if (workspaceName) formData.append("workspaceName", workspaceName);
 
-      // const response = await api.post("/imagesapi/upload", formData, {
-      //   headers: {
-      //     "Content-Type": "multipart/form-data",
-      //     Authorization: `Bearer ${localStorage.getItem("token")}`,
-      //   },
       const response = await api.post('/imagesapi/upload', formData, {
         timeout: 30000, // 30 seconds timeout
+        onUploadProgress: (event) => {
+          if (onProgress && event.total) {
+            onProgress(Math.min(100, Math.round((event.loaded * 100) / event.total)));
+          }
+        },
       });
 
       return imageService.normalizeImageResponse(response.data);

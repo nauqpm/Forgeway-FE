@@ -272,6 +272,42 @@ export default function ChatRealtimeHandler() {
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChannelMemberAdded = useCallback((envelope: any) => {
+    const data = envelope.data || envelope;
+    if (!data?.channelId || !data?.userId) return;
+
+    updateChannelInCache(queryClient, data.channelId, (channel) => {
+      const currentMembers = channel.channelMembers || [];
+      const exists = currentMembers.some(m => String(m.userId) === String(data.userId));
+      if (exists) return {};
+
+      return {
+        channelMembers: [
+          ...currentMembers,
+          {
+            userId: data.userId,
+            role: data.role || 'channel_member',
+            joinedAt: data.joinedAt || new Date().toISOString()
+          }
+        ]
+      };
+    });
+  }, [queryClient]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleChannelMemberRemoved = useCallback((envelope: any) => {
+    const data = envelope.data || envelope;
+    if (!data?.channelId || !data?.userId) return;
+
+    updateChannelInCache(queryClient, data.channelId, (channel) => {
+      const currentMembers = channel.channelMembers || [];
+      return {
+        channelMembers: currentMembers.filter(m => String(m.userId) !== String(data.userId))
+      };
+    });
+  }, [queryClient]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChannelDeleted = useCallback((envelope: any) => {
     const data = envelope.data || envelope;
     const channelId = typeof data === 'string' ? data : (data.channelId || data._id || data.id);
@@ -388,8 +424,8 @@ export default function ChatRealtimeHandler() {
     socket.on(SOCKET_EVENTS.CHANNEL_CREATED, handleChannelCreated);
     socket.on(SOCKET_EVENTS.CHANNEL_UPDATED, handleChannelUpdated);
     socket.on(SOCKET_EVENTS.CHANNEL_DELETED, handleChannelDeleted);
-    socket.on(SOCKET_EVENTS.CHANNEL_MEMBER_ADDED, handleChannelUpdated); // Reuse update logic to refresh member list
-    socket.on(SOCKET_EVENTS.CHANNEL_MEMBER_REMOVED, handleChannelUpdated);
+    socket.on(SOCKET_EVENTS.CHANNEL_MEMBER_ADDED, handleChannelMemberAdded);
+    socket.on(SOCKET_EVENTS.CHANNEL_MEMBER_REMOVED, handleChannelMemberRemoved);
     socket.on(SOCKET_EVENTS.CHANNEL_VISIBILITY_CHANGED, handleChannelVisibilityChanged);
     socket.on(SOCKET_EVENTS.KICKED_FROM_CHANNEL, handleKickedFromChannel);
 
@@ -406,8 +442,8 @@ export default function ChatRealtimeHandler() {
       socket.off(SOCKET_EVENTS.CHANNEL_CREATED, handleChannelCreated);
       socket.off(SOCKET_EVENTS.CHANNEL_UPDATED, handleChannelUpdated);
       socket.off(SOCKET_EVENTS.CHANNEL_DELETED, handleChannelDeleted);
-      socket.off(SOCKET_EVENTS.CHANNEL_MEMBER_ADDED, handleChannelUpdated);
-      socket.off(SOCKET_EVENTS.CHANNEL_MEMBER_REMOVED, handleChannelUpdated);
+      socket.off(SOCKET_EVENTS.CHANNEL_MEMBER_ADDED, handleChannelMemberAdded);
+      socket.off(SOCKET_EVENTS.CHANNEL_MEMBER_REMOVED, handleChannelMemberRemoved);
       socket.off(SOCKET_EVENTS.CHANNEL_VISIBILITY_CHANGED, handleChannelVisibilityChanged);
       socket.off(SOCKET_EVENTS.KICKED_FROM_CHANNEL, handleKickedFromChannel);
 
@@ -427,6 +463,8 @@ export default function ChatRealtimeHandler() {
     handleThreadReplyCreated,
     handleChannelCreated,
     handleChannelUpdated,
+    handleChannelMemberAdded,
+    handleChannelMemberRemoved,
     handleChannelDeleted,
     handleChannelVisibilityChanged,
     handleKickedFromChannel,

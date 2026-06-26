@@ -79,7 +79,12 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     editEditor,
     createCollaborativeEditor,
     destroyCollaborativeEditor,
-  } = useEditorLifecycle(document?.content || "");
+  } = useEditorLifecycle(
+    document?.content || "",
+    document?.workspaceId,
+    document?.id,
+    document?.title
+  );
 
   useEffect(() => {
     if (readEditor && document?.id && mode === "read") {
@@ -427,6 +432,19 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     enterEditMode();
   };
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("edit") === "true" && mode === "read" && document && selectedDocumentId) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("edit");
+      window.history.replaceState(null, "", url.pathname + url.search);
+      
+      void handleToggleMode();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [document?.id, selectedDocumentId]);
+
   const handleEditorTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       handleTitleInput(e);
@@ -489,6 +507,9 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
               <EditorToolbar
                 editor={activeEditor}
                 onToggleFindReplace={() => setFindReplaceOpen(!findReplaceOpen)}
+                workspaceId={document?.workspaceId}
+                pageId={document?.id}
+                pageTitle={document?.title}
               />
             ) : null
           }

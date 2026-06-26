@@ -6,7 +6,7 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
-import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare } from 'lucide-react';
+import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
@@ -247,6 +247,12 @@ export default function ChatWindow() {
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-3 min-w-0">
+          <button 
+            className="md:hidden p-1 -ml-2 mr-1 text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors"
+            onClick={() => useChatStore.getState().setActiveChannel(null)}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
           {activeChannel.type === 'announcement' ? (
             <Megaphone className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" />
           ) : activeWorkspace ? (

@@ -23,7 +23,7 @@ export function useChatRealtime() {
   const sendMessage = useCallback((
     channelId: string,
     content: string,
-    attachments?: { url: string; filename: string; mimetype: string; size: number }[],
+    attachments?: { url: string; name: string; mimeType: string; size: number }[],
     replyToId?: string,
     type?: string,
     stickerId?: string,

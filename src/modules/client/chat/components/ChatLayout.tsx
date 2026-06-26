@@ -4,14 +4,16 @@ import React, { useState } from 'react';
 import ChatSidebar from './ChatSidebar';
 import { SquarePen } from 'lucide-react';
 import NewDMChatModal from './NewDMChatModal';
+import { useChatStore } from '@/stores/chatStore';
 
 export default function ChatLayout({ children }: { children: React.ReactNode }) {
   const [isNewChatOpen, setIsNewChatOpen] = useState(false);
+  const activeChannelId = useChatStore(state => state.activeChannelId);
 
   return (
     <div className="h-full flex min-h-0 overflow-hidden bg-white dark:bg-[#202020] rounded-[12px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-sm relative m-4">
-      {/* Sidebar - fixed width */}
-      <div className="w-64 flex-shrink-0 min-h-0 border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA] dark:bg-[#252525] flex flex-col">
+      {/* Sidebar - fixed width on desktop, full width on mobile when no channel is active */}
+      <div className={`md:w-64 flex-shrink-0 min-h-0 md:border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA] dark:bg-[#252525] flex-col ${activeChannelId ? 'hidden md:flex' : 'flex w-full'}`}>
 
         {/* Messages Header */}
         <header className="h-14 flex-shrink-0 flex items-center justify-between px-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
@@ -31,7 +33,7 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className={`flex-col min-w-0 min-h-0 overflow-hidden ${activeChannelId ? 'flex flex-1 w-full' : 'hidden md:flex md:flex-1'}`}>
         {children}
       </div>
 
