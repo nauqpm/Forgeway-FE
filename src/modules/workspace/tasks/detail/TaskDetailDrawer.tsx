@@ -81,11 +81,25 @@ export default function TaskDetailDrawer({
   const [isResizing, setIsResizing] = useState(false);
 
   useEffect(() => {
+    if (embedded) return;
+
+    const syncDrawerWidth = () => {
+      setDrawerWidth((currentWidth) => Math.min(currentWidth, window.innerWidth));
+    };
+
+    syncDrawerWidth();
+    window.addEventListener("resize", syncDrawerWidth);
+    return () => window.removeEventListener("resize", syncDrawerWidth);
+  }, [embedded]);
+
+  useEffect(() => {
     if (!isResizing) return;
     const handleMouseMove = (e: MouseEvent) => {
       let newWidth = window.innerWidth - e.clientX;
-      const maxWidth = window.innerWidth * 0.5;
-      if (newWidth < 300) newWidth = 300;
+      const isMobileViewport = window.innerWidth < 640;
+      const maxWidth = isMobileViewport ? window.innerWidth : window.innerWidth * 0.5;
+      const minWidth = Math.min(300, maxWidth);
+      if (newWidth < minWidth) newWidth = minWidth;
       if (newWidth > maxWidth) newWidth = maxWidth;
       setDrawerWidth(newWidth);
     };
@@ -149,10 +163,10 @@ export default function TaskDetailDrawer({
         />
       )}
 
-      <div className={panelClasses} style={{ width: embedded ? "100%" : `${drawerWidth}px` }}>
+      <div className={panelClasses} style={{ width: embedded ? "100%" : `${drawerWidth}px`, maxWidth: embedded ? undefined : "100vw" }}>
         {!embedded && (
           <div
-            className={`absolute top-0 left-0 bottom-0 w-1.5 -ml-[3px] cursor-col-resize z-[100000] hover:bg-[#2563EB]/30 transition-colors ${isResizing ? "bg-[#2563EB]/50" : "bg-transparent"}`}
+            className={`absolute top-0 left-0 bottom-0 z-[100000] hidden w-1.5 -ml-[3px] cursor-col-resize transition-colors hover:bg-[#2563EB]/30 sm:block ${isResizing ? "bg-[#2563EB]/50" : "bg-transparent"}`}
             onMouseDown={(e) => {
               e.preventDefault();
               setIsResizing(true);
@@ -162,19 +176,19 @@ export default function TaskDetailDrawer({
 
         {/* Top Header */}
         <div className="app-header border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between shrink-0 bg-[#F7F6F3] dark:bg-[#252525]">
-          <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
-            <div className="flex items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors">
+          <div className="flex min-w-0 items-center gap-2 text-[0.8125rem] font-medium">
+            <div className="hidden items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors sm:flex">
               <div className="w-5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[4px] text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
               </div>
               <span className="text-[#787774] dark:text-[#9B9A97]">Add epic</span>
             </div>
-            <span className="text-[#ABABAB] dark:text-[#6B6B6B]">/</span>
-            <div className="flex items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors">
+            <span className="hidden text-[#ABABAB] dark:text-[#6B6B6B] sm:inline">/</span>
+            <div className="flex min-w-0 items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors">
               <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[3px]">
                 <span className="text-[0.625rem]">✓</span>
               </div>
-              <span className="text-[#111111] dark:text-[#E8E8E7]">{issue.key}</span>
+              <span className="truncate text-[#111111] dark:text-[#E8E8E7]">{issue.key}</span>
             </div>
           </div>
 
