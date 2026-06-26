@@ -46,10 +46,12 @@ type TaskDependency = {
 
 /* ──────────────────────────── Constants ─────────────────────────────────── */
 
+const isMobile = typeof window !== "undefined" && window.innerWidth < 480;
+
 const ROW_H        = 46;
 const VIRT_BUF     = 6;
 const DATE_PAD     = 7;
-const LABEL_W      = 248;
+const LABEL_W = isMobile ? 140 : 248;
 const MIN_DRAG_PIXELS = 10;
 const TIMELINE_HEADER_H = 56;
 const SPRINT_TRACK_H = 42;
@@ -502,12 +504,12 @@ export default function TimelineView({
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
     <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col font-sans text-[#111111] dark:text-[#E8E8E7] relative">
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 min-h-0 ">
 
         {/* ────────── LEFT PANEL ────────── */}
         <div
           style={{ width: LABEL_W, flexShrink: 0 }}
-          className="border-r border-[#EAEAEA] dark:border-white/[0.06] flex flex-col bg-white dark:bg-[#202020] z-10"
+          className="border-r border-[#EAEAEA] dark:border-white/[0.06] flex flex-col bg-white dark:bg-[#202020] z-10 w-[140px] md:w-[248px]"
         >
           {/* Header */}
           <div
@@ -540,7 +542,7 @@ export default function TimelineView({
         </div>
 
         {/* ────────── RIGHT PANEL ────────── */}
-        <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-[#202020] overflow-x-auto">
+        <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-[#202020] overflow-hidden">
 
           {/* Date header */}
           <div
@@ -577,7 +579,7 @@ export default function TimelineView({
           <div
             ref={bodyRef}
             onScroll={handleBodyScroll}
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden timeline-body-scroll"
+            className="flex-1 min-h-0 overflow-auto overflow-x-auto"
             style={{ width: totalWidth }}
           >
             <div style={{ height: totalListH, position: 'relative', width: totalWidth }}>

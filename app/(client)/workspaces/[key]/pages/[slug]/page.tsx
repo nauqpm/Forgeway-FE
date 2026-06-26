@@ -1,18 +1,20 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Edit3, Clock, Eye } from "lucide-react";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import { useDocumentBySlugQuery } from "@/modules/docs/hooks/useWorkspaceDocs";
 import PageSearchComments from "@/modules/docs/components/PageSearchComments";
+import { useDocsStore } from "@/modules/docs/store/docs.store";
 
 export default function PageViewPage() {
   const params = useParams();
   const slug = params.slug as string;
   const workspaceKey = params.key as string;
   const { data: page, isLoading } = useDocumentBySlugQuery(workspaceKey, slug, !!slug);
+  const router = useRouter();
+  const selectDocument = useDocsStore((state) => state.selectDocument);
 
   usePageTitle(page?.title || "Page");
 
@@ -24,19 +26,25 @@ export default function PageViewPage() {
       <div className="app-page-narrow py-8 pb-12 px-4">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link
-            href={`/workspaces/${workspaceKey}/docs`}
+          <button
+            onClick={() => {
+              selectDocument(page.id, [page]);
+              router.push(`/workspaces/${workspaceKey}/pages`);
+            }}
             className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </Link>
+          </button>
         </div>
-        <Link
-          href={`/workspaces/${workspaceKey}/pages/${slug}/edit`}
-          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm"
+        <button
+          onClick={() => {
+            selectDocument(page.id, [page]);
+            router.push(`/workspaces/${workspaceKey}/pages?edit=true`);
+          }}
+          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm cursor-pointer"
         >
           <Edit3 className="w-4 h-4" /> Edit
-        </Link>
+        </button>
       </div>
 
       <article className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,32px)]">
