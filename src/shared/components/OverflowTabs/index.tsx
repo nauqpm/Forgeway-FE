@@ -58,7 +58,7 @@ const OverflowTabsRoot = ({ activeId, children, className }: OverflowTabsProps) 
   const allFit = visibleCount >= allItems.length;
 
   // Guarantee active tab is always in the visible strip
-  let orderedItems = [...allItems];
+  const orderedItems = [...allItems];
   if (!allFit) {
     const activeIdx = orderedItems.findIndex((item) => item.props.id === activeId);
     const isActiveOverflowing = activeIdx >= visibleCount;
