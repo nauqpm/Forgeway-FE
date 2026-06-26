@@ -12,7 +12,8 @@ import { Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-react';
 import Image from 'next/image';
 import logoIcon from '../../../../../app/icon.png';
 
-const LOGIN_RETRY_STORAGE_KEY = 'al-task-login-retry';
+const LEGACY_LOGIN_RETRY_STORAGE_KEY = 'sdlc-platform-login-retry';
+const LOGIN_RETRY_STORAGE_KEY = 'sdlc-platform-login-retry-v2';
 
 type StoredLoginRetry = {
   email: string;
@@ -32,6 +33,7 @@ const readStoredLoginRetry = (): StoredLoginRetry | null => {
   if (typeof window === 'undefined') return null;
 
   try {
+    window.sessionStorage.removeItem(LEGACY_LOGIN_RETRY_STORAGE_KEY);
     const raw = window.sessionStorage.getItem(LOGIN_RETRY_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<StoredLoginRetry>;
@@ -134,6 +136,10 @@ function LoginFormInner() {
       const retryDetails = extractLoginRetryDetails(error);
       if (retryDetails) {
         applyLoginRetry(retryDetails.retryAt);
+      } else {
+        setRetryAt(null);
+        setRetryEmail('');
+        clearStoredLoginRetry();
       }
       // Other error toasts are handled in useAuth.login.
     }

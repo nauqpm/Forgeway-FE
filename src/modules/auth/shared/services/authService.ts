@@ -100,11 +100,15 @@ export const extractLoginRetryDetails = (error: unknown): LoginRetryDetails | nu
     response?: {
       data?: AuthApiError;
       headers?: Record<string, string | number | undefined>;
+      status?: number;
     };
   };
 
   const data = err.response?.data;
   const code = data?.code;
+
+  if (code !== AuthErrorCode.LOGIN_RETRY_LATER) return null;
+
   const details = data?.details ?? {};
   const retryAfterFromBody = toPositiveNumber(details.retryAfterSeconds);
   const retryAfterFromHeader = toPositiveNumber(err.response?.headers?.['retry-after']);
@@ -115,11 +119,7 @@ export const extractLoginRetryDetails = (error: unknown): LoginRetryDetails | nu
   const retryAtFromBody = typeof details.retryAt === 'string' ? details.retryAt : null;
   const retryAt = retryAtFromBody ?? new Date(Date.now() + retryAfterSeconds * 1000).toISOString();
 
-  if (code === AuthErrorCode.LOGIN_RETRY_LATER || code === AuthErrorCode.INVALID_CREDENTIALS) {
-    return { retryAfterSeconds, retryAt };
-  }
-
-  return null;
+  return { retryAfterSeconds, retryAt };
 };
 export const extractAuthError = (error: unknown): AuthApiError => {
   const err = error as { response?: { data?: AuthApiError }; message?: string };
