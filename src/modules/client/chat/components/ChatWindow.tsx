@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import MessageItem from './MessageItem';
@@ -23,6 +24,8 @@ import type { Channel, ChatUser } from '../types/chat.types';
 
 export default function ChatWindow() {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const targetMessageId = searchParams.get('messageId');
   // Use specific selectors to prevent unnecessary re-renders and reference changes
   const activeChannelId = useChatStore(state => state.activeChannelId);
   const activeThreadParentId = useChatStore(state => state.activeThreadParentId);
@@ -146,6 +149,22 @@ export default function ChatWindow() {
       shouldScrollToBottomRef.current = true;
     }
   }, [messages, activeChannelId]);
+
+  useEffect(() => {
+    if (loading || !targetMessageId || activeThreadParentId) return;
+
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`msg-${targetMessageId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+        setTimeout(() => {
+          el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+        }, 2000);
+      }
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [messages, loading, targetMessageId, activeThreadParentId]);
 
   useEffect(() => {
     const interval = setInterval(clearOldTyping, 2000);

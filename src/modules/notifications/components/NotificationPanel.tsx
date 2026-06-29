@@ -167,14 +167,17 @@ function buildNotificationHref(notification: AppNotification): string | undefine
     const parentId = typeof metadata.parentId === "string" ? metadata.parentId : undefined;
     const actualParentId = parentId || metadata.threadParentId || messageId;
     if (channelId && actualParentId) {
-      return `/chat?channelId=${encodeURIComponent(channelId)}&threadParentId=${encodeURIComponent(actualParentId as string)}`;
+      const base = `/chat?channelId=${encodeURIComponent(channelId)}&threadParentId=${encodeURIComponent(actualParentId as string)}`;
+      return messageId ? `${base}&messageId=${encodeURIComponent(messageId)}` : base;
     }
   }
 
   if (notification.type === "CHAT_MENTIONED") {
     const channelId = typeof metadata.channelId === "string" ? metadata.channelId : undefined;
+    const messageId = typeof metadata.messageId === "string" ? metadata.messageId : undefined;
     if (channelId) {
-      return `/chat?channelId=${encodeURIComponent(channelId)}`;
+      const base = `/chat?channelId=${encodeURIComponent(channelId)}`;
+      return messageId ? `${base}&messageId=${encodeURIComponent(messageId)}` : base;
     }
   }
 

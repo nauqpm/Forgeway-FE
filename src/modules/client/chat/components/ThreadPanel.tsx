@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { X, Loader2, MessageSquare } from 'lucide-react';
 import { useThreadReplies, useChatChannels } from '../hooks/useChatQueries';
 import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
@@ -18,6 +19,8 @@ interface ThreadPanelProps {
 
 export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPanelProps) {
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const targetMessageId = searchParams.get('messageId');
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
 
@@ -55,12 +58,28 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
     return null;
   }, [messageId, channelId, queryClient]);
 
-  // Scroll to bottom when replies list updates
+  // Scroll to targeted message if specified, otherwise scroll to bottom
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (isLoading) return;
+
+    if (targetMessageId) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById(`msg-${targetMessageId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+          setTimeout(() => {
+            el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+          }, 2000);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    } else {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
     }
-  }, [replies]);
+  }, [replies, isLoading, targetMessageId]);
 
   return (
     <div className="w-[400px] flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full min-h-0 overflow-hidden relative">
