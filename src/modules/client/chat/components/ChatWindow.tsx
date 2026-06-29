@@ -37,6 +37,7 @@ export default function ChatWindow() {
   const { data: channels = [] } = useChatChannels();
   
   const [unreadCountAtOpen, setUnreadCountAtOpen] = useState<number>(0);
+  const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(null);
   const prevActiveChannelIdRef = useRef<string | null>(null);
   const scrolledMessageIdRef = useRef<string | null>(null);
 
@@ -45,6 +46,7 @@ export default function ChatWindow() {
     prevActiveChannelIdRef.current = activeChannelId;
     const channel = channels.find(c => c._id === activeChannelId);
     setUnreadCountAtOpen(channel?.unreadCount || 0);
+    setFirstUnreadMessageId(null); // Reset first unread message ID on channel change
     scrolledMessageIdRef.current = null; // Reset scroll tracker on channel change
   }
 
@@ -131,10 +133,9 @@ export default function ChatWindow() {
     );
   }, [messagesData]);
 
-  // unreadCountAtOpen is captured at the top of the component
-
-  const firstUnreadMessageId = useMemo(() => {
-    if (unreadCountAtOpen <= 0 || messages.length === 0) return null;
+  // Calculate firstUnreadMessageId once when messages load
+  useEffect(() => {
+    if (unreadCountAtOpen <= 0 || messages.length === 0 || firstUnreadMessageId) return;
 
     let unreadCount = 0;
     for (let i = messages.length - 1; i >= 0; i--) {
@@ -147,12 +148,12 @@ export default function ChatWindow() {
       if (String(senderId) !== String(currentUserId)) {
         unreadCount++;
         if (unreadCount === unreadCountAtOpen) {
-          return msg._id || msg.id;
+          setFirstUnreadMessageId(msg._id || msg.id);
+          break;
         }
       }
     }
-    return null;
-  }, [messages, unreadCountAtOpen, currentUserId]);
+  }, [messages, unreadCountAtOpen, currentUserId, firstUnreadMessageId]);
 
   useEffect(() => {
     if (!activeChannelId) return;
