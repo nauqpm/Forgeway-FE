@@ -877,14 +877,14 @@ export default function MessageItem({
                   className={cn(
                     "flex items-center gap-1 px-1.5 py-0.5 rounded-[6px] border transition-colors",
                     hasReacted
-                      ? "bg-[#2563EB]/10 border-[#2563EB] text-[#2563EB] dark:bg-[#2563EB]/20"
-                      : "bg-[#F0F0EE] dark:bg-white/8 border-transparent hover:border-[#2563EB] text-[#787774] dark:text-[#9B9A97]"
+                      ? "bg-[#2563EB]/10 border-[#2563EB] text-[#2563EB] dark:bg-[#3B82F6]/15 dark:border-[#3B82F6] dark:text-[#3B82F6]"
+                      : "bg-[#F0F0EE] dark:bg-white/[0.08] border-transparent hover:border-[#2563EB] dark:hover:border-[#3B82F6] text-[#787774] dark:text-[#9B9A97]"
                   )}
                 >
                   <span className="text-sm">{emoji}</span>
                   <span className={cn(
                     "text-[10px] font-bold",
-                    hasReacted ? "text-[#2563EB]" : "text-[#787774] dark:text-[#9B9A97]"
+                    hasReacted ? "text-[#2563EB] dark:text-[#3B82F6]" : "text-[#787774] dark:text-[#9B9A97]"
                   )}>{userIds.length}</span>
                 </button>
               );
