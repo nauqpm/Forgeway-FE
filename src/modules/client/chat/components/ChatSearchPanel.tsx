@@ -31,7 +31,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
   const [selectedSenderId, setSelectedSenderId] = useState<string>('');
   const [showSenderDropdown, setShowSenderDropdown] = useState(false);
   const [senderSearchQuery, setSenderSearchQuery] = useState('');
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [lightboxFile, setLightboxFile] = useState<{ url: string; originalName: string } | null>(null);
 
   const { data: members = [] } = useChannelMembers(channelId);
   const authUser = useAuthStore(state => state.user);
@@ -402,7 +402,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                                       <div 
                                         key={idx}
                                         className="relative w-12 h-12 rounded-[4px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
-                                        onClick={() => setLightboxUrl(file.url)}
+                                        onClick={() => setLightboxFile({ url: file.url, originalName: file.name || 'Image' })}
                                         title={file.name || 'Image'}
                                       >
                                         <img
@@ -461,7 +461,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                         <div
                           key={file._id}
                           className="relative aspect-square rounded-[6px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] group cursor-pointer"
-                          onClick={() => setLightboxUrl(file.url)}
+                          onClick={() => setLightboxFile({ url: file.url, originalName: file.originalName || 'Image' })}
                         >
                           <img
                             src={file.url}
@@ -543,21 +543,41 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
         )}
       </div>
       {/* Lightbox Preview Modal */}
-      {lightboxUrl && (
+      {lightboxFile && (
         <div 
-          className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex items-center justify-center cursor-zoom-out"
-          onClick={() => setLightboxUrl(null)}
+          className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center cursor-zoom-out"
+          onClick={() => setLightboxFile(null)}
         >
-          <button
-            onClick={() => setLightboxUrl(null)}
-            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+          {/* Top Bar */}
+          <div 
+            className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-black/70 to-transparent flex items-center justify-between px-6 text-white z-10"
+            onClick={(e) => e.stopPropagation()}
           >
-            <X className="w-6 h-6" />
-          </button>
+            <span className="text-xs font-medium truncate max-w-[70%]">
+              {lightboxFile.originalName}
+            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => handleDownload(lightboxFile.url, lightboxFile.originalName)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                title="Download"
+              >
+                <Download className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => setLightboxFile(null)}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                title="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
           <img
-            src={lightboxUrl}
+            src={lightboxFile.url}
             alt="Preview"
-            className="max-w-[90vw] max-h-[90vh] object-contain rounded-md shadow-2xl select-none"
+            className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
