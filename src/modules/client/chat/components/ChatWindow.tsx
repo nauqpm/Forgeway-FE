@@ -116,6 +116,37 @@ export default function ChatWindow() {
     );
   }, [messagesData]);
 
+  const [unreadCountAtOpen, setUnreadCountAtOpen] = useState<number>(0);
+  const prevActiveChannelIdRef = useRef<string | null>(null);
+
+  // Capture the unread count before we mark the channel as read
+  if (activeChannelId !== prevActiveChannelIdRef.current) {
+    prevActiveChannelIdRef.current = activeChannelId;
+    const channel = channels.find(c => c._id === activeChannelId);
+    setUnreadCountAtOpen(channel?.unreadCount || 0);
+  }
+
+  const firstUnreadMessageId = useMemo(() => {
+    if (unreadCountAtOpen <= 0 || messages.length === 0) return null;
+
+    let unreadCount = 0;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      const senderId = typeof msg.senderId === 'object' && msg.senderId
+        ? msg.senderId._id || msg.senderId.id
+        : msg.senderId;
+
+      // Only count messages from other users
+      if (String(senderId) !== String(currentUserId)) {
+        unreadCount++;
+        if (unreadCount === unreadCountAtOpen) {
+          return msg._id || msg.id;
+        }
+      }
+    }
+    return null;
+  }, [messages, unreadCountAtOpen, currentUserId]);
+
   useEffect(() => {
     if (!activeChannelId) return;
     shouldScrollToBottomRef.current = true;
@@ -142,13 +173,26 @@ export default function ChatWindow() {
     if (shouldScrollToBottomRef.current) {
       if (scrollRef.current) {
         if (channelChanged || lastMsgChanged) {
+          if (channelChanged && firstUnreadMessageId) {
+            setTimeout(() => {
+              const el = document.getElementById(`msg-${firstUnreadMessageId}`);
+              if (el) {
+                el.scrollIntoView({ behavior: 'auto', block: 'center' });
+              } else {
+                if (scrollRef.current) {
+                  scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+                }
+              }
+            }, 50);
+            return;
+          }
           scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
       }
     } else {
       shouldScrollToBottomRef.current = true;
     }
-  }, [messages, activeChannelId]);
+  }, [messages, activeChannelId, firstUnreadMessageId]);
 
   useEffect(() => {
     if (loading || !targetMessageId || activeThreadParentId) return;
@@ -475,15 +519,25 @@ export default function ChatWindow() {
 
               const isSameUserAsPrevious = isSameUser && timeDiff < 5;
               const isMine = String(currentSenderId) === String(currentUserId);
+              const isFirstUnread = msg._id === firstUnreadMessageId;
 
               return (
-                <MessageItem
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  key={msg._id || (msg as any).id}
-                  message={msg}
-                  isSameUserAsPrevious={isSameUserAsPrevious}
-                  isMine={isMine}
-                />
+                <React.Fragment key={msg._id || (msg as any).id}>
+                  {isFirstUnread && (
+                    <div className="flex items-center my-4 px-4 select-none">
+                      <div className="flex-1 h-px bg-red-500/30"></div>
+                      <span className="mx-4 text-[10px] font-bold text-red-500 uppercase tracking-wider px-2.5 py-0.5 bg-red-500/10 dark:bg-red-500/20 rounded-full border border-red-500/20">
+                        New Messages
+                      </span>
+                      <div className="flex-1 h-px bg-red-500/30"></div>
+                    </div>
+                  )}
+                  <MessageItem
+                    message={msg}
+                    isSameUserAsPrevious={isSameUserAsPrevious}
+                    isMine={isMine}
+                  />
+                </React.Fragment>
               );
             })}
           </div>
