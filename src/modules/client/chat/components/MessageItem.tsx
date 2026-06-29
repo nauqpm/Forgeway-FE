@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import type { ChatUser, Message, Channel } from '@/modules/client/chat/types/chat.types';
 import { format } from 'date-fns';
@@ -329,6 +329,8 @@ export default function MessageItem({
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const [loadingPreviews, setLoadingPreviews] = useState<Record<string, boolean>>({});
   const previewUrlsRef = useRef<Record<string, string>>({});
+  const messageRef = useRef<HTMLDivElement>(null);
+  const [isInViewport, setIsInViewport] = useState(false);
 
   useEffect(() => {
     previewUrlsRef.current = previewUrls;
@@ -340,56 +342,8 @@ export default function MessageItem({
     };
   }, []);
 
-  // Automatically load previews on mount
-  useEffect(() => {
-    if (isDeleted || !message.attachments) return;
-
-    message.attachments.forEach(file => {
-      const mime = file.mimeType || '';
-      const isPdf = mime === 'application/pdf';
-      const isTxt = mime.startsWith('text/');
-      const canPreview = isPdf || isTxt;
-
-      if (canPreview && file.url) {
-        setExpandedPreviews(prev => ({ ...prev, [file.url]: true }));
-        setLoadingPreviews(prev => ({ ...prev, [file.url]: true }));
-
-        const loadInitialPreview = async () => {
-          try {
-            const response = await api.get('/attachments/download-by-url', {
-              params: { url: file.url },
-              responseType: 'blob',
-            });
-            const blob = response.data;
-            const blobUrl = URL.createObjectURL(blob);
-            setPreviewUrls(prev => ({ ...prev, [file.url]: blobUrl }));
-          } catch (err) {
-            console.error('Failed to load initial preview:', err);
-          } finally {
-            setLoadingPreviews(prev => ({ ...prev, [file.url]: false }));
-          }
-        };
-        loadInitialPreview();
-      }
-    });
-  }, [message.attachments, isDeleted]);
-
-  const togglePreview = async (url: string) => {
-    if (expandedPreviews[url]) {
-      setExpandedPreviews(prev => ({ ...prev, [url]: false }));
-      if (previewUrls[url]) {
-        URL.revokeObjectURL(previewUrls[url]);
-        setPreviewUrls(prev => {
-          const next = { ...prev };
-          delete next[url];
-          return next;
-        });
-      }
-      return;
-    }
-
-    setExpandedPreviews(prev => ({ ...prev, [url]: true }));
-    if (previewUrls[url]) return;
+  const loadPreview = useCallback(async (url: string) => {
+    if (previewUrls[url] || loadingPreviews[url]) return;
 
     setLoadingPreviews(prev => ({ ...prev, [url]: true }));
     try {
@@ -405,6 +359,73 @@ export default function MessageItem({
     } finally {
       setLoadingPreviews(prev => ({ ...prev, [url]: false }));
     }
+  }, [previewUrls, loadingPreviews]);
+
+  // Automatically expand previews on mount, but do NOT load them yet
+  useEffect(() => {
+    if (isDeleted || !message.attachments) return;
+
+    message.attachments.forEach(file => {
+      const mime = file.mimeType || '';
+      const isPdf = mime === 'application/pdf';
+      const isTxt = mime.startsWith('text/');
+      const canPreview = isPdf || isTxt;
+
+      if (canPreview && file.url) {
+        setExpandedPreviews(prev => ({ ...prev, [file.url]: true }));
+      }
+    });
+  }, [message.attachments, isDeleted]);
+
+  // Set up IntersectionObserver to detect when message enters viewport
+  useEffect(() => {
+    if (isDeleted || !message.attachments) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInViewport(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: '100px', // Start loading slightly before it enters the viewport
+      }
+    );
+
+    if (messageRef.current) {
+      observer.observe(messageRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [message.attachments, isDeleted]);
+
+  // Load preview when the message is in viewport AND preview is expanded
+  useEffect(() => {
+    if (!isInViewport || isDeleted || !message.attachments) return;
+
+    message.attachments.forEach(file => {
+      const mime = file.mimeType || '';
+      const isPdf = mime === 'application/pdf';
+      const isTxt = mime.startsWith('text/');
+      const canPreview = isPdf || isTxt;
+
+      if (canPreview && file.url && expandedPreviews[file.url]) {
+        loadPreview(file.url);
+      }
+    });
+  }, [isInViewport, expandedPreviews, message.attachments, isDeleted, loadPreview]);
+
+  const togglePreview = async (url: string) => {
+    if (expandedPreviews[url]) {
+      setExpandedPreviews(prev => ({ ...prev, [url]: false }));
+      return;
+    }
+
+    setExpandedPreviews(prev => ({ ...prev, [url]: true }));
+    await loadPreview(url);
   };
 
   const hasReactions = !isDeleted && message.reactions && Object.keys(message.reactions).length > 0;
@@ -444,6 +465,7 @@ export default function MessageItem({
 
   return (
     <div 
+      ref={messageRef}
       id={`msg-${message._id}`}
       className={cn(
         "group relative flex gap-4 transition-colors flex-row",
