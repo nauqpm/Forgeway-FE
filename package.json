@@ -94,6 +94,9 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.7.3"
   },
+  "overrides": {
+    "@tiptap/core": "3.26.1"
+  },
   "main": "next.config.js",
   "author": "",
   "license": "ISC",

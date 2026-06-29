@@ -5,19 +5,99 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
+import { extractLoginRetryDetails } from '../../shared/services/authService';
 import { validateEmail } from '../../shared/utils/emailValidation';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-react';
 import Image from 'next/image';
 import logoIcon from '../../../../../app/icon.png';
+
+const LEGACY_LOGIN_RETRY_STORAGE_KEY = 'sdlc-platform-login-retry';
+const LOGIN_RETRY_STORAGE_KEY = 'sdlc-platform-login-retry-v2';
+
+type StoredLoginRetry = {
+  email: string;
+  retryAt: string;
+};
+
+const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+const getRetrySeconds = (retryAt: string | null, now: number): number => {
+  if (!retryAt) return 0;
+  const timestamp = Date.parse(retryAt);
+  if (!Number.isFinite(timestamp)) return 0;
+  return Math.max(0, Math.ceil((timestamp - now) / 1000));
+};
+
+const readStoredLoginRetry = (): StoredLoginRetry | null => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    window.sessionStorage.removeItem(LEGACY_LOGIN_RETRY_STORAGE_KEY);
+    const raw = window.sessionStorage.getItem(LOGIN_RETRY_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StoredLoginRetry>;
+    if (!parsed.retryAt || Date.parse(parsed.retryAt) <= Date.now()) {
+      window.sessionStorage.removeItem(LOGIN_RETRY_STORAGE_KEY);
+      return null;
+    }
+    return {
+      email: normalizeEmail(parsed.email ?? ''),
+      retryAt: parsed.retryAt,
+    };
+  } catch {
+    window.sessionStorage.removeItem(LOGIN_RETRY_STORAGE_KEY);
+    return null;
+  }
+};
+
+const writeStoredLoginRetry = (value: StoredLoginRetry) => {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.setItem(LOGIN_RETRY_STORAGE_KEY, JSON.stringify(value));
+};
+
+const clearStoredLoginRetry = () => {
+  if (typeof window === 'undefined') return;
+  window.sessionStorage.removeItem(LOGIN_RETRY_STORAGE_KEY);
+};
 
 function LoginFormInner() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [retryEmail, setRetryEmail] = useState('');
+  const [retryAt, setRetryAt] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   const { login, isLoading } = useAuth();
   const searchParams = useSearchParams();
+  const normalizedEmail = normalizeEmail(email);
+  const retrySeconds = retryEmail === normalizedEmail ? getRetrySeconds(retryAt, now) : 0;
+  const isCoolingDown = retrySeconds > 0;
+
+  useEffect(() => {
+    const storedRetry = readStoredLoginRetry();
+    if (!storedRetry) return;
+    setRetryEmail(storedRetry.email);
+    setRetryAt(storedRetry.retryAt);
+    setNow(Date.now());
+  }, []);
+
+  useEffect(() => {
+    if (!retryAt) return;
+
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [retryAt]);
+
+  useEffect(() => {
+    if (!retryAt) return;
+    if (getRetrySeconds(retryAt, now) > 0) return;
+
+    setRetryAt(null);
+    setRetryEmail('');
+    clearStoredLoginRetry();
+  }, [now, retryAt]);
 
   useEffect(() => {
     const error = searchParams.get('error');
@@ -26,9 +106,22 @@ function LoginFormInner() {
     }
   }, [searchParams]);
 
+  const applyLoginRetry = (nextRetryAt: string) => {
+    const nextRetry = {
+      email: normalizedEmail,
+      retryAt: nextRetryAt,
+    };
+    setRetryEmail(nextRetry.email);
+    setRetryAt(nextRetry.retryAt);
+    setNow(Date.now());
+    writeStoredLoginRetry(nextRetry);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isCoolingDown) return;
+
     const emailError = validateEmail(email);
     if (emailError) {
       toast.error(emailError);
@@ -37,9 +130,18 @@ function LoginFormInner() {
 
     try {
       await login({ email, password });
+      clearStoredLoginRetry();
       toast.success('Welcome back!');
-    } catch {
-      // Error toast is handled in useAuth.login
+    } catch (error) {
+      const retryDetails = extractLoginRetryDetails(error);
+      if (retryDetails) {
+        applyLoginRetry(retryDetails.retryAt);
+      } else {
+        setRetryAt(null);
+        setRetryEmail('');
+        clearStoredLoginRetry();
+      }
+      // Other error toasts are handled in useAuth.login.
     }
   };
 
@@ -63,7 +165,6 @@ function LoginFormInner() {
             <h1 className="text-2xl font-bold text-gray-950 tracking-tight">Welcome back</h1>
             <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Sign in to your SDLC platform account</p>
           </div>
-
 
           <button onClick={initiateGoogleLogin} type="button"
             className="w-full mb-6 py-3 px-4 flex items-center justify-center gap-3 bg-white/50 hover:bg-white/80 border border-white/30 rounded-[6px] hover:border-white transition-all font-medium text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -103,9 +204,17 @@ function LoginFormInner() {
                 </button>
               </div>
             </div>
-            <button type="submit" disabled={isLoading}
+
+            {isCoolingDown && (
+              <div className="flex items-start gap-2 rounded-[6px] border border-amber-300/80 bg-amber-50/85 px-3 py-2 text-[0.8125rem] font-semibold text-amber-800">
+                <ShieldAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                <span>Please wait {retrySeconds}s before trying again.</span>
+              </div>
+            )}
+
+            <button type="submit" disabled={isLoading || isCoolingDown}
               className="w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-              {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in...</> : 'Sign in'}
+              {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in...</> : isCoolingDown ? `Try again in ${retrySeconds}s` : 'Sign in'}
             </button>
           </form>
 
