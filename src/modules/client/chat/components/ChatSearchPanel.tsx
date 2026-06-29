@@ -387,8 +387,46 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                               </span>
                             )}
                             <p className="text-xs text-[#555555] dark:text-[#C4C4C3] line-clamp-3 mt-1 break-words">
-                              {msg.content || (msg.stickerId ? 'Sent a sticker' : 'Sent an attachment')}
+                              {msg.content || (msg.stickerId ? 'Sent a sticker' : '')}
                             </p>
+
+                            {/* Previews for Attachments in Search Result */}
+                            {!msg.deletedAt && msg.attachments && msg.attachments.length > 0 && (
+                              <div className="mt-1.5 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                {msg.attachments.map((file: any, idx: number) => {
+                                  const mime = file.mimeType || file.mimetype || '';
+                                  const isImg = mime.toLowerCase().startsWith('image/');
+                                  
+                                  if (isImg) {
+                                    return (
+                                      <div 
+                                        key={idx}
+                                        className="relative w-12 h-12 rounded-[4px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+                                        onClick={() => setLightboxUrl(file.url)}
+                                        title={file.name || 'Image'}
+                                      >
+                                        <img
+                                          src={file.url}
+                                          alt={file.name || 'preview'}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                    );
+                                  } else {
+                                    return (
+                                      <div
+                                        key={idx}
+                                        className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-white/[0.02] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] text-[10px] text-[#787774] dark:text-[#9B9A97] max-w-full"
+                                        title={file.name || 'File'}
+                                      >
+                                        <FileText className="w-3 h-3 text-[#787774] dark:text-[#9B9A97] flex-shrink-0" />
+                                        <span className="truncate max-w-[150px]">{file.name || 'File'}</span>
+                                      </div>
+                                    );
+                                  }
+                                })}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
