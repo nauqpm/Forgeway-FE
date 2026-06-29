@@ -31,6 +31,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
   const [selectedSenderId, setSelectedSenderId] = useState<string>('');
   const [showSenderDropdown, setShowSenderDropdown] = useState(false);
   const [senderSearchQuery, setSenderSearchQuery] = useState('');
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const { data: members = [] } = useChannelMembers(channelId);
   const authUser = useAuthStore(state => state.user);
@@ -242,20 +243,34 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                     className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-white dark:bg-white/[0.03] border border-[#EAEAEA] dark:border-white/[0.06] rounded-md text-[#111111] dark:text-[#E8E8E7] text-left hover:bg-[#F7F6F3] dark:hover:bg-white/[0.02] transition-colors"
                   >
                     {selectedSender ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-[8px] font-bold overflow-hidden flex-shrink-0">
-                          {selectedSender.avatar ? (
-                            <img src={selectedSender.avatar} alt={selectedSender.fullName} className="w-full h-full object-cover" />
-                          ) : (
-                            <span>{(selectedSender.fullName || selectedSender.email || 'U').charAt(0).toUpperCase()}</span>
-                          )}
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-[8px] font-bold overflow-hidden flex-shrink-0">
+                            {selectedSender.avatar ? (
+                              <img src={selectedSender.avatar} alt={selectedSender.fullName} className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{(selectedSender.fullName || selectedSender.email || 'U').charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <span className="truncate max-w-[150px]">{selectedSender.fullName || selectedSender.email}</span>
                         </div>
-                        <span className="truncate">{selectedSender.fullName || selectedSender.email}</span>
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedSenderId('');
+                          }}
+                          className="p-0.5 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded text-[#787774] dark:text-[#9B9A97] cursor-pointer ml-1"
+                          title="Clear filter"
+                        >
+                          <X className="w-3 h-3" />
+                        </span>
                       </div>
                     ) : (
-                      <span className="text-[#ABABAB] dark:text-[#6B6B6B]">Filter by sender...</span>
+                      <div className="flex items-center justify-between w-full">
+                        <span className="text-[#ABABAB] dark:text-[#6B6B6B]">Filter by sender...</span>
+                        <span className="text-[9px] text-[#787774] dark:text-[#9B9A97]">▼</span>
+                      </div>
                     )}
-                    <span className="text-[9px] text-[#787774] dark:text-[#9B9A97] ml-2">▼</span>
                   </button>
 
                   {showSenderDropdown && (
@@ -275,16 +290,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                           />
                         </div>
                         <div className="py-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedSenderId('');
-                              setShowSenderDropdown(false);
-                            }}
-                            className="w-full px-3 py-1.5 text-xs text-left hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] text-[#787774] dark:text-[#9B9A97]"
-                          >
-                            All members (Anyone)
-                          </button>
+                          {/* Option 'All members' removed per user request */}
                           {filteredMembersForDropdown.map((m) => (
                             <button
                               key={m._id}
@@ -293,16 +299,25 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                                 setSelectedSenderId(m._id);
                                 setShowSenderDropdown(false);
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] text-[#111111] dark:text-[#E8E8E7]"
+                              className="w-full flex items-center gap-2.5 px-3 py-1.5 text-left hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] transition-colors"
                             >
-                              <div className="w-4.5 h-4.5 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-[9px] font-bold overflow-hidden flex-shrink-0">
+                              <div className="w-6 h-6 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-[10px] font-bold overflow-hidden flex-shrink-0">
                                 {m.avatar ? (
-                                  <img src={m.avatar} alt={m.fullName} className="w-full h-full object-cover" />
+                                  <img src={m.avatar} alt={m.fullName || m.email} className="w-full h-full object-cover" />
                                 ) : (
                                   <span>{(m.fullName || m.email || 'U').charAt(0).toUpperCase()}</span>
                                 )}
                               </div>
-                              <span className="truncate">{m.fullName || m.email}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-[#111111] dark:text-[#E8E8E7] truncate leading-none">
+                                  {m.fullName || m.email || 'User'}
+                                </p>
+                                {m.email && (
+                                  <p className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] truncate leading-none mt-1">
+                                    {m.email}
+                                  </p>
+                                )}
+                              </div>
                             </button>
                           ))}
                           {filteredMembersForDropdown.length === 0 && (
@@ -407,12 +422,13 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                       {mediaFiles.map((file) => (
                         <div
                           key={file._id}
-                          className="relative aspect-square rounded-[6px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] group"
+                          className="relative aspect-square rounded-[6px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] group cursor-pointer"
+                          onClick={() => setLightboxUrl(file.url)}
                         >
                           <img
                             src={file.url}
                             alt={file.originalName}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                           />
                           {/* Hover Overlay */}
                           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
@@ -488,6 +504,26 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
           </div>
         )}
       </div>
+      {/* Lightbox Preview Modal */}
+      {lightboxUrl && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex items-center justify-center cursor-zoom-out"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Preview"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-md shadow-2xl select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 }

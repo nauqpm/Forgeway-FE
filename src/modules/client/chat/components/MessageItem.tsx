@@ -70,6 +70,7 @@ export default function MessageItem({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -794,7 +795,7 @@ export default function MessageItem({
                       src={file.url} 
                       alt={filename} 
                       className="w-full h-auto max-h-[300px] object-contain block hover:opacity-95 transition-opacity cursor-pointer" 
-                      onClick={() => window.open(file.url, '_blank')}
+                      onClick={() => setLightboxUrl(file.url)}
                     />
                   ) : (
                     <div className="flex flex-col w-full">
@@ -985,6 +986,26 @@ export default function MessageItem({
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* Lightbox Preview Modal */}
+      {lightboxUrl && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex items-center justify-center cursor-zoom-out"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img
+            src={lightboxUrl}
+            alt="Preview"
+            className="max-w-[90vw] max-h-[90vh] object-contain rounded-md shadow-2xl select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
