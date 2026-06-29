@@ -35,6 +35,17 @@ export default function ChatWindow() {
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
   
   const { data: channels = [] } = useChatChannels();
+  
+  const [unreadCountAtOpen, setUnreadCountAtOpen] = useState<number>(0);
+  const prevActiveChannelIdRef = useRef<string | null>(null);
+
+  // Capture the unread count before we mark the channel as read
+  if (activeChannelId !== prevActiveChannelIdRef.current) {
+    prevActiveChannelIdRef.current = activeChannelId;
+    const channel = channels.find(c => c._id === activeChannelId);
+    setUnreadCountAtOpen(channel?.unreadCount || 0);
+  }
+
   const {
     data: messagesData,
     isLoading: loading,
@@ -44,7 +55,7 @@ export default function ChatWindow() {
     isFetchingNextPage,
     fetchNextPage,
     refetch,
-  } = useChatMessages(activeChannelId);
+  } = useChatMessages(activeChannelId, unreadCountAtOpen);
   const { data: workspaces = [] } = useWorkspaces();
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
@@ -118,15 +129,7 @@ export default function ChatWindow() {
     );
   }, [messagesData]);
 
-  const [unreadCountAtOpen, setUnreadCountAtOpen] = useState<number>(0);
-  const prevActiveChannelIdRef = useRef<string | null>(null);
-
-  // Capture the unread count before we mark the channel as read
-  if (activeChannelId !== prevActiveChannelIdRef.current) {
-    prevActiveChannelIdRef.current = activeChannelId;
-    const channel = channels.find(c => c._id === activeChannelId);
-    setUnreadCountAtOpen(channel?.unreadCount || 0);
-  }
+  // unreadCountAtOpen is captured at the top of the component
 
   const firstUnreadMessageId = useMemo(() => {
     if (unreadCountAtOpen <= 0 || messages.length === 0) return null;

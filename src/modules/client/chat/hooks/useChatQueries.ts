@@ -28,12 +28,12 @@ export const useChatChannels = () => {
   });
 };
 
-export const useChatMessages = (channelId: string | null) => {
+export const useChatMessages = (channelId: string | null, unreadCount: number = 0) => {
   return useInfiniteQuery<MessagesPage>({
     queryKey: queryKeys.chat.messages(channelId || ''),
     queryFn: ({ pageParam, signal }) =>
       getMessagesAPI(channelId as string, {
-        limit: 20,
+        limit: Math.min(100, Math.max(20, unreadCount + 5)),
         cursor: typeof pageParam === 'string' ? pageParam : undefined,
       }, { signal }),
     initialPageParam: undefined,
