@@ -101,10 +101,10 @@ export const searchMessagesAPI = async (
 ): Promise<Message[]> => {
   const response = await api.get(`/chat/channels/${channelId}/messages/search`, { params });
   const data = normalizeArray<any>(response);
-  return data.map((item: Message & { id?: string }) => ({
+  return data.map((item: any) => ({
     ...item,
-    _id: item._id || item.id
-  }));
+    _id: item._id || item.id || ''
+  })) as Message[];
 };
 
 export const addReactionAPI = async (

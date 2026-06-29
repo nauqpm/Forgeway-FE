@@ -32,7 +32,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
 
   const { data: members = [] } = useChannelMembers(channelId);
   const authUser = useAuthStore(state => state.user);
-  const currentUserId = authUser?._id || authUser?.id;
+  const currentUserId = (authUser as any)?._id || authUser?.id;
 
   // Debounce search query
   useEffect(() => {
