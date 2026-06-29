@@ -158,6 +158,9 @@ export default function ChatWindow() {
     if (!activeChannelId) return;
     shouldScrollToBottomRef.current = true;
 
+    // Clear the messages cache for this channel to force a fresh fetch of the latest messages
+    queryClient.removeQueries({ queryKey: queryKeys.chat.messages(activeChannelId) });
+
     markAsRead(activeChannelId);
     joinChannel(activeChannelId);
     setShowMembers(false);
@@ -231,17 +234,6 @@ export default function ChatWindow() {
     const interval = setInterval(clearOldTyping, 2000);
     return () => clearInterval(interval);
   }, [clearOldTyping]);
-
-  const handleScroll = () => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    // Check if user scrolled to the bottom (within a 15px threshold)
-    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 15;
-    if (isAtBottom && unreadCountAtOpen > 0) {
-      setUnreadCountAtOpen(0);
-    }
-  };
 
   const handleLoadMore = async () => {
     if (!activeChannelId || !hasNextPage || isFetchingNextPage) return;
@@ -489,7 +481,7 @@ export default function ChatWindow() {
       )}
 
       {/* Messages area */}
-      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto min-h-0">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
         {loading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
