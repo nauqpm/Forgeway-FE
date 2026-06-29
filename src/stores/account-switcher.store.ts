@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { accountSwitcherService, type SavedAccount } from "@/modules/auth/services/account-switcher.service";
 import { recentLoginsService } from "@/modules/auth/services/recent-logins.service";
+import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 interface AccountSwitcherState {
   /** Accounts saved under the *current owner* (via AccountSwitcherService). Multi-account switch. */
@@ -74,6 +75,8 @@ export const useAccountSwitcherStore = create<
       // Reload the page so every in-memory store re-initialises with the new identity.
       // This is the safest reset path: a hard refresh clears any per-user cached state.
       if (typeof window !== "undefined") {
+        // Clear workspace selection so the new account defaults to its first workspace on reload.
+        useWorkspaceStore.getState().clearWorkspace();
         window.location.assign("/");
       }
     } catch (e) {
