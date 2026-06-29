@@ -71,6 +71,7 @@ const clearStoredLoginRetry = () => {
 
 function LoginFormInner() {
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [credentialError, setCredentialError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -130,11 +131,12 @@ function LoginFormInner() {
     e.preventDefault();
 
     if (isCoolingDown) return;
+    setEmailError(null);
     setCredentialError(null);
 
-    const emailError = validateEmail(email);
-    if (emailError) {
-      toast.error(emailError);
+    const nextEmailError = validateEmail(email);
+    if (nextEmailError) {
+      setEmailError(nextEmailError);
       return;
     }
 
@@ -199,8 +201,15 @@ function LoginFormInner() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Email</label>
-              <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setCredentialError(null); }} required placeholder="JaneDoe@gmail.com"
-                className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
+              <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailError(null); setCredentialError(null); }} required placeholder="JaneDoe@gmail.com"
+                aria-invalid={Boolean(emailError)}
+                aria-describedby={emailError ? 'login-email-error' : undefined}
+                className={`w-full px-4 py-2.5 bg-white/45 border rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 outline-none transition-all shadow-inner disabled:opacity-50 ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-200/35 focus:border-[#2563EB] focus:ring-[#2563EB]'}`} />
+              {emailError && (
+                <p id="login-email-error" role="alert" className="mt-1.5 text-xs font-medium text-red-700">
+                  {emailError}
+                </p>
+              )}
             </div>
             <div>
               <div className="flex items-center justify-between mb-1.5">
