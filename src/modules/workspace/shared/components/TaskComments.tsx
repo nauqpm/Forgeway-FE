@@ -62,6 +62,9 @@ const toMentionMember = (m: RawMemberDto): MentionMember | null => {
   return { id, display };
 };
 
+const toMentionMembers = (members: RawMemberDto[]): MentionMember[] =>
+  members.map(toMentionMember).filter((member): member is MentionMember => member !== null);
+
 const formatDateTime = (value?: string | null): string => {
   if (!value) return "";
   try {
@@ -181,14 +184,14 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
     staleTime: 30_000,
   });
 
-  const { data: mentionMembers = [] } = useQuery<MentionMember[]>({
+  const { data: mentionMembers = [] } = useQuery<RawMemberDto[], Error, MentionMember[]>({
     queryKey: membersKey,
     queryFn: async () => {
       const response = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId));
       const payload = normalizeResponse<unknown>(response);
-      const arr = Array.isArray(payload) ? (payload as RawMemberDto[]) : [];
-      return arr.map(toMentionMember).filter((m): m is MentionMember => m !== null);
+      return Array.isArray(payload) ? (payload as RawMemberDto[]) : [];
     },
+    select: toMentionMembers,
     enabled: Boolean(workspaceId) && !isDeleted,
     staleTime: 5 * 60_000,
   });
