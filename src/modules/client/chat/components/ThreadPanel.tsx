@@ -23,6 +23,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
   const targetMessageId = searchParams.get('messageId');
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
+  const scrolledMessageIdRef = useRef<string | null>(null);
 
   const { data: channels = [] } = useChatChannels();
   const channel = channels.find(c => c._id === channelId);
@@ -63,11 +64,20 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
     if (isLoading) return;
 
     if (targetMessageId) {
+      if (scrolledMessageIdRef.current === targetMessageId) return;
+
       const timer = setTimeout(() => {
         const el = document.getElementById(`msg-${targetMessageId}`);
         if (el) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
           el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+          scrolledMessageIdRef.current = targetMessageId;
+
+          // Remove messageId from URL so it doesn't scroll on refresh
+          const url = new URL(window.location.href);
+          url.searchParams.delete('messageId');
+          window.history.replaceState({}, '', url.toString());
+
           setTimeout(() => {
             el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
           }, 2000);

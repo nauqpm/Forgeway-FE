@@ -38,12 +38,14 @@ export default function ChatWindow() {
   
   const [unreadCountAtOpen, setUnreadCountAtOpen] = useState<number>(0);
   const prevActiveChannelIdRef = useRef<string | null>(null);
+  const scrolledMessageIdRef = useRef<string | null>(null);
 
   // Capture the unread count before we mark the channel as read
   if (activeChannelId !== prevActiveChannelIdRef.current) {
     prevActiveChannelIdRef.current = activeChannelId;
     const channel = channels.find(c => c._id === activeChannelId);
     setUnreadCountAtOpen(channel?.unreadCount || 0);
+    scrolledMessageIdRef.current = null; // Reset scroll tracker on channel change
   }
 
   const {
@@ -203,12 +205,20 @@ export default function ChatWindow() {
 
   useEffect(() => {
     if (loading || !targetMessageId || activeThreadParentId) return;
+    if (scrolledMessageIdRef.current === targetMessageId) return;
 
     const timer = setTimeout(() => {
       const el = document.getElementById(`msg-${targetMessageId}`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+        scrolledMessageIdRef.current = targetMessageId;
+
+        // Remove messageId from URL so it doesn't scroll on refresh
+        const url = new URL(window.location.href);
+        url.searchParams.delete('messageId');
+        window.history.replaceState({}, '', url.toString());
+
         setTimeout(() => {
           el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
         }, 2000);
