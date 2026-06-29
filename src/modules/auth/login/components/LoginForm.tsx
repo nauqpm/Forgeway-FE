@@ -10,7 +10,7 @@ import { AuthErrorCode } from '../../shared/types/auth.types';
 import { validateEmail } from '../../shared/utils/emailValidation';
 import { extractApiErrorCode } from '@/shared/utils/apiError';
 import toast from 'react-hot-toast';
-import { Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import logoIcon from '../../../../../app/icon.png';
 
@@ -235,8 +235,7 @@ function LoginFormInner() {
             </div>
 
             {isCoolingDown && (
-              <div className="flex items-start gap-2 rounded-[6px] border border-amber-300/80 bg-amber-50/85 px-3 py-2 text-[0.8125rem] font-semibold text-amber-800">
-                <ShieldAlert className="mt-0.5 h-4 w-4 flex-shrink-0" />
+              <div className="flex items-start gap-2 rounded-[6px] border border-[#D97706] bg-[#FFFBEB] px-3 py-2 text-[0.8125rem] font-semibold text-[#78350F] shadow-sm">
                 <span>Please wait {retrySeconds}s before trying again.</span>
               </div>
             )}
