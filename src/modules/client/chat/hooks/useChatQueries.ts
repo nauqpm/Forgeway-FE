@@ -33,7 +33,7 @@ export const useChatMessages = (channelId: string | null, unreadCount: number = 
     queryKey: queryKeys.chat.messages(channelId || ''),
     queryFn: ({ pageParam, signal }) =>
       getMessagesAPI(channelId as string, {
-        limit: Math.min(100, Math.max(20, unreadCount + 5)),
+        limit: Math.min(500, Math.max(20, unreadCount + 10)),
         cursor: typeof pageParam === 'string' ? pageParam : undefined,
       }, { signal }),
     initialPageParam: undefined,

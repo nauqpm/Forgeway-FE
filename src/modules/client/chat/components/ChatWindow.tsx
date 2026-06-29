@@ -232,6 +232,17 @@ export default function ChatWindow() {
     return () => clearInterval(interval);
   }, [clearOldTyping]);
 
+  const handleScroll = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    // Check if user scrolled to the bottom (within a 15px threshold)
+    const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 15;
+    if (isAtBottom && unreadCountAtOpen > 0) {
+      setUnreadCountAtOpen(0);
+    }
+  };
+
   const handleLoadMore = async () => {
     if (!activeChannelId || !hasNextPage || isFetchingNextPage) return;
     
@@ -478,7 +489,7 @@ export default function ChatWindow() {
       )}
 
       {/* Messages area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto min-h-0">
         {loading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
