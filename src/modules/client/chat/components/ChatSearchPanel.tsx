@@ -63,13 +63,47 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
   );
 
   // Attachments Query
-  const { data: attachments = [], isFetching: isLoadingFiles } = useQuery<Attachment[]>({
-    queryKey: ['chat', 'attachments', channelId],
+  // Attachments & Images Query
+  const { data: allFiles = [], isFetching: isLoadingFiles } = useQuery<Attachment[]>({
+    queryKey: ['chat', 'files-and-images', channelId],
     queryFn: async () => {
-      const response = await api.get('/attachments', {
-        params: { targetType: 'channel', targetId: channelId }
-      });
-      return response.data?.data ?? response.data ?? [];
+      const [attachmentsRes, imagesRes] = await Promise.all([
+        api.get('/attachments', {
+          params: { targetType: 'channel', targetId: channelId }
+        }),
+        api.get('/imagesapi', {
+          params: { targetType: 'channel', targetId: channelId, limit: 100 }
+        })
+      ]);
+
+      const attachmentsData = attachmentsRes.data?.data ?? attachmentsRes.data ?? [];
+      
+      const imagesResData = imagesRes.data;
+      const imagesList = Array.isArray(imagesResData)
+        ? imagesResData
+        : (Array.isArray(imagesResData?.images)
+          ? imagesResData.images
+          : (Array.isArray(imagesResData?.data) ? imagesResData.data : []));
+      
+      const normalizedImages = imagesList.map((img: any) => ({
+        _id: img._id,
+        originalName: img.originalName || img.filename || 'image.jpg',
+        mimeType: img.mimeType || img.mimetype || 'image/jpeg',
+        size: img.size || 0,
+        url: img.url,
+        createdAt: img.createdAt || new Date().toISOString()
+      }));
+
+      const normalizedAttachments = (Array.isArray(attachmentsData) ? attachmentsData : []).map((att: any) => ({
+        _id: att._id,
+        originalName: att.originalName || att.filename || 'file',
+        mimeType: att.mimeType || att.mimetype || 'application/octet-stream',
+        size: att.size || 0,
+        url: att.url,
+        createdAt: att.createdAt || new Date().toISOString()
+      }));
+
+      return [...normalizedImages, ...normalizedAttachments];
     },
     enabled: activeTab === 'files' && Boolean(channelId),
   });
@@ -79,7 +113,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     const media: Attachment[] = [];
     const docs: Attachment[] = [];
 
-    attachments.forEach((file) => {
+    allFiles.forEach((file) => {
       const mime = file.mimeType?.toLowerCase() || '';
       if (mime.startsWith('image/') || mime.startsWith('video/')) {
         media.push(file);
@@ -89,7 +123,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     });
 
     return { mediaFiles: media, docFiles: docs };
-  }, [attachments]);
+  }, [allFiles]);
 
   const handleDownload = async (url: string, originalName: string) => {
     const loadingToast = toast.loading('Downloading file...');
@@ -356,7 +390,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-5 h-5 animate-spin text-[#787774]" />
               </div>
-            ) : attachments.length === 0 ? (
+            ) : allFiles.length === 0 ? (
               <div className="py-12 text-center text-xs text-[#ABABAB] dark:text-[#6B6B6B] italic">
                 No files or images sent in this channel yet.
               </div>

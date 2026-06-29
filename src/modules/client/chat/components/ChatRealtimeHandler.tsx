@@ -84,7 +84,7 @@ export default function ChatRealtimeHandler() {
     ensureChannelInCache(message.channelId);
 
     if (message.attachments && message.attachments.length > 0) {
-      queryClient.invalidateQueries({ queryKey: ['chat', 'attachments', message.channelId] });
+      queryClient.invalidateQueries({ queryKey: ['chat', 'files-and-images', message.channelId] });
     }
 
     const activeChannelId = useChatStore.getState().activeChannelId;
