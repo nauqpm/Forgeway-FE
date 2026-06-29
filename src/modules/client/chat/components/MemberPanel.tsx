@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { X, Search, Loader2, Users, UserPlus, UserMinus } from 'lucide-react';
-import { useChannelMembers } from '@/modules/client/chat/hooks/useChatQueries';
+import { useChannelMembers, useCreateDM } from '@/modules/client/chat/hooks/useChatQueries';
 import type { ChatMember } from '@/modules/client/chat/types/chat.types';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import type { AuthUser } from '@/modules/auth/shared/types/auth.types';
@@ -88,7 +88,22 @@ const getRoleBadge = (role?: string) => {
 
 export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   const { data: members = [], isLoading } = useChannelMembers(channelId);
+  const createDMMutation = useCreateDM();
   const [searchQuery, setSearchQuery] = useState('');
+
+  const handleMemberClick = async (memberId: string) => {
+    if (String(memberId) === String(currentUserId)) return;
+    
+    const loadingToast = toast.loading('Starting conversation...');
+    try {
+      await createDMMutation.mutateAsync(memberId);
+      toast.success('Create DM successfully', { id: loadingToast });
+      onClose();
+    } catch (error: any) {
+      console.error('Failed to create DM:', error);
+      toast.error(error.response?.data?.message || error.message || 'Failed to start conversation', { id: loadingToast });
+    }
+  };
 
   const queryClient = useQueryClient();
   const authUser = useAuthStore(state => state.user) as (AuthUser & { _id?: string }) | null;
@@ -255,6 +270,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
             {sortedMembers.map((member) => (
               <div
                 key={member._id}
+                onClick={() => !createDMMutation.isPending && handleMemberClick(String(member._id))}
                 className="flex items-center gap-3 px-4 py-2 hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] transition-colors cursor-pointer"
               >
                 {/* Avatar */}
