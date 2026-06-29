@@ -83,6 +83,10 @@ export default function ChatRealtimeHandler() {
     upsertMessageInCache(queryClient, message.channelId, message);
     ensureChannelInCache(message.channelId);
 
+    if (message.attachments && message.attachments.length > 0) {
+      queryClient.invalidateQueries({ queryKey: ['chat', 'attachments', message.channelId] });
+    }
+
     const activeChannelId = useChatStore.getState().activeChannelId;
     console.log("ChatRealtimeHandler: activeChannelId is", activeChannelId);
     const isCurrentChannel = activeChannelId && message.channelId && String(activeChannelId) === String(message.channelId);

@@ -29,10 +29,24 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedSenderId, setSelectedSenderId] = useState<string>('');
+  const [showSenderDropdown, setShowSenderDropdown] = useState(false);
+  const [senderSearchQuery, setSenderSearchQuery] = useState('');
 
   const { data: members = [] } = useChannelMembers(channelId);
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as any)?._id || authUser?.id;
+
+  const selectedSender = useMemo(() => {
+    return members.find(m => m._id === selectedSenderId);
+  }, [members, selectedSenderId]);
+
+  const filteredMembersForDropdown = useMemo(() => {
+    if (!senderSearchQuery.trim()) return members;
+    const q = senderSearchQuery.toLowerCase();
+    return members.filter(
+      m => m.fullName?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q)
+    );
+  }, [members, senderSearchQuery]);
 
   // Debounce search query
   useEffect(() => {
@@ -185,19 +199,89 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                 />
               </div>
 
-              {/* Sender Filter */}
-              <select
-                value={selectedSenderId}
-                onChange={(e) => setSelectedSenderId(e.target.value)}
-                className="w-full px-2 py-1.5 text-xs bg-white dark:bg-white/[0.03] border border-[#EAEAEA] dark:border-white/[0.06] rounded-md text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors"
-              >
-                <option value="" className="dark:bg-[#202020]">All members</option>
-                {members.map((m) => (
-                  <option key={m._id} value={m._id} className="dark:bg-[#202020]">
-                    {m.fullName || m.email}
-                  </option>
-                ))}
-              </select>
+              {/* Sender Filter (Custom Searchable Dropdown) */}
+              <div className="relative">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowSenderDropdown(!showSenderDropdown)}
+                    className="w-full flex items-center justify-between px-3 py-1.5 text-xs bg-white dark:bg-white/[0.03] border border-[#EAEAEA] dark:border-white/[0.06] rounded-md text-[#111111] dark:text-[#E8E8E7] text-left hover:bg-[#F7F6F3] dark:hover:bg-white/[0.02] transition-colors"
+                  >
+                    {selectedSender ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-[8px] font-bold overflow-hidden flex-shrink-0">
+                          {selectedSender.avatar ? (
+                            <img src={selectedSender.avatar} alt={selectedSender.fullName} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{(selectedSender.fullName || selectedSender.email || 'U').charAt(0).toUpperCase()}</span>
+                          )}
+                        </div>
+                        <span className="truncate">{selectedSender.fullName || selectedSender.email}</span>
+                      </div>
+                    ) : (
+                      <span className="text-[#ABABAB] dark:text-[#6B6B6B]">Filter by sender...</span>
+                    )}
+                    <span className="text-[9px] text-[#787774] dark:text-[#9B9A97] ml-2">▼</span>
+                  </button>
+
+                  {showSenderDropdown && (
+                    <>
+                      {/* Backdrop to close dropdown */}
+                      <div className="fixed inset-0 z-10" onClick={() => setShowSenderDropdown(false)} />
+                      
+                      <div className="absolute z-20 w-full mt-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-md shadow-lg max-h-60 overflow-y-auto flex flex-col">
+                        {/* Search inside dropdown */}
+                        <div className="p-2 border-b border-[#EAEAEA] dark:border-white/[0.06] sticky top-0 bg-white dark:bg-[#252525] z-10">
+                          <input
+                            type="text"
+                            placeholder="Search members..."
+                            value={senderSearchQuery}
+                            onChange={(e) => setSenderSearchQuery(e.target.value)}
+                            className="w-full px-2.5 py-1 text-xs bg-[#F7F6F3] dark:bg-white/[0.04] border border-[#EAEAEA] dark:border-white/[0.06] rounded text-[#111111] dark:text-[#E8E8E7] focus:outline-none"
+                          />
+                        </div>
+                        <div className="py-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedSenderId('');
+                              setShowSenderDropdown(false);
+                            }}
+                            className="w-full px-3 py-1.5 text-xs text-left hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] text-[#787774] dark:text-[#9B9A97]"
+                          >
+                            All members (Anyone)
+                          </button>
+                          {filteredMembersForDropdown.map((m) => (
+                            <button
+                              key={m._id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedSenderId(m._id);
+                                setShowSenderDropdown(false);
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-left hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] text-[#111111] dark:text-[#E8E8E7]"
+                            >
+                              <div className="w-4.5 h-4.5 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-[9px] font-bold overflow-hidden flex-shrink-0">
+                                {m.avatar ? (
+                                  <img src={m.avatar} alt={m.fullName} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span>{(m.fullName || m.email || 'U').charAt(0).toUpperCase()}</span>
+                                )}
+                              </div>
+                              <span className="truncate">{m.fullName || m.email}</span>
+                            </button>
+                          ))}
+                          {filteredMembersForDropdown.length === 0 && (
+                            <div className="px-3 py-2 text-xs text-[#ABABAB] dark:text-[#6B6B6B] italic text-center">
+                              No members found
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Message Results */}
