@@ -7,6 +7,7 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
+import ChatSearchPanel from './ChatSearchPanel';
 import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
@@ -69,6 +70,7 @@ export default function ChatWindow() {
 
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [showMembers, setShowMembers] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const shouldScrollToBottomRef = useRef(true);
   const lastMessageIdRef = useRef<string | null>(null);
@@ -153,6 +155,8 @@ export default function ChatWindow() {
 
     markAsRead(activeChannelId);
     joinChannel(activeChannelId);
+    setShowMembers(false);
+    setShowSearch(false);
 
     return () => {
       leaveChannel();
@@ -400,6 +404,7 @@ export default function ChatWindow() {
             title="View active threads"
             onClick={() => {
               setShowMembers(false);
+              setShowSearch(false);
               setActiveThreadParentId(activeThreadParentId === 'index' ? null : 'index');
             }}
           >
@@ -415,15 +420,24 @@ export default function ChatWindow() {
             title="View members"
             onClick={() => {
               setActiveThreadParentId(null);
+              setShowSearch(false);
               setShowMembers(!showMembers);
             }}
           >
             <Users className="w-4 h-4" />
           </button>
           <button 
-            disabled 
-            title="Coming soon" 
-            className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`p-1 transition-colors rounded-md ${
+              showSearch 
+                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
+                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+            }`}
+            title="Search channel"
+            onClick={() => {
+              setActiveThreadParentId(null);
+              setShowMembers(false);
+              setShowSearch(!showSearch);
+            }}
           >
             <Search className="w-4 h-4" />
           </button>
@@ -590,6 +604,14 @@ export default function ChatWindow() {
       <MemberPanel
         channelId={activeChannelId}
         onClose={() => setShowMembers(false)}
+      />
+    )}
+
+    {/* Search Panel */}
+    {showSearch && activeChannelId && (
+      <ChatSearchPanel
+        channelId={activeChannelId}
+        onClose={() => setShowSearch(false)}
       />
     )}
 

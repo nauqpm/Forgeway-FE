@@ -11,6 +11,7 @@ import {
   searchUsersAPI,
   getThreadRepliesAPI,
   getActiveThreadsAPI,
+  searchMessagesAPI,
 } from '@/modules/client/chat/services/chatService';
 import { getActiveMeetingAPI } from '@/modules/client/meeting/services/meeting.api';
 import { useChatStore } from '@/stores/chatStore';
@@ -150,5 +151,17 @@ export const useActiveThreads = (channelId: string | null) => {
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor || undefined,
     enabled: Boolean(channelId),
+  });
+};
+
+export const useSearchChannelMessages = (
+  channelId: string | null,
+  filters: { q?: string; senderId?: string }
+) => {
+  return useQuery({
+    queryKey: ['chat', 'messages', 'search', channelId, filters],
+    queryFn: () => searchMessagesAPI(channelId as string, filters),
+    enabled: Boolean(channelId && (filters.q?.trim() || filters.senderId)),
+    staleTime: 0,
   });
 };

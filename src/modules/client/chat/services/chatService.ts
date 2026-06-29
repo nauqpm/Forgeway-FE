@@ -95,6 +95,18 @@ export const resetUnreadCountAPI = async (channelId: string): Promise<void> => {
   await api.post(`/chat/channels/${channelId}/read`);
 };
 
+export const searchMessagesAPI = async (
+  channelId: string,
+  params: { q?: string; senderId?: string }
+): Promise<Message[]> => {
+  const response = await api.get(`/chat/channels/${channelId}/messages/search`, { params });
+  const data = normalizeArray<any>(response);
+  return data.map((item: Message & { id?: string }) => ({
+    ...item,
+    _id: item._id || item.id
+  }));
+};
+
 export const addReactionAPI = async (
   messageId: string,
   emoji: string

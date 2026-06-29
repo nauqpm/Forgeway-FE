@@ -1,0 +1,375 @@
+'use client';
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { X, Search, Loader2, FileText, Image as ImageIcon, File, Download, ExternalLink, Calendar } from 'lucide-react';
+import { useChannelMembers, useSearchChannelMessages } from '../hooks/useChatQueries';
+import { useQuery } from '@tanstack/react-query';
+import api from '@/lib/axiosIns';
+import { useChatStore } from '@/stores/chatStore';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import toast from 'react-hot-toast';
+import { format } from 'date-fns';
+
+interface ChatSearchPanelProps {
+  channelId: string;
+  onClose: () => void;
+}
+
+interface Attachment {
+  _id: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  url: string;
+  createdAt: string;
+}
+
+export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelProps) {
+  const [activeTab, setActiveTab] = useState<'messages' | 'files'>('messages');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [selectedSenderId, setSelectedSenderId] = useState<string>('');
+
+  const { data: members = [] } = useChannelMembers(channelId);
+  const authUser = useAuthStore(state => state.user);
+  const currentUserId = authUser?._id || authUser?.id;
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Messages Search Query
+  const { data: searchResults = [], isFetching: isSearching } = useSearchChannelMessages(
+    channelId,
+    { q: debouncedQuery, senderId: selectedSenderId || undefined }
+  );
+
+  // Attachments Query
+  const { data: attachments = [], isFetching: isLoadingFiles } = useQuery<Attachment[]>({
+    queryKey: ['chat', 'attachments', channelId],
+    queryFn: async () => {
+      const response = await api.get('/attachments', {
+        params: { targetType: 'channel', targetId: channelId }
+      });
+      return response.data?.data ?? response.data ?? [];
+    },
+    enabled: activeTab === 'files' && Boolean(channelId),
+  });
+
+  // Filter attachments
+  const { mediaFiles, docFiles } = useMemo(() => {
+    const media: Attachment[] = [];
+    const docs: Attachment[] = [];
+
+    attachments.forEach((file) => {
+      const mime = file.mimeType?.toLowerCase() || '';
+      if (mime.startsWith('image/') || mime.startsWith('video/')) {
+        media.push(file);
+      } else {
+        docs.push(file);
+      }
+    });
+
+    return { mediaFiles: media, docFiles: docs };
+  }, [attachments]);
+
+  const handleDownload = async (url: string, originalName: string) => {
+    const loadingToast = toast.loading('Downloading file...');
+    try {
+      const response = await api.get('/attachments/download-by-url', {
+        params: { url },
+        responseType: 'blob',
+      });
+      const blob = response.data;
+      const blobUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = blobUrl;
+      anchor.download = originalName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(blobUrl);
+      toast.success('Download complete!', { id: loadingToast });
+    } catch (error: any) {
+      console.error('Download failed:', error);
+      toast.error('Failed to download file', { id: loadingToast });
+    }
+  };
+
+  const handleMessageClick = (msg: any) => {
+    const messageId = msg._id || msg.id;
+    
+    if (msg.threadParentId) {
+      // If it is a reply, open the thread panel
+      useChatStore.getState().setActiveThreadParentId(msg.threadParentId);
+      
+      // Append threadParentId and messageId to URL
+      const params = new URLSearchParams(window.location.search);
+      params.set('channelId', channelId);
+      params.set('threadParentId', msg.threadParentId);
+      params.set('messageId', messageId);
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    } else {
+      // If it is a main message, close thread index / panel
+      useChatStore.getState().setActiveThreadParentId(null);
+      
+      // Append channelId and messageId to URL
+      const params = new URLSearchParams(window.location.search);
+      params.set('channelId', channelId);
+      params.set('messageId', messageId);
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    }
+  };
+
+  return (
+    <div className="w-[350px] flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out]">
+      {/* Header */}
+      <div className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
+        <div className="flex items-center gap-2">
+          <Search className="w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
+          <h3 className="text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
+            Search Channel
+          </h3>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex border-b border-[#EAEAEA] dark:border-white/[0.06] px-2 bg-[#FBFBFA] dark:bg-[#1C1C1C]">
+        <button
+          onClick={() => setActiveTab('messages')}
+          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
+            activeTab === 'messages'
+              ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
+              : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
+          }`}
+        >
+          Messages
+        </button>
+        <button
+          onClick={() => setActiveTab('files')}
+          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
+            activeTab === 'files'
+              ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
+              : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
+          }`}
+        >
+          Files & Images
+        </button>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+        {activeTab === 'messages' ? (
+          <>
+            {/* Search Filters */}
+            <div className="p-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA]/50 dark:bg-[#1E1E1E]/30 space-y-2">
+              {/* Keyword Search */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+                <input
+                  type="text"
+                  placeholder="Search message text..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-white/[0.03] border border-[#EAEAEA] dark:border-white/[0.06] rounded-md text-[#111111] dark:text-[#E8E8E7] placeholder-[#ABABAB] dark:placeholder-[#6B6B6B] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors"
+                />
+              </div>
+
+              {/* Sender Filter */}
+              <select
+                value={selectedSenderId}
+                onChange={(e) => setSelectedSenderId(e.target.value)}
+                className="w-full px-2 py-1.5 text-xs bg-white dark:bg-white/[0.03] border border-[#EAEAEA] dark:border-white/[0.06] rounded-md text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6] transition-colors"
+              >
+                <option value="" className="dark:bg-[#202020]">All members</option>
+                {members.map((m) => (
+                  <option key={m._id} value={m._id} className="dark:bg-[#202020]">
+                    {m.fullName || m.email}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Message Results */}
+            <div className="flex-1 overflow-y-auto">
+              {isSearching ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-5 h-5 animate-spin text-[#787774]" />
+                </div>
+              ) : !debouncedQuery.trim() && !selectedSenderId ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-[#ABABAB] dark:text-[#6B6B6B]">
+                  <Search className="w-8 h-8 mb-2 opacity-30" />
+                  <p className="text-xs">Type a keyword or select a member to start searching.</p>
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="py-12 text-center text-xs text-[#ABABAB] dark:text-[#6B6B6B]">
+                  No matching messages found.
+                </div>
+              ) : (
+                <div className="divide-y divide-[#EAEAEA]/50 dark:divide-white/[0.03]">
+                  {searchResults.map((msg: any) => {
+                    const sender = msg.senderId;
+                    const senderName = sender?.fullName || sender?.email || 'User';
+                    const dateStr = format(new Date(msg.createdAt), 'MMM d, h:mm a');
+                    
+                    return (
+                      <div
+                        key={msg._id || msg.id}
+                        onClick={() => handleMessageClick(msg)}
+                        className="p-3 hover:bg-[#F7F6F3]/60 dark:hover:bg-white/[0.02] cursor-pointer transition-colors text-left"
+                      >
+                        <div className="flex items-start gap-2.5">
+                          {/* Avatar */}
+                          <div className="w-6 h-6 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 overflow-hidden mt-0.5">
+                            {sender?.avatar ? (
+                              <img src={sender.avatar} alt={senderName} className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{senderName.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          {/* Body */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-bold text-[#111111] dark:text-[#E8E8E7] truncate">
+                                {senderName}
+                              </span>
+                              <span className="text-[9px] text-[#ABABAB] dark:text-[#6B6B6B] whitespace-nowrap flex items-center gap-1">
+                                <Calendar className="w-2.5 h-2.5" />
+                                {dateStr}
+                              </span>
+                            </div>
+                            {msg.threadParentId && (
+                              <span className="inline-block mt-0.5 px-1 py-0.2 bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 rounded text-[8px] font-bold uppercase tracking-wide">
+                                Reply in thread
+                              </span>
+                            )}
+                            <p className="text-xs text-[#555555] dark:text-[#C4C4C3] line-clamp-3 mt-1 break-words">
+                              {msg.content || (msg.stickerId ? 'Sent a sticker' : 'Sent an attachment')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          /* Files & Images Tab */
+          <div className="flex-1 p-3 space-y-4">
+            {isLoadingFiles ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-5 h-5 animate-spin text-[#787774]" />
+              </div>
+            ) : attachments.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#ABABAB] dark:text-[#6B6B6B] italic">
+                No files or images sent in this channel yet.
+              </div>
+            ) : (
+              <>
+                {/* Media Section */}
+                {mediaFiles.length > 0 && (
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Media ({mediaFiles.length})
+                    </h4>
+                    <div className="grid grid-cols-3 gap-2">
+                      {mediaFiles.map((file) => (
+                        <div
+                          key={file._id}
+                          className="relative aspect-square rounded-[6px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] group"
+                        >
+                          <img
+                            src={file.url}
+                            alt={file.originalName}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* Hover Overlay */}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+                            <button
+                              onClick={() => handleDownload(file.url, file.originalName)}
+                              title="Download"
+                              className="p-1.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
+                            <a
+                              href={file.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title="Open original"
+                              className="p-1.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Documents Section */}
+                {docFiles.length > 0 && (
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wider mb-2 flex items-center gap-1">
+                      <FileText className="w-3.5 h-3.5" />
+                      Documents ({docFiles.length})
+                    </h4>
+                    <div className="space-y-1.5">
+                      {docFiles.map((file) => {
+                        const isPdf = file.mimeType?.toLowerCase() === 'application/pdf';
+                        
+                        return (
+                          <div
+                            key={file._id}
+                            className="flex items-center justify-between p-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA]/50 dark:bg-white/[0.02] hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] transition-colors gap-2"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              {isPdf ? (
+                                <FileText className="w-4 h-4 text-red-500 flex-shrink-0" />
+                              ) : (
+                                <File className="w-4 h-4 text-[#787774] flex-shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-xs text-[#111111] dark:text-[#E8E8E7] truncate font-medium">
+                                  {file.originalName}
+                                </p>
+                                <p className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] mt-0.5">
+                                  {(file.size / 1024).toFixed(1)} KB
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <button
+                              onClick={() => handleDownload(file.url, file.originalName)}
+                              className="p-1 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/5 rounded transition-colors flex-shrink-0"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
