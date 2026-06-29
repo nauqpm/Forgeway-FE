@@ -6,7 +6,9 @@ import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../shared/hooks/useAuth';
 import { initiateGoogleLogin } from '../../sso/services/ssoService';
 import { extractLoginRetryDetails } from '../../shared/services/authService';
+import { AuthErrorCode } from '../../shared/types/auth.types';
 import { validateEmail } from '../../shared/utils/emailValidation';
+import { extractApiErrorCode } from '@/shared/utils/apiError';
 import toast from 'react-hot-toast';
 import { Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-react';
 import Image from 'next/image';
@@ -21,6 +23,12 @@ type StoredLoginRetry = {
 };
 
 const normalizeEmail = (value: string) => value.trim().toLowerCase();
+const CREDENTIAL_ERROR_CODES = new Set<string>([
+  AuthErrorCode.INVALID_CREDENTIALS,
+  AuthErrorCode.ACCOUNT_LOCKED,
+  AuthErrorCode.USER_SUSPENDED,
+  AuthErrorCode.USER_DEACTIVATED,
+]);
 
 const getRetrySeconds = (retryAt: string | null, now: number): number => {
   if (!retryAt) return 0;
@@ -64,6 +72,7 @@ const clearStoredLoginRetry = () => {
 function LoginFormInner() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [credentialError, setCredentialError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [retryEmail, setRetryEmail] = useState('');
   const [retryAt, setRetryAt] = useState<string | null>(null);
@@ -121,6 +130,7 @@ function LoginFormInner() {
     e.preventDefault();
 
     if (isCoolingDown) return;
+    setCredentialError(null);
 
     const emailError = validateEmail(email);
     if (emailError) {
@@ -141,7 +151,10 @@ function LoginFormInner() {
         setRetryEmail('');
         clearStoredLoginRetry();
       }
-      // Other error toasts are handled in useAuth.login.
+      if (CREDENTIAL_ERROR_CODES.has(extractApiErrorCode(error, ''))) {
+        setCredentialError('Email or password is incorrect.');
+      }
+      // Non-credential error toasts are handled in useAuth.login.
     }
   };
 
@@ -186,7 +199,7 @@ function LoginFormInner() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Email</label>
-              <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="JaneDoe@gmail.com"
+              <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setCredentialError(null); }} required placeholder="JaneDoe@gmail.com"
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
             </div>
             <div>
@@ -195,14 +208,21 @@ function LoginFormInner() {
                 <Link href="/forgot-password" className="text-xs text-[#2563EB] hover:text-[#1D4ED8] font-semibold">Forgot password?</Link>
               </div>
               <div className="relative">
-                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required
+                <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => { setPassword(e.target.value); setCredentialError(null); }} required
                   placeholder="Enter your password"
-                  className="w-full px-4 py-2.5 pr-11 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner disabled:opacity-50" />
+                  aria-invalid={Boolean(credentialError)}
+                  aria-describedby={credentialError ? 'login-credential-error' : undefined}
+                  className={`w-full px-4 py-2.5 pr-11 bg-white/45 border rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 outline-none transition-all shadow-inner disabled:opacity-50 ${credentialError ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-200/35 focus:border-[#2563EB] focus:ring-[#2563EB]'}`} />
                 <button type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {credentialError && (
+                <p id="login-credential-error" role="alert" className="mt-1.5 text-xs font-medium text-red-700">
+                  {credentialError}
+                </p>
+              )}
             </div>
 
             {isCoolingDown && (

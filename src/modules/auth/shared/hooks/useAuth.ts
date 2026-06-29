@@ -54,7 +54,8 @@ const handleLoginError = (error: unknown) => {
     errorCode === AuthErrorCode.USER_SUSPENDED ||
     errorCode === AuthErrorCode.USER_DEACTIVATED
   ) {
-    toast.error("Email or password is incorrect.");
+    // LoginForm renders credential failures next to the password field.
+    return;
   } else {
     toast.error("Sign-in failed. Please try again later.");
   }
