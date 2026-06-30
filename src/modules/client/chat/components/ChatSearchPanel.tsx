@@ -452,9 +452,9 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                                     return (
                                       <button
                                         key={idx}
-                                        onClick={() => handleDownload(file.url, file.name || 'File')}
+                                        onClick={() => handleFileClick(file.url, file.name || 'File', file.mimeType || '')}
                                         className="flex items-center gap-1.5 px-2 py-0.5 bg-[#F7F6F3] dark:bg-white/[0.02] hover:bg-[#EAEAEA] dark:hover:bg-white/10 border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] text-[10px] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] max-w-full transition-colors cursor-pointer group text-left"
-                                        title={`Download ${file.name || 'File'}`}
+                                        title={`Open or Download ${file.name || 'File'}`}
                                       >
                                         <FileText className="w-3 h-3 text-[#787774] dark:text-[#9B9A97] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] flex-shrink-0" />
                                         <span className="truncate max-w-[120px]">{file.name || 'File'}</span>
