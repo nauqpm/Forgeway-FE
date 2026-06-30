@@ -165,14 +165,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
           responseType: 'blob',
         });
         const blob = response.data;
-        let finalBlob = blob;
-        if (isPdf && blob.type !== 'application/pdf') {
-          finalBlob = new Blob([blob], { type: 'application/pdf' });
-        } else if (isDocx && blob.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-          finalBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-        }
-        
-        const blobUrl = URL.createObjectURL(finalBlob);
+        const blobUrl = URL.createObjectURL(blob);
         window.open(blobUrl, '_blank');
         toast.dismiss(loadingToast);
         setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000);

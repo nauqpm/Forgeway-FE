@@ -301,16 +301,10 @@ export default function MessageItem({
       });
       const blob = response.data;
       const mime = blob.type || file.mimeType || '';
+      const blobUrl = URL.createObjectURL(blob);
       
       const isDocx = mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || filename.toLowerCase().endsWith('.docx');
       const isPreviewable = mime === 'application/pdf' || isDocx || mime.startsWith('image/') || mime.startsWith('text/');
-      
-      let finalBlob = blob;
-      if (isDocx && blob.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-        finalBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-      }
-      
-      const blobUrl = URL.createObjectURL(finalBlob);
       
       if (isPreviewable) {
         window.open(blobUrl, '_blank');
