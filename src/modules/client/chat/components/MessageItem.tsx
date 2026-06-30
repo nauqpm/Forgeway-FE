@@ -437,7 +437,7 @@ export default function MessageItem({
         loadPreview(file.url);
       }
     });
-  }, [isInViewport, expandedPreviews, message.attachments, isDeleted]);
+  }, [isInViewport, isDeleted, message.attachments, expandedPreviews, loadPreview]);
 
   const togglePreview = async (url: string) => {
     if (expandedPreviews[url]) {

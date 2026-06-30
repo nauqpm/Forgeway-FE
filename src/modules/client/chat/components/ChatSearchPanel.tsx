@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -6,7 +7,6 @@ import { useChannelMembers, useSearchChannelMessages } from '../hooks/useChatQue
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axiosIns';
 import { useChatStore } from '@/stores/chatStore';
-import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
@@ -34,8 +34,6 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
   const [lightboxFile, setLightboxFile] = useState<{ url: string; originalName: string; mimeType?: string } | null>(null);
 
   const { data: members = [] } = useChannelMembers(channelId);
-  const authUser = useAuthStore(state => state.user);
-  const currentUserId = (authUser as any)?._id || authUser?.id;
 
   const selectedSender = useMemo(() => {
     return members.find(m => m._id === selectedSenderId);

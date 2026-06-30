@@ -553,7 +553,7 @@ export default function ChatWindow() {
               const isFirstUnread = msg._id === firstUnreadMessageId;
 
               return (
-                <React.Fragment key={msg._id || (msg as any).id}>
+                <React.Fragment key={msg._id || (msg as { id?: string }).id}>
                   {isFirstUnread && (
                     <div className="flex items-center my-4 px-4 select-none">
                       <div className="flex-1 h-px bg-red-500/30"></div>

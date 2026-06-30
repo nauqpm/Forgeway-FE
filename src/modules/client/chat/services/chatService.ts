@@ -100,8 +100,8 @@ export const searchMessagesAPI = async (
   params: { q?: string; senderId?: string }
 ): Promise<Message[]> => {
   const response = await api.get(`/chat/channels/${channelId}/messages/search`, { params });
-  const data = normalizeArray<any>(response);
-  return data.map((item: any) => ({
+  const data = normalizeArray<{ _id?: string; id?: string; [key: string]: unknown }>(response);
+  return data.map((item) => ({
     ...item,
     _id: item._id || item.id || ''
   })) as Message[];

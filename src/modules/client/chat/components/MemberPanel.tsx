@@ -99,9 +99,10 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
       await createDMMutation.mutateAsync(memberId);
       toast.success('Create DM successfully', { id: loadingToast });
       onClose();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to create DM:', error);
-      toast.error(error.response?.data?.message || error.message || 'Failed to start conversation', { id: loadingToast });
+      const err = error as { response?: { data?: { message?: string } }; message?: string };
+      toast.error(err.response?.data?.message || err.message || 'Failed to start conversation', { id: loadingToast });
     }
   };
 
