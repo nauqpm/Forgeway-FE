@@ -445,6 +445,8 @@ export default function MessageItem({
   }, [isInViewport, isDeleted, message.attachments, expandedPreviews, loadPreview]);
 
   const togglePreview = async (url: string) => {
+    if (loadingPreviews[url]) return;
+
     if (expandedPreviews[url]) {
       setExpandedPreviews(prev => ({ ...prev, [url]: false }));
       return;
