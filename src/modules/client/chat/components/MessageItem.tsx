@@ -330,7 +330,7 @@ export default function MessageItem({
         responseType: 'blob',
       });
       const blob = response.data;
-      const mime = blob.type || file.mimeType || '';
+      const mime = file.mimeType || blob.type || '';
       const blobUrl = URL.createObjectURL(blob);
       
       const isPreviewable = mime === 'application/pdf' || mime.startsWith('image/') || mime.startsWith('text/');
