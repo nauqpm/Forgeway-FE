@@ -151,11 +151,10 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
   const handleFileClick = async (url: string, originalName: string, mimeType: string) => {
     const lowerMime = mimeType?.toLowerCase() || '';
     const isPdf = lowerMime === 'application/pdf';
-    const isDocx = lowerMime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || originalName.toLowerCase().endsWith('.docx');
     const isImg = lowerMime.startsWith('image/');
     const isTxt = lowerMime.startsWith('text/');
     
-    const isPreviewable = isPdf || isDocx || isImg || isTxt;
+    const isPreviewable = isPdf || isImg || isTxt;
     
     if (isPreviewable) {
       const loadingToast = toast.loading('Opening file...');

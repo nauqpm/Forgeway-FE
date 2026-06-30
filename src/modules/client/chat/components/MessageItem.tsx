@@ -303,8 +303,7 @@ export default function MessageItem({
       const mime = blob.type || file.mimeType || '';
       const blobUrl = URL.createObjectURL(blob);
       
-      const isDocx = mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || filename.toLowerCase().endsWith('.docx');
-      const isPreviewable = mime === 'application/pdf' || isDocx || mime.startsWith('image/') || mime.startsWith('text/');
+      const isPreviewable = mime === 'application/pdf' || mime.startsWith('image/') || mime.startsWith('text/');
       
       if (isPreviewable) {
         window.open(blobUrl, '_blank');
@@ -363,21 +362,7 @@ export default function MessageItem({
     }
   }, [previewUrls, loadingPreviews]);
 
-  // Automatically expand previews on mount, but do NOT load them yet
-  useEffect(() => {
-    if (isDeleted || !message.attachments) return;
 
-    message.attachments.forEach(file => {
-      const mime = file.mimeType || '';
-      const isPdf = mime === 'application/pdf';
-      const isTxt = mime.startsWith('text/');
-      const canPreview = isPdf || isTxt;
-
-      if (canPreview && file.url) {
-        setExpandedPreviews(prev => ({ ...prev, [file.url]: true }));
-      }
-    });
-  }, [message.attachments, isDeleted]);
 
   // Set up IntersectionObserver to detect when message enters viewport
   useEffect(() => {
