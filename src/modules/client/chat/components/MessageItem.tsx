@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useChatStore } from '@/stores/chatStore';
 import type { ChatUser, Message, Channel } from '@/modules/client/chat/types/chat.types';
 import { format } from 'date-fns';
-import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle, Pencil, MessageSquare } from 'lucide-react';
+import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle, Pencil, MessageSquare, Download, Play } from 'lucide-react';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
 import { MentionsInput, Mention } from 'react-mentions';
 import api from '@/lib/axiosIns';
@@ -70,7 +70,7 @@ export default function MessageItem({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
-  const [lightboxFile, setLightboxFile] = useState<{ url: string; name: string } | null>(null);
+  const [lightboxFile, setLightboxFile] = useState<{ url: string; name: string; mimeType?: string } | null>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -776,6 +776,7 @@ export default function MessageItem({
               const mime = file.mimeType || '';
               const filename = file.name || 'File';
               const isImg = mime.startsWith('image/');
+              const isVideo = mime.startsWith('video/');
               const isPdf = mime === 'application/pdf';
               const isTxt = mime.startsWith('text/');
               const canPreview = isPdf || isTxt;
@@ -787,7 +788,7 @@ export default function MessageItem({
                   key={idx} 
                   className={cn(
                     "border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden bg-white dark:bg-[#252525] shadow-sm transition-all duration-200",
-                    isImg ? "max-w-full sm:max-w-[350px]" : isExpanded ? "w-full sm:w-[480px] max-w-full" : "max-w-full sm:max-w-[350px]"
+                    isImg || isVideo ? "max-w-full sm:max-w-[350px]" : isExpanded ? "w-full sm:w-[480px] max-w-full" : "max-w-full sm:max-w-[350px]"
                   )}
                 >
                   {isImg ? (
@@ -795,8 +796,24 @@ export default function MessageItem({
                       src={file.url} 
                       alt={filename} 
                       className="w-full h-auto max-h-[300px] object-contain block hover:opacity-95 transition-opacity cursor-pointer" 
-                      onClick={() => setLightboxFile({ url: file.url, name: filename })}
+                      onClick={() => setLightboxFile({ url: file.url, name: filename, mimeType: file.mimeType })}
                     />
+                  ) : isVideo ? (
+                    <div 
+                      className="relative group cursor-pointer bg-black flex items-center justify-center w-full max-h-[300px] aspect-video overflow-hidden"
+                      onClick={() => setLightboxFile({ url: file.url, name: filename, mimeType: file.mimeType })}
+                    >
+                      <video 
+                        src={file.url} 
+                        preload="metadata"
+                        className="w-full h-full object-cover opacity-85 group-hover:opacity-100 transition-opacity"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/30 transition-colors">
+                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg transform group-hover:scale-105 transition-transform duration-200">
+                          <Play className="w-5 h-5 text-black fill-black ml-0.5" />
+                        </div>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex flex-col w-full">
                       <div className="p-3 flex items-center gap-3">
@@ -1021,12 +1038,22 @@ export default function MessageItem({
             </div>
           </div>
 
-          <img
-            src={lightboxFile.url}
-            alt="Preview"
-            className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {lightboxFile.mimeType?.toLowerCase().startsWith('video/') ? (
+            <video
+              src={lightboxFile.url}
+              controls
+              preload="metadata"
+              className="max-w-[90vw] max-h-[85vh] rounded-md shadow-2xl mt-10 focus:outline-none"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={lightboxFile.url}
+              alt="Preview"
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { X, Search, Loader2, FileText, Image as ImageIcon, File, Download, ExternalLink, Calendar } from 'lucide-react';
+import { X, Search, Loader2, FileText, Image as ImageIcon, File, Download, ExternalLink, Calendar, Video, Play } from 'lucide-react';
 import { useChannelMembers, useSearchChannelMessages } from '../hooks/useChatQueries';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axiosIns';
@@ -31,7 +31,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
   const [selectedSenderId, setSelectedSenderId] = useState<string>('');
   const [showSenderDropdown, setShowSenderDropdown] = useState(false);
   const [senderSearchQuery, setSenderSearchQuery] = useState('');
-  const [lightboxFile, setLightboxFile] = useState<{ url: string; originalName: string } | null>(null);
+  const [lightboxFile, setLightboxFile] = useState<{ url: string; originalName: string; mimeType?: string } | null>(null);
 
   const { data: members = [] } = useChannelMembers(channelId);
   const authUser = useAuthStore(state => state.user);
@@ -109,7 +109,6 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     enabled: activeTab === 'files' && Boolean(channelId),
   });
 
-  // Filter attachments
   const { mediaFiles, docFiles } = useMemo(() => {
     const media: Attachment[] = [];
     const docs: Attachment[] = [];
@@ -402,7 +401,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                                       <div 
                                         key={idx}
                                         className="relative w-12 h-12 rounded-[4px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
-                                        onClick={() => setLightboxFile({ url: file.url, originalName: file.name || 'Image' })}
+                                        onClick={() => setLightboxFile({ url: file.url, originalName: file.name || 'Image', mimeType: file.mimeType })}
                                         title={file.name || 'Image'}
                                       >
                                         <img
@@ -414,14 +413,16 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                                     );
                                   } else {
                                     return (
-                                      <div
+                                      <button
                                         key={idx}
-                                        className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-white/[0.02] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] text-[10px] text-[#787774] dark:text-[#9B9A97] max-w-full"
-                                        title={file.name || 'File'}
+                                        onClick={() => handleDownload(file.url, file.name || 'File')}
+                                        className="flex items-center gap-1.5 px-2 py-0.5 bg-[#F7F6F3] dark:bg-white/[0.02] hover:bg-[#EAEAEA] dark:hover:bg-white/10 border border-[#EAEAEA] dark:border-white/[0.06] rounded-[4px] text-[10px] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] max-w-full transition-colors cursor-pointer group text-left"
+                                        title={`Download ${file.name || 'File'}`}
                                       >
-                                        <FileText className="w-3 h-3 text-[#787774] dark:text-[#9B9A97] flex-shrink-0" />
-                                        <span className="truncate max-w-[150px]">{file.name || 'File'}</span>
-                                      </div>
+                                        <FileText className="w-3 h-3 text-[#787774] dark:text-[#9B9A97] group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] flex-shrink-0" />
+                                        <span className="truncate max-w-[120px]">{file.name || 'File'}</span>
+                                        <Download className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-0.5" />
+                                      </button>
                                     );
                                   }
                                 })}
@@ -457,38 +458,37 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                       Media ({mediaFiles.length})
                     </h4>
                     <div className="grid grid-cols-3 gap-2">
-                      {mediaFiles.map((file) => (
-                        <div
-                          key={file._id}
-                          className="relative aspect-square rounded-[6px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] group cursor-pointer"
-                          onClick={() => setLightboxFile({ url: file.url, originalName: file.originalName || 'Image' })}
-                        >
-                          <img
-                            src={file.url}
-                            alt={file.originalName}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                          />
-                          {/* Hover Overlay */}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => handleDownload(file.url, file.originalName)}
-                              title="Download"
-                              className="p-1.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
-                            >
-                              <Download className="w-3.5 h-3.5" />
-                            </button>
-                            <a
-                              href={file.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Open original"
-                              className="p-1.5 bg-white/20 hover:bg-white/30 rounded text-white transition-colors"
-                            >
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
+                      {mediaFiles.map((file) => {
+                        const isVideo = file.mimeType?.toLowerCase().startsWith('video/');
+                        return (
+                          <div
+                            key={file._id}
+                            className="relative aspect-square rounded-[6px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] group cursor-pointer"
+                            onClick={() => setLightboxFile({ url: file.url, originalName: file.originalName || 'Media', mimeType: file.mimeType })}
+                          >
+                            {isVideo ? (
+                              <div className="relative w-full h-full bg-black flex items-center justify-center">
+                                <video
+                                  src={file.url}
+                                  preload="metadata"
+                                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                                  <div className="w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                                    <Play className="w-3.5 h-3.5 text-black fill-black ml-0.5" />
+                                  </div>
+                                </div>
+                              </div>
+                            ) : (
+                              <img
+                                src={file.url}
+                                alt={file.originalName}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                              />
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -503,6 +503,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                     <div className="space-y-1.5">
                       {docFiles.map((file) => {
                         const isPdf = file.mimeType?.toLowerCase() === 'application/pdf';
+                        const isVideo = file.mimeType?.toLowerCase().startsWith('video/');
                         
                         return (
                           <div
@@ -512,6 +513,8 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                             <div className="flex items-center gap-2 min-w-0">
                               {isPdf ? (
                                 <FileText className="w-4 h-4 text-red-500 flex-shrink-0" />
+                              ) : isVideo ? (
+                                <Video className="w-4 h-4 text-blue-500 flex-shrink-0" />
                               ) : (
                                 <File className="w-4 h-4 text-[#787774] flex-shrink-0" />
                               )}
@@ -574,12 +577,22 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
             </div>
           </div>
 
-          <img
-            src={lightboxFile.url}
-            alt="Preview"
-            className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {lightboxFile.mimeType?.toLowerCase().startsWith('video/') ? (
+            <video
+              src={lightboxFile.url}
+              controls
+              preload="metadata"
+              className="max-w-[90vw] max-h-[85vh] rounded-md shadow-2xl mt-10 focus:outline-none"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img
+              src={lightboxFile.url}
+              alt="Preview"
+              className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
         </div>
       )}
     </div>
