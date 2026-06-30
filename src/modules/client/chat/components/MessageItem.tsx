@@ -13,18 +13,13 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
-const getMessageContext = (messageChannelId: string, channels: Channel[]): string | null => {
-  if (!messageChannelId || !channels) return null;
-  const channel = channels.find(c => String(c._id || c.id) === String(messageChannelId));
-  return channel ? channel.name : null;
-};
-
 interface MessageItemProps {
   message: Message;
   isSameUserAsPrevious: boolean;
   isMine: boolean;
   hideThreadBadge?: boolean;
   showContextBadge?: boolean;
+  contextName?: string;
 }
 
 const QUICK_EMOJIS = ['❤️', '👍', '😂', '😢', '❓', '😮'];
@@ -664,15 +659,11 @@ export default function MessageItem({
             <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
               {format(new Date(message.createdAt), 'dd/MM/yyyy HH:mm')}
             </span>
-            {showContextBadge && (() => {
-              const contextName = getMessageContext(message.channelId, channels);
-              if (!contextName) return null;
-              return (
-                <span className="text-[10px] font-semibold bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.04]">
-                  in #{contextName}
-                </span>
-              );
-            })()}
+            {showContextBadge && contextName && (
+              <span className="text-[10px] font-semibold bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97] px-1.5 py-0.5 rounded-[4px] border border-[#EAEAEA] dark:border-white/[0.04]">
+                in #{contextName}
+              </span>
+            )}
           </div>
         )}
         
