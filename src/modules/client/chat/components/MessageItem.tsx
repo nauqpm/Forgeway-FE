@@ -29,7 +29,8 @@ export default function MessageItem({
   isSameUserAsPrevious,
   isMine,
   hideThreadBadge = false,
-  showContextBadge = false
+  showContextBadge = false,
+  contextName
 }: MessageItemProps) {
   const sender = (message.senderId && typeof message.senderId === 'object')
     ? message.senderId
