@@ -148,7 +148,7 @@ export default function ChatWindow() {
       if (String(senderId) !== String(currentUserId)) {
         unreadCount++;
         if (unreadCount === unreadCountAtOpen) {
-          setFirstUnreadMessageId(msg._id || msg.id);
+          setFirstUnreadMessageId((msg._id || msg.id) || null);
           break;
         }
       }
