@@ -113,6 +113,38 @@ export default function MessageItem({
 
   const shouldHighlight = isMentioned || isReplyToMe;
 
+  const parseUrlsInText = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const result = [];
+    let lastIdx = 0;
+    let match;
+    
+    while ((match = urlRegex.exec(text)) !== null) {
+      if (match.index > lastIdx) {
+        result.push(text.substring(lastIdx, match.index));
+      }
+      const url = match[0];
+      result.push(
+        <a
+          key={match.index}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#2563EB] dark:text-[#3B82F6] hover:underline break-all"
+        >
+          {url}
+        </a>
+      );
+      lastIdx = urlRegex.lastIndex;
+    }
+    
+    if (lastIdx < text.length) {
+      result.push(text.substring(lastIdx));
+    }
+    
+    return result;
+  };
+
   const renderMessageContent = (content?: string) => {
     if (!content) return '';
     const mentionRegex = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
@@ -122,7 +154,8 @@ export default function MessageItem({
 
     while ((match = mentionRegex.exec(content)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(content.substring(lastIndex, match.index));
+        const textSegment = content.substring(lastIndex, match.index);
+        parts.push(...parseUrlsInText(textSegment));
       }
       const displayName = match[1];
       const userId = match[2];
@@ -145,7 +178,8 @@ export default function MessageItem({
     }
 
     if (lastIndex < content.length) {
-      parts.push(content.substring(lastIndex));
+      const textSegment = content.substring(lastIndex);
+      parts.push(...parseUrlsInText(textSegment));
     }
 
     return parts.length > 0 ? parts : content;

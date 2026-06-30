@@ -25,7 +25,7 @@ interface Attachment {
 }
 
 export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelProps) {
-  const [activeTab, setActiveTab] = useState<'messages' | 'files'>('messages');
+  const [activeTab, setActiveTab] = useState<'messages' | 'files' | 'links'>('messages');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedSenderId, setSelectedSenderId] = useState<string>('');
@@ -107,6 +107,47 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
       return [...normalizedImages, ...normalizedAttachments];
     },
     enabled: activeTab === 'files' && Boolean(channelId),
+  });
+
+  // Links Query
+  const { data: allLinks = [], isFetching: isLoadingLinks } = useQuery({
+    queryKey: ['chat', 'links', channelId],
+    queryFn: async () => {
+      const response = await api.get(`/chat/channels/${channelId}/messages`, {
+        params: { limit: 100 }
+      });
+      const messages = response.data?.messages || response.data?.data || response.data || [];
+      
+      const links: { url: string; sender: any; createdAt: string; message: any }[] = [];
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      
+      messages.forEach((msg: any) => {
+        if (!msg.content || msg.deletedAt) return;
+        
+        const matches = msg.content.match(urlRegex);
+        if (matches) {
+          matches.forEach((url: string) => {
+            let cleanUrl = url;
+            if (url.endsWith(')')) {
+              const idx = msg.content.indexOf(url);
+              if (idx > 0 && msg.content[idx - 1] === '(') {
+                cleanUrl = url.slice(0, -1);
+              }
+            }
+            
+            links.push({
+              url: cleanUrl,
+              sender: msg.senderId,
+              createdAt: msg.createdAt,
+              message: msg
+            });
+          });
+        }
+      });
+      
+      return links;
+    },
+    enabled: activeTab === 'links' && Boolean(channelId),
   });
 
   const { mediaFiles, docFiles } = useMemo(() => {
@@ -241,6 +282,16 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
           }`}
         >
           Files & Images
+        </button>
+        <button
+          onClick={() => setActiveTab('links')}
+          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
+            activeTab === 'links'
+              ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
+              : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
+          }`}
+        >
+          Links
         </button>
       </div>
 
@@ -466,7 +517,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
               )}
             </div>
           </>
-        ) : (
+        ) : activeTab === 'files' ? (
           /* Files & Images Tab */
           <div className="flex-1 p-3 space-y-4">
             {isLoadingFiles ? (
@@ -574,6 +625,73 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                   </div>
                 )}
               </>
+            )}
+          </div>
+        ) : (
+          /* Links Tab */
+          <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+            {isLoadingLinks ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-5 h-5 animate-spin text-[#787774]" />
+              </div>
+            ) : allLinks.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#ABABAB] dark:text-[#6B6B6B] italic">
+                No links shared in this channel yet.
+              </div>
+            ) : (
+              <div className="divide-y divide-[#EAEAEA]/50 dark:divide-white/[0.03]">
+                {allLinks.map((linkItem, idx) => {
+                  const senderName = linkItem.sender?.fullName || linkItem.sender?.email || 'User';
+                  const dateStr = format(new Date(linkItem.createdAt), 'MMM d, h:mm a');
+                  
+                  return (
+                    <div
+                      key={idx}
+                      className="p-3 hover:bg-[#F7F6F3]/60 dark:hover:bg-white/[0.02] transition-colors text-left flex flex-col gap-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-[8px] font-bold overflow-hidden flex-shrink-0">
+                            {linkItem.sender?.avatar ? (
+                              <img src={linkItem.sender.avatar} alt={senderName} className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{senderName.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-[#111111] dark:text-[#E8E8E7] truncate max-w-[120px]">
+                            {senderName}
+                          </span>
+                        </div>
+                        <span className="text-[9px] text-[#ABABAB] dark:text-[#6B6B6B]">
+                          {dateStr}
+                        </span>
+                      </div>
+                      
+                      <a
+                        href={linkItem.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#2563EB] dark:text-[#3B82F6] hover:underline font-medium break-all flex items-center gap-1"
+                      >
+                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                        {linkItem.url}
+                      </a>
+                      
+                      <div className="flex items-end justify-between gap-2 mt-1">
+                        <p className="text-[11px] text-[#787774] dark:text-[#9B9A97] line-clamp-2 italic flex-1 break-words">
+                          {`"${linkItem.message.content}"`}
+                        </p>
+                        <button
+                          onClick={() => handleMessageClick(linkItem.message)}
+                          className="text-[9px] font-semibold text-[#2563EB] dark:text-[#3B82F6] hover:underline whitespace-nowrap bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 rounded"
+                        >
+                          Jump
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
