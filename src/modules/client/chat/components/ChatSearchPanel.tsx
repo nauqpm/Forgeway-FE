@@ -148,6 +148,43 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     }
   };
 
+  const handleFileClick = async (url: string, originalName: string, mimeType: string) => {
+    const lowerMime = mimeType?.toLowerCase() || '';
+    const isPdf = lowerMime === 'application/pdf';
+    const isDocx = lowerMime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || originalName.toLowerCase().endsWith('.docx');
+    const isImg = lowerMime.startsWith('image/');
+    const isTxt = lowerMime.startsWith('text/');
+    
+    const isPreviewable = isPdf || isDocx || isImg || isTxt;
+    
+    if (isPreviewable) {
+      const loadingToast = toast.loading('Opening file...');
+      try {
+        const response = await api.get('/attachments/download-by-url', {
+          params: { url },
+          responseType: 'blob',
+        });
+        const blob = response.data;
+        let finalBlob = blob;
+        if (isPdf && blob.type !== 'application/pdf') {
+          finalBlob = new Blob([blob], { type: 'application/pdf' });
+        } else if (isDocx && blob.type !== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+          finalBlob = new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        }
+        
+        const blobUrl = URL.createObjectURL(finalBlob);
+        window.open(blobUrl, '_blank');
+        toast.dismiss(loadingToast);
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000);
+      } catch (error) {
+        console.error('Failed to open file:', error);
+        toast.error('Failed to open file', { id: loadingToast });
+      }
+    } else {
+      handleDownload(url, originalName);
+    }
+  };
+
   const handleMessageClick = (msg: any) => {
     const messageId = msg._id || msg.id;
     
@@ -510,7 +547,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                             key={file._id}
                             className="flex items-center justify-between p-2 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA]/50 dark:bg-white/[0.02] hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] transition-colors gap-2"
                           >
-                            <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
                               {isPdf ? (
                                 <FileText className="w-4 h-4 text-red-500 flex-shrink-0" />
                               ) : isVideo ? (
@@ -518,10 +555,14 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                               ) : (
                                 <File className="w-4 h-4 text-[#787774] flex-shrink-0" />
                               )}
-                              <div className="min-w-0">
-                                <p className="text-xs text-[#111111] dark:text-[#E8E8E7] truncate font-medium">
+                              <div className="min-w-0 flex-1 text-left">
+                                <button
+                                  type="button"
+                                  onClick={() => handleFileClick(file.url, file.originalName, file.mimeType)}
+                                  className="text-xs text-[#111111] dark:text-[#E8E8E7] hover:text-[#2563EB] dark:hover:text-[#3B82F6] hover:underline truncate font-medium block w-full text-left"
+                                >
                                   {file.originalName}
-                                </p>
+                                </button>
                                 <p className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] mt-0.5">
                                   {(file.size / 1024).toFixed(1)} KB
                                 </p>
