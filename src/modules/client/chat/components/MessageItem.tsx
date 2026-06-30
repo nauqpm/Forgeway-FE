@@ -364,6 +364,7 @@ export default function MessageItem({
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const [loadingPreviews, setLoadingPreviews] = useState<Record<string, boolean>>({});
   const previewUrlsRef = useRef<Record<string, string>>({});
+  const loadingPreviewsRef = useRef<Record<string, boolean>>({});
   const messageRef = useRef<HTMLDivElement>(null);
   const [isInViewport, setIsInViewport] = useState(false);
 
@@ -372,13 +373,17 @@ export default function MessageItem({
   }, [previewUrls]);
 
   useEffect(() => {
+    loadingPreviewsRef.current = loadingPreviews;
+  }, [loadingPreviews]);
+
+  useEffect(() => {
     return () => {
       Object.values(previewUrlsRef.current).forEach(url => URL.revokeObjectURL(url));
     };
   }, []);
 
   const loadPreview = useCallback(async (url: string) => {
-    if (previewUrls[url] || loadingPreviews[url]) return;
+    if (previewUrlsRef.current[url] || loadingPreviewsRef.current[url]) return;
 
     setLoadingPreviews(prev => ({ ...prev, [url]: true }));
     try {
@@ -394,7 +399,7 @@ export default function MessageItem({
     } finally {
       setLoadingPreviews(prev => ({ ...prev, [url]: false }));
     }
-  }, [previewUrls, loadingPreviews]);
+  }, []);
 
 
 
