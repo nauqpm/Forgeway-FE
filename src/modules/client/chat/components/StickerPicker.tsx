@@ -110,7 +110,13 @@ export default function StickerPicker({ onSelectSticker, onClose }: StickerPicke
 
       {/* Tabs at the Bottom */}
       {!loading && packs.length > 0 && (
-        <div className="h-12 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA] dark:bg-[#252525] flex items-center px-2 gap-1 overflow-x-auto shrink-0">
+        <div 
+          onWheel={(e) => {
+            e.currentTarget.scrollLeft += e.deltaY;
+          }}
+          style={{ scrollbarWidth: 'none' }}
+          className="h-12 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA] dark:bg-[#252525] flex items-center px-2 gap-1 overflow-x-auto shrink-0 [&::-webkit-scrollbar]:hidden"
+        >
           {packs.map((pack) => {
             const isActive = pack._id === activePackId;
             return (
