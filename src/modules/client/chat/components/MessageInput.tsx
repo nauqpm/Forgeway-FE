@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Smile, Paperclip, X } from 'lucide-react';
+import { Send, Smile, Paperclip, X, Bold, Italic, Strikethrough, Code, Quote, List, ListOrdered } from 'lucide-react';
 import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
@@ -240,10 +240,89 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     setShowStickerPicker(false);
   };
 
+  const applyMarkdownShortcut = (prefix: string, suffix: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    const selectedText = value.substring(start, end);
+
+    // If already wrapped in the same prefix/suffix, toggle it off!
+    const isWrapped = 
+      value.substring(start - prefix.length, start) === prefix &&
+      value.substring(end, end + suffix.length) === suffix;
+
+    let newValue = '';
+    let newStart = 0;
+    let newEnd = 0;
+
+    if (isWrapped) {
+      // Toggle off: remove prefix and suffix
+      newValue = 
+        value.substring(0, start - prefix.length) +
+        selectedText +
+        value.substring(end + suffix.length);
+      newStart = start - prefix.length;
+      newEnd = end - prefix.length;
+    } else {
+      // Toggle on: add prefix and suffix
+      newValue = 
+        value.substring(0, start) +
+        prefix +
+        selectedText +
+        suffix +
+        value.substring(end);
+      newStart = start + prefix.length;
+      newEnd = end + prefix.length;
+    }
+
+    setContent(newValue);
+
+    // Reset selection in next tick after React updates the value
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newStart, newEnd);
+    }, 0);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const isMac = typeof window !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+    const modKey = isMac ? e.metaKey : e.ctrlKey;
+
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+      return;
+    }
+
+    // Ctrl+B / Cmd+B -> Chữ đậm (bold)
+    if (modKey && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      applyMarkdownShortcut('**', '**');
+      return;
+    }
+
+    // Ctrl+I / Cmd+I -> Chữ nghiêng (italic)
+    if (modKey && e.key.toLowerCase() === 'i') {
+      e.preventDefault();
+      applyMarkdownShortcut('*', '*');
+      return;
+    }
+
+    // Ctrl+Shift+X / Cmd+Shift+X -> Chữ gạch ngang (strikethrough)
+    if (modKey && e.shiftKey && e.key.toLowerCase() === 'x') {
+      e.preventDefault();
+      applyMarkdownShortcut('~~', '~~');
+      return;
+    }
+
+    // Ctrl+E / Cmd+E / Ctrl+` / Cmd+` -> Code nội dòng (inline code)
+    if (modKey && (e.key.toLowerCase() === 'e' || e.key === '`')) {
+      e.preventDefault();
+      applyMarkdownShortcut('`', '`');
+      return;
     }
   };
 
@@ -485,7 +564,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadedFiles.some(f => f.status === 'uploading')}
                 title="Upload file (Max 10MB)"
-                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors disabled:opacity-50"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors disabled:opacity-50"
               >
                 <Paperclip className="w-4 h-4" />
               </button>
@@ -500,9 +579,69 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
                 type="button"
                 onClick={() => setShowStickerPicker(prev => !prev)}
                 title="Stickers"
-                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/8 rounded-[4px] transition-colors"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
               >
                 <Smile className="w-4 h-4" />
+              </button>
+
+              {/* Formatting Toolbar */}
+              <div className="w-[1px] h-4 bg-[#EAEAEA] dark:bg-white/[0.06] mx-1 shrink-0" />
+
+              <button 
+                type="button"
+                onClick={() => applyMarkdownShortcut('**', '**')}
+                title="Bold (Ctrl+B)"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
+              >
+                <Bold className="w-4 h-4" />
+              </button>
+              <button 
+                type="button"
+                onClick={() => applyMarkdownShortcut('*', '*')}
+                title="Italic (Ctrl+I)"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
+              >
+                <Italic className="w-4 h-4" />
+              </button>
+              <button 
+                type="button"
+                onClick={() => applyMarkdownShortcut('~~', '~~')}
+                title="Strikethrough (Ctrl+Shift+X)"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
+              >
+                <Strikethrough className="w-4 h-4" />
+              </button>
+              <button 
+                type="button"
+                onClick={() => applyMarkdownShortcut('`', '`')}
+                title="Code (Ctrl+E)"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
+              >
+                <Code className="w-4 h-4" />
+              </button>
+              <button 
+                type="button"
+                onClick={() => applyMarkdownShortcut('> ', '')}
+                title="Blockquote"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
+              >
+                <Quote className="w-4 h-4" />
+              </button>
+              <button 
+                type="button"
+                onClick={() => applyMarkdownShortcut('- ', '')}
+                title="Bullet List"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
+              >
+                <List className="w-4 h-4" />
+              </button>
+              <button 
+                type="button"
+                onClick={() => applyMarkdownShortcut('1. ', '')}
+                title="Numbered List"
+                className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
+              >
+                <ListOrdered className="w-4 h-4" />
               </button>
             </div>
             

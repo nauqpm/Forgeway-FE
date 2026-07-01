@@ -46,7 +46,7 @@ export default function StickerPicker({ onSelectSticker, onClose }: StickerPicke
   return (
     <div
       ref={containerRef}
-      className="absolute bottom-16 left-4 z-50 w-[320px] h-[360px] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200"
+      className="absolute bottom-16 left-4 z-50 w-[320px] h-[360px] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 select-none"
     >
       {/* Header */}
       <div className="px-4 py-2.5 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#FBFBFA] dark:bg-[#252525]">
@@ -98,6 +98,8 @@ export default function StickerPicker({ onSelectSticker, onClose }: StickerPicke
                     alt={sticker.code}
                     className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-110"
                     loading="lazy"
+                    draggable="false"
+                    onDragStart={(e) => e.preventDefault()}
                   />
                 </div>
               );
@@ -126,6 +128,8 @@ export default function StickerPicker({ onSelectSticker, onClose }: StickerPicke
                   src={pack.bannerUrl}
                   alt={pack.name}
                   className="w-6 h-6 object-contain rounded"
+                  draggable="false"
+                  onDragStart={(e) => e.preventDefault()}
                 />
               </button>
             );
