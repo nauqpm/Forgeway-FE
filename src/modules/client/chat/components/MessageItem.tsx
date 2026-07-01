@@ -119,14 +119,36 @@ export default function MessageItem({
         const firstLine = lines[0].trim();
         const hasLang = firstLine && !firstLine.includes(' ') && firstLine.length < 15;
         const lang = hasLang ? firstLine : undefined;
-        const content = hasLang ? lines.slice(1).join('\n') : part;
+        
+        let content = '';
+        if (hasLang) {
+          content = lines.slice(1).join('\n');
+        } else {
+          if (lines[0] === '') {
+            content = lines.slice(1).join('\n');
+          } else {
+            content = part;
+          }
+        }
+
+        if (content.endsWith('\n')) {
+          content = content.slice(0, -1);
+        }
+
         blocks.push({ type: 'code', content, lang });
       } else {
         const singleParts = part.split(/`/g);
         singleParts.forEach((subPart, subIdx) => {
           if (subIdx % 2 === 1) {
             if (subPart.includes('\n')) {
-              blocks.push({ type: 'code', content: subPart });
+              let cleanContent = subPart;
+              if (cleanContent.startsWith('\n')) {
+                cleanContent = cleanContent.substring(1);
+              }
+              if (cleanContent.endsWith('\n')) {
+                cleanContent = cleanContent.substring(0, cleanContent.length - 1);
+              }
+              blocks.push({ type: 'code', content: cleanContent });
             } else {
               blocks.push({ type: 'text', content: '`' + subPart + '`' });
             }

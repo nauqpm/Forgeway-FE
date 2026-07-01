@@ -249,42 +249,223 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     const value = textarea.value;
     const selectedText = value.substring(start, end);
 
-    // If already wrapped in the same prefix/suffix, toggle it off!
-    const isWrapped = 
-      value.substring(start - prefix.length, start) === prefix &&
-      value.substring(end, end + suffix.length) === suffix;
-
-    let newValue = '';
-    let newStart = 0;
-    let newEnd = 0;
-
-    if (isWrapped) {
-      // Toggle off: remove prefix and suffix
-      newValue = 
-        value.substring(0, start - prefix.length) +
-        selectedText +
-        value.substring(end + suffix.length);
-      newStart = start - prefix.length;
-      newEnd = end - prefix.length;
-    } else {
-      // Toggle on: add prefix and suffix
-      newValue = 
-        value.substring(0, start) +
-        prefix +
-        selectedText +
-        suffix +
-        value.substring(end);
-      newStart = start + prefix.length;
-      newEnd = end + prefix.length;
+    if (start === end) {
+      // Empty selection: insert prefix and suffix at cursor
+      const newValue = value.substring(0, start) + prefix + suffix + value.substring(end);
+      setContent(newValue);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + prefix.length, start + prefix.length);
+      }, 0);
+      return;
     }
 
-    setContent(newValue);
+    // Explicitly handle Code Block wrapping (```\n ... \n```)
+    if (prefix === '```\n') {
+      const isWrappedOutside = 
+        value.substring(start - 4, start) === '```\n' &&
+        value.substring(end, end + 4) === '\n```';
+      const isWrappedInside = selectedText.startsWith('```\n') && selectedText.endsWith('\n```');
 
-    // Reset selection in next tick after React updates the value
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(newStart, newEnd);
-    }, 0);
+      let newValue = '';
+      let newStart = 0;
+      let newEnd = 0;
+
+      if (isWrappedOutside) {
+        newValue = 
+          value.substring(0, start - 4) +
+          selectedText +
+          value.substring(end + 4);
+        newStart = start - 4;
+        newEnd = end - 4;
+      } else if (isWrappedInside) {
+        newValue = 
+          value.substring(0, start) +
+          selectedText.substring(4, selectedText.length - 4) +
+          value.substring(end);
+        newStart = start;
+        newEnd = end - 8;
+      } else {
+        newValue = 
+          value.substring(0, start) +
+          '```\n' +
+          selectedText +
+          '\n```' +
+          value.substring(end);
+        newStart = start + 4;
+        newEnd = end + 4;
+      }
+
+      setContent(newValue);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(newStart, newEnd);
+      }, 0);
+      return;
+    }
+
+    const lines = selectedText.split('\n');
+    const isInlineModifier = ['**', '*', '~~', '`'].includes(prefix);
+
+    if (isInlineModifier) {
+      if (lines.length === 1) {
+        // Single line inline modifier: support toggle inside or outside selection
+        const isWrappedOutside = 
+          value.substring(start - prefix.length, start) === prefix &&
+          value.substring(end, end + suffix.length) === suffix;
+        const isWrappedInside = selectedText.startsWith(prefix) && selectedText.endsWith(suffix);
+
+        let newValue = '';
+        let newStart = 0;
+        let newEnd = 0;
+
+        if (isWrappedOutside) {
+          newValue = 
+            value.substring(0, start - prefix.length) +
+            selectedText +
+            value.substring(end + suffix.length);
+          newStart = start - prefix.length;
+          newEnd = end - prefix.length;
+        } else if (isWrappedInside) {
+          newValue = 
+            value.substring(0, start) +
+            selectedText.substring(prefix.length, selectedText.length - suffix.length) +
+            value.substring(end);
+          newStart = start;
+          newEnd = end - prefix.length - suffix.length;
+        } else {
+          newValue = 
+            value.substring(0, start) +
+            prefix +
+            selectedText +
+            suffix +
+            value.substring(end);
+          newStart = start + prefix.length;
+          newEnd = end + prefix.length;
+        }
+
+        setContent(newValue);
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(newStart, newEnd);
+        }, 0);
+      } else {
+        // Multi-line inline modifier: format line-by-line
+        const allWrapped = lines.every(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return true;
+          return line.startsWith(prefix) && line.endsWith(suffix);
+        });
+
+        let newLines;
+        if (allWrapped) {
+          newLines = lines.map(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return line;
+            const startIdx = line.indexOf(prefix);
+            const endIdx = line.lastIndexOf(suffix);
+            if (startIdx !== -1 && endIdx !== -1 && startIdx !== endIdx) {
+              return line.substring(0, startIdx) + 
+                     line.substring(startIdx + prefix.length, endIdx) + 
+                     line.substring(endIdx + suffix.length);
+            }
+            return line;
+          });
+        } else {
+          newLines = lines.map(line => {
+            const trimmed = line.trim();
+            if (!trimmed) return line;
+            return `${prefix}${line}${suffix}`;
+          });
+        }
+
+        const newSelectedText = newLines.join('\n');
+        const newValue = value.substring(0, start) + newSelectedText + value.substring(end);
+        setContent(newValue);
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start, start + newSelectedText.length);
+        }, 0);
+      }
+    } else {
+      // Block-level modifiers: quote ('> '), bullet ('- '), numbered ('1. ')
+      const isQuote = prefix === '> ';
+      const isBullet = prefix === '- ';
+      const isNumber = prefix === '1. ';
+
+      const hasPrefix = (line: string): boolean => {
+        const trimmed = line.trim();
+        if (!trimmed) return true;
+        if (isQuote) return line.startsWith('> ');
+        if (isBullet) return line.startsWith('- ') || line.startsWith('* ') || line.startsWith('+ ');
+        if (isNumber) return /^\s*\d+\.\s+/.test(line);
+        return line.startsWith(prefix);
+      };
+
+      const removePrefix = (line: string): string => {
+        if (isQuote && line.startsWith('> ')) {
+          return line.substring(2);
+        }
+        if (isBullet) {
+          if (line.startsWith('- ')) return line.substring(2);
+          if (line.startsWith('* ')) return line.substring(2);
+          if (line.startsWith('+ ')) return line.substring(2);
+        }
+        if (isNumber) {
+          const match = line.match(/^(\s*)(\d+\.\s+)(.*)/);
+          if (match) {
+            return match[1] + match[3];
+          }
+        }
+        if (line.startsWith(prefix)) {
+          return line.substring(prefix.length);
+        }
+        return line;
+      };
+
+      const allHavePrefix = lines.every(line => hasPrefix(line));
+
+      let newLines;
+      if (allHavePrefix) {
+        newLines = lines.map(line => removePrefix(line));
+      } else {
+        let numberCounter = 1;
+        newLines = lines.map(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return line;
+          
+          let cleanedLine = line;
+          // Clear other block prefixes if toggling a new block style
+          if (cleanedLine.startsWith('> ')) {
+            cleanedLine = cleanedLine.substring(2);
+          } else if (cleanedLine.startsWith('- ') || cleanedLine.startsWith('* ') || cleanedLine.startsWith('+ ')) {
+            cleanedLine = cleanedLine.substring(2);
+          } else {
+            const numMatch = cleanedLine.match(/^(\s*)(\d+\.\s+)(.*)/);
+            if (numMatch) {
+              cleanedLine = numMatch[1] + numMatch[3];
+            }
+          }
+
+          if (isQuote) return `> ${cleanedLine}`;
+          if (isBullet) return `- ${cleanedLine}`;
+          if (isNumber) {
+            const itemPrefix = `${numberCounter}. `;
+            numberCounter++;
+            return `${itemPrefix}${cleanedLine}`;
+          }
+          return `${prefix}${cleanedLine}`;
+        });
+      }
+
+      const newSelectedText = newLines.join('\n');
+      const newValue = value.substring(0, start) + newSelectedText + value.substring(end);
+      setContent(newValue);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start, start + newSelectedText.length);
+      }, 0);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -318,10 +499,10 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
       return;
     }
 
-    // Ctrl+E / Cmd+E / Ctrl+` / Cmd+` -> Code nội dòng (inline code)
+    // Ctrl+E / Cmd+E / Ctrl+` / Cmd+` -> Code Block
     if (modKey && (e.key.toLowerCase() === 'e' || e.key === '`')) {
       e.preventDefault();
-      applyMarkdownShortcut('`', '`');
+      applyMarkdownShortcut('```\n', '\n```');
       return;
     }
   };
@@ -613,8 +794,8 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
               </button>
               <button 
                 type="button"
-                onClick={() => applyMarkdownShortcut('`', '`')}
-                title="Code (Ctrl+E)"
+                onClick={() => applyMarkdownShortcut('```\n', '\n```')}
+                title="Code Block (Ctrl+E)"
                 className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
               >
                 <Code className="w-4 h-4" />
