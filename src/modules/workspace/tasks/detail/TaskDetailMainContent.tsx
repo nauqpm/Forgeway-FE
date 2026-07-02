@@ -32,6 +32,7 @@ interface TaskDetailMainContentProps {
   /** Slot rendered between Title and Description — used by Drawer to inject Status + Details */
   afterTitle?: React.ReactNode;
   boardColumns?: TaskStatusColumn[];
+  onRestoreIssue?: () => void;
 }
 
 export default function TaskDetailMainContent({
@@ -53,6 +54,7 @@ export default function TaskDetailMainContent({
   titleSize = "3xl",
   afterTitle,
   boardColumns,
+  onRestoreIssue,
 }: TaskDetailMainContentProps) {
   const titleTextClass =
     titleSize === "3xl"
@@ -74,7 +76,7 @@ export default function TaskDetailMainContent({
           </div>
           <button
             onClick={() => {
-              // Restore action
+              if (onRestoreIssue) onRestoreIssue();
             }}
             className="flex items-center px-3 py-1.5 bg-[#FBF3DB] hover:bg-[#F7F6F3] dark:bg-[rgba(149,100,0,0.12)] dark:hover:bg-[#2E2E2E] text-[#956400] dark:text-[#F59E0B] text-sm font-semibold rounded-[6px] transition-colors"
           >

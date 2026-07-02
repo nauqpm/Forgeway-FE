@@ -43,6 +43,7 @@ interface TaskDetailListProps {
   onUpdateIssue?: (updatedIssue: any) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: TaskDetailResponse) => void;
+  onRestoreIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   canEditTask?: boolean;
 }
@@ -59,6 +60,7 @@ export default function TaskDetailList({
   onUpdateIssue,
   onFieldUpdate,
   onArchiveIssue,
+  onRestoreIssue,
   canEditTask = true,
 }: TaskDetailListProps) {
   const { user, token } = useAuth();
@@ -216,6 +218,7 @@ export default function TaskDetailList({
             }}
             titleSize="2xl"
             boardColumns={boardColumns}
+            onRestoreIssue={() => onRestoreIssue && onRestoreIssue(issue)}
           />
         </div>
 

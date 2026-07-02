@@ -310,6 +310,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           handleUpdateIssue={handleUpdateIssue}
           updateIssueDirectly={updateIssueDirectly}
           handleArchiveIssue={handleArchiveIssue}
+          handleRestoreIssue={handleRestoreIssue}
           detailUrl={detailUrl}
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}

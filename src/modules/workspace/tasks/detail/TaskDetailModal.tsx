@@ -31,6 +31,7 @@ interface TaskDetailModalProps {
   onClose: () => void;
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   onArchiveIssue?: (issue: TaskDetailResponse) => void;
+  onRestoreIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
 }
 
@@ -44,6 +45,7 @@ export default function TaskDetailModal({
   onClose,
   onUpdateIssue,
   onArchiveIssue,
+  onRestoreIssue,
 }: TaskDetailModalProps) {
   const { user, token } = useAuth();
   const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
@@ -248,6 +250,7 @@ export default function TaskDetailModal({
               }}
               titleSize="3xl"
               boardColumns={boardColumns}
+              onRestoreIssue={() => onRestoreIssue && onRestoreIssue(issue)}
             />
           </div>
 

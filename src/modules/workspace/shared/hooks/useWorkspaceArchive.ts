@@ -7,6 +7,7 @@ import { taskService } from "@/modules/workspace/shared/services/taskService";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
 import { WorkspaceTab } from "@/modules/workspace/shared/types/workspace.type";
 import { removeRestoredArchiveItem } from "@/modules/workspace/shared/utils/archiveListState";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 interface UseWorkspaceArchiveParams {
   workspaceId: string | undefined;
@@ -89,6 +90,11 @@ export function useWorkspaceArchive({
           ? current.map((item) => (item.id === restoredIssue.id ? restoredIssue : item))
           : [...current, restoredIssue],
       );
+      setSelectedIssue(restoredIssue);
+      if (restoredIssue.key) {
+        queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, restoredIssue.key), restoredIssue);
+        queryClient.invalidateQueries({ queryKey: queryKeys.tasks.detail(workspaceId, restoredIssue.key) });
+      }
       const nextArchive = removeRestoredArchiveItem({
         items: archivedItems,
         total: archiveTotal,

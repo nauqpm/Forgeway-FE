@@ -42,6 +42,7 @@ interface TaskDetailDrawerProps {
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: TaskDetailResponse) => void;
+  onRestoreIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   /** Embedded in split list view: no overlay, no fixed positioning */
   embedded?: boolean;
@@ -59,6 +60,7 @@ export default function TaskDetailDrawer({
   onUpdateIssue,
   onFieldUpdate,
   onArchiveIssue,
+  onRestoreIssue,
   embedded = false,
 }: TaskDetailDrawerProps) {
   const { user, token } = useAuth();
@@ -280,6 +282,7 @@ export default function TaskDetailDrawer({
               }}
               titleSize="2xl"
               boardColumns={boardColumns}
+              onRestoreIssue={() => onRestoreIssue && onRestoreIssue(issue)}
               afterTitle={
                 <div className="space-y-6">
                   {/* Status */}
