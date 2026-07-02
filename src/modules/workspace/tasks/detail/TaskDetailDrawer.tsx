@@ -7,6 +7,7 @@ import {
   MoreHorizontal,
   FileText,
   Archive,
+  Clock,
 } from "lucide-react";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
@@ -26,6 +27,7 @@ import {
 } from "./task-detail-shared";
 import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
+import TimeTrackingModal from "./TimeTrackingModal";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
@@ -64,6 +66,7 @@ export default function TaskDetailDrawer({
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const [isLogWorkOpen, setIsLogWorkOpen] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
 
   const { data: fetchedWorkspaceMembers = [] } = useQuery<WorkspaceMember[]>({
@@ -212,10 +215,21 @@ export default function TaskDetailDrawer({
                       type="button"
                       onClick={() => {
                         setShowActionMenu(false);
+                        setIsLogWorkOpen(true);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                    >
+                      <Clock className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                      Log work
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowActionMenu(false);
                         onArchiveIssue?.(issue);
                       }}
                       disabled={!onArchiveIssue || issue.isArchived}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-40 border-t border-[#EAEAEA] dark:border-white/[0.06]"
                     >
                       <Archive className="h-4 w-4 text-[#787774]" />
                       Archive
@@ -311,6 +325,13 @@ export default function TaskDetailDrawer({
           </div>
         </div>
       </div>
+
+      <TimeTrackingModal
+        isOpen={isLogWorkOpen}
+        onClose={() => setIsLogWorkOpen(false)}
+        issue={issue}
+        onUpdateIssue={onUpdateIssue}
+      />
 
       <style
         dangerouslySetInnerHTML={{

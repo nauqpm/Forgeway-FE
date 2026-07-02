@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { X, MoreHorizontal, FileText, ChevronDown, Archive } from "lucide-react";
+import { X, MoreHorizontal, FileText, ChevronDown, Archive, Clock } from "lucide-react";
 import { createPortal } from "react-dom";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
@@ -18,6 +18,7 @@ import { useTaskDetailRealtimeRoom } from "@/lib/realtime/hooks/use-task-detail-
 import { getUserDisplayName, formatDateTime, type WorkspaceMember, type SprintOption } from "./task-detail-shared";
 import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
+import TimeTrackingModal from "./TimeTrackingModal";
 
 interface TaskDetailModalProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -49,6 +50,7 @@ export default function TaskDetailModal({
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const [isLogWorkOpen, setIsLogWorkOpen] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
   const [mounted, setMounted] = useState(false);
 
@@ -180,10 +182,21 @@ export default function TaskDetailModal({
                       type="button"
                       onClick={() => {
                         setShowActionMenu(false);
+                        setIsLogWorkOpen(true);
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                    >
+                      <Clock className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                      Log work
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowActionMenu(false);
                         onArchiveIssue?.(issue);
                       }}
                       disabled={!onArchiveIssue || issue.isArchived}
-                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50 border-t border-[#EAEAEA] dark:border-white/[0.06]"
                     >
                       <Archive className="h-4 w-4" />
                       Archive
@@ -277,6 +290,12 @@ export default function TaskDetailModal({
           </div>
         </div>
       </div>
+      <TimeTrackingModal
+        isOpen={isLogWorkOpen}
+        onClose={() => setIsLogWorkOpen(false)}
+        issue={issue}
+        onUpdateIssue={onUpdateIssue}
+      />
     </div>,
     document.body
   );
