@@ -361,33 +361,33 @@ export default function TimeTrackingModal({
                 <div className="relative border-2 border-[#DFE1E6] dark:border-[#2A2A2A] rounded-[3px] overflow-hidden">
                   {/* Toolbar */}
                   <div className="flex items-center gap-1.5 px-2 py-1 bg-[#F4F5F7] dark:bg-[#2A2A2A] border-b border-[#DFE1E6] dark:border-[#2A2A2A]">
-                    <button type="button" onClick={handleAiClick} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="AI Assistant">
+                    <button type="button" onClick={handleAiClick} tabIndex={-1} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="AI Assistant">
                       <Sparkles className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onClick={handleAiClick} className="p-0.5 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]">
+                    <button type="button" onClick={handleAiClick} tabIndex={-1} className="p-0.5 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]">
                       <ChevronDown className="w-3 h-3" />
                     </button>
                     <span className="text-[#DFE1E6] dark:text-[#2A2A2A]">|</span>
-                    <button type="button" onClick={handleTtClick} className="px-1 py-0.5 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[0.75rem] font-semibold text-[#5E6C84] dark:text-[#9B9A97]" title="Format text (bold)">
+                    <button type="button" onClick={handleTtClick} tabIndex={-1} className="px-1 py-0.5 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[0.75rem] font-semibold text-[#5E6C84] dark:text-[#9B9A97]" title="Format text (bold)">
                       Tt
                     </button>
-                    <button type="button" onClick={handleInsertClick} className="px-1 py-0.5 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[0.75rem] font-bold text-[#5E6C84] dark:text-[#9B9A97]" title="Insert item">
+                    <button type="button" onClick={handleInsertClick} tabIndex={-1} className="px-1 py-0.5 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[0.75rem] font-bold text-[#5E6C84] dark:text-[#9B9A97]" title="Insert item">
                       +
                     </button>
-                    <button type="button" onClick={handleLinkClick} className={`p-1 rounded transition-colors ${isLinkPopupOpen ? "bg-[#DEEBFF] text-[#0747A6] dark:bg-[#0747A6]/30 dark:text-[#4C9AFF]" : "text-[#5E6C84] dark:text-[#9B9A97] hover:bg-[#EBECF0] dark:hover:bg-white/5"}`} title="Insert link">
+                    <button type="button" onClick={handleLinkClick} tabIndex={-1} className={`p-1 rounded transition-colors ${isLinkPopupOpen ? "bg-[#DEEBFF] text-[#0747A6] dark:bg-[#0747A6]/30 dark:text-[#4C9AFF]" : "text-[#5E6C84] dark:text-[#9B9A97] hover:bg-[#EBECF0] dark:hover:bg-white/5"}`} title="Insert link">
                       <Link className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onClick={handleUploadClick} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="Upload file">
+                    <button type="button" onClick={handleUploadClick} tabIndex={-1} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="Upload file">
                       <Paperclip className="w-3.5 h-3.5" />
                     </button>
                     <span className="text-[#DFE1E6] dark:text-[#2A2A2A]">|</span>
-                    <button type="button" onClick={handleUndo} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="Undo">
+                    <button type="button" onClick={handleUndo} tabIndex={-1} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="Undo">
                       <Undo className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onClick={handleRedo} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="Redo">
+                    <button type="button" onClick={handleRedo} tabIndex={-1} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="Redo">
                       <Redo className="w-3.5 h-3.5" />
                     </button>
-                    <button type="button" onClick={handleHistoryClick} className={`p-1 rounded transition-colors ${isHistoryPopupOpen ? "bg-[#DEEBFF] text-[#0747A6] dark:bg-[#0747A6]/30 dark:text-[#4C9AFF]" : "text-[#5E6C84] dark:text-[#9B9A97] hover:bg-[#EBECF0] dark:hover:bg-white/5"}`} title="History logs">
+                    <button type="button" onClick={handleHistoryClick} tabIndex={-1} className={`p-1 rounded transition-colors ${isHistoryPopupOpen ? "bg-[#DEEBFF] text-[#0747A6] dark:bg-[#0747A6]/30 dark:text-[#4C9AFF]" : "text-[#5E6C84] dark:text-[#9B9A97] hover:bg-[#EBECF0] dark:hover:bg-white/5"}`} title="History logs">
                       <History className="w-3.5 h-3.5" />
                     </button>
                   </div>

@@ -55,7 +55,7 @@ export default function RegisterForm() {
             <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Start using SLDC platform for free</p>
           </div>
 
-          <button onClick={initiateGoogleLogin} type="button"
+          <button onClick={initiateGoogleLogin} type="button" tabIndex={6}
             className="w-full mb-6 py-3 px-4 flex items-center justify-center gap-3 bg-white/50 hover:bg-white/80 border border-white/30 rounded-[6px] hover:border-white transition-all font-medium text-gray-800">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -76,6 +76,7 @@ export default function RegisterForm() {
             <div>
               <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Work email</label>
               <input type="text" inputMode="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required placeholder="JaneDoe@gmail.com"
+                tabIndex={1}
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner" />
             </div>
             <div>
@@ -83,8 +84,9 @@ export default function RegisterForm() {
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
                   required placeholder="At least 8 characters"
+                  tabIndex={2}
                   className="w-full px-4 py-2.5 pr-11 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} tabIndex={-1} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
                 <PasswordPolicyChecklist password={form.password} />
@@ -93,9 +95,10 @@ export default function RegisterForm() {
             <div>
               <label className="block text-[0.8125rem] font-semibold text-gray-800 mb-1.5">Confirm password</label>
               <input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required placeholder="Re-enter password"
+                tabIndex={3}
                 className="w-full px-4 py-2.5 bg-white/45 border border-gray-200/35 rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 focus:ring-[#2563EB] focus:border-[#2563EB] outline-none transition-all shadow-inner" />
             </div>
-            <button type="submit" disabled={isLoading}
+            <button type="submit" disabled={isLoading} tabIndex={4}
               className="w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Creating account...</> : 'Create account'}
             </button>
@@ -103,11 +106,11 @@ export default function RegisterForm() {
 
           <p className="text-center text-xs text-gray-800 mt-5">
             By creating an account, you agree to the{' '}
-            <Link href="#" className="text-[#2563EB] font-semibold hover:underline">Terms of Service</Link> and{' '}
-            <Link href="#" className="text-[#2563EB] font-semibold hover:underline">Privacy Policy</Link>.
+            <Link href="#" tabIndex={7} className="text-[#2563EB] font-semibold hover:underline">Terms of Service</Link> and{' '}
+            <Link href="#" tabIndex={8} className="text-[#2563EB] font-semibold hover:underline">Privacy Policy</Link>.
           </p>
           <p className="text-center text-[0.8125rem] text-gray-600 mt-6 font-medium">
-            Already have an account?{' '}<Link href="/login" className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">Sign in</Link>
+            Already have an account?{' '}<Link href="/login" tabIndex={5} className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">Sign in</Link>
           </p>
         </div>
       </div>

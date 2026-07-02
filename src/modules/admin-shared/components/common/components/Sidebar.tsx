@@ -426,6 +426,15 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                               const isExpanded = !!wsCustomOpen[wsId];
                               const totalWsUnread = getWorkspaceTotalUnread(wsId);
 
+                              const currentUserId = (user as any)?._id || (user as any)?.id;
+                              const isOwner = ws.ownerId?.toString() === String(currentUserId);
+                              const member = ws.members?.find((m: any) => {
+                                const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+                                return String(uId) === String(currentUserId);
+                              });
+                              const wsRole = isOwner ? 'workspace_admin' : (member?.role || 'member');
+                              const isWsViewer = wsRole === 'viewer';
+
                               if (!wsChannel && wsCustomChannels.length === 0) return null;
 
                               return (
@@ -437,9 +446,9 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                   >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
                                       {isExpanded ? (
-                                        <ChevronDown className="w-3 h-3 flex-shrink-0 transition-transform duration-200" />
+                                        <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
                                       ) : (
-                                        <ChevronRight className="w-3 h-3 flex-shrink-0 transition-transform duration-200" />
+                                        <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
                                       )}
                                       <WorkspaceAvatar workspace={ws} size="xs" />
                                       <span className="font-bold text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] truncate">
@@ -456,8 +465,8 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                   {/* Expanded Workspace Channels List */}
                                   {isExpanded && (
                                     <div className="pl-4 ml-3 border-l border-[#EAEAEA] dark:border-white/[0.06] space-y-0.5 mt-0.5">
-                                      {wsChannel && renderSidebarChannel(wsChannel, wsChannel.name)}
-                                      {wsCustomChannels.map((c) => renderSidebarChannel(c))}
+                                      {!isWsViewer && wsChannel && renderSidebarChannel(wsChannel, wsChannel.name)}
+                                      {!isWsViewer && wsCustomChannels.map((c) => renderSidebarChannel(c))}
                                     </div>
                                   )}
                                 </div>

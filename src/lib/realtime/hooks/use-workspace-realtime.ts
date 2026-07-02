@@ -143,10 +143,15 @@ export function useWorkspaceRealtime({
 
     const handleMemberRemoved = (envelope: WorkspaceRealtimeEnvelope) => {
       if (markHandled(envelope.eventId)) return;
-      if (!isCurrentUserTarget(envelope, currentUserId)) return;
 
       const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
       if (!workspaceId) return;
+
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.members(workspaceId),
+      });
+
+      if (!isCurrentUserTarget(envelope, currentUserId)) return;
 
       updateWorkspacesCache((current) => removeWorkspace(current, workspaceId) as Workspace[]);
 
@@ -167,6 +172,10 @@ export function useWorkspaceRealtime({
       const userId = envelope.data.userId;
       const nextRole = envelope.data.nextRole ?? envelope.data.member?.role;
       if (!workspaceId || !userId || !nextRole) return;
+
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.members(workspaceId),
+      });
 
       updateWorkspacesCache((current) =>
         current.map((ws) =>

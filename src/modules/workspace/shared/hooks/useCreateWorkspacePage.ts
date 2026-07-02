@@ -83,7 +83,7 @@ export function useCreateWorkspacePage(): CreateWorkspacePageProps {
   const handleKeyChange = (value: string) => {
     setForm((current) => ({
       ...current,
-      key: value.toUpperCase().substring(0, 10),
+      key: value.toUpperCase().replace(/[^A-Z0-9-]/g, "").substring(0, 10),
     }));
   };
 

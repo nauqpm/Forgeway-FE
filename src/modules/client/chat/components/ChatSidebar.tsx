@@ -447,7 +447,7 @@ export default function ChatSidebar() {
                     {/* Expandable Workspace Channels */}
                     {isExpanded && (
                       <div className="pl-4 ml-4 border-l border-[#EAEAEA] dark:border-white/[0.06] space-y-0.5">
-                        {wsChannel && (
+                        {!isWsViewer && wsChannel && (
                           renderChannelLink(wsChannel._id, wsChannel.name, 'workspace', wsChannel.unreadCount, wsChannel.lastMessage, ws)
                         )}
 
