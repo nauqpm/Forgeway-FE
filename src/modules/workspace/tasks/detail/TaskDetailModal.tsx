@@ -48,7 +48,7 @@ export default function TaskDetailModal({
   onRestoreIssue,
 }: TaskDetailModalProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "history" | "work_log">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
@@ -251,6 +251,7 @@ export default function TaskDetailModal({
               titleSize="3xl"
               boardColumns={boardColumns}
               onRestoreIssue={() => onRestoreIssue && onRestoreIssue(issue)}
+              onUpdateIssue={onUpdateIssue}
             />
           </div>
 

@@ -327,6 +327,8 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     storyPoints,
     title,
     type,
+    timeLogged,
+    timeEstimated,
   } = updates;
 
   const payload: Record<string, unknown> = {};
@@ -352,6 +354,8 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
     payload.status = normalizedStatus;
   }
   if (sprintId !== undefined) payload.sprintId = sprintId || undefined;
+  if (timeLogged !== undefined) payload.timeLogged = timeLogged;
+  if (timeEstimated !== undefined) payload.timeEstimated = timeEstimated;
 
   return payload;
 };

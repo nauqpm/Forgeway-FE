@@ -21,8 +21,8 @@ interface TaskDetailMainContentProps {
   setLocalTitle: (v: string) => void;
   isEditingTitle: boolean;
   setIsEditingTitle: (v: boolean) => void;
-  activeTab: "comments" | "history";
-  setActiveTab: (v: "comments" | "history") => void;
+  activeTab: "comments" | "history" | "work_log";
+  setActiveTab: (v: "comments" | "history" | "work_log") => void;
   workspaceMembers: WorkspaceMember[];
   assigneeName: string;
   onSaveTitle: () => void;
@@ -33,7 +33,10 @@ interface TaskDetailMainContentProps {
   afterTitle?: React.ReactNode;
   boardColumns?: TaskStatusColumn[];
   onRestoreIssue?: () => void;
+  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
 }
+
+import TaskWorkLogs from "@/modules/workspace/shared/components/TaskWorkLogs";
 
 export default function TaskDetailMainContent({
   issue,
@@ -55,6 +58,7 @@ export default function TaskDetailMainContent({
   afterTitle,
   boardColumns,
   onRestoreIssue,
+  onUpdateIssue,
 }: TaskDetailMainContentProps) {
   const titleTextClass =
     titleSize === "3xl"
@@ -153,13 +157,23 @@ export default function TaskDetailMainContent({
             </button>
             <button
               onClick={() => setActiveTab("history")}
-              className={`px-3 py-1 rounded-[4px] transition-colors ${
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
                 activeTab === "history"
                   ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
                   : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
               }`}
             >
               History
+            </button>
+            <button
+              onClick={() => setActiveTab("work_log")}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
+                activeTab === "work_log"
+                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+              }`}
+            >
+              Work log
             </button>
           </div>
         </div>
@@ -182,6 +196,15 @@ export default function TaskDetailMainContent({
             assignee={issue.assignee}
             labels={issue.labels}
             boardColumns={boardColumns}
+          />
+        )}
+        {activeTab === "work_log" && (
+          <TaskWorkLogs
+            workspaceId={workspaceId}
+            taskId={issue.id}
+            workspaceMembers={workspaceMembers}
+            issue={issue}
+            onUpdateIssue={onUpdateIssue}
           />
         )}
       </div>

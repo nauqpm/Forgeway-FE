@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { X, Calendar, Sparkles, ChevronDown, Link, Undo, Redo, History, Info, Paperclip } from "lucide-react";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
+import api from "@/lib/axiosIns";
+import { apiRoutes } from "@/config/apiRoutes";
+import { toast } from "react-hot-toast";
 
 interface TimeTrackingModalProps {
   isOpen: boolean;
   onClose: () => void;
   issue: TaskDetailResponse;
   onUpdateIssue?: (updatedIssue: any) => void;
+  editWorkLog?: {
+    id: string;
+    hoursSpent: number;
+    description?: string;
+    loggedAt: string;
+  };
 }
 
 export default function TimeTrackingModal({
@@ -14,6 +23,7 @@ export default function TimeTrackingModal({
   onClose,
   issue,
   onUpdateIssue,
+  editWorkLog,
 }: TimeTrackingModalProps) {
   const [timeSpent, setTimeSpent] = useState("");
   const [timeRemaining, setTimeRemaining] = useState("");
@@ -27,6 +37,27 @@ export default function TimeTrackingModal({
   });
   const [description, setDescription] = useState("");
   const [prevLogged, setPrevLogged] = useState(0);
+
+  // Initialize for edit
+  useEffect(() => {
+    if (isOpen && editWorkLog) {
+      // timeSpent could be numeric hours, convert back to a string like '4h' or just '4'
+      setTimeSpent(editWorkLog.hoursSpent.toString() + "h");
+      setDescription(editWorkLog.description || "");
+      if (editWorkLog.loggedAt) {
+        const d = new Date(editWorkLog.loggedAt);
+        setDateStarted(d.toISOString().split("T")[0]);
+        setTimeStarted(d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
+      }
+    } else if (isOpen) {
+      // Reset for create
+      setTimeSpent("");
+      setDescription("");
+      const d = new Date();
+      setDateStarted(d.toISOString().split("T")[0]);
+      setTimeStarted(d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
+    }
+  }, [isOpen, editWorkLog]);
 
   const [historyStack, setHistoryStack] = useState<string[]>([""]);
   const [historyIndex, setHistoryIndex] = useState(0);
@@ -165,20 +196,25 @@ export default function TimeTrackingModal({
   // Load previously logged work from localStorage for persistence
   useEffect(() => {
     if (isOpen && issue.id) {
-      const stored = localStorage.getItem(`task-logged-hours-${issue.id}`);
-      if (stored) {
-        setPrevLogged(parseFloat(stored));
-      } else {
-        // Fallback to issue.timeLogged if defined (convert minutes to hours if necessary)
-        const loggedHrs = issue.timeLogged ? issue.timeLogged / 60 : 0;
-        setPrevLogged(loggedHrs);
-      }
+      // Fetch latest total hours from backend to ensure accuracy
+      const fetchTotal = async () => {
+        try {
+          const res = await api.get(apiRoutes.TASKS.BOARD_TASK_WORK_LOGS(issue.workspaceId, issue.id));
+          const total = res.data?.totalHours || 0;
+          setPrevLogged(total);
+        } catch (err) {
+          console.error("Failed to fetch total logged hours", err);
+          // Fallback to issue.timeLogged
+          const loggedHrs = issue.timeLogged ? issue.timeLogged : 0;
+          setPrevLogged(loggedHrs);
+        }
+      };
+      fetchTotal();
 
-      const storedRemaining = localStorage.getItem(`task-remaining-hours-${issue.id}`);
-      if (storedRemaining) {
-        setTimeRemaining(storedRemaining);
-      } else if (issue.timeEstimated) {
-        setTimeRemaining(issue.timeEstimated);
+      if (issue.timeEstimated !== undefined && issue.timeEstimated !== null) {
+        setTimeRemaining(String(issue.timeEstimated));
+      } else {
+        setTimeRemaining("");
       }
     } else if (!isOpen) {
       // Reset form states when closed
@@ -200,8 +236,10 @@ export default function TimeTrackingModal({
   if (!isOpen) return null;
 
   // Validation: Accept single unit hours e.g., 4 or 4h or 4.5 or 4.5h
-  const parseHoursInput = (val: string): number | null => {
-    const cleaned = val.trim().toLowerCase();
+  const parseHoursInput = (val: string | number): number | null => {
+    if (typeof val === 'number') return val > 0 ? val : 0;
+    if (!val) return null;
+    const cleaned = String(val).trim().toLowerCase();
     if (!cleaned) return null;
     const num = parseFloat(cleaned.replace("h", ""));
     if (isNaN(num) || num <= 0) return null;
@@ -212,37 +250,86 @@ export default function TimeTrackingModal({
   const parsedRemaining = timeRemaining ? parseHoursInput(timeRemaining) : 0;
   const isSaveDisabled = parsedSpent === null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (parsedSpent === null) return;
 
-    const newLogged = prevLogged + parsedSpent;
-    
-    // Save to localStorage
-    localStorage.setItem(`task-logged-hours-${issue.id}`, String(newLogged));
-    if (timeRemaining) {
-      localStorage.setItem(`task-remaining-hours-${issue.id}`, timeRemaining);
-    } else {
-      localStorage.removeItem(`task-remaining-hours-${issue.id}`);
-    }
+    try {
+      // Call the dedicated Work Logs API
+      // safely parse loggedAt
+      let parsedLoggedAt = new Date().toISOString();
+      try {
+        const combinedStr = `${dateStarted} ${timeStarted}`;
+        const d = new Date(combinedStr);
+        if (!isNaN(d.getTime())) {
+          parsedLoggedAt = d.toISOString();
+        } else {
+          // Fallback if parsing fails (e.g. invalid time string)
+          const fallbackD = new Date(dateStarted);
+          if (!isNaN(fallbackD.getTime())) {
+            parsedLoggedAt = fallbackD.toISOString();
+          }
+        }
+      } catch (e) {
+        // fallback to now
+      }
 
-    // Call update callback if provided
-    if (onUpdateIssue) {
-      onUpdateIssue({
-        ...issue,
-        timeLogged: newLogged * 60, // Store as minutes
-        timeEstimated: timeRemaining || undefined,
-      });
-    }
+      const payload = {
+        hoursSpent: parsedSpent,
+        timeEstimated: parsedRemaining || undefined,
+        description: description,
+        loggedAt: parsedLoggedAt,
+      };
 
-    onClose();
+      const response = await api.post(
+        apiRoutes.TASKS.BOARD_TASK_WORK_LOGS(issue.workspaceId, issue.id),
+        payload
+      );
+
+      // The backend has already recalculated timeLogged and updated the task.
+      // We can update the UI optimistically or using the new timeLogged if backend returns it.
+      // For now, we update it optimistically:
+      const newLogged = prevLogged + parsedSpent;
+      
+      // Save to localStorage
+      // REMOVED: Using issue props from server as single source of truth
+
+      // Call update callback if provided
+      if (onUpdateIssue) {
+        onUpdateIssue({
+          ...issue,
+          timeLogged: newLogged, // Store as hours directly
+          timeEstimated: timeRemaining || undefined,
+        });
+      }
+
+      toast.success(`Logged time to Task ${issue.key}`);
+      onClose();
+    } catch (error) {
+      console.error("Failed to log work:", error);
+      toast.error("Failed to log work");
+    }
   };
 
   const liveSpent = parsedSpent || 0;
-  const liveRemaining = parsedRemaining || 0;
-  const displayLogged = liveSpent;
-  const displayRemaining = liveRemaining;
+  
+  // If editing, baseLogged is total task logged minus the old hours of this log
+  const baseLogged = editWorkLog ? Math.max(0, prevLogged - editWorkLog.hoursSpent) : prevLogged;
+  const displayLogged = baseLogged + liveSpent;
+  
+  const displayRemaining = parsedRemaining || 0;
   const totalForBar = displayLogged + displayRemaining;
   const progressPercent = totalForBar > 0 ? (displayLogged / totalForBar) * 100 : 0;
+
+  const formatTime = (hours: number) => {
+    if (hours < 1) {
+      const mins = Math.round(hours * 60);
+      return `${mins}m`;
+    }
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}m`;
+  };
 
   return (
     <div 
@@ -265,9 +352,9 @@ export default function TimeTrackingModal({
           </button>
         </div>
 
-        {/* Progress Bar (Only visible if hours are entered in this session) */}
-        {parsedSpent !== null && (
-          <div className="px-5 py-2">
+        {/* Progress Bar (Visible if task has logged hours or user is typing) */}
+        {(displayLogged > 0 || displayRemaining > 0) && (
+          <div className="px-5 pt-3 pb-1">
             <div className="w-full bg-[#DFE1E6] dark:bg-[#2A2A2A] h-2 rounded-[4px] overflow-hidden">
               <div 
                 className="bg-[#5B8A1C] h-full transition-all duration-300"
@@ -275,7 +362,7 @@ export default function TimeTrackingModal({
               />
             </div>
             <div className="text-[0.8125rem] text-[#5E6C84] dark:text-[#9B9A97] mt-1 font-medium">
-              {displayLogged}h logged
+              {formatTime(displayLogged)} logged
             </div>
           </div>
         )}

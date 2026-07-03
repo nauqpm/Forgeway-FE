@@ -64,7 +64,7 @@ export default function TaskDetailDrawer({
   embedded = false,
 }: TaskDetailDrawerProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "history" | "work_log">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
