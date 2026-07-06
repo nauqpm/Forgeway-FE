@@ -9,7 +9,7 @@ interface TimeTrackingModalProps {
   isOpen: boolean;
   onClose: () => void;
   issue: TaskDetailResponse;
-  onUpdateIssue?: (updatedIssue: any) => void;
+  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   editWorkLog?: {
     id: string;
     hoursSpent: number;
@@ -154,8 +154,9 @@ export default function TimeTrackingModal({
   const handleUploadClick = () => {
     const fileInput = document.createElement("input");
     fileInput.type = "file";
-    fileInput.onchange = (e: any) => {
-      const file = e.target.files?.[0];
+    fileInput.onchange = (e: Event) => {
+      const input = e.target as HTMLInputElement;
+      const file = input.files?.[0];
       if (file) {
         const attachmentText = description ? `\n[Attachment: ${file.name}]` : `[Attachment: ${file.name}]`;
         const newVal = description + attachmentText;
@@ -269,7 +270,7 @@ export default function TimeTrackingModal({
             parsedLoggedAt = fallbackD.toISOString();
           }
         }
-      } catch (e) {
+      } catch {
         // fallback to now
       }
 
@@ -280,7 +281,7 @@ export default function TimeTrackingModal({
         loggedAt: parsedLoggedAt,
       };
 
-      const response = await api.post(
+      await api.post(
         apiRoutes.TASKS.BOARD_TASK_WORK_LOGS(issue.workspaceId, issue.id),
         payload
       );

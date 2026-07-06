@@ -162,7 +162,7 @@ export default function WorkspaceModals({
           onFieldUpdate={canEditTask ? ((id: string, updates: any) => updateIssueDirectly(id, updates)) : undefined}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
-          onRestoreIssue={handleRestoreIssue ? (handleRestoreIssue as any) : undefined}
+          onRestoreIssue={handleRestoreIssue ? ((i: Issue) => handleRestoreIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
       ) : activeIssueDetail && activeTab !== "list" ? (
@@ -178,7 +178,7 @@ export default function WorkspaceModals({
           onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
-          onRestoreIssue={handleRestoreIssue ? (handleRestoreIssue as any) : undefined}
+          onRestoreIssue={handleRestoreIssue ? ((i: Issue) => handleRestoreIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
       ) : null}

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Clock, Loader2, Edit2, Trash2 } from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Clock, Loader2 } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 
@@ -35,7 +35,7 @@ interface TaskWorkLogsProps {
   taskId: string;
   workspaceMembers?: WorkspaceMember[];
   issue?: TaskDetailResponse;
-  onUpdateIssue?: (updatedIssue: any) => void;
+  onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
 }
 
 // Helper to get display name from member list
@@ -119,7 +119,7 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
   // Delete states
   const [deletingLog, setDeletingLog] = useState<WorkLogDto | null>(null);
   
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -132,18 +132,19 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
       } else {
         setLogs([]);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to load work logs");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || "Failed to load work logs");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [workspaceId, taskId]);
 
   useEffect(() => {
     if (workspaceId && taskId) {
       fetchLogs();
     }
-  }, [workspaceId, taskId]);
+  }, [workspaceId, taskId, fetchLogs]);
 
   const handleConfirmDelete = async (adjustTimeRemaining: boolean, newTimeEstimated: string) => {
     if (!deletingLog) return;
@@ -166,8 +167,9 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
           timeEstimated: adjustTimeRemaining ? newTimeEstimated : issue.timeEstimated,
         });
       }
-    } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to delete work log");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      alert(error.response?.data?.message || "Failed to delete work log");
     } finally {
       setDeletingLog(null);
     }
@@ -177,7 +179,7 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
     setEditingLog(log);
   };
 
-  const handleUpdateIssueFromEdit = (updatedIssue: any) => {
+  const handleUpdateIssueFromEdit = (updatedIssue: TaskDetailResponse) => {
     if (onUpdateIssue) {
       onUpdateIssue(updatedIssue);
     }

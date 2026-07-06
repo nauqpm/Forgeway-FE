@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 
 interface DeleteWorkLogModalProps {
   isOpen: boolean;
@@ -57,7 +57,7 @@ export default function DeleteWorkLogModal({
 
         {/* Body */}
         <div className="px-5 pb-5 text-[14px] text-[#172B4D] dark:text-[#B6C2CF]">
-          <p className="mb-4">Once you delete, it's gone for good.</p>
+          <p className="mb-4">Once you delete, it&apos;s gone for good.</p>
           
           <label className="flex items-center gap-2 mb-4 cursor-pointer">
             <input 

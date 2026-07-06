@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import sdlcLogo from "../../../../../../app/Logo_AutomationLand_AI_SDLC-removebg.png";
 import Image from "next/image";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
+import type { AuthUser } from "@/modules/auth/shared/types/auth.types";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
@@ -426,9 +427,9 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                               const isExpanded = !!wsCustomOpen[wsId];
                               const totalWsUnread = getWorkspaceTotalUnread(wsId);
 
-                              const currentUserId = (user as any)?._id || (user as any)?.id;
+                              const currentUserId = (user as AuthUser & { _id?: string })?._id || user?.id;
                               const isOwner = ws.ownerId?.toString() === String(currentUserId);
-                              const member = ws.members?.find((m: any) => {
+                              const member = ws.members?.find((m: { userId?: string | { _id?: string; id?: string } }) => {
                                 const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
                                 return String(uId) === String(currentUserId);
                               });
