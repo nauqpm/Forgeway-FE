@@ -8,11 +8,14 @@ import { apiRoutes } from "@/config/apiRoutes";
 interface WorkspaceMember {
   id?: string;
   _id?: string;
-  userId?: string | { _id?: string; id?: string; fullName?: string; email?: string; avatarUrl?: string };
-  user?: string | { _id?: string; id?: string; fullName?: string; email?: string; avatarUrl?: string };
+  userId?: string | { _id?: string; id?: string; fullName?: string; name?: string; email?: string; avatarUrl?: string; avatar?: string; image?: string };
+  user?: string | { _id?: string; id?: string; fullName?: string; name?: string; email?: string; avatarUrl?: string; avatar?: string; image?: string };
   fullName?: string;
+  name?: string;
   email?: string;
   avatarUrl?: string;
+  avatar?: string;
+  image?: string;
 }
 
 interface WorkLogDto {
