@@ -287,9 +287,9 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           reportsProps={{
             workspaceId: workspace._id,
             workspaceKey: workspace.key,
-            onSelectTask: openTaskDetail,
+            onSelectTask: (task) => openTaskDetail(task as unknown as Issue),
             currentUserId: user?.id,
-            workspaceType: workspace.type,
+            workspaceType: workspace.type || "",
           }}
         />
 
