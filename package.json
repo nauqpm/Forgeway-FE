@@ -65,6 +65,7 @@
     "react-mentions": "^4.4.10",
     "react-rnd": "^10.5.3",
     "react-select": "^5.10.2",
+    "recharts": "^3.9.2",
     "socket.io-client": "^4.8.3",
     "suneditor": "^2.47.5",
     "suneditor-react": "^3.6.1",

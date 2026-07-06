@@ -284,6 +284,13 @@ export default function WorkspacePage(props: WorkspacePageProps) {
             currentUserId: user?.id,
             isAdmin: isWorkspaceAdmin,
           }}
+          reportsProps={{
+            workspaceId: workspace._id,
+            workspaceKey: workspace.key,
+            onSelectTask: openTaskDetail,
+            currentUserId: user?.id,
+            workspaceType: workspace.type,
+          }}
         />
 
         <WorkspaceModals

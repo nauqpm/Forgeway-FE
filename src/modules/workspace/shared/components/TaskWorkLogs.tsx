@@ -111,6 +111,16 @@ const formatFullDate = (dateString: string) => {
   return `${datePart} at ${timePart}`;
 };
 
+const getAvatarUrl = (url?: string | null) => {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
+    return url;
+  }
+  const baseUrl = (process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5512").replace(/\/$/, "");
+  const path = url.startsWith("/") ? url : `/${url}`;
+  return `${baseUrl}${path}`;
+};
+
 export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [], issue, onUpdateIssue }: TaskWorkLogsProps) {
   const [logs, setLogs] = useState<WorkLogDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -226,7 +236,7 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
           <div key={log.id} className="flex gap-3 p-3 rounded-[6px] bg-[#F7F6F3] dark:bg-white/[0.02] border border-[#EAEAEA] dark:border-white/5">
             <div className="flex-shrink-0 mt-1">
               {avatar ? (
-                <img src={avatar} alt={name} className="w-8 h-8 rounded-full object-cover" />
+                <img src={getAvatarUrl(avatar)} alt={name} className="w-8 h-8 rounded-full object-cover" />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-[#0052CC] text-white flex items-center justify-center text-[0.8125rem] font-semibold">
                   {name.charAt(0).toUpperCase()}

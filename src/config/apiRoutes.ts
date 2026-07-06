@@ -83,6 +83,7 @@ export const apiRoutes = {
         BOARD_TASK_COMMENTS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments`,
         BOARD_TASK_COMMENT: (workspaceId: string, taskId: string, commentId: string) => `/workspaces/${workspaceId}/board/${taskId}/comments/${commentId}`,
         BOARD_TASK_WORK_LOGS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board-tasks/${taskId}/work-logs`,
+        BOARD_TASK_WORK_LOG_REPORT: (workspaceId: string) => `/workspaces/${workspaceId}/reports/worklogs`,
         BOARD_TASK_WORK_LOG_UPDATE: (workspaceId: string, taskId: string, logId: string) => `/workspaces/${workspaceId}/board-tasks/${taskId}/work-logs/${logId}`,
         BOARD_TASK_WORK_LOG_DELETE: (workspaceId: string, taskId: string, logId: string) => `/workspaces/${workspaceId}/board-tasks/${taskId}/work-logs/${logId}`,
         BY_SPRINT: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/board/tasks?sprintId=${sprintId}`,
