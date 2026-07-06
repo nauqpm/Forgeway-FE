@@ -5,6 +5,7 @@ import { Issue } from "@/modules/workspace/shared/types/issue.type";
 import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
 import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 import { Workspace, WorkspaceTab, getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
+import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 
 const CreateTaskModal = dynamic(
   () => import("@/modules/workspace/tasks/create/CreateTaskModal"),
@@ -68,6 +69,7 @@ interface WorkspaceModalsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateIssueDirectly: (id: string, updates: any) => void;
   handleArchiveIssue: (issue: Issue) => void;
+  handleRestoreIssue?: (issue: TaskDetailResponse) => void;
   detailUrl: string | undefined;
   canEditTask: boolean;
   canDeleteTask: boolean;
@@ -98,6 +100,7 @@ export default function WorkspaceModals({
   handleUpdateIssue,
   updateIssueDirectly,
   handleArchiveIssue,
+  handleRestoreIssue,
   detailUrl,
   canEditTask,
   canDeleteTask,
@@ -160,6 +163,7 @@ export default function WorkspaceModals({
           onFieldUpdate={canEditTask ? ((id: string, updates: any) => updateIssueDirectly(id, updates)) : undefined}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
+          onRestoreIssue={handleRestoreIssue ? ((i: TaskDetailResponse) => handleRestoreIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
       ) : activeIssueDetail && activeTab !== "list" ? (
@@ -175,6 +179,7 @@ export default function WorkspaceModals({
           onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
+          onRestoreIssue={handleRestoreIssue ? ((i: TaskDetailResponse) => handleRestoreIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
       ) : null}

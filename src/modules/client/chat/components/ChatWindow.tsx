@@ -110,6 +110,10 @@ export default function ChatWindow() {
       queryClient.setQueryData<Channel[]>(queryKeys.chat.channels(), (current = []) =>
         current.map(c => (c._id || c.id) === activeChannelId ? updatedChannel : c)
       );
+      // Invalidate active channel details and messages query to trigger refetch
+      await queryClient.invalidateQueries({ queryKey: queryKeys.chat.channel(activeChannelId) });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.chat.messages(activeChannelId) });
+      refetch();
       toast.success(`Joined #${activeChannel?.name || 'channel'}!`);
     } catch (err) {
       const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
@@ -186,26 +190,18 @@ export default function ChatWindow() {
     if (shouldScrollToBottomRef.current) {
       if (scrollRef.current) {
         if (channelChanged || lastMsgChanged) {
-          if (channelChanged && firstUnreadMessageId) {
-            setTimeout(() => {
-              const el = document.getElementById(`msg-${firstUnreadMessageId}`);
-              if (el) {
-                el.scrollIntoView({ behavior: 'auto', block: 'center' });
-              } else {
-                if (scrollRef.current) {
-                  scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-                }
-              }
-            }, 50);
-            return;
-          }
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          // Always scroll directly to the bottom of the chat window
+          setTimeout(() => {
+            if (scrollRef.current) {
+              scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+            }
+          }, 50);
         }
       }
     } else {
       shouldScrollToBottomRef.current = true;
     }
-  }, [messages, activeChannelId, firstUnreadMessageId]);
+  }, [messages, activeChannelId]);
 
   useEffect(() => {
     if (loading || !targetMessageId || activeThreadParentId) return;

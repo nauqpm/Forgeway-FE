@@ -8,10 +8,12 @@ import {
   Settings,
   Archive,
   ArrowLeft,
+  Clock,
 } from "lucide-react";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import type { Issue } from "@/modules/workspace/shared/types/issue.type";
 import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
+import TimeTrackingModal from "./TimeTrackingModal";
 import StatusPicker from "@/shared/components/StatusPicker";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
 import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
@@ -41,6 +43,7 @@ interface TaskDetailListProps {
   onUpdateIssue?: (updatedIssue: any) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: TaskDetailResponse) => void;
+  onRestoreIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   canEditTask?: boolean;
 }
@@ -57,13 +60,15 @@ export default function TaskDetailList({
   onUpdateIssue,
   onFieldUpdate,
   onArchiveIssue,
+  onRestoreIssue,
   canEditTask = true,
 }: TaskDetailListProps) {
   const { user, token } = useAuth();
-  const [activeTab, setActiveTab] = useState<"comments" | "history">("comments");
+  const [activeTab, setActiveTab] = useState<"comments" | "history" | "work_log">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const [isLogWorkOpen, setIsLogWorkOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
 
@@ -156,10 +161,19 @@ export default function TaskDetailList({
                   <button
                     onClick={() => {
                       setShowActionMenu(false);
+                      setIsLogWorkOpen(true);
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                  >
+                    <Clock className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" /> Log work
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowActionMenu(false);
                       onArchiveIssue?.(issue);
                     }}
                     disabled={!onArchiveIssue || issue.isArchived}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:opacity-50 border-t border-[#EAEAEA] dark:border-white/[0.06]"
                   >
                     <Archive className="h-4 w-4" /> Archive
                   </button>
@@ -204,6 +218,7 @@ export default function TaskDetailList({
             }}
             titleSize="2xl"
             boardColumns={boardColumns}
+            onRestoreIssue={() => onRestoreIssue && onRestoreIssue(issue)}
           />
         </div>
 
@@ -261,6 +276,12 @@ export default function TaskDetailList({
           </div>
         </div>
       </div>
+      <TimeTrackingModal
+        isOpen={isLogWorkOpen}
+        onClose={() => setIsLogWorkOpen(false)}
+        issue={issue}
+        onUpdateIssue={onUpdateIssue}
+      />
     </div>
   );
 }

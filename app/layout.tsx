@@ -66,7 +66,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="">
+      <body className="" suppressHydrationWarning>
         <Suspense>
           <QueryProvider>
             <TokenHandler />

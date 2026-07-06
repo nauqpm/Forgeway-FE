@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import {
@@ -71,6 +71,43 @@ export default function BoardTaskActionMenu({
   const [coverAnchorRect, setCoverAnchorRect] = useState<DOMRect | null>(null);
   const coverRowRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleButtonMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setCoverAnchorRect(coverRowRef.current?.getBoundingClientRect() ?? null);
+  };
+
+  const handleButtonMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setCoverAnchorRect(null);
+    }, 150);
+  };
+
+  const handlePopoverMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setCoverAnchorRect(coverRowRef.current?.getBoundingClientRect() ?? null);
+  };
+
+  const handlePopoverMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setCoverAnchorRect(null);
+    }, 100);
+  };
   const { saving, applyCover, removeCover } = useTaskCoverActions({
     workspaceId,
     issue,
@@ -237,7 +274,8 @@ export default function BoardTaskActionMenu({
           <button
             ref={coverRowRef}
             type="button"
-            onMouseEnter={() => setCoverAnchorRect(coverRowRef.current?.getBoundingClientRect() ?? null)}
+            onMouseEnter={handleButtonMouseEnter}
+            onMouseLeave={handleButtonMouseLeave}
             className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[0.8125rem] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
           >
             <span>Select cover</span>
@@ -280,8 +318,8 @@ export default function BoardTaskActionMenu({
         onApplyCover={applyCover}
         onRemoveCover={removeCover}
         onRequestClose={() => setCoverAnchorRect(null)}
-        onMouseEnter={() => setCoverAnchorRect(coverRowRef.current?.getBoundingClientRect() ?? null)}
-        onMouseLeave={() => setCoverAnchorRect(null)}
+        onMouseEnter={handlePopoverMouseEnter}
+        onMouseLeave={handlePopoverMouseLeave}
       />
     </>,
     document.body,

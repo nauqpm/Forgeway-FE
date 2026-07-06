@@ -44,6 +44,10 @@ const MembersTab = dynamic(() => import("@/modules/workspace/board/MembersTab"),
   ssr: false,
   loading: tabLoading,
 });
+const ReportsTab = dynamic(() => import("@/modules/workspace/board/ReportsTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
 
 type WorkspaceContentProps = {
   activeTab: string;
@@ -71,6 +75,13 @@ type WorkspaceContentProps = {
     currentUserId?: string;
     isAdmin: boolean;
   };
+  reportsProps: {
+    workspaceId: string;
+    workspaceKey: string;
+    onSelectTask: (task: { id: string; key: string; title: string; type: string }) => void;
+    currentUserId?: string;
+    workspaceType: string;
+  };
 };
 
 export default function WorkspaceContent({
@@ -86,6 +97,7 @@ export default function WorkspaceContent({
   calendarProps,
   archiveProps,
   membersProps,
+  reportsProps,
 }: WorkspaceContentProps) {
   return (
     <div
@@ -116,6 +128,8 @@ export default function WorkspaceContent({
       {activeTab === "summary" && <SummaryTab {...summaryProps} />}
 
       {activeTab === "members" && <MembersTab {...membersProps} />}
+
+      {activeTab === "reports" && <ReportsTab {...reportsProps} />}
     </div>
   );
 }

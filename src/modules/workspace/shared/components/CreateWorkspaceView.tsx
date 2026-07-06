@@ -45,7 +45,7 @@ export default function CreateWorkspaceView({
                 value={form.name}
                 onChange={(e) => {
                   handleFieldChange("name", e.target.value);
-                  handleFieldChange("key", e.target.value.toUpperCase().replace(/\s+/g, "").substring(0, 5));
+                  handleFieldChange("key", e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, "").substring(0, 5));
                 }}
                 className="w-full px-4 py-3 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
                 placeholder="Example: Engineering Team, Project Alpha"
@@ -64,7 +64,14 @@ export default function CreateWorkspaceView({
                 maxLength={10}
                 required
               />
-              <p className="mt-1.5 text-xs text-[#787774] dark:text-[#9B9A97]">The key is used to generate work item codes. Example: {form.key || "ENG"}-123.</p>
+              <p className="mt-1.5 text-xs text-[#787774] dark:text-[#9B9A97]">
+                The key is used to generate work item codes. Example: {
+                  (() => {
+                    const activeKey = form.key || "ENG";
+                    return /-\d+$/.test(activeKey) ? activeKey : `${activeKey}-123`;
+                  })()
+                }.
+              </p>
             </div>
 
             <div>

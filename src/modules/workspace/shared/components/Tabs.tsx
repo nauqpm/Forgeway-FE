@@ -39,6 +39,9 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
       <OverflowTabs.Item id="members" onSelect={() => setActiveTab("members")}>
         Members
       </OverflowTabs.Item>
+      <OverflowTabs.Item id="reports" onSelect={() => setActiveTab("reports")}>
+        Reports
+      </OverflowTabs.Item>
     </OverflowTabs>
   );
 };
