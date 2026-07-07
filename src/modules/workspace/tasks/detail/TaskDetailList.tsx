@@ -280,6 +280,7 @@ export default function TaskDetailList({
         isOpen={isLogWorkOpen}
         onClose={() => setIsLogWorkOpen(false)}
         issue={issue}
+        workspaceId={workspaceId}
         onUpdateIssue={onUpdateIssue}
       />
     </div>

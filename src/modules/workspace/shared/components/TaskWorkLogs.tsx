@@ -39,6 +39,8 @@ interface TaskWorkLogsProps {
   workspaceMembers?: WorkspaceMember[];
   issue?: TaskDetailResponse;
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
+  /** Whether the current user has TASK_EDIT permission in this workspace */
+  canEdit?: boolean;
 }
 
 // Helper to get display name from member list
@@ -121,7 +123,9 @@ const getAvatarUrl = (url?: string | null) => {
   return `${baseUrl}${path}`;
 };
 
-export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [], issue, onUpdateIssue }: TaskWorkLogsProps) {
+export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [], issue, onUpdateIssue, canEdit = true }: TaskWorkLogsProps) {
+  // Derive read-only state: archived tasks, deleted tasks, or lack of edit permission
+  const isReadOnly = !canEdit || !!issue?.isArchived || !!issue?.isDeleted;
   const [logs, setLogs] = useState<WorkLogDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -159,25 +163,25 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
     }
   }, [workspaceId, taskId, fetchLogs]);
 
-  const handleConfirmDelete = async (adjustTimeRemaining: boolean, newTimeEstimated: string) => {
+  const handleConfirmDelete = async (adjustTimeRemaining: boolean, newTimeEstimatedHours: number) => {
     if (!deletingLog) return;
     
     try {
       let url = apiRoutes.TASKS.BOARD_TASK_WORK_LOG_DELETE(workspaceId, taskId, deletingLog.id);
       url += `?adjustTimeRemaining=${adjustTimeRemaining}`;
-      if (adjustTimeRemaining && newTimeEstimated) {
-        url += `&newTimeEstimated=${encodeURIComponent(newTimeEstimated)}`;
+      if (adjustTimeRemaining) {
+        url += `&newTimeEstimated=${encodeURIComponent(newTimeEstimatedHours)}`;
       }
 
       await api.delete(url);
       setLogs((prev) => prev.filter((l) => l.id !== deletingLog.id));
       
       if (onUpdateIssue && issue) {
-        // Optimistic update of the parent issue
+        // Optimistic update of the parent issue (use numeric hours consistently)
         onUpdateIssue({
           ...issue,
           timeLogged: (issue.timeLogged || 0) - deletingLog.hoursSpent,
-          timeEstimated: adjustTimeRemaining ? newTimeEstimated : issue.timeEstimated,
+          timeEstimated: adjustTimeRemaining ? newTimeEstimatedHours : issue.timeEstimated,
         });
       }
     } catch (err: unknown) {
@@ -267,15 +271,17 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
                 </div>
               )}
               
-              <div className="flex items-center gap-3 text-[0.75rem] text-[#5E6C84] dark:text-[#9B9A97]">
-                <button onClick={() => handleEditClick(log)} className="hover:text-[#172B4D] dark:hover:text-[#E8E8E7] transition-colors font-medium">
-                  Edit
-                </button>
-                <span>&middot;</span>
-                <button onClick={() => setDeletingLog(log)} className="hover:text-[#DE350B] transition-colors font-medium">
-                  Delete
-                </button>
-              </div>
+              {!isReadOnly && (
+                <div className="flex items-center gap-3 text-[0.75rem] text-[#5E6C84] dark:text-[#9B9A97]">
+                  <button onClick={() => handleEditClick(log)} className="hover:text-[#172B4D] dark:hover:text-[#E8E8E7] transition-colors font-medium">
+                    Edit
+                  </button>
+                  <span>&middot;</span>
+                  <button onClick={() => setDeletingLog(log)} className="hover:text-[#DE350B] transition-colors font-medium">
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -285,8 +291,8 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
         isOpen={!!deletingLog}
         onClose={() => setDeletingLog(null)}
         onConfirm={handleConfirmDelete}
-        initialTimeRemaining={issue?.timeEstimated || "0"}
-        deletedTime={deletingLog ? formatTimeSpent(deletingLog.hoursSpent) : ""}
+        initialTimeRemainingHours={typeof issue?.timeEstimated === "number" ? issue.timeEstimated : parseFloat(String(issue?.timeEstimated || "0")) || 0}
+        deletedHours={deletingLog?.hoursSpent ?? 0}
       />
 
       {issue && (

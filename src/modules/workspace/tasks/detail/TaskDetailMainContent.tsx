@@ -205,6 +205,7 @@ export default function TaskDetailMainContent({
             workspaceMembers={workspaceMembers}
             issue={issue}
             onUpdateIssue={onUpdateIssue}
+            canEdit={canEditTask}
           />
         )}
       </div>

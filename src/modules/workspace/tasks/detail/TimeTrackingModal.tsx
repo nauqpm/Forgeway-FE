@@ -9,6 +9,7 @@ interface TimeTrackingModalProps {
   isOpen: boolean;
   onClose: () => void;
   issue: TaskDetailResponse;
+  workspaceId?: string;
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   editWorkLog?: {
     id: string;
@@ -22,6 +23,7 @@ export default function TimeTrackingModal({
   isOpen,
   onClose,
   issue,
+  workspaceId,
   onUpdateIssue,
   editWorkLog,
 }: TimeTrackingModalProps) {
@@ -200,7 +202,8 @@ export default function TimeTrackingModal({
       // Fetch latest total hours from backend to ensure accuracy
       const fetchTotal = async () => {
         try {
-          const res = await api.get(apiRoutes.TASKS.BOARD_TASK_WORK_LOGS(issue.workspaceId, issue.id));
+          const wId = issue.workspaceId || workspaceId || "";
+          const res = await api.get(apiRoutes.TASKS.BOARD_TASK_WORK_LOGS(wId, issue.id));
           const total = res.data?.totalHours || 0;
           setPrevLogged(total);
         } catch (err) {
@@ -232,7 +235,7 @@ export default function TimeTrackingModal({
       setLinkText("");
       setIsHistoryPopupOpen(false);
     }
-  }, [isOpen, issue]);
+  }, [isOpen, issue, workspaceId]);
 
   if (!isOpen) return null;
 
@@ -281,29 +284,38 @@ export default function TimeTrackingModal({
         loggedAt: parsedLoggedAt,
       };
 
-      await api.post(
-        apiRoutes.TASKS.BOARD_TASK_WORK_LOGS(issue.workspaceId, issue.id),
-        payload
-      );
+      const wId = issue.workspaceId || workspaceId || "";
 
-      // The backend has already recalculated timeLogged and updated the task.
-      // We can update the UI optimistically or using the new timeLogged if backend returns it.
-      // For now, we update it optimistically:
-      const newLogged = prevLogged + parsedSpent;
-      
-      // Save to localStorage
-      // REMOVED: Using issue props from server as single source of truth
+      if (editWorkLog) {
+        // Edit mode: PATCH to update the existing work log
+        await api.patch(
+          apiRoutes.TASKS.BOARD_TASK_WORK_LOG_UPDATE(wId, issue.id, editWorkLog.id),
+          payload
+        );
+      } else {
+        // Create mode: POST a new work log
+        await api.post(
+          apiRoutes.TASKS.BOARD_TASK_WORK_LOGS(wId, issue.id),
+          payload
+        );
+      }
+
+      // Recalculate optimistic display value
+      // Edit: replace old hours with new hours; Create: add new hours on top
+      const newLogged = editWorkLog
+        ? Math.max(0, prevLogged - editWorkLog.hoursSpent) + parsedSpent
+        : prevLogged + parsedSpent;
 
       // Call update callback if provided
       if (onUpdateIssue) {
         onUpdateIssue({
           ...issue,
-          timeLogged: newLogged, // Store as hours directly
-          timeEstimated: timeRemaining || undefined,
+          timeLogged: newLogged, // numeric hours
+          timeEstimated: parsedRemaining ?? undefined, // numeric hours, not raw string
         });
       }
 
-      toast.success(`Logged time to Task ${issue.key}`);
+      toast.success(editWorkLog ? `Updated work log for Task ${issue.key}` : `Logged time to Task ${issue.key}`);
       onClose();
     } catch (error) {
       console.error("Failed to log work:", error);

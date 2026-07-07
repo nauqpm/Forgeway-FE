@@ -81,7 +81,7 @@ export interface TaskDetailResponse {
   comments?: Comment[];
   subtasks?: Subtask[];
   timeLogged?: number;
-  timeEstimated?: string;
+  timeEstimated?: string | number;
   startDate?: string;
   cover?: TaskCover | null;
   labels?: TaskLabel[];

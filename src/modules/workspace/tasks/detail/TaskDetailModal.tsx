@@ -137,35 +137,6 @@ export default function TaskDetailModal({
 
           <div className="flex items-center gap-1">
             {onArchiveIssue && (
-              // <div className="relative">
-              //   <button
-              //     type="button"
-              //     onClick={() => setShowActionMenu((open) => !open)}
-              //     className="p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
-              //     aria-label="Task actions"
-              //   >
-              //     <MoreHorizontal className="w-4 h-4" />
-              //   </button>
-              //   {showActionMenu && (
-              //     <div
-              //       className="absolute right-0 top-full z-50 mt-1 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] py-1"
-              //       style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
-              //     >
-              //       <button
-              //         type="button"
-              //         onClick={() => {
-              //           setShowActionMenu(false);
-              //           onArchiveIssue?.(issue);
-              //         }}
-              //         disabled={!onArchiveIssue || issue.isArchived}
-              //         className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] disabled:cursor-not-allowed disabled:opacity-50"
-              //       >
-              //         <Archive className="h-4 w-4" />
-              //         Archive
-              //       </button>
-              //     </div>
-              //   )}
-              // </div>
               <div className="relative">
                 <button
                   type="button"
@@ -298,6 +269,7 @@ export default function TaskDetailModal({
         isOpen={isLogWorkOpen}
         onClose={() => setIsLogWorkOpen(false)}
         issue={issue}
+        workspaceId={workspaceId}
         onUpdateIssue={onUpdateIssue}
       />
     </div>,

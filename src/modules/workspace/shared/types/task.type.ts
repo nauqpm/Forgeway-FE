@@ -40,5 +40,5 @@ export interface Task {
   labels?: TaskLabel[];
   labelIds?: string[];
   timeLogged?: number;
-  timeEstimated?: string;
+  timeEstimated?: string | number;
 }

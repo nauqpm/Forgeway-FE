@@ -13,7 +13,8 @@ import {
 } from "lucide-react";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
-import { exportWorklogReportToCSV } from "../shared/utils/exportCsv";
+import { exportWorklogReportToExcel } from "../shared/utils/exportExcel";
+import CustomDatePicker from "@/shared/components/CustomDatePicker";
 
 interface WorklogReportTabProps {
   workspaceId: string;
@@ -150,10 +151,13 @@ export default function WorklogReportTab({
 
   const handleExport = () => {
     if (!reportData) return;
-    exportWorklogReportToCSV(
+    exportWorklogReportToExcel(
       reportData.periods,
       reportData.users,
-      `worklog-report-${workspaceKey}-${groupBy}-${startDate}-to-${endDate}.csv`
+      workspaceKey,
+      startDate,
+      endDate,
+      `worklog-report-${workspaceKey}-${groupBy}-${startDate}-to-${endDate}.xlsx`
     );
   };
 
@@ -220,7 +224,7 @@ export default function WorklogReportTab({
             className="inline-flex items-center gap-2 border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] px-3.5 py-2 rounded-[6px] text-[0.8125rem] font-semibold hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="w-4 h-4" />
-            Export CSV
+            Export Excel
           </button>
         </div>
       </div>
@@ -233,18 +237,18 @@ export default function WorklogReportTab({
             <Calendar className="w-3.5 h-3.5" /> Date range
           </label>
           <div className="flex items-center gap-2">
-            <input
-              type="date"
+            <CustomDatePicker
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="px-3 py-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] text-[0.8125rem] bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:border-[#2563EB]"
+              onChange={(v) => setStartDate(v ?? "")}
+              placeholder="Start date"
+              popoverPlacement="bottom-start"
             />
             <span className="text-[#ABABAB] dark:text-[#6B6B6B]">&rarr;</span>
-            <input
-              type="date"
+            <CustomDatePicker
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="px-3 py-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] text-[0.8125rem] bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:border-[#2563EB]"
+              onChange={(v) => setEndDate(v ?? "")}
+              placeholder="End date"
+              popoverPlacement="bottom-start"
             />
           </div>
         </div>
@@ -462,7 +466,7 @@ export default function WorklogReportTab({
                     {isExpanded && hasMoreTasks && (
                       <tr className="border-b border-[#EAEAEA] dark:border-white/5">
                         <td className="p-3 sticky left-0 bg-white dark:bg-[#1a1a1a] border-r border-[#EAEAEA]/40 dark:border-white/5 z-10"></td>
-                        <td colSpan={2 + reportData.periods.length} className="p-3 sticky left-[150px] bg-white dark:bg-[#1a1a1a] z-10">
+                        <td className="p-3 sticky left-[150px] bg-white dark:bg-[#1a1a1a] z-10">
                           <button
                             onClick={() => toggleShowAllTasks(user.userId)}
                             className="text-[#2563EB] dark:text-[#3B82F6] hover:underline font-semibold text-[0.8125rem]"
@@ -470,6 +474,8 @@ export default function WorklogReportTab({
                             {showAll ? "Show less tasks" : `Show ${user.tasks.length - 5} more tasks...`}
                           </button>
                         </td>
+                        <td className="p-3 sticky left-[430px] bg-white dark:bg-[#1a1a1a] z-10 border-r border-[#EAEAEA] dark:border-white/10"></td>
+                        <td colSpan={reportData.periods.length} className="p-3"></td>
                       </tr>
                     )}
                   </Fragment>

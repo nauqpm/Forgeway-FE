@@ -333,6 +333,7 @@ export default function TaskDetailDrawer({
         isOpen={isLogWorkOpen}
         onClose={() => setIsLogWorkOpen(false)}
         issue={issue}
+        workspaceId={workspaceId}
         onUpdateIssue={onUpdateIssue}
       />
 
