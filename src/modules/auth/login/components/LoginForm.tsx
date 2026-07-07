@@ -181,7 +181,7 @@ function LoginFormInner() {
             <p className="text-gray-600 text-[0.8125rem] mt-1.5 font-semibold">Sign in to your SDLC platform account</p>
           </div>
 
-          <button onClick={initiateGoogleLogin} type="button"
+          <button onClick={initiateGoogleLogin} type="button" tabIndex={5}
             className="w-full mb-6 py-3 px-4 flex items-center justify-center gap-3 bg-white/50 hover:bg-white/80 border border-white/30 rounded-[6px] hover:border-white transition-all font-medium text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed">
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -204,6 +204,7 @@ function LoginFormInner() {
               <input type="text" inputMode="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailError(null); setCredentialError(null); }} required placeholder="JaneDoe@gmail.com"
                 aria-invalid={Boolean(emailError)}
                 aria-describedby={emailError ? 'login-email-error' : undefined}
+                tabIndex={1}
                 className={`w-full px-4 py-2.5 bg-white/45 border rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 outline-none transition-all shadow-inner disabled:opacity-50 ${emailError ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-200/35 focus:border-[#2563EB] focus:ring-[#2563EB]'}`} />
               {emailError && (
                 <p id="login-email-error" role="alert" className="mt-1.5 text-xs font-medium text-red-700">
@@ -214,15 +215,16 @@ function LoginFormInner() {
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="block text-[0.8125rem] font-semibold text-gray-800">Password</label>
-                <Link href="/forgot-password" className="text-xs text-[#2563EB] hover:text-[#1D4ED8] font-semibold">Forgot password?</Link>
+                <Link href="/forgot-password" tabIndex={4} className="text-xs text-[#2563EB] hover:text-[#1D4ED8] font-semibold">Forgot password?</Link>
               </div>
               <div className="relative">
                 <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => { setPassword(e.target.value); setCredentialError(null); }} required
                   placeholder="Enter your password"
                   aria-invalid={Boolean(credentialError)}
                   aria-describedby={credentialError ? 'login-credential-error' : undefined}
+                  tabIndex={2}
                   className={`w-full px-4 py-2.5 pr-11 bg-white/45 border rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 outline-none transition-all shadow-inner disabled:opacity-50 ${credentialError ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-200/35 focus:border-[#2563EB] focus:ring-[#2563EB]'}`} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} tabIndex={-1}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-700 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -240,7 +242,7 @@ function LoginFormInner() {
               </div>
             )}
 
-            <button type="submit" disabled={isLoading || isCoolingDown}
+            <button type="submit" disabled={isLoading || isCoolingDown} tabIndex={3}
               className="w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" />Signing in...</> : isCoolingDown ? `Try again in ${retrySeconds}s` : 'Sign in'}
             </button>
@@ -248,7 +250,7 @@ function LoginFormInner() {
 
           <p className="text-center text-[0.8125rem] text-gray-600 mt-6 font-medium">
             Do not have an account?{' '}
-            <Link href="/register" className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">Sign up for free</Link>
+            <Link href="/register" tabIndex={6} className="text-[#2563EB] font-bold hover:text-[#1D4ED8] transition-colors">Sign up</Link>
           </p>
         </div>
       </div>

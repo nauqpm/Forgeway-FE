@@ -39,4 +39,6 @@ export interface Task {
   cover?: TaskCover | null;
   labels?: TaskLabel[];
   labelIds?: string[];
+  timeLogged?: number;
+  timeEstimated?: string | number;
 }

@@ -41,7 +41,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-8 sm:px-0 space-y-6">
       <h1 className="text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
         Personal profile
       </h1>

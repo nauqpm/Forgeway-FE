@@ -9,6 +9,7 @@ import Tabs from "@/modules/workspace/shared/components/Tabs";
 import WorkspaceModals from "./WorkspaceModals";
 import { getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
+import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import type { useWorkspacePage } from "@/modules/workspace/shared/hooks/useWorkspacePage";
 
 const BulkActionBar = dynamic(
@@ -283,6 +284,13 @@ export default function WorkspacePage(props: WorkspacePageProps) {
             currentUserId: user?.id,
             isAdmin: isWorkspaceAdmin,
           }}
+          reportsProps={{
+            workspaceId: workspace._id,
+            workspaceKey: workspace.key,
+            onSelectTask: (task) => openTaskDetail(task as unknown as Issue),
+            currentUserId: user?.id,
+            workspaceType: workspace.type || "",
+          }}
         />
 
         <WorkspaceModals
@@ -310,6 +318,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           handleUpdateIssue={handleUpdateIssue}
           updateIssueDirectly={updateIssueDirectly}
           handleArchiveIssue={handleArchiveIssue}
+          handleRestoreIssue={handleRestoreIssue ? (i: TaskDetailResponse) => handleRestoreIssue(i as unknown as Issue) : undefined}
           detailUrl={detailUrl}
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}
