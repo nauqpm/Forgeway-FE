@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { accountSwitcherService, type SavedAccount } from "@/modules/auth/services/account-switcher.service";
+import { accountSwitcherService, type SavedAccount, type SwitchCredential } from "@/modules/auth/services/account-switcher.service";
 import { recentLoginsService } from "@/modules/auth/services/recent-logins.service";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
@@ -19,7 +19,7 @@ interface AccountSwitcherState {
 interface AccountSwitcherActions {
   /** Loads both saved (owner-scoped) and recent (device-scoped) accounts in one shot. */
   fetch: () => Promise<void>;
-  switchTo: (accountId: string) => Promise<void>;
+  switchTo: (accountId: string, credential: SwitchCredential) => Promise<void>;
   forget: (accountId: string) => Promise<void>;
   forgetRecent: (accountId: string) => Promise<void>;
   reset: () => void;
@@ -67,11 +67,11 @@ export const useAccountSwitcherStore = create<
     }
   },
 
-  async switchTo(accountId) {
+  async switchTo(accountId, credential) {
     if (get().isSwitching) return;
     set({ isSwitching: true, error: null });
     try {
-      await accountSwitcherService.switchTo(accountId);
+      await accountSwitcherService.switchTo(accountId, credential);
       // Reload the page so every in-memory store re-initialises with the new identity.
       // This is the safest reset path: a hard refresh clears any per-user cached state.
       if (typeof window !== "undefined") {

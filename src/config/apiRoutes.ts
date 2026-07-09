@@ -10,6 +10,7 @@ export const apiRoutes = {
         MY_PERMISSIONS: '/auth/my-permissions',
         ACCOUNTS: '/auth/accounts',
         ACCOUNTS_SWITCH: '/auth/accounts/switch',
+        ACCOUNTS_SWITCH_SSO_INIT: '/auth/accounts/switch/sso/init',
         ACCOUNTS_FORGET: (accountId: string) => `/auth/accounts/${accountId}`,
         ACCOUNTS_RECENT: '/auth/accounts/recent',
         ACCOUNTS_RECENT_FORGET: (accountId: string) => `/auth/accounts/recent/${accountId}`,

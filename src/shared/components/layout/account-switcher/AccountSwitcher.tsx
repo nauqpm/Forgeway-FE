@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { LogIn, Repeat, UserCircle2, X } from "lucide-react";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
-import type { SavedAccount } from "@/modules/auth/services/account-switcher.service";
+import {
+  accountSwitcherService,
+  REAUTH_REQUIRED_MESSAGE,
+  SSO_SWITCH_REQUIRED_MESSAGE,
+  type SavedAccount,
+} from "@/modules/auth/services/account-switcher.service";
+import { Modal } from "@/shared/components/ui/Modal";
+
+const accountSwitcherEnabled =
+  process.env.NEXT_PUBLIC_ACCOUNT_SWITCHER_ENABLED === "true";
 
 function fmtTime(d: string | Date): string {
   const date = typeof d === "string" ? new Date(d) : d;
@@ -75,6 +84,14 @@ export default function AccountSwitcherList({
   const isLoading = useAccountSwitcherStore((s) => s.isLoading);
   const isSwitching = useAccountSwitcherStore((s) => s.isSwitching);
   const error = useAccountSwitcherStore((s) => s.error);
+  const [pendingAccount, setPendingAccount] = useState<SavedAccount | null>(
+    null,
+  );
+  const [password, setPassword] = useState("");
+  const [verifyInfo, setVerifyInfo] = useState<string | null>(null);
+  const [switchError, setSwitchError] = useState<string | null>(null);
+  const [isSsoRedirecting, setIsSsoRedirecting] = useState(false);
+  const [ssoRedirectError, setSsoRedirectError] = useState<string | null>(null);
 
   // Lazy-load on first open. Use getState() — subscribing to the `fetch` action
   // would put this effect in an infinite loop (Zustand returns a new ref each render).
@@ -89,14 +106,78 @@ export default function AccountSwitcherList({
     () => mergeAccounts(accounts, recentAccounts),
     [accounts, recentAccounts],
   );
+  const visibleError =
+    pendingAccount || error === REAUTH_REQUIRED_MESSAGE ? null : error;
 
   if (authLoading || !isAuthenticated) return null;
 
-  const handleSwitch = async (accountId: string) => {
+  const closeVerifyModal = () => {
+    setPendingAccount(null);
+    setPassword("");
+    setVerifyInfo(null);
+    setSwitchError(null);
+    setSsoRedirectError(null);
+    setIsSsoRedirecting(false);
+  };
+
+  const openVerifyModal = (account: SavedAccount, infoMessage?: string) => {
+    if (!accountSwitcherEnabled) return;
+    setPendingAccount(account);
+    setPassword("");
+    setVerifyInfo(infoMessage ?? null);
+    setSwitchError(null);
+    setSsoRedirectError(null);
+    setIsSsoRedirecting(false);
+  };
+
+  const handleAccountClick = async (account: SavedAccount) => {
+    if (!accountSwitcherEnabled) return;
+    if (account.switchState !== "parked") {
+      openVerifyModal(account);
+      return;
+    }
+
     try {
-      await useAccountSwitcherStore.getState().switchTo(accountId);
-    } catch {
-      // Error already in store
+      await useAccountSwitcherStore.getState().switchTo(account.accountId, {
+        type: "parked",
+      });
+    } catch (err) {
+      if (err instanceof Error && err.message === REAUTH_REQUIRED_MESSAGE) {
+        openVerifyModal(account, REAUTH_REQUIRED_MESSAGE);
+      }
+    }
+  };
+
+  const handleSwitch = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (isSwitching || !pendingAccount || !password.trim()) return;
+    try {
+      await useAccountSwitcherStore.getState().switchTo(pendingAccount.accountId, {
+        type: "password",
+        password,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Switch failed";
+      setSwitchError(message);
+      setPassword("");
+    }
+  };
+
+  const handleStartSsoSwitch = async () => {
+    if (!pendingAccount || isSsoRedirecting) return;
+    setSsoRedirectError(null);
+    setIsSsoRedirecting(true);
+    try {
+      const { authorizationUrl } = await accountSwitcherService.initSsoSwitch(
+        pendingAccount.accountId,
+        window.location.href,
+      );
+      window.location.assign(authorizationUrl);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Unable to start SSO switch";
+      setSsoRedirectError(message);
+      setIsSsoRedirecting(false);
     }
   };
 
@@ -150,6 +231,9 @@ export default function AccountSwitcherList({
         {!isLoading &&
           merged.map(({ account: acc, isSaved }) => {
             const isCurrent = user?.email === acc.email;
+            const isParked = acc.switchState === "parked";
+            const switchDisabled =
+              isSwitching || isCurrent || !accountSwitcherEnabled || !isSaved;
             return (
               <div
                 key={`${isSaved ? "saved" : "recent"}:${acc.accountId}`}
@@ -173,8 +257,15 @@ export default function AccountSwitcherList({
 
                 <button
                   type="button"
-                  disabled={isSwitching || isCurrent}
-                  onClick={() => handleSwitch(acc.accountId)}
+                  disabled={switchDisabled}
+                  onClick={() => void handleAccountClick(acc)}
+                  title={
+                    !isCurrent && !accountSwitcherEnabled
+                      ? "Account switching is temporarily disabled"
+                      : !isCurrent && !isSaved
+                        ? "Sign in again to switch to this account"
+                      : undefined
+                  }
                   className="min-w-0 flex-1 text-left disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   <p className="truncate text-[12.5px] font-medium text-[#111111] dark:text-[#E8E8E7]">
@@ -184,6 +275,17 @@ export default function AccountSwitcherList({
                     {acc.email}
                     {isCurrent && " · hiện tại"}
                     {!isCurrent && ` · ${fmtTime(acc.lastUsedAt)}`}
+                    {!isCurrent && isSaved && (
+                      <span
+                        className={
+                          isParked
+                            ? "text-[#2563EB] dark:text-indigo-300"
+                            : "text-[#9B9A97] dark:text-[#6B6B6B]"
+                        }
+                      >
+                        {` · ${isParked ? "Ready" : "Verify"}`}
+                      </span>
+                    )}
                   </p>
                 </button>
 
@@ -202,11 +304,98 @@ export default function AccountSwitcherList({
           })}
       </div>
 
-      {error && (
+      {visibleError && (
         <div className="px-3 py-2 text-[10px] text-[#9F2F2D] dark:text-red-400">
-          {error}
+          {visibleError}
         </div>
       )}
+
+      <Modal
+        open={Boolean(pendingAccount)}
+        onClose={closeVerifyModal}
+        title={
+          pendingAccount
+            ? `Verify account ${pendingAccount.email} before switching`
+            : "Verify account before switching"
+        }
+        description={
+          pendingAccount
+            ? `Enter the password for ${pendingAccount.email}, not your current account.`
+            : undefined
+        }
+        size="sm"
+      >
+        {switchError === SSO_SWITCH_REQUIRED_MESSAGE ? (
+          <div className="space-y-3">
+            <p className="text-[13px] text-[#787774] dark:text-[#9B9A97]">
+              {SSO_SWITCH_REQUIRED_MESSAGE}
+            </p>
+            {ssoRedirectError && (
+              <p className="text-[11px] text-[#9F2F2D] dark:text-red-400">
+                {ssoRedirectError}
+              </p>
+            )}
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={closeVerifyModal}
+                className="h-8 rounded-md border border-[#EAEAEA] px-3 text-[12px] font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:border-white/10 dark:text-[#E8E8E7] dark:hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleStartSsoSwitch}
+                disabled={isSsoRedirecting}
+                className="h-8 rounded-md bg-[#111111] px-3 text-[12px] font-medium text-white transition hover:bg-[#2F2F2F] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#E8E8E7] dark:text-[#111111]"
+              >
+                {isSsoRedirecting ? "Redirecting..." : "Continue with SSO"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSwitch} className="space-y-3">
+            {verifyInfo && (
+              <p className="text-[12px] text-[#787774] dark:text-[#9B9A97]">
+                {verifyInfo}
+              </p>
+            )}
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setSwitchError(null);
+              }}
+              autoComplete="current-password"
+              placeholder="Password"
+              className="h-9 w-full rounded-md border border-[#EAEAEA] bg-white px-3 text-[13px] text-[#111111] outline-none transition focus:border-[#2563EB] dark:border-white/10 dark:bg-[#252525] dark:text-[#E8E8E7]"
+              autoFocus
+            />
+            {switchError && (
+              <p className="text-[11px] text-[#9F2F2D] dark:text-red-400">
+                {switchError}
+              </p>
+            )}
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={closeVerifyModal}
+                className="h-8 rounded-md border border-[#EAEAEA] px-3 text-[12px] font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:border-white/10 dark:text-[#E8E8E7] dark:hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSwitching || !password.trim()}
+                className="h-8 rounded-md bg-[#111111] px-3 text-[12px] font-medium text-white transition hover:bg-[#2F2F2F] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#E8E8E7] dark:text-[#111111]"
+              >
+                {isSwitching ? "Switching..." : "Switch"}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
 
       <a
         href="/login"
