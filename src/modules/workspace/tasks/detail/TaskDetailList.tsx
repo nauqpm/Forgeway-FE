@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   MoreHorizontal,
   ChevronDown,
   ChevronRight,
   Settings,
   Archive,
-  ArrowLeft,
   Clock,
+  Copy,
+  Trash2,
+  ImagePlus,
+  ArrowLeft,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import type { Issue } from "@/modules/workspace/shared/types/issue.type";
 import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
@@ -17,6 +21,8 @@ import TimeTrackingModal from "./TimeTrackingModal";
 import StatusPicker from "@/shared/components/StatusPicker";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
 import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
+import { useTaskCoverActions } from "@/modules/workspace/shared/hooks/useTaskCoverActions";
+import TaskCoverPickerPortal from "@/modules/workspace/tasks/covers/TaskCoverPickerPortal";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
 import {
@@ -43,6 +49,7 @@ interface TaskDetailListProps {
   onUpdateIssue?: (updatedIssue: any) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: TaskDetailResponse) => void;
+  onDeleteIssue?: (issue: TaskDetailResponse) => void;
   onRestoreIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   canEditTask?: boolean;
@@ -60,7 +67,9 @@ export default function TaskDetailList({
   onUpdateIssue,
   onFieldUpdate,
   onArchiveIssue,
+  onDeleteIssue,
   onRestoreIssue,
+  detailUrl,
   canEditTask = true,
 }: TaskDetailListProps) {
   const { user, token } = useAuth();
@@ -71,6 +80,26 @@ export default function TaskDetailList({
   const [isLogWorkOpen, setIsLogWorkOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+  const [coverAnchorRect, setCoverAnchorRect] = useState<DOMRect | null>(null);
+  const coverRowRef = useRef<HTMLButtonElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCoverMouseEnter = () => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    if (coverRowRef.current) setCoverAnchorRect(coverRowRef.current.getBoundingClientRect());
+  };
+
+  const handleCoverMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setCoverAnchorRect(null);
+    }, 150);
+  };
+
+  const { saving, applyCover, removeCover } = useTaskCoverActions({
+    workspaceId,
+    issue,
+    onCoverChange: setLocalCover,
+  });
 
   useEffect(() => {
     if (issue) {
@@ -144,7 +173,6 @@ export default function TaskDetailList({
         </div>
 
         {/* Actions */}
-        {(onArchiveIssue || canEditTask) && (
           <div className="flex items-center gap-0.5 shrink-0 ml-2">
             <div className="relative">
               <button
@@ -167,6 +195,50 @@ export default function TaskDetailList({
                   >
                     <Clock className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" /> Log work
                   </button>
+                  {onUpdateIssue && (
+                    <button
+                      ref={coverRowRef}
+                      type="button"
+                      onMouseEnter={handleCoverMouseEnter}
+                      onMouseLeave={handleCoverMouseLeave}
+                      onClick={handleCoverMouseEnter}
+                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[0.8125rem] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                    >
+                      <span className="flex items-center gap-2">
+                        <ImagePlus className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                        Select cover
+                      </span>
+                      <ChevronRight className="h-4 w-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowActionMenu(false);
+                      const wKey = issue.key ? issue.key.substring(0, issue.key.lastIndexOf('-')) : workspaceId;
+                      const taskLink = detailUrl 
+                        ? `${window.location.origin}${detailUrl}`
+                        : `${window.location.origin}/workspaces/${wKey}/board?issue=${issue.key}`;
+                      navigator.clipboard.writeText(taskLink);
+                      toast.success("Task link copied");
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                  >
+                    <Copy className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                    Copy link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowActionMenu(false);
+                      navigator.clipboard.writeText(issue.key);
+                      toast.success("Task key copied");
+                    }}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                  >
+                    <Copy className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                    Copy key
+                  </button>
                   <button
                     onClick={() => {
                       setShowActionMenu(false);
@@ -177,11 +249,40 @@ export default function TaskDetailList({
                   >
                     <Archive className="h-4 w-4" /> Archive
                   </button>
+                  <button
+                    onClick={() => {
+                      setShowActionMenu(false);
+                      onDeleteIssue?.(issue);
+                    }}
+                    disabled={!onDeleteIssue}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#EF4444] hover:bg-[#FEF2F2] dark:hover:bg-[rgba(239,68,68,0.12)] disabled:opacity-50"
+                  >
+                    <Trash2 className="h-4 w-4" /> Delete
+                  </button>
                 </div>
               )}
+
+              <TaskCoverPickerPortal
+                anchorRect={coverAnchorRect}
+                cover={localCover}
+                disabled={issue.isArchived}
+                saving={saving}
+                onApplyCover={(cover) => {
+                  applyCover(cover);
+                  setCoverAnchorRect(null);
+                  setShowActionMenu(false);
+                }}
+                onRemoveCover={() => {
+                  removeCover();
+                  setCoverAnchorRect(null);
+                  setShowActionMenu(false);
+                }}
+                onRequestClose={() => setCoverAnchorRect(null)}
+                onMouseEnter={handleCoverMouseEnter}
+                onMouseLeave={handleCoverMouseLeave}
+              />
             </div>
           </div>
-        )}
       </div>
 
       <TaskCoverBanner

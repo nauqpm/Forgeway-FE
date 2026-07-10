@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import WorkspaceContent from "./WorkspaceContent";
 import Header from "@/modules/workspace/shared/components/Header";
+import ImportCsvModal from "@/modules/workspace/tasks/import/ImportCsvModal";
 import Tabs from "@/modules/workspace/shared/components/Tabs";
 import WorkspaceModals from "./WorkspaceModals";
 import { getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
@@ -20,6 +22,8 @@ const BulkActionBar = dynamic(
 type WorkspacePageProps = ReturnType<typeof useWorkspacePage>;
 
 export default function WorkspacePage(props: WorkspacePageProps) {
+  const [isImportCsvModalOpen, setIsImportCsvModalOpen] = useState(false);
+
   const {
     workspace,
     loading,
@@ -257,8 +261,11 @@ export default function WorkspacePage(props: WorkspacePageProps) {
             onBulkUpdateIds: handleListBulkUpdate,
             onBulkDeleteIds: handleListBulkDelete,
             onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
+            handleDeleteIssue: canDeleteTask ? handleDeleteIssue : undefined,
             canEditTask,
             canDeleteTask,
+            canImportCsv: isWorkspaceAdmin,
+            onOpenImportCsv: () => setIsImportCsvModalOpen(true),
           }}
           summaryProps={{
             issues,
@@ -337,6 +344,13 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}
           canMoveTask={canMoveTask}
+        />
+
+        <ImportCsvModal 
+          isOpen={isImportCsvModalOpen} 
+          onClose={() => setIsImportCsvModalOpen(false)} 
+          workspace={workspace} 
+          onSuccess={() => window.location.reload()}
         />
       </div>
     </div>
