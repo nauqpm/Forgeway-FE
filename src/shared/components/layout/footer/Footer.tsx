@@ -22,7 +22,7 @@ const legalLinks = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]">
+    <footer className="border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-1">
@@ -89,7 +89,7 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="Your email"
-                className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
+                className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
               />
               <button
                 type="submit"
@@ -101,7 +101,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-[#EAEAEA] dark:border-white/8 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-10 pt-6 border-t border-[#EAEAEA] dark:border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-[0.8125rem] text-[#ABABAB] dark:text-[#6B6B6B]">
             &copy; {new Date().getFullYear()} AL-TASK. All rights reserved.
           </p>

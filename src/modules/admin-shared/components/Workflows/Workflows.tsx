@@ -61,7 +61,7 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
     <div className={`app-page-narrow ${className}`}>
       <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-6">Workflow Configuration</h1>
       {workflows.length === 0 ? (
-        <div className="flex flex-col items-center py-16 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8">
+        <div className="flex flex-col items-center py-16 bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
           <BarChart3 className="w-12 h-12 text-[#ABABAB] dark:text-[#6B6B6B] mb-3" />
           <p className="text-[#787774] dark:text-[#9B9A97] font-medium">No workflows have been configured</p>
           <p className="text-[#ABABAB] dark:text-[#6B6B6B] text-sm">
@@ -73,7 +73,7 @@ export default function AdminWorkflows({ className = "" }: AdminWorkflowsProps) 
           {workflows.map((workflow) => (
             <div
               key={workflow._id}
-              className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8"
+              className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]"
             >
               <div className="flex items-center justify-between mb-4">
                 <div>

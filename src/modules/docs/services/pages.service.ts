@@ -68,9 +68,11 @@ async function getPageById(id: string): Promise<Document> {
   return mapPage(raw);
 }
 
-/** Fetch a single page by slug */
-async function getPageBySlug(slug: string): Promise<Document> {
-  const res = await api.get(apiRoutes.PAGES.BY_SLUG(slug));
+/** Fetch a single page by slug inside a workspace */
+async function getPageBySlug(workspaceId: string, slug: string): Promise<Document> {
+  const res = await api.get(apiRoutes.PAGES.BY_SLUG(slug), {
+    params: { workspaceId },
+  });
   const raw: PageApiResponse = res.data?.data ?? res.data;
   return mapPage(raw);
 }
@@ -185,11 +187,12 @@ async function exportDocx(id: string, title: string): Promise<void> {
 }
 
 /** Import DOCX file and get HTML */
-async function importDocx(file: File): Promise<string> {
+async function importDocx(file: File, workspaceId: string): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
   
   const res = await api.post(apiRoutes.PAGES.IMPORT_DOCX, formData, {
+    params: { workspaceId },
     headers: {
       'Content-Type': 'multipart/form-data',
     },

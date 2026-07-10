@@ -573,7 +573,7 @@ export default function DataGridListView({
       </div>
 
       {/* Table Footer */}
-      <div className="flex justify-between items-center p-3 border-t border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] shrink-0 h-14">
+      <div className="flex justify-between items-center p-3 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] shrink-0 h-14">
         {!isCreating && !hideCreate ? (
           <button
             onClick={() => setIsCreating(true)}
@@ -638,7 +638,7 @@ export default function DataGridListView({
           <button
             onClick={() => onRefresh && !isRefreshing ? onRefresh() : null}
             disabled={isRefreshing}
-            className={`p-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] transition-colors border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 ${isRefreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`p-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] transition-colors border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/[0.06] ${isRefreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
             title="Refresh Data"
           >
             <RefreshCcw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#2563EB]' : ''}`} />

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
@@ -14,17 +14,24 @@ function getErrorMessage(error: unknown, fallback: string): string {
 export function useDocumentActions(refetch: () => void) {
   const [deleting, setDeleting] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const deleteInFlight = useRef(false);
 
   const handleDelete = useCallback(
     async (doc: DocumentItem) => {
+      if (deleteInFlight.current) return false;
+
+      deleteInFlight.current = true;
       setDeleting(true);
       try {
         await documentService.delete(doc._id);
         toast.success("Document deleted");
         refetch();
+        return true;
       } catch {
         toast.error("Delete document failed");
+        return false;
       } finally {
+        deleteInFlight.current = false;
         setDeleting(false);
       }
     },

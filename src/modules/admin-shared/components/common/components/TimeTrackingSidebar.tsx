@@ -23,7 +23,7 @@ export default function TimeTrackingSidebar({ timeEstimated, timeLogged, onLogWo
   }
 
   return (
-    <div className="space-y-3 pt-4 border-t border-[#EAEAEA] dark:border-white/8 mt-4">
+    <div className="space-y-3 pt-4 border-t border-[#EAEAEA] dark:border-white/[0.06] mt-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[#787774] dark:text-[#9B9A97]">Time tracking</h3>
         <button

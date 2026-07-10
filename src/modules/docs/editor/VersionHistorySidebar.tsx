@@ -51,7 +51,7 @@ export default function VersionHistorySidebar({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-950 text-slate-700 dark:text-slate-200">
+    <div className="flex flex-col h-full bg-white shadow-[-1px_0_0_rgba(229,231,235,0.8)] dark:bg-[#202020] dark:shadow-[-1px_0_0_rgba(255,255,255,0.06)] text-slate-700 dark:text-slate-200">
       {/* Header */}
       <div className="p-4 border-b border-gray-200/60 dark:border-gray-800 flex items-center gap-2">
         <History className="w-[18px] h-[18px] text-indigo-500" />
@@ -186,7 +186,7 @@ export default function VersionHistorySidebar({
                   Restore version?
                 </h4>
                 <p className="text-xs text-slate-500 mt-1">
-                  The current document content will be completely overwritten by the restored version content. Active users will receive the new content. This action cannot be directly undone.
+                  Current unsaved edits and active collaborators may be overwritten. Create a named version first if you need a backup.
                 </p>
               </div>
             </div>

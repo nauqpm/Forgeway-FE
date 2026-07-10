@@ -150,9 +150,11 @@ export default function WorkspacePage(props: WorkspacePageProps) {
     );
   }
 
+  const isDocsTab = activeTab === "pages";
+
   return (
-    <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)]">
-      <div className="workspace-surface pb-12">
+    <div className={isDocsTab ? "flex min-h-0 flex-1 overflow-hidden p-[var(--workspace-surface-pad)]" : "flex-1 overflow-y-auto p-[var(--workspace-surface-pad)]"}>
+      <div className={isDocsTab ? "flex min-h-0 flex-1 flex-col" : "workspace-surface pb-12"}>
         <Header
           workspace={workspace}
           workspaceId={workspace.key}

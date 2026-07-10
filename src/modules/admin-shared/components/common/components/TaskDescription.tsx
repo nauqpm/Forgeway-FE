@@ -31,7 +31,7 @@ const MenuBar = ({ editor }: { editor: any }) => {
   if (!editor) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/8 rounded-t-[6px]">
+    <div className="flex flex-wrap items-center gap-1 p-2 bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] rounded-t-[6px]">
       <button
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={`p-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors ${editor.isActive('bold') ? 'bg-[#F7F6F3] dark:bg-white/8 text-[#2563EB] dark:text-[#3B82F6]' : 'text-[#787774] dark:text-[#9B9A97]'}`}
@@ -167,7 +167,7 @@ export default function TaskDescription({ initialContent, onSave }: TaskDescript
     return (
       <div
         onClick={() => setIsEditing(true)}
-        className="p-4 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer transition-colors min-h-15 prose prose-sm max-w-none text-[#111111] dark:text-[#E8E8E7]"
+        className="p-4 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/[0.06] cursor-pointer transition-colors min-h-15 prose prose-sm max-w-none text-[#111111] dark:text-[#E8E8E7]"
       >
         {content && content !== '<p></p>' ? (
           <div

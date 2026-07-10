@@ -67,11 +67,28 @@ export function useUploadedWorkspaceDocsQuery(workspaceId: string, enabled = tru
   });
 }
 
-export function useDocumentBySlugQuery(workspaceKey: string, slug: string, enabled = true) {
+export function useDocumentBySlugQuery(workspaceId: string, slug: string, enabled = true) {
   return useQuery<Document>({
-    queryKey: queryKeys.docs.bySlug(workspaceKey, slug),
-    queryFn: () => pagesService.getPageBySlug(slug),
-    enabled: enabled && !!slug,
+    queryKey: queryKeys.docs.bySlug(workspaceId, slug),
+    queryFn: () => pagesService.getPageBySlug(workspaceId, slug),
+    enabled: enabled && !!workspaceId && !!slug,
+  });
+}
+
+export function useDocumentByIdQuery(
+  workspaceId: string,
+  id: string | null,
+  enabled = true,
+  initialData?: Document,
+) {
+  return useQuery<Document>({
+    queryKey: queryKeys.docs.byId(workspaceId, id || ""),
+    queryFn: () => pagesService.getPageById(id!),
+    enabled: enabled && !!workspaceId && !!id,
+    initialData,
+    // When initialData is supplied (from list), treat it as stale immediately
+    // so a background refetch still happens
+    initialDataUpdatedAt: initialData ? 0 : undefined,
   });
 }
 
@@ -232,6 +249,7 @@ export function useWorkspaceDocs(workspaceId: string) {
       }
 
       const previousDocuments = docsQuery.data ?? [];
+      const deletedDocuments = previousDocuments.filter((document) => toDelete.includes(document.id));
       queryClient.setQueryData<Document[]>(
         queryKeys.docs.list(workspaceId),
         removeDocuments(previousDocuments, toDelete),
@@ -242,6 +260,10 @@ export function useWorkspaceDocs(workspaceId: string) {
 
       try {
         await deletePageMutation.mutateAsync(id);
+        deletedDocuments.forEach((document) => {
+          queryClient.removeQueries({ queryKey: queryKeys.docs.byId(workspaceId, document.id) });
+          queryClient.removeQueries({ queryKey: queryKeys.docs.bySlug(workspaceId, document.slug) });
+        });
       } catch (error) {
         queryClient.setQueryData(queryKeys.docs.list(workspaceId), previousDocuments);
         toast.error(getErrorMessage(error, "Could not delete page"));
@@ -285,6 +307,8 @@ export function useWorkspaceDocs(workspaceId: string) {
     documents,
     isLoading: docsQuery.isLoading,
     isFetching: docsQuery.isFetching,
+    isError: docsQuery.isError,
+    error: docsQuery.error,
     refetch: docsQuery.refetch,
     createDocument,
     updateDocument,
