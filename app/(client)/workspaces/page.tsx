@@ -126,9 +126,9 @@ export default function WorkspacesPage() {
 
                 {/* Header Card */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex gap-3 items-center">
+                  <div className="flex min-w-0 flex-1 gap-3 items-center">
                     <WorkspaceAvatar workspace={workspace} size="lg" className="shadow-inner" />
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         {workspace.access === "public" ? (
                           <Globe className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
@@ -137,7 +137,7 @@ export default function WorkspacesPage() {
                         )}
                         <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded text-[0.625rem] font-mono font-bold tracking-wider">{workspace.key || routeKey}</span>
                       </div>
-                      <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-lg group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-colors line-clamp-1">{workspace.name}</h3>
+                      <h3 title={workspace.name} className="truncate font-bold text-[#111111] text-lg transition-colors group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#3B82F6]">{workspace.name}</h3>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-[#EFF6FF] px-2 py-0.5 text-xs font-semibold capitalize text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
                           {workspaceType === "scrum" ? (
