@@ -231,7 +231,7 @@ export default function DataGridListView({
           );
         }
         return (
-          <div className="flex items-center gap-2 group/title">
+          <div className="flex items-center gap-2 group/title min-w-0">
             <FileText className="w-4 h-4 shrink-0 text-[#1F6C9F]" />
             <span
               className="truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
@@ -519,7 +519,7 @@ export default function DataGridListView({
 
       {/* Data Grid Table */}
       <div className="flex-1 overflow-auto custom-scrollbar relative">
-        <table className="w-full text-left border-collapse" style={{ width: table.getCenterTotalSize() }}>
+        <table className="w-full text-left border-collapse table-fixed" style={{ width: table.getCenterTotalSize() }}>
           <thead className="sticky top-0 z-10 bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>

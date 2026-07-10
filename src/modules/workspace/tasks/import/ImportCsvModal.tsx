@@ -6,7 +6,7 @@ import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import {
   previewCsvImport,
   confirmCsvImport,
-  downloadCsvTemplate,
+  downloadImportTemplate,
   ImportCsvPreviewResponse,
   ImportBulkResult
 } from "@/modules/workspace/shared/services/taskCsvImport.service";
@@ -35,11 +35,15 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
   if (!isOpen) return null;
 
   const handleClose = () => {
+    const shouldCallSuccess = step === "result" && resultData && resultData.created > 0;
     setStep("upload");
     setPreviewData(null);
     setResultData(null);
     setIsLoading(false);
     onClose();
+    if (shouldCallSuccess && onSuccess) {
+      onSuccess();
+    }
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,10 +82,6 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
       const result = await confirmCsvImport(workspace._id, previewData.sessionToken);
       setResultData(result);
       setStep("result");
-      
-      if (result.created > 0 && onSuccess) {
-        onSuccess();
-      }
     } catch (error) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi tạo issues.");
@@ -139,18 +139,27 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                 />
               </div>
 
-              <div className="mt-8 flex flex-col items-center gap-2">
-                <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
-                  Chưa có file mẫu? Tải file template với định dạng chuẩn (UTF-8).
-                </p>
-                <button
-                  onClick={downloadCsvTemplate}
-                  className="flex items-center gap-2 text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6] hover:underline"
-                >
-                  <FileDown className="w-4 h-4" />
-                  Tải CSV Template
-                </button>
-              </div>
+                <div className="text-center w-full mt-6">
+                  <p className="text-xs text-[#6B6B6B] dark:text-[#A0A0A0] mb-2">
+                    Chưa có file mẫu? Tải file template định dạng chuẩn có sẵn Dropdown (XLSX) hoặc dạng văn bản (CSV).
+                  </p>
+                  <div className="flex items-center justify-center gap-4">
+                    <button
+                      className="flex items-center gap-2 text-[0.8125rem] font-medium text-[#2563EB] dark:text-[#3B82F6] hover:underline"
+                      onClick={() => downloadImportTemplate(workspace._id, 'xlsx')}
+                    >
+                      <FileDown className="w-4 h-4" />
+                      Tải XLSX Template
+                    </button>
+                    <button
+                      className="flex items-center gap-2 text-[0.8125rem] font-medium text-[#6B6B6B] dark:text-[#A0A0A0] hover:underline"
+                      onClick={() => downloadImportTemplate(workspace._id, 'csv')}
+                    >
+                      <FileDown className="w-4 h-4" />
+                      Tải CSV Template
+                    </button>
+                  </div>
+                </div>
             </div>
           )}
 

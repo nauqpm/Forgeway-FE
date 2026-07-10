@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
@@ -22,6 +23,7 @@ const BulkActionBar = dynamic(
 type WorkspacePageProps = ReturnType<typeof useWorkspacePage>;
 
 export default function WorkspacePage(props: WorkspacePageProps) {
+  const queryClient = useQueryClient();
   const [isImportCsvModalOpen, setIsImportCsvModalOpen] = useState(false);
 
   const {
@@ -350,7 +352,10 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           isOpen={isImportCsvModalOpen} 
           onClose={() => setIsImportCsvModalOpen(false)} 
           workspace={workspace} 
-          onSuccess={() => window.location.reload()}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["tasks", workspace._id] });
+            queryClient.invalidateQueries({ queryKey: ["board", workspace._id] });
+          }}
         />
       </div>
     </div>

@@ -265,7 +265,7 @@ export default function ListTab({
               </div>
               <ChevronRight className="w-4 h-4 text-[#888888]" />
             </button>
-            <div className="absolute right-[100%] top-0 mr-1 hidden group-hover:block w-28 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="absolute right-[100%] top-0 hidden group-hover:block w-28 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 py-1 before:absolute before:content-[''] before:-right-3 before:top-0 before:w-3 before:h-full" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
               <button
                 onClick={() => handleExport("csv")}
                 className="w-full text-left flex items-center gap-2 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
@@ -607,7 +607,7 @@ export default function ListTab({
                                 {issueKey}
                               </span>
                             </div>
-                            <p className="mt-1 line-clamp-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
+                            <p className="mt-1 line-clamp-2 break-all text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
                               {issue.title}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">

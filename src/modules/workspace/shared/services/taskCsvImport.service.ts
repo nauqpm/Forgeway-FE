@@ -72,43 +72,21 @@ export async function confirmCsvImport(
 }
 
 /**
- * Generate and download CSV template
+ * Download template for import
  */
-export function downloadCsvTemplate(): void {
-  const headers = [
-    'title',
-    'description',
-    'type',
-    'priority',
-    'status',
-    'assigneeEmail',
-    'storyPoints',
-    'startDate',
-    'dueDate',
-  ];
+export async function downloadImportTemplate(workspaceId: string, format: 'csv' | 'xlsx' = 'xlsx'): Promise<void> {
+  const response = await api.get(
+    apiRoutes.TASKS.BOARD_IMPORT_TEMPLATE?.(workspaceId) || `/workspaces/${workspaceId}/board/import/template`,
+    {
+      params: { format },
+      responseType: 'blob',
+    }
+  );
 
-  const sampleRow = [
-    'Example task',
-    'Description for task',
-    'task',
-    'medium',
-    'todo',
-    'user@example.com',
-    '5',
-    '2026-01-01',
-    '2026-01-15',
-  ];
-
-  const csvContent = [headers.join(','), sampleRow.join(',')].join('\n');
-
-  // Add BOM for Excel UTF-8 compatibility
-  const blob = new Blob(['\uFEFF' + csvContent], {
-    type: 'text/csv;charset=utf-8;',
-  });
-  const url = URL.createObjectURL(blob);
+  const url = URL.createObjectURL(new Blob([response.data as BlobPart]));
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', 'import-issue-template.csv');
+  link.setAttribute('download', `import-issue-template.${format}`);
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
