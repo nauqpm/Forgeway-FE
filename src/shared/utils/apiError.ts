@@ -14,6 +14,13 @@ export interface ApiErrorResponse {
   statusCode?: number;
 }
 
+export interface SwitchRenewErrorResponse extends ApiErrorResponse {
+  code: 'REQUIRES_FULL_LOGIN';
+  targetUserId?: string;
+  provider?: 'password' | 'google';
+  redirectTo?: string;
+}
+
 /**
  * Extended axios error with typed response
  */
@@ -82,4 +89,17 @@ export function extractResponseData<T>(response: AxiosResponse<T> | undefined, f
 export function isApiErrorResponse(data: unknown): data is ApiErrorResponse {
   if (!data || typeof data !== 'object') return false;
   return 'message' in data || 'error' in data || 'code' in data;
+}
+
+export function extractSwitchRenewError(
+  error: unknown,
+): SwitchRenewErrorResponse | null {
+  const axiosError = error as TypedAxiosError;
+  const data = axiosError.response?.data as SwitchRenewErrorResponse | undefined;
+
+  if (data?.code !== 'REQUIRES_FULL_LOGIN' || !data.redirectTo) {
+    return null;
+  }
+
+  return data;
 }

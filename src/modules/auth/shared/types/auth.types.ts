@@ -225,6 +225,7 @@ export enum AuthErrorCode {
   EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS',
   SSO_ACCOUNT_NOT_LINKED = 'SSO_ACCOUNT_NOT_LINKED',
   RATE_LIMITED = 'RATE_LIMITED',
+  REQUIRES_FULL_LOGIN = 'REQUIRES_FULL_LOGIN',
 }
 
 // ─── API Error ───────────────────────────────────────────────────────────────

@@ -20,8 +20,12 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
   const [hasFetched, setHasFetched] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Account-switcher badge — subscribe to `accounts` count only
-  const accountsCount = useAccountSwitcherStore((s) => s.accounts.length);
+  const switchableCount = useAccountSwitcherStore((state) =>
+    state.accounts.reduce(
+      (count, account) => count + (account.isCurrent ? 0 : 1),
+      0,
+    ),
+  );
 
   // Close on click outside
   useEffect(() => {
@@ -97,9 +101,9 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
               }`}
             >
               {showSwitcher ? <X className="h-3.5 w-3.5" /> : <Repeat className="h-4 w-4" />}
-              {accountsCount > 0 && !showSwitcher && (
+              {switchableCount > 0 && !showSwitcher && (
                 <span className="absolute -right-0.5 -top-0.5 min-w-[14px] rounded-full bg-[#2563EB] px-1 text-[9px] font-semibold leading-[14px] text-white dark:bg-indigo-500">
-                  {accountsCount}
+                  {switchableCount}
                 </span>
               )}
             </button>
