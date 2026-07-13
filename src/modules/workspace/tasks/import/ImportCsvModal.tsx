@@ -51,12 +51,12 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
     if (!file) return;
 
     if (file.size > MAX_FILE_SIZE) {
-      toast.error("File quá lớn. Vui lòng upload file <= 2MB.");
+      toast.error("File is too large. Please upload file <= 2MB.");
       return;
     }
 
     if (!file.name.endsWith('.csv') && !file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && file.type !== 'text/csv' && !file.type.includes('excel') && !file.type.includes('spreadsheetml')) {
-      toast.error("Vui lòng upload file định dạng CSV hoặc Excel.");
+      toast.error("Please upload a CSV or Excel file.");
       return;
     }
 
@@ -67,7 +67,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
       setStep("preview");
     } catch (error) {
       const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi đọc file CSV/Excel.");
+      toast.error(err?.response?.data?.message || "An error occurred while reading the CSV/Excel file.");
     } finally {
       setIsLoading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -84,7 +84,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
       setStep("result");
     } catch (error) {
       const err = error as { response?: { data?: { message?: string } } };
-      toast.error(err?.response?.data?.message || "Có lỗi xảy ra khi tạo issues.");
+      toast.error(err?.response?.data?.message || "An error occurred while creating issues.");
     } finally {
       setIsLoading(false);
     }
@@ -98,9 +98,9 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
       >
         <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06] shrink-0">
           <h3 className="text-[1rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-            {step === "upload" && "Import issues từ CSV / Excel"}
-            {step === "preview" && "Xem trước dữ liệu Import"}
-            {step === "result" && "Kết quả Import"}
+            {step === "upload" && "Import issues from CSV / Excel"}
+            {step === "preview" && "Preview Import Data"}
+            {step === "result" && "Import Result"}
           </h3>
           <button
             onClick={handleClose}
@@ -124,10 +124,10 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                 )}
                 
                 <h4 className="text-[0.9375rem] font-medium text-[#111111] dark:text-[#E8E8E7] mb-1">
-                  {isLoading ? "Đang xử lý..." : "Click hoặc kéo thả file CSV/Excel vào đây"}
+                  {isLoading ? "Processing..." : "Click or drag and drop CSV/Excel file here"}
                 </h4>
                 <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
-                  Hỗ trợ file .csv, .xlsx, .xls (Tối đa 2MB, &le; 200 dòng)
+                  Supports .csv, .xlsx, .xls (Max 2MB, &le; 200 rows)
                 </p>
                 <input 
                   type="file" 
@@ -141,7 +141,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
 
                 <div className="text-center w-full mt-6">
                   <p className="text-xs text-[#6B6B6B] dark:text-[#A0A0A0] mb-2">
-                    Chưa có file mẫu? Tải file template định dạng chuẩn có sẵn Dropdown (XLSX) hoặc dạng văn bản (CSV).
+                    Don&apos;t have a template? Download the standard template with Dropdowns (XLSX) or text format (CSV).
                   </p>
                   <div className="flex items-center justify-center gap-4">
                     <button
@@ -149,14 +149,14 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                       onClick={() => downloadImportTemplate(workspace._id, 'xlsx')}
                     >
                       <FileDown className="w-4 h-4" />
-                      Tải XLSX Template
+                      Download XLSX Template
                     </button>
                     <button
                       className="flex items-center gap-2 text-[0.8125rem] font-medium text-[#6B6B6B] dark:text-[#A0A0A0] hover:underline"
                       onClick={() => downloadImportTemplate(workspace._id, 'csv')}
                     >
                       <FileDown className="w-4 h-4" />
-                      Tải CSV Template
+                      Download CSV Template
                     </button>
                   </div>
                 </div>
@@ -172,7 +172,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                     <div className="text-[1.25rem] font-bold text-[#111111] dark:text-[#E8E8E7]">
                       {previewData.validCount}
                     </div>
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Hợp lệ (Sẽ được tạo)</div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Valid (Will be created)</div>
                   </div>
                 </div>
                 
@@ -182,7 +182,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                     <div className="text-[1.25rem] font-bold text-[#111111] dark:text-[#E8E8E7]">
                       {previewData.warningCount}
                     </div>
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Cảnh báo</div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Warning</div>
                   </div>
                 </div>
 
@@ -192,7 +192,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                     <div className="text-[1.25rem] font-bold text-[#111111] dark:text-[#E8E8E7]">
                       {previewData.errorCount}
                     </div>
-                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Lỗi (Bị bỏ qua)</div>
+                    <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Error (Skipped)</div>
                   </div>
                 </div>
               </div>
@@ -201,10 +201,10 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                 <table className="w-full text-left text-[0.8125rem]">
                   <thead className="bg-[#FAFAFA] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 font-medium border-b border-[#EAEAEA] dark:border-white/[0.08] w-[60px]">Dòng</th>
-                      <th className="px-4 py-3 font-medium border-b border-[#EAEAEA] dark:border-white/[0.08]">Tiêu đề</th>
-                      <th className="px-4 py-3 font-medium border-b border-[#EAEAEA] dark:border-white/[0.08] w-[100px]">Trạng thái</th>
-                      <th className="px-4 py-3 font-medium border-b border-[#EAEAEA] dark:border-white/[0.08]">Chi tiết</th>
+                      <th className="px-4 py-3 font-medium border-b border-[#EAEAEA] dark:border-white/[0.08] w-[60px]">Row</th>
+                      <th className="px-4 py-3 font-medium border-b border-[#EAEAEA] dark:border-white/[0.08]">Title</th>
+                      <th className="px-4 py-3 font-medium border-b border-[#EAEAEA] dark:border-white/[0.08] w-[100px]">Status</th>
+                      <th className="px-4 py-3 font-medium border-b border-[#EAEAEA] dark:border-white/[0.08]">Details</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/[0.04]">
@@ -218,12 +218,12 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                       >
                         <td className="px-4 py-3 text-[#787774] dark:text-[#9B9A97]">{row.rowIndex}</td>
                         <td className="px-4 py-3 text-[#111111] dark:text-[#E8E8E7] font-medium truncate max-w-[250px]" title={row.title}>
-                          {row.title || <span className="text-red-500 italic">Trống</span>}
+                          {row.title || <span className="text-red-500 italic">Empty</span>}
                         </td>
                         <td className="px-4 py-3">
-                          {row.status === 'valid' && <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.75rem] font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Hợp lệ</span>}
-                          {row.status === 'warning' && <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.75rem] font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Cảnh báo</span>}
-                          {row.status === 'error' && <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.75rem] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Lỗi</span>}
+                          {row.status === 'valid' && <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.75rem] font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Valid</span>}
+                          {row.status === 'warning' && <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.75rem] font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Warning</span>}
+                          {row.status === 'error' && <span className="inline-flex items-center px-2 py-0.5 rounded text-[0.75rem] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Error</span>}
                         </td>
                         <td className="px-4 py-3 text-[#787774] dark:text-[#9B9A97]">
                           {row.status === 'valid' && <span className="text-green-600 dark:text-green-400">OK</span>}
@@ -252,19 +252,19 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                 <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
               </div>
               <h3 className="text-[1.25rem] font-bold text-[#111111] dark:text-[#E8E8E7] mb-2">
-                Import hoàn tất
+                Import Complete
               </h3>
               <p className="text-[0.9375rem] text-[#787774] dark:text-[#9B9A97] mb-8">
-                Đã tạo thành công <strong className="text-[#111111] dark:text-[#E8E8E7]">{resultData.created}</strong> issues.
-                {resultData.failed > 0 && ` Có ${resultData.failed} issues thất bại.`}
+                Successfully created <strong className="text-[#111111] dark:text-[#E8E8E7]">{resultData.created}</strong> issues.
+                {resultData.failed > 0 && ` ${resultData.failed} issues failed.`}
               </p>
 
               {resultData.failed > 0 && (
                 <div className="w-full max-w-lg bg-[#FDF5F4] dark:bg-[#382323] border border-red-200 dark:border-red-900/50 rounded-[8px] p-4 text-left">
-                  <h4 className="text-[0.875rem] font-semibold text-red-800 dark:text-red-400 mb-2">Chi tiết lỗi:</h4>
+                  <h4 className="text-[0.875rem] font-semibold text-red-800 dark:text-red-400 mb-2">Error details:</h4>
                   <ul className="list-disc list-inside text-[0.8125rem] text-red-700 dark:text-red-300 max-h-[150px] overflow-y-auto">
                     {resultData.results.filter(r => r.status === 'failed').map((r, i) => (
-                      <li key={i}>Dòng {r.rowIndex} ({r.title}): {r.error}</li>
+                      <li key={i}>Row {r.rowIndex} ({r.title}): {r.error}</li>
                     ))}
                   </ul>
                 </div>
@@ -280,7 +280,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
               disabled={isLoading}
               className="px-4 py-2 border border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors disabled:opacity-50"
             >
-              Hủy
+              Cancel
             </button>
           )}
           
@@ -291,16 +291,16 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
               className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors disabled:opacity-50 flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              Xác nhận tạo {previewData?.validCount || 0} issues
+              Confirm creation of {previewData?.validCount || 0} issues
             </button>
           )}
 
           {step === "result" && (
             <button
               onClick={handleClose}
-              className="px-4 py-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] transition-colors"
+              className="px-4 py-2 bg-[#111111] dark:bg-[#E8E8E7] text-white dark:text-[#111111] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#2E2E2E] dark:hover:bg-white transition-colors"
             >
-              Đóng
+              Close
             </button>
           )}
         </div>
