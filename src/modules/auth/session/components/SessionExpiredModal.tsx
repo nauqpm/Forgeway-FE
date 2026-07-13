@@ -20,7 +20,7 @@ const SessionExpiredModal: React.FC = () => {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" />
       <div
-        className="relative bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 p-8 max-w-sm w-full mx-4 animate-in fade-in zoom-in-95"
+        className="relative bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] p-8 max-w-sm w-full mx-4 animate-in fade-in zoom-in-95"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
         <div className="text-center">

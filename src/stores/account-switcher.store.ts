@@ -1,129 +1,120 @@
-"use client";
+'use client';
 
-import { create } from "zustand";
-import { accountSwitcherService, type SavedAccount } from "@/modules/auth/services/account-switcher.service";
-import { recentLoginsService } from "@/modules/auth/services/recent-logins.service";
-import { useWorkspaceStore } from "@/stores/workspaceStore";
+import { create } from 'zustand';
+import { chatSocketClient } from '@/lib/socket/chat.client';
+import { clearTokens } from '@/modules/auth/shared/services/tokenService';
+import { usePermissionStore } from '@/modules/auth/permission/stores/permissionStore';
+import {
+  useAuthStore,
+  useSecurityStore,
+  useSessionStore,
+} from '@/modules/auth/shared/stores/authStore';
+import {
+  accountSwitcherService,
+  type DeviceSwitchAccountItem,
+} from '@/modules/auth/services/account-switcher.service';
+import {
+  extractApiError,
+  extractSwitchRenewError,
+} from '@/shared/utils/apiError';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 interface AccountSwitcherState {
-  /** Accounts saved under the *current owner* (via AccountSwitcherService). Multi-account switch. */
-  accounts: SavedAccount[];
-  /** Accounts that have logged in on this device (via recent_logins). Independent of owner. */
-  recentAccounts: SavedAccount[];
+  accounts: DeviceSwitchAccountItem[];
   isLoading: boolean;
-  /** Set while a switch request is in flight to prevent double-clicks */
   isSwitching: boolean;
   error: string | null;
-}
-
-interface AccountSwitcherActions {
-  /** Loads both saved (owner-scoped) and recent (device-scoped) accounts in one shot. */
   fetch: () => Promise<void>;
-  switchTo: (accountId: string) => Promise<void>;
-  forget: (accountId: string) => Promise<void>;
-  forgetRecent: (accountId: string) => Promise<void>;
+  switchTo: (targetUserId: string) => Promise<void>;
+  forget: (targetUserId: string) => Promise<void>;
   reset: () => void;
 }
 
-export const useAccountSwitcherStore = create<
-  AccountSwitcherState & AccountSwitcherActions
->((set, get) => ({
-  accounts: [],
-  recentAccounts: [],
-  isLoading: false,
-  isSwitching: false,
-  error: null,
+const resetClientStateForSwitch = () => {
+  clearTokens();
+  useAuthStore.getState().clearAuth();
+  usePermissionStore.getState().clearPermissions();
+  useSessionStore.getState().clearSessionState();
+  useSecurityStore.getState().clearSecurityState();
+  useWorkspaceStore.getState().clearWorkspace();
+  chatSocketClient.disconnect();
+};
 
-  async fetch() {
-    set({ isLoading: true, error: null });
-    try {
-      // Gộp 2 nguồn song song để giảm round-trip. Lỗi của 1 nguồn không chặn nguồn còn lại.
-      const [savedResult, recentResult] = await Promise.allSettled([
-        accountSwitcherService.list(),
-        recentLoginsService.list(),
-      ]);
+export const useAccountSwitcherStore = create<AccountSwitcherState>(
+  (set, get) => ({
+    accounts: [],
+    isLoading: false,
+    isSwitching: false,
+    error: null,
 
-      const accounts =
-        savedResult.status === "fulfilled" ? savedResult.value : [];
-      const recentAccounts =
-        recentResult.status === "fulfilled" ? recentResult.value : [];
-
-      set({ accounts, recentAccounts, isLoading: false });
-
-      if (savedResult.status === "rejected") {
-        set({ error: "Không tải được danh sách account đã lưu." });
+    async fetch() {
+      set({ isLoading: true, error: null });
+      try {
+        const accounts = await accountSwitcherService.list();
+        set({ accounts, isLoading: false });
+      } catch (error) {
+        set({
+          isLoading: false,
+          error: extractApiError(error, 'Failed to load device accounts'),
+        });
       }
-      if (recentResult.status === "rejected") {
-        // Ghi đè error chỉ khi saved thành công
-        if (savedResult.status === "fulfilled") {
-          set({ error: "Không tải được danh sách account gần đây." });
+    },
+
+    async switchTo(targetUserId) {
+      if (get().isSwitching) return;
+      set({ isSwitching: true, error: null });
+
+      try {
+        const result = await accountSwitcherService.switchTo(targetUserId);
+        resetClientStateForSwitch();
+        window.location.assign(result.redirectTo);
+      } catch (error) {
+        const renew = extractSwitchRenewError(error);
+        if (renew?.redirectTo) {
+          set((state) => ({
+            isSwitching: false,
+            accounts: state.accounts.map((account) =>
+              account.userId === renew.targetUserId
+                ? {
+                    ...account,
+                    status: 'expired',
+                    provider: renew.provider ?? account.provider,
+                  }
+                : account,
+            ),
+          }));
+          window.location.assign(renew.redirectTo);
+          return;
         }
+
+        set({
+          isSwitching: false,
+          error: extractApiError(error, 'Switch failed'),
+        });
+        throw error;
       }
-    } catch (e) {
-      set({
-        isLoading: false,
-        error: e instanceof Error ? e.message : "Failed to load accounts",
-      });
-    }
-  },
+    },
 
-  async switchTo(accountId) {
-    if (get().isSwitching) return;
-    set({ isSwitching: true, error: null });
-    try {
-      await accountSwitcherService.switchTo(accountId);
-      // Reload the page so every in-memory store re-initialises with the new identity.
-      // This is the safest reset path: a hard refresh clears any per-user cached state.
-      if (typeof window !== "undefined") {
-        // Clear workspace selection so the new account defaults to its first workspace on reload.
-        useWorkspaceStore.getState().clearWorkspace();
-        window.location.assign("/");
+    async forget(targetUserId) {
+      const previous = get().accounts;
+      set({
+        accounts: previous.filter((account) => account.userId !== targetUserId),
+        error: null,
+      });
+
+      try {
+        await accountSwitcherService.forget(targetUserId);
+      } catch (error) {
+        set({
+          accounts: previous,
+          error: extractApiError(error, 'Failed to remove account'),
+        });
+        throw error;
       }
-    } catch (e) {
-      set({
-        isSwitching: false,
-        error: e instanceof Error ? e.message : "Switch failed",
-      });
-      throw e;
-    }
-  },
+    },
 
-  async forget(accountId) {
-    const prev = get().accounts;
-    // Optimistic remove
-    set({ accounts: prev.filter((a) => a.accountId !== accountId) });
-    try {
-      await accountSwitcherService.forget(accountId);
-    } catch (e) {
-      // Roll back
-      set({ accounts: prev, error: e instanceof Error ? e.message : "Failed" });
-      throw e;
-    }
-  },
-
-  async forgetRecent(accountId) {
-    const prev = get().recentAccounts;
-    set({
-      recentAccounts: prev.filter((a) => a.accountId !== accountId),
-    });
-    try {
-      await recentLoginsService.forget(accountId);
-    } catch (e) {
-      set({
-        recentAccounts: prev,
-        error: e instanceof Error ? e.message : "Failed",
-      });
-      throw e;
-    }
-  },
-
-  reset() {
-    set({
-      accounts: [],
-      recentAccounts: [],
-      isLoading: false,
-      isSwitching: false,
-      error: null,
-    });
-  },
-}));
+    reset() {
+      set({ accounts: [], isLoading: false, isSwitching: false, error: null });
+    },
+  }),
+);

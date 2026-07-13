@@ -86,8 +86,7 @@ type WorkspaceContentProps = {
 
 export default function WorkspaceContent({
   activeTab,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  workspace: _workspace,
+  workspace,
   workspaceId,
   boardProps,
   backlogProps,
@@ -101,14 +100,10 @@ export default function WorkspaceContent({
 }: WorkspaceContentProps) {
   return (
     <div
-      className={`rounded-[10px] ${
-        activeTab === "pages"
-          ? ""
-          : ""
-      }`}
+      className={activeTab === "pages" ? "flex min-h-0 flex-1" : "rounded-[10px]"}
     >
       {activeTab === "pages" && (
-        <DocsLayout workspaceId={workspaceId} />
+        <DocsLayout workspaceId={workspaceId} workspaceKey={workspace.key || workspace.slug || workspaceId} />
       )}
 
       {activeTab === "board" && <BoardTab {...boardProps} />}

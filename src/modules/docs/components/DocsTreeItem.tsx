@@ -14,16 +14,20 @@ import { Document } from "../types/docs.type";
 import DocsTree from "./DocsTree";
 import { motion, AnimatePresence } from "framer-motion";
 import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { useRouter } from "next/navigation";
+import { buildWorkspacePageHref } from "../utils/pageRoutes";
 
 interface DocsTreeItemProps {
   doc: Document;
   workspaceId: string;
+  workspaceKey: string;
   level: number;
 }
 
 export default function DocsTreeItem({
   doc,
   workspaceId,
+  workspaceKey,
   level,
 }: DocsTreeItemProps) {
   const {
@@ -33,6 +37,7 @@ export default function DocsTreeItem({
     selectDocument,
   } = useDocsStore();
   const { documents, createDocument, deleteDocument, renameDocument } = useWorkspaceDocs(workspaceId);
+  const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(doc.title);
@@ -73,6 +78,7 @@ export default function DocsTreeItem({
 
   const handleSelect = () => {
     selectDocument(doc.id, documents);
+    router.push(buildWorkspacePageHref({ workspaceKey, doc }));
   };
 
   const handleAddChild = async (e: React.MouseEvent) => {
@@ -254,6 +260,7 @@ export default function DocsTreeItem({
             <DocsTree
               docs={children}
               workspaceId={workspaceId}
+              workspaceKey={workspaceKey}
               level={level + 1}
             />
           </motion.div>

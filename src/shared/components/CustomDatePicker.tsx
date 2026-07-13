@@ -217,7 +217,7 @@ export default function CustomDatePicker({
       aria-label="Date picker calendar"
       onMouseDown={(e) => e.preventDefault()}
     >
-      <div className="flex items-center justify-between border-b border-[#EAEAEA] px-4 py-3 dark:border-white/8">
+      <div className="flex items-center justify-between border-b border-[#EAEAEA] px-4 py-3 dark:border-white/[0.06]">
         <button
           type="button"
           onClick={() => setViewMonth((current) => subMonths(current, 1))}
@@ -272,7 +272,7 @@ export default function CustomDatePicker({
         </div>
       </div>
 
-      <div className="flex items-center justify-between border-t border-[#EAEAEA] px-4 py-3 dark:border-white/8">
+      <div className="flex items-center justify-between border-t border-[#EAEAEA] px-4 py-3 dark:border-white/[0.06]">
         <button
           type="button"
           onClick={clearDate}

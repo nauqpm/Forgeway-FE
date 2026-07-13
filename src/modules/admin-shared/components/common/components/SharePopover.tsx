@@ -94,17 +94,17 @@ export default function SharePopover() {
     <div className="relative" ref={popoverRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center gap-2 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 text-[#787774] dark:text-[#9B9A97] px-4 py-2 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 font-medium text-sm transition-colors"
+        className="inline-flex items-center gap-2 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] text-[#787774] dark:text-[#9B9A97] px-4 py-2 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 font-medium text-sm transition-colors"
       >
         Invite member
       </button>
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-[min(calc(100vw-48px),var(--app-drawer-w))] bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          className="absolute right-0 mt-2 w-[min(calc(100vw-48px),var(--app-drawer-w))] bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
           style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         >
-          <div className="p-4 border-b border-[#EAEAEA] dark:border-white/8">
+          <div className="p-4 border-b border-[#EAEAEA] dark:border-white/[0.06]">
             <h3 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7] mb-4">Share</h3>
             
             {/* Search Input Area */}
@@ -131,7 +131,7 @@ export default function SharePopover() {
                 {/* Dropdown Results */}
                 {searchTerm && (
                   <div
-                    className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 rounded-[8px] z-10 max-h-48 overflow-y-auto"
+                    className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-10 max-h-48 overflow-y-auto"
                     style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}
                   >
                     {isSearching ? (
@@ -201,7 +201,7 @@ export default function SharePopover() {
             </div>
           </div>
 
-          <div className="p-3 border-t border-[#EAEAEA] dark:border-white/8 flex items-center justify-between">
+          <div className="p-3 border-t border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between">
             <button
               onClick={handleCopy}
               className="flex items-center gap-2 text-sm font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 px-3 py-1.5 rounded-[6px] transition-colors"

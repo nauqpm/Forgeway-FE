@@ -13,10 +13,13 @@ import { DocumentItem } from "../types/document.type";
 import { toast } from "react-hot-toast";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { useRouter } from "next/navigation";
+import { buildWorkspacePageHref, buildWorkspacePagesHref } from "../utils/pageRoutes";
 
-export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
+export default function DocsSidebar({ workspaceId, workspaceKey }: { workspaceId: string; workspaceKey: string }) {
   const { selectDocument, selectImportedDocument, selectedDocumentId, selectedImportedDocumentId } = useDocsStore();
   const { documents, createDocument } = useWorkspaceDocs(workspaceId);
+  const router = useRouter();
   const uploadedDocsQuery = useUploadedWorkspaceDocsQuery(workspaceId);
   const queryClient = useQueryClient();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -101,7 +104,10 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
           >
             <div className="p-4 flex flex-col gap-4">
               <button
-                onClick={() => selectDocument(null, documents)}
+                onClick={() => {
+                  selectDocument(null, documents);
+                  router.push(buildWorkspacePagesHref(workspaceKey));
+                }}
                 className={`flex items-center gap-3 px-3 py-2 rounded-[6px] text-[0.8125rem] font-medium transition-all ${
                   !selectedDocumentId && !selectedImportedDocumentId
                     ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]"
@@ -127,11 +133,16 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                     {filteredDocs.map(doc => (
                       <li key={doc.id}>
                         <button
-                          onClick={() =>
-                            doc.source === "import"
-                              ? selectImportedDocument(doc.id)
-                              : selectDocument(doc.id, documents)
-                          }
+                          onClick={() => {
+                            if (doc.source === "import") {
+                              selectImportedDocument(doc.id);
+                              return;
+                            }
+                            const target = documents.find((item) => item.id === doc.id);
+                            if (!target) return;
+                            selectDocument(doc.id, documents);
+                            router.push(buildWorkspacePageHref({ workspaceKey, doc: target }));
+                          }}
                           className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[0.8125rem] transition-all ${
                             selectedDocumentId === doc.id || selectedImportedDocumentId === doc.id
                               ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium"
@@ -150,11 +161,11 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                 </div>
               ) : (
                 <>
-                  <RecentDocs workspaceId={workspaceId} />
+                  <RecentDocs workspaceId={workspaceId} workspaceKey={workspaceKey} />
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
                       <h3 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest">
-                        Documents in Workspace
+                        Pages
                       </h3>
                       <button 
                         onClick={handleCreate}
@@ -164,12 +175,12 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <DocsTree docs={rootDocs} workspaceId={workspaceId} level={0} />
+                    <DocsTree docs={rootDocs} workspaceId={workspaceId} workspaceKey={workspaceKey} level={0} />
                   </div>
                   <div className="px-2">
                     <div className="flex items-center justify-between px-3 mb-3">
                       <h3 className="text-[0.625rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-widest">
-                        Imported Documents
+                        Imported Files
                       </h3>
                     </div>
                     <ul className="space-y-1 px-1">
@@ -190,15 +201,17 @@ export default function DocsSidebar({ workspaceId }: { workspaceId: string }) {
                                 e.preventDefault();
                                 setRemoveTarget(doc);
                               }}
-                              className="opacity-0 group-hover:opacity-100 p-1 rounded-[4px] text-[#ABABAB] hover:text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
+                            className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded-[4px] text-[#ABABAB] hover:text-[#9F2F2D] hover:bg-[#FDEBEC] dark:hover:bg-[rgba(159,47,45,0.12)] transition-colors"
+                            aria-label={`Remove ${doc.name} from workspace`}
                               title="Remove from workspace"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                             <a
                               href={documentService.downloadUrl(doc._id)}
-                              className="opacity-0 group-hover:opacity-100 p-1 rounded-[4px] text-[#ABABAB] hover:text-[#2563EB] hover:bg-[#EFF6FF] dark:hover:text-[#3B82F6] dark:hover:bg-[rgba(37,99,235,0.12)] transition-colors"
+                              className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded-[4px] text-[#ABABAB] hover:text-[#2563EB] hover:bg-[#EFF6FF] dark:hover:text-[#3B82F6] dark:hover:bg-[rgba(37,99,235,0.12)] transition-colors"
                               title="Download document"
+                              aria-label={`Download ${doc.name}`}
                             >
                               <Download className="w-3.5 h-3.5" />
                             </a>

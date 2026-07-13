@@ -25,8 +25,12 @@ export default function Header() {
   const [hasFetched, setHasFetched] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Account-switcher badge count
-  const accountsCount = useAccountSwitcherStore((s) => s.accounts.length);
+  const switchableCount = useAccountSwitcherStore((state) =>
+    state.accounts.reduce(
+      (count, account) => count + (account.isCurrent ? 0 : 1),
+      0,
+    ),
+  );
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -115,9 +119,9 @@ export default function Header() {
                     }`}
                   >
                     {showSwitcher ? <X className="h-3.5 w-3.5" /> : <Repeat className="w-4 h-4" />}
-                    {accountsCount > 0 && !showSwitcher && (
+                    {switchableCount > 0 && !showSwitcher && (
                       <span className="absolute -right-0.5 -top-0.5 min-w-[14px] rounded-full bg-[#2563EB] px-1 text-[9px] font-semibold leading-[14px] text-white dark:bg-indigo-500">
-                        {accountsCount}
+                        {switchableCount}
                       </span>
                     )}
                   </button>

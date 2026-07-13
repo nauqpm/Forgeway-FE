@@ -3,10 +3,13 @@
 import { FileText } from "lucide-react";
 import { useDocsStore } from "../store/docs.store";
 import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { useRouter } from "next/navigation";
+import { buildWorkspacePageHref } from "../utils/pageRoutes";
 
-export default function RecentDocs({ workspaceId }: { workspaceId: string }) {
+export default function RecentDocs({ workspaceId, workspaceKey }: { workspaceId: string; workspaceKey: string }) {
   const { recentDocumentIds, selectDocument, selectedDocumentId } = useDocsStore();
   const { documents } = useWorkspaceDocs(workspaceId);
+  const router = useRouter();
 
   const recentDocs = recentDocumentIds
     .map(id => documents.find(d => d.id === id))
@@ -24,7 +27,10 @@ export default function RecentDocs({ workspaceId }: { workspaceId: string }) {
           doc && (
             <li key={doc.id}>
               <button
-                onClick={() => selectDocument(doc.id, documents)}
+                onClick={() => {
+                  selectDocument(doc.id, documents);
+                  router.push(buildWorkspacePageHref({ workspaceKey, doc }));
+                }}
                 className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-[6px] text-[0.8125rem] transition-all ${
                   selectedDocumentId === doc.id
                     ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6] font-medium"
