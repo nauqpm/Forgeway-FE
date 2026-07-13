@@ -72,6 +72,7 @@ export const apiRoutes = {
         BOARD_TASK_RESTORE: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/restore`,
         BOARD_IMPORT_PREVIEW: (workspaceId: string) => `/workspaces/${workspaceId}/board/tasks/import/preview`,
         BOARD_IMPORT_CONFIRM: (workspaceId: string) => `/workspaces/${workspaceId}/board/tasks/import/confirm`,
+        BOARD_IMPORT_TEMPLATE: (workspaceId: string) => `/workspaces/${workspaceId}/board/tasks/import/template`,
         BOARD_EXPORT: (workspaceId: string) => `/workspaces/${workspaceId}/board/export`,
         BOARD_TASK_ACTIVITIES: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/activities`,
         BOARD_TASK_ATTACHMENTS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/${taskId}/attachments`,
