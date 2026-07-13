@@ -16,6 +16,7 @@ export interface User {
   locale?: string;
   mfaEnabled?: boolean;
   ssoProvider?: SsoProvider | null;
+  mustChangePassword?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

@@ -180,12 +180,17 @@ export const useAuth = () => {
       setInitialized(true);
       await fetchPermissions();
 
+      if (currentUser.mustChangePassword) {
+        router.push(AUTH_ROUTES.CHANGE_PASSWORD);
+        return;
+      }
+
       if (currentUser.role === "super_admin") {
         window.location.href = ADMIN_URL;
         return;
       }
 
-      router.push(AUTH_ROUTES.HOME);
+      router.push(AUTH_ROUTES.DASHBOARD);
     },
     onError: handleLoginError,
   });
@@ -263,6 +268,7 @@ export const useAuth = () => {
       const nextUser = await queryClient.fetchQuery({
         queryKey: AUTH_ME_QUERY_KEY,
         queryFn: getCurrentUserAPI,
+        staleTime: 0, // Force network request to get fresh mustChangePassword status
         retry: false,
       });
       queryClient.setQueryData(AUTH_ME_QUERY_KEY, nextUser);
@@ -312,7 +318,7 @@ export const useAuth = () => {
       setUser(response.user);
       await fetchPermissions();
     }
-    router.replace('/');
+    router.replace(AUTH_ROUTES.DASHBOARD);
   }, [queryClient, setUser, fetchPermissions, router]);
 
   return {

@@ -1,8 +1,9 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
+
 import Sidebar from "@/modules/admin-shared/components/common/components/Sidebar";
 import NotificationPanel from "@/modules/admin-shared/components/common/components/NotificationPanel";
 import {
@@ -29,6 +30,7 @@ import {
   LogOut,
   X,
   Search,
+  Key,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -73,6 +75,10 @@ const DEFAULT_FILTERS: Filters = {
   backlog: false,
   archived: false,
 };
+
+import logoIcon from "../icon.png";
+
+
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -209,12 +215,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
   useWorkspaceRealtime({ enabled: isAuthenticated });
 
+  const mustChangePassword = (user as any)?.mustChangePassword;
+
   // Auth redirect
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace("/login");
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.replace("/login");
+      } else if (mustChangePassword && pathname !== "/change-password") {
+        router.replace("/change-password");
+      }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, mustChangePassword, pathname]);
 
   // Hydrate filters from URL on mount
   useEffect(() => {
@@ -311,6 +323,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) return null;
+
+
 
   return (
     <div className="h-screen overflow-hidden bg-[#F2FAFF] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">

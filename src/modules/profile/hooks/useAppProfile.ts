@@ -43,6 +43,8 @@ export function useAppProfile() {
         currentPassword: payload.currentPassword,
         password: payload.password,
       });
+      // Refresh token to get the updated mustChangePassword status in the new JWT
+      await api.post("/auth/refresh", {}, { withCredentials: true });
     },
   });
 
