@@ -71,7 +71,7 @@ const SessionList: React.FC = () => {
             className={`flex items-center gap-4 p-4 rounded-[8px] border ${
               s.isCurrent
                 ? 'border-[#2563EB]/20 dark:border-[rgba(37,99,235,0.2)] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.06)]'
-                : 'border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020]'
+                : 'border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]'
             }`}
           >
             <div className="flex-shrink-0 w-10 h-10 bg-[#F7F6F3] dark:bg-[#252525] rounded-[6px] flex items-center justify-center">

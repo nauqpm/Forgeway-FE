@@ -20,6 +20,7 @@ import { DocumentItem } from "../types/document.type";
 import EditorToolbar from "../editor/EditorToolbar";
 import { getEditorExtensions } from "../editor/editorExtensions";
 import FindReplacePanel from "../editor/FindReplacePanel";
+import PageCanvas from "../editor/PageCanvas";
 import TableContextMenu from "../editor/TableContextMenu";
 import VersionHistorySidebar from "../editor/VersionHistorySidebar";
 import type { DocumentVersion } from "../types/docs.type";
@@ -73,7 +74,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
     editorProps: {
       attributes: {
         class:
-          "tiptap-content prose m-5 max-w-none px-2 pb-32 text-[#111111] focus:outline-none dark:prose-invert dark:text-[#E8E8E7] prose-strong:text-[#111111] dark:prose-strong:text-[#E8E8E7]",
+          "tiptap-content prose max-w-none pb-32 text-[#111111] focus:outline-none dark:prose-invert dark:text-[#E8E8E7] prose-strong:text-[#111111] dark:prose-strong:text-[#E8E8E7]",
         spellcheck: "false",
         autocorrect: "off",
         autocapitalize: "off",
@@ -370,12 +371,8 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
                 Loading content...
               </div>
             ) : (
-              <div className="mx-auto w-full max-w-[75rem] px-6 py-8 lg:px-10">
-              <div className="mb-10">
-                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B] print:hidden">
-                  Document Title
-                </p>
-                <div className="rounded-[8px] border border-[#D5DAE1] bg-[#F8FAFC] px-5 py-4 shadow-sm transition focus-within:border-[#2563EB] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#2563EB]/10 dark:border-white/[0.14] dark:bg-[#292929] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.03)] dark:focus-within:border-[#3B82F6] dark:focus-within:bg-[#2D2D2D] dark:focus-within:ring-[#3B82F6]/15">
+              <PageCanvas>
+                <div className="mb-6 print:mb-4">
                   <input
                     type="text"
                     value={title}
@@ -383,26 +380,19 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
                       setTitle(e.target.value);
                       setStatus("idle");
                     }}
-                    className="w-full bg-transparent text-4xl font-extrabold leading-tight tracking-tight text-[#111111] dark:text-[#E8E8E7] outline-none placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]"
+                    className="w-full border-none bg-transparent text-4xl font-extrabold leading-tight tracking-tight text-[#111111] outline-none placeholder:text-[#ABABAB] focus:ring-0 dark:text-[#E8E8E7] dark:placeholder:text-[#6B6B6B] print:text-black"
                     placeholder="Enter document title..."
                   />
+                  <div className="mt-3 h-px bg-gray-200/60 dark:bg-gray-800 print:hidden" />
                 </div>
-              </div>
 
-              <div className="pb-40">
-                <p className="mb-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-[#ABABAB] dark:text-[#6B6B6B] print:hidden">
-                  Document Content
-                </p>
-                <div className="min-h-[37.5rem] rounded-[8px] border border-[#D5DAE1] bg-[#F8FAFC] px-4 py-3 shadow-sm transition focus-within:border-[#2563EB] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#2563EB]/10 dark:border-white/[0.14] dark:bg-[#292929] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.03)] dark:focus-within:border-[#3B82F6] dark:focus-within:bg-[#2D2D2D] dark:focus-within:ring-[#3B82F6]/15">
-                  <div
-                    className="dark:prose-invert"
-                    onContextMenu={handleContextMenu}
-                  >
-                    <EditorContent editor={editor} />
-                  </div>
+                <div
+                  className="min-h-[800px] text-gray-900 dark:text-[#E8E8E7] print:min-h-0"
+                  onContextMenu={handleContextMenu}
+                >
+                  <EditorContent editor={editor} />
                 </div>
-              </div>
-              </div>
+              </PageCanvas>
             )}
           </div>
           {findReplaceOpen && (
@@ -432,7 +422,7 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
       </div>
 
       {showVersionModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -440,13 +430,13 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
                 void handleCreateVersion(versionLabel.trim());
               }
             }}
-            className="w-full max-w-sm rounded-[10px] border border-[#EAEAEA] bg-white p-5 shadow-xl dark:border-white/[0.08] dark:bg-[#202020]"
+            className="w-full max-w-sm rounded-[10px] border border-[#EAEAEA] bg-white p-5 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] dark:border-white/[0.06] dark:bg-[#202020]"
           >
-            <h3 className="mb-2 text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">Create named version</h3>
+            <h3 className="mb-2 text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Create named version</h3>
             <input
               value={versionLabel}
               onChange={(e) => setVersionLabel(e.target.value)}
-              className="mb-4 w-full rounded-[6px] border border-[#D5DAE1] bg-white px-3 py-2 text-sm outline-none focus:border-[#2563EB] dark:border-white/[0.14] dark:bg-[#292929] dark:text-[#E8E8E7]"
+              className="mb-4 w-full rounded-[6px] border border-[#EAEAEA] bg-[#F7F6F3] px-3 py-2 text-[0.8125rem] text-[#111111] outline-none transition-colors placeholder:text-[#ABABAB] focus:border-[#2563EB] focus:bg-white dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#E8E8E7] dark:placeholder:text-[#6B6B6B] dark:focus:border-[#3B82F6] dark:focus:bg-[#252525]"
               placeholder="Version name"
               maxLength={100}
               autoFocus
@@ -455,14 +445,14 @@ export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved 
               <button
                 type="button"
                 onClick={() => setShowVersionModal(false)}
-                className="rounded-[6px] px-3 py-2 text-xs font-semibold text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-white/5"
+                className="rounded-[6px] border border-[#EAEAEA] px-4 py-2 text-[0.8125rem] font-medium text-[#787774] transition-colors hover:bg-[#F7F6F3] dark:border-white/[0.06] dark:text-[#9B9A97] dark:hover:bg-white/5"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isPublishing || !versionLabel.trim()}
-                className="rounded-[6px] bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="rounded-[6px] bg-[#2563EB] px-4 py-2 text-[0.8125rem] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-50 dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
               >
                 Create
               </button>

@@ -81,7 +81,7 @@ function Modal({
         className={[
           "relative z-10 flex flex-col",
           "bg-white dark:bg-[#202020]",
-          "border border-[#EAEAEA] dark:border-white/8",
+          "border border-[#EAEAEA] dark:border-white/[0.06]",
           "rounded-[10px]",
           "shadow-float",
           "max-h-[90vh]",
@@ -94,7 +94,7 @@ function Modal({
       >
         {/* Header */}
         {(title || !hideCloseButton) && (
-          <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-[#EAEAEA] dark:border-white/8 flex-shrink-0">
+          <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex-shrink-0">
             <div>
               {title && (
                 <h2
@@ -131,7 +131,7 @@ function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#EAEAEA] dark:border-white/8 flex-shrink-0">
+          <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[#EAEAEA] dark:border-white/[0.06] flex-shrink-0">
             {footer}
           </div>
         )}

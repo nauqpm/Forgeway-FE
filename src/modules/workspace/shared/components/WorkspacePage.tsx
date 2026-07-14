@@ -1,10 +1,13 @@
 "use client";
 
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import WorkspaceContent from "./WorkspaceContent";
 import Header from "@/modules/workspace/shared/components/Header";
+import ImportCsvModal from "@/modules/workspace/tasks/import/ImportCsvModal";
 import Tabs from "@/modules/workspace/shared/components/Tabs";
 import WorkspaceModals from "./WorkspaceModals";
 import { getWorkspaceTemplate } from "@/modules/workspace/shared/types/workspace.type";
@@ -20,6 +23,9 @@ const BulkActionBar = dynamic(
 type WorkspacePageProps = ReturnType<typeof useWorkspacePage>;
 
 export default function WorkspacePage(props: WorkspacePageProps) {
+  const queryClient = useQueryClient();
+  const [isImportCsvModalOpen, setIsImportCsvModalOpen] = useState(false);
+
   const {
     workspace,
     loading,
@@ -150,9 +156,11 @@ export default function WorkspacePage(props: WorkspacePageProps) {
     );
   }
 
+  const isDocsTab = activeTab === "pages";
+
   return (
-    <div className="flex-1 overflow-y-auto p-[var(--workspace-surface-pad)]">
-      <div className="workspace-surface pb-12">
+    <div className={isDocsTab ? "flex min-h-0 flex-1 overflow-hidden p-[var(--workspace-surface-pad)]" : "flex-1 overflow-y-auto p-[var(--workspace-surface-pad)]"}>
+      <div className={isDocsTab ? "flex min-h-0 flex-1 flex-col" : "workspace-surface pb-12"}>
         <Header
           workspace={workspace}
           workspaceId={workspace.key}
@@ -255,8 +263,11 @@ export default function WorkspacePage(props: WorkspacePageProps) {
             onBulkUpdateIds: handleListBulkUpdate,
             onBulkDeleteIds: handleListBulkDelete,
             onCreateTask: canCreateTask ? handleCreateTaskFromList : undefined,
+            handleDeleteIssue: canDeleteTask ? handleDeleteIssue : undefined,
             canEditTask,
             canDeleteTask,
+            canImportCsv: isWorkspaceAdmin,
+            onOpenImportCsv: () => setIsImportCsvModalOpen(true),
           }}
           summaryProps={{
             issues,
@@ -335,6 +346,16 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}
           canMoveTask={canMoveTask}
+        />
+
+        <ImportCsvModal 
+          isOpen={isImportCsvModalOpen} 
+          onClose={() => setIsImportCsvModalOpen(false)} 
+          workspace={workspace} 
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ["tasks", workspace._id] });
+            queryClient.invalidateQueries({ queryKey: ["board", workspace._id] });
+          }}
         />
       </div>
     </div>

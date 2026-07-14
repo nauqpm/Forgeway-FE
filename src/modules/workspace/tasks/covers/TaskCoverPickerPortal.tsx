@@ -72,6 +72,7 @@ export default function TaskCoverPickerPortal({
 
   return createPortal(
     <div
+      id="cover-picker-portal"
       className="fixed z-[1000000]"
       style={{ left: position.left, top: position.top }}
       onClick={(event) => event.stopPropagation()}

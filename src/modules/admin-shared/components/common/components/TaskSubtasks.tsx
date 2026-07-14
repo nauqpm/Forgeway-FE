@@ -38,7 +38,7 @@ export default function TaskSubtasks({ subtasks = [], onAdd, onUpdateStatus }: T
       </div>
       
       {/* Progress Bar */}
-      <div className="w-full bg-[#F7F6F3] dark:bg-[#252525] rounded-[8px] h-1.5 border border-[#EAEAEA] dark:border-white/8 overflow-hidden">
+      <div className="w-full bg-[#F7F6F3] dark:bg-[#252525] rounded-[8px] h-1.5 border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden">
         <div 
           className="bg-[#346538] dark:bg-[#4ADE80] h-full transition-all duration-500 ease-in-out"
           style={{ width: `${percent}%` }}
@@ -47,7 +47,7 @@ export default function TaskSubtasks({ subtasks = [], onAdd, onUpdateStatus }: T
 
       {/* Subtask List */}
       {subtasks && subtasks.length > 0 && (
-        <div className="flex flex-col gap-0.5 border border-[#EAEAEA] dark:border-white/8 rounded-[8px] p-1 bg-white dark:bg-[#202020]">
+        <div className="flex flex-col gap-0.5 border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-1 bg-white dark:bg-[#202020]">
           {subtasks.map(task => (
             <div key={task.id} className="flex items-center gap-3 p-2 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] group transition-colors">
               <button 

@@ -733,7 +733,7 @@ export default function NotificationPanel({
                           tabIndex={0}
                           onClick={() => handleNotificationClick(notification)}
                           onKeyDown={(event) => handleNotificationKeyDown(event, notification)}
-                          className={`w-full text-left relative p-3 rounded-[8px] transition-all group hover:bg-[#F9F9F8] dark:hover:bg-[#252525] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/8 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 ${!notification.isRead ? "bg-[#EFF6FF]/30 dark:bg-[rgba(37,99,235,0.06)]" : ""}`}
+                          className={`w-full text-left relative p-3 rounded-[8px] transition-all group hover:bg-[#F9F9F8] dark:hover:bg-[#252525] border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/[0.06] cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 ${!notification.isRead ? "bg-[#EFF6FF]/30 dark:bg-[rgba(37,99,235,0.06)]" : ""}`}
                         >
                           {!notification.isRead && (
                             <span className="absolute top-3.5 right-3 w-2 h-2 bg-[#2563EB] dark:bg-[#3B82F6] rounded-full" />

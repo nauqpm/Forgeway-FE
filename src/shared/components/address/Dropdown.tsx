@@ -19,7 +19,7 @@ const Dropdown = ({
       <div className="relative h-10">
         <div
           className={`absolute inset-0 py-2 px-3 flex justify-between items-center border
-            ${hasError ? "border-red-500" : "border-[#EAEAEA] dark:border-white/8"}
+            ${hasError ? "border-red-500" : "border-[#EAEAEA] dark:border-white/[0.06]"}
             bg-white dark:bg-[#202020] rounded-[6px]
             ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
           onClick={isDisabled ? undefined : onToggle}
@@ -49,7 +49,7 @@ const Dropdown = ({
         )}
 
         {isOpen && (
-          <div className="absolute z-20 mt-10 w-full bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/8 max-h-60 overflow-y-auto rounded-[6px]"
+          <div className="absolute z-20 mt-10 w-full bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] max-h-60 overflow-y-auto rounded-[6px]"
                style={{ boxShadow: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)" }}>
             {children}
           </div>

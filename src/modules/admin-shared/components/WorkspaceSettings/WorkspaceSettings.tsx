@@ -133,7 +133,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
     <div className={`app-page-narrow ${className}`}>
       <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-6">Workspace Settings</h1>
 
-      <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 mb-6">
+      <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] mb-6">
         <h2 className="font-semibold text-[#111111] dark:text-[#E8E8E7] mb-4 flex items-center gap-2">
           <Building2 className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" /> Workspace Information
         </h2>
@@ -168,7 +168,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
         </div>
       </div>
 
-      <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8">
+      <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
         <h2 className="font-semibold text-[#111111] dark:text-[#E8E8E7] mb-4 flex items-center gap-2">
           <Users className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" /> Member ({members.length})
         </h2>

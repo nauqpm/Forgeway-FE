@@ -26,11 +26,11 @@ export default function LogWorkModal({ onClose, onSave }: LogWorkModalProps) {
   return (
     <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/40 p-4">
       <div
-        className="w-full max-w-md bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] rounded-[10px] border border-[#EAEAEA] dark:border-white/8"
+        className="w-full max-w-md bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06]"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/8">
+        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
           <h2 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Log work</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors">
             <X className="w-4 h-4" />
@@ -65,7 +65,7 @@ export default function LogWorkModal({ onClose, onSave }: LogWorkModalProps) {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 p-5 border-t border-[#EAEAEA] dark:border-white/8">
+        <div className="flex items-center justify-end gap-2 p-5 border-t border-[#EAEAEA] dark:border-white/[0.06]">
           <button
             onClick={onClose}
             className="px-4 py-2 border border-[#EAEAEA] dark:border-white/10 text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] font-medium hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"

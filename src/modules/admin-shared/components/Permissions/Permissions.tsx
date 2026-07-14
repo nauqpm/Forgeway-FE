@@ -110,7 +110,7 @@ export default function Permissions() {
       </div>
 
       {/* System Roles */}
-      <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 mb-8">
+      <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] mb-8">
         <h2 className="font-semibold text-[#111111] dark:text-[#E8E8E7] text-xl mb-5 flex items-center gap-3">
           <Shield className="w-6 h-6 text-[#2563EB] dark:text-[#3B82F6]" />
           System Roles
@@ -133,8 +133,8 @@ export default function Permissions() {
       </div>
 
       {/* Permissions Matrix */}
-      <div className="bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden">
-        <div className="workspace-panel border-b border-[#EAEAEA] dark:border-white/8 flex items-center justify-between">
+      <div className="bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden">
+        <div className="workspace-panel border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between">
           <h2 className="font-semibold text-xl text-[#111111] dark:text-[#E8E8E7]">Permission Matrix</h2>
           {saved && (
             <div className="flex items-center gap-2 text-[#346538] dark:text-[#4ADE80] text-sm font-medium">
@@ -147,7 +147,7 @@ export default function Permissions() {
         <div className="overflow-x-auto">
           <table className="w-full app-table-min">
             <thead>
-              <tr className="border-b border-[#EAEAEA] dark:border-white/8 bg-[#F9F9F8] dark:bg-[#252525]">
+              <tr className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525]">
                 <th className="text-left py-4 px-6 font-medium text-[#787774] dark:text-[#9B9A97] w-80">Permission</th>
                 {roles.map(role => (
                   <th key={role.id} className="text-center py-4 px-4 font-medium text-[#787774] dark:text-[#9B9A97]">
@@ -160,7 +160,7 @@ export default function Permissions() {
               {permissionGroups.map((group) => (
                 <>
                   {/* Group Header */}
-                  <tr className="bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/8">
+                  <tr className="bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
                     <td colSpan={5} className="px-6 py-3 font-semibold text-[#787774] dark:text-[#9B9A97]">
                       {group.label}
                     </td>
@@ -168,7 +168,7 @@ export default function Permissions() {
 
                   {/* Permissions */}
                   {group.items.map((perm) => (
-                    <tr key={perm.key} className="border-b border-[#EAEAEA] dark:border-white/8 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
+                    <tr key={perm.key} className="border-b border-[#EAEAEA] dark:border-white/[0.06] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors">
                       <td className="px-6 py-4 text-[#787774] dark:text-[#9B9A97] font-medium">
                         {perm.label}
                         <span className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] ml-2 font-mono">({perm.key})</span>

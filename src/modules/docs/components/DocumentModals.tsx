@@ -15,6 +15,7 @@ interface DocumentModalsProps {
   setEditingDoc: (doc: DocumentItem | null) => void;
   viewingDoc: DocumentItem | null;
   setViewingDoc: (doc: DocumentItem | null) => void;
+  onEditViewingDoc?: () => void;
   deleteTarget: DocumentItem | null;
   setDeleteTarget: (doc: DocumentItem | null) => void;
   renameTarget: DocumentItem | null;
@@ -24,7 +25,7 @@ interface DocumentModalsProps {
   setLinkingDoc: (doc: DocumentItem | null) => void;
   deleting: boolean;
   renaming: boolean;
-  onDelete: (doc: DocumentItem) => void;
+  onDelete: (doc: DocumentItem) => Promise<boolean>;
   onRename: (doc: DocumentItem, name: string) => Promise<boolean>;
   onSaved: () => void;
   closeRenameDialog: (isRenaming: boolean) => void;
@@ -35,6 +36,7 @@ export default function DocumentModals({
   setEditingDoc,
   viewingDoc,
   setViewingDoc,
+  onEditViewingDoc,
   deleteTarget,
   setDeleteTarget,
   renameTarget,
@@ -128,25 +130,26 @@ export default function DocumentModals({
 
       {deleteTarget && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
           onClick={() => { if (!deleting) setDeleteTarget(null); }}
         >
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-document-title"
-            className="w-full max-w-md rounded-[8px] border border-[#EAEAEA] bg-white p-5 dark:border-white/[0.06] dark:bg-[#252525]"
+            aria-describedby="delete-document-description"
+            className="w-full max-w-md rounded-[8px] border border-[#EAEAEA] bg-white p-5 shadow-[0_20px_45px_rgba(15,23,42,0.18)] dark:border-white/[0.06] dark:bg-[#252525]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400">
                 <Trash2 className="h-5 w-5" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <h2 id="delete-document-title" className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   Delete document?
                 </h2>
-                <p className="mt-1 text-sm text-[#787774] dark:text-[#9B9A97]">
+                <p id="delete-document-description" className="mt-1 text-sm leading-6 text-[#787774] dark:text-[#9B9A97]">
                   This will permanently delete{" "}
                   <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
                     {deleteTarget.name}
@@ -167,8 +170,10 @@ export default function DocumentModals({
               <button
                 type="button"
                 disabled={deleting}
-                onClick={() => onDelete(deleteTarget)}
-                className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={async () => {
+                  if (await onDelete(deleteTarget)) setDeleteTarget(null);
+                }}
+                className="rounded-[6px] bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-red-600 dark:hover:bg-red-500"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </button>
@@ -191,7 +196,7 @@ export default function DocumentModals({
                 <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   {viewingDoc.name}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-[#9B9A97]">
                   {viewingDoc.extension.toUpperCase()} · {formatSize(viewingDoc.size)}
                 </p>
               </div>
@@ -207,7 +212,7 @@ export default function DocumentModals({
               </div>
             </div>
             <div className="min-h-0 flex-1">
-              <ImportedDocumentViewer doc={viewingDoc} showBackButton={false} />
+              <ImportedDocumentViewer doc={viewingDoc} showBackButton={false} onEdit={onEditViewingDoc} />
             </div>
           </div>
         </div>

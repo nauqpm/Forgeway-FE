@@ -68,7 +68,8 @@ interface WorkspaceModalsProps {
   handleUpdateIssue: (issue: any) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateIssueDirectly: (id: string, updates: any) => void;
-  handleArchiveIssue: (issue: Issue) => void;
+  handleArchiveIssue?: (issue: Issue) => void;
+  handleDeleteIssue?: (issue: Issue) => void;
   handleRestoreIssue?: (issue: TaskDetailResponse) => void;
   detailUrl: string | undefined;
   canEditTask: boolean;
@@ -100,6 +101,7 @@ export default function WorkspaceModals({
   handleUpdateIssue,
   updateIssueDirectly,
   handleArchiveIssue,
+  handleDeleteIssue,
   handleRestoreIssue,
   detailUrl,
   canEditTask,
@@ -162,7 +164,9 @@ export default function WorkspaceModals({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onFieldUpdate={canEditTask ? ((id: string, updates: any) => updateIssueDirectly(id, updates)) : undefined}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
+          onArchiveIssue={canDeleteTask && handleArchiveIssue ? ((i: any) => handleArchiveIssue(i)) : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onDeleteIssue={canDeleteTask && handleDeleteIssue ? ((i: any) => handleDeleteIssue(i)) : undefined}
           onRestoreIssue={handleRestoreIssue ? ((i: TaskDetailResponse) => handleRestoreIssue(i)) : undefined}
           detailUrl={detailUrl}
         />
@@ -178,7 +182,9 @@ export default function WorkspaceModals({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onUpdateIssue={canEditTask ? ((i: any) => handleUpdateIssue(i)) : undefined}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onArchiveIssue={canDeleteTask ? ((i: any) => handleArchiveIssue(i)) : undefined}
+          onArchiveIssue={canDeleteTask && handleArchiveIssue ? ((i: any) => handleArchiveIssue(i)) : undefined}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onDeleteIssue={canDeleteTask && handleDeleteIssue ? ((i: any) => handleDeleteIssue(i)) : undefined}
           onRestoreIssue={handleRestoreIssue ? ((i: TaskDetailResponse) => handleRestoreIssue(i)) : undefined}
           detailUrl={detailUrl}
         />

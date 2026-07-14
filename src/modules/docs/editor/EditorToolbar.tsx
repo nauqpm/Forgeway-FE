@@ -244,7 +244,7 @@ export default function EditorToolbar({
       disabled={disabled}
       title={title}
       aria-pressed={Boolean(isActive)}
-      className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+      className={`inline-flex h-8 w-8 items-center justify-center rounded-[6px] transition-colors ${
         isActive
           ? "bg-[#DBEAFE] text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(37,99,235,0.10)] dark:bg-[rgba(59,130,246,0.22)] dark:text-[#BFDBFE] dark:shadow-[inset_0_0_0_1px_rgba(147,197,253,0.18)] font-bold"
           : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
@@ -523,7 +523,7 @@ export default function EditorToolbar({
             openLinkPopover();
           }}
           title="Set up or edit link"
-          className={`p-2 rounded-[6px] transition-all flex items-center justify-center ${
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-[6px] transition-colors ${
             toolbarState.link || linkPopoverOpen
               ? "bg-[#DBEAFE] text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(37,99,235,0.10)] dark:bg-[rgba(59,130,246,0.22)] dark:text-[#BFDBFE] dark:shadow-[inset_0_0_0_1px_rgba(147,197,253,0.18)] font-bold"
               : "text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
@@ -552,10 +552,6 @@ export default function EditorToolbar({
           <ImageIcon className="h-4 w-4" />
         </ToolbarButton>
 
-        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={toolbarState.taskList} title="Checklist">
-          <ListTodo className="h-4 w-4" />
-        </ToolbarButton>
-
         <button
           ref={tableButtonRef}
           onMouseDown={(event) => {
@@ -564,7 +560,7 @@ export default function EditorToolbar({
           }}
           title="Insert table"
           className={`
-          p-2 rounded-lg transition-all flex items-center justify-center
+          inline-flex h-8 w-8 items-center justify-center rounded-[6px] transition-colors
           ${
             tablePickerOpen
               ? "bg-[#DBEAFE] text-[#1D4ED8] shadow-[inset_0_0_0_1px_rgba(37,99,235,0.10)] dark:bg-[rgba(59,130,246,0.22)] dark:text-[#BFDBFE] dark:shadow-[inset_0_0_0_1px_rgba(147,197,253,0.18)] font-bold"

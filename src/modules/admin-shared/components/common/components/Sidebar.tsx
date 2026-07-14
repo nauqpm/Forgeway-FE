@@ -235,8 +235,17 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
     } else {
       if (moreWorkspacesBtnRef.current) {
         const rect = moreWorkspacesBtnRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const popoverEstimateHeight = 420; // safe estimation of popover height
+        
+        let top = rect.top;
+        // If popover goes off-screen at the bottom, adjust top
+        if (top + popoverEstimateHeight > viewportHeight) {
+          top = Math.max(12, viewportHeight - popoverEstimateHeight - 12);
+        }
+
         setMoreWorkspacesPos({
-          top: rect.top,
+          top: top,
           left: collapsed ? 'calc(var(--app-sidebar-collapsed) + 12px)' : 'calc(var(--app-sidebar-expanded) + 12px)',
         });
       }
@@ -365,20 +374,24 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                   />
                 ) : (
                   <>
-                    <div className="flex items-center justify-between w-full rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors group">
+                    <div
+                      className={`flex items-center justify-between w-full rounded-[6px] transition-all group ${
+                        pathname.startsWith('/chat')
+                          ? 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]'
+                          : 'hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                      }`}
+                    >
                       <Link
                         href="/chat"
                         onClick={onMobileClose}
-                        className={`flex-1 flex items-center gap-3 px-3 py-2 rounded-[6px] transition-colors ${
-                          pathname.startsWith('/chat') ? navActiveClass : `text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]`
-                        }`}
+                        className="flex-1 flex items-center gap-3 px-3 py-2 rounded-l-[6px] min-w-0 text-inherit"
                       >
                         <MessageCircle
                           className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${
                             pathname.startsWith('/chat') ? iconActiveClass : iconInactiveClass
                           }`}
                         />
-                        <span className="text-[0.8125rem] font-medium flex-1 text-left">Chat</span>
+                        <span className="text-[0.8125rem] font-medium flex-1 text-left truncate">Chat</span>
                         {totalUnreadCount > 0 && (
                           <span className="flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full leading-none shrink-0 mr-1">
                             {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
@@ -386,8 +399,17 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                         )}
                       </Link>
                       <button
-                        onClick={() => setChatOpen(!chatOpen)}
-                        className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] mr-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setChatOpen(!chatOpen);
+                        }}
+                        className={`p-1.5 rounded-[4px] mr-2 flex-shrink-0 transition-all ${
+                          pathname.startsWith('/chat')
+                            ? 'hover:bg-black/5 dark:hover:bg-white/10 text-[#1E40AF] dark:text-[#93C5FD]'
+                            : 'hover:bg-[#EAEAEA] dark:hover:bg-white/10 text-[#ABABAB] dark:text-[#6B6B6B] group-hover:text-[#787774] dark:group-hover:text-[#9B9A97]'
+                        }`}
+                        title={chatOpen ? "Collapse Chat" : "Expand Chat"}
                       >
                         {chatOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                       </button>
@@ -442,7 +464,14 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                 <div key={wsId} className="space-y-0.5">
                                   {/* Workspace Accordion Header */}
                                   <div
-                                    onClick={() => toggleWsCustomOpen(wsId)}
+                                    onClick={() => {
+                                      toggleWsCustomOpen(wsId);
+                                      if (wsChannel) {
+                                        useChatStore.getState().setActiveChannel(wsChannel._id);
+                                        router.push("/chat");
+                                        onMobileClose();
+                                      }
+                                    }}
                                     className="w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer text-[#787774] dark:text-[#9B9A97] transition-colors"
                                   >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">

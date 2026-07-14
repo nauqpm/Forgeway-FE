@@ -1,93 +1,20 @@
 "use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Edit3, Clock, Eye } from "lucide-react";
+import { use } from "react";
+import { useWorkspacePage } from "@/modules/workspace/shared/hooks/useWorkspacePage";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
-import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
-import { useDocumentBySlugQuery } from "@/modules/docs/hooks/useWorkspaceDocs";
-import PageSearchComments from "@/modules/docs/components/PageSearchComments";
-import { useDocsStore } from "@/modules/docs/store/docs.store";
+import WorkspacePage from "@/modules/workspace/shared/components/WorkspacePage";
 
-export default function PageViewPage() {
-  const params = useParams();
-  const slug = params.slug as string;
-  const workspaceKey = params.key as string;
-  const { data: page, isLoading } = useDocumentBySlugQuery(workspaceKey, slug, !!slug);
-  const router = useRouter();
-  const selectDocument = useDocsStore((state) => state.selectDocument);
-
-  usePageTitle(page?.title || "Page");
-
-  if (isLoading) return <LoadingSpinner />;
-  if (!page) return <div className="app-main text-center text-gray-500">Page not found</div>;
-
-  return (
-    <div className="flex-1 overflow-y-auto">
-      <div className="app-page-narrow py-8 pb-12 px-4">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              selectDocument(page.id, [page]);
-              router.push(`/workspaces/${workspaceKey}/pages`);
-            }}
-            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          </button>
-        </div>
-        <button
-          onClick={() => {
-            selectDocument(page.id, [page]);
-            router.push(`/workspaces/${workspaceKey}/pages?edit=true`);
-          }}
-          className="inline-flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 font-medium text-sm cursor-pointer"
-        >
-          <Edit3 className="w-4 h-4" /> Edit
-        </button>
-      </div>
-
-      <article className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,32px)]">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{page.title}</h1>
-
-        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-8 pb-6 border-b border-gray-100 dark:border-gray-800">
-          {page.lastEditedBy && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">
-                {page.lastEditedBy.fullName?.charAt(0) || "?"}
-              </div>
-              <span>{page.lastEditedBy.fullName || "Unknown"}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-4 h-4" />
-            <span>{new Date(page.updatedAt).toLocaleDateString("en-US")}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Eye className="w-4 h-4" />
-            <span>v{page.version}</span>
-          </div>
-        </div>
-
-        {page.labels.length > 0 && (
-          <div className="flex items-center gap-2 mb-6">
-            {page.labels.map((label) => (
-              <span key={label} className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-medium">
-                {label}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div
-          className="prose prose-gray max-w-none"
-          dangerouslySetInnerHTML={{
-            __html: page.content || '<p class="text-gray-400 italic">No content yet. Click Edit to add content.</p>',
-          }}
-        />
-      </article>
-      <PageSearchComments workspaceId={page.workspaceId} pageId={page.id} />
-      </div>
-    </div>
-  );
+/**
+ * Deep-link view route: /workspaces/:key/pages/:slug-:pageId
+ *
+ * Renders the full workspace shell (header + tabs) with the Docs tab active.
+ * DocsLayout will read the URL to auto-select the correct document into the store.
+ */
+export default function PageViewRoute({ params }: { params: Promise<{ key: string; slug: string }> }) {
+  const { key: workspaceKey } = use(params);
+  // Force `tab` to ["pages"] so useWorkspacePage sets activeTab = "pages"
+  const page = useWorkspacePage(workspaceKey, ["pages"]);
+  usePageTitle(page.pageTitle);
+  return <WorkspacePage {...page} />;
 }

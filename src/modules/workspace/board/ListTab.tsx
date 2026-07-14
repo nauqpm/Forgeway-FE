@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import {
   LayoutGrid,
   PanelRight,
@@ -9,7 +9,14 @@ import {
   RotateCw,
   FileText,
   Columns,
+  MoreHorizontal,
+  FileDown,
+  FileUp,
+  ChevronRight,
 } from "lucide-react";
+import toast from "react-hot-toast";
+import api from "@/lib/axiosIns";
+import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
 import { Filters } from "@/modules/workspace/shared/types/filter.type";
 import { VisibilityState } from "@tanstack/react-table";
@@ -40,6 +47,7 @@ const LIST_SPLIT_SORT_OPTIONS: { id: ListSplitSortField; label: string }[] = [
 type ListTabProps = {
   filteredIssues: Issue[];
   selectedIssue: Issue | null;
+  workspaceKey?: string;
   workspaceId: string;
   sprints?: Sprint[];
   workspaceTemplate?: "kanban" | "scrum";
@@ -59,8 +67,11 @@ type ListTabProps = {
   onBulkUpdateIds?: (ids: string[], updates: Partial<Issue>) => Promise<void>;
   onBulkDeleteIds?: (ids: string[]) => void | Promise<void>;
   onCreateTask?: (task: { title: string; type?: string; assigneeId?: string | null; dueDate?: string | null }) => Promise<void>;
+  handleDeleteIssue?: (issue: Issue) => void;
   canEditTask?: boolean;
   canDeleteTask?: boolean;
+  canImportCsv?: boolean;
+  onOpenImportCsv?: () => void;
 };
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -72,6 +83,7 @@ const COLUMN_LABELS: Record<string, string> = {
 export default function ListTab({
   filteredIssues,
   selectedIssue,
+  workspaceKey,
   workspaceId,
   sprints = [],
   workspaceTemplate = "kanban",
@@ -89,8 +101,11 @@ export default function ListTab({
   onBulkUpdateIds,
   onBulkDeleteIds,
   onCreateTask,
+  handleDeleteIssue,
   canEditTask = true,
   canDeleteTask = true,
+  canImportCsv = false,
+  onOpenImportCsv,
 }: ListTabProps) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(() => {
     if (typeof window !== "undefined") {
@@ -140,6 +155,137 @@ export default function ListTab({
               <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{COLUMN_LABELS[id]}</span>
             </label>
           ))}
+        </div>
+      )}
+    </div>
+  );
+
+  const [showImportExportMenu, setShowImportExportMenu] = useState(false);
+  const importExportMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (importExportMenuRef.current && !importExportMenuRef.current.contains(e.target as Node))
+        setShowImportExportMenu(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
+
+  const [exportLoading, setExportLoading] = useState(false);
+
+  const handleExport = useCallback(async (format: "csv" | "xlsx" | "docx") => {
+    setShowImportExportMenu(false);
+    setExportLoading(true);
+    const toastId = toast.loading(`Đang xuất file ${format.toUpperCase()}...`);
+    try {
+      const params = new URLSearchParams();
+      params.set("format", format);
+
+      if (filters.statuses?.length) {
+        const statusMap: Record<string, string> = {
+          "To Do": "todo",
+          "In Progress": "inprogress",
+          "Testing": "testing",
+          "Done": "done",
+        };
+        const mapped = filters.statuses.map((s: string) => statusMap[s] || s.toLowerCase().replace(/\s+/g, ""));
+        params.set("status", mapped.join(","));
+      }
+      if (filters.assignees?.length) {
+        params.set("assigneeId", filters.assignees.join(","));
+      }
+      if (filters.types?.length) {
+        params.set("type", filters.types.map((t: string) => t.toLowerCase()).join(","));
+      }
+      if (filters.priorities?.length) {
+        params.set("priority", filters.priorities.map((p: string) => p.toLowerCase()).join(","));
+      }
+      if (filters.search) {
+        params.set("search", filters.search);
+      }
+
+      const response = await api.get(
+        `${apiRoutes.TASKS.BOARD_EXPORT(workspaceId)}?${params.toString()}`,
+        { responseType: "blob" },
+      );
+
+      const blob = new Blob([response.data as BlobPart], {
+        type: format === "xlsx"
+          ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          : format === "docx"
+            ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            : "text/csv; charset=utf-8",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tasks-${workspaceKey || workspaceId}-${new Date().toISOString().slice(0, 10)}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+
+      toast.success(`Export ${format.toUpperCase()} thành công!`, { id: toastId });
+    } catch {
+      toast.error("Export thất bại. Vui lòng thử lại.", { id: toastId });
+    } finally {
+      setExportLoading(false);
+    }
+  }, [workspaceId, workspaceKey, filters]);
+
+  const importExportMenu = (
+    <div className="relative ml-2 shrink-0 -mr-2 sm:-mr-4" ref={importExportMenuRef}>
+      <button
+        type="button"
+        onClick={() => setShowImportExportMenu(o => !o)}
+        disabled={exportLoading}
+        className="inline-flex items-center justify-center w-8 h-8 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors disabled:opacity-50"
+      >
+        <MoreHorizontal className="w-4 h-4" />
+      </button>
+      {showImportExportMenu && (
+        <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+          {canImportCsv && (
+            <button
+              onClick={() => {
+                setShowImportExportMenu(false);
+                onOpenImportCsv?.();
+              }}
+              className="w-full text-left flex items-center gap-2 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+            >
+              <FileDown className="w-4 h-4" /> Import CSV
+            </button>
+          )}
+          <div className="relative group">
+            <button
+              className="w-full text-left flex items-center justify-between gap-2 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+            >
+              <div className="flex items-center gap-2">
+                <FileUp className="w-4 h-4" /> Export
+              </div>
+              <ChevronRight className="w-4 h-4 text-[#888888]" />
+            </button>
+            <div className="absolute right-[100%] top-0 hidden group-hover:block w-28 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 py-1 before:absolute before:content-[''] before:-right-3 before:top-0 before:w-3 before:h-full" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+              <button
+                onClick={() => handleExport("csv")}
+                className="w-full text-left flex items-center gap-2 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+              >
+                .csv
+              </button>
+              <button
+                onClick={() => handleExport("xlsx")}
+                className="w-full text-left flex items-center gap-2 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+              >
+                .xlsx
+              </button>
+              <button
+                onClick={() => handleExport("docx")}
+                className="w-full text-left flex items-center gap-2 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+              >
+                .docx
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -303,7 +449,7 @@ export default function ListTab({
         filters={filters}
         setFilters={setFilters}
         uniqueAssignees={uniqueAssignees}
-        extraActions={<>{columnsButton}{viewToggle}</>}
+        extraActions={<>{columnsButton}{viewToggle}{importExportMenu}</>}
       />
 
       {listViewMode === "grid" ? (
@@ -323,6 +469,7 @@ export default function ListTab({
               }}
               onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
               onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
+              onDeleteIssue={canDeleteTask && handleDeleteIssue ? (i) => handleDeleteIssue(i as unknown as Issue) : undefined}
               canEditTask={canEditTask}
             />
           </div>
@@ -460,7 +607,7 @@ export default function ListTab({
                                 {issueKey}
                               </span>
                             </div>
-                            <p className="mt-1 line-clamp-2 text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
+                            <p className="mt-1 line-clamp-2 break-all text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
                               {issue.title}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -514,6 +661,7 @@ export default function ListTab({
                 }}
                 onUpdateIssue={canEditTask ? handleUpdateIssue : undefined}
                 onFieldUpdate={canEditTask ? updateIssueDirectly : undefined}
+                onDeleteIssue={canDeleteTask && handleDeleteIssue ? (i) => handleDeleteIssue(i as unknown as Issue) : undefined}
                 canEditTask={canEditTask}
               />
             ) : (
