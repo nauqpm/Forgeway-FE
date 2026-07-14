@@ -315,7 +315,6 @@ export default function TiptapEditor({
     setIsPublishing(true);
     try {
       const title = ydoc?.getText("title").toString() || document.title;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const html = editor.getHTML();
 
       const titleSaved = await saveTitle();
