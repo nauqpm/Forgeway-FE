@@ -21,47 +21,76 @@ export default function DocumentsLibraryContent({ documentId, documentMode }: Do
   const router = useRouter();
   const { user } = useAuth();
   const page = useDocumentsPage();
+  const {
+    documents,
+    filtered,
+    isLoading,
+    query,
+    setQuery,
+    sortBy,
+    setSortBy,
+    openMenuId,
+    setOpenMenuId,
+    editingDoc,
+    setEditingDoc,
+    viewingDoc,
+    setViewingDoc,
+    deleteTarget,
+    setDeleteTarget,
+    renameTarget,
+    renameName,
+    setRenameName,
+    linkingDoc,
+    setLinkingDoc,
+    deleting,
+    renaming,
+    handleDelete,
+    handleRename,
+    refetch,
+    closeRenameDialog,
+    openRenameDialog,
+  } = page;
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const routeDocument = useMemo(
-    () => page.documents.find((doc) => doc._id === documentId) ?? null,
-    [documentId, page.documents],
+    () => documents.find((doc) => doc._id === documentId) ?? null,
+    [documentId, documents],
   );
 
   useEffect(() => {
-    if (!documentId || page.isLoading) return;
+    if (!documentId || isLoading) return;
 
-    page.setOpenMenuId(null);
+    setOpenMenuId(null);
     if (documentMode === "edit") {
-      page.setViewingDoc(null);
-      page.setEditingDoc(routeDocument);
+      setViewingDoc(null);
+      setEditingDoc(routeDocument);
       return;
     }
 
-    page.setEditingDoc(null);
-    page.setViewingDoc(routeDocument);
+    setEditingDoc(null);
+    setViewingDoc(routeDocument);
   }, [
     documentId,
     documentMode,
-    page.isLoading,
+    isLoading,
     routeDocument,
-    page.setOpenMenuId,
-    page.setViewingDoc,
-    page.setEditingDoc,
+    setOpenMenuId,
+    setViewingDoc,
+    setEditingDoc,
   ]);
 
   const closeDocumentRoute = () => {
-    page.setEditingDoc(null);
-    page.setViewingDoc(null);
+    setEditingDoc(null);
+    setViewingDoc(null);
     router.push(DOCUMENTS_LIBRARY_HREF);
   };
 
   const openDocumentRoute = (doc: { _id: string }) => {
-    page.setOpenMenuId(null);
+    setOpenMenuId(null);
     router.push(buildDocumentHref(doc._id));
   };
 
   const openDocumentEditRoute = (doc: { _id: string }) => {
-    page.setOpenMenuId(null);
+    setOpenMenuId(null);
     router.push(buildDocumentHref(doc._id, "edit"));
   };
 
@@ -86,49 +115,49 @@ export default function DocumentsLibraryContent({ documentId, documentMode }: Do
         </div>
 
         <DocumentToolbar
-          query={page.query}
-          setQuery={page.setQuery}
-          sortBy={page.sortBy}
-          setSortBy={page.setSortBy}
+          query={query}
+          setQuery={setQuery}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
           viewMode={viewMode}
           setViewMode={setViewMode}
         />
 
         <DocumentGrid
-          documents={page.filtered}
-          isLoading={page.isLoading}
+          documents={filtered}
+          isLoading={isLoading}
           viewMode={viewMode}
-          openMenuId={page.openMenuId}
-          setOpenMenuId={page.setOpenMenuId}
+          openMenuId={openMenuId}
+          setOpenMenuId={setOpenMenuId}
           currentUserId={user?.id}
           onView={openDocumentRoute}
           onEdit={openDocumentEditRoute}
-          onRename={(doc) => { page.setOpenMenuId(null); page.openRenameDialog(doc); }}
-          onDelete={(doc) => { page.setOpenMenuId(null); page.setDeleteTarget(doc); }}
+          onRename={(doc) => { setOpenMenuId(null); openRenameDialog(doc); }}
+          onDelete={(doc) => { setOpenMenuId(null); setDeleteTarget(doc); }}
         />
       </div>
 
       <DocumentModals
-        editingDoc={page.editingDoc}
+        editingDoc={editingDoc}
         setEditingDoc={(doc) => (doc ? openDocumentEditRoute(doc) : closeDocumentRoute())}
-        viewingDoc={page.viewingDoc}
+        viewingDoc={viewingDoc}
         setViewingDoc={(doc) => (doc ? openDocumentRoute(doc) : closeDocumentRoute())}
         onEditViewingDoc={() => {
-          if (page.viewingDoc) openDocumentEditRoute(page.viewingDoc);
+          if (viewingDoc) openDocumentEditRoute(viewingDoc);
         }}
-        deleteTarget={page.deleteTarget}
-        setDeleteTarget={page.setDeleteTarget}
-        renameTarget={page.renameTarget}
-        renameName={page.renameName}
-        setRenameName={page.setRenameName}
-        linkingDoc={page.linkingDoc}
-        setLinkingDoc={page.setLinkingDoc}
-        deleting={page.deleting}
-        renaming={page.renaming}
-        onDelete={page.handleDelete}
-        onRename={page.handleRename}
-        onSaved={page.refetch}
-        closeRenameDialog={page.closeRenameDialog}
+        deleteTarget={deleteTarget}
+        setDeleteTarget={setDeleteTarget}
+        renameTarget={renameTarget}
+        renameName={renameName}
+        setRenameName={setRenameName}
+        linkingDoc={linkingDoc}
+        setLinkingDoc={setLinkingDoc}
+        deleting={deleting}
+        renaming={renaming}
+        onDelete={handleDelete}
+        onRename={handleRename}
+        onSaved={refetch}
+        closeRenameDialog={closeRenameDialog}
       />
     </div>
   );
