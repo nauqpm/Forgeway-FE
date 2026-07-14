@@ -30,7 +30,6 @@ import {
   LogOut,
   X,
   Search,
-  Key,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -75,10 +74,6 @@ const DEFAULT_FILTERS: Filters = {
   backlog: false,
   archived: false,
 };
-
-import logoIcon from "../icon.png";
-
-
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
@@ -215,7 +210,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
   useWorkspaceRealtime({ enabled: isAuthenticated });
 
-  const mustChangePassword = (user as any)?.mustChangePassword;
+  const mustChangePassword = user?.mustChangePassword;
 
   // Auth redirect
   useEffect(() => {

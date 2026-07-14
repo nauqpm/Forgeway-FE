@@ -9,13 +9,14 @@ import { useAppProfile } from "@/modules/profile/hooks/useAppProfile";
 import { ChangePasswordForm } from "@/modules/profile/components/ChangePasswordForm";
 import logoIcon from "../../icon.png";
 import { AUTH_ROUTES } from "@/modules/auth/shared/constants/auth-routes";
+import { ChangePasswordPayload } from "@/modules/profile/types/profile.types";
 
 function ForceChangePasswordWrapper() {
   const { changePassword, saving } = useAppProfile();
   const { refreshUser } = useAuth();
   const router = useRouter();
 
-  const handlePasswordChange = async (payload: any) => {
+  const handlePasswordChange = async (payload: ChangePasswordPayload) => {
     const res = await changePassword(payload);
     if (res.success) {
       await refreshUser();
@@ -31,7 +32,7 @@ export default function ChangePasswordPage() {
   const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
 
-  const mustChangePassword = (user as any)?.mustChangePassword;
+  const mustChangePassword = user?.mustChangePassword;
 
   useEffect(() => {
     if (!isLoading) {
