@@ -57,14 +57,14 @@ export default function TaskDetailView({
         <Link href={backHref} className="mt-1 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
           <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
         </Link>
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-3 mb-1">
             <span className={`px-2 py-0.5 text-xs rounded text-white ${typeColors[task.type] || "bg-gray-400"}`}>
               {task.type}
             </span>
             <span className="text-sm text-gray-500 dark:text-gray-400">{task.key}</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{task.title}</h1>
+          <h1 className="max-w-full break-words [overflow-wrap:anywhere] text-2xl font-bold text-gray-900 dark:text-white">{task.title}</h1>
           {workspace && (
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               in{" "}

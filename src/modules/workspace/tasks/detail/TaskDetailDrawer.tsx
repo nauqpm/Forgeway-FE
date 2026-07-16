@@ -363,8 +363,8 @@ export default function TaskDetailDrawer({
         />
 
         {/* Content Body — single scrollable column */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
-          <div className="p-4 md:p-6 space-y-8">
+          <div className="min-w-0 flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
+            <div className="min-w-0 p-4 md:p-6 space-y-8">
             <TaskDetailMainContent
               issue={issue}
               workspaceId={workspaceId}

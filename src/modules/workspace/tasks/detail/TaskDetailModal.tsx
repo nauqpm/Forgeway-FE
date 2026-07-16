@@ -299,7 +299,7 @@ export default function TaskDetailModal({
         {/* Content Body */}
         <div className="flex flex-col md:flex-row flex-1 overflow-y-auto">
           {/* Left Column (Main) */}
-          <div className="flex-1 order-2 md:order-1 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] md:border-r border-[#EAEAEA] dark:border-white/[0.06] space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
+          <div className="min-w-0 flex-1 order-2 md:order-1 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] md:border-r border-[#EAEAEA] dark:border-white/[0.06] space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <TaskDetailMainContent
               issue={issue}
               workspaceId={workspaceId}

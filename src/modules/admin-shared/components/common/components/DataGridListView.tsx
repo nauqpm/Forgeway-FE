@@ -209,12 +209,13 @@ export default function DataGridListView({
       accessorKey: 'title',
       header: 'Work',
       size: 300,
+      maxSize: 300,
       cell: info => {
         const issue = info.row.original;
         const isEditing = editingCell?.rowId === issue.id && editingCell?.col === 'title';
         if (canEditTask && isEditing) {
           return (
-            <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+            <div className="flex min-w-0 items-center gap-2" onClick={e => e.stopPropagation()}>
               <FileText className="w-4 h-4 shrink-0 text-[#1F6C9F]" />
               <input
                 autoFocus
@@ -225,7 +226,7 @@ export default function DataGridListView({
                   if (e.key === 'Enter') { if (editValue.trim() && editValue !== issue.title) saveEdit(issue.id, 'title', editValue.trim()); else setEditingCell(null); }
                   if (e.key === 'Escape') setEditingCell(null);
                 }}
-                className="flex-1 px-1.5 py-0.5 text-sm border border-[#2563EB] rounded-[6px] outline-none bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]"
+                className="min-w-0 flex-1 px-1.5 py-0.5 text-sm border border-[#2563EB] rounded-[6px] outline-none bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]"
               />
             </div>
           );
@@ -234,7 +235,7 @@ export default function DataGridListView({
           <div className="flex items-center gap-2 group/title min-w-0">
             <FileText className="w-4 h-4 shrink-0 text-[#1F6C9F]" />
             <span
-              className="truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
+              className="min-w-0 flex-1 truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
               onClick={e => {
                 e.stopPropagation();
                 if (!canEditTask) {

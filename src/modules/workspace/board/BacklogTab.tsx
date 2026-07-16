@@ -484,12 +484,12 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   <span className="text-[0.6875rem] font-mono font-medium text-[#ABABAB] dark:text-[#6B6B6B] w-16 hover:underline cursor-pointer">
                                     {issue.key}
                                   </span>
-                                  <span className="min-w-0 break-words text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] cursor-pointer">
+                                  <span title={issue.title} className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] dark:group-hover:text-[#60A5FA] cursor-pointer">
                                     {issue.title}
                                   </span>
                                 </div>
                               </div>
-                              <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                              <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">
                                 {canEditTask ? (
                                   <>
                                     <div className="relative group/pts">
@@ -708,12 +708,12 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 <span className="text-[0.6875rem] font-mono font-medium text-[#ABABAB] dark:text-[#6B6B6B] w-16 hover:underline cursor-pointer">
                                   {issue.key}
                                 </span>
-                                <span className="min-w-0 break-words text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] cursor-pointer">
+                                <span title={issue.title} className="min-w-0 flex-1 truncate text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] group-hover:text-[#2563EB] cursor-pointer">
                                   {issue.title}
                                 </span>
                               </div>
                             </div>
-                            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+                            <div className="flex shrink-0 flex-wrap items-center gap-3 lg:justify-end">
                               {canEditTask ? (
                                 <>
                                   <div className="relative group/pts">

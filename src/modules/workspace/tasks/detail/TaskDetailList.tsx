@@ -296,7 +296,7 @@ export default function TaskDetailList({
       {/* ── BODY: LEFT MAIN + RIGHT SIDEBAR ── */}
       <div className="flex flex-1 overflow-hidden">
         {/* ── LEFT COLUMN: Main content ── */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 border-r border-[#EAEAEA] dark:border-white/[0.06]">
+        <div className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 border-r border-[#EAEAEA] dark:border-white/[0.06]">
           <TaskDetailMainContent
             issue={issue}
             workspaceId={workspaceId}
