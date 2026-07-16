@@ -79,7 +79,7 @@ export function ForYouWorkspaceGrid({ workspaces, stats, error }: Props) {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="app-card-grid-fluid-xl grid grid-cols-1 gap-4 lg:grid-cols-2">
           {workspaces.map((workspace) => {
             const routeKey = workspaceRouteKeyOf(workspace);
             return (

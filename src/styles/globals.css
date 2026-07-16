@@ -240,6 +240,30 @@ body {
   }
 }
 
+@media (min-width: 80rem) {
+  .app-page-fluid-xl {
+    max-width: none;
+  }
+
+  .app-card-grid-fluid-xl {
+    grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+  }
+}
+
+@media (min-width: 120rem) {
+  :root {
+    --app-content-max: 100%;
+  }
+
+  .app-page-fluid-2xl {
+    max-width: none;
+  }
+
+  .app-card-grid-fluid-2xl {
+    grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
+  }
+}
+
 @layer utilities {
     .animate-fadeIn {
         animation: fadeIn 0.3s forwards;

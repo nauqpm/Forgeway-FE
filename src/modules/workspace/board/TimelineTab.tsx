@@ -20,7 +20,7 @@ export default function TimelineTab({
   canMoveTask = true,
 }: TimelineTabProps) {
   return (
-    <div className="px-2 py-2 overflow-hidden">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col p-2">
       <TimelineView
         issues={filteredIssues}
         sprints={sprints}

@@ -18,7 +18,7 @@ export function DashboardWorkspaceGrid({ workspaces }: Props) {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="app-card-grid-fluid-xl grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {workspaces.length === 0 ? (
           <div className="col-span-full rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] p-8 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
             No recommended workspaces yet.

@@ -39,7 +39,7 @@ export default function MyTasksView({
   grouped,
 }: MyTasksPageProps) {
   return (
-    <div className="app-page-wide">
+    <div className="app-page-wide app-page-fluid-2xl">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">My Tasks</h1>

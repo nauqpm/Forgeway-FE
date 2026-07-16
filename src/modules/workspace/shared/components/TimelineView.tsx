@@ -90,6 +90,7 @@ export default function TimelineView({
   const leftRef       = useRef<HTMLDivElement>(null);
   const rightPanelRef = useRef<HTMLDivElement>(null);
   const syncingRef    = useRef(false);
+  const zoomAnchorDayRef = useRef<number | null>(null);
   const dragSessionRef = useRef<TimelineDragSession | null>(null);
   const suppressNextTaskClickRef = useRef(false);
 
@@ -117,6 +118,15 @@ export default function TimelineView({
     panel.addEventListener('wheel', handleWheel, { passive: false });
     return () => panel.removeEventListener('wheel', handleWheel);
   }, []);
+
+  useEffect(() => {
+    const anchorDay = zoomAnchorDayRef.current;
+    const body = bodyRef.current;
+    if (anchorDay === null || !body) return;
+
+    body.scrollLeft = Math.max(0, anchorDay * pixelsPerDay - body.clientWidth / 2);
+    zoomAnchorDayRef.current = null;
+  }, [pixelsPerDay]);
 
   /* ── Build flat ordered row list ────────────────────────────────── */
   const rows = useMemo<TimelineRow[]>(() => {
@@ -255,6 +265,14 @@ export default function TimelineView({
       syncingRef.current = false;
     }
   }, []);
+
+  const changeZoom = useCallback((delta: number) => {
+    const body = bodyRef.current;
+    if (body) {
+      zoomAnchorDayRef.current = (body.scrollLeft + body.clientWidth / 2) / pixelsPerDay;
+    }
+    setPixelsPerDay((current) => Math.max(10, Math.min(100, current + delta)));
+  }, [pixelsPerDay]);
 
   /* ── Drag / Resize callbacks ─────────────────────────────────────── */
   const onDragStop = useCallback((row: TimelineRow, x: number) => {
@@ -522,8 +540,8 @@ export default function TimelineView({
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col font-sans text-[#111111] dark:text-[#E8E8E7] relative">
-      <div className="flex flex-1 min-h-0 ">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col relative overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white font-sans text-[#111111] dark:border-white/[0.06] dark:bg-[#202020] dark:text-[#E8E8E7]">
+      <div className="flex min-h-0 min-w-0 flex-1">
 
         {/* ────────── LEFT PANEL ────────── */}
         <div
@@ -651,7 +669,7 @@ export default function TimelineView({
       {/* Zoom controls */}
       <div className="absolute bottom-5 right-5 z-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] flex items-center p-1 gap-0.5" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
         <button
-          onClick={() => setPixelsPerDay(p => Math.max(10, p - 10))}
+          onClick={() => changeZoom(-10)}
           className="p-1.5 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors"
           title="Zoom Out"
         >
@@ -661,7 +679,7 @@ export default function TimelineView({
           {pixelsPerDay}px
         </span>
         <button
-          onClick={() => setPixelsPerDay(p => Math.min(100, p + 10))}
+          onClick={() => changeZoom(10)}
           className="p-1.5 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors"
           title="Zoom In"
         >

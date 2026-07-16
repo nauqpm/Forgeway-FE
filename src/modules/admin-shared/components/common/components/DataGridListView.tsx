@@ -95,6 +95,7 @@ export default function DataGridListView({
   const [columnResizeMode] = useState<ColumnResizeMode>('onChange');
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
+  const hasSelectionColumn = canEditTask || canDeleteTask;
 
   // Inline editing state
   const [editingCell, setEditingCell] = useState<{ rowId: string; col: string } | null>(null);
@@ -173,7 +174,7 @@ export default function DataGridListView({
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const columns = useMemo<ColumnDef<any>[]>(() => [
-    ...(canEditTask || canDeleteTask ? [{
+    ...(hasSelectionColumn ? [{
       id: 'checkbox',
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       header: ({ table }: any) => (
@@ -516,7 +517,7 @@ export default function DataGridListView({
   });
 
   return (
-    <div ref={containerRef} className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col font-sans">
+    <div ref={containerRef} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white font-sans dark:border-white/[0.06] dark:bg-[#202020]">
 
       {/* Data Grid Table */}
       <div className="flex-1 overflow-auto custom-scrollbar relative">
@@ -525,22 +526,28 @@ export default function DataGridListView({
             {table.getHeaderGroups().map(headerGroup => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <th
-                    key={header.id}
-                    style={{ width: header.getSize() }}
-                    className="relative px-3 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wider bg-[#F9F9F8] dark:bg-[#252525] select-none"
-                  >
-                    <div className="flex items-center">
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                    </div>
-                    {header.column.getCanResize() && (
-                      <div
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-[#2563EB]/50 bg-[#EAEAEA]/0 ${header.column.getIsResizing() ? 'bg-[#2563EB]' : ''}`}
-                      />
-                    )}
-                  </th>
+                  (() => {
+                    const isPinned = header.column.id === 'checkbox' || header.column.id === 'key';
+                    const left = header.column.id === 'key' && hasSelectionColumn ? 40 : 0;
+                    return (
+                      <th
+                        key={header.id}
+                        style={{ width: header.getSize(), ...(isPinned ? { left } : {}) }}
+                        className={`relative px-3 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wider bg-[#F9F9F8] dark:bg-[#252525] select-none ${isPinned ? 'sticky z-20' : ''}`}
+                      >
+                        <div className="flex items-center">
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </div>
+                        {header.column.getCanResize() && (
+                          <div
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            className={`absolute right-0 top-0 h-full w-1.5 cursor-col-resize hover:bg-[#2563EB]/50 bg-[#EAEAEA]/0 ${header.column.getIsResizing() ? 'bg-[#2563EB]' : ''}`}
+                          />
+                        )}
+                      </th>
+                    );
+                  })()
                 ))}
               </tr>
             ))}
@@ -551,15 +558,19 @@ export default function DataGridListView({
                 key={row.id}
                 className={`hover:bg-[#F9F9F8]/50 dark:hover:bg-white/5 transition-colors group ${row.getIsSelected() ? 'bg-[#EFF6FF]/70 dark:bg-[rgba(37,99,235,0.12)]' : ''}`}
               >
-                {row.getVisibleCells().map(cell => (
-                  <td
-                    key={cell.id}
-                    style={{ width: cell.column.getSize() }}
-                    className="px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/[0.06] last:border-r-0 overflow-visible"
-                  >
-                    {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
+                {row.getVisibleCells().map(cell => {
+                  const isPinned = cell.column.id === 'checkbox' || cell.column.id === 'key';
+                  const left = cell.column.id === 'key' && hasSelectionColumn ? 40 : 0;
+                  return (
+                    <td
+                      key={cell.id}
+                      style={{ width: cell.column.getSize(), ...(isPinned ? { left } : {}) }}
+                      className={`px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/[0.06] last:border-r-0 overflow-visible ${isPinned ? 'sticky z-10 bg-white dark:bg-[#202020] group-hover:bg-[#F9F9F8] dark:group-hover:bg-[#252525]' : ''}`}
+                    >
+                      {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
             {table.getRowModel().rows.length === 0 && (

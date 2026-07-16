@@ -177,7 +177,7 @@ export default function MembersTab({
   }
 
   return (
-    <>
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
       {isAdmin && (
         <InviteModal
           isOpen={isInviteOpen}
@@ -395,6 +395,6 @@ export default function MembersTab({
           </section>
         )}
       </div>
-    </>
+    </div>
   );
 }

@@ -52,7 +52,7 @@ export default function TaskDetailView({
   const backHref = workspace ? `/workspaces/${workspace.key}` : "/workspaces";
 
   return (
-    <div className="app-page-wide">
+    <div className="app-page-wide app-page-fluid-2xl">
       <div className="flex items-start gap-4 mb-6">
         <Link href={backHref} className="mt-1 p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
           <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />

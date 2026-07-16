@@ -444,17 +444,19 @@ export default function ListTab({
   );
 
   return (
-    <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
-      <BoardFilters
-        filters={filters}
-        setFilters={setFilters}
-        uniqueAssignees={uniqueAssignees}
-        extraActions={<>{columnsButton}{viewToggle}{importExportMenu}</>}
-      />
+    <div className="workspace-panel flex min-h-0 min-w-0 flex-1 flex-col bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
+      <div className="shrink-0">
+        <BoardFilters
+          filters={filters}
+          setFilters={setFilters}
+          uniqueAssignees={uniqueAssignees}
+          extraActions={<>{columnsButton}{viewToggle}{importExportMenu}</>}
+        />
+      </div>
 
       {listViewMode === "grid" ? (
         selectedIssue ? (
-          <div className="workspace-list-height overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
+          <div className="flex min-h-0 flex-1 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
@@ -474,8 +476,8 @@ export default function ListTab({
             />
           </div>
         ) : (
-          <div className="flex w-full overflow-hidden workspace-list-height transition-all duration-200">
-            <div className="flex-1 overflow-x-auto min-w-0">
+          <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden transition-all duration-200">
+            <div className="flex min-h-0 min-w-0 flex-1">
             <DataGridListView
               issues={filteredIssues}
               workspaceId={workspaceId}
@@ -496,7 +498,7 @@ export default function ListTab({
           </div>
         )
       ) : (
-        <div className="workspace-list-height flex flex-col lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-hidden">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] lg:grid lg:grid-cols-[var(--workspace-list-sidebar-w)_minmax(0,1fr)]">
           <aside className="flex flex-col border-b lg:border-b-0 lg:border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] shrink-0 max-h-[45vh] lg:max-h-none min-h-0">
             <div
               ref={listSplitToolbarRef}
