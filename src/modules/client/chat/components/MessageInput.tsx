@@ -53,8 +53,14 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     };
   }, []);
 
-  const replyingToMessage = useChatStore(state => state.replyingToMessage);
-  const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+  const globalReplyingToMessage = useChatStore(state => state.replyingToMessage);
+  const globalSetReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+  
+  const threadReplyingToMessage = useChatStore(state => state.replyingToThreadMessage);
+  const setThreadReplyingToMessage = useChatStore(state => state.setReplyingToThreadMessage);
+  
+  const replyingToMessage = threadParentId ? threadReplyingToMessage : globalReplyingToMessage;
+  const setReplyingToMessage = threadParentId ? setThreadReplyingToMessage : globalSetReplyingToMessage;
   const replyingSender = typeof replyingToMessage?.senderId === 'object' && replyingToMessage.senderId
     ? replyingToMessage.senderId
     : null;

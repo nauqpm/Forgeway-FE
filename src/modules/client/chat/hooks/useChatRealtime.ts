@@ -51,24 +51,24 @@ export function useChatRealtime() {
     chatSocketClient.leaveChannel();
   }, []);
 
-  const sendReaction = useCallback((channelId: string, messageId: string, emoji: string) => {
+  const sendReaction = useCallback((channelId: string, messageId: string, emoji: string, threadParentId?: string) => {
     const socket = chatSocketClient.connect();
     if (socket) {
-      socket.emit(SOCKET_EVENTS.REACTION, { channelId, messageId, emoji });
+      socket.emit(SOCKET_EVENTS.REACTION, { channelId, messageId, emoji, threadParentId });
     }
   }, []);
 
-  const sendDeleteMessage = useCallback((channelId: string, messageId: string) => {
+  const sendDeleteMessage = useCallback((channelId: string, messageId: string, threadParentId?: string) => {
     const socket = chatSocketClient.connect();
     if (socket) {
-      socket.emit(SOCKET_EVENTS.DELETE, { channelId, messageId });
+      socket.emit(SOCKET_EVENTS.DELETE, { channelId, messageId, threadParentId });
     }
   }, []);
 
-  const sendEditMessage = useCallback((channelId: string, messageId: string, content: string) => {
+  const sendEditMessage = useCallback((channelId: string, messageId: string, content: string, threadParentId?: string) => {
     const socket = chatSocketClient.connect();
     if (socket) {
-      socket.emit(SOCKET_EVENTS.EDIT, { channelId, messageId, content });
+      socket.emit(SOCKET_EVENTS.EDIT, { channelId, messageId, content, threadParentId });
     }
   }, []);
 

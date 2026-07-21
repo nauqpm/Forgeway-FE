@@ -44,6 +44,7 @@ export default function MessageItem({
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
   const { sendReaction, sendDeleteMessage, sendEditMessage } = useChatRealtime();
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+  const setReplyingToThreadMessage = useChatStore(state => state.setReplyingToThreadMessage);
   const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
 
   const activeChannelId = useChatStore(state => state.activeChannelId);
@@ -554,7 +555,7 @@ export default function MessageItem({
     const trimmed = editContent.trim();
     if (!trimmed) return;
     try {
-      sendEditMessage(message.channelId, message._id, trimmed);
+      sendEditMessage(message.channelId, message._id, trimmed, message.threadParentId);
     } catch (err) {
       console.error("Failed to edit message:", err);
     }
@@ -563,7 +564,7 @@ export default function MessageItem({
 
   const confirmDelete = () => {
     try {
-      sendDeleteMessage(message.channelId, message._id);
+      sendDeleteMessage(message.channelId, message._id, message.threadParentId);
     } catch (err) {
       console.error("Failed to delete message:", err);
     }
@@ -571,11 +572,11 @@ export default function MessageItem({
   };
 
   const handleToggleReaction = (emoji: string) => {
-    sendReaction(message.channelId, message._id, emoji);
+    sendReaction(message.channelId, message._id, emoji, message.threadParentId);
   };
 
   const handleSelectEmoji = (emoji: string) => {
-    sendReaction(message.channelId, message._id, emoji);
+    sendReaction(message.channelId, message._id, emoji, message.threadParentId);
     setShowEmojiPicker(false);
   };
 
@@ -801,20 +802,28 @@ export default function MessageItem({
           </div>
 
           <button 
-            onClick={() => setReplyingToMessage(message)}
+            onClick={() => {
+              if (hideThreadBadge) {
+                setReplyingToThreadMessage(message);
+              } else {
+                setReplyingToMessage(message);
+              }
+            }}
             className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" 
             title="Reply"
           >
             <Reply className="w-3.5 h-3.5" />
           </button>
 
-          <button 
-            onClick={() => setActiveThreadParentId(message._id)}
-            className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" 
-            title="Reply in thread"
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-          </button>
+          {!hideThreadBadge && (
+            <button 
+              onClick={() => setActiveThreadParentId(message._id)}
+              className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors" 
+              title="Reply in thread"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+            </button>
+          )}
           {isMine && (
             <>
               <button 
@@ -911,13 +920,13 @@ export default function MessageItem({
                 ? "[Message deleted]"
                 : replyParent.type === 'sticker'
                 ? "[Sticker]"
-                : renderMessageContent(replyParent.content)}
+                : (replyParent.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')}
             </span>
           </div>
         )}
 
         {!isSameUserAsPrevious && (
-          <div className="flex items-center gap-2 mb-0.5">
+          <div className="flex items-baseline gap-2 mb-0.5">
             <span 
               className="text-[0.875rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer"
               onClick={handleUserClick}

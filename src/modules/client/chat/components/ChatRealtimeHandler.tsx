@@ -125,6 +125,13 @@ export default function ChatRealtimeHandler() {
     if (!message?._id || !message?.channelId) return;
     updateMessageInCache(queryClient, message.channelId, message._id, () => message);
 
+    if (message.threadParentId) {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.threadReplies(message.channelId, message.threadParentId),
+        (current = []) => current.map(m => (m._id || m.id) === message._id ? message : m)
+      );
+    }
+
     updateChannelInCache(queryClient, message.channelId, (channel) => {
       const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
       const editedMsgId = message._id || message.id;
@@ -156,6 +163,13 @@ export default function ChatRealtimeHandler() {
     updateMessageInCache(queryClient, data.channelId, data.messageId, () => ({
       deletedAt: new Date().toISOString(),
     }));
+
+    if (data.threadParentId) {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.threadReplies(data.channelId, data.threadParentId),
+        (current = []) => current.map(m => (m._id || m.id) === data.messageId ? { ...m, deletedAt: new Date().toISOString() } : m)
+      );
+    }
 
     if (data.lastMessage !== undefined) {
       updateChannelInCache(queryClient, data.channelId, () => ({
@@ -215,6 +229,13 @@ export default function ChatRealtimeHandler() {
     updateMessageInCache(queryClient, data.channelId, data.messageId, () => ({
       reactions: data.reactions,
     }));
+
+    if (data.threadParentId) {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.threadReplies(data.channelId, data.threadParentId),
+        (current = []) => current.map(m => (m._id || m.id) === data.messageId ? { ...m, reactions: data.reactions } : m)
+      );
+    }
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
