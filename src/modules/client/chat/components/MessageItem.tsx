@@ -8,8 +8,9 @@ import { Paperclip, SmilePlus, Reply, Trash2, X, AlertTriangle, Pencil, MessageS
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
 import { MentionsInput, Mention } from 'react-mentions';
 import api from '@/lib/axiosIns';
-import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
+import { useChatChannels, useChannelMembers } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import UserProfileCard from './UserProfileCard';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -48,7 +49,9 @@ export default function MessageItem({
   const activeChannelId = useChatStore(state => state.activeChannelId);
   const { data: channels = [] } = useChatChannels();
   const activeChannel = channels.find((c: Channel) => c._id === activeChannelId);
-  const channelMembers = activeChannel?.members || [];
+  
+  const { data: fetchedMembers = [] } = useChannelMembers(message.channelId || activeChannelId);
+  const channelMembers = fetchedMembers.length > 0 ? fetchedMembers : (activeChannel?.members || []);
 
   const getReactionTooltip = (userIds: string[]) => {
     const names = userIds.map(id => {
@@ -67,6 +70,8 @@ export default function MessageItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [lightboxFile, setLightboxFile] = useState<{ url: string; name: string; mimeType?: string } | null>(null);
+  const [showProfileCard, setShowProfileCard] = useState(false);
+  const [profileCardPos, setProfileCardPos] = useState({ x: 0, y: 0 });
   const pickerRef = useRef<HTMLDivElement>(null);
   const editInputRef = useRef<HTMLTextAreaElement>(null);
   const mentionSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -78,6 +83,14 @@ export default function MessageItem({
       }
     };
   }, []);
+
+  const handleUserClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    setProfileCardPos({ x: rect.left, y: rect.bottom });
+    setShowProfileCard(true);
+  };
 
   const replyParent = message.replyToId && typeof message.replyToId === 'object'
     ? (message.replyToId as Message)
@@ -221,7 +234,7 @@ export default function MessageItem({
         }
       }
       
-      if (tagStack.length > 0 && typeof element === 'string') {
+      if (tagStack.length > 0) {
         let styledNode: React.ReactNode = element;
         for (let i = tagStack.length - 1; i >= 0; i--) {
           const tag = tagStack[i];
@@ -265,7 +278,7 @@ export default function MessageItem({
 
     const urls: React.ReactNode[] = [];
     let urlCount = 0;
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urlRegex = /(https?:\/\/[^\s<]+?)(?=[*~_.,;)]*(\s|$|<))/g;
     substituted = substituted.replace(urlRegex, (match) => {
       if (match.startsWith('@@@LINKTOKEN') || match.startsWith('@@@MENTIONTOKEN')) return match;
       const token = `@@@URLTOKEN${urlCount}@@@`;
@@ -365,8 +378,24 @@ export default function MessageItem({
           {lines.map((line, lineIdx) => {
             if (!line.trim()) return <div key={lineIdx} className="h-1" />;
 
-            if (line.startsWith('> ')) {
-              const quoteContent = line.substring(2);
+            let prefixTags = '';
+            let suffixTags = '';
+            let strippedLine = line.trim();
+
+            const tagMatch = strippedLine.match(/^((?:<(?:strong|em|del)>)+)/);
+            if (tagMatch) {
+              prefixTags = tagMatch[1];
+              strippedLine = strippedLine.substring(tagMatch[0].length).trim();
+            }
+            
+            const suffixMatch = strippedLine.match(/((?:<\/(?:strong|em|del)>)+)$/);
+            if (suffixMatch) {
+              suffixTags = suffixMatch[1];
+              strippedLine = strippedLine.substring(0, strippedLine.length - suffixMatch[0].length).trim();
+            }
+
+            if (strippedLine.startsWith('> ')) {
+              const quoteContent = prefixTags + strippedLine.substring(2) + suffixTags;
               return (
                 <blockquote 
                   key={lineIdx} 
@@ -377,21 +406,26 @@ export default function MessageItem({
               );
             }
 
-            if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('+ ')) {
-              const listItemContent = line.substring(2);
+            let markerClasses = '';
+            if (prefixTags.includes('strong')) markerClasses += ' font-bold';
+            if (prefixTags.includes('em')) markerClasses += ' italic';
+            if (prefixTags.includes('del')) markerClasses += ' line-through';
+
+            if (strippedLine.startsWith('- ') || strippedLine.startsWith('* ') || strippedLine.startsWith('+ ')) {
+              const listItemContent = prefixTags + strippedLine.substring(2) + suffixTags;
               return (
-                <ul key={lineIdx} className="list-disc pl-5 my-0.5">
+                <ul key={lineIdx} className={`list-disc pl-5 my-0.5${markerClasses}`}>
                   <li>{parseTagsAndRestoreTokens(listItemContent, mentions, links, urls, inlineCodes)}</li>
                 </ul>
               );
             }
 
-            const numMatch = line.match(/^(\d+)\.\s(.*)/);
+            const numMatch = strippedLine.match(/^(\d+)\.\s(.*)/);
             if (numMatch) {
               const listNum = numMatch[1];
-              const listItemContent = numMatch[2];
+              const listItemContent = prefixTags + numMatch[2] + suffixTags;
               return (
-                <ol key={lineIdx} className="list-decimal pl-5 my-0.5" start={parseInt(listNum)}>
+                <ol key={lineIdx} className={`list-decimal pl-5 my-0.5${markerClasses}`} start={parseInt(listNum)}>
                   <li>{parseTagsAndRestoreTokens(listItemContent, mentions, links, urls, inlineCodes)}</li>
                 </ol>
               );
@@ -808,7 +842,10 @@ export default function MessageItem({
       {/* Avatar column */}
       <div className="w-10 flex-shrink-0 flex justify-center mt-0.5">
         {!isSameUserAsPrevious ? (
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-medium shadow-sm">
+          <div 
+            className="w-10 h-10 rounded-full overflow-hidden bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-medium shadow-sm cursor-pointer"
+            onClick={handleUserClick}
+          >
             {sender.avatar ? (
               <img 
                 src={sender.avatar} 
@@ -881,7 +918,10 @@ export default function MessageItem({
 
         {!isSameUserAsPrevious && (
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-[0.875rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer">
+            <span 
+              className="text-[0.875rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer"
+              onClick={handleUserClick}
+            >
               {displayName}
             </span>
             <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
@@ -1301,6 +1341,15 @@ export default function MessageItem({
             />
           )}
         </div>
+      )}
+      
+      {showProfileCard && (
+        <UserProfileCard 
+          user={sender as any} 
+          position={profileCardPos} 
+          onClose={() => setShowProfileCard(false)} 
+          isCurrentUser={String(sender._id) === String(currentUserId)}
+        />
       )}
     </div>
   );
