@@ -1153,7 +1153,10 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   padding: 0 8px 8px 8px !important;
 }
 
-.emoji-mart-custom-wrapper .epr-header-overlay,
+.emoji-mart-custom-wrapper .epr-header-overlay {
+  display: none !important;
+}
+
 .emoji-mart-custom-wrapper .epr-emoji-category-label {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -1168,17 +1171,7 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   height: auto !important;
 }
 
-.dark .emoji-mart-custom-wrapper .epr-header-overlay,
 .dark .emoji-mart-custom-wrapper .epr-emoji-category-label {
   color: #9CA3AF !important;
   background-color: #202020 !important;
-}
-
-.emoji-mart-custom-wrapper .epr-header-overlay::before,
-.emoji-mart-custom-wrapper .epr-header-overlay::after,
-.emoji-mart-custom-wrapper .epr-emoji-category-label::before,
-.emoji-mart-custom-wrapper .epr-emoji-category-label::after {
-  display: none !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
 }
