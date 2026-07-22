@@ -104,3 +104,34 @@ export const updateMessageInCache = (
     }
   );
 };
+
+export const removeMessageFromCache = (
+  queryClient: QueryClient,
+  channelId: string,
+  messageId: string,
+  threadParentId?: string
+) => {
+  queryClient.setQueryData<InfiniteData<MessagesPage>>(
+    queryKeys.chat.messages(channelId),
+    (current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        pages: current.pages.map((page) => ({
+          ...page,
+          messages: page.messages.filter((m) => getMessageId(m) !== messageId),
+        })),
+      };
+    }
+  );
+
+  if (threadParentId) {
+    queryClient.setQueryData<Message[]>(
+      queryKeys.chat.threadReplies(channelId, threadParentId),
+      (current = []) => current.filter((m) => getMessageId(m) !== messageId)
+    );
+  }
+
+  queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+  queryClient.invalidateQueries({ queryKey: ['chat', 'messages', 'search', channelId] });
+};

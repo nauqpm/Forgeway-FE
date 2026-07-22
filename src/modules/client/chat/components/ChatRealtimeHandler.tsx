@@ -12,6 +12,7 @@ import {
   updateMessageInCache,
   upsertChannelInCache,
   upsertMessageInCache,
+  removeMessageFromCache,
 } from '@/modules/client/chat/utils/chatQueryCache';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import toast from 'react-hot-toast';
@@ -125,6 +126,13 @@ export default function ChatRealtimeHandler() {
     if (!message?._id || !message?.channelId) return;
     updateMessageInCache(queryClient, message.channelId, message._id, () => message);
 
+    if (message.threadParentId) {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.threadReplies(message.channelId, message.threadParentId),
+        (current = []) => current.map(m => (m._id || m.id) === message._id ? message : m)
+      );
+    }
+
     updateChannelInCache(queryClient, message.channelId, (channel) => {
       const lastMsgId = channel.lastMessage?._id || channel.lastMessage?.id;
       const editedMsgId = message._id || message.id;
@@ -157,11 +165,26 @@ export default function ChatRealtimeHandler() {
       deletedAt: new Date().toISOString(),
     }));
 
+    if (data.threadParentId) {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.threadReplies(data.channelId, data.threadParentId),
+        (current = []) => current.map(m => (m._id || m.id) === data.messageId ? { ...m, deletedAt: new Date().toISOString() } : m)
+      );
+    }
+
     if (data.lastMessage !== undefined) {
       updateChannelInCache(queryClient, data.channelId, () => ({
         lastMessage: data.lastMessage || undefined,
       }));
     }
+  }, [queryClient]);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleMessageDeletedForMe = useCallback((envelope: any) => {
+    const data = envelope.data || envelope;
+    if (!data?.messageId || !data?.channelId) return;
+
+    removeMessageFromCache(queryClient, data.channelId, data.messageId, data.threadParentId);
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,22 +238,30 @@ export default function ChatRealtimeHandler() {
     updateMessageInCache(queryClient, data.channelId, data.messageId, () => ({
       reactions: data.reactions,
     }));
+
+    if (data.threadParentId) {
+      queryClient.setQueryData<Message[]>(
+        queryKeys.chat.threadReplies(data.channelId, data.threadParentId),
+        (current = []) => current.map(m => (m._id || m.id) === data.messageId ? { ...m, reactions: data.reactions } : m)
+      );
+    }
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleThreadReplyCreated = useCallback((envelope: any) => {
     console.log("ChatRealtimeHandler: Received chat.thread.reply.created", envelope);
     const reply = (envelope.data || envelope) as Message;
-    const channelId = reply.channelId;
-    const parentId = reply.threadParentId;
+    const channelId = typeof reply.channelId === 'object' ? String(reply.channelId) : String(reply.channelId || '');
+    const parentId = typeof reply.threadParentId === 'object' ? String(reply.threadParentId) : String(reply.threadParentId || '');
     if (!channelId || !parentId) return;
 
     // 1. Add to thread replies query cache
     queryClient.setQueryData<Message[]>(
       queryKeys.chat.threadReplies(channelId, parentId),
       (current = []) => {
-        const exists = current.some(m => (m._id || m.id) === (reply._id || reply.id));
-        if (exists) return current.map(m => (m._id || m.id) === (reply._id || reply.id) ? reply : m);
+        const replyId = String(reply._id || reply.id);
+        const exists = current.some(m => String(m._id || m.id) === replyId);
+        if (exists) return current.map(m => String(m._id || m.id) === replyId ? reply : m);
         return [...current, reply];
       }
     );
@@ -258,6 +289,19 @@ export default function ChatRealtimeHandler() {
         lastReplyParticipants: newParticipants
       };
     });
+
+    // 4. Mark thread as unread if:
+    //    - The reply is from someone else (not myself)
+    //    - The user is not currently viewing that exact thread
+    const currentUser = useAuthStore.getState().user;
+    const currentUserId = (currentUser as { id: string; _id?: string } | null)?._id || currentUser?.id;
+    const isMyOwnReply = senderId && currentUserId && String(senderId) === String(currentUserId);
+    const activeThreadParentId = useChatStore.getState().activeThreadParentId;
+    const isViewingThisThread = activeThreadParentId === parentId;
+
+    if (!isMyOwnReply && !isViewingThisThread) {
+      useChatStore.getState().markThreadUnread(parentId);
+    }
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -418,6 +462,7 @@ export default function ChatRealtimeHandler() {
     socket.on(SOCKET_EVENTS.SENT, handleNewMessage);
     socket.on(SOCKET_EVENTS.EDITED, handleMessageEdited);
     socket.on(SOCKET_EVENTS.DELETED, handleMessageDeleted);
+    socket.on(SOCKET_EVENTS.DELETED_FOR_ME, handleMessageDeletedForMe);
     socket.on(SOCKET_EVENTS.USER_TYPING, handleUserTyping);
     socket.on(SOCKET_EVENTS.UNREAD_UPDATE, handleUnreadUpdate);
     socket.on(SOCKET_EVENTS.REACTION_UPDATED, handleReactionUpdated);
@@ -437,6 +482,7 @@ export default function ChatRealtimeHandler() {
       socket.off(SOCKET_EVENTS.SENT, handleNewMessage);
       socket.off(SOCKET_EVENTS.EDITED, handleMessageEdited);
       socket.off(SOCKET_EVENTS.DELETED, handleMessageDeleted);
+      socket.off(SOCKET_EVENTS.DELETED_FOR_ME, handleMessageDeletedForMe);
       socket.off(SOCKET_EVENTS.USER_TYPING, handleUserTyping);
       socket.off(SOCKET_EVENTS.UNREAD_UPDATE, handleUnreadUpdate);
       socket.off(SOCKET_EVENTS.REACTION_UPDATED, handleReactionUpdated);
@@ -460,6 +506,7 @@ export default function ChatRealtimeHandler() {
     handleNewMessage,
     handleMessageEdited,
     handleMessageDeleted,
+    handleMessageDeletedForMe,
     handleUserTyping,
     handleUnreadUpdate,
     handleReactionUpdated,

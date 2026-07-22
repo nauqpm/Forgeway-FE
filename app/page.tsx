@@ -1,8 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "./apple-icon.png";
 import { HeroAuthActions, NavAuthActions } from "./LandingAuthActions";
-import AdminNavLink from "./AdminNavLink";
 import BackToTop from "@/shared/components/back-to-top/BackToTop";
 import {
   Activity,
@@ -31,12 +32,6 @@ import {
   Workflow,
   Zap,
 } from "lucide-react";
-
-export const metadata = {
-  title: { absolute: "SDLC Platform" },
-  description:
-    "SDLC Platform is a modern project management platform for workspaces, Kanban boards, sprint planning, collaboration, permissions, and real-time project tracking.",
-};
 
 const trustedTeams = ["Startup Teams", "Agencies", "Developers", "Product Teams", "Enterprise Teams"];
 
@@ -373,7 +368,6 @@ export default function LandingPage() {
             {["Features", "Solutions", "Pricing", "About"].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`} className="transition hover:text-[#2563EB] dark:hover:text-white">{item}</a>
             ))}
-            <AdminNavLink />
           </div>
           <NavAuthActions />
         </div>

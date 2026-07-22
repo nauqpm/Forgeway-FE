@@ -28,6 +28,7 @@ export interface Message {
   createdAt: string;
   updatedAt?: string;
   deletedAt?: string | null;
+  deletedForUsers?: string[];
   reactions?: Record<string, string[]>;
   sentAt?: string;
   threadParentId?: string;

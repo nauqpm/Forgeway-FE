@@ -80,6 +80,7 @@ export const CHAT_EVENTS = {
   EDITED: 'chat.message.edited',
   DELETE: 'chat.delete',
   DELETED: 'chat.message.deleted',
+  DELETED_FOR_ME: 'chat.message.deleted_for_me',
   REACTION: 'chat.reaction',
   REACTION_UPDATED: 'chat.reaction.updated',
 

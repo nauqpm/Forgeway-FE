@@ -1090,3 +1090,88 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 .dark .chat-m__suggestions__item--focused {
   background: rgba(255, 255, 255, 0.06);
 }
+
+/* ── Custom Emoji Picker Overrides ── */
+.emoji-mart-custom-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.emoji-mart-custom-wrapper .epr-main {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  width: 100% !important;
+  height: 100% !important;
+  font-family: inherit !important;
+}
+
+.emoji-mart-custom-wrapper .epr-search-container {
+  padding: 10px 12px 6px 12px !important;
+}
+
+.emoji-mart-custom-wrapper .epr-search-container input.epr-search {
+  border-radius: 10px !important;
+  border: 1px solid #E5E7EB !important;
+  background-color: #F9FAFB !important;
+  font-size: 13px !important;
+  height: 36px !important;
+  outline: none !important;
+  transition: all 0.15s ease !important;
+}
+
+.dark .emoji-mart-custom-wrapper .epr-search-container input.epr-search {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: #2A2A2A !important;
+  color: #E8E8E7 !important;
+}
+
+.emoji-mart-custom-wrapper .epr-search-container input.epr-search:focus {
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+  background-color: #FFFFFF !important;
+}
+
+.dark .emoji-mart-custom-wrapper .epr-search-container input.epr-search:focus {
+  border-color: #3B82F6 !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+  background-color: #252525 !important;
+}
+
+.emoji-mart-custom-wrapper .epr-category-nav {
+  padding: 4px 8px !important;
+}
+
+.emoji-mart-custom-wrapper .epr-category-nav button.epr-cat-btn {
+  border-radius: 8px !important;
+  padding: 4px !important;
+  transition: all 0.15s ease !important;
+}
+
+.emoji-mart-custom-wrapper .epr-body {
+  padding: 0 8px 8px 8px !important;
+}
+
+.emoji-mart-custom-wrapper .epr-header-overlay {
+  display: none !important;
+}
+
+.emoji-mart-custom-wrapper .epr-emoji-category-label {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #6B7280 !important;
+  background-color: #FFFFFF !important;
+  padding: 6px 8px 4px 8px !important;
+  margin: 0 !important;
+  height: auto !important;
+}
+
+.dark .emoji-mart-custom-wrapper .epr-emoji-category-label {
+  color: #9CA3AF !important;
+  background-color: #202020 !important;
+}

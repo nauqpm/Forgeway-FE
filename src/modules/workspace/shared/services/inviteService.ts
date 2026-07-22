@@ -57,4 +57,12 @@ export const inviteService = {
   },
 
   acceptInvite: (token: string) => api.post(apiRoutes.WORKSPACES.ACCEPT_INVITE(token)),
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  searchSystemUsers: async (search?: string): Promise<any[]> => {
+    const res = await api.get('/chat/users/search', {
+      params: { q: search }
+    });
+    return res.data?.data || res.data || [];
+  },
 };

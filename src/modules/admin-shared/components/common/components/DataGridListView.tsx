@@ -493,7 +493,7 @@ export default function DataGridListView({
         </button>
       ),
     },
-  ], [onClickTask, onUpdateIssue, normalizedMembers, boardColumns, editingCell, editValue, canEditTask, canDeleteTask, workspaceId, saveEdit]);
+  ], [onClickTask, onUpdateIssue, normalizedMembers, boardColumns, editingCell, editValue, canEditTask, workspaceId, saveEdit, hasSelectionColumn]);
 
   const table = useReactTable({
     data: issues,
