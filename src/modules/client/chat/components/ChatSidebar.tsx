@@ -417,7 +417,7 @@ export default function ChatSidebar() {
                     {/* Workspace Accordion Header */}
                     <div 
                       className={cn(
-                        "w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer group text-[#787774] dark:text-[#9B9A97]"
+                        "w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer group text-[#787774] dark:text-[#9B9A97] gap-2"
                       )}
                       onClick={() => toggleWorkspace(wsId)}
                     >
