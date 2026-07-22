@@ -42,9 +42,10 @@ export default function ChatWindow() {
   const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(null);
   const prevActiveChannelIdRef = useRef<string | null>(null);
   const scrolledMessageIdRef = useRef<string | null>(null);
-
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCreateThreadModal, setShowCreateThreadModal] = useState(false);
   const updateChannelMutation = useUpdateChannel();
 
   // Capture the unread count before we mark the channel as read
@@ -55,6 +56,8 @@ export default function ChatWindow() {
     setFirstUnreadMessageId(null); // Reset first unread message ID on channel change
     scrolledMessageIdRef.current = null; // Reset scroll tracker on channel change
     setIsEditingName(false);
+    setSearchQuery(""); // Reset local search query on channel change
+    setShowCreateThreadModal(false); // Close create thread modal on channel change
   }
 
   const handleSaveName = async () => {
@@ -150,17 +153,26 @@ export default function ChatWindow() {
     if (activeChannel?.type !== 'workspace' || !activeChannel?.workspaceId) return null;
     return workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(activeChannel.workspaceId));
   }, [activeChannel, workspaces]);
-
   const messages = useMemo(() => {
-    const rawMessages = messagesData?.pages.flatMap((page) => page.messages) || [];
+    let rawMessages = messagesData?.pages.flatMap((page) => page.messages) || [];
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      rawMessages = rawMessages.filter(msg => {
+        const contentMatch = msg.content?.toLowerCase().includes(query);
+        const sender = msg.senderId;
+        const senderName = (sender && typeof sender === 'object' ? sender.fullName : undefined) || msg.senderName;
+        const senderMatch = senderName?.toLowerCase().includes(query);
+        return contentMatch || senderMatch;
+      });
+    }
+
     // Ensure chronological order (oldest to newest)
     return [...rawMessages].sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
-  }, [messagesData]);
-
-  // Calculate firstUnreadMessageId once when messages load
+  }, [messagesData, searchQuery]);
   useEffect(() => {
     if (unreadCountAtOpen <= 0 || messages.length === 0 || firstUnreadMessageId) return;
 
@@ -514,9 +526,39 @@ export default function ChatWindow() {
           </button>
         </div>
       </header>
-
       {/* Active Meeting Banner */}
       <MeetingBanner channelId={activeChannelId} />
+
+      {/* Search & Create Thread Bar for Workspace/Custom Channels */}
+      {activeChannel && activeChannel.workspaceId && (activeChannel.type === 'workspace' || activeChannel.type === 'custom') && isMemberOfActiveChannel && (
+        <div className="p-3 flex items-center gap-3 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/[0.06] select-none">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
+            <input
+              type="text"
+              placeholder="Search messages in this channel..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 text-[0.8125rem] bg-[#F7F6F3] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-lg text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-[#2563EB]"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={() => setShowCreateThreadModal(true)}
+            className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[8px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors cursor-pointer shadow-sm select-none"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Create Thread</span>
+          </button>
+        </div>
+      )}
 
       {/* Sync/Load Error Banner (when there is cached history) */}
       {errorMessage && messages.length > 0 && (
@@ -629,46 +671,48 @@ export default function ChatWindow() {
         )}
       </div>
 
-      {/* Footer / Input */}
-      <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
-        <div className="px-4 h-5 flex items-center">
-          {!isReadOnly && typingUserIds.length > 0 && (
-            <div className="text-[10px] text-[#787774] italic animate-pulse">
-              {getTypingText()}
-            </div>
-          )}
-        </div>
-
-        {isReadOnly ? (
-          <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
-            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] font-medium italic">
-              This channel is read-only. Only administrators can post updates.
-            </p>
-          </div>
-        ) : !isMemberOfActiveChannel ? (
-          <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06] flex flex-col items-center justify-center gap-3">
-            <p className="text-[0.875rem] text-[#787774] dark:text-[#9B9A97] font-medium">
-              You are viewing <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">#{activeChannel.name}</span>. This is a {activeChannel.isPrivate ? 'private' : 'public'} custom channel.
-            </p>
-            {(!activeChannel.isPrivate || isWorkspaceAdmin) && (
-              <button
-                onClick={handleJoinChannel}
-                disabled={joining}
-                className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                {joining && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>Join Channel</span>
-              </button>
+      {!(activeChannel && activeChannel.workspaceId && (activeChannel.type === 'workspace' || activeChannel.type === 'custom') && isMemberOfActiveChannel) ? (
+        <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
+          <div className="px-4 h-5 flex items-center">
+            {!isReadOnly && typingUserIds.length > 0 && (
+              <div className="text-[10px] text-[#787774] italic animate-pulse">
+                {getTypingText()}
+              </div>
             )}
           </div>
-        ) : (
-          <MessageInput
-            channelId={activeChannelId}
-            channelName={activeChannel.name}
-          />
-        )}
-      </div>
+
+          {isReadOnly ? (
+            <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
+              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] font-medium italic">
+                This channel is read-only. Only administrators can post updates.
+              </p>
+            </div>
+          ) : !isMemberOfActiveChannel ? (
+            <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06] flex flex-col items-center justify-center gap-3">
+              <p className="text-[0.875rem] text-[#787774] dark:text-[#9B9A97] font-medium">
+                You are viewing <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">#{activeChannel.name}</span>. This is a {activeChannel.isPrivate ? 'private' : 'public'} custom channel.
+              </p>
+              {(!activeChannel.isPrivate || isWorkspaceAdmin) && (
+                <button
+                  onClick={handleJoinChannel}
+                  disabled={joining}
+                  className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer"
+                >
+                  {joining && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>Join Channel</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <MessageInput
+              channelId={activeChannelId}
+              channelName={activeChannel.name}
+            />
+          )}
+        </div>
+      ) : null}
     </div>
+
 
     {/* Member Panel */}
     {showMembers && activeChannelId && (
@@ -702,6 +746,36 @@ export default function ChatWindow() {
         onClose={() => setActiveThreadParentId(null)}
       />
     )}
+
+      {showCreateThreadModal && activeChannel && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#202020] rounded-xl shadow-xl w-full max-w-lg overflow-visible border border-[#EAEAEA] dark:border-white/[0.06] flex flex-col animate-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-base">Create a new Thread</h3>
+                <p className="text-xs text-[#787774] dark:text-[#9B9A97] mt-0.5">
+                  This thread will be posted in <span className="font-semibold">#{activeChannel.name}</span> and will automatically notify all members.
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowCreateThreadModal(false)} 
+                className="text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors p-1.5 rounded-lg hover:bg-[#F0F0EE] dark:hover:bg-white/10 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-visible">
+              <MessageInput
+                channelId={activeChannelId}
+                channelName={activeChannel.name}
+                autoMentionAll={true}
+                onSuccess={() => setShowCreateThreadModal(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {isEditingName && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-[#202020] rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] flex flex-col">

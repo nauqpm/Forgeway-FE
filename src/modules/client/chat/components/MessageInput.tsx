@@ -18,9 +18,17 @@ interface MessageInputProps {
   channelId: string;
   channelName?: string;
   threadParentId?: string;
+  autoMentionAll?: boolean;
+  onSuccess?: () => void;
 }
 
-export default function MessageInput({ channelId, channelName, threadParentId }: MessageInputProps) {
+export default function MessageInput({
+  channelId,
+  channelName,
+  threadParentId,
+  autoMentionAll = false,
+  onSuccess,
+}: MessageInputProps) {
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
   const { data: channels = [] } = useChatChannels();
@@ -216,6 +224,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     }
   };
 
+
   const handleSend = () => {
     const hasFiles = uploadedFiles.some(f => f.status === 'completed');
     if (!content.trim() && !hasFiles) return;
@@ -244,10 +253,15 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
       const isImg = uploadedFiles.find(f => f.status === 'completed')?.isImage;
       type = isImg ? 'image' : 'file';
     }
-
+    let finalContent = content.trim();
+    if (autoMentionAll) {
+      if (!finalContent.includes('[@All](All)') && !finalContent.includes('[@all](all)')) {
+        finalContent = finalContent ? `${finalContent} [@All](All)` : `[@All](All)`;
+      }
+    }
     sendMessage(
       channelId,
-      content.trim(),
+      finalContent,
       completedAttachments.length > 0 ? completedAttachments : undefined,
       replyingToMessage?._id,
       type,
@@ -261,12 +275,19 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   const handleSelectSticker = (stickerId: string) => {
-    sendMessage(channelId, '', undefined, replyingToMessage?._id, 'sticker', stickerId, threadParentId);
+    const contentVal = autoMentionAll ? '[@All](All)' : '';
+    sendMessage(channelId, contentVal, undefined, replyingToMessage?._id, 'sticker', stickerId, threadParentId);
     setReplyingToMessage(null);
     setShowMediaPicker(false);
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   const applyMarkdownShortcut = (prefix: string, suffix: string) => {
