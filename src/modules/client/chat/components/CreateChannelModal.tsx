@@ -44,14 +44,19 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
     }
   }, [isOpen]);
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Allow letters (including Vietnamese), numbers, spaces, hyphens, and underscores
-    const value = e.target.value.replace(/[^a-zA-Z0-9\s-_àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/g, '');
-    setName(value);
+    setName(e.target.value);
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       toast.error('Channel name is required');
+      return;
+    }
+    const isValidName = /^[a-zA-Z0-9\s-_àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]+$/.test(trimmedName);
+    if (!isValidName) {
+      toast.error('Channel name can only contain letters, numbers, spaces, hyphens, and underscores');
       return;
     }
     if (!workspaceId) {
@@ -62,7 +67,7 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
     setLoading(true);
     try {
       const channel = await createChannelAPI({
-        name: name.trim(),
+        name: trimmedName,
         workspaceId,
         isPrivate,
         description: description.trim() || undefined,
