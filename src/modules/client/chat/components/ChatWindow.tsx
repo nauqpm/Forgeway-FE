@@ -152,17 +152,17 @@ export default function ChatWindow() {
   const shouldScrollToBottomRef = useRef(true);
   const lastMessageIdRef = useRef<string | null>(null);
   const prevChannelIdRef = useRef<string | null>(null);
-
   const isMemberOfActiveChannel = useMemo(() => {
     if (!activeChannel) return false;
     if (activeChannel.type !== 'custom') return true;
-    if (isWorkspaceAdmin) return true;
-    if (!activeChannel.channelMembers) return false;
-    return activeChannel.channelMembers.some(
+
+    const member = activeChannel.channelMembers?.find(
       m => String(m.userId) === String(currentUserId)
     );
-  }, [activeChannel, currentUserId, isWorkspaceAdmin]);
-
+    if (!member) return false;
+    if (member.joined === false) return false;
+    return true;
+  }, [activeChannel, currentUserId]);
   const handleJoinChannel = async () => {
     if (!activeChannelId) return;
     setJoining(true);
