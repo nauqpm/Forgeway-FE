@@ -23,6 +23,7 @@ import ThreadPanel from './ThreadPanel';
 import ThreadIndexPanel from './ThreadIndexPanel';
 import toast from 'react-hot-toast';
 import type { Channel, ChatUser } from '../types/chat.types';
+import DeleteChannelConfirmModal from './DeleteChannelConfirmModal';
 
 export default function ChatWindow() {
   const queryClient = useQueryClient();
@@ -47,6 +48,7 @@ export default function ChatWindow() {
   const [editNameValue, setEditNameValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const updateChannelMutation = useUpdateChannel();
 
   // Capture the unread count before we mark the channel as read
@@ -54,11 +56,12 @@ export default function ChatWindow() {
     prevActiveChannelIdRef.current = activeChannelId;
     const channel = channels.find(c => c._id === activeChannelId);
     setUnreadCountAtOpen(channel?.unreadCount || 0);
-    setFirstUnreadMessageId(null); // Reset first unread message ID on channel change
-    scrolledMessageIdRef.current = null; // Reset scroll tracker on channel change
+    setFirstUnreadMessageId(null);
+    scrolledMessageIdRef.current = null;
     setIsEditingName(false);
-    setSearchQuery(""); // Reset local search query on channel change
-    setShowCreateThreadModal(false); // Close create thread modal on channel change
+    setSearchQuery("");
+    setShowCreateThreadModal(false);
+    setShowDeleteModal(false);
   }
 
   const handleSaveName = async () => {
@@ -76,11 +79,8 @@ export default function ChatWindow() {
       toast.error(err.response?.data?.message || "Failed to rename conversation");
     }
   };
-
   const handleDeleteChannel = async () => {
     if (!activeChannel) return;
-    const confirmed = window.confirm(`Are you sure you want to delete the channel #${activeChannel.name}? This action cannot be undone.`);
-    if (!confirmed) return;
 
     try {
       await deleteChannelAPI(activeChannel._id);
@@ -92,6 +92,7 @@ export default function ChatWindow() {
       );
       
       await queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+      setShowDeleteModal(false);
       
       if (generalChannel) {
         useChatStore.getState().setActiveChannel(generalChannel._id);
@@ -103,7 +104,6 @@ export default function ChatWindow() {
       toast.error('Failed to delete channel');
     }
   };
-
   const {
     data: messagesData,
     isLoading: loading,
@@ -136,6 +136,14 @@ export default function ChatWindow() {
     const role = isOwner ? 'workspace_admin' : ((member as { role?: string })?.role || 'member');
     return role === 'workspace_admin';
   }, [activeChannel?.workspaceId, workspaces, currentUserId, userRole]);
+
+  const isChannelAdmin = useMemo(() => {
+    if (!activeChannel || !activeChannel.channelMembers) return false;
+    const member = activeChannel.channelMembers.find(
+      m => String(m.userId) === String(currentUserId)
+    );
+    return member?.role === 'channel_admin';
+  }, [activeChannel, currentUserId]);
 
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [showMembers, setShowMembers] = useState(false);
@@ -467,9 +475,9 @@ export default function ChatWindow() {
                       <Edit2 className="w-3 h-3" />
                     </button>
                   )}
-                  {activeChannel.type === 'custom' && (userRole === 'super_admin' || activeChannel.createdBy === currentUserId) && (
+                  {activeChannel.type === 'custom' && (userRole === 'super_admin' || isWorkspaceAdmin || isChannelAdmin || activeChannel.createdBy === currentUserId) && (
                     <button 
-                      onClick={handleDeleteChannel}
+                      onClick={() => setShowDeleteModal(true)}
                       className="p-1 rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-950/40 dark:hover:bg-red-900/40 transition-colors text-red-600 dark:text-red-400"
                       title="Delete channel"
                     >
@@ -817,6 +825,13 @@ export default function ChatWindow() {
           </div>
         </div>
       )}
+
+      <DeleteChannelConfirmModal
+        isOpen={showDeleteModal}
+        channelName={activeChannel?.name || ''}
+        onConfirm={handleDeleteChannel}
+        onClose={() => setShowDeleteModal(false)}
+      />
 
       {isEditingName && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
