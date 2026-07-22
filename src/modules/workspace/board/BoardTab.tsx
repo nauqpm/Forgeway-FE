@@ -310,7 +310,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     : null;
 
   return (
-    <div className="flex flex-col gap-0.5 relative">
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-0.5">
       {filters.archived && (
         <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[0.6875rem] font-bold z-10">
           Archived View - Read Only
@@ -318,11 +318,13 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       )}
 
       {/* Quick Filters */}
-      <BoardFilters
-        filters={filters}
-        setFilters={setFilters}
-        uniqueAssignees={uniqueAssignees}
-      />
+      <div className="shrink-0">
+        <BoardFilters
+          filters={filters}
+          setFilters={setFilters}
+          uniqueAssignees={uniqueAssignees}
+        />
+      </div>
 
       <DragDropContext onBeforeDragStart={handleBoardDragStart} onDragEnd={handleBoardDragEnd}>
         <Droppable
@@ -332,12 +334,16 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         >
           {(provided) => (
             <div
-              className="flex overflow-x-auto pt-2 px-[var(--workspace-surface-pad)] pb-[var(--workspace-surface-pad)]"
-              style={{ gap: "var(--workspace-board-gap)" }}
-              ref={provided.innerRef}
-              {...provided.droppableProps}
+              ref={columnsEndRef}
+              className="flex min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden"
             >
-              {columns.map((column, index) => (
+              <div
+                className="flex min-w-max pt-2 px-[var(--workspace-surface-pad)] pb-[var(--workspace-surface-pad)]"
+                style={{ gap: "var(--workspace-board-gap)" }}
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+              >
+                {columns.map((column, index) => (
                 <Draggable
                   key={column.id}
                   draggableId={`col-${column.id}`}
@@ -348,11 +354,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="workspace-column flex-shrink-0 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] flex flex-col border border-[#EAEAEA] dark:border-white/[0.06] group/column overflow-hidden"
+                      className="workspace-column flex min-h-0 flex-shrink-0 flex-col bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] group/column overflow-hidden"
                     >
                       <div
                         {...(filters.archived ? {} : provided.dragHandleProps)}
-                        className={`p-3 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-t-[8px] ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
+                        className={`shrink-0 p-3 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-t-[8px] ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
                         onDoubleClick={() => {
                           if (filters.archived) return;
                           setEditingColumnId(column.id);
@@ -405,7 +411,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 space-y-3 transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
+                            className={`flex min-h-0 flex-1 flex-col overflow-y-auto p-3 space-y-3 transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
                           >
                             {getColumnIssues(column)
                               .map((issue, issueIndex) => (
@@ -475,7 +481,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         </div>
                                       )}
                                       <div className="p-3.5">
-                                        <p className="mb-2 text-[0.8125rem] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
+                                        <p title={issue.title} className="mb-2 truncate text-[0.8125rem] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
                                           {issue.title}
                                         </p>
                                         <div className="mb-3 flex flex-wrap gap-1.5">
@@ -554,8 +560,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
 
               {/* Add new column */}
               <div
-                className="workspace-column flex-shrink-0 bg-transparent flex flex-col group/new-col"
-                ref={columnsEndRef}
+                className="workspace-column flex min-h-0 flex-shrink-0 flex-col bg-transparent group/new-col"
               >
                 {canUpdateWorkspace && showCreateColumn ? (
                   <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-3">
@@ -602,6 +607,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 ) : null}
               </div>
             </div>
+          </div>
           )}
         </Droppable>
       </DragDropContext>

@@ -156,11 +156,10 @@ export function NavAuthActions() {
                 title="Chuyển account"
                 aria-label="Chuyển account"
                 aria-expanded={showSwitcher}
-                className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-md transition ${
-                  showSwitcher
+                className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-md transition ${showSwitcher
                     ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-indigo-500/15 dark:text-indigo-300"
                     : "text-[#2563EB] hover:bg-[#EFF6FF] dark:text-indigo-300 dark:hover:bg-indigo-500/10"
-                }`}
+                  }`}
               >
                 {showSwitcher ? <X className="h-3.5 w-3.5" /> : <Repeat className="h-4 w-4" />}
                 {switchableCount > 0 && !showSwitcher && (
@@ -220,7 +219,7 @@ export function NavAuthActions() {
                     className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#2563EB] dark:text-indigo-300 transition hover:bg-[#EFF6FF] dark:hover:bg-indigo-500/10"
                   >
                     <Shield className="h-4 w-4" />
-                    Trang quản trị
+                    Admin
                     <span className="ml-auto text-[10px] uppercase tracking-wider text-[#9B9A97] dark:text-[#6B6B6B]">↗</span>
                   </a>
                 </div>

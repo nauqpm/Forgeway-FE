@@ -116,7 +116,7 @@ export default function BoardTaskActionMenu({
 
   const taskLink = useMemo(() => {
     if (typeof window === "undefined") return issue.key;
-    return `${window.location.origin}/workspaces/${workspaceKey}/board`;
+    return `${window.location.origin}/workspaces/${workspaceKey}/board?issue=${issue.key}`;
   }, [issue.key, workspaceKey]);
 
   useLayoutEffect(() => setMounted(true), []);

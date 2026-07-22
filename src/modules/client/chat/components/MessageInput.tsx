@@ -5,12 +5,13 @@ import { Send, Smile, Paperclip, X, Bold, Italic, Strikethrough, Code, Quote, Li
 import { MentionsInput, Mention } from 'react-mentions';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
-import StickerPicker from './StickerPicker';
+import EmojiStickerPicker from './EmojiStickerPicker';
 import { toast } from 'react-hot-toast';
 import { useChatChannels } from '../hooks/useChatQueries';
 import api from '@/lib/axiosIns';
 import imageService from '@/shared/utils/imageService';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MessageInputProps {
@@ -20,12 +21,13 @@ interface MessageInputProps {
 }
 
 export default function MessageInput({ channelId, channelName, threadParentId }: MessageInputProps) {
+  const authUser = useAuthStore(state => state.user);
+  const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
   const { data: channels = [] } = useChatChannels();
   const { data: workspaces = [] } = useWorkspaces();
-  const isDM = channels.find(c => c._id === channelId)?.type === 'dm';
 
   const [content, setContent] = useState('');
-  const [showStickerPicker, setShowStickerPicker] = useState(false);
+  const [showMediaPicker, setShowMediaPicker] = useState(false);
   const { sendMessage, sendTyping } = useChatRealtime();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,8 +55,14 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     };
   }, []);
 
-  const replyingToMessage = useChatStore(state => state.replyingToMessage);
-  const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+  const globalReplyingToMessage = useChatStore(state => state.replyingToMessage);
+  const globalSetReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
+  
+  const threadReplyingToMessage = useChatStore(state => state.replyingToThreadMessage);
+  const setThreadReplyingToMessage = useChatStore(state => state.setReplyingToThreadMessage);
+  
+  const replyingToMessage = threadParentId ? threadReplyingToMessage : globalReplyingToMessage;
+  const setReplyingToMessage = threadParentId ? setThreadReplyingToMessage : globalSetReplyingToMessage;
   const replyingSender = typeof replyingToMessage?.senderId === 'object' && replyingToMessage.senderId
     ? replyingToMessage.senderId
     : null;
@@ -67,17 +75,12 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     }
   }, [content]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
-    if (!selectedFiles || selectedFiles.length === 0) return;
-
+  const uploadFiles = async (filesToUpload: File[]) => {
     // Find channel workspace details
     const currentChannel = channels.find(c => c._id === channelId);
     const workspaceId = currentChannel?.workspaceId;
     const currentWorkspace = workspaces.find(w => w._id === workspaceId);
     const workspaceName = currentWorkspace?.name;
-
-    const filesToUpload = Array.from(selectedFiles);
 
     for (const file of filesToUpload) {
       if (file.size > 10 * 1024 * 1024) {
@@ -94,7 +97,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
         key: tempKey,
         id: '',
         url: localPreviewUrl || '',
-        name: file.name,
+        name: file.name || (isImg ? 'image.png' : 'file'),
         size: file.size,
         mimeType: file.type,
         isImage: isImg,
@@ -155,18 +158,44 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
             mimeType: att.mimeType || att.mimetype || file.type
           } : f));
         }
-        toast.success(`Tải lên tệp "${file.name}" thành công!`);
+        toast.success(`Tải lên tệp "${file.name || 'image'}" thành công!`);
       } catch (err) {
         console.error('File upload failed:', err);
-        toast.error(`Tải lên tệp "${file.name}" thất bại!`);
+        toast.error(`Tải lên tệp "${file.name || 'image'}" thất bại!`);
         setUploadedFiles(prev => prev.filter(f => f.key !== tempKey));
       }
     }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles || selectedFiles.length === 0) return;
+
+    const filesToUpload = Array.from(selectedFiles);
+    await uploadFiles(filesToUpload);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const filesToUpload: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file') {
+        const file = items[i].getAsFile();
+        if (file) filesToUpload.push(file);
+      }
+    }
+
+    if (filesToUpload.length > 0) {
+      uploadFiles(filesToUpload);
+    }
+  };
+
 
   const handleRemoveFile = async (key: string) => {
     const fileToRemove = uploadedFiles.find(f => f.key === key);
@@ -237,7 +266,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
   const handleSelectSticker = (stickerId: string) => {
     sendMessage(channelId, '', undefined, replyingToMessage?._id, 'sticker', stickerId, threadParentId);
     setReplyingToMessage(null);
-    setShowStickerPicker(false);
+    setShowMediaPicker(false);
   };
 
   const applyMarkdownShortcut = (prefix: string, suffix: string) => {
@@ -530,7 +559,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
-    const isAllMatch = !isDM && (!query || 'all'.startsWith(query.toLowerCase()));
+    const isAllMatch = !query || 'all'.startsWith(query.toLowerCase());
     if (isAllMatch) {
       callback([{
         id: 'All',
@@ -548,16 +577,21 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
         });
         const members = response.data || [];
         
-        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
-          const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
-          return {
-            id: m._id || m.id,
-            display,
-            email: m.email,
-            phone: m.phone,
-            avatar: m.avatar
-          };
-        });
+        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members
+          .filter((m: { _id?: string; id?: string }) => {
+            const memberId = m._id || m.id;
+            return !currentUserId || String(memberId) !== String(currentUserId);
+          })
+          .map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
+            const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
+            return {
+              id: m._id || m.id,
+              display,
+              email: m.email,
+              phone: m.phone,
+              avatar: m.avatar
+            };
+          });
 
         // Thêm tùy chọn @All nếu từ khóa khớp hoặc khi truy vấn trống
         if (isAllMatch) {
@@ -586,10 +620,11 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
 
   return (
     <div className="p-4 bg-white dark:bg-[#202020] relative">
-      {showStickerPicker && (
-        <StickerPicker
+      {showMediaPicker && (
+        <EmojiStickerPicker
           onSelectSticker={(id) => handleSelectSticker(id)}
-          onClose={() => setShowStickerPicker(false)}
+          onSelectEmoji={(emoji) => setContent(c => c + emoji)}
+          onClose={() => setShowMediaPicker(false)}
         />
       )}
       <div className="border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] overflow-visible flex flex-col focus-within:border-[#ABABAB] dark:focus-within:border-[#3B82F6] transition-colors">
@@ -602,7 +637,28 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
                   Replying to {replyingSender?.fullName || replyingSender?.email || 'User'}
                 </span>
                 <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
-                  {(replyingToMessage.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')}
+                  {(() => {
+                    const msg = replyingToMessage;
+                    if (msg.deletedAt) return '[Message deleted]';
+                    if (msg.type === 'sticker') return '[Sticker]';
+                    if (msg.content && msg.content.trim()) {
+                      const cleanText = msg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+                      if (msg.attachments && msg.attachments.length > 0) {
+                        const firstAtt = msg.attachments[0];
+                        const isImg = firstAtt.mimeType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(firstAtt.url || firstAtt.name || '');
+                        return `${isImg ? '[Image]' : '[File]'} ${cleanText}`;
+                      }
+                      return cleanText;
+                    }
+                    if (msg.attachments && msg.attachments.length > 0) {
+                      const firstAtt = msg.attachments[0];
+                      const isImg = firstAtt.mimeType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(firstAtt.url || firstAtt.name || '');
+                      return isImg ? '[Image]' : '[File]';
+                    }
+                    if ((msg.type as string) === 'image') return '[Image]';
+                    if ((msg.type as string) === 'file') return '[File]';
+                    return '[Attachment]';
+                  })()}
                 </span>
               </div>
               <button 
@@ -663,7 +719,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
             </div>
           )}
 
-          <div className="w-full relative">
+          <div className="w-full relative" onPaste={handlePaste}>
             <MentionsInput
               inputRef={textareaRef}
               value={content}
@@ -758,8 +814,8 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
               />
               <button 
                 type="button"
-                onClick={() => setShowStickerPicker(prev => !prev)}
-                title="Stickers"
+                onClick={() => setShowMediaPicker(prev => !prev)}
+                title="Stickers & Emojis"
                 className="p-1.5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-[4px] transition-colors"
               >
                 <Smile className="w-4 h-4" />

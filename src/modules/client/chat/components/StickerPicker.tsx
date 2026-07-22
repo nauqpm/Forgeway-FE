@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Loader2, Smile } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
 import { useStickers } from '@/modules/client/chat/hooks/useChatQueries';
 
 function getStaticUrl(url: string): string {
@@ -13,14 +13,12 @@ function getStaticUrl(url: string): string {
 
 interface StickerPickerProps {
   onSelectSticker: (id: string, url: string) => void;
-  onClose: () => void;
 }
 
-export default function StickerPicker({ onSelectSticker, onClose }: StickerPickerProps) {
+export default function StickerPicker({ onSelectSticker }: StickerPickerProps) {
   const { data: packs = [], isLoading: loading, isError } = useStickers();
   const [activePackId, setActivePackId] = useState<string | null>(null);
   const [hoveredStickerId, setHoveredStickerId] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!activePackId && packs.length > 0) {
@@ -28,40 +26,10 @@ export default function StickerPicker({ onSelectSticker, onClose }: StickerPicke
     }
   }, [activePackId, packs]);
 
-  // Close on clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [onClose]);
-
   const activePack = packs.find((p) => p._id === activePackId);
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute bottom-16 left-4 z-50 w-[320px] h-[360px] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 select-none"
-    >
-      {/* Header */}
-      <div className="px-4 py-2.5 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#FBFBFA] dark:bg-[#252525]">
-        <div className="flex items-center gap-1.5 text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
-          <Smile className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
-          <span>Stickers</span>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-xs text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
-        >
-          Close
-        </button>
-      </div>
-
+    <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Stickers Grid Area */}
       <div className="flex-1 overflow-y-auto p-3 bg-white dark:bg-[#1C1C1C]">
         {loading ? (

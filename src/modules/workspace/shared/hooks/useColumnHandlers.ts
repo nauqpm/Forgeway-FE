@@ -59,10 +59,12 @@ export const useColumnHandlers = ({
       setShowCreateColumn(false);
 
       setTimeout(() => {
-        columnsEndRef.current?.scrollIntoView({
+        const scrollContainer = columnsEndRef.current;
+        if (!scrollContainer) return;
+
+        scrollContainer.scrollTo({
           behavior: "smooth",
-          block: "nearest",
-          inline: "end",
+          left: Math.max(0, scrollContainer.scrollWidth - scrollContainer.clientWidth),
         });
       }, 100);
 

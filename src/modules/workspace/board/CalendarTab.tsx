@@ -20,14 +20,16 @@ export default function CalendarTab({
   onQuickCreateTask,
 }: CalendarTabProps) {
   return (
-    <div className="workspace-board-height px-2 py-2">
-      <CalendarView
-        issues={issues}
-        sprints={sprints}
-        onUpdateIssueDate={handleUpdateIssueDate}
-        onSelectIssue={setSelectedIssue}
-        onQuickCreateTask={onQuickCreateTask}
-      />
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col p-2">
+      <div className="flex min-h-0 min-w-0 flex-1">
+        <CalendarView
+          issues={issues}
+          sprints={sprints}
+          onUpdateIssueDate={handleUpdateIssueDate}
+          onSelectIssue={setSelectedIssue}
+          onQuickCreateTask={onQuickCreateTask}
+        />
+      </div>
     </div>
   );
 }

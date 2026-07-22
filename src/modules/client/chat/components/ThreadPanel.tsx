@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Loader2, MessageSquare } from 'lucide-react';
 import { useThreadReplies, useChatChannels } from '../hooks/useChatQueries';
@@ -32,8 +32,9 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Search for parent message in cache
-  const parentMessage = useMemo(() => {
+
+  // Search for parent message in cache — subscribe to cache changes for realtime updates
+  const getParentFromCache = useCallback(() => {
     if (!messageId || !channelId) return null;
 
     // 1. Try channel messages cache
@@ -48,16 +49,33 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
     }
 
     // 2. Try active threads cache
-    const activeThreads = queryClient.getQueryData<Message[]>(
+    const activeThreads = queryClient.getQueryData<InfiniteData<{ threads: Message[] }>>(
       queryKeys.chat.activeThreads(channelId)
     );
-    if (activeThreads) {
-      const found = activeThreads.find(m => (m._id || m.id) === messageId);
-      if (found) return found;
+    if (activeThreads?.pages) {
+      for (const page of activeThreads.pages) {
+        const found = page.threads?.find(m => (m._id || m.id) === messageId);
+        if (found) return found;
+      }
     }
 
     return null;
   }, [messageId, channelId, queryClient]);
+
+  const [parentMessage, setParentMessage] = useState<Message | null>(getParentFromCache);
+
+  // Subscribe to cache changes so parentMessage updates realtime
+  useEffect(() => {
+    setParentMessage(getParentFromCache());
+    const unsubscribe = queryClient.getQueryCache().subscribe(() => {
+      // Defer to avoid "setState during render" warning when cache updates mid-render
+      setTimeout(() => {
+        setParentMessage(getParentFromCache());
+      }, 0);
+    });
+    return unsubscribe;
+  }, [getParentFromCache, queryClient]);
+
 
   // Scroll to targeted message if specified, otherwise scroll to bottom
   useEffect(() => {

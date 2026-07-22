@@ -184,6 +184,7 @@ const Header = ({
             Invite members
           </button>
         )}
+
         {canCreateTask && (
           <button
             onClick={() => setShowCreateIssue(true)}
@@ -199,6 +200,7 @@ const Header = ({
         onClose={() => setIsInviteModalOpen(false)}
         projectId={workspace._id ?? workspaceId}
       />
+
 
       {isAvatarPickerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
