@@ -9,7 +9,7 @@ import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
 import ChatSearchPanel from './ChatSearchPanel';
 
-import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft, Edit2, X, Trash2 } from 'lucide-react';
+import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft, Edit2, X, Trash2, Lock } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
@@ -622,14 +622,39 @@ export default function ChatWindow() {
         </div>
       )}
 
-      {/* Messages area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
-        {loading && messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+        {!isMemberOfActiveChannel ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#FBFBFA] dark:bg-[#1E1E1E] select-none">
+            <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 dark:bg-[#2563EB]/25 flex items-center justify-center mb-4 text-[#2563EB] dark:text-[#60A5FA] shadow-sm border border-[#2563EB]/15 dark:border-[#2563EB]/30">
+              {activeChannel.isPrivate ? <Lock className="w-8 h-8" /> : <Hash className="w-8 h-8" />}
+            </div>
+            <h2 className="text-xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-2">
+              Join #{activeChannel.name}
+            </h2>
+            <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-sm mb-6 leading-relaxed">
+              {activeChannel.description || `This is a ${activeChannel.isPrivate ? 'private' : 'public'} custom channel. Join to view its message history and post messages.`}
+            </p>
+            {(!activeChannel.isPrivate || isWorkspaceAdmin || activeChannel.channelMembers?.some(m => String(m.userId) === String(currentUserId))) ? (
+              <button
+                onClick={handleJoinChannel}
+                disabled={joining}
+                className="flex items-center gap-2 px-6 h-10 text-sm font-semibold rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+              >
+                {joining && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>Join Channel</span>
+              </button>
+            ) : (
+              <p className="text-xs text-red-500 font-semibold italic bg-red-100/50 dark:bg-red-950/20 px-3 py-1.5 rounded-lg border border-red-500/10">
+                You must be invited by a channel administrator to join this private channel.
+              </p>
+            )}
+          </div>
+        ) : loading && messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full flex-1">
             <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
           </div>
         ) : errorMessage && messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+          <div className="flex flex-col items-center justify-center h-full flex-1 p-4 text-center">
             <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-3">
               <Info className="w-6 h-6 text-red-500" />
             </div>
@@ -652,7 +677,7 @@ export default function ChatWindow() {
             </button>
           </div>
         ) : (
-          <div className="py-4">
+          <div className="py-4 flex-1">
             {hasNextPage && (
               <div className="flex justify-center mb-4">
                 <button
@@ -717,44 +742,30 @@ export default function ChatWindow() {
       </div>
 
       {!(activeChannel && activeChannel.workspaceId && (activeChannel.type === 'workspace' || activeChannel.type === 'custom') && isMemberOfActiveChannel) ? (
-        <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
-          <div className="px-4 h-5 flex items-center">
-            {!isReadOnly && typingUserIds.length > 0 && (
-              <div className="text-[10px] text-[#787774] italic animate-pulse">
-                {getTypingText()}
-              </div>
-            )}
-          </div>
-
-          {isReadOnly ? (
-            <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
-              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] font-medium italic">
-                This channel is read-only. Only administrators can post updates.
-              </p>
-            </div>
-          ) : !isMemberOfActiveChannel ? (
-            <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06] flex flex-col items-center justify-center gap-3">
-              <p className="text-[0.875rem] text-[#787774] dark:text-[#9B9A97] font-medium">
-                You are viewing <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">#{activeChannel.name}</span>. This is a {activeChannel.isPrivate ? 'private' : 'public'} custom channel.
-              </p>
-              {(!activeChannel.isPrivate || isWorkspaceAdmin) && (
-                <button
-                  onClick={handleJoinChannel}
-                  disabled={joining}
-                  className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer"
-                >
-                  {joining && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Join Channel</span>
-                </button>
+        activeChannel.type === 'custom' && !isMemberOfActiveChannel ? null : (
+          <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
+            <div className="px-4 h-5 flex items-center">
+              {!isReadOnly && typingUserIds.length > 0 && (
+                <div className="text-[10px] text-[#787774] italic animate-pulse">
+                  {getTypingText()}
+                </div>
               )}
             </div>
-          ) : (
-            <MessageInput
-              channelId={activeChannelId}
-              channelName={activeChannel.name}
-            />
-          )}
-        </div>
+
+            {isReadOnly ? (
+              <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
+                <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] font-medium italic">
+                  This channel is read-only. Only administrators can post updates.
+                </p>
+              </div>
+            ) : (
+              <MessageInput
+                channelId={activeChannelId}
+                channelName={activeChannel.name}
+              />
+            )}
+          </div>
+        )
       ) : null}
     </div>
 

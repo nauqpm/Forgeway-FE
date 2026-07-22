@@ -153,11 +153,18 @@ export default function ChatSidebar() {
     const ch = channels.find(c => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
     return ch ? ch.unreadCount : 0;
   };
-
   const getLastMessagePreview = (channel: Channel) => {
+    if (channel.type === 'custom') {
+      const member = channel.channelMembers?.find(
+        m => String(m.userId) === String(currentUserId)
+      );
+      if (!member || member.joined === false) {
+        return "Join to view messages";
+      }
+    }
+
     const lastMsg = channel.lastMessage;
     if (!lastMsg || (!lastMsg.content && !lastMsg.senderId && !lastMsg.type && (!lastMsg.attachments || lastMsg.attachments.length === 0))) return "Start a conversation";
-    
     const sender = lastMsg.senderId;
     const msgSenderId = sender && typeof sender === 'object'
       ? (sender._id || sender.id)
@@ -484,10 +491,13 @@ export default function ChatSidebar() {
                         {!isWsViewer && wsChannel && (
                           renderChannelLink(wsChannel._id, wsChannel.name, 'workspace', wsChannel.unreadCount, wsChannel.lastMessage, ws)
                         )}
-
                         {!isWsViewer && wsCustomChannels.map((c, cIdx) => {
                           const isMember = isChannelMember(c);
                           const isPrivate = c.isPrivate;
+                          // Private channels are only shown if the user is a member/invited
+                          if (isPrivate && !isMember) {
+                            return null;
+                          }
                           const dimClass = (!isMember && !isPrivate) ? "opacity-50 hover:opacity-80 transition-opacity" : "";
                           return (
                             <div key={c._id || `ws-custom-${cIdx}`} className={dimClass}>
@@ -495,7 +505,6 @@ export default function ChatSidebar() {
                             </div>
                           );
                         })}
-
                         {!isWsViewer && wsCustomChannels.length === 0 && (
                           <div className="px-2 py-1.5 text-left">
                             <p className="text-[10px] text-[#ABABAB] italic">No custom channels</p>
