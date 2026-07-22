@@ -421,7 +421,8 @@ export default function ChatSidebar() {
                 });
                 const wsRole = isOwner ? 'workspace_admin' : (member?.role || 'member');
                 const isWsViewer = wsRole === 'viewer';
-
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const isWsAdmin = (authUser as any)?.role === 'super_admin' || wsRole === 'workspace_admin';
                 return (
                   <div key={wsId} className="space-y-0.5">
                     {/* Workspace Accordion Header */}
@@ -494,8 +495,8 @@ export default function ChatSidebar() {
                         {!isWsViewer && wsCustomChannels.map((c, cIdx) => {
                           const isMember = isChannelMember(c);
                           const isPrivate = c.isPrivate;
-                          // Private channels are only shown if the user is a member/invited
-                          if (isPrivate && !isMember) {
+                          // Private channels are only shown if the user is a member/invited, or is a super/workspace admin
+                          if (isPrivate && !isMember && !isWsAdmin) {
                             return null;
                           }
                           const dimClass = (!isMember && !isPrivate) ? "opacity-50 hover:opacity-80 transition-opacity" : "";
