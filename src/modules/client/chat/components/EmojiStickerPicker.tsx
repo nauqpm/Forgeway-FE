@@ -28,36 +28,38 @@ export default function EmojiStickerPicker({ onSelectSticker, onSelectEmoji, onC
   return (
     <div
       ref={containerRef}
-      className="absolute bottom-16 left-4 z-50 w-[320px] h-[360px] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 select-none"
+      className="absolute bottom-16 left-4 z-50 w-[340px] h-[420px] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200 select-none"
     >
-      {/* Header Tabs */}
-      <div className="flex text-sm font-semibold text-[#787774] dark:text-[#9B9A97] bg-[#FBFBFA] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
-        <button
-          onClick={() => setActiveTab('stickers')}
-          className={`flex-1 py-3 text-center transition-colors relative ${
-            activeTab === 'stickers' ? 'text-[#2563EB] dark:text-[#3B82F6]' : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
-          }`}
-        >
-          STICKER
-          {activeTab === 'stickers' && (
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#2563EB] dark:bg-[#3B82F6]" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('emoji')}
-          className={`flex-1 py-3 text-center transition-colors relative ${
-            activeTab === 'emoji' ? 'text-[#2563EB] dark:text-[#3B82F6]' : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
-          }`}
-        >
-          EMOJI
-          {activeTab === 'emoji' && (
-            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#2563EB] dark:bg-[#3B82F6]" />
-          )}
-        </button>
+      {/* Header Segment Tabs */}
+      <div className="p-2 bg-[#F8F9FA] dark:bg-[#1A1A1A] border-b border-[#EAEAEA] dark:border-white/[0.06]">
+        <div className="flex items-center p-1 bg-[#EAEAEA]/70 dark:bg-[#282828] rounded-xl">
+          <button
+            type="button"
+            onClick={() => setActiveTab('stickers')}
+            className={`flex-1 py-1.5 text-xs font-bold tracking-wider uppercase rounded-lg transition-all ${
+              activeTab === 'stickers'
+                ? 'bg-white dark:bg-[#383838] text-[#2563EB] dark:text-[#60A5FA] shadow-sm'
+                : 'text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-white'
+            }`}
+          >
+            Sticker
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('emoji')}
+            className={`flex-1 py-1.5 text-xs font-bold tracking-wider uppercase rounded-lg transition-all ${
+              activeTab === 'emoji'
+                ? 'bg-white dark:bg-[#383838] text-[#2563EB] dark:text-[#60A5FA] shadow-sm'
+                : 'text-[#64748B] dark:text-[#94A3B8] hover:text-[#0F172A] dark:hover:text-white'
+            }`}
+          >
+            Emoji
+          </button>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-[#202020]">
         {activeTab === 'stickers' ? (
           <StickerPicker onSelectSticker={onSelectSticker} />
         ) : (
