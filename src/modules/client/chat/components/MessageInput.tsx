@@ -18,9 +18,19 @@ interface MessageInputProps {
   channelId: string;
   channelName?: string;
   threadParentId?: string;
+  autoMentionAll?: boolean;
+  onSuccess?: () => void;
+  ignoreReply?: boolean;
 }
 
-export default function MessageInput({ channelId, channelName, threadParentId }: MessageInputProps) {
+export default function MessageInput({
+  channelId,
+  channelName,
+  threadParentId,
+  autoMentionAll = false,
+  onSuccess,
+  ignoreReply = false,
+}: MessageInputProps) {
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
   const { data: channels = [] } = useChatChannels();
@@ -61,7 +71,8 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
   const threadReplyingToMessage = useChatStore(state => state.replyingToThreadMessage);
   const setThreadReplyingToMessage = useChatStore(state => state.setReplyingToThreadMessage);
   
-  const replyingToMessage = threadParentId ? threadReplyingToMessage : globalReplyingToMessage;
+
+  const replyingToMessage = ignoreReply ? null : (threadParentId ? threadReplyingToMessage : globalReplyingToMessage);
   const setReplyingToMessage = threadParentId ? setThreadReplyingToMessage : globalSetReplyingToMessage;
   const replyingSender = typeof replyingToMessage?.senderId === 'object' && replyingToMessage.senderId
     ? replyingToMessage.senderId
@@ -216,6 +227,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     }
   };
 
+
   const handleSend = () => {
     const hasFiles = uploadedFiles.some(f => f.status === 'completed');
     if (!content.trim() && !hasFiles) return;
@@ -244,10 +256,15 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
       const isImg = uploadedFiles.find(f => f.status === 'completed')?.isImage;
       type = isImg ? 'image' : 'file';
     }
-
+    let finalContent = content.trim();
+    if (autoMentionAll) {
+      if (!finalContent.includes('[@All](All)') && !finalContent.includes('[@all](all)')) {
+        finalContent = finalContent ? `${finalContent} [@All](All)` : `[@All](All)`;
+      }
+    }
     sendMessage(
       channelId,
-      content.trim(),
+      finalContent,
       completedAttachments.length > 0 ? completedAttachments : undefined,
       replyingToMessage?._id,
       type,
@@ -261,22 +278,44 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+    if (onSuccess) {
+      onSuccess();
+    }
   };
 
   const handleSelectSticker = (stickerId: string) => {
-    sendMessage(channelId, '', undefined, replyingToMessage?._id, 'sticker', stickerId, threadParentId);
+    const contentVal = autoMentionAll ? '[@All](All)' : '';
+    sendMessage(channelId, contentVal, undefined, replyingToMessage?._id, 'sticker', stickerId, threadParentId);
     setReplyingToMessage(null);
     setShowMediaPicker(false);
+    if (onSuccess) {
+      onSuccess();
+    }
   };
-
   const applyMarkdownShortcut = (prefix: string, suffix: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    let start = textarea.selectionStart;
+    let end = textarea.selectionEnd;
     const value = textarea.value;
-    const selectedText = value.substring(start, end);
+    let selectedText = value.substring(start, end);
+
+    const isInlineModifier = ['**', '*', '~~', '`'].includes(prefix);
+
+    if (isInlineModifier && selectedText) {
+      if (selectedText.startsWith('```')) {
+        const firstNewline = selectedText.indexOf('\n');
+        const offset = firstNewline !== -1 ? firstNewline + 1 : 3;
+        start += offset;
+      }
+      if (selectedText.endsWith('```')) {
+        const lastNewline = selectedText.lastIndexOf('\n', selectedText.length - 4);
+        const offset = lastNewline !== -1 ? selectedText.length - lastNewline : 3;
+        end -= offset;
+      }
+      selectedText = value.substring(start, end);
+    }
 
     if (start === end) {
       // Empty selection: insert prefix and suffix at cursor
@@ -334,15 +373,39 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
     }
 
     const lines = selectedText.split('\n');
-    const isInlineModifier = ['**', '*', '~~', '`'].includes(prefix);
 
     if (isInlineModifier) {
       if (lines.length === 1) {
         // Single line inline modifier: support toggle inside or outside selection
-        const isWrappedOutside = 
-          value.substring(start - prefix.length, start) === prefix &&
-          value.substring(end, end + suffix.length) === suffix;
-        const isWrappedInside = selectedText.startsWith(prefix) && selectedText.endsWith(suffix);
+        let isWrappedOutside = false;
+        let isWrappedInside = false;
+
+        if (prefix === '*') {
+          let countBefore = 0;
+          while (value.charAt(start - 1 - countBefore) === '*') {
+            countBefore++;
+          }
+          let countAfter = 0;
+          while (value.charAt(end + countAfter) === '*') {
+            countAfter++;
+          }
+          isWrappedOutside = countBefore > 0 && countAfter > 0 && countBefore % 2 === 1 && countAfter % 2 === 1;
+
+          let countInsideBefore = 0;
+          while (selectedText.charAt(countInsideBefore) === '*') {
+            countInsideBefore++;
+          }
+          let countInsideAfter = 0;
+          while (selectedText.charAt(selectedText.length - 1 - countInsideAfter) === '*') {
+            countInsideAfter++;
+          }
+          isWrappedInside = countInsideBefore > 0 && countInsideAfter > 0 && countInsideBefore % 2 === 1 && countInsideAfter % 2 === 1;
+        } else {
+          isWrappedOutside = 
+            value.substring(start - prefix.length, start) === prefix &&
+            value.substring(end, end + suffix.length) === suffix;
+          isWrappedInside = selectedText.startsWith(prefix) && selectedText.endsWith(suffix);
+        }
 
         let newValue = '';
         let newStart = 0;
@@ -371,7 +434,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
             value.substring(end);
           newStart = start + prefix.length;
           newEnd = end + prefix.length;
-        }
+}
 
         setContent(newValue);
         setTimeout(() => {
@@ -380,31 +443,56 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
         }, 0);
       } else {
         // Multi-line inline modifier: format line-by-line
-        const allWrapped = lines.every(line => {
+        const getLineWrappedInfo = (line: string) => {
           const trimmed = line.trim();
-          if (!trimmed) return true;
-          return line.startsWith(prefix) && line.endsWith(suffix);
-        });
+          if (!trimmed) return { isWrapped: true, prefixStr: '', contentStr: '', suffixStr: '', leadingSpaces: '', prefixMarker: '', mainContent: '' };
+          
+          const listMatch = line.match(/^(\s*)(> |- |\* |\+ |\d+\.\s+)(.*)/);
+          let leadingSpaces = '';
+          let prefixMarker = '';
+          let mainContent = line;
+          
+          if (listMatch) {
+            leadingSpaces = listMatch[1];
+            prefixMarker = listMatch[2];
+            mainContent = listMatch[3];
+          }
+          
+          let isWrapped = false;
+          if (prefix === '*') {
+            let countStart = 0;
+            while (mainContent.charAt(countStart) === '*') {
+              countStart++;
+            }
+            let countEnd = 0;
+            while (mainContent.charAt(mainContent.length - 1 - countEnd) === '*') {
+              countEnd++;
+            }
+            isWrapped = countStart > 0 && countEnd > 0 && countStart % 2 === 1 && countEnd % 2 === 1;
+          } else {
+            isWrapped = mainContent.startsWith(prefix) && mainContent.endsWith(suffix);
+          }
+          return { isWrapped, leadingSpaces, prefixMarker, mainContent };
+        };
+
+        const allWrapped = lines.every(line => getLineWrappedInfo(line).isWrapped);
 
         let newLines;
         if (allWrapped) {
           newLines = lines.map(line => {
-            const trimmed = line.trim();
-            if (!trimmed) return line;
-            const startIdx = line.indexOf(prefix);
-            const endIdx = line.lastIndexOf(suffix);
-            if (startIdx !== -1 && endIdx !== -1 && startIdx !== endIdx) {
-              return line.substring(0, startIdx) + 
-                     line.substring(startIdx + prefix.length, endIdx) + 
-                     line.substring(endIdx + suffix.length);
+            const info = getLineWrappedInfo(line);
+            if (!line.trim()) return line;
+            if (info.isWrapped) {
+              const unwrapped = info.mainContent.substring(prefix.length, info.mainContent.length - suffix.length);
+              return `${info.leadingSpaces}${info.prefixMarker}${unwrapped}`;
             }
             return line;
           });
         } else {
           newLines = lines.map(line => {
-            const trimmed = line.trim();
-            if (!trimmed) return line;
-            return `${prefix}${line}${suffix}`;
+            const info = getLineWrappedInfo(line);
+            if (!line.trim()) return line;
+            return `${info.leadingSpaces}${info.prefixMarker}${prefix}${info.mainContent}${suffix}`;
           });
         }
 
@@ -725,7 +813,11 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
               value={content}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              placeholder={channelName ? `Message into #${channelName}...` : 'Type a message...'}
+              placeholder={
+                channelName
+                  ? `Message into #${channelName.length > 20 ? channelName.substring(0, 20) + '...' : channelName}...`
+                  : 'Type a message...'
+              }
               className="chat-m w-full bg-transparent"
               a11ySuggestionsListLabel="Suggested mentions"
               maxLength={4000}

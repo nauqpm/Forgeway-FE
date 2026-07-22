@@ -53,6 +53,7 @@ export interface Channel {
     userId: string;
     role: 'channel_admin' | 'channel_member';
     joinedAt: string;
+    joined?: boolean;
   }[];
   workspaceId?: string;
   unreadCount: number;

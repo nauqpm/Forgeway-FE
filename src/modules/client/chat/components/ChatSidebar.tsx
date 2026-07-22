@@ -141,8 +141,11 @@ export default function ChatSidebar() {
       </div>
     );
   }
-
-  const generalChannels = sortedChannels.filter(c => c.type === 'general' || c.type === 'announcement' || (c.type as string) === 'public');
+  // Global channels: fixed position order (announcement → general → public), not affected by new messages
+  const GLOBAL_CHANNEL_ORDER: Record<string, number> = { announcement: 0, general: 1, public: 2 };
+  const generalChannels = channels
+    .filter(c => c.type === 'general' || c.type === 'announcement' || (c.type as string) === 'public')
+    .sort((a, b) => (GLOBAL_CHANNEL_ORDER[a.type] ?? 99) - (GLOBAL_CHANNEL_ORDER[b.type] ?? 99));
   const dmChannels = sortedChannels.filter(c => c.type === 'dm');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -150,11 +153,18 @@ export default function ChatSidebar() {
     const ch = channels.find(c => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
     return ch ? ch.unreadCount : 0;
   };
-
   const getLastMessagePreview = (channel: Channel) => {
+    if (channel.type === 'custom') {
+      const member = channel.channelMembers?.find(
+        m => String(m.userId) === String(currentUserId)
+      );
+      if (!member || member.joined === false) {
+        return "Join to view messages";
+      }
+    }
+
     const lastMsg = channel.lastMessage;
     if (!lastMsg || (!lastMsg.content && !lastMsg.senderId && !lastMsg.type && (!lastMsg.attachments || lastMsg.attachments.length === 0))) return "Start a conversation";
-    
     const sender = lastMsg.senderId;
     const msgSenderId = sender && typeof sender === 'object'
       ? (sender._id || sender.id)
@@ -411,13 +421,14 @@ export default function ChatSidebar() {
                 });
                 const wsRole = isOwner ? 'workspace_admin' : (member?.role || 'member');
                 const isWsViewer = wsRole === 'viewer';
-
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const isWsAdmin = (authUser as any)?.role === 'super_admin' || wsRole === 'workspace_admin';
                 return (
                   <div key={wsId} className="space-y-0.5">
                     {/* Workspace Accordion Header */}
                     <div 
                       className={cn(
-                        "w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer group text-[#787774] dark:text-[#9B9A97]"
+                        "w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer group text-[#787774] dark:text-[#9B9A97] gap-2"
                       )}
                       onClick={() => toggleWorkspace(wsId)}
                     >
@@ -481,10 +492,13 @@ export default function ChatSidebar() {
                         {!isWsViewer && wsChannel && (
                           renderChannelLink(wsChannel._id, wsChannel.name, 'workspace', wsChannel.unreadCount, wsChannel.lastMessage, ws)
                         )}
-
                         {!isWsViewer && wsCustomChannels.map((c, cIdx) => {
                           const isMember = isChannelMember(c);
                           const isPrivate = c.isPrivate;
+                          // Private channels are only shown if the user is a member/invited, or is a super/workspace admin
+                          if (isPrivate && !isMember && !isWsAdmin) {
+                            return null;
+                          }
                           const dimClass = (!isMember && !isPrivate) ? "opacity-50 hover:opacity-80 transition-opacity" : "";
                           return (
                             <div key={c._id || `ws-custom-${cIdx}`} className={dimClass}>
@@ -492,7 +506,6 @@ export default function ChatSidebar() {
                             </div>
                           );
                         })}
-
                         {!isWsViewer && wsCustomChannels.length === 0 && (
                           <div className="px-2 py-1.5 text-left">
                             <p className="text-[10px] text-[#ABABAB] italic">No custom channels</p>
