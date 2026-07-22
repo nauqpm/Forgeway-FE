@@ -746,7 +746,11 @@ export default function MessageInput({
               value={content}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
-              placeholder={channelName ? `Message into #${channelName}...` : 'Type a message...'}
+              placeholder={
+                channelName
+                  ? `Message into #${channelName.length > 20 ? channelName.substring(0, 20) + '...' : channelName}...`
+                  : 'Type a message...'
+              }
               className="chat-m w-full bg-transparent"
               a11ySuggestionsListLabel="Suggested mentions"
               maxLength={4000}

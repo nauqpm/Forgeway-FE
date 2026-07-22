@@ -753,8 +753,12 @@ export default function ChatWindow() {
             <div className="px-6 py-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-base">Create a new Thread</h3>
-                <p className="text-xs text-[#787774] dark:text-[#9B9A97] mt-0.5">
-                  This thread will be posted in <span className="font-semibold">#{activeChannel.name}</span> and will automatically notify all members.
+                <p className="text-xs text-[#787774] dark:text-[#9B9A97] mt-0.5 leading-relaxed">
+                  This thread will be posted in{" "}
+                  <span className="font-semibold truncate max-w-[200px] inline-block align-bottom" title={`#${activeChannel.name}`}>
+                    #{activeChannel.name}
+                  </span>{" "}
+                  and will automatically notify all members.
                 </p>
               </div>
               <button 
