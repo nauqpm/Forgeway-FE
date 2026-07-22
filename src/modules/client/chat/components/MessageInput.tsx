@@ -289,15 +289,30 @@ export default function MessageInput({
       onSuccess();
     }
   };
-
   const applyMarkdownShortcut = (prefix: string, suffix: string) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    let start = textarea.selectionStart;
+    let end = textarea.selectionEnd;
     const value = textarea.value;
-    const selectedText = value.substring(start, end);
+    let selectedText = value.substring(start, end);
+
+    const isInlineModifier = ['**', '*', '~~', '`'].includes(prefix);
+
+    if (isInlineModifier && selectedText) {
+      if (selectedText.startsWith('```')) {
+        const firstNewline = selectedText.indexOf('\n');
+        const offset = firstNewline !== -1 ? firstNewline + 1 : 3;
+        start += offset;
+      }
+      if (selectedText.endsWith('```')) {
+        const lastNewline = selectedText.lastIndexOf('\n', selectedText.length - 4);
+        const offset = lastNewline !== -1 ? selectedText.length - lastNewline : 3;
+        end -= offset;
+      }
+      selectedText = value.substring(start, end);
+    }
 
     if (start === end) {
       // Empty selection: insert prefix and suffix at cursor
@@ -355,7 +370,6 @@ export default function MessageInput({
     }
 
     const lines = selectedText.split('\n');
-    const isInlineModifier = ['**', '*', '~~', '`'].includes(prefix);
 
     if (isInlineModifier) {
       if (lines.length === 1) {
@@ -417,7 +431,7 @@ export default function MessageInput({
             value.substring(end);
           newStart = start + prefix.length;
           newEnd = end + prefix.length;
-        }
+}
 
         setContent(newValue);
         setTimeout(() => {
@@ -426,31 +440,43 @@ export default function MessageInput({
         }, 0);
       } else {
         // Multi-line inline modifier: format line-by-line
-        const allWrapped = lines.every(line => {
+        const getLineWrappedInfo = (line: string) => {
           const trimmed = line.trim();
-          if (!trimmed) return true;
-          return line.startsWith(prefix) && line.endsWith(suffix);
-        });
+          if (!trimmed) return { isWrapped: true, prefixStr: '', contentStr: '', suffixStr: '', leadingSpaces: '', prefixMarker: '', mainContent: '' };
+          
+          const listMatch = line.match(/^(\s*)(> |- |\* |\+ |\d+\.\s+)(.*)/);
+          let leadingSpaces = '';
+          let prefixMarker = '';
+          let mainContent = line;
+          
+          if (listMatch) {
+            leadingSpaces = listMatch[1];
+            prefixMarker = listMatch[2];
+            mainContent = listMatch[3];
+          }
+          
+          const isWrapped = mainContent.startsWith(prefix) && mainContent.endsWith(suffix);
+          return { isWrapped, leadingSpaces, prefixMarker, mainContent };
+        };
+
+        const allWrapped = lines.every(line => getLineWrappedInfo(line).isWrapped);
 
         let newLines;
         if (allWrapped) {
           newLines = lines.map(line => {
-            const trimmed = line.trim();
-            if (!trimmed) return line;
-            const startIdx = line.indexOf(prefix);
-            const endIdx = line.lastIndexOf(suffix);
-            if (startIdx !== -1 && endIdx !== -1 && startIdx !== endIdx) {
-              return line.substring(0, startIdx) + 
-                     line.substring(startIdx + prefix.length, endIdx) + 
-                     line.substring(endIdx + suffix.length);
+            const info = getLineWrappedInfo(line);
+            if (!line.trim()) return line;
+            if (info.isWrapped) {
+              const unwrapped = info.mainContent.substring(prefix.length, info.mainContent.length - suffix.length);
+              return `${info.leadingSpaces}${info.prefixMarker}${unwrapped}`;
             }
             return line;
           });
         } else {
           newLines = lines.map(line => {
-            const trimmed = line.trim();
-            if (!trimmed) return line;
-            return `${prefix}${line}${suffix}`;
+            const info = getLineWrappedInfo(line);
+            if (!line.trim()) return line;
+            return `${info.leadingSpaces}${info.prefixMarker}${prefix}${info.mainContent}${suffix}`;
           });
         }
 
