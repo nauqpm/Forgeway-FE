@@ -40,8 +40,9 @@ export default function UserProfileCard({ user, position, onClose, isCurrentUser
 
   const handleMessageUser = async () => {
     try {
-      await createDMMutation.mutateAsync(user._id);
+      await createDMMutation.mutateAsync([user._id]);
       onClose();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create DM');
     }

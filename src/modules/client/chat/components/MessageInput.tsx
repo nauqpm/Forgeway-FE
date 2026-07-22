@@ -11,6 +11,7 @@ import { useChatChannels } from '../hooks/useChatQueries';
 import api from '@/lib/axiosIns';
 import imageService from '@/shared/utils/imageService';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
+import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
 interface MessageInputProps {
@@ -20,9 +21,10 @@ interface MessageInputProps {
 }
 
 export default function MessageInput({ channelId, channelName, threadParentId }: MessageInputProps) {
+  const authUser = useAuthStore(state => state.user);
+  const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
   const { data: channels = [] } = useChatChannels();
   const { data: workspaces = [] } = useWorkspaces();
-  const isDM = channels.find(c => c._id === channelId)?.type === 'dm';
 
   const [content, setContent] = useState('');
   const [showMediaPicker, setShowMediaPicker] = useState(false);
@@ -557,7 +559,7 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
       clearTimeout(mentionSearchTimeoutRef.current);
     }
 
-    const isAllMatch = !isDM && (!query || 'all'.startsWith(query.toLowerCase()));
+    const isAllMatch = !query || 'all'.startsWith(query.toLowerCase());
     if (isAllMatch) {
       callback([{
         id: 'All',
@@ -575,16 +577,21 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
         });
         const members = response.data || [];
         
-        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members.map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
-          const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
-          return {
-            id: m._id || m.id,
-            display,
-            email: m.email,
-            phone: m.phone,
-            avatar: m.avatar
-          };
-        });
+        const mappedMembers: { id: string; display: string; email?: string; phone?: string; avatar?: string }[] = members
+          .filter((m: { _id?: string; id?: string }) => {
+            const memberId = m._id || m.id;
+            return !currentUserId || String(memberId) !== String(currentUserId);
+          })
+          .map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
+            const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
+            return {
+              id: m._id || m.id,
+              display,
+              email: m.email,
+              phone: m.phone,
+              avatar: m.avatar
+            };
+          });
 
         // Thêm tùy chọn @All nếu từ khóa khớp hoặc khi truy vấn trống
         if (isAllMatch) {
@@ -630,7 +637,28 @@ export default function MessageInput({ channelId, channelName, threadParentId }:
                   Replying to {replyingSender?.fullName || replyingSender?.email || 'User'}
                 </span>
                 <span className="text-[#787774] dark:text-[#9B9A97] truncate mt-0.5">
-                  {(replyingToMessage.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')}
+                  {(() => {
+                    const msg = replyingToMessage;
+                    if (msg.deletedAt) return '[Message deleted]';
+                    if (msg.type === 'sticker') return '[Sticker]';
+                    if (msg.content && msg.content.trim()) {
+                      const cleanText = msg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+                      if (msg.attachments && msg.attachments.length > 0) {
+                        const firstAtt = msg.attachments[0];
+                        const isImg = firstAtt.mimeType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(firstAtt.url || firstAtt.name || '');
+                        return `${isImg ? '[Image]' : '[File]'} ${cleanText}`;
+                      }
+                      return cleanText;
+                    }
+                    if (msg.attachments && msg.attachments.length > 0) {
+                      const firstAtt = msg.attachments[0];
+                      const isImg = firstAtt.mimeType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(firstAtt.url || firstAtt.name || '');
+                      return isImg ? '[Image]' : '[File]';
+                    }
+                    if ((msg.type as string) === 'image') return '[Image]';
+                    if ((msg.type as string) === 'file') return '[File]';
+                    return '[Attachment]';
+                  })()}
                 </span>
               </div>
               <button 

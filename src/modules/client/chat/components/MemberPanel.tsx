@@ -96,7 +96,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
     
     const loadingToast = toast.loading('Starting conversation...');
     try {
-      await createDMMutation.mutateAsync(memberId);
+      await createDMMutation.mutateAsync([memberId]);
       toast.success('Create DM successfully', { id: loadingToast });
       onClose();
     } catch (error) {

@@ -8,13 +8,13 @@ import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
 import ChatSearchPanel from './ChatSearchPanel';
-import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft } from 'lucide-react';
+import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft, Edit2, X } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
 import Link from 'next/link';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
-import { useChatChannels, useChatMessages } from '@/modules/client/chat/hooks/useChatQueries';
+import { useChatChannels, useChatMessages, useUpdateChannel } from '@/modules/client/chat/hooks/useChatQueries';
 import { joinChannelAPI } from '../services/chatService';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
@@ -33,6 +33,8 @@ export default function ChatWindow() {
   const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
   const typingUsers = useChatStore(state => state.typingUsers);
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
+  const unreadThreadIds = useChatStore(state => state.unreadThreadIds);
+  const unreadThreadsCount = unreadThreadIds.size;
   
   const { data: channels = [] } = useChatChannels();
   
@@ -41,6 +43,10 @@ export default function ChatWindow() {
   const prevActiveChannelIdRef = useRef<string | null>(null);
   const scrolledMessageIdRef = useRef<string | null>(null);
 
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState("");
+  const updateChannelMutation = useUpdateChannel();
+
   // Capture the unread count before we mark the channel as read
   if (activeChannelId !== prevActiveChannelIdRef.current) {
     prevActiveChannelIdRef.current = activeChannelId;
@@ -48,7 +54,24 @@ export default function ChatWindow() {
     setUnreadCountAtOpen(channel?.unreadCount || 0);
     setFirstUnreadMessageId(null); // Reset first unread message ID on channel change
     scrolledMessageIdRef.current = null; // Reset scroll tracker on channel change
+    setIsEditingName(false);
   }
+
+  const handleSaveName = async () => {
+    if (!activeChannelId) return;
+    if (!editNameValue.trim()) {
+      setIsEditingName(false);
+      return;
+    }
+    try {
+      await updateChannelMutation.mutateAsync({ channelId: activeChannelId, updateData: { name: editNameValue.trim() } });
+      toast.success("Conversation renamed successfully");
+      setIsEditingName(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to rename conversation");
+    }
+  };
 
   const {
     data: messagesData,
@@ -310,13 +333,21 @@ export default function ChatWindow() {
 
   if (activeChannel.type === 'dm') {
     const members = activeChannel.members || [];
-    const otherMember = members.find((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
+    const otherMembers = members.filter((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
 
-    if (otherMember && typeof otherMember === 'object') {
-      headerName = otherMember.fullName || otherMember.email || "Direct Message";
-      headerDescription = otherMember.email || "Direct Message";
+    if (activeChannel.name && activeChannel.name !== 'Direct Message' && members.length > 2) {
+      headerName = activeChannel.name;
+      headerDescription = `${members.length} members`;
+    } else if (otherMembers.length > 0) {
+      const names = otherMembers.map((m: ChatUser) => m.fullName || m.email?.split('@')[0] || "User");
+      if (names.length > 3) {
+        headerName = `${names.slice(0, 3).join(", ")} & ${names.length - 3} others`;
+      } else {
+        headerName = names.join(", ");
+      }
+      headerDescription = otherMembers.length === 1 ? otherMembers[0].email || "Direct Message" : `${members.length} members`;
     } else {
-      headerName = "Deleted User";
+      headerName = "Just you";
       headerDescription = "Direct Message";
     }
   }
@@ -355,9 +386,17 @@ export default function ChatWindow() {
           ) : activeChannel.type === 'dm' ? (
             (() => {
               const members = activeChannel.members || [];
-              const otherMember = members.find((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
-              const displayAvatar = otherMember?.avatar;
-              const initials = (otherMember?.fullName || otherMember?.email || "Deleted User").charAt(0).toUpperCase();
+              const otherMembers = members.filter((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
+              const displayAvatar = otherMembers.length === 1 ? otherMembers[0]?.avatar : null;
+              let initials = "";
+              if (members.length > 2 && (!activeChannel.name || activeChannel.name === 'Direct Message')) {
+                initials = otherMembers.length.toString();
+              } else if (otherMembers.length === 1) {
+                initials = (otherMembers[0]?.fullName || otherMembers[0]?.email || "User").charAt(0).toUpperCase();
+              } else {
+                initials = headerName?.charAt(0).toUpperCase() || "G";
+              }
+              
               return (
                 <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white font-bold text-sm shadow-sm">
                   {displayAvatar ? (
@@ -374,12 +413,26 @@ export default function ChatWindow() {
 
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-sm truncate leading-snug">{headerName}</span>
-              {activeWorkspace && activeWorkspace.key && (
-                <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
-                  {activeWorkspace.key}
-                </span>
-              )}
+                <>
+                  <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-sm truncate leading-snug">{headerName}</span>
+                  {(activeChannel.type === 'custom' || (activeChannel.type === 'dm' && (activeChannel.members?.length ?? 0) > 2)) && (
+                    <button 
+                      onClick={() => {
+                        setEditNameValue(activeChannel.name === 'Direct Message' ? headerName : activeChannel.name);
+                        setIsEditingName(true);
+                      }} 
+                      className="p-1 rounded-full bg-[#E5E7EB] dark:bg-[#383838] hover:bg-[#D1D5DB] dark:hover:bg-[#404040] transition-colors text-[#4B5563] dark:text-[#A3A3A3]"
+                      title="Edit conversation name"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                    </button>
+                  )}
+                  {activeWorkspace && activeWorkspace.key && (
+                    <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
+                      {activeWorkspace.key}
+                    </span>
+                  )}
+                </>
             </div>
             
             <span className="text-[11px] text-[#787774] dark:text-[#9B9A97] truncate leading-none mt-0.5">
@@ -409,7 +462,7 @@ export default function ChatWindow() {
           <div className="w-px h-4 bg-[#EAEAEA] dark:bg-white/[0.06] mx-1" />
           
           <button 
-            className={`p-1 transition-colors rounded-md ${
+            className={`p-1 transition-colors rounded-md relative ${
               activeThreadParentId === 'index'
                 ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
                 : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
@@ -422,6 +475,11 @@ export default function ChatWindow() {
             }}
           >
             <MessageSquare className="w-4 h-4" />
+            {unreadThreadsCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-[#EF4444] text-white text-[8px] font-bold rounded-full border-2 border-white dark:border-[#202020] animate-pulse leading-none">
+                {unreadThreadsCount > 99 ? '99+' : unreadThreadsCount}
+              </span>
+            )}
           </button>
 
           <button 
@@ -644,6 +702,52 @@ export default function ChatWindow() {
         onClose={() => setActiveThreadParentId(null)}
       />
     )}
+      {isEditingName && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#202020] rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] flex flex-col">
+            <div className="px-6 py-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex justify-between items-center">
+              <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7]">Edit Conversation Name</h3>
+              <button onClick={() => setIsEditingName(false)} className="text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-2">
+                Conversation Name
+              </label>
+              <input
+                autoFocus
+                className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.06] rounded-lg bg-[#F7F6F3] dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                value={editNameValue}
+                onChange={(e) => setEditNameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editNameValue.trim()) handleSaveName();
+                  if (e.key === 'Escape') setIsEditingName(false);
+                }}
+                maxLength={50}
+                placeholder="Enter a new name..."
+              />
+            </div>
+            <div className="px-6 py-4 bg-[#F7F6F3] dark:bg-black/20 border-t border-[#EAEAEA] dark:border-white/[0.06] flex justify-end gap-2">
+              <button
+                onClick={() => setIsEditingName(false)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#4B5563] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#383838] transition-colors"
+                disabled={updateChannelMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveName}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors flex items-center gap-2"
+                disabled={updateChannelMutation.isPending || !editNameValue.trim()}
+              >
+                {updateChannelMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

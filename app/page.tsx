@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "./apple-icon.png";
 import { HeroAuthActions, NavAuthActions } from "./LandingAuthActions";
-import AdminNavLink from "./AdminNavLink";
 import BackToTop from "@/shared/components/back-to-top/BackToTop";
 import {
   Activity,
@@ -373,7 +372,6 @@ export default function LandingPage() {
             {["Features", "Solutions", "Pricing", "About"].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`} className="transition hover:text-[#2563EB] dark:hover:text-white">{item}</a>
             ))}
-            <AdminNavLink />
           </div>
           <NavAuthActions />
         </div>
