@@ -264,8 +264,8 @@ export default function MessageItem({
   const shouldHighlight = isMentioned || isReplyToMe;
   const hasReactions = !isDeleted && message.reactions && Object.keys(message.reactions).length > 0;
   const spacingClasses = !isSameUserAsPrevious
-    ? (hasReactions ? 'mt-2.5 pt-1 pb-2' : 'mt-2.5 pt-1 pb-1')
-    : (hasReactions ? 'mt-0.5 pt-0.5 pb-2' : 'mt-0.5 pt-0.5 pb-0.5');
+    ? (hasReactions ? 'mt-3 pt-1.5 pb-2.5' : 'mt-3 pt-1.5 pb-1.5')
+    : (hasReactions ? 'mt-1 pt-0.5 pb-2' : 'mt-1 pt-0.5 pb-1');
 
   // Branch 1: System Message
   if (message.type === 'system') {
@@ -287,7 +287,7 @@ export default function MessageItem({
       id={`msg-${message._id}`}
       onContextMenu={handleContextMenu}
       className={cn(
-        "group relative flex gap-4 transition-colors flex-row",
+        "group relative flex gap-4 transition-all flex-row mx-2 rounded-lg",
         shouldHighlight 
           ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4" 
           : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4",
