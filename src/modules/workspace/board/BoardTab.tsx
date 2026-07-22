@@ -14,6 +14,7 @@ import BoardFilters from "@/modules/workspace/shared/components/BoardFilters";
 import BoardTaskActionMenu from "@/modules/workspace/tasks/covers/BoardTaskActionMenu";
 import TaskLabelModal from "@/modules/workspace/tasks/labels/TaskLabelModal";
 import { compareIssueRank } from "@/modules/workspace/shared/utils/dragUtils";
+import { MAX_COLUMN_NAME_LENGTH } from "@/modules/workspace/shared/utils/columnName";
 
 import {
   Check,
@@ -378,6 +379,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                               if (e.key === "Escape") setEditingColumnId(null);
                             }}
                             onBlur={() => setEditingColumnId(null)}
+                            maxLength={MAX_COLUMN_NAME_LENGTH}
                             className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
                           />
                         ) : (
@@ -576,6 +578,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           setNewColumnName("");
                         }
                       }}
+                      maxLength={MAX_COLUMN_NAME_LENGTH}
                       placeholder="New column name..."
                       className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] focus:border-[#2563EB] outline-none transition-colors"
                     />
