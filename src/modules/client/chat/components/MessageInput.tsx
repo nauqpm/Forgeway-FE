@@ -360,10 +360,35 @@ export default function MessageInput({
     if (isInlineModifier) {
       if (lines.length === 1) {
         // Single line inline modifier: support toggle inside or outside selection
-        const isWrappedOutside = 
-          value.substring(start - prefix.length, start) === prefix &&
-          value.substring(end, end + suffix.length) === suffix;
-        const isWrappedInside = selectedText.startsWith(prefix) && selectedText.endsWith(suffix);
+        let isWrappedOutside = false;
+        let isWrappedInside = false;
+
+        if (prefix === '*') {
+          let countBefore = 0;
+          while (value.charAt(start - 1 - countBefore) === '*') {
+            countBefore++;
+          }
+          let countAfter = 0;
+          while (value.charAt(end + countAfter) === '*') {
+            countAfter++;
+          }
+          isWrappedOutside = countBefore > 0 && countAfter > 0 && countBefore % 2 === 1 && countAfter % 2 === 1;
+
+          let countInsideBefore = 0;
+          while (selectedText.charAt(countInsideBefore) === '*') {
+            countInsideBefore++;
+          }
+          let countInsideAfter = 0;
+          while (selectedText.charAt(selectedText.length - 1 - countInsideAfter) === '*') {
+            countInsideAfter++;
+          }
+          isWrappedInside = countInsideBefore > 0 && countInsideAfter > 0 && countInsideBefore % 2 === 1 && countInsideAfter % 2 === 1;
+        } else {
+          isWrappedOutside = 
+            value.substring(start - prefix.length, start) === prefix &&
+            value.substring(end, end + suffix.length) === suffix;
+          isWrappedInside = selectedText.startsWith(prefix) && selectedText.endsWith(suffix);
+        }
 
         let newValue = '';
         let newStart = 0;
