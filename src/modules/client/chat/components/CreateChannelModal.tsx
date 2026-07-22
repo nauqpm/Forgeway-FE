@@ -43,16 +43,11 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
       setLoading(false);
     }
   }, [isOpen]);
-
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // lowercase, alphanumeric and hyphens only
-    const value = e.target.value
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
+    // Allow letters (including Vietnamese), numbers, spaces, hyphens, and underscores
+    const value = e.target.value.replace(/[^a-zA-Z0-9\s-_àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]/g, '');
     setName(value);
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
@@ -142,7 +137,7 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
               />
             </div>
             <p className="text-[10px] text-[#787774] mt-1">
-              Names must be lowercase, without spaces or periods, and shorter than 80 characters.
+              Names can contain Vietnamese, spaces, and must be shorter than 80 characters.
             </p>
           </div>
 

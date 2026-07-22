@@ -8,14 +8,15 @@ import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
 import ChatSearchPanel from './ChatSearchPanel';
-import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft, Edit2, X } from 'lucide-react';
+
+import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft, Edit2, X, Trash2 } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
 import Link from 'next/link';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels, useChatMessages, useUpdateChannel } from '@/modules/client/chat/hooks/useChatQueries';
-import { joinChannelAPI } from '../services/chatService';
+import { joinChannelAPI, deleteChannelAPI } from '../services/chatService';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import ThreadPanel from './ThreadPanel';
@@ -73,6 +74,33 @@ export default function ChatWindow() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to rename conversation");
+    }
+  };
+
+  const handleDeleteChannel = async () => {
+    if (!activeChannel) return;
+    const confirmed = window.confirm(`Are you sure you want to delete the channel #${activeChannel.name}? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      await deleteChannelAPI(activeChannel._id);
+      toast.success(`Channel #${activeChannel.name} deleted successfully`);
+      
+      const wsId = activeChannel.workspaceId;
+      const generalChannel = channels.find(
+        (c: Channel) => c.type === 'workspace' && String(c.workspaceId) === String(wsId)
+      );
+      
+      await queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+      
+      if (generalChannel) {
+        useChatStore.getState().setActiveChannel(generalChannel._id);
+      } else {
+        useChatStore.getState().setActiveChannel(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete channel:', error);
+      toast.error('Failed to delete channel');
     }
   };
 
@@ -437,6 +465,15 @@ export default function ChatWindow() {
                       title="Edit conversation name"
                     >
                       <Edit2 className="w-3 h-3" />
+                    </button>
+                  )}
+                  {activeChannel.type === 'custom' && (userRole === 'super_admin' || activeChannel.createdBy === currentUserId) && (
+                    <button 
+                      onClick={handleDeleteChannel}
+                      className="p-1 rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-950/40 dark:hover:bg-red-900/40 transition-colors text-red-600 dark:text-red-400"
+                      title="Delete channel"
+                    >
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   )}
                   {activeWorkspace && activeWorkspace.key && (
