@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "./apple-icon.png";
@@ -30,12 +32,6 @@ import {
   Workflow,
   Zap,
 } from "lucide-react";
-
-export const metadata = {
-  title: { absolute: "SDLC Platform" },
-  description:
-    "SDLC Platform is a modern project management platform for workspaces, Kanban boards, sprint planning, collaboration, permissions, and real-time project tracking.",
-};
 
 const trustedTeams = ["Startup Teams", "Agencies", "Developers", "Product Teams", "Enterprise Teams"];
 
