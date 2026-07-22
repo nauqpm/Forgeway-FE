@@ -20,6 +20,7 @@ interface MessageInputProps {
   threadParentId?: string;
   autoMentionAll?: boolean;
   onSuccess?: () => void;
+  ignoreReply?: boolean;
 }
 
 export default function MessageInput({
@@ -28,6 +29,7 @@ export default function MessageInput({
   threadParentId,
   autoMentionAll = false,
   onSuccess,
+  ignoreReply = false,
 }: MessageInputProps) {
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
@@ -69,7 +71,8 @@ export default function MessageInput({
   const threadReplyingToMessage = useChatStore(state => state.replyingToThreadMessage);
   const setThreadReplyingToMessage = useChatStore(state => state.setReplyingToThreadMessage);
   
-  const replyingToMessage = threadParentId ? threadReplyingToMessage : globalReplyingToMessage;
+
+  const replyingToMessage = ignoreReply ? null : (threadParentId ? threadReplyingToMessage : globalReplyingToMessage);
   const setReplyingToMessage = threadParentId ? setThreadReplyingToMessage : globalSetReplyingToMessage;
   const replyingSender = typeof replyingToMessage?.senderId === 'object' && replyingToMessage.senderId
     ? replyingToMessage.senderId

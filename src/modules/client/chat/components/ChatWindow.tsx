@@ -773,6 +773,7 @@ export default function ChatWindow() {
                 channelId={activeChannelId}
                 channelName={activeChannel.name}
                 autoMentionAll={true}
+                ignoreReply={true}
                 onSuccess={() => setShowCreateThreadModal(false)}
               />
             </div>
