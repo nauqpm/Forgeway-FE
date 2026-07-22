@@ -141,8 +141,11 @@ export default function ChatSidebar() {
       </div>
     );
   }
-
-  const generalChannels = sortedChannels.filter(c => c.type === 'general' || c.type === 'announcement' || (c.type as string) === 'public');
+  // Global channels: fixed position order (announcement → general → public), not affected by new messages
+  const GLOBAL_CHANNEL_ORDER: Record<string, number> = { announcement: 0, general: 1, public: 2 };
+  const generalChannels = channels
+    .filter(c => c.type === 'general' || c.type === 'announcement' || (c.type as string) === 'public')
+    .sort((a, b) => (GLOBAL_CHANNEL_ORDER[a.type] ?? 99) - (GLOBAL_CHANNEL_ORDER[b.type] ?? 99));
   const dmChannels = sortedChannels.filter(c => c.type === 'dm');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
