@@ -455,7 +455,20 @@ export default function MessageInput({
             mainContent = listMatch[3];
           }
           
-          const isWrapped = mainContent.startsWith(prefix) && mainContent.endsWith(suffix);
+          let isWrapped = false;
+          if (prefix === '*') {
+            let countStart = 0;
+            while (mainContent.charAt(countStart) === '*') {
+              countStart++;
+            }
+            let countEnd = 0;
+            while (mainContent.charAt(mainContent.length - 1 - countEnd) === '*') {
+              countEnd++;
+            }
+            isWrapped = countStart > 0 && countEnd > 0 && countStart % 2 === 1 && countEnd % 2 === 1;
+          } else {
+            isWrapped = mainContent.startsWith(prefix) && mainContent.endsWith(suffix);
+          }
           return { isWrapped, leadingSpaces, prefixMarker, mainContent };
         };
 
