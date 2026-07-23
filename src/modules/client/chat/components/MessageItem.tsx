@@ -48,7 +48,7 @@ export default function MessageItem({
     : ({ _id: String(message.senderId || ''), fullName: 'Deleted User', email: '' } as ChatUser);
   const displayName = sender.fullName || sender.email || 'Deleted User';
   const initialLetter = displayName.charAt(0).toUpperCase();
-  const isDeleted = Boolean(message.deletedAt);
+  const isDeleted = false;
 
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;

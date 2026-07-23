@@ -168,6 +168,11 @@ export default function ChatRealtimeHandler() {
         lastMessage: data.lastMessage || undefined,
       }));
     }
+
+    const activeThreadParentId = useChatStore.getState().activeThreadParentId;
+    if (activeThreadParentId && String(activeThreadParentId) === String(data.messageId)) {
+      toast.error('The original message for this thread has been deleted.');
+    }
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

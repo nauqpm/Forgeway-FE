@@ -27,7 +27,7 @@ export interface Message {
   replyToId?: string | Message;
   createdAt: string;
   updatedAt?: string;
-  deletedAt?: string | null;
+  editedAt?: string | null;
   deletedForUsers?: string[];
   reactions?: Record<string, string[]>;
   sentAt?: string;

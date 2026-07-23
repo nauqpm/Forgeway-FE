@@ -352,7 +352,6 @@ export const renderMessageContent = (
 
 export const getMessagePreviewText = (msg?: Message | null): string => {
   if (!msg) return '';
-  if (msg.deletedAt) return '[Message deleted]';
   if (msg.type === 'sticker') return '[Sticker]';
 
   if (msg.content && msg.content.trim()) {

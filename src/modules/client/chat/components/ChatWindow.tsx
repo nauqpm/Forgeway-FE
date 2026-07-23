@@ -208,9 +208,6 @@ export default function ChatWindow() {
   const messages = useMemo(() => {
     let rawMessages = messagesData?.pages.flatMap((page) => page.messages) || [];
 
-    // Completely filter out deleted messages
-    rawMessages = rawMessages.filter(msg => !msg.deletedAt && !(msg as { isDeleted?: boolean }).isDeleted);
-
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       rawMessages = rawMessages.filter(msg => {

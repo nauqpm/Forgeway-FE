@@ -122,7 +122,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       
       messages.forEach((msg: any) => {
-        if (!msg.content || msg.deletedAt) return;
+        if (!msg.content) return;
         
         const matches = msg.content.match(urlRegex);
         if (matches) {
@@ -482,7 +482,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                             </p>
 
                             {/* Previews for Attachments in Search Result */}
-                            {!msg.deletedAt && msg.attachments && msg.attachments.length > 0 && (
+                            {msg.attachments && msg.attachments.length > 0 && (
                               <div className="mt-1.5 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
                                 {msg.attachments.map((file: any, idx: number) => {
                                   const mime = file.mimeType || file.mimetype || '';

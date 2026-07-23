@@ -40,7 +40,7 @@ export default function MessageContent({
   return (
     <div className="text-[#111111] dark:text-[#E8E8E7] break-words [overflow-wrap:anywhere] [word-break:break-word] w-full min-w-0 text-justify chat-message-content">
       {renderMessageContent(message.content, currentUserId, onMentionClick)}
-      {message.updatedAt && message.updatedAt !== message.createdAt && (
+      {Boolean(message.editedAt) && (
         <span className="text-[10px] text-[#ABABAB] dark:text-[#6B6B6B] ml-1.5 select-none font-normal italic">(edited)</span>
       )}
     </div>

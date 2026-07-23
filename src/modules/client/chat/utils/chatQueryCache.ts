@@ -130,8 +130,18 @@ export const removeMessageFromCache = (
       queryKeys.chat.threadReplies(channelId, threadParentId),
       (current = []) => current.filter((m) => getMessageId(m) !== messageId)
     );
+  } else {
+    // If a top-level parent message was deleted, clear all its thread replies from cache
+    queryClient.setQueryData<Message[]>(
+      queryKeys.chat.threadReplies(channelId, messageId),
+      []
+    );
+    queryClient.removeQueries({
+      queryKey: queryKeys.chat.threadReplies(channelId, messageId),
+    });
   }
 
   queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.chat.activeThreads(channelId) });
   queryClient.invalidateQueries({ queryKey: ['chat', 'messages', 'search', channelId] });
 };
