@@ -43,7 +43,7 @@ export default function MessageHoverActions({
 
   return (
     <div className={cn(
-      "absolute -top-6 right-4 flex items-center gap-0.5 transition-all z-30 bg-white dark:bg-[#1C1C1C] border border-[#EAEAEA] dark:border-white/[0.08] rounded-md px-1 py-0.5 shadow-md",
+      "absolute -top-3.5 right-4 flex items-center gap-0.5 transition-all z-30 bg-white dark:bg-[#1C1C1C] border border-[#EAEAEA] dark:border-white/[0.08] rounded-md px-1 py-0.5 shadow-md",
       showEmojiPicker ? "opacity-100 scale-100" : "opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100"
     )}>
       <ActionTooltip label="Add reaction">

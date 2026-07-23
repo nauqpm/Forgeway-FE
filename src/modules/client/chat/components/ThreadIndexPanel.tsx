@@ -6,6 +6,8 @@ import { useActiveThreads, useChatChannels } from '../hooks/useChatQueries';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { formatDistanceToNow } from 'date-fns';
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
+import { ResizeHandle } from '@/shared/components/ResizeHandle';
 import type { Message } from '@/modules/client/chat/types/chat.types';
 
 interface ThreadIndexPanelProps {
@@ -15,6 +17,24 @@ interface ThreadIndexPanelProps {
 
 export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPanelProps) {
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
+  const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
+  const unreadThreadIds = useChatStore(state => state.unreadThreadIds);
+  const markThreadRead = useChatStore(state => state.markThreadRead);
+
+  const authUser = useAuthStore(state => state.user);
+  const currentUserId = (authUser as { _id?: string; id?: string })?._id || authUser?.id;
+
+  const { width: panelWidth, handleMouseDown, handleReset } = useResizablePanel({
+    defaultWidth: 400,
+    minWidth: 280,
+    maxWidth: 650,
+    side: 'left',
+    storageKey: 'al_chat_right_panel_w',
+  });
+
+  const { data: channels = [] } = useChatChannels();
+  const channel = channels.find(c => c._id === channelId);
+
   const {
     data,
     isLoading,
@@ -27,15 +47,6 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
     if (!data?.pages) return [];
     return data.pages.flatMap((page) => page.threads);
   }, [data]);
-
-  const { data: channels = [] } = useChatChannels();
-  const channel = channels.find(c => c._id === channelId);
-
-  const authUser = useAuthStore(state => state.user);
-  const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
-  const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
-  const unreadThreadIds = useChatStore(state => state.unreadThreadIds);
-  const markThreadRead = useChatStore(state => state.markThreadRead);
 
   // Filter threads
   const filteredThreads = useMemo(() => {
@@ -85,7 +96,11 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
   };
 
   return (
-    <div className="w-[400px] flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full min-h-0 overflow-hidden relative">
+    <div 
+      style={{ width: `${panelWidth}px` }}
+      className="flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full min-h-0 overflow-hidden relative"
+    >
+      <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="left" />
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex flex-col min-w-0">

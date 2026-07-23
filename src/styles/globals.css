@@ -1058,6 +1058,80 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   overflow-y: auto !important;
   box-sizing: border-box;
 }
+
+/* ── Tiptap Rich Text Chat Editor ── */
+.tiptap-chat-editor .ProseMirror {
+  outline: none !important;
+  min-height: 24px;
+  max-height: 200px;
+  overflow-y: auto;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #111111;
+}
+.dark .tiptap-chat-editor .ProseMirror {
+  color: #E8E8E7;
+}
+.tiptap-chat-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: #9CA3AF;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.tiptap-chat-editor .ProseMirror span[data-type="mention"] {
+  background-color: #EFF6FF;
+  color: #2563EB;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-weight: 500;
+  font-size: 0.85rem;
+  display: inline-block;
+  margin: 0 1px;
+}
+.dark .tiptap-chat-editor .ProseMirror span[data-type="mention"] {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: #60A5FA;
+}
+.tiptap-chat-editor .ProseMirror pre {
+  background-color: #F3F4F6;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  margin: 4px 0;
+}
+.dark .tiptap-chat-editor .ProseMirror pre {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.tiptap-chat-editor .ProseMirror code {
+  background-color: rgba(37, 99, 235, 0.08);
+  color: #E11D48;
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+.dark .tiptap-chat-editor .ProseMirror code {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #F43F5E;
+}
+
+/* ── Prevent text insertion cursor (caret) on rendered chat messages ── */
+.chat-message-content {
+  caret-color: transparent !important;
+}
+.chat-message-content input,
+.chat-message-content textarea,
+.chat-message-content [contenteditable="true"] {
+  caret-color: auto !important;
+}
+
+/* ── Disable CSS transitions while resizing to eliminate drag lag ── */
+body[style*="col-resize"] *,
+body[style*="cursor: col-resize"] * {
+  transition: none !important;
+}
 .chat-m__suggestions__list {
   background: #ffffff;
   border: 1px solid #EAEAEA;

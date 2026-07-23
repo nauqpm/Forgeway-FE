@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
@@ -383,15 +383,17 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                             className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
                           />
                         ) : (
-                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2">
-                            {column.name}
-                            <span className="w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold">
+                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2 min-w-0 flex-1 mr-2">
+                            <span className="truncate" title={column.name}>
+                              {column.name}
+                            </span>
+                            <span className="shrink-0 w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold">
                               {getColumnIssues(column).length}
                             </span>
                           </h3>
                         )}
                         {!filters.archived && (canUpdateWorkspace || canCreateTask) && (
-                          <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+                          <div className="flex shrink-0 gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
                             {canUpdateWorkspace && (
                               <button
                                 onClick={() => {

@@ -108,7 +108,7 @@ export default function MembersTab({
     try {
       await api.put(apiRoutes.WORKSPACES.UPDATE_MEMBER(workspaceId, userId), { role });
       queryClient.setQueryData<WorkspaceMember[]>(
-        ["members", workspaceId],
+        queryKeys.workspaces.members(workspaceId),
         (prev) => (prev ?? []).map((m) =>
           m.userId?._id === userId ? { ...m, role } : m,
         ),
@@ -131,7 +131,7 @@ export default function MembersTab({
     try {
       await api.delete(apiRoutes.WORKSPACES.REMOVE_MEMBER(workspaceId, userId));
       queryClient.setQueryData<WorkspaceMember[]>(
-        ["members", workspaceId],
+        queryKeys.workspaces.members(workspaceId),
         (prev) => (prev ?? []).filter((m) => m.userId?._id !== userId),
       );
       toast.success("Member removed from workspace.");
@@ -149,7 +149,7 @@ export default function MembersTab({
     try {
       await inviteService.cancelInvite(workspaceId, inviteId);
       queryClient.setQueryData<PendingInvite[]>(
-        ["invites", workspaceId],
+        queryKeys.workspaces.invites(workspaceId),
         (prev) => (prev ?? []).filter((i) => i._id !== inviteId),
       );
       toast.success("Invitation cancelled.");

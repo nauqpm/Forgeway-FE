@@ -36,7 +36,7 @@ export default function SystemMessage({
             </div>
           )}
         </div>
-        <div className="flex-1 break-words leading-snug sm:leading-normal">
+        <div className="flex-1 break-words leading-snug sm:leading-normal chat-message-content">
           <strong className="font-medium text-[#111111] dark:text-[#E8E8E7]">{displayName}</strong>{' '}
           {renderMessageContent(message.content, currentUserId)}
           <span className="inline-block text-[#ABABAB] dark:text-[#6B6B6B] ml-1.5 text-[0.65rem] sm:text-[0.6875rem] font-normal whitespace-nowrap">

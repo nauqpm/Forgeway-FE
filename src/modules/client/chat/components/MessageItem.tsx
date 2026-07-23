@@ -287,7 +287,7 @@ export default function MessageItem({
       id={`msg-${message._id}`}
       onContextMenu={handleContextMenu}
       className={cn(
-        "group relative flex gap-4 transition-all flex-row mx-2 rounded-lg",
+        "group relative flex gap-4 transition-all flex-row mx-2 rounded-lg hover:z-20",
         shouldHighlight 
           ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4" 
           : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4",

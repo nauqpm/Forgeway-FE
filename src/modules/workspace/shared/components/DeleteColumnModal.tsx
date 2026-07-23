@@ -40,14 +40,16 @@ export default function DeleteColumnModal({
         className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-md border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
       >
-        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-[#9F2F2D]" />
-            Delete column {column.name}
+        <div className="flex items-start justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-start gap-2 min-w-0 flex-1 mr-2 mt-0.5">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-[#9F2F2D] mt-0.5" />
+            <span className="break-all whitespace-normal">
+              Delete column {column.name}
+            </span>
           </h3>
           <button
             onClick={onClose}
-            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
+            className="shrink-0 text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
           >
             <X className="w-4 h-4" />
           </button>

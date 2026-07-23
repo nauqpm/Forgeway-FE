@@ -10,6 +10,8 @@ import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import type { Message, MessagesPage, ChatUser } from '@/modules/client/chat/types/chat.types';
 import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
+import { ResizeHandle } from '@/shared/components/ResizeHandle';
 
 interface ThreadPanelProps {
   channelId: string;
@@ -25,13 +27,24 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
   const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
   const scrolledMessageIdRef = useRef<string | null>(null);
 
+  const { width: panelWidth, handleMouseDown, handleReset } = useResizablePanel({
+    defaultWidth: 400,
+    minWidth: 280,
+    maxWidth: 650,
+    side: 'left',
+    storageKey: 'al_chat_right_panel_w',
+  });
+
   const { data: channels = [] } = useChatChannels();
   const channel = channels.find(c => c._id === channelId);
 
   const { data: replies = [], isLoading } = useThreadReplies(channelId, messageId);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const visibleReplies = React.useMemo(() => {
+    return replies.filter(r => !r.deletedAt && !(r as { isDeleted?: boolean }).isDeleted);
+  }, [replies]);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   // Search for parent message in cache — subscribe to cache changes for realtime updates
   const getParentFromCache = useCallback(() => {
@@ -110,7 +123,11 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
   }, [replies, isLoading, targetMessageId]);
 
   return (
-    <div className="w-[400px] flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full min-h-0 overflow-hidden relative">
+    <div 
+      style={{ width: `${panelWidth}px` }}
+      className="flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full min-h-0 overflow-hidden relative"
+    >
+      <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="left" />
       {/* Header */}
       <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex flex-col min-w-0">
@@ -131,7 +148,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
       <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0 flex flex-col">
         {/* Parent Message Section */}
         {parentMessage ? (
-          <div className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA]/40 dark:bg-[#252525]/20 pb-2">
+          <div className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA]/40 dark:bg-[#252525]/20 pt-3.5 pb-2">
             <MessageItem
               message={parentMessage}
               isSameUserAsPrevious={false}
@@ -148,22 +165,22 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
         {/* Divider */}
         <div className="px-4 py-2 bg-[#FBFBFA] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center gap-1.5 text-[10px] font-bold text-[#ABABAB] uppercase tracking-wider">
           <MessageSquare className="w-3 h-3" />
-          <span>{replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
+          <span>{visibleReplies.length} {visibleReplies.length === 1 ? 'reply' : 'replies'}</span>
         </div>
 
         {/* Replies List */}
-        <div className="flex-1 py-3">
+        <div className="flex-1 pt-3.5 pb-3">
           {isLoading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="w-5 h-5 animate-spin text-[#787774]" />
             </div>
-          ) : replies.length === 0 ? (
+          ) : visibleReplies.length === 0 ? (
             <div className="py-12 text-center text-[#ABABAB] italic text-xs">
               No replies yet. Be the first to reply!
             </div>
           ) : (
-            replies.map((reply, idx) => {
-              const previousReply = replies[idx - 1];
+            visibleReplies.map((reply, idx) => {
+              const previousReply = visibleReplies[idx - 1];
               const getSenderId = (m: Message) => (m.senderId && typeof m.senderId === 'object') ? m.senderId._id || m.senderId.id : m.senderId;
               const currentSenderId = getSenderId(reply);
               const previousSenderId = previousReply ? getSenderId(previousReply) : null;
@@ -189,7 +206,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
       </div>
 
       {/* Reply Input */}
-      <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06]">
+      <div className="flex-shrink-0">
         <MessageInput
           channelId={channelId}
           channelName={channel?.name}
