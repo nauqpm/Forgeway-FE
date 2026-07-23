@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 
 export interface MentionItem {
   id: string;
@@ -28,9 +28,20 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(({ items, comma
     }
   };
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     setSelectedIndex(0);
   }, [items]);
+
+  useEffect(() => {
+    if (containerRef.current) {
+      const selectedEl = containerRef.current.children[selectedIndex] as HTMLElement;
+      if (selectedEl) {
+        selectedEl.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [selectedIndex]);
 
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }: { event: KeyboardEvent }) => {
@@ -55,7 +66,10 @@ const MentionList = forwardRef<MentionListRef, MentionListProps>(({ items, comma
   }
 
   return (
-    <div className="bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-lg shadow-xl overflow-hidden py-1 min-w-[240px] max-w-[320px] z-50">
+    <div 
+      ref={containerRef}
+      className="bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-lg shadow-xl overflow-y-auto py-1 min-w-[240px] max-w-[320px] max-h-[250px] z-50 shadow-2xl"
+    >
       {items.map((item, index) => {
         const isSelected = index === selectedIndex;
         const isAll = item.id === 'All' || item.id === 'all';

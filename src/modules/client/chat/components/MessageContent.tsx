@@ -20,7 +20,7 @@ export default function MessageContent({
   if (isDeleted) {
     return (
       <div className="italic text-[#787774] dark:text-[#9B9A97] text-[0.8125rem]">
-        [Message deleted]
+        [Tin nhắn đã bị xóa]
       </div>
     );
   }

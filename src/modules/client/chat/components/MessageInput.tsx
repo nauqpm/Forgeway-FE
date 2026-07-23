@@ -6,7 +6,9 @@ import { useEditor, EditorContent, ReactRenderer, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Mention from '@tiptap/extension-mention';
+import LinkExtension from '@tiptap/extension-link';
 import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion';
+import { TextSelection } from '@tiptap/pm/state';
 
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { useChatStore } from '@/stores/chatStore';
@@ -17,6 +19,7 @@ import api from '@/lib/axiosIns';
 import imageService from '@/shared/utils/imageService';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import { searchUsersAPI } from '../services/chatService';
 import MentionList, { MentionItem } from './MentionList';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
@@ -33,8 +36,10 @@ interface MessageInputProps {
 interface TiptapNode {
   type?: string;
   text?: string;
-  marks?: { type: string }[];
-  attrs?: { label?: string; id?: string };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  marks?: { type: string; attrs?: Record<string, any> }[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  attrs?: Record<string, any>;
   content?: TiptapNode[];
 }
 
@@ -59,12 +64,20 @@ function serializeTiptapContent(editor: Editor | null): string {
           else if (mark.type === 'italic') text = `*${text}*`;
           else if (mark.type === 'strike') text = `~~${text}~~`;
           else if (mark.type === 'code') text = `\`${text}\``;
+          else if (mark.type === 'link') {
+            const href = mark.attrs?.href || text;
+            text = href;
+          }
         }
       }
       return text;
     }
 
-    if (node.type === 'hardBreak') return '\n';
+    if (node.type === 'paragraph') {
+      return node.content ? node.content.map(processNode).join('') : '';
+    }
+
+    if (node.type === 'hardBreak') return '@@@SOFTBREAK@@@';
 
     if (node.type === 'codeBlock') {
       const innerText = node.content ? node.content.map(processNode).join('') : '';
@@ -72,19 +85,19 @@ function serializeTiptapContent(editor: Editor | null): string {
     }
 
     if (node.type === 'blockquote') {
-      const innerText = node.content ? node.content.map(processNode).join('') : '';
+      const innerText = node.content ? node.content.map(processNode).join('@@@SOFTBREAK@@@') : '';
       return `> ${innerText}`;
     }
 
     if (node.type === 'bulletList') {
       return node.content
-        ? node.content.map((item: TiptapNode) => `- ${item.content ? item.content.map(processNode).join('') : ''}`).join('\n')
+        ? node.content.map((item: TiptapNode) => `- ${item.content ? item.content.map(processNode).join('@@@SOFTBREAK@@@') : ''}`).join('\n')
         : '';
     }
 
     if (node.type === 'orderedList') {
       return node.content
-        ? node.content.map((item: TiptapNode, i: number) => `${i + 1}. ${item.content ? item.content.map(processNode).join('') : ''}`).join('\n')
+        ? node.content.map((item: TiptapNode, i: number) => `${i + 1}. ${item.content ? item.content.map(processNode).join('@@@SOFTBREAK@@@') : ''}`).join('\n')
         : '';
     }
 
@@ -112,6 +125,8 @@ export default function MessageInput({
   const { data: workspaces = [] } = useWorkspaces();
 
   const [showMediaPicker, setShowMediaPicker] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(true);
+  const [, setSelectionTick] = useState(0);
   const { sendMessage, sendTyping } = useChatRealtime();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastTypingSentRef = useRef<number>(0);
@@ -139,22 +154,70 @@ export default function MessageInput({
     ? replyingToMessage.senderId
     : null;
 
+  const channelIdRef = useRef(channelId);
+  React.useEffect(() => {
+    channelIdRef.current = channelId;
+  }, [channelId]);
+
   // 1. Configure Tiptap Mention Suggestion Plugin
   const mentionSuggestion = useMemo(() => ({
     char: '@',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    findSuggestionMatch: (config: any) => {
+      const $from = config?.$position || config?.state?.selection?.$from;
+      if (!$from) return null;
+      const nodeBefore = $from.nodeBefore;
+      if (!nodeBefore || !nodeBefore.isText || !nodeBefore.text) return null;
+
+      const textBefore = nodeBefore.text;
+      const regex = /(^|\s)@([^\s]*)$/;
+      const match = regex.exec(textBefore);
+      if (!match) return null;
+
+      const from = $from.pos - match[0].length + match[1].length;
+      const to = $from.pos;
+
+      return {
+        range: { from, to },
+        query: match[2],
+        text: match[0].slice(match[1].length),
+      };
+    },
     items: async ({ query }: { query: string }): Promise<MentionItem[]> => {
       try {
         const cleanQuery = (query || '').replace(/^@+/, '').trim();
         const apiQuery = cleanQuery.replace(/@+$/, '').trim();
         const isAllMatch = !cleanQuery || 'all'.startsWith(cleanQuery.toLowerCase());
 
-        const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
-          params: { q: apiQuery }
-        });
-        const members = response.data || [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let members: any[] = [];
+        const activeChannelId = channelIdRef.current || channelId;
+        if (activeChannelId) {
+          try {
+            const response = await api.get(`/chat/channels/${activeChannelId}/mention-members`, {
+              params: { q: apiQuery }
+            });
+            const data = response.data?.data ?? response.data;
+            members = Array.isArray(data) ? data : [];
+          } catch (e) {
+            console.warn('Channel mention members search failed, falling back to global search:', e);
+          }
+        }
+
+        if (members.length === 0) {
+          try {
+            const fallbackUsers = await searchUsersAPI(apiQuery);
+            members = fallbackUsers;
+          } catch (e) {
+            console.error('Fallback user search failed:', e);
+          }
+        }
 
         const mappedMembers: MentionItem[] = members
-          .filter((m: { _id?: string; id?: string }) => !currentUserId || String(m._id || m.id) !== String(currentUserId))
+          .filter((m: { _id?: string; id?: string }) => {
+            const memberId = m._id || m.id;
+            return !currentUserId || String(memberId) !== String(currentUserId);
+          })
           .map((m: { _id?: string; id?: string; fullName?: string; email?: string; avatar?: string }) => {
             const name = m.fullName?.trim();
             const email = m.email?.trim();
@@ -175,6 +238,29 @@ export default function MessageInput({
             avatar: 'special-all'
           });
         }
+
+        mappedMembers.sort((a, b) => {
+          if (a.id === 'All') return -1;
+          if (b.id === 'All') return 1;
+
+          const q = apiQuery.toLowerCase();
+          const aEmail = (a.email || '').toLowerCase();
+          const bEmail = (b.email || '').toLowerCase();
+          const aLabel = (a.label || '').toLowerCase();
+          const bLabel = (b.label || '').toLowerCase();
+
+          const aExact = aEmail === q || aLabel === q;
+          const bExact = bEmail === q || bLabel === q;
+          if (aExact && !bExact) return -1;
+          if (!aExact && bExact) return 1;
+
+          const aStarts = aEmail.startsWith(q) || aLabel.startsWith(q);
+          const bStarts = bEmail.startsWith(q) || bLabel.startsWith(q);
+          if (aStarts && !bStarts) return -1;
+          if (!aStarts && bStarts) return 1;
+
+          return 0;
+        });
 
         return mappedMembers.slice(0, 10);
       } catch (err) {
@@ -201,7 +287,8 @@ export default function MessageInput({
           const rect = props.clientRect?.();
           if (rect) {
             popupContainer.style.left = `${rect.left}px`;
-            popupContainer.style.top = `${rect.bottom + 6}px`;
+            popupContainer.style.bottom = `${window.innerHeight - rect.top + 6}px`;
+            popupContainer.style.top = 'auto';
           }
 
           popupContainer.appendChild(component.element);
@@ -212,7 +299,8 @@ export default function MessageInput({
           const rect = props.clientRect?.();
           if (rect && popupContainer) {
             popupContainer.style.left = `${rect.left}px`;
-            popupContainer.style.top = `${rect.bottom + 6}px`;
+            popupContainer.style.bottom = `${window.innerHeight - rect.top + 6}px`;
+            popupContainer.style.top = 'auto';
           }
         },
         onKeyDown(props: SuggestionKeyDownProps) {
@@ -243,6 +331,7 @@ export default function MessageInput({
       StarterKit.configure({
         bulletList: { keepMarks: true },
         orderedList: { keepMarks: true },
+        heading: false,
       }),
       Placeholder.configure({
         placeholder: channelName
@@ -255,28 +344,63 @@ export default function MessageInput({
         },
         suggestion: mentionSuggestion,
       }),
+      LinkExtension.configure({
+        autolink: true,
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-[#2563EB] dark:text-[#3B82F6] underline',
+        },
+      }),
     ],
     editorProps: {
       attributes: {
         class: 'tiptap-chat-editor min-h-[24px] focus:outline-none',
       },
-      handleKeyDown: (_view, event) => {
-        if (event.key === 'Enter' && !event.shiftKey) {
-          event.preventDefault();
-          handleSend();
-          return true;
+      handleKeyDown: (view, event) => {
+        if (event.key === 'Enter' && !event.isComposing) {
+          if (!event.shiftKey) {
+            event.preventDefault();
+            handleSendRef.current();
+            return true;
+          } else {
+            const { state } = view;
+            const { $from } = state.selection;
+            let inList = false;
+            for (let d = $from.depth; d > 0; d--) {
+              if ($from.node(d).type.name === 'listItem') {
+                inList = true;
+                break;
+              }
+            }
+
+            if (inList && editorRef.current?.commands?.splitListItem) {
+              const handled = editorRef.current.commands.splitListItem('listItem');
+              if (handled) {
+                event.preventDefault();
+                return true;
+              }
+            }
+          }
         }
         return false;
       },
     },
-    onUpdate: () => {
+    onUpdate: ({ editor }) => {
+      setIsEmpty(editor.isEmpty);
       const now = Date.now();
       if (now - lastTypingSentRef.current > 2000) {
         sendTyping(channelId);
         lastTypingSentRef.current = now;
       }
     },
-  });
+    onSelectionUpdate: () => {
+      setSelectionTick((prev) => prev + 1);
+    },
+    onTransaction: ({ editor }) => {
+      setIsEmpty(editor.isEmpty);
+      setSelectionTick((prev) => prev + 1);
+    },
+  }, [channelId]);
 
   // 3. File Upload Handler
   const uploadFiles = async (filesToUpload: File[]) => {
@@ -413,6 +537,71 @@ export default function MessageInput({
     }
   };
 
+  const toggleFormattedBlock = (type: 'bulletList' | 'orderedList' | 'blockquote') => {
+    if (!editor) return;
+
+    if (editor.isActive(type)) {
+      if (type === 'bulletList') editor.chain().focus().toggleBulletList().run();
+      else if (type === 'orderedList') editor.chain().focus().toggleOrderedList().run();
+      else if (type === 'blockquote') editor.chain().focus().toggleBlockquote().run();
+      return;
+    }
+
+    const { state, dispatch } = editor.view;
+    const { selection } = state;
+    const { from, to, $from } = selection;
+    const tr = state.tr;
+    let modifiedDoc = false;
+
+    const parentStart = $from.start($from.depth);
+    const parentEnd = $from.end($from.depth);
+    const searchFrom = Math.min(from, parentStart);
+    const searchTo = Math.max(to, parentEnd);
+
+    // 1. Strip leading literal list prefixes (like "1. ", "- ", "* ")
+    state.doc.nodesBetween(searchFrom, searchTo, (node, pos) => {
+      if (node.isText && node.text) {
+        const match = node.text.match(/^(\d+\.|[-*+])\s+/);
+        if (match) {
+          tr.delete(pos, pos + match[0].length);
+          modifiedDoc = true;
+        }
+      }
+    });
+
+    // 2. Find and handle hardBreaks
+    const hardBreakPositions: number[] = [];
+    state.doc.nodesBetween(searchFrom, searchTo, (node, pos) => {
+      if (node.type.name === 'hardBreak') {
+        hardBreakPositions.push(pos);
+      }
+    });
+
+    if (hardBreakPositions.length > 0) {
+      modifiedDoc = true;
+      for (let i = hardBreakPositions.length - 1; i >= 0; i--) {
+        const pos = hardBreakPositions[i];
+        tr.delete(pos, pos + 1);
+        tr.split(pos);
+      }
+
+      const newFrom = tr.mapping.map(from);
+      const newTo = tr.mapping.map(to);
+      const safeFrom = Math.min(newFrom, tr.doc.content.size - 1);
+      const safeTo = Math.min(newTo, tr.doc.content.size - 1);
+
+      tr.setSelection(TextSelection.create(tr.doc, safeFrom, safeTo));
+    }
+
+    if (modifiedDoc) {
+      dispatch(tr);
+    }
+
+    if (type === 'bulletList') editor.chain().focus().toggleBulletList().run();
+    else if (type === 'orderedList') editor.chain().focus().toggleOrderedList().run();
+    else if (type === 'blockquote') editor.chain().focus().toggleBlockquote().run();
+  };
+
   // 4. Send Message Handler
   const handleSend = () => {
     if (!editor) return;
@@ -466,12 +655,20 @@ export default function MessageInput({
     );
 
     editor.commands.clearContent();
+    setIsEmpty(true);
     setUploadedFiles([]);
     setReplyingToMessage(null);
     if (onSuccess) {
       onSuccess();
     }
   };
+
+  const handleSendRef = useRef(handleSend);
+  const editorRef = useRef<Editor | null>(null);
+  React.useEffect(() => {
+    handleSendRef.current = handleSend;
+    editorRef.current = editor;
+  });
 
   const handleSelectSticker = (stickerId: string) => {
     const contentVal = autoMentionAll ? '[@All](All)' : '';
@@ -483,7 +680,7 @@ export default function MessageInput({
     }
   };
 
-  const isEditorEmpty = !editor || editor.isEmpty;
+  const isEditorEmpty = isEmpty;
 
   return (
     <div className="w-full bg-white dark:bg-[#202020] p-3 border-t border-[#EAEAEA] dark:border-white/[0.06] select-text">
@@ -495,7 +692,7 @@ export default function MessageInput({
               Replying to {replyingSender ? (replyingSender.fullName || replyingSender.email) : 'User'}
             </span>
             <span className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">
-              {replyingToMessage.content}
+              {replyingToMessage.content?.replace(/@@@SOFTBREAK@@@/g, ' ')}
             </span>
           </div>
           <button
@@ -637,7 +834,7 @@ export default function MessageInput({
             </button>
             <button 
               type="button"
-              onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+              onClick={() => toggleFormattedBlock('blockquote')}
               title="Blockquote"
               className={cn(
                 "p-1.5 rounded-[4px] transition-colors",
@@ -650,7 +847,7 @@ export default function MessageInput({
             </button>
             <button 
               type="button"
-              onClick={() => editor?.chain().focus().toggleBulletList().run()}
+              onClick={() => toggleFormattedBlock('bulletList')}
               title="Bullet List"
               className={cn(
                 "p-1.5 rounded-[4px] transition-colors",
@@ -663,7 +860,7 @@ export default function MessageInput({
             </button>
             <button 
               type="button"
-              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+              onClick={() => toggleFormattedBlock('orderedList')}
               title="Numbered List"
               className={cn(
                 "p-1.5 rounded-[4px] transition-colors",

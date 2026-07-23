@@ -1060,7 +1060,8 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 }
 
 /* ── Tiptap Rich Text Chat Editor ── */
-.tiptap-chat-editor .ProseMirror {
+.ProseMirror,
+.tiptap-chat-editor {
   outline: none !important;
   min-height: 24px;
   max-height: 200px;
@@ -1069,17 +1070,20 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   line-height: 1.25rem;
   color: #111111;
 }
-.dark .tiptap-chat-editor .ProseMirror {
+.dark .ProseMirror,
+.dark .tiptap-chat-editor {
   color: #E8E8E7;
 }
-.tiptap-chat-editor .ProseMirror p.is-editor-empty:first-child::before {
+.ProseMirror p.is-editor-empty:first-child::before,
+.tiptap-chat-editor p.is-editor-empty:first-child::before {
   color: #9CA3AF;
   content: attr(data-placeholder);
   float: left;
   height: 0;
   pointer-events: none;
 }
-.tiptap-chat-editor .ProseMirror span[data-type="mention"] {
+.ProseMirror span[data-type="mention"],
+.tiptap-chat-editor span[data-type="mention"] {
   background-color: #EFF6FF;
   color: #2563EB;
   border-radius: 4px;
@@ -1089,11 +1093,13 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   display: inline-block;
   margin: 0 1px;
 }
-.dark .tiptap-chat-editor .ProseMirror span[data-type="mention"] {
+.dark .ProseMirror span[data-type="mention"],
+.dark .tiptap-chat-editor span[data-type="mention"] {
   background-color: rgba(37, 99, 235, 0.2);
   color: #60A5FA;
 }
-.tiptap-chat-editor .ProseMirror pre {
+.ProseMirror pre,
+.tiptap-chat-editor pre {
   background-color: #F3F4F6;
   border-radius: 6px;
   padding: 8px 12px;
@@ -1101,10 +1107,12 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   font-size: 0.8rem;
   margin: 4px 0;
 }
-.dark .tiptap-chat-editor .ProseMirror pre {
+.dark .ProseMirror pre,
+.dark .tiptap-chat-editor pre {
   background-color: rgba(255, 255, 255, 0.08);
 }
-.tiptap-chat-editor .ProseMirror code {
+.ProseMirror code,
+.tiptap-chat-editor code {
   background-color: rgba(37, 99, 235, 0.08);
   color: #E11D48;
   border-radius: 4px;
@@ -1112,9 +1120,73 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   font-family: monospace;
   font-size: 0.85rem;
 }
-.dark .tiptap-chat-editor .ProseMirror code {
+.dark .ProseMirror code,
+.dark .tiptap-chat-editor code {
   background-color: rgba(255, 255, 255, 0.1);
   color: #F43F5E;
+}
+
+/* ── Tiptap Lists & Blockquote Preview While Typing ── */
+.ProseMirror ul,
+.tiptap-chat-editor ul {
+  list-style-type: disc !important;
+  padding-left: 1.25rem !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+.ProseMirror ol,
+.tiptap-chat-editor ol {
+  list-style-type: decimal !important;
+  padding-left: 1.25rem !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+}
+.ProseMirror li,
+.tiptap-chat-editor li {
+  display: list-item !important;
+  list-style-position: outside !important;
+  margin-top: 0.125rem !important;
+  margin-bottom: 0.125rem !important;
+}
+.ProseMirror li:has(strong)::marker,
+.tiptap-chat-editor li:has(strong)::marker,
+.chat-message-content li:has(strong)::marker {
+  font-weight: bold !important;
+}
+.ProseMirror li:has(em)::marker,
+.tiptap-chat-editor li:has(em)::marker,
+.chat-message-content li:has(em)::marker {
+  font-style: italic !important;
+}
+.ProseMirror li:has(s)::marker,
+.ProseMirror li:has(del)::marker,
+.tiptap-chat-editor li:has(s)::marker,
+.tiptap-chat-editor li:has(del)::marker,
+.chat-message-content li:has(s)::marker,
+.chat-message-content li:has(del)::marker {
+  text-decoration: line-through !important;
+}
+.ProseMirror li p,
+.tiptap-chat-editor li p {
+  margin: 0 !important;
+  display: inline !important;
+}
+.ProseMirror blockquote,
+.tiptap-chat-editor blockquote {
+  border-left: 3px solid #2563EB !important;
+  padding-left: 0.75rem !important;
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.25rem !important;
+  font-style: italic;
+  color: #555555;
+  background-color: #F7F6F3;
+  border-radius: 0 4px 4px 0;
+}
+.dark .ProseMirror blockquote,
+.dark .tiptap-chat-editor blockquote {
+  border-left-color: #3B82F6 !important;
+  color: #AAAAAA;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* ── Prevent text insertion cursor (caret) on rendered chat messages ── */

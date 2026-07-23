@@ -91,7 +91,9 @@ export default function MessageContextMenu({
       {message.content && (
         <button
           onClick={() => {
-            const cleanText = message.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+            const cleanText = message.content
+              .replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')
+              .replace(/@@@SOFTBREAK@@@/g, '\n');
             navigator.clipboard.writeText(cleanText);
             toast.success('Text copied to clipboard');
             onClose();

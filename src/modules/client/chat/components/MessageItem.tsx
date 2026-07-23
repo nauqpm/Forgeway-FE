@@ -313,7 +313,7 @@ export default function MessageItem({
         onDeleteForMe={() => setShowDeleteForMeConfirm(true)}
         onEdit={() => {
           setIsEditing(true);
-          setEditContent(message.content);
+          setEditContent((message.content || '').replace(/@@@SOFTBREAK@@@/g, '\n'));
         }}
         onDeleteForEveryone={() => setShowDeleteConfirm(true)}
       />
@@ -562,7 +562,7 @@ export default function MessageItem({
         onReplyInThread={() => setActiveThreadParentId(message._id)}
         onEdit={() => {
           setIsEditing(true);
-          setEditContent(message.content);
+          setEditContent((message.content || '').replace(/@@@SOFTBREAK@@@/g, '\n'));
         }}
         onDeleteForMe={() => setShowDeleteForMeConfirm(true)}
         onDeleteForEveryone={() => setShowDeleteConfirm(true)}
