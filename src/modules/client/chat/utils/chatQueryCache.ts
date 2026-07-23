@@ -105,6 +105,36 @@ export const updateMessageInCache = (
   );
 };
 
+const getReplyTargetId = (replyToId: unknown): string | null => {
+  if (!replyToId) return null;
+  if (typeof replyToId === 'string') return replyToId;
+  if (typeof replyToId === 'object' && replyToId !== null) {
+    const obj = replyToId as { _id?: string; id?: string };
+    return String(obj._id || obj.id || '');
+  }
+  return null;
+};
+
+const updateReplyTargetIfDeleted = (m: Message, targetMessageId: string): Message => {
+  const targetId = getReplyTargetId(m.replyToId);
+  if (targetId && String(targetId) === String(targetMessageId)) {
+    const existingSender =
+      m.replyToId && typeof m.replyToId === 'object'
+        ? (m.replyToId as Message).senderId
+        : (m as Message & { replyToSenderId?: unknown }).replyToSenderId || null;
+    return {
+      ...m,
+      replyToId: {
+        _id: String(targetMessageId),
+        content: '[Message deleted]',
+        senderId: existingSender,
+        isDeleted: true,
+      } as unknown as Message,
+    };
+  }
+  return m;
+};
+
 export const removeMessageFromCache = (
   queryClient: QueryClient,
   channelId: string,
@@ -119,7 +149,9 @@ export const removeMessageFromCache = (
         ...current,
         pages: current.pages.map((page) => ({
           ...page,
-          messages: page.messages.filter((m) => getMessageId(m) !== messageId),
+          messages: page.messages
+            .filter((m) => getMessageId(m) !== messageId)
+            .map((m) => updateReplyTargetIfDeleted(m, messageId)),
         })),
       };
     }
@@ -128,7 +160,10 @@ export const removeMessageFromCache = (
   if (threadParentId) {
     queryClient.setQueryData<Message[]>(
       queryKeys.chat.threadReplies(channelId, threadParentId),
-      (current = []) => current.filter((m) => getMessageId(m) !== messageId)
+      (current = []) =>
+        current
+          .filter((m) => getMessageId(m) !== messageId)
+          .map((m) => updateReplyTargetIfDeleted(m, messageId))
     );
   } else {
     // If a top-level parent message was deleted, clear all its thread replies from cache

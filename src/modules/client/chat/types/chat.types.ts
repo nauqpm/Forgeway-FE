@@ -25,6 +25,7 @@ export interface Message {
   type: 'text' | 'system' | 'sticker' | 'file';
   stickerId?: Sticker;
   replyToId?: string | Message;
+  replyToSenderId?: string | ChatUser;
   createdAt: string;
   updatedAt?: string;
   editedAt?: string | null;
