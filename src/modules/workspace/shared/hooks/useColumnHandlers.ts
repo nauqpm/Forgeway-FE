@@ -5,7 +5,7 @@ import { boardService } from "../services/boardService";
 import { BoardColumn } from "../types/board.type";
 import { toast } from "react-hot-toast";
 import { extractApiError, extractApiErrorCode } from "@/shared/utils/apiError";
-import { COLUMN_NAME_MESSAGES, hasDuplicateColumnName, normalizeColumnDisplayName } from "../utils/columnName";
+import { COLUMN_NAME_MESSAGES, MAX_COLUMN_NAME_LENGTH, hasDuplicateColumnName, normalizeColumnDisplayName } from "../utils/columnName";
 
 const getColumnErrorMessage = (error: unknown, fallback: string): string => {
   const code = extractApiErrorCode(error, "");
@@ -174,6 +174,11 @@ export const useColumnHandlers = ({
       return;
     }
 
+    if (normalizedName.length > MAX_COLUMN_NAME_LENGTH) {
+      toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+      return;
+    }
+
     const board = queryClient.getQueryData<{ columns: BoardColumn[] }>(boardQueryKey);
     if (hasDuplicateColumnName(board?.columns ?? [], normalizedName)) {
       toast.error(COLUMN_NAME_MESSAGES.DUPLICATE);
@@ -187,6 +192,11 @@ export const useColumnHandlers = ({
     const normalizedName = normalizeColumnDisplayName(name);
     if (!normalizedName) {
       toast.error(COLUMN_NAME_MESSAGES.INVALID);
+      return;
+    }
+
+    if (normalizedName.length > MAX_COLUMN_NAME_LENGTH) {
+      toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
       return;
     }
 
