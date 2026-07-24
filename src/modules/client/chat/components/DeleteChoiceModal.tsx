@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Trash2, Users, User, X } from 'lucide-react';
+import { Trash2, X } from 'lucide-react';
+import { TrashForMeIcon, TrashForEveryoneIcon } from './MessageContextMenu';
 import { renderMessageContent } from '../utils/messageContentRenderer';
 import type { Message } from '../types/chat.types';
 
@@ -75,8 +76,8 @@ export default function DeleteChoiceModal({
               }}
               className="w-full p-3 flex items-start gap-3 rounded-lg border border-[#EAEAEA] dark:border-white/[0.08] hover:border-orange-500/50 hover:bg-orange-50/50 dark:hover:bg-orange-500/10 transition-all text-left cursor-pointer group"
             >
-              <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0 group-hover:scale-105 transition-transform">
-                <Users className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <TrashForEveryoneIcon className="w-4 h-4 text-orange-500" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:text-orange-600 dark:group-hover:text-orange-400">
@@ -95,8 +96,8 @@ export default function DeleteChoiceModal({
               }}
               className="w-full p-3 flex items-start gap-3 rounded-lg border border-[#EAEAEA] dark:border-white/[0.08] hover:border-red-500/50 hover:bg-red-50/50 dark:hover:bg-red-500/10 transition-all text-left cursor-pointer group"
             >
-              <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500 shrink-0 group-hover:scale-105 transition-transform">
-                <User className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-500/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                <TrashForMeIcon className="w-4 h-4 text-red-500" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] group-hover:text-red-600 dark:group-hover:text-red-400">

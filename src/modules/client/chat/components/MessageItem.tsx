@@ -584,7 +584,8 @@ export default function MessageItem({
           setIsEditing(true);
           setEditContent((message.content || '').replace(/@@@SOFTBREAK@@@/g, '\n'));
         }}
-        onDeleteClick={handleDeleteClick}
+        onDeleteForMe={() => setShowDeleteForMeConfirm(true)}
+        onDeleteForEveryone={() => setShowDeleteConfirm(true)}
         onClose={() => setContextMenuPos(null)}
       />
     </div>
