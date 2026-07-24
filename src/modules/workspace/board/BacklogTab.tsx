@@ -304,7 +304,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
         onBeforeDragStart={handleBacklogDragStart}
         onDragEnd={canMoveTask ? handleBacklogDragEnd : () => undefined}
       >
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto space-y-6 px-[var(--workspace-surface-pad)] py-[var(--workspace-surface-pad)]">
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto space-y-6 px-[var(--workspace-surface-pad)] py-[var(--workspace-surface-pad)]">
           {/* Backlog Top Bar with Filter */}
           <div className="flex flex-col gap-3 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7]">
