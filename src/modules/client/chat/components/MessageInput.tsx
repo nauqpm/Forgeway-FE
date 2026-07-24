@@ -159,6 +159,8 @@ export default function MessageInput({
     channelIdRef.current = channelId;
   }, [channelId]);
 
+  const isMentionOpenRef = useRef(false);
+
   // 1. Configure Tiptap Mention Suggestion Plugin
   const mentionSuggestion = useMemo(() => ({
     char: '@',
@@ -274,6 +276,7 @@ export default function MessageInput({
 
       return {
         onStart: (props: SuggestionProps) => {
+          isMentionOpenRef.current = true;
           component = new ReactRenderer(MentionList, {
             props,
             editor: props.editor,
@@ -305,6 +308,7 @@ export default function MessageInput({
         },
         onKeyDown(props: SuggestionKeyDownProps) {
           if (props.event.key === 'Escape') {
+            isMentionOpenRef.current = false;
             if (popupContainer) {
               popupContainer.remove();
               popupContainer = null;
@@ -312,9 +316,14 @@ export default function MessageInput({
             return true;
           }
 
-          return (component?.ref as { onKeyDown?: (props: SuggestionKeyDownProps) => boolean })?.onKeyDown?.(props) || false;
+          const handled = (component?.ref as { onKeyDown?: (props: SuggestionKeyDownProps) => boolean })?.onKeyDown?.(props) || false;
+          if (handled && (props.event.key === 'Enter' || props.event.key === 'Tab')) {
+            isMentionOpenRef.current = false;
+          }
+          return handled;
         },
         onExit() {
+          isMentionOpenRef.current = false;
           if (popupContainer) {
             popupContainer.remove();
             popupContainer = null;
@@ -357,6 +366,10 @@ export default function MessageInput({
         class: 'tiptap-chat-editor min-h-[24px] focus:outline-none',
       },
       handleKeyDown: (view, event) => {
+        if (isMentionOpenRef.current) {
+          return false;
+        }
+
         if (event.key === 'Enter' && !event.isComposing) {
           if (!event.shiftKey) {
             event.preventDefault();

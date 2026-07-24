@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Reply, MessageSquare, Copy, Pencil, Trash2, RotateCcw } from 'lucide-react';
+import { Reply, MessageSquare, Copy, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Message } from '../types/chat.types';
 
@@ -16,8 +16,7 @@ interface MessageContextMenuProps {
   onReply: () => void;
   onReplyInThread: () => void;
   onEdit: () => void;
-  onDeleteForMe: () => void;
-  onDeleteForEveryone: () => void;
+  onDeleteClick: () => void;
   onClose: () => void;
 }
 
@@ -32,8 +31,7 @@ export default function MessageContextMenu({
   onReply,
   onReplyInThread,
   onEdit,
-  onDeleteForMe,
-  onDeleteForEveryone,
+  onDeleteClick,
   onClose,
 }: MessageContextMenuProps) {
   if (!contextMenuPos) return null;
@@ -122,27 +120,14 @@ export default function MessageContextMenu({
 
       <button
         onClick={() => {
-          onDeleteForMe();
+          onDeleteClick();
           onClose();
         }}
         className="w-full flex items-center justify-between px-2.5 py-1.5 text-[0.8125rem] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors cursor-pointer"
       >
-        <span>Delete for me</span>
+        <span>Delete message</span>
         <Trash2 className="w-3.5 h-3.5 text-red-500" />
       </button>
-
-      {isMine && (
-        <button
-          onClick={() => {
-            onDeleteForEveryone();
-            onClose();
-          }}
-          className="w-full flex items-center justify-between px-2.5 py-1.5 text-[0.8125rem] font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors cursor-pointer"
-        >
-          <span>Delete for everyone</span>
-          <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
-        </button>
-      )}
     </div>
   );
 }
