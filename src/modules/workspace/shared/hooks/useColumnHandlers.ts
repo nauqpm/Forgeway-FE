@@ -117,8 +117,8 @@ export const useColumnHandlers = ({
   });
 
   const deleteColumnMutation = useMutation({
-    mutationFn: ({ columnId, migrateTo }: { columnId: string; migrateTo?: string }) =>
-      boardService.deleteColumn(workspaceId, columnId, { targetColumnId: migrateTo }),
+    mutationFn: ({ columnId, migrateTo, archivedMigrateTo }: { columnId: string; migrateTo?: string; archivedMigrateTo?: string }) =>
+      boardService.deleteColumn(workspaceId, columnId, { targetColumnId: migrateTo, archivedTargetColumnId: archivedMigrateTo }),
     onMutate: async ({ columnId }) => {
       await queryClient.cancelQueries({ queryKey: boardQueryKey });
       const previousBoard = queryClient.getQueryData<{ boardId: string; columns: BoardColumn[] }>(boardQueryKey);
@@ -199,8 +199,8 @@ export const useColumnHandlers = ({
     renameColumnMutation.mutate({ columnId, name: normalizedName });
   };
 
-  const handleDeleteColumn = (columnId: string, migrateTo?: string) => {
-    deleteColumnMutation.mutate({ columnId, migrateTo });
+  const handleDeleteColumn = (columnId: string, migrateTo?: string, archivedMigrateTo?: string) => {
+    deleteColumnMutation.mutate({ columnId, migrateTo, archivedMigrateTo });
   };
 
   const handleMoveColumn = (columnId: string, newOrder: number) => {
