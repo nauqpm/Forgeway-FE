@@ -19,6 +19,7 @@ import { getActiveMeetingAPI } from '@/modules/client/meeting/services/meeting.a
 import { useChatStore } from '@/stores/chatStore';
 import type { MentionMember, MessagesPage, Message } from '@/modules/client/chat/types/chat.types';
 import { updateChannelInCache, upsertChannelInCache, removeMessageFromCache } from '@/modules/client/chat/utils/chatQueryCache';
+import { toast } from 'react-hot-toast';
 
 type ActiveThreadsResponse = { threads: Message[]; nextCursor: string | null };
 
@@ -115,6 +116,7 @@ export const useCreateDM = () => {
     onSuccess: (channel) => {
       upsertChannelInCache(queryClient, channel);
       setActiveChannel(channel._id);
+      toast.success('Create DM successfully');
     },
   });
 };

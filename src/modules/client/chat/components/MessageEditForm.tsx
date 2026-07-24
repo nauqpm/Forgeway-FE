@@ -46,17 +46,18 @@ export default function MessageEditForm({
           maxLength={4000}
         >
           <Mention
-            trigger="@"
+            trigger={/(?:^|\s)(@([^\s]*))$/}
             data={onMentionSearch}
             markup="[@__display__](__id__)"
+            displayTransform={(_id, display) => `@${display.includes(' — ') ? display.split(' — ')[0] : display}`}
             renderSuggestion={(
               suggestion,
-              _search,
-              highlightedDisplay,
             ) => {
               const avatarUrl = (suggestion as { id: string | number; display: string; avatar?: string; email?: string }).avatar;
               const email = (suggestion as { id: string | number; display: string; avatar?: string; email?: string }).email;
               const isAll = suggestion.id === 'All' || suggestion.id === 'all';
+              const rawDisplay = suggestion.display || '';
+              const displayName = rawDisplay.includes(' — ') ? rawDisplay.split(' — ')[0] : rawDisplay;
 
               return (
                 <div className="flex items-center gap-3 py-1.5 px-3 hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors w-full text-left">
@@ -69,7 +70,7 @@ export default function MessageEditForm({
                     ) : avatarUrl ? (
                       <img 
                         src={avatarUrl} 
-                        alt={suggestion.display} 
+                        alt={displayName} 
                         className="w-full h-full object-cover" 
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = 'none';
@@ -77,19 +78,19 @@ export default function MessageEditForm({
                           if (parent && !parent.querySelector('.mention-avatar-fallback')) {
                             const span = document.createElement('span');
                             span.className = 'mention-avatar-fallback';
-                            span.innerText = suggestion.display?.toString().charAt(0).toUpperCase() || 'U';
+                            span.innerText = displayName.charAt(0).toUpperCase() || 'U';
                             parent.appendChild(span);
                           }
                         }}
                       />
                     ) : (
-                      <span>{suggestion.display?.toString().charAt(0).toUpperCase()}</span>
+                      <span>{displayName.charAt(0).toUpperCase()}</span>
                     )}
                   </div>
 
                   <div className="flex-1 min-w-0 flex flex-col text-left">
                     <span className="font-semibold text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] truncate leading-tight">
-                      {isAll ? "@All" : highlightedDisplay}
+                      {isAll ? "@All" : displayName}
                     </span>
                     {email && (
                       <span className="text-[0.75rem] text-[#787774] dark:text-[#9B9A97] truncate leading-tight mt-0.5">
@@ -101,7 +102,6 @@ export default function MessageEditForm({
               );
             }}
             className="text-[#2563EB] bg-[#EFF6FF] dark:text-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)] font-medium"
-            displayTransform={(id, display) => `@${display}`}
           />
         </MentionsInput>
       </div>

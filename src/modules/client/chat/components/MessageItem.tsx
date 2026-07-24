@@ -16,6 +16,7 @@ import MessageEditForm from './MessageEditForm';
 import MessageContent from './MessageContent';
 import MessageAttachments from './MessageAttachments';
 import ConfirmActionModal from './ConfirmActionModal';
+import DeleteChoiceModal from './DeleteChoiceModal';
 import MediaLightbox, { LightboxFile } from './MediaLightbox';
 
 import { useAttachmentPreview } from '../hooks/useAttachmentPreview';
@@ -48,7 +49,7 @@ export default function MessageItem({
     : ({ _id: String(message.senderId || ''), fullName: 'Deleted User', email: '' } as ChatUser);
   const displayName = sender.fullName || sender.email || 'Deleted User';
   const initialLetter = displayName.charAt(0).toUpperCase();
-  const isDeleted = Boolean(message.deletedAt);
+  const isDeleted = false;
 
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
@@ -80,6 +81,7 @@ export default function MessageItem({
   const [positionBelow, setPositionBelow] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteForMeConfirm, setShowDeleteForMeConfirm] = useState(false);
+  const [showDeleteChoices, setShowDeleteChoices] = useState(false);
   const { mutate: deleteForMeMutate } = useDeleteMessageForMeMutation();
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
@@ -232,6 +234,14 @@ export default function MessageItem({
     setShowDeleteForMeConfirm(false);
   };
 
+  const handleDeleteClick = () => {
+    if (isMine) {
+      setShowDeleteChoices(true);
+    } else {
+      setShowDeleteForMeConfirm(true);
+    }
+  };
+
   // Reply calculation
   const replyParent = message.replyToId && typeof message.replyToId === 'object'
     ? (message.replyToId as Message)
@@ -287,7 +297,7 @@ export default function MessageItem({
       id={`msg-${message._id}`}
       onContextMenu={handleContextMenu}
       className={cn(
-        "group relative flex gap-4 transition-all flex-row mx-2 rounded-lg",
+        "group relative flex gap-4 transition-all flex-row mx-2 rounded-lg hover:z-10",
         shouldHighlight 
           ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4" 
           : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4",
@@ -310,12 +320,11 @@ export default function MessageItem({
           else setReplyingToMessage(message);
         }}
         onReplyInThread={() => setActiveThreadParentId(message._id)}
-        onDeleteForMe={() => setShowDeleteForMeConfirm(true)}
         onEdit={() => {
           setIsEditing(true);
-          setEditContent(message.content);
+          setEditContent((message.content || '').replace(/@@@SOFTBREAK@@@/g, '\n'));
         }}
-        onDeleteForEveryone={() => setShowDeleteConfirm(true)}
+        onDeleteClick={handleDeleteClick}
       />
 
       {/* Avatar column */}
@@ -500,6 +509,17 @@ export default function MessageItem({
         ) : null}
       </div>
 
+      {/* Delete Choice Dialog Modal (shows 2 choices if message is mine) */}
+      <DeleteChoiceModal
+        isOpen={showDeleteChoices}
+        displayName={displayName}
+        message={message}
+        currentUserId={currentUserId}
+        onDeleteForEveryone={() => setShowDeleteConfirm(true)}
+        onDeleteForMe={() => setShowDeleteForMeConfirm(true)}
+        onClose={() => setShowDeleteChoices(false)}
+      />
+
       {/* Delete for Everyone Dialog Modal */}
       <ConfirmActionModal
         isOpen={showDeleteConfirm}
@@ -562,7 +582,7 @@ export default function MessageItem({
         onReplyInThread={() => setActiveThreadParentId(message._id)}
         onEdit={() => {
           setIsEditing(true);
-          setEditContent(message.content);
+          setEditContent((message.content || '').replace(/@@@SOFTBREAK@@@/g, '\n'));
         }}
         onDeleteForMe={() => setShowDeleteForMeConfirm(true)}
         onDeleteForEveryone={() => setShowDeleteConfirm(true)}

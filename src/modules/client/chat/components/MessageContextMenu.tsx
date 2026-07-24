@@ -1,9 +1,27 @@
 'use client';
 
 import React from 'react';
-import { Reply, MessageSquare, Copy, Pencil, Trash2, RotateCcw } from 'lucide-react';
+import { Reply, MessageSquare, Copy, Pencil, Trash2, User, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { Message } from '../types/chat.types';
+
+export function TrashForMeIcon({ className = "w-4 h-4 text-red-500" }: { className?: string }) {
+  return (
+    <div className="relative inline-flex items-center justify-center shrink-0 w-4 h-4 mr-0.5">
+      <Trash2 className={className} />
+      <User className="w-2.5 h-2.5 absolute -bottom-1 -right-1 text-current stroke-[2.5] bg-white dark:bg-[#1C1C1C] rounded-full" />
+    </div>
+  );
+}
+
+export function TrashForEveryoneIcon({ className = "w-4 h-4 text-orange-500" }: { className?: string }) {
+  return (
+    <div className="relative inline-flex items-center justify-center shrink-0 w-4 h-4 mr-0.5">
+      <Trash2 className={className} />
+      <Users className="w-2.5 h-2.5 absolute -bottom-1 -right-1.5 text-current stroke-[2.5] bg-white dark:bg-[#1C1C1C] rounded-full" />
+    </div>
+  );
+}
 
 interface MessageContextMenuProps {
   contextMenuPos: { x: number; y: number } | null;
@@ -91,7 +109,9 @@ export default function MessageContextMenu({
       {message.content && (
         <button
           onClick={() => {
-            const cleanText = message.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+            const cleanText = message.content
+              .replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')
+              .replace(/@@@SOFTBREAK@@@/g, '\n');
             navigator.clipboard.writeText(cleanText);
             toast.success('Text copied to clipboard');
             onClose();
@@ -126,7 +146,7 @@ export default function MessageContextMenu({
         className="w-full flex items-center justify-between px-2.5 py-1.5 text-[0.8125rem] font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors cursor-pointer"
       >
         <span>Delete for me</span>
-        <Trash2 className="w-3.5 h-3.5 text-red-500" />
+        <TrashForMeIcon className="w-3.5 h-3.5 text-red-500" />
       </button>
 
       {isMine && (
@@ -138,7 +158,7 @@ export default function MessageContextMenu({
           className="w-full flex items-center justify-between px-2.5 py-1.5 text-[0.8125rem] font-medium text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-md transition-colors cursor-pointer"
         >
           <span>Delete for everyone</span>
-          <RotateCcw className="w-3.5 h-3.5 text-orange-500" />
+          <TrashForEveryoneIcon className="w-3.5 h-3.5 text-orange-500" />
         </button>
       )}
     </div>

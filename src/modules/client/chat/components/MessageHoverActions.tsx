@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { SmilePlus, Reply, MessageSquare, Trash2, Pencil, RotateCcw } from 'lucide-react';
+import { SmilePlus, Reply, MessageSquare, Trash2, Pencil } from 'lucide-react';
 import ActionTooltip from './ActionTooltip';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
@@ -18,9 +18,8 @@ interface MessageHoverActionsProps {
   onSelectEmoji: (emoji: string) => void;
   onReply: () => void;
   onReplyInThread: () => void;
-  onDeleteForMe: () => void;
   onEdit: () => void;
-  onDeleteForEveryone: () => void;
+  onDeleteClick: () => void;
 }
 
 export default function MessageHoverActions({
@@ -35,15 +34,14 @@ export default function MessageHoverActions({
   onSelectEmoji,
   onReply,
   onReplyInThread,
-  onDeleteForMe,
   onEdit,
-  onDeleteForEveryone,
+  onDeleteClick,
 }: MessageHoverActionsProps) {
   if (isDeleted) return null;
 
   return (
     <div className={cn(
-      "absolute -top-6 right-4 flex items-center gap-0.5 transition-all z-30 bg-white dark:bg-[#1C1C1C] border border-[#EAEAEA] dark:border-white/[0.08] rounded-md px-1 py-0.5 shadow-md",
+      "absolute -top-3.5 right-4 flex items-center gap-0.5 transition-all z-10 bg-white dark:bg-[#1C1C1C] border border-[#EAEAEA] dark:border-white/[0.08] rounded-md px-1 py-0.5 shadow-md",
       showEmojiPicker ? "opacity-100 scale-100" : "opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100"
     )}>
       <ActionTooltip label="Add reaction">
@@ -62,7 +60,7 @@ export default function MessageHoverActions({
             <div 
               ref={pickerRef}
               className={cn(
-                "absolute right-0 flex items-center gap-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.08)] z-50 whitespace-nowrap select-none",
+                "absolute right-0 flex items-center gap-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] p-1.5 shadow-[0_4px_12px_rgba(0,0,0,0.08)] z-20 whitespace-nowrap select-none",
                 positionBelow ? "top-full mt-1.5" : "bottom-full mb-1.5"
               )}
             >
@@ -100,36 +98,25 @@ export default function MessageHoverActions({
         </ActionTooltip>
       )}
 
-      <ActionTooltip label="Delete for me" align="right">
+      {isMine && (
+        <ActionTooltip label="Edit message" align="right">
+          <button 
+            onClick={onEdit}
+            className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors cursor-pointer" 
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+        </ActionTooltip>
+      )}
+
+      <ActionTooltip label="Delete message" align="right">
         <button 
-          onClick={onDeleteForMe}
+          onClick={onDeleteClick}
           className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-red-50 dark:hover:bg-red-900/20 text-[#787774] hover:text-red-500 transition-colors cursor-pointer" 
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </ActionTooltip>
-
-      {isMine && (
-        <>
-          <ActionTooltip label="Edit message" align="right">
-            <button 
-              onClick={onEdit}
-              className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors cursor-pointer" 
-            >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-          </ActionTooltip>
-
-          <ActionTooltip label="Delete for everyone" align="right">
-            <button 
-              onClick={onDeleteForEveryone}
-              className="w-6 h-6 flex items-center justify-center rounded-[4px] hover:bg-orange-50 dark:hover:bg-orange-900/20 text-[#787774] hover:text-orange-500 transition-colors cursor-pointer" 
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          </ActionTooltip>
-        </>
-      )}
     </div>
   );
 }

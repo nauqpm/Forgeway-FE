@@ -91,12 +91,26 @@ export default function WorkspacesPage() {
   return (
     <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">
       <div className="app-page-wide app-page-fluid-2xl">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8 min-w-0 w-full">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-1">Workspaces</h1>
-          <p className="text-[#787774] dark:text-[#9B9A97] text-sm">Showing {workspaces.length} Workspace{workspaces.length !== 1 ? 's' : ''}{currentWorkspace ? ` (Current: ${currentWorkspace.name})` : ''}</p>
+          <p className="text-[#787774] dark:text-[#9B9A97] text-sm flex flex-wrap items-center gap-1">
+            <span>Showing {workspaces.length} Workspace{workspaces.length !== 1 ? 's' : ''}</span>
+            {currentWorkspace && (
+              <span className="text-[#ABABAB] dark:text-[#6B6B6B] flex items-center gap-1 min-w-0">
+                <span>(Current:</span>
+                <span 
+                  className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-[300px] font-medium text-[#787774] dark:text-[#9B9A97] inline-block align-bottom" 
+                  title={currentWorkspace.name}
+                >
+                  {currentWorkspace.name}
+                </span>
+                <span>)</span>
+              </span>
+            )}
+          </p>
         </div>
-        <Link href="/workspaces/create" className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-5 py-2.5 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-sm transition-colors shadow-sm">
+        <Link href="/workspaces/create" className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-5 py-2.5 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-sm transition-colors shadow-sm shrink-0">
           <Plus className="w-4 h-4" /> Create New Workspace
         </Link>
       </div>

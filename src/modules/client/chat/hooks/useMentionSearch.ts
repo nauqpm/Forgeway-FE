@@ -28,7 +28,7 @@ export function useMentionSearch(channelId?: string | null) {
       search: string,
       callback: (data: MentionMemberItem[]) => void
     ) => {
-      const query = search || '';
+      const query = (search || '').replace(/^@+/, '').trim();
 
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -47,8 +47,9 @@ export function useMentionSearch(channelId?: string | null) {
 
       const fetchMembers = async () => {
         try {
+          const apiQuery = query.replace(/@+$/, '').trim();
           const response = await api.get(`/chat/channels/${channelId}/mention-members`, {
-            params: { q: query }
+            params: { q: apiQuery }
           });
           const members = response.data || [];
           
@@ -58,7 +59,9 @@ export function useMentionSearch(channelId?: string | null) {
               return !currentUserId || String(memberId) !== String(currentUserId);
             })
             .map((m: { _id?: string; id?: string; fullName?: string; email?: string; phone?: string; avatar?: string }) => {
-              const display = m.fullName?.trim() || m.email?.split('@')[0] || String(m._id || m.id || 'User');
+              const name = m.fullName?.trim();
+              const email = m.email?.trim();
+              const display = name && email ? `${name} — ${email}` : (name || email || String(m._id || m.id || 'User'));
               return {
                 id: m._id || (m.id as string),
                 display,

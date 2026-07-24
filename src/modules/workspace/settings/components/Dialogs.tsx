@@ -35,7 +35,7 @@ export function WorkspaceDeleteDialog({
             Delete workspace
           </h2>
         </div>
-        <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4">
+        <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4 break-words [overflow-wrap:anywhere]">
           This action will delete workspace{" "}
           <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">
             {workspaceName}

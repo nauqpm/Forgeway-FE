@@ -37,6 +37,8 @@ import {
   Lock,
   Megaphone,
 } from "lucide-react";
+import { useResizablePanel } from "@/shared/hooks/useResizablePanel";
+import { ResizeHandle } from "@/shared/components/ResizeHandle";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -259,6 +261,25 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
 
   const isAdmin = isGlobalAdminRole(user?.role);
 
+  const { width: mainSidebarWidth, handleMouseDown, handleReset } = useResizablePanel({
+    defaultWidth: 240,
+    minWidth: 190,
+    maxWidth: 380,
+    side: 'right',
+    storageKey: 'al_main_sidebar_w',
+    onWidthChange: (w) => {
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.setProperty('--app-sidebar-expanded', `${w}px`);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (mounted && !collapsed && typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--app-sidebar-expanded', `${mainSidebarWidth}px`);
+    }
+  }, [mounted, collapsed, mainSidebarWidth]);
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -267,10 +288,13 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
       {/* Sidebar */}
       <aside
         data-collapsed={collapsed}
-        className={`app-sidebar fixed top-0 left-0 h-full bg-[#FBFBFA] dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] z-40 transition-all duration-200 flex flex-col ${
+        className={`app-sidebar fixed top-0 left-0 h-full bg-[#FBFBFA] dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] z-40 transition-all duration-200 flex flex-col group/main-sidebar ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
+        {!collapsed && (
+          <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="right" />
+        )}
         {/* Logo / Brand + Toggle — all inside sidebar, never floating outside */}
         <div
           className={`app-header flex items-center border-b border-[#EAEAEA] dark:border-white/[0.06] flex-shrink-0 ${
@@ -551,10 +575,11 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                       <Link
                         key={workspace._id || routeKey}
                         href={`/workspaces/${routeKey}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors min-w-0 w-full"
+                        title={workspace.name}
                       >
-                        <WorkspaceAvatar workspace={workspace} size="xs" />
-                        <span className="truncate">{workspace.name}</span>
+                        <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
+                        <span className="truncate flex-1">{workspace.name}</span>
                       </Link>
                     );
                   })}
@@ -626,9 +651,9 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
         {/* Bottom: Workspace + Settings */}
         <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] p-3 space-y-1">
           {!collapsed && currentWorkspace && (
-            <div className="mb-2 flex items-center gap-2 rounded-[6px] bg-[#F9F9F8] px-3 py-2 dark:bg-white/5">
-              <WorkspaceAvatar workspace={currentWorkspace} size="sm" />
-              <div className="min-w-0">
+            <div className="mb-2 flex items-center gap-2 rounded-[6px] bg-[#F9F9F8] px-3 py-2 dark:bg-white/5 min-w-0 w-full" title={currentWorkspace.name}>
+              <WorkspaceAvatar workspace={currentWorkspace} size="sm" className="shrink-0" />
+              <div className="min-w-0 flex-1">
                 <p className="text-[0.625rem] font-semibold uppercase tracking-[0.06em] text-[#ABABAB] dark:text-[#6B6B6B]">
                   Workspace
                 </p>

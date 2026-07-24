@@ -42,13 +42,7 @@ export default function AcceptInvitePage({ token }: Props) {
     }
   }, [invite, isAuthenticated, user, router, isLinkInvite]);
 
-  // Auto-accept link invites when authenticated
-  useEffect(() => {
-    if (isLinkInvite && isAuthenticated && invite?.status === 'pending' && !accepting && !done) {
-      handleAccept();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLinkInvite, isAuthenticated, invite?.status]);
+
 
   const handleAccept = async () => {
     setAccepting(true);
@@ -123,22 +117,22 @@ export default function AcceptInvitePage({ token }: Props) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A] p-4">
       <div className="bg-white dark:bg-[#202020] rounded-[10px] p-8 max-w-md w-full" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3 mb-6 min-w-0">
           <div className="w-12 h-12 rounded-[8px] bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center flex-shrink-0">
             <Building2 className="w-6 h-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">{invite.workspaceName}</h1>
-            <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B]">{invite.workspaceKey}</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] break-words [overflow-wrap:anywhere]">{invite.workspaceName}</h1>
+            <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] truncate">{invite.workspaceKey}</p>
           </div>
         </div>
 
-        <p className="text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] mb-1">
+        <p className="text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] mb-1 break-words [overflow-wrap:anywhere]">
           <span className="font-semibold">{invite.invitedBy?.fullName || invite.invitedBy?.email}</span>{' '}
           invited you to join as{' '}
           <span className="font-semibold text-[#2563EB] dark:text-[#3B82F6]">{invite.role}</span>.
         </p>
-        <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] mb-6">
+        <p className="text-xs text-[#ABABAB] dark:text-[#6B6B6B] mb-6 break-words [overflow-wrap:anywhere]">
           {invite.invitedEmail ? `Sent to: ${invite.invitedEmail}` : 'Open invite link'}
           {invite.expiresAt ? ` · Expires: ${new Date(invite.expiresAt).toLocaleDateString('en-US')}` : ''}
         </p>

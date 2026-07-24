@@ -14,6 +14,8 @@ import InviteChannelMembersModal from './InviteChannelMembersModal';
 import { kickMemberAPI } from '@/modules/client/chat/services/chatService';
 import toast from 'react-hot-toast';
 import { Modal, ModalFooter } from '@/shared/components/ui/Modal';
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
+import { ResizeHandle } from '@/shared/components/ResizeHandle';
 
 interface MemberPanelProps {
   channelId: string;
@@ -204,8 +206,20 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
     });
   }, [filteredMembers]);
 
+  const { width: panelWidth, handleMouseDown, handleReset } = useResizablePanel({
+    defaultWidth: 320,
+    minWidth: 260,
+    maxWidth: 600,
+    side: 'left',
+    storageKey: 'al_chat_right_panel_w',
+  });
+
   return (
-    <div className="w-[280px] flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out]">
+    <div 
+      style={{ width: `${panelWidth}px` }}
+      className="flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out] relative"
+    >
+      <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="left" />
       {/* Header */}
       <div className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-2">

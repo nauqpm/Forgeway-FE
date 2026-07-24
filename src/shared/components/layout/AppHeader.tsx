@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { Menu } from "lucide-react";
 import Image from "next/image";
@@ -81,7 +81,7 @@ export default function AppHeader({
     });
 
   return (
-    <header className="app-header bg-white dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between sticky top-0 z-20 transition-colors duration-200">
+    <header className="app-header bg-white dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between sticky top-0 z-[100] transition-colors duration-200">
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {/* Mobile menu */}
         <button

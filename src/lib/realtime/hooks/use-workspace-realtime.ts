@@ -186,6 +186,17 @@ export function useWorkspaceRealtime({
       );
     };
 
+    const handleInviteUpdated = (envelope: WorkspaceRealtimeEnvelope) => {
+      if (markHandled(envelope.eventId)) return;
+
+      const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
+      if (!workspaceId) return;
+
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.invites(workspaceId),
+      });
+    };
+
     socket.on(WORKSPACE_EVENTS.CREATED, handleWorkspaceUpsert);
     socket.on(WORKSPACE_EVENTS.UPDATED, handleWorkspaceUpsert);
     socket.on(WORKSPACE_EVENTS.ARCHIVED, handleWorkspaceRemoved);
@@ -194,6 +205,8 @@ export function useWorkspaceRealtime({
     socket.on(WORKSPACE_EVENTS.MEMBER_ADDED, handleMemberAdded);
     socket.on(WORKSPACE_EVENTS.MEMBER_REMOVED, handleMemberRemoved);
     socket.on(WORKSPACE_EVENTS.MEMBER_ROLE_UPDATED, handleMemberRoleUpdated);
+    socket.on(WORKSPACE_EVENTS.INVITE_CREATED, handleInviteUpdated);
+    socket.on(WORKSPACE_EVENTS.INVITE_CANCELLED, handleInviteUpdated);
 
     const unsubscribeReconnect = realtimeSocketClient.onReconnect(() => {
       const workspaceId = currentWorkspaceIdRef.current;
@@ -213,6 +226,8 @@ export function useWorkspaceRealtime({
       socket.off(WORKSPACE_EVENTS.MEMBER_ADDED, handleMemberAdded);
       socket.off(WORKSPACE_EVENTS.MEMBER_REMOVED, handleMemberRemoved);
       socket.off(WORKSPACE_EVENTS.MEMBER_ROLE_UPDATED, handleMemberRoleUpdated);
+      socket.off(WORKSPACE_EVENTS.INVITE_CREATED, handleInviteUpdated);
+      socket.off(WORKSPACE_EVENTS.INVITE_CANCELLED, handleInviteUpdated);
       unsubscribeReconnect();
       clearRedirectTimer();
     };
