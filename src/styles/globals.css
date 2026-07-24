@@ -175,15 +175,11 @@ body {
   .app-page-narrow {
     width: 100%;
     max-width: var(--app-narrow-content);
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .app-page-medium {
     width: 100%;
     max-width: var(--app-medium-content);
-    margin-left: auto;
-    margin-right: auto;
     padding-left: calc(var(--app-page-pad) * 0.5);
     padding-right: calc(var(--app-page-pad) * 0.5);
   }
@@ -191,8 +187,6 @@ body {
   .app-page-wide {
     width: 100%;
     max-width: var(--app-wide-content);
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .app-table-min {
@@ -202,8 +196,6 @@ body {
   .workspace-surface {
     width: 100%;
     max-width: var(--app-content-max);
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .workspace-panel {

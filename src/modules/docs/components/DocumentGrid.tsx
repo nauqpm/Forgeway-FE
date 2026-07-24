@@ -11,15 +11,25 @@ import {
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 
-function getFileIcon(extension: string) {
-  const ext = extension.toLowerCase();
-  if ([".png", ".jpg", ".jpeg", ".webp"].includes(ext)) return FileImage;
-  if ([".xls", ".xlsx"].includes(ext)) return FileSpreadsheet;
-  if ([".ppt", ".pptx"].includes(ext)) return FileType2;
-  return FileText;
+function getFileTheme(extension: string) {
+  const ext = (extension || "").toLowerCase();
+  if ([".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"].includes(ext)) {
+    return { Icon: FileImage, style: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400 border-purple-100 dark:border-purple-900/30" };
+  }
+  if ([".xls", ".xlsx", ".csv"].includes(ext)) {
+    return { Icon: FileSpreadsheet, style: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30" };
+  }
+  if ([".ppt", ".pptx"].includes(ext)) {
+    return { Icon: FileType2, style: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border-amber-100 dark:border-amber-900/30" };
+  }
+  if (ext === ".pdf") {
+    return { Icon: FileText, style: "bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border-rose-100 dark:border-rose-900/30" };
+  }
+  return { Icon: FileText, style: "bg-blue-50 text-[#2563EB] dark:bg-blue-950/40 dark:text-[#3B82F6] border-blue-100 dark:border-blue-900/30" };
 }
 
 function formatSize(size: number) {
+  if (!size || size <= 0) return "0.0 KB";
   const kb = size / 1024;
   if (kb < 1024) return `${kb.toFixed(1)} KB`;
   return `${(kb / 1024).toFixed(1)} MB`;
@@ -27,7 +37,11 @@ function formatSize(size: number) {
 
 function formatDate(value?: string) {
   if (!value) return "--";
-  return new Date(value).toLocaleDateString();
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 interface DocumentGridProps {
@@ -57,25 +71,30 @@ export default function DocumentGrid({
 }: DocumentGridProps) {
   if (isLoading) {
     return (
-      <div className="rounded-[8px] border border-[#EAEAEA] bg-white p-10 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
-        Loading documents...
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+          <div
+            key={n}
+            className="h-44 animate-pulse rounded-[10px] border border-[#EAEAEA] bg-white p-5 dark:border-white/[0.06] dark:bg-[#202020]"
+          />
+        ))}
       </div>
     );
   }
 
   if (documents.length === 0) {
     return (
-      <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-white p-10 text-center text-sm text-[#787774] dark:border-white/[0.08] dark:bg-[#252525] dark:text-[#9B9A97]">
-        <p className="font-semibold text-[#111111] dark:text-[#E8E8E7]">No matching documents</p>
-        <p className="mt-1">Try another search or clear filters.</p>
+      <div className="rounded-[10px] border border-dashed border-[#EAEAEA] bg-white p-12 text-center text-sm text-[#787774] dark:border-white/[0.08] dark:bg-[#202020] dark:text-[#9B9A97]">
+        <p className="text-base font-semibold text-[#111111] dark:text-[#E8E8E7]">No matching documents</p>
+        <p className="mt-1">Try another search keyword or create a new document.</p>
       </div>
     );
   }
 
   if (viewMode === "list") {
     return (
-      <div className="overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
-        <div className="hidden grid-cols-[minmax(0,1fr)_8rem_8rem_3rem] border-b border-[#EAEAEA] bg-[#F9F9F8] px-4 py-3 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:border-white/[0.06] dark:bg-[#2A2A2A] dark:text-[#6B6B6B] md:grid">
+      <div className="overflow-hidden rounded-[10px] border border-[#EAEAEA] bg-white shadow-sm dark:border-white/[0.06] dark:bg-[#202020]">
+        <div className="hidden grid-cols-[minmax(0,1fr)_9rem_9rem_3rem] border-b border-[#EAEAEA] bg-[#F9F9F8] px-5 py-3 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#6B6B6B] md:grid">
           <span>Name</span>
           <span>Size</span>
           <span>Updated</span>
@@ -83,7 +102,7 @@ export default function DocumentGrid({
         </div>
         <div className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06]">
           {documents.map((doc) => {
-            const Icon = getFileIcon(doc.extension);
+            const { Icon, style } = getFileTheme(doc.extension);
             return (
               <div
                 key={doc._id}
@@ -96,18 +115,20 @@ export default function DocumentGrid({
                     onView(doc);
                   }
                 }}
-                className="group relative grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors hover:bg-[#F9F9F8] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 dark:hover:bg-[#2A2A2A] md:grid-cols-[auto_minmax(0,1fr)_8rem_8rem_3rem]"
+                className="group relative grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3.5 transition-colors hover:bg-[#F7F6F3] focus:outline-none dark:hover:bg-[#252525] md:grid-cols-[auto_minmax(0,1fr)_9rem_9rem_3rem]"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-[6px] bg-[#EFF6FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]">
+                <div className={`flex h-9 w-9 items-center justify-center rounded-[6px] border ${style}`}>
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">{doc.name}</p>
+                  <p className="truncate text-sm font-semibold text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#3B82F6]">
+                    {doc.name}
+                  </p>
                   <p className="mt-0.5 text-xs text-[#787774] dark:text-[#9B9A97]">
-                    {doc.documentType === "online" ? "Online document" : "File"}
+                    {doc.documentType === "online" ? "Online document" : `${(doc.extension || "").toUpperCase().replace(".", "") || "File"}`}
                   </p>
                 </div>
-                <span className="hidden text-xs text-[#787774] dark:text-[#9B9A97] md:block">{formatSize(doc.size)}</span>
+                <span className="hidden text-xs font-medium text-[#787774] dark:text-[#9B9A97] md:block">{formatSize(doc.size)}</span>
                 <span className="hidden text-xs text-[#ABABAB] dark:text-[#6B6B6B] md:block">{formatDate(doc.updatedAt || doc.createdAt)}</span>
                 <button
                   onClick={(e) => {
@@ -116,31 +137,31 @@ export default function DocumentGrid({
                   }}
                   aria-label={`Open actions for ${doc.name}`}
                   title={`Open actions for ${doc.name}`}
-                  className="rounded-[4px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] hover:text-[#787774] dark:text-[#6B6B6B] dark:hover:bg-white/5 dark:hover:text-[#9B9A97]"
+                  className="rounded-[6px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#EAEAEA] hover:text-[#111111] dark:text-[#6B6B6B] dark:hover:bg-white/10 dark:hover:text-[#E8E8E7]"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
                 {openMenuId === doc._id && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="absolute right-4 top-11 z-20 w-48 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]"
+                    className="absolute right-5 top-12 z-30 w-48 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white shadow-lg dark:border-white/[0.08] dark:bg-[#252525]"
                   >
-                    <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800" onClick={(e) => { e.stopPropagation(); onView(doc); }}>
-                      <FileText className="h-3.5 w-3.5" /> View
+                    <button className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]" onClick={(e) => { e.stopPropagation(); onView(doc); }}>
+                      <FileText className="h-4 w-4 text-[#787774]" /> View
                     </button>
-                    <a href={documentService.downloadUrl(doc._id)} onClick={(e) => e.stopPropagation()} className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800">
-                      <Download className="h-3.5 w-3.5" /> Download
+                    <a href={documentService.downloadUrl(doc._id)} onClick={(e) => e.stopPropagation()} className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]">
+                      <Download className="h-4 w-4 text-[#787774]" /> Download
                     </a>
                     {doc.documentType === "online" && currentUserId === doc.uploadedBy && (
-                      <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800" onClick={(e) => { e.stopPropagation(); onEdit(doc); }}>
-                        <Pencil className="h-3.5 w-3.5" /> Edit online document
+                      <button className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]" onClick={(e) => { e.stopPropagation(); onEdit(doc); }}>
+                        <Pencil className="h-4 w-4 text-[#787774]" /> Edit online document
                       </button>
                     )}
-                    <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800" onClick={(e) => { e.stopPropagation(); onRename(doc); }}>
-                      <Pencil className="h-3.5 w-3.5" /> Rename
+                    <button className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]" onClick={(e) => { e.stopPropagation(); onRename(doc); }}>
+                      <Pencil className="h-4 w-4 text-[#787774]" /> Rename
                     </button>
-                    <button className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20" onClick={(e) => { e.stopPropagation(); onDelete(doc); }}>
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    <button className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#9F2F2D] transition hover:bg-[#FDEBEC] dark:text-[#F87171] dark:hover:bg-[rgba(159,47,45,0.15)]" onClick={(e) => { e.stopPropagation(); onDelete(doc); }}>
+                      <Trash2 className="h-4 w-4" /> Delete
                     </button>
                   </div>
                 )}
@@ -153,9 +174,11 @@ export default function DocumentGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5">
       {documents.map((doc) => {
-        const Icon = getFileIcon(doc.extension);
+        const { Icon, style } = getFileTheme(doc.extension);
+        const formattedExt = (doc.extension || "").toUpperCase().replace(".", "") || "DOC";
+
         return (
           <div
             key={doc._id}
@@ -168,89 +191,97 @@ export default function DocumentGrid({
                 onView(doc);
               }
             }}
-            className="workspace-panel group relative min-h-[210px] cursor-pointer rounded-[8px] border border-[#EAEAEA] bg-white transition-colors hover:bg-[#F9F9F8] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 dark:border-white/[0.06] dark:bg-[#202020] dark:hover:bg-white/8"
+            className="group relative flex flex-col justify-between rounded-[10px] border border-[#EAEAEA] bg-white p-4.5 transition-all hover:border-[#2563EB]/40 hover:shadow-md focus:outline-none dark:border-white/[0.08] dark:bg-[#202020] dark:hover:border-[#3B82F6]/40 dark:hover:shadow-black/40 cursor-pointer"
           >
-            <div className="mb-3 flex items-start justify-between">
-              <div className="flex h-11 w-11 items-center justify-center rounded-[6px] bg-[#EFF6FF] text-[#2563EB] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]">
-                <Icon className="h-5 w-5" />
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setOpenMenuId(openMenuId === doc._id ? null : doc._id);
-                }}
-                aria-label={`Open actions for ${doc.name}`}
-                title={`Open actions for ${doc.name}`}
-                className="rounded-[4px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] hover:text-[#787774] dark:text-[#6B6B6B] dark:hover:bg-white/5 dark:hover:text-[#9B9A97]"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </div>
-
-            {openMenuId === doc._id && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-4 top-12 z-20 w-44 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]"
-              >
+            <div>
+              <div className="mb-3.5 flex items-start justify-between">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-[8px] border ${style}`}>
+                  <Icon className="h-5.5 w-5.5" />
+                </div>
                 <button
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                  onClick={() => onView(doc)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenMenuId(openMenuId === doc._id ? null : doc._id);
+                  }}
+                  aria-label={`Open actions for ${doc.name}`}
+                  title={`Open actions for ${doc.name}`}
+                  className="rounded-[6px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#6B6B6B] dark:hover:bg-white/10 dark:hover:text-[#E8E8E7]"
                 >
-                  <FileText className="h-3.5 w-3.5" />
-                  View
+                  <MoreHorizontal className="h-4 w-4" />
                 </button>
-                <a
-                  href={documentService.downloadUrl(doc._id)}
+              </div>
+
+              {openMenuId === doc._id && (
+                <div
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
+                  className="absolute right-4 top-13 z-30 w-48 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white shadow-xl dark:border-white/[0.08] dark:bg-[#252525]"
                 >
-                  <Download className="h-3.5 w-3.5" />
-                  Download
-                </a>
-                {doc.documentType === "online" && currentUserId === doc.uploadedBy && (
                   <button
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]"
+                    onClick={() => onView(doc)}
+                  >
+                    <FileText className="h-4 w-4 text-[#787774]" />
+                    View
+                  </button>
+                  <a
+                    href={documentService.downloadUrl(doc._id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]"
+                  >
+                    <Download className="h-4 w-4 text-[#787774]" />
+                    Download
+                  </a>
+                  {doc.documentType === "online" && currentUserId === doc.uploadedBy && (
+                    <button
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(doc);
+                      }}
+                    >
+                      <Pencil className="h-4 w-4 text-[#787774]" />
+                      Edit online document
+                    </button>
+                  )}
+                  <button
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onEdit(doc);
+                      onRename(doc);
                     }}
                   >
-                    <Pencil className="h-3.5 w-3.5" />
-                    Edit online document
+                    <Pencil className="h-4 w-4 text-[#787774]" />
+                    Rename
                   </button>
-                )}
-                <button
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-gray-800"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRename(doc);
-                  }}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                  Rename
-                </button>
-                <button
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-medium text-red-600 transition hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(doc);
-                  }}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Delete
-                </button>
-              </div>
-            )}
+                  <button
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#9F2F2D] transition hover:bg-[#FDEBEC] dark:text-[#F87171] dark:hover:bg-[rgba(159,47,45,0.15)]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(doc);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
+              )}
 
-            <p className="line-clamp-2 min-h-10 text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
-              {doc.name}
-            </p>
-            <p className="mt-1 text-xs text-[#787774] dark:text-[#9B9A97]">
-              {doc.extension.toUpperCase()} - {formatSize(doc.size)}
-            </p>
-            <p className="mt-1 text-xs text-[#ABABAB] dark:text-[#6B6B6B]">
-              Date uploaded: {formatDate(doc.updatedAt || doc.createdAt)}
-            </p>
+              <h3 className="line-clamp-2 text-sm font-semibold text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#3B82F6]">
+                {doc.name}
+              </h3>
+            </div>
+
+            <div className="mt-4 border-t border-[#EAEAEA] pt-3 dark:border-white/[0.06]">
+              <div className="flex items-center justify-between text-xs text-[#787774] dark:text-[#9B9A97]">
+                <span className="inline-flex items-center rounded-[4px] bg-[#F7F6F3] px-1.5 py-0.5 font-medium text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]">
+                  .{formattedExt}
+                </span>
+                <span>{formatSize(doc.size)}</span>
+              </div>
+              <p className="mt-2 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
+                Uploaded {formatDate(doc.updatedAt || doc.createdAt)}
+              </p>
+            </div>
           </div>
         );
       })}

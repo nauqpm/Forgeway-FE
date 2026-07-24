@@ -29,4 +29,6 @@ export interface MoveColumnDto {
 
 export interface DeleteColumnDto {
   targetColumnId?: string;
+  archivedTargetColumnId?: string;
 }
+

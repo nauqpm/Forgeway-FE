@@ -18,7 +18,7 @@ export default function CreateWorkspaceView({
 }: CreateWorkspacePageProps) {
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="app-page-narrow py-8 pb-12">
+      <div className="w-full max-w-full py-8 pb-12 px-[var(--workspace-surface-pad)]">
         <div className="flex items-center gap-3 mb-6">
           <Link href="/workspaces" className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors">
             <ArrowLeft className="w-5 h-5 text-[#787774] dark:text-[#9B9A97]" />

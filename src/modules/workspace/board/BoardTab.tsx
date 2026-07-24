@@ -9,6 +9,8 @@ import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import { useQuery } from "@tanstack/react-query";
+import { taskService } from "@/modules/workspace/shared/services/taskService";
 import DeleteColumnModal from "@/modules/workspace/shared/components/DeleteColumnModal";
 import BoardFilters from "@/modules/workspace/shared/components/BoardFilters";
 import BoardTaskActionMenu from "@/modules/workspace/tasks/covers/BoardTaskActionMenu";
@@ -88,7 +90,7 @@ type BoardTabProps = {
     handleBoardDragStart?: () => void;
     handleAddColumn: () => void;
     handleRenameColumn: (columnId: string, name: string) => void;
-    handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
+    handleDeleteColumn: (columnId: string, migrateTo?: string, archivedMigrateTo?: string) => void;
     handleMoveColumn: (columnId: string, newOrder: number) => void;
     updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
     onArchiveIssue?: (issue: Issue) => void;
@@ -156,6 +158,27 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const actionMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch archived tasks count for the column being deleted
+  const { data: archivedTasksInColumn } = useQuery({
+    queryKey: ["tasks-archived-column", workspace._id, columnToDelete?.id],
+    queryFn: () => taskService.getBoardTasks(workspace._id, {
+      archived: true,
+      columnId: columnToDelete!.id,
+      page: 1,
+      limit: 1,
+    }),
+    enabled: !!columnToDelete && deleteModalOpen,
+    staleTime: 0,
+  });
+
+  // Whether the column being deleted has any archived tasks
+  const archivedInColumn = (archivedTasksInColumn?.length ?? 0) > 0;
+
+
+
+
+
 
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
@@ -657,12 +680,13 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           column={columnToDelete}
           columns={columns}
           hasTasks={issues.some(i => issueMatchesColumn(i, columnToDelete))}
+          hasArchivedTasks={archivedInColumn}
           onClose={() => {
             setDeleteModalOpen(false);
             setColumnToDelete(null);
           }}
-          onConfirm={(migrateTo) => {
-            handleDeleteColumn(columnToDelete.id, migrateTo);
+          onConfirm={(migrateTo, archivedMigrateTo) => {
+            handleDeleteColumn(columnToDelete.id, migrateTo, archivedMigrateTo);
             setDeleteModalOpen(false);
             setColumnToDelete(null);
           }}
