@@ -177,9 +177,7 @@ export default function ChatSidebar() {
       'Deleted User';
 
     let formattedContent = '';
-    if (lastMsg.deletedAt) {
-      formattedContent = "[Message deleted]";
-    } else if (lastMsg.type === 'sticker') {
+    if (lastMsg.type === 'sticker') {
       formattedContent = "[Sticker]";
     } else if (lastMsg.content && lastMsg.content.trim()) {
       const cleanContent = lastMsg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');

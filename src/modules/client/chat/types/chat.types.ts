@@ -25,9 +25,10 @@ export interface Message {
   type: 'text' | 'system' | 'sticker' | 'file';
   stickerId?: Sticker;
   replyToId?: string | Message;
+  replyToSenderId?: string | ChatUser;
   createdAt: string;
   updatedAt?: string;
-  deletedAt?: string | null;
+  editedAt?: string | null;
   deletedForUsers?: string[];
   reactions?: Record<string, string[]>;
   sentAt?: string;

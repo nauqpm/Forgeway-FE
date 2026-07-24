@@ -77,7 +77,7 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-[#252525] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] z-50 shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-[#252525] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] z-[9999] shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden">
           {/* Header: name + email on the left, switch-account icon on the right */}
           <div className="flex items-start gap-2 px-4 py-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
             <div className="min-w-0 flex-1">

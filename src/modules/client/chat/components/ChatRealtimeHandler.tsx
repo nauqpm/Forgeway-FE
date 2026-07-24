@@ -161,21 +161,17 @@ export default function ChatRealtimeHandler() {
     const data = envelope.data || envelope;
     if (!data?.messageId || !data?.channelId) return;
 
-    updateMessageInCache(queryClient, data.channelId, data.messageId, () => ({
-      deletedAt: new Date().toISOString(),
-    }));
-
-    if (data.threadParentId) {
-      queryClient.setQueryData<Message[]>(
-        queryKeys.chat.threadReplies(data.channelId, data.threadParentId),
-        (current = []) => current.map(m => (m._id || m.id) === data.messageId ? { ...m, deletedAt: new Date().toISOString() } : m)
-      );
-    }
+    removeMessageFromCache(queryClient, data.channelId, data.messageId, data.threadParentId);
 
     if (data.lastMessage !== undefined) {
       updateChannelInCache(queryClient, data.channelId, () => ({
         lastMessage: data.lastMessage || undefined,
       }));
+    }
+
+    const activeThreadParentId = useChatStore.getState().activeThreadParentId;
+    if (activeThreadParentId && String(activeThreadParentId) === String(data.messageId)) {
+      toast.error('The original message for this thread has been deleted.');
     }
   }, [queryClient]);
 

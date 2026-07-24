@@ -78,16 +78,26 @@ export default function RoleChanger({
 
     const rect = button.getBoundingClientRect();
     const menuWidth = 240;
+    const menuHeight = 185; // Approximate menu height with 3 options
     const viewportPadding = 16;
     const left = Math.min(
       Math.max(viewportPadding, rect.right - menuWidth),
       window.innerWidth - menuWidth - viewportPadding,
     );
 
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    let top = rect.bottom + 6;
+    // If there is not enough space below, and there is more space above, flip the dropdown upwards
+    if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+      top = rect.top - menuHeight - 6;
+    }
+
     setMenuStyle({
       left,
       position: "fixed",
-      top: rect.bottom + 6,
+      top,
       width: menuWidth,
     });
   };

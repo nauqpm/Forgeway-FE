@@ -48,6 +48,7 @@ export const WORKSPACE_EVENTS = {
   MEMBER_REMOVED: 'workspace.member.removed',
   MEMBER_ROLE_UPDATED: 'workspace.member.role_updated',
   INVITE_CREATED: 'workspace.invite.created',
+  INVITE_CANCELLED: 'workspace.invite.cancelled',
 } as const;
 
 export const TASK_DETAIL_EVENTS = {

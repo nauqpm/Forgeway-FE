@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
@@ -9,7 +9,7 @@ import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
 import ChatSearchPanel from './ChatSearchPanel';
 
-import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft, Edit2, X, Trash2, Lock } from 'lucide-react';
+import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft, Edit2, X, Trash2, Lock, Settings } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
@@ -49,6 +49,21 @@ export default function ChatWindow() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showChannelSettingsMenu, setShowChannelSettingsMenu] = useState(false);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(e.target as Node)) {
+        setShowChannelSettingsMenu(false);
+      }
+    };
+    if (showChannelSettingsMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showChannelSettingsMenu]);
+
   const updateChannelMutation = useUpdateChannel();
 
   // Capture the unread count before we mark the channel as read
@@ -62,6 +77,7 @@ export default function ChatWindow() {
     setSearchQuery("");
     setShowCreateThreadModal(false);
     setShowDeleteModal(false);
+    setShowChannelSettingsMenu(false);
   }
 
   const handleSaveName = async () => {
@@ -303,7 +319,7 @@ export default function ChatWindow() {
     return () => clearInterval(interval);
   }, [clearOldTyping]);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
     if (!activeChannelId || !hasNextPage || isFetchingNextPage) return;
     
     const container = scrollRef.current;
@@ -325,7 +341,17 @@ export default function ChatWindow() {
     } catch (err) {
       console.error("Failed to load older messages:", err);
     }
-  };
+  }, [activeChannelId, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Auto load older messages when user scrolls near top (Facebook Messenger style)
+  const handleScroll = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    if (container.scrollTop <= 150 && hasNextPage && !isFetchingNextPage) {
+      handleLoadMore();
+    }
+  }, [hasNextPage, isFetchingNextPage, handleLoadMore]);
 
   const errorMessage = useMemo(() => {
     if (!isError) return null;
@@ -461,35 +487,12 @@ export default function ChatWindow() {
 
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2">
-                <>
-                  <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-sm truncate leading-snug">{headerName}</span>
-                  {(activeChannel.type === 'custom' || (activeChannel.type === 'dm' && (activeChannel.members?.length ?? 0) > 2)) && (
-                    <button 
-                      onClick={() => {
-                        setEditNameValue(activeChannel.name === 'Direct Message' ? headerName : activeChannel.name);
-                        setIsEditingName(true);
-                      }} 
-                      className="p-1 rounded-full bg-[#E5E7EB] dark:bg-[#383838] hover:bg-[#D1D5DB] dark:hover:bg-[#404040] transition-colors text-[#4B5563] dark:text-[#A3A3A3]"
-                      title="Edit conversation name"
-                    >
-                      <Edit2 className="w-3 h-3" />
-                    </button>
-                  )}
-                  {activeChannel.type === 'custom' && (userRole === 'super_admin' || isWorkspaceAdmin || isChannelAdmin || activeChannel.createdBy === currentUserId) && (
-                    <button 
-                      onClick={() => setShowDeleteModal(true)}
-                      className="p-1 rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-950/40 dark:hover:bg-red-900/40 transition-colors text-red-600 dark:text-red-400"
-                      title="Delete channel"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  )}
-                  {activeWorkspace && activeWorkspace.key && (
-                    <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
-                      {activeWorkspace.key}
-                    </span>
-                  )}
-                </>
+              <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-sm truncate leading-snug">{headerName}</span>
+              {activeWorkspace && activeWorkspace.key && (
+                <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
+                  {activeWorkspace.key}
+                </span>
+              )}
             </div>
             
             <span className="text-[11px] text-[#787774] dark:text-[#9B9A97] truncate leading-none mt-0.5">
@@ -569,13 +572,65 @@ export default function ChatWindow() {
           >
             <Search className="w-4 h-4" />
           </button>
+
+          {(() => {
+            const canEditName = activeChannel.type === 'custom' || (activeChannel.type === 'dm' && (activeChannel.members?.length ?? 0) > 2);
+            const canDeleteChannel = activeChannel.type === 'custom' && (userRole === 'super_admin' || isWorkspaceAdmin || isChannelAdmin || activeChannel.createdBy === currentUserId);
+            if (!canEditName && !canDeleteChannel) return null;
+
+            return (
+              <div className="relative flex items-center" ref={settingsMenuRef}>
+                <button 
+                  onClick={() => setShowChannelSettingsMenu(prev => !prev)} 
+                  className={`p-1 transition-colors rounded-md ${
+                    showChannelSettingsMenu 
+                      ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
+                      : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                  }`}
+                  title="Channel Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+
+                {showChannelSettingsMenu && (
+                  <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-lg shadow-xl py-1 z-50">
+                    {canEditName && (
+                      <button
+                        onClick={() => {
+                          setShowChannelSettingsMenu(false);
+                          setEditNameValue(activeChannel.name === 'Direct Message' ? headerName : activeChannel.name);
+                          setIsEditingName(true);
+                        }}
+                        className="w-full px-3 py-2 text-xs font-medium text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 flex items-center gap-2 transition-colors cursor-pointer"
+                      >
+                        <Edit2 className="w-3.5 h-3.5 text-[#787774] dark:text-[#9B9A97]" />
+                        <span>Rename Channel</span>
+                      </button>
+                    )}
+                    {canDeleteChannel && (
+                      <button
+                        onClick={() => {
+                          setShowChannelSettingsMenu(false);
+                          setShowDeleteModal(true);
+                        }}
+                        className="w-full px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete Channel</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </header>
       {/* Active Meeting Banner */}
       <MeetingBanner channelId={activeChannelId} />
 
-      {/* Search & Create Thread Bar for Workspace/Custom Channels */}
-      {activeChannel && activeChannel.workspaceId && (activeChannel.type === 'workspace' || activeChannel.type === 'custom') && isMemberOfActiveChannel && (
+      {/* Search & Create Thread Bar for Default Workspace Channels Only */}
+      {activeChannel && activeChannel.workspaceId && activeChannel.type === 'workspace' && isMemberOfActiveChannel && (
         <div className="p-3 flex items-center gap-3 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/[0.06] select-none">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
@@ -621,8 +676,7 @@ export default function ChatWindow() {
           </button>
         </div>
       )}
-
-      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto min-h-0 flex flex-col">
         {!isMemberOfActiveChannel ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#FBFBFA] dark:bg-[#1E1E1E] select-none">
             <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 dark:bg-[#2563EB]/25 flex items-center justify-center mb-4 text-[#2563EB] dark:text-[#60A5FA] shadow-sm border border-[#2563EB]/15 dark:border-[#2563EB]/30">
@@ -678,22 +732,12 @@ export default function ChatWindow() {
           </div>
         ) : (
           <div className="py-4 flex-1">
-            {hasNextPage && (
-              <div className="flex justify-center mb-4">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={isFetchingNextPage}
-                  className="px-4 py-1.5 text-xs font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] bg-[#F0F0EE] dark:bg-white/5 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded-[6px] transition-colors flex items-center gap-2"
-                >
-                  {isFetchingNextPage ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Loading history...
-                    </>
-                  ) : (
-                    "Load older messages"
-                  )}
-                </button>
+            {isFetchingNextPage && (
+              <div className="flex justify-center mb-3">
+                <div className="px-3.5 py-1 text-xs font-medium text-[#787774] dark:text-[#9B9A97] bg-[#F0F0EE]/80 dark:bg-white/5 rounded-full flex items-center gap-2 shadow-sm border border-[#EAEAEA] dark:border-white/[0.06]">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
+                  <span>Loading older messages...</span>
+                </div>
               </div>
             )}
             {messages.map((msg, idx) => {
@@ -741,16 +785,14 @@ export default function ChatWindow() {
         )}
       </div>
 
-      {!(activeChannel && activeChannel.workspaceId && (activeChannel.type === 'workspace' || activeChannel.type === 'custom') && isMemberOfActiveChannel) ? (
+      {!(activeChannel && activeChannel.workspaceId && activeChannel.type === 'workspace' && isMemberOfActiveChannel) ? (
         activeChannel.type === 'custom' && !isMemberOfActiveChannel ? null : (
-          <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
-            <div className="px-4 h-5 flex items-center">
-              {!isReadOnly && typingUserIds.length > 0 && (
-                <div className="text-[10px] text-[#787774] italic animate-pulse">
-                  {getTypingText()}
-                </div>
-              )}
-            </div>
+          <div className="flex-shrink-0 bg-white dark:bg-[#202020]">
+            {!isReadOnly && typingUserIds.length > 0 && (
+              <div className="px-4 py-1 text-[11px] text-[#787774] dark:text-[#9B9A97] italic animate-pulse">
+                {getTypingText()}
+              </div>
+            )}
 
             {isReadOnly ? (
               <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
@@ -806,7 +848,7 @@ export default function ChatWindow() {
       {showCreateThreadModal && activeChannel && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
           <div className="bg-white dark:bg-[#202020] rounded-xl shadow-xl w-full max-w-lg overflow-visible border border-[#EAEAEA] dark:border-white/[0.06] flex flex-col animate-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex justify-between items-center">
+            <div className="px-5 py-3.5 border-b border-[#EAEAEA] dark:border-white/[0.06] flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-base">Create a new Thread</h3>
                 <p className="text-xs text-[#787774] dark:text-[#9B9A97] mt-0.5 leading-relaxed">
@@ -819,12 +861,12 @@ export default function ChatWindow() {
               </div>
               <button 
                 onClick={() => setShowCreateThreadModal(false)} 
-                className="text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors p-1.5 rounded-lg hover:bg-[#F0F0EE] dark:hover:bg-white/10 cursor-pointer"
+                className="text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors p-1.5 rounded-lg hover:bg-[#F0F0EE] dark:hover:bg-white/10 cursor-pointer shrink-0 ml-3"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-6 overflow-visible">
+            <div className="p-0 overflow-visible rounded-b-xl">
               <MessageInput
                 channelId={activeChannelId}
                 channelName={activeChannel.name}

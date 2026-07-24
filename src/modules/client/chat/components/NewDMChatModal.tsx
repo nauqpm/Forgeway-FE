@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Search, User, Loader2 } from 'lucide-react';
 import { useSearchUsers, useCreateDM } from '../hooks/useChatQueries';
 import type { SearchUser } from '@/modules/client/chat/types/chat.types';
+import { toast } from 'react-hot-toast';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Failed to create DM:', error);
-      alert(`Error starting chat: ${error.response?.data?.message || error.message}`);
+      toast.error(error.response?.data?.message || error.message || 'Không thể tạo cuộc trò chuyện!');
     }
   };
 

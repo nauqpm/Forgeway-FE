@@ -9,6 +9,8 @@ import api from '@/lib/axiosIns';
 import { useChatStore } from '@/stores/chatStore';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
+import { ResizeHandle } from '@/shared/components/ResizeHandle';
 
 interface ChatSearchPanelProps {
   channelId: string;
@@ -120,7 +122,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       
       messages.forEach((msg: any) => {
-        if (!msg.content || msg.deletedAt) return;
+        if (!msg.content) return;
         
         const matches = msg.content.match(urlRegex);
         if (matches) {
@@ -241,8 +243,20 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     }
   };
 
+  const { width: panelWidth, handleMouseDown, handleReset } = useResizablePanel({
+    defaultWidth: 360,
+    minWidth: 280,
+    maxWidth: 600,
+    side: 'left',
+    storageKey: 'al_chat_right_panel_w',
+  });
+
   return (
-    <div className="w-[350px] flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out]">
+    <div 
+      style={{ width: `${panelWidth}px` }}
+      className="flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out] relative"
+    >
+      <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="left" />
       {/* Header */}
       <div className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
@@ -468,7 +482,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                             </p>
 
                             {/* Previews for Attachments in Search Result */}
-                            {!msg.deletedAt && msg.attachments && msg.attachments.length > 0 && (
+                            {msg.attachments && msg.attachments.length > 0 && (
                               <div className="mt-1.5 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
                                 {msg.attachments.map((file: any, idx: number) => {
                                   const mime = file.mimeType || file.mimetype || '';

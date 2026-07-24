@@ -149,14 +149,14 @@ const Header = ({
               )}
             </span>
           </div>
-          <h1 className="flex min-w-0 flex-wrap items-center gap-3 text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
-            <span className="min-w-0 break-words">{workspace.name}</span>
+          <h1 className="flex min-w-0 items-center gap-2 text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] w-full">
+            <span className="truncate max-w-[120px] sm:max-w-[280px] md:max-w-[450px] lg:max-w-[600px] inline-block align-middle" title={workspace.name}>{workspace.name}</span>
             {canUpdateWorkspace && (
               <Link
                 href={`/workspaces/${workspaceId}/settings`}
                 className="shrink-0 p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]"
               >
-                <Settings className="w-5 h-5" />
+                <Settings className="w-4 h-4" />
               </Link>
             )}
           </h1>

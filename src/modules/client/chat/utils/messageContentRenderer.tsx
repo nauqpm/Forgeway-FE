@@ -77,13 +77,18 @@ export const parseTagsAndRestoreTokens = (
   urls: React.ReactNode[], 
   inlineCodes: React.ReactNode[]
 ): React.ReactNode[] => {
-  const tokenRegex = /(<\/?[a-z]+>|@@@(?:MENTION|LINK|URL|INLINECODE)TOKEN\d+@@@)/g;
+  const tokenRegex = /(<\/?[a-z]+>|@@@(?:MENTION|LINK|URL|INLINECODE)TOKEN\d+@@@|@@@SOFTBREAK@@@)/g;
   const parts = text.split(tokenRegex);
   const result: React.ReactNode[] = [];
   const tagStack: string[] = [];
   
   parts.forEach((part, idx) => {
     if (!part) return;
+
+    if (part === '@@@SOFTBREAK@@@') {
+      result.push(<br key={`softbreak-${idx}`} />);
+      return;
+    }
     
     if (part.startsWith('<') && part.endsWith('>')) {
       if (part.startsWith('</')) {
@@ -148,7 +153,8 @@ export const preprocessInlineMarkdown = (text: string) => {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-[#2563EB] dark:text-[#3B82F6] hover:underline font-semibold"
+        title={url}
+        className="text-[#2563EB] dark:text-[#3B82F6] hover:underline font-semibold break-all"
       >
         {label}
       </a>
@@ -299,13 +305,15 @@ export const renderMessageContent = (
             );
           }
 
-          let markerClasses = '';
-          if (prefixTags.includes('strong')) markerClasses += ' font-bold';
-          if (prefixTags.includes('em')) markerClasses += ' italic';
-          if (prefixTags.includes('del')) markerClasses += ' line-through';
-
           if (strippedLine.startsWith('- ') || strippedLine.startsWith('* ') || strippedLine.startsWith('+ ')) {
-            const listItemContent = prefixTags + strippedLine.substring(2) + suffixTags;
+            const content = strippedLine.substring(2).trim();
+
+            let markerClasses = '';
+            if (/^(?:<[a-z]+>)*<strong>/.test(content)) markerClasses += ' font-bold';
+            if (/^(?:<[a-z]+>)*<em>/.test(content)) markerClasses += ' italic';
+            if (/^(?:<[a-z]+>)*<del>/.test(content)) markerClasses += ' line-through';
+
+            const listItemContent = prefixTags + content + suffixTags;
             return (
               <ul key={lineIdx} className={`list-disc pl-5 my-0.5 break-words [overflow-wrap:anywhere] text-justify${markerClasses}`}>
                 <li>{parseTagsAndRestoreTokens(listItemContent, mentions, links, urls, inlineCodes)}</li>
@@ -316,7 +324,14 @@ export const renderMessageContent = (
           const numMatch = strippedLine.match(/^(\d+)\.\s(.*)/);
           if (numMatch) {
             const listNum = numMatch[1];
-            const listItemContent = prefixTags + numMatch[2] + suffixTags;
+            const content = numMatch[2].trim();
+
+            let markerClasses = '';
+            if (/^(?:<[a-z]+>)*<strong>/.test(content)) markerClasses += ' font-bold';
+            if (/^(?:<[a-z]+>)*<em>/.test(content)) markerClasses += ' italic';
+            if (/^(?:<[a-z]+>)*<del>/.test(content)) markerClasses += ' line-through';
+
+            const listItemContent = prefixTags + content + suffixTags;
             return (
               <ol key={lineIdx} className={`list-decimal pl-5 my-0.5 break-words [overflow-wrap:anywhere] text-justify${markerClasses}`} start={parseInt(listNum)}>
                 <li>{parseTagsAndRestoreTokens(listItemContent, mentions, links, urls, inlineCodes)}</li>
@@ -337,11 +352,12 @@ export const renderMessageContent = (
 
 export const getMessagePreviewText = (msg?: Message | null): string => {
   if (!msg) return '';
-  if (msg.deletedAt) return '[Message deleted]';
   if (msg.type === 'sticker') return '[Sticker]';
 
   if (msg.content && msg.content.trim()) {
-    const cleanText = msg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+    const cleanText = msg.content
+      .replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1')
+      .replace(/@@@SOFTBREAK@@@/g, ' ');
     if (msg.attachments && msg.attachments.length > 0) {
       const firstAtt = msg.attachments[0];
       const isImg = firstAtt.mimeType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(firstAtt.url || firstAtt.name || '');
