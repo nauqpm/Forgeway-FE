@@ -157,6 +157,11 @@ export const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: loginAPI,
     onSuccess: async (response) => {
+      if (response.redirectUrl) {
+        window.location.href = response.redirectUrl;
+        return;
+      }
+
       if (response.mfaRequired && response.mfaToken && response.mfaMethod) {
         setMfaChallenge(response.mfaToken, response.mfaMethod);
         router.push(AUTH_ROUTES.MFA);
@@ -238,9 +243,13 @@ export const useAuth = () => {
         throw new Error(emailError);
       }
 
+      const params = new URLSearchParams(window.location.search);
+      const redirectUrl = params.get('redirect');
+
       return loginMutation.mutateAsync({
         ...data,
         email: normalizedEmail,
+        ...(redirectUrl ? { redirect: redirectUrl } : {}),
       });
     },
     [loginMutation],
