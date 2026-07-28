@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { ResizeHandle } from '@/shared/components/ResizeHandle';
+import { renderMessageContent } from '../utils/messageContentRenderer';
 
 interface ChatSearchPanelProps {
   channelId: string;
@@ -477,9 +478,9 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                                 Reply in thread
                               </span>
                             )}
-                            <p className="text-xs text-[#555555] dark:text-[#C4C4C3] line-clamp-3 mt-1 break-words">
-                              {msg.content || (msg.stickerId ? 'Sent a sticker' : '')}
-                            </p>
+                            <div className="text-xs text-[#555555] dark:text-[#C4C4C3] line-clamp-3 mt-1 break-words">
+                              {renderMessageContent(msg.content || (msg.stickerId ? 'Sent a sticker' : ''))}
+                            </div>
 
                             {/* Previews for Attachments in Search Result */}
                             {msg.attachments && msg.attachments.length > 0 && (
