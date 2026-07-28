@@ -58,7 +58,7 @@ export default function GeneralSettings({
   handleLeaveConfirmKeyDown,
 }: GeneralSettingsProps) {
   return (
-    <form onSubmit={handleSave} className="space-y-8 max-w-[min(100%,42rem)]">
+    <form onSubmit={handleSave} className="space-y-8 w-full max-w-full">
       <section>
         <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">Basic information</h2>
         {!canManageWorkspace && (

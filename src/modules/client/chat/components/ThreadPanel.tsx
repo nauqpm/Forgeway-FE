@@ -2,9 +2,9 @@
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { X, Loader2, MessageSquare, AlertCircle } from 'lucide-react';
+import { X, Loader2, MessageSquare, AlertCircle, ArrowDown } from 'lucide-react';
 import { useThreadReplies, useChatChannels } from '../hooks/useChatQueries';
-import { useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { useQueryClient, useQuery, type InfiniteData } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import type { Message, MessagesPage, ChatUser } from '@/modules/client/chat/types/chat.types';
@@ -12,6 +12,7 @@ import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { ResizeHandle } from '@/shared/components/ResizeHandle';
+import { getMessageByIdAPI } from '../services/chatService';
 
 interface ThreadPanelProps {
   channelId: string;
@@ -22,10 +23,9 @@ interface ThreadPanelProps {
 export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPanelProps) {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const targetMessageId = searchParams.get('messageId');
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string })?._id || authUser?.id;
-  const scrolledMessageIdRef = useRef<string | null>(null);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
 
   const { width: panelWidth, handleMouseDown, handleReset } = useResizablePanel({
     defaultWidth: 400,
@@ -75,52 +75,102 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
     return null;
   }, [messageId, channelId, queryClient]);
 
-  const [parentMessage, setParentMessage] = useState<Message | null>(getParentFromCache);
+  const [parentFromCache, setParentFromCache] = useState<Message | null>(getParentFromCache);
 
   // Subscribe to cache changes so parentMessage updates realtime
   useEffect(() => {
-    setParentMessage(getParentFromCache());
+    setParentFromCache(getParentFromCache());
     const unsubscribe = queryClient.getQueryCache().subscribe(() => {
       // Defer to avoid "setState during render" warning when cache updates mid-render
       setTimeout(() => {
-        setParentMessage(getParentFromCache());
+        setParentFromCache(getParentFromCache());
       }, 0);
     });
     return unsubscribe;
   }, [getParentFromCache, queryClient]);
 
-
-  // Scroll to targeted message if specified, otherwise scroll to bottom
-  useEffect(() => {
-    if (isLoading) return;
-
-    if (targetMessageId) {
-      if (scrolledMessageIdRef.current === targetMessageId) return;
-
-      const timer = setTimeout(() => {
-        const el = document.getElementById(`msg-${targetMessageId}`);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
-          scrolledMessageIdRef.current = targetMessageId;
-
-          // Remove messageId from URL so it doesn't scroll on refresh
-          const url = new URL(window.location.href);
-          url.searchParams.delete('messageId');
-          window.history.replaceState({}, '', url.toString());
-
-          setTimeout(() => {
-            el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
-          }, 2000);
-        }
-      }, 150);
-      return () => clearTimeout(timer);
-    } else {
-      if (scrollRef.current) {
-        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  // Fallback: fetch parent message from API when it's not available in cache.
+  // This happens when the user hasn't scrolled far back in the channel to load that message.
+  const { data: parentFromAPI, isFetching: isFetchingParent } = useQuery<Message | null>({
+    queryKey: ['chat', 'message', channelId, messageId],
+    queryFn: async () => {
+      try {
+        return await getMessageByIdAPI(channelId, messageId);
+      } catch {
+        return null;
       }
+    },
+    enabled: Boolean(channelId && messageId && !parentFromCache),
+    staleTime: 30_000,
+    retry: false,
+  });
+
+  const parentMessage: Message | null = parentFromCache ?? parentFromAPI ?? null;
+
+  // ─── Scroll-to-reply logic ───────────────────────────────────────────────
+  // Use a dedicated state (NOT searchParams) as the source of truth.
+  // This prevents the URL-clear step inside scrollToMessage from re-triggering
+  // the scroll effect with targetId=null and scrolling back to the bottom.
+  const [scrollTargetId, setScrollTargetId] = useState<string | null>(
+    () => searchParams.get('messageId')
+  );
+
+  // Effect 1: Update scrollTargetId whenever the URL messageId param changes.
+  // Handles both: initial mount (thread was closed) AND panel already open (no re-mount).
+  useEffect(() => {
+    const targetId = searchParams.get('messageId');
+    setScrollTargetId(targetId);
+  }, [searchParams, messageId]);
+
+  // Effect 2: Perform the scroll whenever scrollTargetId is set and replies are loaded.
+  // Does NOT depend on searchParams — so clearing the URL won't re-trigger this.
+  useEffect(() => {
+    if (!scrollTargetId || isLoading) return;
+
+    let cancelled = false;
+    let attempts = 0;
+
+    const tryScroll = () => {
+      if (cancelled) return;
+      const el = document.getElementById(`msg-${scrollTargetId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+
+        // Clear the target so this effect won't fire again for the same message
+        setScrollTargetId(null);
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('messageId');
+        window.history.replaceState({}, '', url.toString());
+
+        setTimeout(() => {
+          el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+        }, 2000);
+      } else if (attempts < 15) {
+        // Element not in DOM yet — retry while replies are still rendering
+        attempts++;
+        setTimeout(tryScroll, 150);
+      }
+    };
+
+    const timer = setTimeout(tryScroll, 100);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [scrollTargetId, isLoading, replies]);
+
+  // Effect 3: Scroll to bottom for new incoming replies (only when no scroll target).
+  useEffect(() => {
+    if (isLoading || scrollTargetId) return;
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [replies, isLoading, targetMessageId]);
+    // intentionally not including scrollTargetId in deps —
+    // we only want this to fire when replies actually change, not when target clears.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replies, isLoading]);
 
   return (
     <div 
@@ -145,7 +195,11 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
       </header>
 
       {/* Content Area */}
-      {!parentMessage ? (
+      {isFetchingParent && !parentMessage ? (
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-5 h-5 animate-spin text-[#787774]" />
+        </div>
+      ) : !parentMessage ? (
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
             <AlertCircle className="w-6 h-6" />
@@ -166,7 +220,16 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
       ) : (
         <>
           {/* Message List Area */}
-          <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+          <div
+            ref={scrollRef}
+            onScroll={() => {
+              const container = scrollRef.current;
+              if (!container) return;
+              const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+              setShowScrollBottom(distanceFromBottom > 500);
+            }}
+            className="flex-1 overflow-y-auto min-h-0 flex flex-col relative"
+          >
             {/* Parent Message Section */}
             <div className="border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#FBFBFA]/40 dark:bg-[#252525]/20 pt-3.5 pb-2">
               <MessageItem
@@ -218,6 +281,22 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
                 })
               )}
             </div>
+
+            {/* Floating scroll to bottom button */}
+            {showScrollBottom && (
+              <button
+                onClick={() => {
+                  if (scrollRef.current) {
+                    scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+                  }
+                }}
+                className="sticky bottom-4 right-4 ml-auto mr-4 mb-2 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] text-white rounded-full shadow-lg text-xs font-semibold transition-all transform hover:scale-105 active:scale-95 animate-fade-in"
+                title="Scroll to latest replies"
+              >
+                <ArrowDown className="w-3.5 h-3.5" />
+                <span>Latest Replies</span>
+              </button>
+            )}
           </div>
 
           {/* Reply Input */}

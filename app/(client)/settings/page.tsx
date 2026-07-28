@@ -36,7 +36,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="app-page-narrow app-page-fluid-2xl py-8 pb-12 px-4">
+      <div className="w-full max-w-full py-8 pb-12 px-4">
         <h1 className="mb-6 text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
           Settings
         </h1>
@@ -52,7 +52,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="min-[1920px]:max-w-[56.25rem] workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
+        <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
           <h2 className="mb-4 flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7]">
             <User className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
             Profile
@@ -105,7 +105,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="min-[1920px]:max-w-[56.25rem] workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
+        <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
           <h2 className="mb-4 flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7]">
             <Shield className="h-5 w-5 text-[#2563EB] dark:text-[#3B82F6]" />
             Password
@@ -133,7 +133,7 @@ export default function SettingsPage() {
           )}
         </div>
 
-        <div className="min-[1920px]:max-w-[56.25rem] workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
+        <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
           <h2 className="mb-4 flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7]">
             <LogOut className="h-5 w-5 text-[#9F2F2D] dark:text-[#F87171]" />
             Account

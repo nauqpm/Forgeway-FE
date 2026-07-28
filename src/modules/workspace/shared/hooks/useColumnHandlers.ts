@@ -3,9 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { boardService } from "../services/boardService";
 import { BoardColumn } from "../types/board.type";
+import { Issue } from "../types/issue.type";
 import { toast } from "react-hot-toast";
 import { extractApiError, extractApiErrorCode } from "@/shared/utils/apiError";
-import { COLUMN_NAME_MESSAGES, hasDuplicateColumnName, normalizeColumnDisplayName } from "../utils/columnName";
+import { COLUMN_NAME_MESSAGES, MAX_COLUMN_NAME_LENGTH, hasDuplicateColumnName, normalizeColumnDisplayName } from "../utils/columnName";
 
 const getColumnErrorMessage = (error: unknown, fallback: string): string => {
   const code = extractApiErrorCode(error, "");
@@ -117,10 +118,11 @@ export const useColumnHandlers = ({
   });
 
   const deleteColumnMutation = useMutation({
-    mutationFn: ({ columnId, migrateTo }: { columnId: string; migrateTo?: string }) =>
-      boardService.deleteColumn(workspaceId, columnId, { targetColumnId: migrateTo }),
-    onMutate: async ({ columnId }) => {
+    mutationFn: ({ columnId, migrateTo, archivedMigrateTo }: { columnId: string; migrateTo?: string; archivedMigrateTo?: string }) =>
+      boardService.deleteColumn(workspaceId, columnId, { targetColumnId: migrateTo, archivedTargetColumnId: archivedMigrateTo }),
+    onMutate: async ({ columnId, migrateTo }) => {
       await queryClient.cancelQueries({ queryKey: boardQueryKey });
+      await queryClient.cancelQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
       const previousBoard = queryClient.getQueryData<{ boardId: string; columns: BoardColumn[] }>(boardQueryKey);
 
       if (previousBoard) {
@@ -128,6 +130,18 @@ export const useColumnHandlers = ({
           ...previousBoard,
           columns: previousBoard.columns.filter((c) => c.id !== columnId),
         });
+      }
+
+      if (migrateTo) {
+        queryClient.setQueriesData<Issue[]>(
+          { queryKey: queryKeys.tasks.byWorkspace(workspaceId) },
+          (current) => {
+            if (!Array.isArray(current)) return current;
+            return current.map((task) =>
+              task.columnId === columnId ? { ...task, columnId: migrateTo } : task
+            );
+          }
+        );
       }
 
       return { previousBoard };
@@ -142,6 +156,9 @@ export const useColumnHandlers = ({
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: boardQueryKey });
+      queryClient.invalidateQueries({ queryKey: queryKeys.board.byWorkspace(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.all });
     },
     onSuccess: () => {
       toast.success("Column deleted");
@@ -174,6 +191,11 @@ export const useColumnHandlers = ({
       return;
     }
 
+    if (normalizedName.length > MAX_COLUMN_NAME_LENGTH) {
+      toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+      return;
+    }
+
     const board = queryClient.getQueryData<{ columns: BoardColumn[] }>(boardQueryKey);
     if (hasDuplicateColumnName(board?.columns ?? [], normalizedName)) {
       toast.error(COLUMN_NAME_MESSAGES.DUPLICATE);
@@ -190,6 +212,11 @@ export const useColumnHandlers = ({
       return;
     }
 
+    if (normalizedName.length > MAX_COLUMN_NAME_LENGTH) {
+      toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+      return;
+    }
+
     const board = queryClient.getQueryData<{ columns: BoardColumn[] }>(boardQueryKey);
     if (hasDuplicateColumnName(board?.columns ?? [], normalizedName, columnId)) {
       toast.error(COLUMN_NAME_MESSAGES.DUPLICATE);
@@ -199,8 +226,8 @@ export const useColumnHandlers = ({
     renameColumnMutation.mutate({ columnId, name: normalizedName });
   };
 
-  const handleDeleteColumn = (columnId: string, migrateTo?: string) => {
-    deleteColumnMutation.mutate({ columnId, migrateTo });
+  const handleDeleteColumn = (columnId: string, migrateTo?: string, archivedMigrateTo?: string) => {
+    deleteColumnMutation.mutate({ columnId, migrateTo, archivedMigrateTo });
   };
 
   const handleMoveColumn = (columnId: string, newOrder: number) => {

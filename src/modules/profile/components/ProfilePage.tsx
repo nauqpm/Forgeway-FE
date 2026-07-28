@@ -41,7 +41,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="app-page-fluid-xl max-w-2xl mx-auto px-4 py-8 sm:px-0 space-y-6">
+    <div className="w-full max-w-full px-6 py-8 space-y-6">
       <h1 className="text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
         Personal profile
       </h1>
@@ -53,7 +53,7 @@ export function ProfilePage() {
         </div>
       )}
 
-      <div className="min-[1280px]:max-w-[60rem] bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
+      <div className="w-full bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
         <h2 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
           <User className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
           Personal information
@@ -67,7 +67,7 @@ export function ProfilePage() {
         />
       </div>
 
-      <div className="min-[1280px]:max-w-[60rem] bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
+      <div className="w-full bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
         <h2 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
           <Key className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
           Password
