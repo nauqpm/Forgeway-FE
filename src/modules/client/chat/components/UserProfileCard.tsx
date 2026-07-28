@@ -41,6 +41,7 @@ export default function UserProfileCard({ user, position, onClose, isCurrentUser
   const handleMessageUser = async () => {
     try {
       await createDMMutation.mutateAsync([user._id]);
+      toast.success('Create DM successfully');
       onClose();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

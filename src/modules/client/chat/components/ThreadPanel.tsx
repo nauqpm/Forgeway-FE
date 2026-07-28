@@ -38,6 +38,24 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
   const { data: channels = [] } = useChatChannels();
   const channel = channels.find(c => c._id === channelId);
 
+  const { data: workspaces = [] } = useWorkspaces();
+  const userRole = useAuthStore(state => state.user?.role);
+  
+  const isWorkspaceAdmin = React.useMemo(() => {
+    if (channel?.type === 'dm') return false;
+    if (userRole === 'super_admin') return true;
+    if (!channel?.workspaceId) return false;
+    const ws = workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(channel.workspaceId));
+    if (!ws) return false;
+    const isOwner = String(ws.ownerId) === String(currentUserId);
+    const member = ws.members?.find((m: { userId?: { _id?: string; id?: string } | string }) => {
+      const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+      return String(uId) === String(currentUserId);
+    });
+    const role = isOwner ? 'workspace_admin' : ((member as { role?: string })?.role || 'member');
+    return role === 'workspace_admin';
+  }, [channel?.type, channel?.workspaceId, workspaces, currentUserId, userRole]);
+
   const { data: replies = [], isLoading } = useThreadReplies(channelId, messageId);
 
   const visibleReplies = React.useMemo(() => {
@@ -237,6 +255,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
                 isSameUserAsPrevious={false}
                 isMine={String((parentMessage.senderId && typeof parentMessage.senderId === 'object') ? (parentMessage.senderId as ChatUser)._id || (parentMessage.senderId as ChatUser).id : parentMessage.senderId || '') === String(currentUserId)}
                 hideThreadBadge={true}
+                isWorkspaceAdmin={isWorkspaceAdmin}
               />
             </div>
 
@@ -276,6 +295,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
                       isSameUserAsPrevious={isSameUserAsPrevious}
                       isMine={String(currentSenderId) === String(currentUserId)}
                       hideThreadBadge={true}
+                      isWorkspaceAdmin={isWorkspaceAdmin}
                     />
                   );
                 })

@@ -89,8 +89,8 @@ export default function WorkspacesPage() {
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">
-      <div className="app-page-wide app-page-fluid-2xl">
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-medium app-page-fluid-xl pt-6 pb-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8 min-w-0 w-full">
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-1">Workspaces</h1>

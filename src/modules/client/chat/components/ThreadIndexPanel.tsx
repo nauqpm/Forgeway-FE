@@ -70,10 +70,11 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
   }, [threads, filter, currentUserId]);
 
   // Count how many unread threads are in the filtered list
-  const unreadCount = useMemo(
-    () => filteredThreads.filter(t => unreadThreadIds.has(t._id || t.id || '')).length,
-    [filteredThreads, unreadThreadIds]
-  );
+  const unreadCount = useMemo(() => {
+    const channelUnreads = unreadThreadIds[channelId];
+    if (!channelUnreads) return 0;
+    return filteredThreads.filter(t => channelUnreads.has(t._id || t.id || '')).length;
+  }, [filteredThreads, unreadThreadIds, channelId]);
 
   const getSenderName = (thread: Message) => {
     if (thread.senderId && typeof thread.senderId === 'object') {
@@ -91,7 +92,7 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
 
   const handleOpenThread = (thread: Message) => {
     const threadId = thread._id || thread.id || '';
-    markThreadRead(threadId);
+    markThreadRead(channelId, threadId);
     setActiveThreadParentId(threadId);
   };
 
@@ -171,7 +172,7 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
               ? formatDistanceToNow(new Date(thread.lastReplyAt), { addSuffix: true })
               : '';
             const threadId = thread._id || thread.id || '';
-            const isUnread = unreadThreadIds.has(threadId);
+            const isUnread = Boolean(unreadThreadIds[channelId]?.has(threadId));
 
             return (
               <button

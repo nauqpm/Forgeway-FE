@@ -193,18 +193,37 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   // Sort: admins first, then alphabetically
   const sortedMembers = useMemo(() => {
     return [...filteredMembers].sort((a: ChatMember, b: ChatMember) => {
-      const roleOrder = (r?: string) => {
-        if (!r) return 3;
+      const getEffectiveRole = (member: ChatMember & { globalRole?: string }) => {
+        if (member.globalRole === 'super_admin' || member.globalRole === 'superadmin') return 'super_admin';
+        const wsMem = activeWorkspace?.members?.find(
+          (m: WorkspaceMember) => {
+            const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+            return String(uId) === String(member._id);
+          }
+        );
+        if (wsMem?.role === 'workspace_admin' || String(activeWorkspace?.ownerId) === String(member._id)) return 'workspace_admin';
+        if (wsMem?.role === 'viewer') return 'viewer';
+        if (wsMem?.role === 'member') return 'member';
+        return member.role || 'viewer';
+      };
+
+      const roleOrder = (r: string) => {
         const nr = r.toLowerCase();
         if (nr === 'super_admin' || nr === 'superadmin') return 0;
         if (nr === 'workspace_admin' || nr === 'admin') return 1;
-        return 3;
+        if (nr === 'member' || nr === 'channel_admin' || nr === 'channel_member') return 2;
+        if (nr === 'viewer') return 3;
+        return 4;
       };
-      const diff = roleOrder(a.role) - roleOrder(b.role);
+
+      const roleA = getEffectiveRole(a);
+      const roleB = getEffectiveRole(b);
+
+      const diff = roleOrder(roleA) - roleOrder(roleB);
       if (diff !== 0) return diff;
       return (a.fullName || '').localeCompare(b.fullName || '');
     });
-  }, [filteredMembers]);
+  }, [filteredMembers, activeWorkspace]);
 
   const { width: panelWidth, handleMouseDown, handleReset } = useResizablePanel({
     defaultWidth: 320,

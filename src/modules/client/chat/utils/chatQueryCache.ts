@@ -151,7 +151,16 @@ export const removeMessageFromCache = (
           ...page,
           messages: page.messages
             .filter((m) => getMessageId(m) !== messageId)
-            .map((m) => updateReplyTargetIfDeleted(m, messageId)),
+            .map((m) => {
+              const updated = updateReplyTargetIfDeleted(m, messageId);
+              if (threadParentId && getMessageId(updated) === threadParentId) {
+                return {
+                  ...updated,
+                  replyCount: Math.max(0, (updated.replyCount || 1) - 1),
+                };
+              }
+              return updated;
+            }),
         })),
       };
     }

@@ -55,6 +55,11 @@ body {
   background-color: var(--color-canvas);
 }
 
+button {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
 :root {
   --app-header-h: 3.5rem;
   --app-page-pad: clamp(0.75rem, 1.2vw, 1.5rem);

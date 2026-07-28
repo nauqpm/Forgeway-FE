@@ -49,6 +49,7 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
     if (selectedUserIds.length === 0) return;
     try {
       await createDMMutation.mutateAsync(selectedUserIds);
+      toast.success('Create DM successfully');
       onClose();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

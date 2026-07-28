@@ -296,7 +296,7 @@ export default function ChatRealtimeHandler() {
     const isViewingThisThread = activeThreadParentId === parentId;
 
     if (!isMyOwnReply && !isViewingThisThread) {
-      useChatStore.getState().markThreadUnread(parentId);
+      useChatStore.getState().markThreadUnread(channelId, parentId);
     }
   }, [queryClient]);
 
@@ -336,6 +336,8 @@ export default function ChatRealtimeHandler() {
         ]
       };
     });
+
+    void queryClient.invalidateQueries({ queryKey: queryKeys.chat.members(data.channelId) });
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -349,6 +351,13 @@ export default function ChatRealtimeHandler() {
         channelMembers: currentMembers.filter(m => String(m.userId) !== String(data.userId))
       };
     });
+
+    queryClient.setQueryData<Array<{ _id?: string; id?: string }>>(queryKeys.chat.members(data.channelId), (old) => {
+      if (!old) return old;
+      return old.filter(m => String(m._id) !== String(data.userId) && String(m.id) !== String(data.userId));
+    });
+
+    void queryClient.invalidateQueries({ queryKey: queryKeys.chat.members(data.channelId) });
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
