@@ -9,12 +9,15 @@ import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import { useQuery } from "@tanstack/react-query";
+import { taskService } from "@/modules/workspace/shared/services/taskService";
 import DeleteColumnModal from "@/modules/workspace/shared/components/DeleteColumnModal";
 import BoardFilters from "@/modules/workspace/shared/components/BoardFilters";
 import BoardTaskActionMenu from "@/modules/workspace/tasks/covers/BoardTaskActionMenu";
 import TaskLabelModal from "@/modules/workspace/tasks/labels/TaskLabelModal";
 import { compareIssueRank } from "@/modules/workspace/shared/utils/dragUtils";
-import { MAX_COLUMN_NAME_LENGTH } from "@/modules/workspace/shared/utils/columnName";
+import { toast } from "react-hot-toast";
+import { MAX_COLUMN_NAME_LENGTH, COLUMN_NAME_MESSAGES } from "@/modules/workspace/shared/utils/columnName";
 
 import {
   Check,
@@ -88,7 +91,7 @@ type BoardTabProps = {
     handleBoardDragStart?: () => void;
     handleAddColumn: () => void;
     handleRenameColumn: (columnId: string, name: string) => void;
-    handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
+    handleDeleteColumn: (columnId: string, migrateTo?: string, archivedMigrateTo?: string) => void;
     handleMoveColumn: (columnId: string, newOrder: number) => void;
     updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
     onArchiveIssue?: (issue: Issue) => void;
@@ -156,6 +159,27 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const actionMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch archived tasks count for the column being deleted
+  const { data: archivedTasksInColumn } = useQuery({
+    queryKey: ["tasks-archived-column", workspace._id, columnToDelete?.id],
+    queryFn: () => taskService.getBoardTasks(workspace._id, {
+      archived: true,
+      columnId: columnToDelete!.id,
+      page: 1,
+      limit: 1,
+    }),
+    enabled: !!columnToDelete && deleteModalOpen,
+    staleTime: 0,
+  });
+
+  // Whether the column being deleted has any archived tasks
+  const archivedInColumn = (archivedTasksInColumn?.length ?? 0) > 0;
+
+
+
+
+
 
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
@@ -367,21 +391,38 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         }}
                       >
                         {editingColumnId === column.id ? (
-                          <input
-                            autoFocus
-                            value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleRenameColumn(column.id, editingName);
-                                setEditingColumnId(null);
-                              }
-                              if (e.key === "Escape") setEditingColumnId(null);
-                            }}
-                            onBlur={() => setEditingColumnId(null)}
-                            maxLength={MAX_COLUMN_NAME_LENGTH}
-                            className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
-                          />
+                          <div className="w-full">
+                            <input
+                              autoFocus
+                              value={editingName}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val.length > MAX_COLUMN_NAME_LENGTH) {
+                                  toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+                                  setEditingName(val.slice(0, MAX_COLUMN_NAME_LENGTH));
+                                } else {
+                                  setEditingName(val);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleRenameColumn(column.id, editingName);
+                                  setEditingColumnId(null);
+                                }
+                                if (e.key === "Escape") setEditingColumnId(null);
+                              }}
+                              onBlur={() => setEditingColumnId(null)}
+                              className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
+                            />
+                            {editingName.length >= 40 && (
+                              <div className="text-[0.625rem] font-mono mt-1 text-right text-[#787774] dark:text-[#9B9A97]">
+                                <span className={editingName.length >= MAX_COLUMN_NAME_LENGTH ? "text-[#9F2F2D] font-bold" : ""}>
+                                  {editingName.length}
+                                </span>
+                                /{MAX_COLUMN_NAME_LENGTH}
+                              </div>
+                            )}
+                          </div>
                         ) : (
                           <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2 min-w-0 flex-1 mr-2">
                             <span className="truncate" title={column.name}>
@@ -572,7 +613,15 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                       type="text"
                       autoFocus
                       value={newColumnName}
-                      onChange={(e) => setNewColumnName(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.length > MAX_COLUMN_NAME_LENGTH) {
+                          toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+                          setNewColumnName(val.slice(0, MAX_COLUMN_NAME_LENGTH));
+                        } else {
+                          setNewColumnName(val);
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleAddColumn();
                         if (e.key === "Escape") {
@@ -580,10 +629,17 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           setNewColumnName("");
                         }
                       }}
-                      maxLength={MAX_COLUMN_NAME_LENGTH}
                       placeholder="New column name..."
                       className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] focus:border-[#2563EB] outline-none transition-colors"
                     />
+                    {newColumnName.length >= 40 && (
+                      <div className="text-[0.625rem] font-mono mt-1 text-right text-[#787774] dark:text-[#9B9A97]">
+                        <span className={newColumnName.length >= MAX_COLUMN_NAME_LENGTH ? "text-[#9F2F2D] font-bold" : ""}>
+                          {newColumnName.length}
+                        </span>
+                        /{MAX_COLUMN_NAME_LENGTH}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 mt-3">
                       <button
                         onClick={handleAddColumn}
@@ -657,12 +713,13 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           column={columnToDelete}
           columns={columns}
           hasTasks={issues.some(i => issueMatchesColumn(i, columnToDelete))}
+          hasArchivedTasks={archivedInColumn}
           onClose={() => {
             setDeleteModalOpen(false);
             setColumnToDelete(null);
           }}
-          onConfirm={(migrateTo) => {
-            handleDeleteColumn(columnToDelete.id, migrateTo);
+          onConfirm={(migrateTo, archivedMigrateTo) => {
+            handleDeleteColumn(columnToDelete.id, migrateTo, archivedMigrateTo);
             setDeleteModalOpen(false);
             setColumnToDelete(null);
           }}

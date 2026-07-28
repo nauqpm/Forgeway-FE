@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import {
   ArrowRight,
   Lock,
@@ -86,6 +88,8 @@ const Header = ({
     }
   };
 
+  const queryClient = useQueryClient();
+
   const handleSaveAvatar = async () => {
     if (!selectedAvatar) return;
     setSavingAvatar(true);
@@ -93,7 +97,18 @@ const Header = ({
       const updatedWorkspace = await workspaceService.updateWorkspace(workspace._id, {
         avatar: selectedAvatar,
       });
-      onWorkspaceUpdated?.({ ...workspace, ...updatedWorkspace });
+
+      queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (old = []) =>
+        old.map((w) =>
+          w._id === workspace._id || w.key === workspace.key
+            ? { ...w, ...updatedWorkspace, avatar: selectedAvatar }
+            : w,
+        ),
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+      void queryClient.invalidateQueries({ queryKey: ["admin"] });
+
+      onWorkspaceUpdated?.({ ...workspace, ...updatedWorkspace, avatar: selectedAvatar });
       setIsAvatarPickerOpen(false);
       toast.success("Workspace avatar updated.");
     } catch {
