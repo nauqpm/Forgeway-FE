@@ -151,6 +151,7 @@ export function ProfileInfoForm({
                 alt={profile.fullName ?? "Avatar"}
                 width={80}
                 height={80}
+                unoptimized
                 className="object-cover w-full h-full"
               />
             ) : (
