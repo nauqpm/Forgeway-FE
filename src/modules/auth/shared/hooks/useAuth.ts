@@ -21,6 +21,7 @@ import { AUTH_ROUTES } from "../constants/auth-routes";
 import { AuthErrorCode } from "../types/auth.types";
 import { validateEmail } from "../utils/emailValidation";
 import type { AuthUser, LoginRequest, RegisterRequest, AuthApiError, Permission } from "../types/auth.types";
+import { exchangeCode } from "../services/ssoService";
 
 export const AUTH_ME_QUERY_KEY = ["auth", "me"] as const;
 export const AUTH_PERMISSIONS_QUERY_KEY = ["auth", "permissions"] as const;
@@ -157,11 +158,6 @@ export const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: loginAPI,
     onSuccess: async (response) => {
-      if (response.redirectUrl) {
-        window.location.href = response.redirectUrl;
-        return;
-      }
-
       if (response.mfaRequired && response.mfaToken && response.mfaMethod) {
         setMfaChallenge(response.mfaToken, response.mfaMethod);
         router.push(AUTH_ROUTES.MFA);
@@ -194,6 +190,13 @@ export const useAuth = () => {
         window.location.href = ADMIN_URL;
         return;
       }
+
+      // Note: để ở đây, sẽ bị gọi nhiều lần, không ổn
+      const url = new URL(window.location.href);
+      const redirectUrl = url.searchParams.get('redirect');
+      await exchangeCode({
+        redirectUrl: redirectUrl || ''
+      });
 
       router.push(AUTH_ROUTES.DASHBOARD);
     },
@@ -243,13 +246,9 @@ export const useAuth = () => {
         throw new Error(emailError);
       }
 
-      const params = new URLSearchParams(window.location.search);
-      const redirectUrl = params.get('redirect');
-
       return loginMutation.mutateAsync({
         ...data,
         email: normalizedEmail,
-        ...(redirectUrl ? { redirect: redirectUrl } : {}),
       });
     },
     [loginMutation],

@@ -32,7 +32,6 @@ export interface AuthUser extends User {
 export interface LoginRequest {
   email: string;
   password: string;
-  redirect?: string;
   // rememberMe?: boolean;
 }
 
@@ -40,14 +39,22 @@ export interface LoginResponse {
   success: boolean;
   message: string;
   user?: AuthUser;
-  /** Redirect URL for SSO flow */
-  redirectUrl?: string;
   /** True when the backend requires MFA before issuing a session */
   mfaRequired?: boolean;
   /** Temporary token used to verify MFA */
   mfaToken?: string;
   /** MFA method required by the backend */
   mfaMethod?: MfaMethod;
+}
+
+// -- SSO
+export interface GetExchangeCodeRequest {
+  redirectUrl: string;
+}
+
+export interface GetExchangeCodeResponse {
+  success: boolean;
+  redirectUrl: string;
 }
 
 export interface RegisterRequest {
