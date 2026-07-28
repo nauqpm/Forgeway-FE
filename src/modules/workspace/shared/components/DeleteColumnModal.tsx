@@ -23,12 +23,13 @@ export default function DeleteColumnModal({
   hasTasks,
   hasArchivedTasks,
 }: DeleteColumnModalProps) {
-  const [migrateTo, setMigrateTo] = useState<string>("");
-  const [archivedMigrateTo, setArchivedMigrateTo] = useState<string>("");
+  const otherColumns = columns.filter((c) => c.id !== column.id);
+  const defaultTarget = otherColumns[0]?.id || "";
+
+  const [migrateTo, setMigrateTo] = useState<string>(() => defaultTarget);
+  const [archivedMigrateTo, setArchivedMigrateTo] = useState<string>(() => defaultTarget);
 
   if (!isOpen || !column) return null;
-
-  const otherColumns = columns.filter((c) => c.id !== column.id);
 
   const isFormValid =
     (!hasTasks || !!migrateTo) &&
