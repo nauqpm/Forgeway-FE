@@ -210,11 +210,15 @@ export const preprocessInlineMarkdown = (text: string) => {
 };
 
 export const renderMessageContent = (
-  content?: string, 
+  contentOrMsg?: string | Message | null, 
   currentUserId?: string,
   onMentionClick?: (userId: string, displayName: string, pos: { x: number; y: number }) => void
 ) => {
-  if (!content) return '';
+  const content = typeof contentOrMsg === 'object' && contentOrMsg !== null
+    ? contentOrMsg.content
+    : contentOrMsg;
+
+  if (typeof content !== 'string' || !content) return '';
 
   const mentions: React.ReactNode[] = [];
   const mentionRegex = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;

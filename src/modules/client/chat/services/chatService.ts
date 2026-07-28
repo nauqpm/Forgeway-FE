@@ -285,6 +285,18 @@ export const updateMemberRoleAPI = async (
   };
 };
 
+export const getMessageByIdAPI = async (
+  channelId: string,
+  messageId: string
+): Promise<Message> => {
+  const response = await api.get(`/chat/channels/${channelId}/messages/${messageId}`);
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id || messageId,
+  } as Message;
+};
+
 export const getThreadRepliesAPI = async (
   channelId: string,
   messageId: string
