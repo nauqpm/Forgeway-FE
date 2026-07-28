@@ -191,12 +191,12 @@ export default function DocumentGrid({
                 onView(doc);
               }
             }}
-            className="group relative flex flex-col justify-between rounded-[10px] border border-[#EAEAEA] bg-white p-4.5 transition-all hover:border-[#2563EB]/40 hover:shadow-md focus:outline-none dark:border-white/[0.08] dark:bg-[#202020] dark:hover:border-[#3B82F6]/40 dark:hover:shadow-black/40 cursor-pointer"
+            className="group relative flex min-h-[210px] flex-col justify-between rounded-[10px] border border-[#EAEAEA] bg-white p-[1.125rem] transition-all hover:border-[#2563EB]/40 hover:shadow-md focus:outline-none dark:border-white/[0.08] dark:bg-[#202020] dark:hover:border-[#3B82F6]/40 dark:hover:shadow-black/40 cursor-pointer"
           >
             <div>
               <div className="mb-3.5 flex items-start justify-between">
                 <div className={`flex h-11 w-11 items-center justify-center rounded-[8px] border ${style}`}>
-                  <Icon className="h-5.5 w-5.5" />
+                  <Icon className="h-5 w-5" />
                 </div>
                 <button
                   onClick={(e) => {
@@ -214,7 +214,7 @@ export default function DocumentGrid({
               {openMenuId === doc._id && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute right-4 top-13 z-30 w-48 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white shadow-xl dark:border-white/[0.08] dark:bg-[#252525]"
+                  className="absolute right-4 top-12 z-30 w-48 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white shadow-xl dark:border-white/[0.08] dark:bg-[#252525]"
                 >
                   <button
                     className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-xs font-medium text-[#111111] transition hover:bg-[#F7F6F3] dark:text-[#E8E8E7] dark:hover:bg-[#2E2E2E]"
@@ -273,10 +273,18 @@ export default function DocumentGrid({
 
             <div className="mt-4 border-t border-[#EAEAEA] pt-3 dark:border-white/[0.06]">
               <div className="flex items-center justify-between text-xs text-[#787774] dark:text-[#9B9A97]">
-                <span className="inline-flex items-center rounded-[4px] bg-[#F7F6F3] px-1.5 py-0.5 font-medium text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]">
-                  .{formattedExt}
-                </span>
-                <span>{formatSize(doc.size)}</span>
+                {doc.documentType === "online" ? (
+                  <span className="inline-flex items-center rounded-[4px] bg-blue-50 dark:bg-blue-950/30 px-1.5 py-0.5 font-semibold text-blue-600 dark:text-blue-400">
+                    Online document
+                  </span>
+                ) : (
+                  <>
+                    <span className="inline-flex items-center rounded-[4px] bg-[#F7F6F3] px-1.5 py-0.5 font-medium text-[#787774] dark:bg-[#252525] dark:text-[#9B9A97]">
+                      .{formattedExt}
+                    </span>
+                    <span>{formatSize(doc.size)}</span>
+                  </>
+                )}
               </div>
               <p className="mt-2 text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B]">
                 Uploaded {formatDate(doc.updatedAt || doc.createdAt)}

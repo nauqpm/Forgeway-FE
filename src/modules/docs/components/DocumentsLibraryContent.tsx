@@ -96,7 +96,7 @@ export default function DocumentsLibraryContent({ documentId, documentMode }: Do
 
   return (
     <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">
-      <div className="w-full max-w-full pb-12">
+      <div className="app-page-wide pb-12">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="mb-1 text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">

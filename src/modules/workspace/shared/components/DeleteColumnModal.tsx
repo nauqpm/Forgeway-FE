@@ -23,7 +23,7 @@ export default function DeleteColumnModal({
   hasTasks,
   hasArchivedTasks,
 }: DeleteColumnModalProps) {
-  const otherColumns = columns.filter((c) => c.id !== column.id);
+  const otherColumns = columns.filter((c) => c.id !== column?.id);
   const defaultTarget = otherColumns[0]?.id || "";
 
   const [migrateTo, setMigrateTo] = useState<string>(() => defaultTarget);

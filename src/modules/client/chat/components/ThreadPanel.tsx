@@ -119,10 +119,8 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
   // Handles both: initial mount (thread was closed) AND panel already open (no re-mount).
   useEffect(() => {
     const targetId = searchParams.get('messageId');
-    if (targetId) {
-      setScrollTargetId(targetId);
-    }
-  }, [searchParams]);
+    setScrollTargetId(targetId);
+  }, [searchParams, messageId]);
 
   // Effect 2: Perform the scroll whenever scrollTargetId is set and replies are loaded.
   // Does NOT depend on searchParams — so clearing the URL won't re-trigger this.
@@ -228,7 +226,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
               const container = scrollRef.current;
               if (!container) return;
               const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-              setShowScrollBottom(distanceFromBottom > 1000);
+              setShowScrollBottom(distanceFromBottom > 500);
             }}
             className="flex-1 overflow-y-auto min-h-0 flex flex-col relative"
           >

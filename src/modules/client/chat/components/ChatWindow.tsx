@@ -294,10 +294,10 @@ export default function ChatWindow() {
 
   useEffect(() => {
     const targetId = searchParams.get('messageId');
-    if (targetId && !activeThreadParentId) {
+    if (!activeThreadParentId) {
       setScrollTargetId(targetId);
     }
-  }, [searchParams, activeThreadParentId]);
+  }, [searchParams, activeThreadParentId, activeChannelId]);
 
   // Attempt scroll to target message; auto-fetch older pages if target message is not loaded yet
   useEffect(() => {
