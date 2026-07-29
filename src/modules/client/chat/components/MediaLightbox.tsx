@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Download, X } from 'lucide-react';
 
 export interface LightboxFile {
@@ -22,9 +23,15 @@ export default function MediaLightbox({
   onDownload,
   onClose,
 }: MediaLightboxProps) {
-  if (!file) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!file || !mounted) return null;
+
+  return createPortal(
     <div 
       className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center cursor-zoom-out select-none animate-in fade-in duration-150"
       onClick={onClose}
@@ -72,6 +79,7 @@ export default function MediaLightbox({
           onClick={(e) => e.stopPropagation()}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
