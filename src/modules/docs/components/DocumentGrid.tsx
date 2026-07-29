@@ -71,7 +71,7 @@ export default function DocumentGrid({
 }: DocumentGridProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 min-[1920px]:grid-cols-5 min-[2560px]:grid-cols-6">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
           <div
             key={n}
@@ -93,12 +93,13 @@ export default function DocumentGrid({
 
   if (viewMode === "list") {
     return (
-      <div className="overflow-hidden rounded-[10px] border border-[#EAEAEA] bg-white shadow-sm dark:border-white/[0.06] dark:bg-[#202020]">
-        <div className="hidden grid-cols-[minmax(0,1fr)_9rem_9rem_3rem] border-b border-[#EAEAEA] bg-[#F9F9F8] px-5 py-3 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#6B6B6B] md:grid">
+      <div className="rounded-[10px] border border-[#EAEAEA] bg-white shadow-sm dark:border-white/[0.06] dark:bg-[#202020]">
+        <div className="hidden rounded-t-[9px] gap-3 grid-cols-[auto_minmax(0,1fr)_9rem_9rem_3rem] border-b border-[#EAEAEA] bg-[#F9F9F8] px-5 py-3 text-[0.6875rem] font-semibold uppercase tracking-wider text-[#ABABAB] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#6B6B6B] md:grid">
+          <div className="w-9" />
           <span>Name</span>
           <span>Size</span>
           <span>Updated</span>
-          <span className="text-right">Actions</span>
+          <span className="text-center">Actions</span>
         </div>
         <div className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06]">
           {documents.map((doc) => {
@@ -115,7 +116,7 @@ export default function DocumentGrid({
                     onView(doc);
                   }
                 }}
-                className="group relative grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3.5 transition-colors hover:bg-[#F7F6F3] focus:outline-none dark:hover:bg-[#252525] md:grid-cols-[auto_minmax(0,1fr)_9rem_9rem_3rem]"
+                className="group relative grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3.5 transition-colors hover:bg-[#F7F6F3] focus:outline-none dark:hover:bg-[#252525] md:grid-cols-[auto_minmax(0,1fr)_9rem_9rem_3rem] first:rounded-t-[9px] md:first:rounded-t-none last:rounded-b-[9px]"
               >
                 <div className={`flex h-9 w-9 items-center justify-center rounded-[6px] border ${style}`}>
                   <Icon className="h-4 w-4" />
@@ -137,7 +138,7 @@ export default function DocumentGrid({
                   }}
                   aria-label={`Open actions for ${doc.name}`}
                   title={`Open actions for ${doc.name}`}
-                  className="rounded-[6px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#EAEAEA] hover:text-[#111111] dark:text-[#6B6B6B] dark:hover:bg-white/10 dark:hover:text-[#E8E8E7]"
+                  className="justify-self-center rounded-[6px] p-1.5 text-[#ABABAB] transition-colors hover:bg-[#EAEAEA] hover:text-[#111111] dark:text-[#6B6B6B] dark:hover:bg-white/10 dark:hover:text-[#E8E8E7]"
                 >
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
@@ -174,7 +175,7 @@ export default function DocumentGrid({
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 min-[1920px]:grid-cols-5 min-[2560px]:grid-cols-6">
       {documents.map((doc) => {
         const { Icon, style } = getFileTheme(doc.extension);
         const formattedExt = (doc.extension || "").toUpperCase().replace(".", "") || "DOC";

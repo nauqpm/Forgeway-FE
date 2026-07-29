@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Loader2, MessageSquare, AlertCircle, ArrowDown } from 'lucide-react';
 import { useThreadReplies, useChatChannels } from '../hooks/useChatQueries';
+import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useQueryClient, useQuery, type InfiniteData } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
@@ -45,7 +46,8 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
     if (channel?.type === 'dm') return false;
     if (userRole === 'super_admin') return true;
     if (!channel?.workspaceId) return false;
-    const ws = workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(channel.workspaceId));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ws = workspaces.find((w: any) => String(w._id || (w as { id?: string }).id) === String(channel.workspaceId));
     if (!ws) return false;
     const isOwner = String(ws.ownerId) === String(currentUserId);
     const member = ws.members?.find((m: { userId?: { _id?: string; id?: string } | string }) => {

@@ -567,9 +567,9 @@ export default function ChatWindow() {
               }}
             >
               <MessageSquare className="w-4 h-4" />
-              {unreadThreadsCount > 0 && (
+              {unreadThreadsCount.size > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-[#EF4444] text-white text-[8px] font-bold rounded-full border-2 border-white dark:border-[#202020] animate-pulse leading-none">
-                  {unreadThreadsCount > 99 ? '99+' : unreadThreadsCount}
+                  {unreadThreadsCount.size > 99 ? '99+' : unreadThreadsCount.size}
                 </span>
               )}
             </button>
