@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { ResizeHandle } from '@/shared/components/ResizeHandle';
 import { renderMessageContent } from '../utils/messageContentRenderer';
+import MediaLightbox from './MediaLightbox';
 
 interface ChatSearchPanelProps {
   channelId: string;
@@ -710,55 +711,11 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
         )}
       </div>
       {/* Lightbox Preview Modal */}
-      {lightboxFile && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center cursor-zoom-out"
-          onClick={() => setLightboxFile(null)}
-        >
-          {/* Top Bar */}
-          <div 
-            className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-black/70 to-transparent flex items-center justify-between px-6 text-white z-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span className="text-xs font-medium truncate max-w-[70%]">
-              {lightboxFile.originalName}
-            </span>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleDownload(lightboxFile.url, lightboxFile.originalName)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                title="Download"
-              >
-                <Download className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setLightboxFile(null)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {lightboxFile.mimeType?.toLowerCase().startsWith('video/') ? (
-            <video
-              src={lightboxFile.url}
-              controls
-              preload="metadata"
-              className="max-w-[90vw] max-h-[85vh] rounded-md shadow-2xl mt-10 focus:outline-none"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <img
-              src={lightboxFile.url}
-              alt="Preview"
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
-        </div>
-      )}
+      <MediaLightbox
+        file={lightboxFile ? { url: lightboxFile.url, name: lightboxFile.originalName, mimeType: lightboxFile.mimeType } : null}
+        onDownload={() => lightboxFile && handleDownload(lightboxFile.url, lightboxFile.originalName)}
+        onClose={() => setLightboxFile(null)}
+      />
     </div>
   );
 }

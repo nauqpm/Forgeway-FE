@@ -38,7 +38,7 @@ export default function MediaLightbox({
     >
       {/* Top Bar */}
       <div 
-        className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-black/70 to-transparent flex items-center justify-between px-6 text-white z-10"
+        className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-black/70 to-transparent flex items-center justify-between px-6 text-white z-10 cursor-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <span className="text-xs font-medium truncate max-w-[70%]">
@@ -68,14 +68,14 @@ export default function MediaLightbox({
           src={file.url}
           controls
           preload="metadata"
-          className="max-w-[90vw] max-h-[85vh] rounded-md shadow-2xl mt-10 focus:outline-none"
+          className="max-w-[90vw] max-h-[85vh] rounded-md shadow-2xl mt-10 focus:outline-none cursor-auto"
           onClick={(e) => e.stopPropagation()}
         />
       ) : (
         <img
           src={file.url}
           alt="Preview"
-          className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10"
+          className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10 cursor-auto"
           onClick={(e) => e.stopPropagation()}
         />
       )}
