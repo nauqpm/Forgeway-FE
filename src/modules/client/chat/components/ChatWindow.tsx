@@ -35,7 +35,7 @@ export default function ChatWindow() {
   const typingUsers = useChatStore(state => state.typingUsers);
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
   const unreadThreadIds = useChatStore(state => state.unreadThreadIds);
-  const unreadThreadsCount = unreadThreadIds.size;
+  const unreadThreadsCount = activeChannelId ? (unreadThreadIds[activeChannelId]?.size || 0) : 0;
 
   const { data: channels = [] } = useChatChannels();
 
@@ -567,9 +567,9 @@ export default function ChatWindow() {
               }}
             >
               <MessageSquare className="w-4 h-4" />
-              {unreadThreadsCount.size > 0 && (
+              {unreadThreadsCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-[#EF4444] text-white text-[8px] font-bold rounded-full border-2 border-white dark:border-[#202020] animate-pulse leading-none">
-                  {unreadThreadsCount.size > 99 ? '99+' : unreadThreadsCount.size}
+                  {unreadThreadsCount > 99 ? '99+' : unreadThreadsCount}
                 </span>
               )}
             </button>
