@@ -46,8 +46,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
     if (channel?.type === 'dm') return false;
     if (userRole === 'super_admin') return true;
     if (!channel?.workspaceId) return false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ws = workspaces.find((w: any) => String(w._id || (w as { id?: string }).id) === String(channel.workspaceId));
+    const ws = workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(channel.workspaceId));
     if (!ws) return false;
     const isOwner = String(ws.ownerId) === String(currentUserId);
     const member = ws.members?.find((m: { userId?: { _id?: string; id?: string } | string }) => {
@@ -127,23 +126,14 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
 
   const parentMessage: Message | null = parentFromCache ?? parentFromAPI ?? null;
 
-  // ─── Scroll-to-reply logic ───────────────────────────────────────────────
-  // Use a dedicated state (NOT searchParams) as the source of truth.
-  // This prevents the URL-clear step inside scrollToMessage from re-triggering
-  // the scroll effect with targetId=null and scrolling back to the bottom.
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(
     () => searchParams.get('messageId')
   );
 
-  // Effect 1: Update scrollTargetId whenever the URL messageId param changes.
-  // Handles both: initial mount (thread was closed) AND panel already open (no re-mount).
   useEffect(() => {
     const targetId = searchParams.get('messageId');
     setScrollTargetId(targetId);
   }, [searchParams, messageId]);
-
-  // Effect 2: Perform the scroll whenever scrollTargetId is set and replies are loaded.
-  // Does NOT depend on searchParams — so clearing the URL won't re-trigger this.
   useEffect(() => {
     if (!scrollTargetId || isLoading) return;
 
