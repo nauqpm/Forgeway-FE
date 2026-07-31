@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
 import TaskDescription from "@/modules/admin-shared/components/common/components/TaskDescription";
 import TaskAttachmentsPanel from "@/modules/workspace/tasks/attachments/TaskAttachmentsPanel";
@@ -64,6 +64,10 @@ export default function TaskDetailMainContent({
   onUpdateIssue,
   onSubtaskClick,
 }: TaskDetailMainContentProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const titleTextClass =
     titleSize === "3xl"
       ? "text-3xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4"

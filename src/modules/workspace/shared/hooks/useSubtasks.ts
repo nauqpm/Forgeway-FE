@@ -25,7 +25,7 @@ type SubtasksData = { subtasks: Subtask[]; progress: SubtaskProgress };
 export function useSubtasks(workspaceId: string, parentId: string) {
   const queryClient = useQueryClient();
 
-  const subtasksQuery = useQuery<SubtasksData>({
+  const subtasksQuery = useQuery<{ subtasks: Subtask[]; progress: SubtaskProgress }>({
     queryKey: queryKeys.tasks.subtasks(workspaceId, parentId),
     queryFn: async () => {
       if (!parentId) return { subtasks: [], progress: { done: 0, total: 0 } };

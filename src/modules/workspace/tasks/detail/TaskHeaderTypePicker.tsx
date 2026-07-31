@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Check } from "lucide-react";
-import { TASK_TYPE_CONFIG } from "@/shared/components/TypePicker";
+import { Check, ChevronDown } from "lucide-react";
+import { TASK_TYPES, TASK_TYPE_CONFIG } from "@/shared/components/TypePicker";
 
 interface TaskHeaderTypePickerProps {
   type?: string;
