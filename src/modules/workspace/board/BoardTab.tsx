@@ -2,6 +2,7 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { Filters } from "@/modules/workspace/shared/types/filter.type";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
@@ -15,6 +16,7 @@ import DeleteColumnModal from "@/modules/workspace/shared/components/DeleteColum
 import BoardFilters from "@/modules/workspace/shared/components/BoardFilters";
 import BoardTaskActionMenu from "@/modules/workspace/tasks/covers/BoardTaskActionMenu";
 import TaskLabelModal from "@/modules/workspace/tasks/labels/TaskLabelModal";
+import BoardCardSubtasks from "@/modules/workspace/tasks/detail/BoardCardSubtasks";
 import { compareIssueRank } from "@/modules/workspace/shared/utils/dragUtils";
 import { toast } from "react-hot-toast";
 import { MAX_COLUMN_NAME_LENGTH, COLUMN_NAME_MESSAGES } from "@/modules/workspace/shared/utils/columnName";
@@ -572,6 +574,27 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                             renderReadonlyAssignee(issue)
                                           )}
                                         </div>
+
+                                        {issue.type?.toLowerCase() !== "subtask" && (
+                                          <div className="mt-3">
+                                            <BoardCardSubtasks
+                                              workspaceId={data.workspace._id}
+                                              taskId={issue.id}
+                                              taskType={issue.type}
+                                              workspaceMembers={workspaceMembers}
+                                              canEditTask={canEditTask}
+                                              boardColumns={columns}
+                                              onSubtaskClick={(key) => {
+                                                const currentPath = window.location.pathname;
+                                                const newPath = currentPath.includes("/key/") 
+                                                  ? currentPath.replace(/\/key\/[^/]+$/, `/key/${key}`)
+                                                  : `${currentPath}/key/${key}`;
+                                                window.history.pushState(null, "", newPath);
+                                                window.dispatchEvent(new Event("popstate"));
+                                              }}
+                                            />
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   )}

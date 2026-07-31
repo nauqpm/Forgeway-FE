@@ -22,6 +22,8 @@ export interface Task {
   startDate?: string;
   dueDate?: string;
   epic?: string | null;
+  parentId?: string | null;
+  subtaskProgress?: { done: number; total: number };
   isArchived?: boolean;
   archivedAt?: string | null;
   archivedBy?: string | null;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { X, MoreHorizontal, FileText, ChevronDown, Archive, Clock, Copy, Trash2, ImagePlus, ChevronRight } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useRef } from "react";
@@ -23,6 +23,9 @@ import { getUserDisplayName, formatDateTime, type WorkspaceMember, type SprintOp
 import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
 import TimeTrackingModal from "./TimeTrackingModal";
+import TaskHeaderTypePicker from "./TaskHeaderTypePicker";
+import ConvertToSubtaskModal from "./ConvertToSubtaskModal";
+import ConvertSubtaskConfirmModal from "./ConvertSubtaskConfirmModal";
 
 interface TaskDetailModalProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,6 +40,7 @@ interface TaskDetailModalProps {
   onArchiveIssue?: (issue: TaskDetailResponse) => void;
   onDeleteIssue?: (issue: TaskDetailResponse) => void;
   onRestoreIssue?: (issue: TaskDetailResponse) => void;
+  onSubtaskClick?: (subtaskId: string) => void;
   detailUrl?: string;
 }
 
@@ -52,19 +56,37 @@ export default function TaskDetailModal({
   onArchiveIssue,
   onDeleteIssue,
   onRestoreIssue,
+  onSubtaskClick,
   detailUrl,
 }: TaskDetailModalProps) {
   const { user, token } = useAuth();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"comments" | "history" | "work_log">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [isLogWorkOpen, setIsLogWorkOpen] = useState(false);
+  const [isConvertToSubtaskOpen, setIsConvertToSubtaskOpen] = useState(false);
+  const [isConvertToTaskOpen, setIsConvertToTaskOpen] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
   const [mounted, setMounted] = useState(false);
   const [coverAnchorRect, setCoverAnchorRect] = useState<DOMRect | null>(null);
   const coverRowRef = useRef<HTMLButtonElement>(null);
   const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleConvertToTask = async () => {
+    try {
+      await api.post(apiRoutes.TASKS.BOARD_SUBTASK_CONVERT_TO_TASK(workspaceId, issue.id));
+      toast.success("Converted to task");
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.tasks.all, "subtasks", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
+      setIsConvertToTaskOpen(false);
+      if (onClose) onClose();
+    } catch (error: any) {
+      const message = error?.response?.data?.message || "Failed to convert to task";
+      toast.error(message);
+    }
+  };
 
   const handleCoverMouseEnter = () => {
     if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
@@ -153,12 +175,35 @@ export default function TaskDetailModal({
               </div>
               <span className="text-[#787774] dark:text-[#9B9A97]">Add epic</span>
             </div>
+            {issue.type?.toLowerCase() === 'subtask' && issue.parent && (
+              <>
+                <span className="text-[#ABABAB] dark:text-[#6B6B6B]">/</span>
+                <div 
+                  className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors"
+                  onClick={() => {
+                    if (onClose) onClose();
+                  }}
+                >
+                  <span className="text-[#111111] dark:text-[#E8E8E7]">{issue.parent.key}</span>
+                </div>
+              </>
+            )}
             <span className="text-[#ABABAB] dark:text-[#6B6B6B]">/</span>
-            <div className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors">
-              <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[4px]">
-                <span className="text-[0.625rem]">✓</span>
-              </div>
-              <span className="text-[#111111] dark:text-[#E8E8E7]">{issue.key}</span>
+            <div className="flex items-center gap-2 px-2 py-1 rounded-[6px] transition-colors">
+              <TaskHeaderTypePicker
+                type={issue.type}
+                isSubtask={issue.type?.toLowerCase() === 'subtask'}
+                disabled={!canEditTask || issue.isArchived}
+                onUpdateType={(newType) => {
+                  if (canEditTask && onUpdateIssue && !issue.isArchived) {
+                    onUpdateIssue({ ...issue, type: newType });
+                  }
+                }}
+              />
+              <span className="text-[#111111] dark:text-[#E8E8E7] cursor-pointer hover:underline" onClick={() => {
+                navigator.clipboard.writeText(issue.key);
+                toast.success("Task key copied");
+              }}>{issue.key}</span>
             </div>
           </div>
 
@@ -220,6 +265,31 @@ export default function TaskDetailModal({
                       <Copy className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
                       Copy link
                     </button>
+                    {issue.type?.toLowerCase() === 'subtask' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowActionMenu(false);
+                          setIsConvertToTaskOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                      >
+                        <FileText className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                        Convert to Task
+                      </button>
+                    ) : issue.type?.toLowerCase() !== 'epic' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowActionMenu(false);
+                          setIsConvertToSubtaskOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                      >
+                        <FileText className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                        Convert to Subtask
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => {
@@ -314,6 +384,7 @@ export default function TaskDetailModal({
               setActiveTab={setActiveTab}
               workspaceMembers={detailWorkspaceMembers}
               assigneeName={assigneeName}
+              onSubtaskClick={onSubtaskClick}
               onSaveTitle={handleTitleBlur}
               onSaveDescription={(newDesc) => {
                 if (canEditTask && onUpdateIssue && !issue.isArchived) {
@@ -372,6 +443,22 @@ export default function TaskDetailModal({
         issue={issue}
         workspaceId={workspaceId}
         onUpdateIssue={onUpdateIssue}
+      />
+      <ConvertToSubtaskModal
+        isOpen={isConvertToSubtaskOpen}
+        onClose={() => setIsConvertToSubtaskOpen(false)}
+        workspaceId={workspaceId}
+        issueKey={issue.key}
+        issueId={issue.id}
+        onSuccess={() => {
+          if (onClose) onClose();
+        }}
+      />
+      <ConvertSubtaskConfirmModal
+        isOpen={isConvertToTaskOpen}
+        onClose={() => setIsConvertToTaskOpen(false)}
+        onConfirm={handleConvertToTask}
+        subtaskTitle={issue.title}
       />
     </div>,
     document.body

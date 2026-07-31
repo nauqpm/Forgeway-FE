@@ -141,6 +141,7 @@ export const toIssue = (task: TaskDto): Issue => {
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
+    subtaskProgress: task.subtaskProgress ?? undefined,
   };
 };
 

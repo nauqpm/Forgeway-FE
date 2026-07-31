@@ -52,6 +52,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         onClose={modal.close}
         onUpdate={modal.update}
         onArchive={modal.archive}
+        onSubtaskClick={modal.openSubtask}
       />
 
     </div>

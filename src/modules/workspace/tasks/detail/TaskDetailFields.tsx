@@ -194,14 +194,21 @@ export default function TaskDetailFields({
 
       {/* Type */}
       <FieldRow label="Type">
-        <TypePicker
-          value={issue.type ?? "Task"}
-          onChange={(type) => onUpdate({ type })}
-          disabled={!canEditTask || issue.isArchived}
-          variant="pill"
-          size="sm"
-          placement="bottom"
-        />
+        <div className="flex items-center h-[32px]">
+          <TypePicker
+            value={issue.type ?? "Task"}
+            onChange={(type) => onUpdate({ type })}
+            disabled={
+              !canEditTask ||
+              issue.isArchived ||
+              issue.type?.toLowerCase() === "subtask" ||
+              issue.type?.toLowerCase() === "epic"
+            }
+            variant="pill"
+            size="sm"
+            placement="bottom"
+          />
+        </div>
       </FieldRow>
 
       {/* Reporter */}

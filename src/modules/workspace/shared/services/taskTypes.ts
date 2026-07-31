@@ -64,6 +64,7 @@ export type TaskDto = {
   cover?: TaskCover | null;
   labels?: (TaskLabel | string | { _id?: string; id?: string; name?: string })[];
   labelIds?: string[];
+  subtaskProgress?: { done: number; total: number };
 };
 
 // Input types for creating/updating tasks

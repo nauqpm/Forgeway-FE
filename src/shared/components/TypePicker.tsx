@@ -44,6 +44,13 @@ export const TASK_TYPE_CONFIG: Record<string, {
     pillText: "text-[#346538] dark:text-[#6FCF7B]",
     dotColor: "bg-[#346538]",
   },
+  Subtask: {
+    Icon: FileText,
+    iconColor: "text-[#787774] dark:text-[#9B9A97]",
+    pillBg: "bg-[#F7F6F3] dark:bg-[rgba(120,119,116,0.12)]",
+    pillText: "text-[#787774] dark:text-[#9B9A97]",
+    dotColor: "bg-[#787774]",
+  },
 };
 
 export interface TypePickerProps {
@@ -103,8 +110,11 @@ export default function TypePicker({
     setOpen((p) => !p);
   };
 
-  const resolved = TASK_TYPES.find((t) => t.toLowerCase() === (value ?? "").toLowerCase()) ?? "Task";
-  const cfg = TASK_TYPE_CONFIG[resolved];
+  const resolvedValue = value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : "Task";
+  const isCustomOrHiddenType = !TASK_TYPES.includes(resolvedValue as any);
+  
+  const resolved = isCustomOrHiddenType ? resolvedValue : (TASK_TYPES.find((t) => t.toLowerCase() === (value ?? "").toLowerCase()) ?? "Task");
+  const cfg = TASK_TYPE_CONFIG[resolved] || TASK_TYPE_CONFIG["Task"];
   const label = resolved;
   const Icon = cfg?.Icon ?? FileText;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
