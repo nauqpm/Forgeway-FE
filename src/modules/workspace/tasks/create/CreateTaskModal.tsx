@@ -1,12 +1,17 @@
 "use client";
 
-import { FileText, X } from "lucide-react";
 import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
+import { Modal } from "@/shared/components/ui/Modal";
 import StatusPicker from "@/shared/components/StatusPicker";
 import TypePicker from "@/shared/components/TypePicker";
 import PriorityPicker from "@/shared/components/PriorityPicker";
 import AssigneePicker, { toAssigneePickerUsers, AssigneePickerMember } from "@/shared/components/AssigneePicker";
 import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
+import { useStoryGovernance } from "@/modules/story-governance/hooks/useStoryGovernance";
+import {
+  getApprovedContractOptions,
+  selectContractPin,
+} from "@/modules/story-governance/utils/taskStory";
 
 type CreateTaskModalProps = {
   showCreateIssue: boolean;
@@ -33,6 +38,9 @@ export default function CreateTaskModal({
   workspace,
   boardColumns = [],
 }: CreateTaskModalProps) {
+  const { contracts } = useStoryGovernance(workspace._id, showCreateIssue);
+  const approvedContracts = getApprovedContractOptions(contracts.data ?? []);
+
   if (!showCreateIssue) return null;
 
   const assigneeUsers = toAssigneePickerUsers(workspace.members as AssigneePickerMember[]);
@@ -42,27 +50,10 @@ export default function CreateTaskModal({
     : ["To Do", "In Progress", "Done"].map(name => ({ id: name.toLowerCase().replace(/\s/g, ""), name }));
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100000] p-4">
-      <div
-        className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-lg border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden"
-        style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
-      >
-        <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-          <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7] flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
-            Create new task
-          </h3>
-          <button
-            onClick={() => setShowCreateIssue(false)}
-            className="text-[#ABABAB] hover:text-[#111111] dark:hover:text-[#E8E8E7] p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] transition-colors"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
+    <Modal open={showCreateIssue} onClose={() => setShowCreateIssue(false)} title="Create new task" size="lg">
         <form
           onSubmit={(e) => handleCreateIssue(e, newIssueForm)}
-          className="p-5 space-y-4"
+          className="space-y-4"
         >
           <div>
             <label className={labelCls}>
@@ -133,6 +124,41 @@ export default function CreateTaskModal({
             </div>
           </div>
 
+          <div>
+            <label htmlFor="task-story-contract" className={labelCls}>Story Contract</label>
+            <select
+              id="task-story-contract"
+              value={newIssueForm.storyContractId ?? ""}
+              onChange={(event) =>
+                setNewIssueForm({
+                  ...newIssueForm,
+                  ...selectContractPin(event.target.value, approvedContracts),
+                })
+              }
+              className={inputCls}
+            >
+              <option value="">No linked Story</option>
+              {approvedContracts.map((contract) => (
+                <option key={contract._id} value={contract._id}>
+                  {contract.key} · {contract.title}
+                </option>
+              ))}
+            </select>
+            {newIssueForm.storyVersionId ? (
+              <p className="mt-1.5 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+                Version {newIssueForm.storyVersionId} (current approved)
+              </p>
+            ) : approvedContracts.length === 0 ? (
+              <p className="mt-1.5 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+                Linking is unavailable until an active Contract has an approved Version.
+              </p>
+            ) : (
+              <p className="mt-1.5 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
+                Selecting a Contract pins its current approved immutable Version.
+              </p>
+            )}
+          </div>
+
           <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <button
               type="button"
@@ -149,7 +175,6 @@ export default function CreateTaskModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

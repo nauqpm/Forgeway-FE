@@ -119,24 +119,6 @@ export function useDragHandlers({
         issues: filteredIssues,
         setIssues,
         onTaskReorder: syncTaskReorder,
-        onSprintAssign: (taskId, sprintId) => {
-          if (workspaceId) {
-            taskService
-              .updateBoardTask(workspaceId, taskId, { sprintId: sprintId ?? undefined })
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .then((updatedTask: any) => {
-                patchSelectedTaskView(updatedTask);
-                queryClient.invalidateQueries({
-                  queryKey: ["taskActivities", workspaceId, taskId],
-                });
-              })
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              .catch((error: any) => {
-                queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
-                toast.error(error?.response?.data?.message || "Could not update task sprint");
-              });
-          }
-        },
       });
       isDraggingIssueRef.current = false;
       setIssues((current) => [...current].sort(compareIssueRank));
@@ -144,11 +126,8 @@ export function useDragHandlers({
     [
       filteredIssues,
       isDraggingIssueRef,
-      patchSelectedTaskView,
-      queryClient,
       setIssues,
       syncTaskReorder,
-      workspaceId,
     ],
   );
 

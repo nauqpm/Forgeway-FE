@@ -138,6 +138,9 @@ export const toIssue = (task: TaskDto): Issue => {
     createdAt: task.createdAt,
     updatedAt: task.updatedAt,
     version: task.version,
+    storyContractId: task.storyContractId,
+    storyVersionId: task.storyVersionId,
+    requirementsState: task.requirementsState ?? "CURRENT",
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
@@ -171,10 +174,23 @@ export const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
     createdAt: task.createdAt ?? "",
     updatedAt: task.updatedAt ?? "",
     version: task.version,
+    requirementsState: issue.requirementsState ?? "CURRENT",
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
   };
+};
+
+const storyPinPayload = (
+  storyContractId: string | null | undefined,
+  storyVersionId: string | null | undefined,
+) => {
+  const hasContract = storyContractId !== undefined;
+  const hasVersion = storyVersionId !== undefined;
+  if (hasContract !== hasVersion || Boolean(storyContractId) !== Boolean(storyVersionId)) {
+    throw new Error("Story Contract and Version must be selected together");
+  }
+  return hasContract ? { storyContractId, storyVersionId } : {};
 };
 
 export const toCreatePayload = (input: CreateTaskInput) => ({
@@ -187,6 +203,7 @@ export const toCreatePayload = (input: CreateTaskInput) => ({
   assigneeId: input.assigneeId || undefined,
   startDate: input.startDate || undefined,
   dueDate: input.dueDate || undefined,
+  ...storyPinPayload(input.storyContractId, input.storyVersionId),
 });
 
 export const toTaskComment = (comment: TaskComment): TaskComment => ({
@@ -195,7 +212,12 @@ export const toTaskComment = (comment: TaskComment): TaskComment => ({
   authorId: comment.authorId || comment.author?.id || "",
 });
 
-export const toUpdatePayload = (updates: Partial<Issue>) => {
+export const toUpdatePayload = (
+  updates: Omit<Partial<Issue>, "storyContractId" | "storyVersionId"> & {
+    storyContractId?: string | null;
+    storyVersionId?: string | null;
+  },
+) => {
   const {
     assignee,
     assigneeId,
@@ -211,6 +233,8 @@ export const toUpdatePayload = (updates: Partial<Issue>) => {
     type,
     timeLogged,
     timeEstimated,
+    storyContractId,
+    storyVersionId,
   } = updates;
 
   const payload: Record<string, unknown> = {};
@@ -238,6 +262,7 @@ export const toUpdatePayload = (updates: Partial<Issue>) => {
   if (sprintId !== undefined) payload.sprintId = sprintId || undefined;
   if (timeLogged !== undefined) payload.timeLogged = timeLogged;
   if (timeEstimated !== undefined) payload.timeEstimated = timeEstimated;
+  Object.assign(payload, storyPinPayload(storyContractId, storyVersionId));
 
   return payload;
 };

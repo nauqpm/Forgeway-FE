@@ -1,11 +1,15 @@
 "use client";
 
 import React from "react";
+import { useParams } from "next/navigation";
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
 import TaskDescription from "@/modules/admin-shared/components/common/components/TaskDescription";
 import TaskAttachmentsPanel from "@/modules/workspace/tasks/attachments/TaskAttachmentsPanel";
 import TaskComments from "@/modules/workspace/shared/components/TaskComments";
 import TaskActivityHistory from "@/modules/workspace/shared/components/TaskActivityHistory";
+import TaskStoryPanel from "@/modules/story-governance/components/TaskStoryPanel";
+import { WORKSPACE_PERMISSIONS } from "@/modules/workspace/shared/constants/workspacePermissions";
+import { useWorkspacePermission } from "@/modules/workspace/shared/hooks/useWorkspacePermission";
 import { getIssueAssigneeId } from "./task-detail-shared";
 import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
 import type { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
@@ -14,7 +18,7 @@ import type { WorkspaceMember } from "./task-detail-shared";
 interface TaskDetailMainContentProps {
   issue: TaskDetailResponse;
   workspaceId: string;
-  user?: { id?: string } | null;
+  user?: { id?: string; email?: string; role?: string } | null;
   token?: string | null;
   canEditTask: boolean;
   localTitle: string;
@@ -60,6 +64,14 @@ export default function TaskDetailMainContent({
   onRestoreIssue,
   onUpdateIssue,
 }: TaskDetailMainContentProps) {
+  const { key: workspaceKey = issue.key.replace(/-\d+$/, "") } = useParams<{
+    key?: string;
+  }>();
+  const workspacePermission = useWorkspacePermission(workspaceId);
+  const isWorkspaceAdmin = workspacePermission.role === "workspace_admin";
+  const canResolveStoryImpact = workspacePermission.hasPermission(
+    WORKSPACE_PERMISSIONS.STORY_RESOLVE_IMPACT,
+  );
   const titleTextClass =
     titleSize === "3xl"
       ? "text-3xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4"
@@ -121,7 +133,19 @@ export default function TaskDetailMainContent({
       </div>
 
       {/* Slot for injecting Status + Details between Title and Description (used by Drawer) */}
-      <div className="order-3">{afterTitle}</div>
+      <div className="order-3 space-y-6">
+        {afterTitle}
+        <TaskStoryPanel
+          workspaceId={workspaceId}
+          workspaceKey={workspaceKey}
+          task={issue}
+          currentUserId={user?.id}
+          isWorkspaceAdmin={isWorkspaceAdmin}
+          canEditTask={canEditTask}
+          canResolveStoryImpact={canResolveStoryImpact}
+          onUpdateTask={onUpdateIssue}
+        />
+      </div>
 
       {/* Description */}
       <div className="order-4 space-y-2">

@@ -13,6 +13,7 @@ import {
   FileDown,
   FileUp,
   ChevronRight,
+  GitBranch,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "@/lib/axiosIns";
@@ -613,6 +614,20 @@ export default function ListTab({
                               {issue.title}
                             </p>
                             <div className="mt-2 flex flex-wrap gap-1.5">
+                              {(issue.requirementsState === "REVIEW_REQUIRED" ||
+                                issue.requirementsState === "REBASE_REQUIRED") && (
+                                <span
+                                  title={issue.requirementsState === "REBASE_REQUIRED" ? "Story rebase required" : "Story review required"}
+                                  className={`inline-flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[0.625rem] font-semibold ${
+                                    issue.requirementsState === "REBASE_REQUIRED"
+                                      ? "bg-[#FDEBEC] text-[#9F2F2D]"
+                                      : "bg-[#FBF3DB] text-[#956400]"
+                                  }`}
+                                >
+                                  <GitBranch aria-hidden className="h-3 w-3" />
+                                  {issue.requirementsState === "REBASE_REQUIRED" ? "Rebase" : "Review"}
+                                </span>
+                              )}
                               <span
                                 className={`rounded-[4px] px-1.5 py-0.5 text-[0.625rem] font-semibold ${
                                   resolvedCol?.isDone || statusName.toLowerCase().includes("done")

@@ -12,6 +12,8 @@ interface NewIssueForm {
   sprintId: string | null;
   assigneeId: string;
   columnId?: string | null;
+  storyContractId?: string;
+  storyVersionId?: string;
 }
 
 const DEFAULT_NEW_ISSUE_FORM: NewIssueForm = {
