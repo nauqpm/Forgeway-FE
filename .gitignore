@@ -76,3 +76,12 @@ node_modules/headroom-ai/
 
 # CodeGraph local index
 .codegraph/
+
+# Playwright runtime artifacts
+test-results/
+playwright-report/
+
+
+
+.planning
+.superpowers
