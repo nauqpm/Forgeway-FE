@@ -174,7 +174,7 @@ export default function RequirementPanel({ workspaceId, permissions, onSelect }:
         ) : (
           <div className="flex min-h-40 flex-col items-center justify-center rounded-[6px] border border-dashed border-[var(--color-border)] p-4 text-center text-sm text-[#787774] dark:text-[#9B9A97]">
             <p>{filter === "active" ? "No requirements yet" : "No archived requirements"}</p>
-            {filter === "active" && (
+            {canCreate && filter === "active" && (
               <p className="mt-1">Create a requirement to establish the source for a story contract.</p>
             )}
           </div>

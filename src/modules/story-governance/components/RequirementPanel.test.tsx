@@ -66,6 +66,12 @@ describe("RequirementPanel", () => {
     expect(await screen.findByText(/No requirements yet/)).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Requirements" })).toHaveClass("bg-[var(--color-surface)]");
     expect(screen.getByRole("button", { name: "Active" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByText(/Create a requirement to establish/)).not.toBeInTheDocument();
+  });
+
+  it("invites members to create the first active requirement", async () => {
+    renderPanel([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
+    expect(await screen.findByText(/No requirements yet/)).toBeInTheDocument();
     expect(screen.getByText(/Create a requirement to establish/)).toBeInTheDocument();
   });
 
