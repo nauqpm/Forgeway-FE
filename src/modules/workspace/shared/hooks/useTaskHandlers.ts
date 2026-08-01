@@ -5,6 +5,10 @@ import { Issue } from "../types/issue.type";
 import { taskService } from "../services/taskService";
 import { toast } from "react-hot-toast";
 import { extractApiError } from "@/shared/utils/apiError";
+import {
+  getTaskStoryGateCode,
+  openTaskStoryPanel,
+} from "@/modules/story-governance/utils/taskStory";
 
 interface CreateIssueForm {
   title: string;
@@ -14,6 +18,8 @@ interface CreateIssueForm {
   sprintId: string | null;
   assigneeId: string;
   columnId?: string | null;
+  storyContractId?: string;
+  storyVersionId?: string;
 }
 
 interface UseTaskHandlersProps {
@@ -114,10 +120,15 @@ export const useTaskHandlers = ({
           if (existingIssue && existingIssue.key) {
             queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, existingIssue.key), existingIssue);
           }
+          const gateCode = getTaskStoryGateCode(error);
+          if (gateCode && existingIssue) {
+            setSelectedIssue(existingIssue);
+            window.setTimeout(() => openTaskStoryPanel(id, gateCode), 0);
+          }
           toast.error(extractApiError(error, "Could not update task"));
         });
     },
-    [queryClient, workspaceId]
+    [queryClient, setSelectedIssue, workspaceId]
   );
 
   const handleCreateIssue = async (
@@ -147,6 +158,8 @@ export const useTaskHandlers = ({
         sprintId: null,
         assigneeId: "",
         columnId: null,
+        storyContractId: undefined,
+        storyVersionId: undefined,
       });
       queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
       invalidateDashboard(queryClient);
@@ -219,6 +232,10 @@ export const useTaskHandlers = ({
         queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, updatedIssue.key), previousDetail);
       }
       setSelectedIssue(previousDetail ?? null);
+      const gateCode = getTaskStoryGateCode(error);
+      if (gateCode && previousDetail) {
+        window.setTimeout(() => openTaskStoryPanel(updatedIssue.id, gateCode), 0);
+      }
       toast.error(extractApiError(error, "Could not update task"));
     }
   };
