@@ -28,14 +28,13 @@ const requirement = (overrides: Partial<RawRequirement> = {}): RawRequirement =>
   ...overrides,
 });
 
-const renderPanel = (
-  permissions: WorkspacePermission[] = [WORKSPACE_PERMISSIONS.STORY_READ],
-  onSelect = vi.fn(),
-) =>
+const renderPanel = (permissions: WorkspacePermission[] = [WORKSPACE_PERMISSIONS.STORY_READ], onSelect = vi.fn()) =>
   render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
+    <QueryClientProvider
+      client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}
+    >
       <RequirementPanel workspaceId="workspace-id" permissions={permissions} onSelect={onSelect} />
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
 
 describe("RequirementPanel", () => {
@@ -65,6 +64,9 @@ describe("RequirementPanel", () => {
     service.listRequirements.mockResolvedValueOnce([]);
     renderPanel();
     expect(await screen.findByText(/No requirements yet/)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Requirements" })).toHaveClass("bg-[var(--color-surface)]");
+    expect(screen.getByRole("button", { name: "Active" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByText(/Create a requirement to establish/)).toBeInTheDocument();
   });
 
   it("filters active and archived Requirements without losing historical access", async () => {
@@ -126,6 +128,34 @@ describe("RequirementPanel", () => {
     expect(screen.queryByText(/postgres:\/\/admin:secret/)).not.toBeInTheDocument();
     expect(screen.getByLabelText("Key")).toHaveValue("REQ-1");
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("keeps entered values after a JSON validation error and disables Save while pending", async () => {
+    let resolveCreate: (() => void) | undefined;
+    service.createRequirement.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveCreate = resolve;
+        })
+    );
+    renderPanel([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
+    fireEvent.click(await screen.findByRole("button", { name: "Create requirement" }));
+    fireEvent.change(screen.getByLabelText("Key"), { target: { value: "REQ-1" } });
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "A title" } });
+    fireEvent.change(screen.getByLabelText("Body"), { target: { value: "A body" } });
+    fireEvent.change(screen.getByLabelText("Source metadata (JSON object)"), { target: { value: "{" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save requirement" }));
+
+    expect(screen.getByRole("alert")).toHaveTextContent("Source metadata must be a JSON object.");
+    expect(screen.getByLabelText("Key")).toHaveValue("REQ-1");
+    expect(screen.getByLabelText("Source metadata (JSON object)")).toHaveValue("{");
+
+    fireEvent.change(screen.getByLabelText("Source metadata (JSON object)"), {
+      target: { value: '{"source":"manual"}' },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save requirement" }));
+    expect(screen.getByRole("button", { name: "Cancel" }).nextElementSibling).toBeDisabled();
+    resolveCreate?.();
   });
 
   it("does not expose archive controls without story:archive", async () => {
