@@ -122,7 +122,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   const isChannelAdmin = currentUserMember?.role === 'channel_admin';
 
   // Get workspace role
-  const workspaces = queryClient.getQueryData<Workspace[]>(['workspaces']) || [];
+  const workspaces = queryClient.getQueryData<Workspace[]>(queryKeys.workspaces.list()) || [];
   const activeWorkspace = workspaces.find(
     (w) => String(w._id) === String(activeChannel?.workspaceId)
   );

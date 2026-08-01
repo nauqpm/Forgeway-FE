@@ -17,6 +17,7 @@ import {
 import { queryKeys } from '@/shared/constants/queryKeys';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import { useWorkspaceStore } from '@/stores/workspaceStore';
 import type { Channel, Message } from '@/modules/client/chat/types/chat.types';
 
 const fetchingChannels = new Set<string>();
@@ -36,12 +37,35 @@ export default function ChatRealtimeHandler() {
   const { data: channels = [] } = useChatChannels();
   const setTyping = useChatStore(state => state.setTyping);
   const user = useAuthStore(state => state.user);
+  const currentWorkspaceId = useWorkspaceStore(state => state.currentWorkspaceId);
   const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!user || channels.length === 0) return;
     chatSocketClient.joinChannels(channels.map(channel => channel._id));
   }, [channels, user]);
+
+  useEffect(() => {
+    const socket = chatSocketClient.getSocket();
+    if (!socket || !currentWorkspaceId) return;
+
+    if (socket.connected) {
+      socket.emit('chat.joinWorkspace', { workspaceId: currentWorkspaceId });
+    }
+
+    const onConnect = () => {
+      socket.emit('chat.joinWorkspace', { workspaceId: currentWorkspaceId });
+    };
+
+    socket.on('connect', onConnect);
+
+    return () => {
+      socket.off('connect', onConnect);
+      if (socket.connected) {
+        socket.emit('chat.leaveWorkspace', { workspaceId: currentWorkspaceId });
+      }
+    };
+  }, [currentWorkspaceId]);
 
   const ensureChannelInCache = useCallback((channelId: string) => {
     const cachedChannels = queryClient.getQueryData<Channel[]>(queryKeys.chat.channels()) || [];
