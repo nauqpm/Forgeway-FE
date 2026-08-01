@@ -10,6 +10,8 @@ import type { StoryContract } from "../types/storyGovernance.type";
 import RequirementPanel from "./RequirementPanel";
 import StoryContractIndex from "./StoryContractIndex";
 import StoryContractDetail, { type StoryContractSection } from "./StoryContractDetail";
+import { Button } from "@/shared/components/ui/Button";
+import { Input } from "@/shared/components/ui/Input";
 import { Modal, ModalFooter } from "@/shared/components/ui/Modal";
 import {
   registerDraftNavigationPrompt,
@@ -39,6 +41,8 @@ export default function StoryGovernanceTab({
   const initialSection = initial.get("section");
   const initialContractRef = useRef(initial.get("contract"));
   const [requirementsOpen, setRequirementsOpen] = useState(false);
+  const [contractSearch, setContractSearch] = useState("");
+  const [contractCreateOpen, setContractCreateOpen] = useState(false);
   const [mobileView, setMobileView] = useState<"index" | "detail">("index");
   const [selection, setSelection] = useState<StoryContractSelection>({
     contractId: initial.get("contract"),
@@ -48,6 +52,7 @@ export default function StoryGovernanceTab({
     versionId: initial.get("version"),
   });
   const canRead = permissions.includes(WORKSPACE_PERMISSIONS.STORY_READ);
+  const canCreate = permissions.includes(WORKSPACE_PERMISSIONS.STORY_CREATE);
   const { requirements, contracts } = useStoryGovernance(workspaceId, canRead);
   const [selectedRequirementId, setSelectedRequirementId] = useState<string | null>(null);
   const selectedRequirement = useStoryRequirement(workspaceId, selectedRequirementId, canRead);
@@ -123,9 +128,11 @@ export default function StoryGovernanceTab({
 
   return <>
     <div data-testid="story-workspace" data-story-layout="master-detail" className="workspace-panel flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[8px] border border-[var(--color-border)] bg-[var(--color-surface)]">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--color-border)] p-2">
-        <button type="button" onClick={() => setRequirementsOpen(true)} className="rounded-md px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-400">Requirements</button>
-        <button type="button" onClick={() => setMobileView("index")} className="rounded-md px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-slate-400 lg:hidden">Contract list</button>
+      <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--color-border)] p-2">
+        <div className="min-w-[12rem] flex-1"><Input type="search" role="searchbox" aria-label="Search story contracts" value={contractSearch} onChange={(event) => setContractSearch(event.target.value)} placeholder="Search key or title" /></div>
+        <Button type="button" variant="secondary" onClick={() => setRequirementsOpen(true)}>Requirements</Button>
+        {canCreate && <Button type="button" onClick={() => setContractCreateOpen(true)}>New contract</Button>}
+        <Button type="button" variant="secondary" onClick={() => setMobileView("index")} className="lg:hidden">Contract list</Button>
       </div>
       <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[19rem_minmax(0,1fr)] lg:overflow-hidden">
         <div data-story-mobile-panel="contracts" className={`min-h-0 min-w-0 ${mobileView === "detail" ? "hidden lg:block" : ""}`}>
@@ -134,6 +141,11 @@ export default function StoryGovernanceTab({
             permissions={permissions}
             requirements={requirements.data ?? []}
             selectedId={selected?._id ?? null}
+            search={contractSearch}
+            onSearchChange={setContractSearch}
+            createOpen={contractCreateOpen}
+            onCreateOpenChange={setContractCreateOpen}
+            onOpenRequirements={() => setRequirementsOpen(true)}
             onSelect={(id) => selectContract(id)}
             onCreated={(contract: StoryContract) => selectContract(contract._id, "drafts")}
             onOpenApprovals={(id) => selectContract(id, "approvals")}

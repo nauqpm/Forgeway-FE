@@ -139,6 +139,32 @@ describe("StoryGovernanceTab", () => {
     expect(within(dialog).getAllByRole("heading", { name: "Requirements" })[0]).toBeInTheDocument();
   });
 
+  it("filters Contracts from the toolbar and opens creation in a dialog", async () => {
+    const user = userEvent.setup();
+    service.listRequirements.mockResolvedValue([requirement()]);
+    service.listContracts.mockResolvedValue([
+      contract({ _id: "contract-checkout", key: "SC-1", title: "Checkout contract" }),
+      contract({ _id: "contract-profile", key: "SC-2", title: "Profile contract" }),
+    ]);
+    renderTab([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
+
+    await user.type(await screen.findByRole("searchbox", { name: "Search story contracts" }), "checkout");
+    const contractsPanel = (await screen.findByRole("heading", { name: "Story contracts" })).closest("section");
+    expect(contractsPanel).not.toBeNull();
+    expect(within(contractsPanel!).getByText("Checkout contract")).toBeInTheDocument();
+    expect(within(contractsPanel!).queryByText("Profile contract")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "New contract" }));
+    expect(screen.getByRole("dialog", { name: "Create story contract" })).toBeInTheDocument();
+  });
+
+  it("offers Requirements from the empty Contract state when no active Requirement exists", async () => {
+    renderTab([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
+
+    expect(await screen.findByRole("button", { name: "Open requirements" })).toBeInTheDocument();
+    expect(screen.queryByText("Create an active requirement before creating a story contract.")).not.toBeInTheDocument();
+  });
+
   it("returns to the Contract index without changing the selected Contract URL", async () => {
     const user = userEvent.setup();
     service.listRequirements.mockResolvedValue([requirement()]);
@@ -241,6 +267,19 @@ describe("StoryGovernanceTab", () => {
     expect(screen.queryByText(/Create one from an active primary requirement/)).not.toBeInTheDocument();
   });
 
+  it("keeps archived Contracts visually distinct and readable", async () => {
+    service.listContracts.mockResolvedValue([
+      contract({ _id: "contract-archived", key: "SC-2", title: "Archived contract", status: "archived" }),
+    ]);
+    renderTab();
+
+    const contractsPanel = (await screen.findByRole("heading", { name: "Story contracts" })).closest("section");
+    expect(contractsPanel).not.toBeNull();
+    fireEvent.click(within(contractsPanel!).getByRole("button", { name: "Archived" }));
+    const row = (await within(contractsPanel!).findByRole("button", { name: /SC-2 Archived contract/ })).parentElement;
+    expect(row).toHaveClass("border-dashed");
+  });
+
   it("routes a pending-approval archive error for a non-selected Contract to that exact Contract", async () => {
     service.listContracts.mockResolvedValue([
       contract(),
@@ -266,6 +305,21 @@ describe("StoryGovernanceTab", () => {
 
     await waitFor(() => expect(window.location.search).toBe("?contract=contract-2&section=approvals"));
     expect(within(screen.getByLabelText("Selected story contract")).getByRole("heading", { name: "Billing contract" })).toBeInTheDocument();
+  });
+
+  it("clears pending-approval recovery after a later archive succeeds", async () => {
+    service.listContracts.mockResolvedValue([contract()]);
+    service.archiveContract
+      .mockRejectedValueOnce({ response: { data: { code: "STORY_PENDING_APPROVAL_EXISTS" } } })
+      .mockResolvedValueOnce(contract({ status: "archived" }));
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderTab([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_ARCHIVE]);
+
+    const archiveButton = await screen.findByRole("button", { name: "Archive contract SC-1" });
+    fireEvent.click(archiveButton);
+    await screen.findByRole("alert");
+    fireEvent.click(screen.getByRole("button", { name: "Archive contract SC-1" }));
+    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
   });
 
   it("restores Contract ID and section from URL state without exposing content", async () => {
