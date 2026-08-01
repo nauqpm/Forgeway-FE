@@ -120,6 +120,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
     canManageSprint,
     canUpdateWorkspace,
     isWorkspaceAdmin,
+    workspacePermissions,
     uniqueAssignees,
     bulkActionMembers,
     activeSprint,
@@ -172,7 +173,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
         </div>
 
         <div className="shrink-0">
-          <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={handleTabChange} />
+          <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={handleTabChange} permissions={workspacePermissions.permissions} />
         </div>
 
         <WorkspaceContent
@@ -304,6 +305,12 @@ export default function WorkspacePage(props: WorkspacePageProps) {
             onSelectTask: (task) => openTaskDetail(task as unknown as Issue),
             currentUserId: user?.id,
             workspaceType: workspace.type || "",
+          }}
+          storyGovernanceProps={{
+            workspaceId: workspace._id,
+            workspaceKey: workspace.key,
+            currentUserId: user?.id,
+            permissions: workspacePermissions.permissions,
           }}
         />
 

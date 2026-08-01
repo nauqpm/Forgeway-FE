@@ -7,7 +7,12 @@ import {
   getRouteStateFromPath,
   getDefaultWorkspaceTab,
   isHiddenWorkspaceTab,
+  isWorkspaceTab,
 } from "@/modules/workspace/shared/utils/workspaceUtils";
+import {
+  getProtectedDraftUrl,
+  requestDraftNavigation,
+} from "@/modules/story-governance/utils/storyGovernance";
 
 interface UseWorkspaceTabRouterParams {
   workspaceKey: string;
@@ -46,32 +51,52 @@ export function useWorkspaceTabRouter({
 
   const handleTabChange = useCallback(
     (newTab: WorkspaceTab) => {
-      setActiveTab(newTab);
-      onSelectIssue(null);
-      onSelectTaskKey(null);
-      onSetListGridDrawerOpen(false);
-      window.history.pushState(null, "", getWorkspaceTabUrl(newTab));
+      requestDraftNavigation(() => {
+        setActiveTab(newTab);
+        onSelectIssue(null);
+        onSelectTaskKey(null);
+        onSetListGridDrawerOpen(false);
+        window.history.pushState(null, "", getWorkspaceTabUrl(newTab));
+      });
     },
     [getWorkspaceTabUrl, onSelectIssue, onSelectTaskKey, onSetListGridDrawerOpen],
   );
 
   useEffect(() => {
     const handlePopState = () => {
-      const { tabSegment, taskKey } = getRouteStateFromPath(window.location.pathname);
-      const currentWorkspace = workspace.current;
-      if (isHiddenWorkspaceTab(tabSegment)) {
-        const defaultTab = currentWorkspace ? getDefaultWorkspaceTab(currentWorkspace) : "board";
-        setActiveTab(defaultTab);
-        window.history.replaceState(null, "", getWorkspaceTabUrl(defaultTab));
-      } else if (tabSegment) {
-        setActiveTab(tabSegment as WorkspaceTab);
-      } else if (currentWorkspace) {
-        setActiveTab(getDefaultWorkspaceTab(currentWorkspace));
-      }
-      onSelectTaskKey(taskKey);
-      if (!taskKey) {
-        onSelectIssue(null);
-        onSetListGridDrawerOpen(false);
+      const targetUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      let restoredProtectedEntry = false;
+      const continueNavigation = () => {
+        if (restoredProtectedEntry) {
+          window.history.back();
+          return;
+        }
+        if (`${window.location.pathname}${window.location.search}${window.location.hash}` !== targetUrl) {
+          window.history.pushState(null, "", targetUrl);
+        }
+        const { tabSegment, taskKey } = getRouteStateFromPath(window.location.pathname);
+        const currentWorkspace = workspace.current;
+        if (isHiddenWorkspaceTab(tabSegment)) {
+          const defaultTab = currentWorkspace ? getDefaultWorkspaceTab(currentWorkspace) : "board";
+          setActiveTab(defaultTab);
+          window.history.replaceState(null, "", getWorkspaceTabUrl(defaultTab));
+        } else if (isWorkspaceTab(tabSegment)) {
+          setActiveTab(tabSegment as WorkspaceTab);
+        } else if (currentWorkspace) {
+          setActiveTab(getDefaultWorkspaceTab(currentWorkspace));
+        }
+        onSelectTaskKey(taskKey);
+        if (!taskKey) {
+          onSelectIssue(null);
+          onSetListGridDrawerOpen(false);
+        }
+      };
+      if (!requestDraftNavigation(continueNavigation)) {
+        const protectedUrl = getProtectedDraftUrl();
+        if (protectedUrl) {
+          restoredProtectedEntry = true;
+          window.history.pushState(null, "", protectedUrl);
+        }
       }
     };
     window.addEventListener("popstate", handlePopState);

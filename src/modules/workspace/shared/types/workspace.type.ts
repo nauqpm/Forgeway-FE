@@ -52,7 +52,8 @@ export type WorkspaceTab =
   | "archive"
   | "pages"
   | "members"
-  | "reports";
+  | "reports"
+  | "stories";
 
 export const getWorkspaceTemplate = (workspace: Workspace): "kanban" | "scrum" =>
   workspace.template ?? workspace.type ?? "kanban";

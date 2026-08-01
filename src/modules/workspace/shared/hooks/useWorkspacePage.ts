@@ -225,6 +225,6 @@ export function useWorkspacePage(workspaceKey: string, tab: string[] | undefined
     handleBoardDragEndWithSync, handleBacklogDragEndWithSync, onBoardDragStart, onBacklogDragStart,
     toggleTaskSelection, toggleSprintSelection,
     canCreateTask, canEditTask, canDeleteTask, canMoveTask, canManageSprint, canUpdateWorkspace,
-    isWorkspaceAdmin, uniqueAssignees, bulkActionMembers, activeSprint, pageTitle, user,
+    isWorkspaceAdmin, workspacePermissions, uniqueAssignees, bulkActionMembers, activeSprint, pageTitle, user,
   };
 }
