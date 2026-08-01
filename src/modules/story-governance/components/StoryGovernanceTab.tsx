@@ -37,10 +37,9 @@ export default function StoryGovernanceTab({
 }: Props) {
   const initial = new URLSearchParams(window.location.search);
   const initialSection = initial.get("section");
+  const initialContractRef = useRef(initial.get("contract"));
   const [requirementsOpen, setRequirementsOpen] = useState(false);
-  const [mobileView, setMobileView] = useState<"index" | "detail">(
-    initial.get("contract") ? "detail" : "index",
-  );
+  const [mobileView, setMobileView] = useState<"index" | "detail">("index");
   const [selection, setSelection] = useState<StoryContractSelection>({
     contractId: initial.get("contract"),
     section: sections.includes(initialSection as StoryContractSection)
@@ -67,6 +66,12 @@ export default function StoryGovernanceTab({
       setSelection((current) => ({ ...current, contractId: selected._id }));
     }
   }, [selected, selection.contractId]);
+  useEffect(() => {
+    if (selected && initialContractRef.current) {
+      initialContractRef.current = null;
+      setMobileView("detail");
+    }
+  }, [selected]);
   useEffect(() => {
     const params = new URLSearchParams();
     if (selection.contractId) params.set("contract", selection.contractId);

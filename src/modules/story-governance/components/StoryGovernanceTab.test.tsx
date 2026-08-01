@@ -155,6 +155,28 @@ describe("StoryGovernanceTab", () => {
     expect(window.location.search).toBe(selectedUrl);
   });
 
+  it("keeps the Contract index visible while a URL-selected Contract is loading", () => {
+    window.history.replaceState(null, "", "/workspaces/ABC/stories?contract=contract-1");
+    service.listContracts.mockReturnValue(new Promise(() => undefined));
+    renderTab();
+
+    const loading = screen.getByLabelText("Story contracts loading");
+    const contractPanel = loading.closest("[data-story-mobile-panel='contracts']");
+    expect(contractPanel).not.toHaveClass("hidden");
+    expect(screen.getByRole("button", { name: "Contract list" })).toBeInTheDocument();
+  });
+
+  it("keeps the Contract index visible when a URL-selected Contract cannot load", async () => {
+    window.history.replaceState(null, "", "/workspaces/ABC/stories?contract=contract-1");
+    service.listContracts.mockRejectedValueOnce({ response: { status: 500 } });
+    renderTab();
+
+    const error = await screen.findByText("Story contracts could not be loaded. Refresh the page to try again.");
+    const contractPanel = error.closest("[data-story-mobile-panel='contracts']");
+    expect(contractPanel).not.toHaveClass("hidden");
+    expect(screen.getByRole("button", { name: "Contract list" })).toBeInTheDocument();
+  });
+
   it("renders status-specific loading, error, and empty states", async () => {
     service.listRequirements.mockReturnValue(new Promise(() => undefined));
     const first = renderTab();
