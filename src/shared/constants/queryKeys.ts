@@ -12,6 +12,7 @@ const ADMIN = ["admin"] as const;
 const STAFF = ["staff"] as const;
 const CHAT = ["chat"] as const;
 const SEARCH = ["search"] as const;
+const STORY_GOVERNANCE = ["story-governance"] as const;
 
 export const queryKeys = {
   profile: {
@@ -97,6 +98,7 @@ export const queryKeys = {
         ? ([...ADMIN, "users", filters] as const)
         : ([...ADMIN, "users"] as const),
     workflows: () => [...ADMIN, "workflows"] as const,
+    workflow: (workspaceId: string) => [...ADMIN, "workflows", workspaceId] as const,
     settings: (workspaceId: string) => [...ADMIN, "settings", workspaceId] as const,
   },
   staff: {
@@ -154,5 +156,25 @@ export const queryKeys = {
         params.updatedBefore,
         params.cursor,
       ] as const,
+  },
+  storyGovernance: {
+    all: (workspaceId: string) => [...STORY_GOVERNANCE, workspaceId] as const,
+    requirements: (workspaceId: string) => [...STORY_GOVERNANCE, workspaceId, "requirements"] as const,
+    requirement: (workspaceId: string, requirementId: string) => [...STORY_GOVERNANCE, workspaceId, "requirements", requirementId] as const,
+    contracts: (workspaceId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts"] as const,
+    contract: (workspaceId: string, contractId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId] as const,
+    drafts: (workspaceId: string, contractId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "drafts"] as const,
+    draft: (workspaceId: string, contractId: string, draftId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "drafts", draftId] as const,
+    versions: (workspaceId: string, contractId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "versions"] as const,
+    version: (workspaceId: string, contractId: string, versionId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "versions", versionId] as const,
+    diff: (workspaceId: string, contractId: string, fromId: string, toId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "diff", fromId, toId] as const,
+    criterion: (workspaceId: string, contractId: string, criterionId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "criteria", criterionId] as const,
+    criterionRevisions: (workspaceId: string, contractId: string, criterionId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "criteria", criterionId, "revisions"] as const,
+    verifications: (workspaceId: string, contractId: string, versionId: string, criterionId: string, revisionId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "versions", versionId, "criteria", criterionId, "revisions", revisionId, "verifications"] as const,
+    decisionProposals: (workspaceId: string, contractId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "decision-proposals"] as const,
+    decisions: (workspaceId: string, contractId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "decisions"] as const,
+    approvals: (workspaceId: string, contractId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "approvals"] as const,
+    versionImpact: (workspaceId: string, contractId: string, versionId: string) => [...STORY_GOVERNANCE, workspaceId, "contracts", contractId, "versions", versionId, "impact"] as const,
+    taskImpact: (workspaceId: string, taskId: string) => [...STORY_GOVERNANCE, workspaceId, "tasks", taskId, "impact"] as const,
   },
 } as const;
