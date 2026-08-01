@@ -3,9 +3,13 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "../types/issue.type";
 import { TaskFilters } from "../types/filter.type";
 import { TaskDetailResponse } from "../types/task-detail.type";
-import type { TaskLabel } from "../types/label.type";
-import { toTaskDateKey } from "../utils/taskDateKey";
 import { CreateTaskInput, TaskDto } from "./taskTypes";
+import {
+  toCreatePayload as normalizeCreatePayload,
+  toIssue as normalizeTaskIssue,
+  toTaskDetail as normalizeTaskDetail,
+  toUpdatePayload as normalizeUpdatePayload,
+} from "./taskNormalizer";
 
 // Re-export types
 export type {
@@ -136,14 +140,6 @@ const COLUMN_BY_STATUS: Record<string, string> = {
   done: "done",
 };
 
-const STATUS_BY_COLUMN: Record<string, string> = {
-  todo: "To Do",
-  inprogress: "In Progress",
-  "in-progress": "In Progress",
-  testing: "Testing",
-  done: "Done",
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const normalizeResponseData = <T>(payload: any): T => {
   return payload?.data?.data ?? payload?.data ?? payload;
@@ -178,187 +174,11 @@ const toColumnId = (status?: string) => {
   return COLUMN_BY_STATUS[status] ?? normalizeValue(status);
 };
 
-const toUiLabel = (value?: string, fallback = "") => {
-  if (!value) return fallback;
-  return value.charAt(0).toUpperCase() + value.slice(1);
-};
-
-const toStatusLabel = (task: TaskDto) => {
-  const column = task.columnId ?? task.boardColumnId ?? task.status;
-  return STATUS_BY_COLUMN[column ?? ""] ?? task.status ?? "To Do";
-};
-
-const toTaskLabel = (raw: TaskLabel | string | { _id?: string; id?: string; name?: string }): TaskLabel => {
-  if (typeof raw === "string") {
-    return { id: raw, name: raw };
-  }
-
-  const id = raw.id ?? raw._id ?? "";
-  return {
-    ...raw,
-    id,
-    name: raw.name ?? id,
-  };
-};
-
-const toTaskLabels = (task: TaskDto): TaskLabel[] => {
-  if (Array.isArray(task.labels)) {
-    return task.labels.map(toTaskLabel).filter((label) => label.id);
-  }
-
-  return (task.labelIds ?? []).map((id) => ({ id, name: id }));
-};
-
-const requireTaskKey = (task: TaskDto) => {
-  if (!task.key) {
-    throw new Error("Task key is missing from backend response");
-  }
-
-  return task.key;
-};
-
-const requireTaskId = (task: TaskDto) => {
-  const id = task.id ?? task._id;
-  if (!id) {
-    throw new Error("Task id is missing from backend response");
-  }
-
-  return id;
-};
-
-const toIssue = (task: TaskDto): Issue => {
-  const assignee = task.assigneeId || "U";
-  const id = requireTaskId(task);
-
-  return {
-    id,
-    _id: task._id,
-    key: requireTaskKey(task),
-    title: task.title,
-    description: task.description ?? "",
-    columnId: task.columnId ?? task.boardColumnId ?? toColumnId(task.status) ?? "todo",
-    status: toStatusLabel(task),
-    rank: task.rank,
-    priority: toUiLabel(task.priority, "Medium"),
-    type: toUiLabel(task.type, "Task"),
-    assignee,
-    assigneeId: task.assigneeId,
-    assigneeDisplayName: task.assignee?.fullName ?? task.assignee?.email ?? undefined,
-    assigneeAvatar: task.assignee?.avatar ?? undefined,
-    color: "bg-[#2563EB]",
-    sprintId: task.sprintId ?? null,
-    storyPoints: task.storyPoints ?? 0,
-    startDate: toTaskDateKey(task.startDate),
-    dueDate: toTaskDateKey(task.dueDate),
-    isArchived: task.isArchived,
-    archivedAt: task.archivedAt ?? null,
-    archivedBy: task.archivedBy ?? null,
-    archivedByUser: task.archivedByUser ?? null,
-    createdAt: task.createdAt,
-    updatedAt: task.updatedAt,
-    version: task.version,
-    cover: task.cover ?? null,
-    labels: toTaskLabels(task),
-    labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
-  };
-};
-
-const formatAssignee = (task: TaskDto) => task.assignee?.fullName || task.assignee?.email || task.assigneeId || "U";
-
-const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
-  const issue = toIssue(task);
-
-  return {
-    ...issue,
-    workspaceId: task.workspaceId ?? "",
-    description: task.description ?? "",
-    type: toUiLabel(task.type, "Task"),
-    priority: toUiLabel(task.priority, "Medium"),
-    status: toStatusLabel(task),
-    rank: task.rank ?? "",
-    assignee: task.assignee ?? null,
-    assigneeDisplayName: formatAssignee(task),
-    reporterId: task.reporterId ?? null,
-    reporter: task.reporter ?? null,
-    sprint: task.sprint ?? undefined,
-    boardId: task.boardId,
-    board: task.board ?? undefined,
-    dueDate: toTaskDateKey(task.dueDate) ?? null,
-    isArchived: task.isArchived ?? false,
-    isDeleted: task.isDeleted ?? false,
-    createdAt: task.createdAt ?? "",
-    updatedAt: task.updatedAt ?? "",
-    version: task.version,
-    cover: task.cover ?? null,
-    labels: toTaskLabels(task),
-    labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
-  };
-};
-
-const toCreatePayload = (input: CreateTaskInput) => ({
-  title: input.title,
-  type: normalizeValue(input.type),
-  priority: normalizeValue(input.priority),
-  columnId: input.columnId || toColumnId(input.status),
-  status: toColumnId(input.status),
-  sprintId: input.sprintId || undefined,
-  assigneeId: input.assigneeId || undefined,
-  startDate: input.startDate || undefined,
-  dueDate: input.dueDate || undefined,
-});
-
 const toTaskComment = (comment: TaskComment): TaskComment => ({
   ...comment,
   id: comment.id || comment._id || "",
   authorId: comment.authorId || comment.author?.id || "",
 });
-
-const toUpdatePayload = (updates: Partial<Issue>) => {
-  const {
-    assignee,
-    assigneeId,
-    columnId,
-    description,
-    startDate,
-    dueDate,
-    priority,
-    sprintId,
-    status,
-    storyPoints,
-    title,
-    type,
-    timeLogged,
-    timeEstimated,
-  } = updates;
-
-  const payload: Record<string, unknown> = {};
-
-  if (title !== undefined) payload.title = title;
-  if (description !== undefined) payload.description = description;
-  if (storyPoints !== undefined) payload.storyPoints = storyPoints;
-  if (columnId !== undefined) {
-    payload.columnId = columnId;
-  }
-  if (startDate !== undefined) payload.startDate = startDate || undefined;
-  if (dueDate !== undefined) payload.dueDate = dueDate || undefined;
-  if (assigneeId !== undefined) {
-    payload.assigneeId = assigneeId || null;
-  } else if (typeof assignee === "string" && assignee !== "U") {
-    payload.assigneeId = assignee;
-  }
-  if (type !== undefined) payload.type = normalizeValue(type);
-  if (priority !== undefined) payload.priority = normalizeValue(priority);
-  if (status !== undefined) {
-    const normalizedStatus = toColumnId(status);
-    if (columnId === undefined) payload.columnId = normalizedStatus;
-    payload.status = normalizedStatus;
-  }
-  if (sprintId !== undefined) payload.sprintId = sprintId || undefined;
-  if (timeLogged !== undefined) payload.timeLogged = timeLogged;
-  if (timeEstimated !== undefined) payload.timeEstimated = timeEstimated;
-
-  return payload;
-};
 
 export const buildTaskQuery = (filters?: TaskFilters) => {
   if (!filters) return "";
@@ -405,7 +225,7 @@ export const taskService: any = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload = normalizeResponseData<any>(response);
     const tasks: TaskDto[] = Array.isArray(payload) ? payload : (payload?.tasks ?? []);
-    return tasks.map(toIssue);
+    return tasks.map(normalizeTaskIssue);
   },
 
   async listBoardTasks(workspaceId: string, filters?: TaskFilters): Promise<Issue[]> {
@@ -415,13 +235,13 @@ export const taskService: any = {
   async getBoardTaskDetail(workspaceId: string, taskKey: string): Promise<TaskDetailResponse> {
     const response = await api.get(apiRoutes.TASKS.BOARD_TASK_BY_KEY(workspaceId, taskKey));
 
-    return toTaskDetail(normalizeResponseData<TaskDto>(response));
+    return normalizeTaskDetail(normalizeResponseData<TaskDto>(response));
   },
 
   async createBoardTask(workspaceId: string, input: CreateTaskInput): Promise<Issue> {
-    const response = await api.post(apiRoutes.TASKS.BOARD(workspaceId), toCreatePayload(input));
+    const response = await api.post(apiRoutes.TASKS.BOARD(workspaceId), normalizeCreatePayload(input));
 
-    return toIssue(normalizeResponseData<TaskDto>(response));
+    return normalizeTaskIssue(normalizeResponseData<TaskDto>(response));
   },
 
   async updateBoardTask(workspaceId: string, taskId: string, updates: Partial<Issue>): Promise<Issue> {
@@ -454,24 +274,24 @@ export const taskService: any = {
       }
 
       const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceId, taskId), payload);
-      return toIssue(normalizeResponseData<TaskDto>(response));
+      return normalizeTaskIssue(normalizeResponseData<TaskDto>(response));
     }
 
-    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId), toUpdatePayload(updates));
+    const response = await api.patch(apiRoutes.TASKS.BOARD_TASK(workspaceId, taskId), normalizeUpdatePayload(updates));
 
-    return toIssue(normalizeResponseData<TaskDto>(response));
+    return normalizeTaskIssue(normalizeResponseData<TaskDto>(response));
   },
 
   async moveBoardTask(workspaceId: string, taskId: string, input: { columnId: string }): Promise<Issue> {
     const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_MOVE(workspaceId, taskId), input);
 
-    return toIssue(normalizeResponseData<TaskDto>(response));
+    return normalizeTaskIssue(normalizeResponseData<TaskDto>(response));
   },
 
   async reorderBoardTask(workspaceId: string, taskId: string, input: ReorderTaskInput): Promise<Issue> {
     const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_REORDER(workspaceId, taskId), input);
 
-    return toIssue(normalizeResponseData<TaskDto>(response));
+    return normalizeTaskIssue(normalizeResponseData<TaskDto>(response));
   },
 
   async deleteBoardTask(workspaceId: string, taskId: string): Promise<void> {
@@ -483,19 +303,19 @@ export const taskService: any = {
   async archiveBoardTask(workspaceId: string, taskId: string): Promise<Issue> {
     const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_ARCHIVE(workspaceId, taskId));
 
-    return toIssue(normalizeResponseData<TaskDto>(response));
+    return normalizeTaskIssue(normalizeResponseData<TaskDto>(response));
   },
 
   async restoreBoardTask(workspaceId: string, taskId: string): Promise<Issue> {
     const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_RESTORE(workspaceId, taskId));
 
-    return toIssue(normalizeResponseData<TaskDto>(response));
+    return normalizeTaskIssue(normalizeResponseData<TaskDto>(response));
   },
 
   async replaceTaskLabels(workspaceId: string, taskId: string, labelIds: string[]): Promise<Issue> {
     const response = await api.patch(apiRoutes.TASKS.BOARD_TASK_LABELS(workspaceId, taskId), { labelIds });
 
-    return toIssue(normalizeResponseData<TaskDto>(response));
+    return normalizeTaskIssue(normalizeResponseData<TaskDto>(response));
   },
 
   async getTaskActivities(
@@ -528,7 +348,7 @@ export const taskService: any = {
     const payload = normalizeResponseData<Record<string, unknown>>(response);
     const raw: TaskDto[] = Array.isArray(payload) ? (payload as TaskDto[]) : ((payload?.tasks ?? []) as TaskDto[]);
     return {
-      tasks: raw.map(toIssue),
+      tasks: raw.map(normalizeTaskIssue),
       total: typeof payload?.total === "number" ? payload.total : raw.length,
       page: typeof payload?.page === "number" ? payload.page : (filters?.page ?? 1),
       limit: typeof payload?.limit === "number" ? payload.limit : (filters?.limit ?? 20),

@@ -18,6 +18,25 @@ import { useWorkspaceRealtime } from "@/modules/workspace/shared/hooks/useWorksp
 import { sortIssuesByRank, taskIdOf } from "@/lib/realtime/utils/task-realtime-cache.utils";
 import { clearOptimisticIssueOrder, isNoopReorderError } from "@/modules/workspace/shared/utils/workspaceUtils";
 import { queryKeys } from "@/shared/constants/queryKeys";
+import {
+  getTaskStoryGateCode,
+  openTaskStoryPanel,
+  restoreTaskPositions,
+} from "@/modules/story-governance/utils/taskStory";
+
+export const getReorderFailure = (
+  current: Issue[],
+  previous: Issue[],
+  error: unknown,
+) => {
+  const gateCode = getTaskStoryGateCode(error);
+  return {
+    issues: gateCode
+      ? restoreTaskPositions(current, previous)
+      : current.map(clearOptimisticIssueOrder),
+    gateCode,
+  };
+};
 
 interface UseWorkspaceIssuesParams {
   workspaceId: string | undefined;
@@ -49,6 +68,9 @@ export function useWorkspaceIssues({
   const isDraggingIssueRef = useRef(false);
   const reorderInFlightRef = useRef(new Set<string>());
   const pendingReorderRef = useRef(new Map<string, TaskReorderSyncInput>());
+  const reorderSnapshotsRef = useRef(new Map<string, Issue[]>());
+  const issuesRef = useRef(issues);
+  issuesRef.current = issues;
 
   const { data: boardData, isLoading: isBoardLoading } = useQuery({
     queryKey: ["board", workspaceId],
@@ -143,6 +165,9 @@ export function useWorkspaceIssues({
         return;
       }
       reorderInFlightRef.current.add(taskId);
+      if (!reorderSnapshotsRef.current.has(taskId)) {
+        reorderSnapshotsRef.current.set(taskId, issuesRef.current.map((issue) => ({ ...issue })));
+      }
 
       taskService
         .reorderBoardTask(workspaceId, taskId, { columnId, status, sprintId, rankScope, beforeTaskId, afterTaskId })
@@ -166,8 +191,23 @@ export function useWorkspaceIssues({
         })
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .catch((error: any) => {
-          setIssues((current) => current.map(clearOptimisticIssueOrder));
+          const previous = reorderSnapshotsRef.current.get(taskId) ?? [];
+          const failure = getReorderFailure(issuesRef.current, previous, error);
+          setIssues(failure.issues);
+          queryClient.setQueriesData<Issue[]>({ queryKey: ["tasks", workspaceId] }, (current) =>
+            Array.isArray(current)
+              ? getReorderFailure(current, previous, error).issues
+              : current,
+          );
           queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+          if (failure.gateCode) {
+            pendingReorderRef.current.delete(taskId);
+            const selected = previous.find((issue) => issue.id === taskId);
+            if (selected) setSelectedIssue(selected);
+            window.setTimeout(() => openTaskStoryPanel(taskId, failure.gateCode!), 0);
+            toast.error("Resolve Story requirements before moving this task forward");
+            return;
+          }
           if (!isNoopReorderError(error)) {
             toast.error(error?.response?.data?.message || "Could not update task position");
           }
@@ -178,10 +218,12 @@ export function useWorkspaceIssues({
           if (queuedReorder) {
             pendingReorderRef.current.delete(taskId);
             window.setTimeout(() => syncTaskReorder(queuedReorder), 0);
+          } else {
+            reorderSnapshotsRef.current.delete(taskId);
           }
         });
     },
-    [patchSelectedTaskView, queryClient, workspaceId],
+    [patchSelectedTaskView, queryClient, setSelectedIssue, workspaceId],
   );
 
   return {

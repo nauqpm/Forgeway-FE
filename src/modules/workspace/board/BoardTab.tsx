@@ -26,6 +26,7 @@ import {
   Trash2,
   X,
   PlayCircle,
+  GitBranch,
 } from "lucide-react";
 import AssigneePicker from "@/shared/components/AssigneePicker";
 import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
@@ -68,7 +69,7 @@ type BoardTabProps = {
 
   ui: {
     filters: Filters;
-    newIssueForm: { title: string; status?: string; columnId?: string; sprintId?: string | null };
+    newIssueForm: { title: string; status?: string; columnId?: string; sprintId?: string | null; storyContractId?: string; storyVersionId?: string };
     showCreateColumn: boolean;
     newColumnName: string;
     isFetching?: boolean;
@@ -81,7 +82,7 @@ type BoardTabProps = {
 
     setSelectedIssue: (issue: Issue | null) => void;
 
-    setNewIssueForm: React.Dispatch<React.SetStateAction<{ title: string; status?: string; columnId?: string; sprintId?: string | null }>>;
+    setNewIssueForm: React.Dispatch<React.SetStateAction<{ title: string; status?: string; columnId?: string; sprintId?: string | null; storyContractId?: string; storyVersionId?: string }>>;
     setShowCreateIssue: React.Dispatch<React.SetStateAction<boolean>>;
 
     setShowCreateColumn: React.Dispatch<React.SetStateAction<boolean>>;
@@ -530,6 +531,20 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                           {issue.title}
                                         </p>
                                         <div className="mb-3 flex flex-wrap gap-1.5">
+                                          {(issue.requirementsState === "REVIEW_REQUIRED" ||
+                                            issue.requirementsState === "REBASE_REQUIRED") && (
+                                            <span
+                                              title={issue.requirementsState === "REBASE_REQUIRED" ? "Story rebase required" : "Story review required"}
+                                              className={`inline-flex items-center gap-1 rounded-[4px] px-2 py-0.5 text-[0.625rem] font-semibold ${
+                                                issue.requirementsState === "REBASE_REQUIRED"
+                                                  ? "bg-[#FDEBEC] text-[#9F2F2D]"
+                                                  : "bg-[#FBF3DB] text-[#956400]"
+                                              }`}
+                                            >
+                                              <GitBranch aria-hidden className="h-3 w-3" />
+                                              {issue.requirementsState === "REBASE_REQUIRED" ? "Rebase" : "Review"}
+                                            </span>
+                                          )}
                                           <span
                                             className={`px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold ${issue.priority === "High" || issue.priority === "Highest" ? "bg-[#FDEBEC] text-[#9F2F2D]" : issue.priority === "Medium" ? "bg-[#FBF3DB] text-[#956400]" : "bg-[#EDF3EC] text-[#346538]"}`}
                                           >
