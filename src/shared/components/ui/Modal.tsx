@@ -36,16 +36,53 @@ function Modal({
   className = "",
 }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const wasOpenRef = useRef(false);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
+
+  if (open && !wasOpenRef.current && typeof document !== "undefined") {
+    returnFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  }
+  wasOpenRef.current = open;
 
   // Close on Escape key
   useEffect(() => {
     if (!open) return;
+    queueMicrotask(() => {
+      if (containerRef.current?.contains(document.activeElement)) return;
+      containerRef.current?.querySelector<HTMLElement>(
+        "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])",
+      )?.focus();
+    });
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key !== "Tab") return;
+      const controls = Array.from(
+        containerRef.current?.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])",
+        ) ?? [],
+      );
+      if (!controls.length) return;
+      const activeIndex = controls.indexOf(document.activeElement as HTMLElement);
+      if (e.shiftKey && activeIndex <= 0) {
+        e.preventDefault();
+        controls[controls.length - 1].focus();
+      } else if (!e.shiftKey && (activeIndex === -1 || activeIndex === controls.length - 1)) {
+        e.preventDefault();
+        controls[0].focus();
+      }
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [open, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+    return () => {
+      returnFocusRef.current?.focus();
+      returnFocusRef.current = null;
+    };
+  }, [open]);
 
   // Prevent body scroll when open
   useEffect(() => {
