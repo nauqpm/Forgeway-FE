@@ -1,15 +1,18 @@
 import React from "react";
 import { OverflowTabs } from "@/shared/components/OverflowTabs";
 import { getWorkspaceTemplate, Workspace, WorkspaceTab } from "@/modules/workspace/shared/types/workspace.type";
+import { WORKSPACE_PERMISSIONS, type WorkspacePermission } from "@/modules/workspace/shared/constants/workspacePermissions";
 
 interface TabProps {
   workspace: Workspace;
   activeTab: WorkspaceTab;
   setActiveTab: (tab: WorkspaceTab) => void;
+  permissions: WorkspacePermission[];
 }
 
-const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
+const Tabs = ({ workspace, activeTab, setActiveTab, permissions }: TabProps) => {
   const template = getWorkspaceTemplate(workspace);
+  const canReadStories = permissions.includes(WORKSPACE_PERMISSIONS.STORY_READ);
 
   return (
     <OverflowTabs activeId={activeTab}>
@@ -36,6 +39,11 @@ const Tabs = ({ workspace, activeTab, setActiveTab }: TabProps) => {
       <OverflowTabs.Item id="pages" onSelect={() => setActiveTab("pages")}>
         Docs
       </OverflowTabs.Item>
+      {canReadStories && (
+        <OverflowTabs.Item id="stories" onSelect={() => setActiveTab("stories")}>
+          Stories
+        </OverflowTabs.Item>
+      )}
       <OverflowTabs.Item id="members" onSelect={() => setActiveTab("members")}>
         Members
       </OverflowTabs.Item>
