@@ -34,6 +34,9 @@ export interface Task {
   createdAt?: string;
   updatedAt?: string;
   version?: number;
+  storyContractId?: string;
+  storyVersionId?: string;
+  requirementsState?: "CURRENT" | "REVIEW_REQUIRED" | "REBASE_REQUIRED";
   optimisticOrder?: number;
   optimisticScope?: string;
   cover?: TaskCover | null;
