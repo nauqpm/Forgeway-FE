@@ -22,6 +22,9 @@ export const getDefaultWorkspaceTab = (workspace: Workspace): WorkspaceTab =>
 
 export const isHiddenWorkspaceTab = (tabName: WorkspaceTab | null | undefined) => tabName === "summary";
 
+export const isWorkspaceTab = (tabName: string | null | undefined): tabName is WorkspaceTab =>
+  ["summary", "board", "backlog", "timeline", "calendar", "list", "archive", "pages", "members", "reports", "stories"].includes(tabName ?? "");
+
 export const clearOptimisticIssueOrder = (issue: Issue): Issue => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { optimisticOrder: _optimisticOrder, optimisticScope: _optimisticScope, ...rest } = issue;

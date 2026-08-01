@@ -48,6 +48,10 @@ const ReportsTab = dynamic(() => import("@/modules/workspace/board/ReportsTab"),
   ssr: false,
   loading: tabLoading,
 });
+const StoryGovernanceTab = dynamic(() => import("@/modules/story-governance/components/StoryGovernanceTab"), {
+  ssr: false,
+  loading: tabLoading,
+});
 
 type WorkspaceContentProps = {
   activeTab: string;
@@ -82,6 +86,12 @@ type WorkspaceContentProps = {
     currentUserId?: string;
     workspaceType: string;
   };
+  storyGovernanceProps: {
+    workspaceId: string;
+    workspaceKey: string;
+    currentUserId?: string;
+    permissions: import("@/modules/workspace/shared/constants/workspacePermissions").WorkspacePermission[];
+  };
 };
 
 export default function WorkspaceContent({
@@ -97,6 +107,7 @@ export default function WorkspaceContent({
   archiveProps,
   membersProps,
   reportsProps,
+  storyGovernanceProps,
 }: WorkspaceContentProps) {
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
@@ -123,6 +134,8 @@ export default function WorkspaceContent({
       {activeTab === "members" && <MembersTab {...membersProps} />}
 
       {activeTab === "reports" && <ReportsTab {...reportsProps} />}
+
+      {activeTab === "stories" && <StoryGovernanceTab {...storyGovernanceProps} />}
     </div>
   );
 }
