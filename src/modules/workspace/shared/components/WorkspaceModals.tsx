@@ -37,6 +37,8 @@ interface NewIssueForm {
   sprintId: string | null;
   assigneeId: string;
   columnId?: string | null;
+  storyContractId?: string;
+  storyVersionId?: string;
 }
 
 interface WorkspaceModalsProps {

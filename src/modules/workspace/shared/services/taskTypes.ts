@@ -34,6 +34,9 @@ export type TaskDto = {
   priority?: string;
   rank?: string;
   version?: number;
+  storyContractId?: string;
+  storyVersionId?: string;
+  requirementsState?: "CURRENT" | "REVIEW_REQUIRED" | "REBASE_REQUIRED";
   assigneeId?: string | null;
   assignee?: TaskUserDto;
   reporterId?: string;
@@ -77,6 +80,8 @@ export type CreateTaskInput = {
   columnId?: string | null;
   startDate?: string;
   dueDate?: string;
+  storyContractId?: string | null;
+  storyVersionId?: string | null;
 };
 
 export type ReorderTaskInput = {

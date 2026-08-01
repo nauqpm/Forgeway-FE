@@ -26,15 +26,21 @@ export default function TaskDetailDeepLinkPage() {
   const workspaceKey = Array.isArray(params.key) ? params.key[0] : params.key;
   const taskKey = Array.isArray(params.taskKey) ? params.taskKey[0] : params.taskKey;
   const queryClient = useQueryClient();
+  const workspaceQuery = useQuery({
+    queryKey: ["workspace-route", workspaceKey],
+    queryFn: () => resolveWorkspaceFromRouteKey(workspaceKey!),
+    enabled: !!workspaceKey,
+    staleTime: 30_000,
+  });
 
   const backToBoard = useCallback(() => {
     router.push(`/workspaces/${workspaceKey}/board`);
   }, [router, workspaceKey]);
 
   const taskDetailQuery = useQuery({
-    queryKey: queryKeys.tasks.detail(workspaceKey ?? "", taskKey ?? ""),
+    queryKey: queryKeys.tasks.detail(workspaceQuery.data?._id ?? "", taskKey ?? ""),
     queryFn: async () => {
-      const nextWorkspace = await resolveWorkspaceFromRouteKey(workspaceKey!);
+      const nextWorkspace = workspaceQuery.data!;
       let members = nextWorkspace.members ?? [];
 
       try {
@@ -55,7 +61,7 @@ export default function TaskDetailDeepLinkPage() {
         columns: boardData.columns as BoardColumn[],
       };
     },
-    enabled: !!workspaceKey && !!taskKey,
+    enabled: !!workspaceQuery.data?._id && !!taskKey,
     staleTime: 30_000,
   });
 
@@ -82,8 +88,9 @@ export default function TaskDetailDeepLinkPage() {
       return enrichTaskDetailUsers(refreshedIssue, workspace.members);
     },
     onSuccess: (refreshedIssue) => {
-      if (!refreshedIssue || !workspaceKey || !taskKey) return;
-      queryClient.setQueryData(queryKeys.tasks.detail(workspaceKey, taskKey), (current: typeof taskDetailQuery.data) =>
+      const workspaceId = taskDetailQuery.data?.workspace._id;
+      if (!refreshedIssue || !workspaceId || !taskKey) return;
+      queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, taskKey), (current: typeof taskDetailQuery.data) =>
         current ? { ...current, issue: refreshedIssue } : current,
       );
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
@@ -94,7 +101,7 @@ export default function TaskDetailDeepLinkPage() {
     await updateIssueMutation.mutateAsync(updatedIssue);
   };
 
-  if (taskDetailQuery.isLoading) {
+  if (workspaceQuery.isLoading || taskDetailQuery.isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#FBFBFA] dark:bg-[#1A1A1A]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2563EB] dark:border-[#3B82F6] border-t-transparent" />
@@ -102,13 +109,14 @@ export default function TaskDetailDeepLinkPage() {
     );
   }
 
-  const status = (taskDetailQuery.error as { response?: { status?: number } } | null)?.response?.status;
+  const queryError = workspaceQuery.error ?? taskDetailQuery.error;
+  const status = (queryError as { response?: { status?: number } } | null)?.response?.status;
   const error =
     status === 404
       ? "Task not found"
       : status === 403
         ? "You do not have permission to access this task"
-        : taskDetailQuery.error
+        : queryError
           ? "Could not load task details"
           : null;
   const workspace = taskDetailQuery.data?.workspace ?? null;

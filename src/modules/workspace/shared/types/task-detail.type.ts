@@ -76,6 +76,9 @@ export interface TaskDetailResponse {
   createdAt: string;
   updatedAt: string;
   version?: number;
+  storyContractId?: string;
+  storyVersionId?: string;
+  requirementsState: "CURRENT" | "REVIEW_REQUIRED" | "REBASE_REQUIRED";
 
   // Frontend-specific fields currently expected by the UI Drawer
   comments?: Comment[];
