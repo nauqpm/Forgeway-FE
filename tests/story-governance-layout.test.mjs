@@ -4,18 +4,21 @@ import test from "node:test";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("Stories uses a constrained canvas with independently scrolling columns", () => {
+test("Stories uses a master-detail workspace canvas", () => {
   const tab = read("src/modules/story-governance/components/StoryGovernanceTab.tsx");
   const requirements = read("src/modules/story-governance/components/RequirementPanel.tsx");
   const contracts = read("src/modules/story-governance/components/StoryContractIndex.tsx");
 
   assert.match(tab, /flex min-h-0 min-w-0 flex-1/);
+  assert.match(tab, /data-story-layout="master-detail"/);
+  assert.doesNotMatch(tab, /grid-cols-\[minmax\(16rem,0\.85fr\)_minmax\(17rem,1fr\)_minmax\(20rem,1\.25fr\)\]/);
+  assert.doesNotMatch(tab, /dark:bg-slate-950/);
   assert.match(requirements, /min-h-0 min-w-0 overflow-y-auto/);
   assert.match(contracts, /min-h-0 min-w-0 overflow-y-auto/);
-  assert.match(tab, /data-story-mobile-panel="detail"[^>]*className="min-h-0 min-w-0 overflow-y-auto/);
+  assert.match(tab, /data-story-mobile-panel="detail"/);
 });
 
-test("Stories keeps lightweight visuals and exposes named mobile panel paths", () => {
+test("Stories keeps lightweight visuals and workspace controls", () => {
   const tab = read("src/modules/story-governance/components/StoryGovernanceTab.tsx");
   const source = [
     tab,
@@ -27,8 +30,6 @@ test("Stories keeps lightweight visuals and exposes named mobile panel paths", (
 
   assert.doesNotMatch(source, /\bbg-gradient-/);
   assert.doesNotMatch(source, /\bshadow-(?:lg|xl|2xl)\b/);
-  assert.match(tab, /aria-label="Story workspace panels"/);
-  assert.match(tab, /data-story-mobile-panel="requirements"/);
   assert.match(tab, /data-story-mobile-panel="contracts"/);
   assert.match(tab, /data-story-mobile-panel="detail"/);
 });

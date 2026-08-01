@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, cleanup, fireEvent, render, renderHook, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import StoryGovernanceTab from "./StoryGovernanceTab";
@@ -118,9 +119,46 @@ describe("StoryGovernanceTab", () => {
     expect(service.listContracts).not.toHaveBeenCalled();
   });
 
+  it("uses a master-detail workspace shell without mobile panel navigation", () => {
+    renderTab();
+
+    expect(screen.getByTestId("story-workspace")).toHaveAttribute(
+      "data-story-layout",
+      "master-detail",
+    );
+    expect(screen.queryByRole("navigation", { name: "Story workspace panels" })).not.toBeInTheDocument();
+  });
+
+  it("opens Requirements in a dialog from the workspace toolbar", async () => {
+    const user = userEvent.setup();
+    renderTab();
+
+    await user.click(screen.getByRole("button", { name: "Requirements" }));
+    const dialog = screen.getByRole("dialog", { name: "Requirements" });
+    expect(dialog).toBeInTheDocument();
+    expect(within(dialog).getAllByRole("heading", { name: "Requirements" })[0]).toBeInTheDocument();
+  });
+
+  it("returns to the Contract index without changing the selected Contract URL", async () => {
+    const user = userEvent.setup();
+    service.listRequirements.mockResolvedValue([requirement()]);
+    service.listContracts.mockResolvedValue([contract()]);
+    renderTab();
+
+    await user.click(await screen.findByRole("button", { name: /SC-1 Export contract/ }));
+    await screen.findByRole("button", { name: "Back to contracts" });
+    const selectedUrl = window.location.search;
+
+    await user.click(screen.getByRole("button", { name: "Back to contracts" }));
+    expect(screen.queryByRole("button", { name: "Back to contracts" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Story contracts" })).toBeInTheDocument();
+    expect(window.location.search).toBe(selectedUrl);
+  });
+
   it("renders status-specific loading, error, and empty states", async () => {
     service.listRequirements.mockReturnValue(new Promise(() => undefined));
     const first = renderTab();
+    fireEvent.click(screen.getByRole("button", { name: "Requirements" }));
     expect(screen.getByLabelText("Requirements loading")).toBeInTheDocument();
     expect(screen.getByLabelText("Story contracts loading")).toBeInTheDocument();
     first.unmount();
@@ -128,6 +166,7 @@ describe("StoryGovernanceTab", () => {
     service.listRequirements.mockResolvedValue([]);
     service.listContracts.mockRejectedValueOnce({ response: { status: 500 } });
     const failed = renderTab();
+    fireEvent.click(screen.getByRole("button", { name: "Requirements" }));
     expect(await screen.findByRole("alert", { name: "" })).toHaveTextContent("Story contracts could not be loaded");
     expect(screen.getByText(/No requirements yet/)).toBeInTheDocument();
     failed.unmount();
@@ -137,20 +176,17 @@ describe("StoryGovernanceTab", () => {
     expect(await screen.findByText(/No story contracts yet/)).toBeInTheDocument();
   });
 
-  it("keeps Requirement and Contract details mutually exclusive", async () => {
+  it("keeps the selected Contract while viewing its Requirement detail", async () => {
     service.listRequirements.mockResolvedValue([requirement()]);
     service.listContracts.mockResolvedValue([contract()]);
     renderTab();
 
     const contractDetail = await screen.findByLabelText("Selected story contract");
+    fireEvent.click(screen.getByRole("button", { name: "Requirements" }));
     const requirementButton = await screen.findByRole("button", { name: /REQ-1 Customer export/ });
     act(() => requirementButton.click());
     const detail = screen.getByLabelText("Selected requirement");
     expect(await within(detail).findByText("Customers can export their data.")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Selected story contract")).not.toBeInTheDocument();
-
-    act(() => screen.getByRole("button", { name: /SC-1 Export contract/ }).click());
-    expect(screen.queryByLabelText("Selected requirement")).not.toBeInTheDocument();
     expect(within(screen.getByLabelText("Selected story contract")).getByRole("heading", { name: "Export contract" })).toBeInTheDocument();
     expect(contractDetail).toBeInTheDocument();
   });
@@ -164,6 +200,7 @@ describe("StoryGovernanceTab", () => {
     );
     renderTab();
 
+    fireEvent.click(screen.getByRole("button", { name: "Requirements" }));
     fireEvent.click(await screen.findByRole("button", { name: /REQ-1 List title/ }));
     const detail = await screen.findByLabelText("Selected requirement");
     expect(await within(detail).findByRole("heading", { name: "Authoritative title" })).toBeInTheDocument();
