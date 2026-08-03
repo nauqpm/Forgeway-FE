@@ -223,6 +223,7 @@ function ModalFooter({
         <button
           onClick={onConfirm}
           disabled={loading}
+          aria-label={confirmLabel}
           className={`${confirmBase} ${confirmStyles}`}
         >
           {loading ? (

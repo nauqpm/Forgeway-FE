@@ -38,3 +38,19 @@ describe("Modal focus containment", () => {
     expect(cancel).toHaveFocus();
   });
 });
+
+describe("ModalFooter", () => {
+  it("keeps the confirm label as its accessible name while loading", () => {
+    render(
+      <ModalFooter
+        onConfirm={vi.fn()}
+        confirmLabel="Create requirement"
+        loading
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Create requirement" }),
+    ).toBeDisabled();
+  });
+});
