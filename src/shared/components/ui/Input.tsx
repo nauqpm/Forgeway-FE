@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes, ReactNode } from "react";
+import { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes, ReactNode, useId } from "react";
 
 // ── Base classes shared by all input types ───────────────────────────────────
 const baseInputClasses = [
@@ -18,6 +18,7 @@ const baseInputClasses = [
 
 // ── Wrapper with label + error ────────────────────────────────────────────────
 interface FieldWrapperProps {
+  controlId?: string;
   label?: string;
   hint?: string;
   error?: string;
@@ -26,11 +27,11 @@ interface FieldWrapperProps {
   className?: string;
 }
 
-function FieldWrapper({ label, hint, error, required, children, className = "" }: FieldWrapperProps) {
+function FieldWrapper({ controlId, label, hint, error, required, children, className = "" }: FieldWrapperProps) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (
-        <label className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[#787774] dark:text-[#9B9A97]">
+        <label htmlFor={controlId} className="text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-[#787774] dark:text-[#9B9A97]">
           {label}
           {required && <span className="ml-0.5 text-[#9F2F2D]">*</span>}
         </label>
@@ -56,7 +57,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, hint, error, wrapperClassName, leftIcon, rightIcon, className = "", ...props }, ref) => {
+  ({ label, hint, error, wrapperClassName, leftIcon, rightIcon, className = "", id, ...props }, ref) => {
+    const generatedId = useId();
+    const controlId = id ?? generatedId;
     const hasError = Boolean(error);
 
     const input = (
@@ -67,6 +70,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           </span>
         )}
         <input
+          id={controlId}
           ref={ref}
           className={[
             baseInputClasses,
@@ -92,6 +96,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <FieldWrapper
+        controlId={controlId}
         label={label}
         hint={hint}
         error={error}
@@ -115,11 +120,14 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, hint, error, wrapperClassName, className = "", ...props }, ref) => {
+  ({ label, hint, error, wrapperClassName, className = "", id, ...props }, ref) => {
+    const generatedId = useId();
+    const controlId = id ?? generatedId;
     const hasError = Boolean(error);
 
     const textarea = (
       <textarea
+        id={controlId}
         ref={ref}
         className={[
           baseInputClasses,
@@ -137,6 +145,7 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 
     return (
       <FieldWrapper
+        controlId={controlId}
         label={label}
         hint={hint}
         error={error}
@@ -161,11 +170,14 @@ interface SelectProps extends InputHTMLAttributes<HTMLSelectElement> {
 }
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, hint, error, wrapperClassName, className = "", children, ...props }, ref) => {
+  ({ label, hint, error, wrapperClassName, className = "", children, id, ...props }, ref) => {
+    const generatedId = useId();
+    const controlId = id ?? generatedId;
     const hasError = Boolean(error);
 
     const select = (
       <select
+        id={controlId}
         ref={ref}
         className={[
           baseInputClasses,
@@ -186,6 +198,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     return (
       <FieldWrapper
+        controlId={controlId}
         label={label}
         hint={hint}
         error={error}
