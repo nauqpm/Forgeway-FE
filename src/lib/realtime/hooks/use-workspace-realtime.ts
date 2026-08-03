@@ -96,6 +96,8 @@ export function useWorkspaceRealtime({
 
       updateWorkspacesCache((current) => upsertWorkspace(current, workspace as Workspace) as Workspace[]);
       if (!currentWorkspaceIdRef.current) setCurrentWorkspaceId(workspaceId);
+      
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
     };
 
     const removeWorkspaceFromState = (workspaceId: string) => {
@@ -133,6 +135,12 @@ export function useWorkspaceRealtime({
       void queryClient.invalidateQueries({
         queryKey: queryKeys.workspaces.members(workspaceId),
       });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.channels(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ["chat", "members"],
+      });
 
       if (!isCurrentUserTarget(envelope, currentUserId)) return;
 
@@ -147,8 +155,25 @@ export function useWorkspaceRealtime({
       const workspaceId = envelope.workspaceId ?? envelope.data.workspaceId;
       if (!workspaceId) return;
 
+      const userId = envelope.data.userId;
+
       void queryClient.invalidateQueries({
         queryKey: queryKeys.workspaces.members(workspaceId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.chat.channels(),
+      });
+      
+      if (userId) {
+        // Optimistically remove user from all cached chat member lists instantly
+        queryClient.setQueriesData({ queryKey: ["chat", "members"] }, (old: unknown) => {
+          if (!Array.isArray(old)) return old;
+          return old.filter((m: { _id?: string; id?: string }) => String(m._id) !== String(userId) && String(m.id) !== String(userId));
+        });
+      }
+
+      void queryClient.invalidateQueries({
+        queryKey: ["chat", "members"],
       });
 
       if (!isCurrentUserTarget(envelope, currentUserId)) return;

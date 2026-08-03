@@ -51,6 +51,26 @@ export default function DocumentsLibraryContent({ documentId, documentMode }: Do
     openRenameDialog,
   } = page;
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("documents-view-mode");
+      if (saved === "grid" || saved === "list") {
+        setViewMode(saved);
+      }
+    } catch {
+      // Ignore
+    }
+  }, []);
+
+  const handleSetViewMode = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem("documents-view-mode", mode);
+    } catch {
+      // Ignore
+    }
+  };
   const routeDocument = useMemo(
     () => documents.find((doc) => doc._id === documentId) ?? null,
     [documentId, documents],
@@ -120,7 +140,7 @@ export default function DocumentsLibraryContent({ documentId, documentMode }: Do
           sortBy={sortBy}
           setSortBy={setSortBy}
           viewMode={viewMode}
-          setViewMode={setViewMode}
+          setViewMode={handleSetViewMode}
         />
 
         <DocumentGrid

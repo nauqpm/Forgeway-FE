@@ -180,7 +180,12 @@ export default function ChatSidebar() {
     if (lastMsg.type === 'sticker') {
       formattedContent = "[Sticker]";
     } else if (lastMsg.content && lastMsg.content.trim()) {
-      const cleanContent = lastMsg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+      let cleanContent = lastMsg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+      // Strip simple markdown formatting: **bold**, *italic*, __underline__, ~~strikethrough~~, `code`
+      cleanContent = cleanContent.replace(/(\*\*|__|\*|_|~~|`)(.*?)\1/g, '$2');
+      // Strip blockquote >
+      cleanContent = cleanContent.replace(/^>\s+/gm, '');
+      
       if (lastMsg.attachments && lastMsg.attachments.length > 0) {
         const firstAttachment = lastMsg.attachments[0];
         const isImage = firstAttachment.mimeType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(firstAttachment.url || firstAttachment.name || '');

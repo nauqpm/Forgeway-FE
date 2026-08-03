@@ -28,6 +28,7 @@ interface MessageContextMenuProps {
   contextMenuRef: React.RefObject<HTMLDivElement | null>;
   message: Message;
   isMine: boolean;
+  isWorkspaceAdmin?: boolean;
   hideThreadBadge?: boolean;
   quickEmojis: string[];
   onSelectEmoji: (emoji: string) => void;
@@ -44,6 +45,7 @@ export default function MessageContextMenu({
   contextMenuRef,
   message,
   isMine,
+  isWorkspaceAdmin = false,
   hideThreadBadge = false,
   quickEmojis,
   onSelectEmoji,
@@ -149,7 +151,7 @@ export default function MessageContextMenu({
         <TrashForMeIcon className="w-3.5 h-3.5 text-red-500" />
       </button>
 
-      {isMine && (
+      {(isMine || isWorkspaceAdmin) && (
         <button
           onClick={() => {
             onDeleteForEveryone();

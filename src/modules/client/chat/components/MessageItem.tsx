@@ -32,6 +32,7 @@ interface MessageItemProps {
   hideThreadBadge?: boolean;
   showContextBadge?: boolean;
   contextName?: string;
+  isWorkspaceAdmin?: boolean;
 }
 
 const QUICK_EMOJIS = ['❤️', '👍', '😂', '😢', '❓', '😮'];
@@ -42,7 +43,8 @@ export default function MessageItem({
   isMine,
   hideThreadBadge = false,
   showContextBadge = false,
-  contextName
+  contextName,
+  isWorkspaceAdmin = false
 }: MessageItemProps) {
   const sender = (message.senderId && typeof message.senderId === 'object')
     ? message.senderId
@@ -235,7 +237,7 @@ export default function MessageItem({
   };
 
   const handleDeleteClick = () => {
-    if (isMine) {
+    if (isMine || isWorkspaceAdmin) {
       setShowDeleteChoices(true);
     } else {
       setShowDeleteForMeConfirm(true);
@@ -572,6 +574,7 @@ export default function MessageItem({
         contextMenuRef={contextMenuRef}
         message={message}
         isMine={isMine}
+        isWorkspaceAdmin={isWorkspaceAdmin}
         hideThreadBadge={hideThreadBadge}
         quickEmojis={QUICK_EMOJIS}
         onSelectEmoji={handleSelectEmoji}

@@ -35,17 +35,19 @@ export default function ChatWindow() {
   const typingUsers = useChatStore(state => state.typingUsers);
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
   const unreadThreadIds = useChatStore(state => state.unreadThreadIds);
-  const unreadThreadsCount = unreadThreadIds.size;
+  const unreadThreadsCount = activeChannelId ? (unreadThreadIds[activeChannelId]?.size || 0) : 0;
 
   const { data: channels = [] } = useChatChannels();
 
   const [unreadCountAtOpen, setUnreadCountAtOpen] = useState<number>(0);
   const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(null);
+  const [firstNewMessageId, setFirstNewMessageId] = useState<string | null>(null);
   const prevActiveChannelIdRef = useRef<string | null>(null);
   const scrolledMessageIdRef = useRef<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [hasNewUnread, setHasNewUnread] = useState(false);
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showChannelSettingsMenu, setShowChannelSettingsMenu] = useState(false);
@@ -71,6 +73,7 @@ export default function ChatWindow() {
     const channel = channels.find(c => c._id === activeChannelId);
     setUnreadCountAtOpen(channel?.unreadCount || 0);
     setFirstUnreadMessageId(null);
+    setFirstNewMessageId(null);
     scrolledMessageIdRef.current = null;
     setIsEditingName(false);
     setSearchQuery("");
@@ -266,6 +269,7 @@ export default function ChatWindow() {
   useEffect(() => {
     const lastMsg = messages[messages.length - 1];
     const lastMsgId = lastMsg ? lastMsg._id : null;
+    const isMine = lastMsg ? String(getSenderId(lastMsg)) === String(currentUserId) : false;
 
     const channelChanged = activeChannelId !== prevChannelIdRef.current;
     const lastMsgChanged = lastMsgId !== lastMessageIdRef.current;
@@ -273,21 +277,41 @@ export default function ChatWindow() {
     prevChannelIdRef.current = activeChannelId;
     lastMessageIdRef.current = lastMsgId;
 
-    if (shouldScrollToBottomRef.current) {
+    const forceScroll = channelChanged || (lastMsgChanged && isMine);
+
+    if (shouldScrollToBottomRef.current || forceScroll) {
       if (scrollRef.current) {
         if (channelChanged || lastMsgChanged) {
           // Always scroll directly to the bottom of the chat window
           setTimeout(() => {
             if (scrollRef.current) {
               scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+              shouldScrollToBottomRef.current = true;
+              setShowScrollBottom(false);
+              setHasNewUnread(false);
             }
           }, 50);
         }
       }
-    } else {
-      shouldScrollToBottomRef.current = true;
+
+      // If the current user sends a new message, they have seen everything,
+      // so clear the 'New Messages' dividers.
+      if (lastMsgChanged && isMine) {
+        setFirstNewMessageId(null);
+        setFirstUnreadMessageId(null);
+      }
+    } else if (lastMsgChanged && !isMine && scrollRef.current) {
+      // If we are not scrolling to bottom and a new message arrives from someone else,
+      // make sure the scroll-to-bottom button is visible by updating state
+      const container = scrollRef.current;
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distanceFromBottom > 100) {
+        setShowScrollBottom(true);
+      }
+      setHasNewUnread(true);
+      setFirstNewMessageId((prev) => prev || lastMsgId);
     }
-  }, [messages, activeChannelId]);
+  }, [messages, activeChannelId, currentUserId]);
 
   // Track target message ID from URL parameter reactively
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(() => searchParams.get('messageId'));
@@ -377,9 +401,20 @@ export default function ChatWindow() {
     const container = scrollRef.current;
     if (!container) return;
 
-    // Show scroll-to-bottom button if user is scrolled up more than 2000px from bottom
     const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-    setShowScrollBottom(distanceFromBottom > 2000);
+
+    // Update ref so we know whether to auto-scroll on new messages
+    if (distanceFromBottom <= 50) {
+      shouldScrollToBottomRef.current = true;
+      setHasNewUnread(false);
+      setShowScrollBottom(false);
+    } else {
+      shouldScrollToBottomRef.current = false;
+      setHasNewUnread((prev) => {
+        setShowScrollBottom(distanceFromBottom > (prev ? 200 : 1500));
+        return prev;
+      });
+    }
 
     if (container.scrollTop <= 150 && hasNextPage && !isFetchingNextPage) {
       handleLoadMore();
@@ -461,7 +496,7 @@ export default function ChatWindow() {
 
   return (
     <div className="flex-1 flex min-w-0 min-h-0 overflow-hidden bg-white dark:bg-[#202020]">
-      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative">
         {/* Header */}
         <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -790,7 +825,7 @@ export default function ChatWindow() {
 
                 const isSameUserAsPrevious = isSameUser && timeDiff < 5;
                 const isMine = String(currentSenderId) === String(currentUserId);
-                const isFirstUnread = msg._id === firstUnreadMessageId;
+                const isFirstUnread = msg._id === firstUnreadMessageId || msg._id === firstNewMessageId;
 
                 return (
                   <React.Fragment key={msg._id || (msg as { id?: string }).id}>
@@ -814,22 +849,30 @@ export default function ChatWindow() {
             </div>
           )}
 
-          {/* Scroll to bottom button */}
-          {showScrollBottom && (
-            <button
-              onClick={() => {
-                if (scrollRef.current) {
-                  scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-                }
-              }}
-              className="absolute bottom-20 right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] text-white rounded-full shadow-lg text-xs font-semibold transition-all transform hover:scale-105 active:scale-95 animate-fade-in"
-              title="Scroll to latest messages"
-            >
-              <ArrowDown className="w-3.5 h-3.5" />
-              <span>Latest Messages</span>
-            </button>
-          )}
         </div>
+
+        {/* Scroll to bottom button */}
+        {showScrollBottom && (
+          <button
+            onClick={() => {
+              if (scrollRef.current) {
+                scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+                setHasNewUnread(false);
+              }
+            }}
+            className="absolute bottom-20 right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] text-white rounded-full shadow-lg text-xs font-semibold transition-all transform hover:scale-105 active:scale-95 animate-fade-in"
+            title="Scroll to latest messages"
+          >
+            <ArrowDown className="w-3.5 h-3.5" />
+            <span>{hasNewUnread ? "New Message" : "Latest Messages"}</span>
+            {hasNewUnread && (
+              <>
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#2563EB] dark:border-[#3B82F6] animate-ping" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#2563EB] dark:border-[#3B82F6]" />
+              </>
+            )}
+          </button>
+        )}
 
         {!(activeChannel && activeChannel.workspaceId && activeChannel.type === 'workspace' && isMemberOfActiveChannel) ? (
           activeChannel.type === 'custom' && !isMemberOfActiveChannel ? null : (
