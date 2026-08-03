@@ -10,6 +10,7 @@ import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { queryKeys } from "@/shared/constants/queryKeys";
+import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
 
 type MentionMember = {
   id: string;
@@ -173,6 +174,10 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+
+  const { hasPermission } = useWorkspacePermission(workspaceId);
+  const canComment = hasPermission("task:edit");
 
   const commentsKey = useMemo(() => queryKeys.tasks.detailComments(workspaceId, taskId), [workspaceId, taskId]);
   const membersKey = useMemo(() => queryKeys.workspaces.members(workspaceId), [workspaceId]);
@@ -456,11 +461,11 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
               </div>
             ) : (
               <>
-                <p className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] whitespace-pre-wrap leading-relaxed">
+                <p className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] whitespace-pre-wrap break-words leading-relaxed">
                   {renderRichText(node.content)}
                 </p>
                 <div className="flex gap-3 mt-2 text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
-                  {!isArchived && (
+                  {!isArchived && canComment && (
                     <button
                       className="inline-flex items-center gap-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
                       onClick={() => handleReplyStart(node)}
@@ -478,7 +483,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                         Edit
                       </button>
                       <button
-                        onClick={() => deleteMutation.mutate(node.id)}
+                        onClick={() => setCommentToDelete(node.id)}
                         disabled={deleteMutation.isPending}
                         className="inline-flex items-center gap-1 hover:text-[#9F2F2D] dark:hover:text-[#F87171] transition-colors disabled:opacity-60"
                       >
@@ -595,11 +600,12 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
         </div>
       )}
       {!isArchived && (
-        <>
-          <div className="flex gap-4 pt-2">
-            {renderCurrentUserAvatar()}
-            <div className="flex-1 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
-              <div className="mb-4 text-[0.8125rem] relative z-50">
+        canComment ? (
+          <>
+            <div className="flex gap-4 pt-2">
+              {renderCurrentUserAvatar()}
+              <div className="flex-1 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
+                <div className="mb-4 text-[0.8125rem] relative z-50">
                 <style
                   dangerouslySetInnerHTML={{
                     __html: `
@@ -696,6 +702,13 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
             </div>
           </div>
         </>
+        ) : (
+          <div className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] p-4 text-center">
+            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+              You don&apos;t have permission to comment on this task.
+            </p>
+          </div>
+        )
       )}
 
       {commentTree.length > 0 ? (
@@ -706,6 +719,60 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
             No comments yet.
           </div>
         )
+      )}
+
+      {commentToDelete && (
+        <div 
+          className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150 select-none"
+          onClick={() => setCommentToDelete(null)}
+        >
+          <div 
+            className="w-full max-w-sm bg-white dark:bg-[#1C1C1C] rounded-xl shadow-2xl border border-[#EAEAEA] dark:border-white/[0.08] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
+                  <AlertCircle className="w-4 h-4 text-red-500" />
+                </div>
+                <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
+                  Delete comment
+                </h3>
+              </div>
+              <button
+                onClick={() => setCommentToDelete(null)}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <div className="px-5 pb-4">
+              <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] leading-relaxed">
+                Are you sure you want to delete this comment? This action cannot be undone.
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-end gap-2 px-5 pb-5">
+              <button
+                onClick={() => setCommentToDelete(null)}
+                className="px-4 py-2 text-[0.8125rem] font-medium text-[#555555] dark:text-[#AAAAAA] bg-[#F0F0EE] dark:bg-white/[0.08] hover:bg-[#E5E5E3] dark:hover:bg-white/[0.12] rounded-lg transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteMutation.mutate(commentToDelete);
+                  setCommentToDelete(null);
+                }}
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2 text-[0.8125rem] font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm cursor-pointer disabled:opacity-60"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

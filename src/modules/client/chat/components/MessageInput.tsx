@@ -622,7 +622,10 @@ export default function MessageInput({
     const contentText = serializeTiptapContent(editor);
     const hasFiles = uploadedFiles.some(f => f.status === 'completed');
 
-    if (!contentText.trim() && !hasFiles) return;
+    // Remove softbreaks and then check if the text is empty
+    const isTrulyEmpty = !contentText.replace(/@@@SOFTBREAK@@@/g, '').trim();
+
+    if (isTrulyEmpty && !hasFiles) return;
 
     if (contentText.length > 4000) {
       toast.error('Message cannot exceed 4000 characters');

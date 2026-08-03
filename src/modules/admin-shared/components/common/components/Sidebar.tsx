@@ -556,14 +556,30 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                     <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
                   </Link>
                 ) : (
-                  <button
-                    onClick={() => setWorkspaceOpen(!workspaceOpen)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
-                  >
-                    <BookOpen className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
-                    <span className="text-[0.8125rem] font-medium flex-1 text-left">Workspaces</span>
-                    {workspaceOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </button>
+                  <div className={`w-full flex items-center rounded-[6px] transition-colors group ${
+                      pathname.startsWith('/workspaces') 
+                        ? navActiveClass 
+                        : 'text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                  }`}>
+                    <Link
+                      href="/workspaces"
+                      onClick={onMobileClose}
+                      className="flex items-center gap-3 py-2 pl-3 flex-1 min-w-0"
+                    >
+                      <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
+                      <span className="text-[0.8125rem] font-medium flex-1 text-left">Workspaces</span>
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setWorkspaceOpen(!workspaceOpen);
+                      }}
+                      className="py-2 pr-3 pl-1 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
+                    >
+                      {workspaceOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </button>
+                  </div>
                 )}
               {/* SUB NAV */}
               {workspaceOpen && !collapsed && (
