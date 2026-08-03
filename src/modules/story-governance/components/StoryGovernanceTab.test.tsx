@@ -158,6 +158,39 @@ describe("StoryGovernanceTab", () => {
     expect(screen.getByRole("dialog", { name: "Create story contract" })).toBeInTheDocument();
   });
 
+  it("disables New contract while Contracts are loading or unavailable", async () => {
+    const user = userEvent.setup();
+    service.listRequirements.mockResolvedValue([requirement()]);
+    service.listContracts.mockReturnValue(new Promise(() => undefined));
+    const loading = renderTab([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
+
+    const loadingButton = screen.getByRole("button", { name: "New contract" });
+    expect(loadingButton).toBeDisabled();
+    await user.click(loadingButton);
+    expect(screen.queryByRole("dialog", { name: "Create story contract" })).not.toBeInTheDocument();
+    loading.unmount();
+
+    service.listContracts.mockRejectedValueOnce({ response: { status: 500 } });
+    renderTab([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
+    await screen.findByText("Story contracts could not be loaded. Refresh the page to try again.");
+    const unavailableButton = screen.getByRole("button", { name: "New contract" });
+    expect(unavailableButton).toBeDisabled();
+    await user.click(unavailableButton);
+    expect(screen.queryByRole("dialog", { name: "Create story contract" })).not.toBeInTheDocument();
+  });
+
+  it("keeps New contract unavailable without an active Requirement and offers Requirements instead", async () => {
+    const user = userEvent.setup();
+    renderTab([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
+
+    await screen.findByText(/No story contracts yet/);
+    const create = screen.getByRole("button", { name: "New contract" });
+    expect(create).toBeDisabled();
+    await user.click(create);
+    expect(screen.queryByRole("dialog", { name: "Create story contract" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Open requirements" })).toBeInTheDocument();
+  });
+
   it("offers Requirements from the empty Contract state when no active Requirement exists", async () => {
     renderTab([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
 

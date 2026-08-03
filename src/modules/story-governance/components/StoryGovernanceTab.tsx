@@ -54,6 +54,10 @@ export default function StoryGovernanceTab({
   const canRead = permissions.includes(WORKSPACE_PERMISSIONS.STORY_READ);
   const canCreate = permissions.includes(WORKSPACE_PERMISSIONS.STORY_CREATE);
   const { requirements, contracts } = useStoryGovernance(workspaceId, canRead);
+  const canCreateContract = canCreate
+    && !contracts.isLoading
+    && !contracts.isError
+    && (requirements.data ?? []).some((requirement) => (requirement.status ?? "active") === "active");
   const [selectedRequirementId, setSelectedRequirementId] = useState<string | null>(null);
   const selectedRequirement = useStoryRequirement(workspaceId, selectedRequirementId, canRead);
   const [navigationPromptOpen, setNavigationPromptOpen] = useState(false);
@@ -131,7 +135,7 @@ export default function StoryGovernanceTab({
       <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-[var(--color-border)] p-2">
         <div className="min-w-[12rem] flex-1"><Input type="search" role="searchbox" aria-label="Search story contracts" value={contractSearch} onChange={(event) => setContractSearch(event.target.value)} placeholder="Search key or title" /></div>
         <Button type="button" variant="secondary" onClick={() => setRequirementsOpen(true)}>Requirements</Button>
-        {canCreate && <Button type="button" onClick={() => setContractCreateOpen(true)}>New contract</Button>}
+        {canCreate && <Button type="button" disabled={!canCreateContract} onClick={() => setContractCreateOpen(true)}>New contract</Button>}
         <Button type="button" variant="secondary" onClick={() => setMobileView("index")} className="lg:hidden">Contract list</Button>
       </div>
       <div className="grid min-h-0 min-w-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[19rem_minmax(0,1fr)] lg:overflow-hidden">
