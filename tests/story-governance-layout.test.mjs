@@ -49,6 +49,7 @@ test("dark mode tokens outrank light defaults and style native controls", () => 
   assert.match(globals, /:root\.dark\s*\{/);
   assert.match(globals, /:root\.dark\s*\{[^}]*color-scheme:\s*dark/s);
   assert.match(globals, /:root\s*\{[^}]*color-scheme:\s*light/s);
+  assert.match(globals, /:root\.dark\s+\.story-governance-form\s+:where\(input:not\(\[type="checkbox"\]\), textarea, select\)\s*\{[^}]*border-color:\s*var\(--color-border\)/s);
 });
 
 test("Task Story mounts once through the shared detail seam", () => {

@@ -428,7 +428,7 @@ export default function StoryDraftEditor({
     }
   };
 
-  return <section aria-label="Story draft editor" className="min-w-0 space-y-5 p-4">
+  return <section aria-label="Story draft editor" className="story-governance-form min-w-0 space-y-5 p-4">
     <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-border)] pb-4">
       <div>
         <p className="font-mono text-xs text-[var(--color-ink-2)]">Draft revision {draft.draftRevision}</p>

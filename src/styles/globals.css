@@ -1419,3 +1419,7 @@ body[style*="cursor: col-resize"] * {
   color: #9CA3AF !important;
   background-color: #202020 !important;
 }
+
+:root.dark .story-governance-form :where(input:not([type="checkbox"]), textarea, select) {
+  border-color: var(--color-border);
+}

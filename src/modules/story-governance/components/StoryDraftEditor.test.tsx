@@ -49,6 +49,12 @@ describe("StoryDraftEditor", () => {
   });
   afterEach(() => { cleanup(); vi.clearAllMocks(); vi.restoreAllMocks(); });
 
+  it("scopes native fields to the muted Story form border treatment", async () => {
+    renderEditor();
+
+    expect((await screen.findByLabelText("Problem")).closest("section")).toHaveClass("story-governance-form");
+  });
+
   it("saves the complete draft form with its optimistic revision", async () => {
     renderEditor();
     fireEvent.click(await screen.findByRole("button", { name: "Save draft" }));
