@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useRef, ReactNode } from "react";
+import { useEffect, useId, useRef, ReactNode } from "react";
 import { createPortal } from "react-dom";
+
+const openModals = new Map<symbol, number>();
+let modalOpenSequence = 0;
 
 interface ModalProps {
   open: boolean;
@@ -38,23 +41,40 @@ function Modal({
   const containerRef = useRef<HTMLDivElement>(null);
   const wasOpenRef = useRef(false);
   const returnFocusRef = useRef<HTMLElement | null>(null);
+  const instanceIdRef = useRef(Symbol("modal"));
+  const openOrderRef = useRef(0);
+  const generatedId = useId();
+  const titleId = title ? `${generatedId}-title` : undefined;
+  const descriptionId = description ? `${generatedId}-description` : undefined;
 
   if (open && !wasOpenRef.current && typeof document !== "undefined") {
     returnFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    openOrderRef.current = ++modalOpenSequence;
   }
   wasOpenRef.current = open;
+
+  useEffect(() => {
+    if (!open) return;
+    const instanceId = instanceIdRef.current;
+    openModals.set(instanceId, openOrderRef.current);
+    return () => {
+      openModals.delete(instanceId);
+    };
+  }, [open]);
 
   // Close on Escape key
   useEffect(() => {
     if (!open) return;
     queueMicrotask(() => {
+      if (!isTopmostModal(instanceIdRef.current)) return;
       if (containerRef.current?.contains(document.activeElement)) return;
       containerRef.current?.querySelector<HTMLElement>(
         "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])",
       )?.focus();
     });
     const handleKey = (e: KeyboardEvent) => {
+      if (!isTopmostModal(instanceIdRef.current)) return;
       if (e.key === "Escape") onClose();
       if (e.key !== "Tab") return;
       const controls = Array.from(
@@ -103,7 +123,8 @@ function Modal({
       className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-labelledby={title ? "modal-title" : undefined}
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
     >
       {/* Backdrop */}
       <div
@@ -135,14 +156,14 @@ function Modal({
             <div>
               {title && (
                 <h2
-                  id="modal-title"
+                  id={titleId}
                   className="text-[0.9375rem] font-semibold tracking-[-0.01em] text-[#111111] dark:text-[#E8E8E7]"
                 >
                   {title}
                 </h2>
               )}
               {description && (
-                <p className="mt-0.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+                <p id={descriptionId} className="mt-0.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   {description}
                 </p>
               )}
@@ -177,6 +198,11 @@ function Modal({
   );
 
   return createPortal(content, document.body);
+}
+
+function isTopmostModal(instanceId: symbol) {
+  const order = openModals.get(instanceId);
+  return order !== undefined && order === Math.max(...openModals.values());
 }
 
 // ── Convenience sub-components for footer patterns ───────────────────────────
