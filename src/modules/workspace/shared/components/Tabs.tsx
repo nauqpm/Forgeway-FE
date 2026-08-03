@@ -13,6 +13,7 @@ interface TabProps {
 const Tabs = ({ workspace, activeTab, setActiveTab, permissions }: TabProps) => {
   const template = getWorkspaceTemplate(workspace);
   const canReadStories = permissions.includes(WORKSPACE_PERMISSIONS.STORY_READ);
+  const storiesNavEnabled = process.env.NEXT_PUBLIC_STORY_GOVERNANCE_NAV_ENABLED !== "false";
 
   return (
     <OverflowTabs activeId={activeTab}>
@@ -39,7 +40,7 @@ const Tabs = ({ workspace, activeTab, setActiveTab, permissions }: TabProps) => 
       <OverflowTabs.Item id="pages" onSelect={() => setActiveTab("pages")}>
         Docs
       </OverflowTabs.Item>
-      {canReadStories && (
+      {canReadStories && storiesNavEnabled && (
         <OverflowTabs.Item id="stories" onSelect={() => setActiveTab("stories")}>
           Stories
         </OverflowTabs.Item>
