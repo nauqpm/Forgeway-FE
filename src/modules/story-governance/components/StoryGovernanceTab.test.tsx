@@ -236,6 +236,16 @@ describe("StoryGovernanceTab", () => {
     expect(screen.getByRole("button", { name: "Contract list" })).toBeInTheDocument();
   });
 
+  it("keeps the Contract index visible when a URL-selected Contract no longer exists", async () => {
+    window.history.replaceState(null, "", "/workspaces/ABC/stories?contract=deleted-contract");
+    service.listContracts.mockResolvedValue([contract()]);
+    renderTab();
+
+    await screen.findByRole("button", { name: /SC-1 Export contract/ });
+    expect(screen.queryByRole("button", { name: "Back to contracts" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Story contracts" })).toBeInTheDocument();
+  });
+
   it("renders status-specific loading, error, and empty states", async () => {
     service.listRequirements.mockReturnValue(new Promise(() => undefined));
     const first = renderTab();

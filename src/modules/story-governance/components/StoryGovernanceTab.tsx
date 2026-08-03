@@ -76,11 +76,14 @@ export default function StoryGovernanceTab({
     }
   }, [selected, selection.contractId]);
   useEffect(() => {
-    if (selected && initialContractRef.current) {
-      initialContractRef.current = null;
+    const requestedContractId = initialContractRef.current;
+    if (!requestedContractId || contracts.isLoading) return;
+
+    initialContractRef.current = null;
+    if (!contracts.isError && selected?._id === requestedContractId) {
       setMobileView("detail");
     }
-  }, [selected]);
+  }, [contracts.isError, contracts.isLoading, selected]);
   useEffect(() => {
     const params = new URLSearchParams();
     if (selection.contractId) params.set("contract", selection.contractId);
