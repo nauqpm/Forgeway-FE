@@ -64,5 +64,5 @@ test("production overrides Stories navigation without changing the local Docker 
   const workflow = read(".github/workflows/cd.yml");
 
   assert.match(dockerfile, /ARG NEXT_PUBLIC_STORY_GOVERNANCE_NAV_ENABLED=true/);
-  assert.match(workflow, /NEXT_PUBLIC_STORY_GOVERNANCE_NAV_ENABLED=\$\{\{ vars\.NEXT_PUBLIC_STORY_GOVERNANCE_NAV_ENABLED \|\| 'false' \}\}/);
+  assert.doesNotMatch(workflow, /NEXT_PUBLIC_STORY_GOVERNANCE_NAV_ENABLED/);
 });
