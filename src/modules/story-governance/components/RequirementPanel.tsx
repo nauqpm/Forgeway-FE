@@ -113,7 +113,7 @@ export default function RequirementPanel({ workspaceId, permissions, onSelect }:
         </div>
         {canCreate && (
           <Button type="button" size="sm" icon={<PiPlus aria-hidden="true" />} onClick={() => setIsOpen(true)}>
-            Create requirement
+            Create
           </Button>
         )}
       </div>

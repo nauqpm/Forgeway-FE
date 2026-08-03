@@ -4,7 +4,8 @@
 @tailwind utilities;
 
 /* ── Dark mode token overrides ── */
-.dark {
+:root.dark {
+  color-scheme: dark;
   --color-canvas: #202020;
   --color-surface: #252525;
   --color-surface-2: #2A2A2A;
@@ -56,6 +57,7 @@ body {
 }
 
 :root {
+  color-scheme: light;
   --app-header-h: 3.5rem;
   --app-page-pad: clamp(0.75rem, 1.2vw, 1.5rem);
   --app-page-pad-y: clamp(1rem, 1.6vw, 1.75rem);

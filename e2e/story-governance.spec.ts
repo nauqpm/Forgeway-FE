@@ -270,7 +270,7 @@ test("admin completes the critical Story lifecycle with idempotent writes", asyn
   const state = await installStoryApi(page);
   await page.goto("/workspaces/AL/stories");
 
-  await page.getByRole("button", { name: "Create requirement" }).click();
+  await page.getByRole("button", { name: "Create", exact: true }).click();
   await page.getByLabel("Key", { exact: true }).fill("REQ-1");
   await page.getByLabel("Title", { exact: true }).fill("Govern Story delivery");
   await page.getByLabel("Body", { exact: true }).fill("Keep requirements and delivery aligned.");
@@ -383,7 +383,7 @@ test("viewer sees read-only controls and both viewports have no horizontal overf
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/workspaces/AL/stories");
 
-  await expect(page.getByRole("button", { name: "Create requirement" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Create", exact: true })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Create contract" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Archive requirement/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /Archive contract/ })).toHaveCount(0);
@@ -420,7 +420,7 @@ test("viewer sees read-only controls and both viewports have no horizontal overf
 test("dirty Draft navigation is named and keeps focus inside the confirmation", async ({ page }) => {
   const state = await installStoryApi(page);
   await page.goto("/workspaces/AL/stories");
-  await page.getByRole("button", { name: "Create requirement" }).click();
+  await page.getByRole("button", { name: "Create", exact: true }).click();
   await page.getByLabel("Key", { exact: true }).fill("REQ-1");
   await page.getByLabel("Title", { exact: true }).fill("Govern Story delivery");
   await page.getByLabel("Body", { exact: true }).fill("Body");

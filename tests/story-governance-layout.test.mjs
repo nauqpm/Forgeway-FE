@@ -43,6 +43,14 @@ test("Stories keeps lightweight visuals and workspace controls", () => {
   assert.match(tab, /data-story-mobile-panel="detail"/);
 });
 
+test("dark mode tokens outrank light defaults and style native controls", () => {
+  const globals = read("src/styles/globals.css");
+
+  assert.match(globals, /:root\.dark\s*\{/);
+  assert.match(globals, /:root\.dark\s*\{[^}]*color-scheme:\s*dark/s);
+  assert.match(globals, /:root\s*\{[^}]*color-scheme:\s*light/s);
+});
+
 test("Task Story mounts once through the shared detail seam", () => {
   const detail = read("src/modules/workspace/tasks/detail/TaskDetailMainContent.tsx");
 

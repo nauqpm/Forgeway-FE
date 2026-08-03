@@ -72,6 +72,7 @@ describe("RequirementPanel", () => {
   it("invites members to create the first active requirement", async () => {
     renderPanel([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
     expect(await screen.findByText(/No requirements yet/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create", exact: true })).toBeInTheDocument();
     expect(screen.getByText(/Create a requirement to establish/)).toBeInTheDocument();
   });
 
@@ -93,7 +94,7 @@ describe("RequirementPanel", () => {
 
   it("validates the required create fields before submitting", async () => {
     renderPanel([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
-    fireEvent.click(await screen.findByRole("button", { name: "Create requirement" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Create", exact: true }));
     fireEvent.click(screen.getByRole("button", { name: "Save requirement" }));
     expect(screen.getByText("Key is required and must be 100 characters or fewer.")).toBeInTheDocument();
     expect(service.createRequirement).not.toHaveBeenCalled();
@@ -101,7 +102,7 @@ describe("RequirementPanel", () => {
 
   it("rejects a whitespace-only body, closes on Escape, and returns focus to its opener", async () => {
     renderPanel([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
-    const opener = await screen.findByRole("button", { name: "Create requirement" });
+    const opener = await screen.findByRole("button", { name: "Create", exact: true });
     opener.focus();
     fireEvent.click(opener);
     fireEvent.change(screen.getByLabelText("Key"), { target: { value: "REQ-1" } });
@@ -124,7 +125,7 @@ describe("RequirementPanel", () => {
       response: { data: { message: "postgres://admin:secret@internal/requirements" } },
     });
     renderPanel([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
-    fireEvent.click(await screen.findByRole("button", { name: "Create requirement" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Create", exact: true }));
     fireEvent.change(screen.getByLabelText("Key"), { target: { value: "REQ-1" } });
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "A title" } });
     fireEvent.change(screen.getByLabelText("Body"), { target: { value: "A body" } });
@@ -145,7 +146,7 @@ describe("RequirementPanel", () => {
         })
     );
     renderPanel([WORKSPACE_PERMISSIONS.STORY_READ, WORKSPACE_PERMISSIONS.STORY_CREATE]);
-    fireEvent.click(await screen.findByRole("button", { name: "Create requirement" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Create", exact: true }));
     fireEvent.change(screen.getByLabelText("Key"), { target: { value: "REQ-1" } });
     fireEvent.change(screen.getByLabelText("Title"), { target: { value: "A title" } });
     fireEvent.change(screen.getByLabelText("Body"), { target: { value: "A body" } });
