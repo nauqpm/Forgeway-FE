@@ -27,6 +27,7 @@ import {
   validateDraftForm,
 } from "../utils/storyGovernance";
 import { Modal } from "@/shared/components/ui/Modal";
+import { Button } from "@/shared/components/ui/Button";
 
 export type StoryDraftEditorProps = {
   workspaceId: string;
@@ -387,13 +388,13 @@ export default function StoryDraftEditor({
   };
 
   if (draftApi.drafts.isLoading || (selectedDraftId && draftApi.draft.isLoading)) {
-    return <section aria-label="Draft editor loading" className="min-w-0 animate-pulse p-4"><div className="h-8 w-48 rounded bg-slate-200" /></section>;
+    return <section aria-label="Draft editor loading" className="min-w-0 animate-pulse p-4"><div className="h-8 w-48 rounded bg-[var(--color-surface-2)]" /></section>;
   }
   if (draftApi.drafts.isError || (selectedDraftId && draftApi.draft.isError)) {
     return <section role="alert" className="p-4 text-sm text-red-700">Drafts could not be loaded. Refresh the page to try again.</section>;
   }
   if (!selectedDraftId) {
-    return <section aria-label="Story draft editor" className="min-w-0 p-4"><p className="text-sm text-slate-500">No Draft selected.</p><div className="mt-3 flex flex-wrap gap-2">{(draftApi.drafts.data ?? []).length > 0 && <><label className="sr-only" htmlFor="draft-list-selector">Select an existing draft</label><select id="draft-list-selector" value="" onChange={(event) => selectDraft(event.target.value)} className="rounded-md border p-2 text-sm"><option value="">Select an existing draft</option>{(draftApi.drafts.data ?? []).map((item) => <option key={item._id} value={item._id}>{item.status} · r{item.draftRevision}</option>)}</select></>}{canCreate && <button type="button" onClick={requestCreate} disabled={draftApi.createDraft.isPending} className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-50">Create draft</button>}</div></section>;
+    return <section aria-label="Story draft editor" className="min-w-0 p-4"><p className="text-sm text-[var(--color-ink-2)]">No Draft selected.</p><div className="mt-3 flex flex-wrap gap-2">{(draftApi.drafts.data ?? []).length > 0 && <><label className="sr-only" htmlFor="draft-list-selector">Select an existing draft</label><select id="draft-list-selector" value="" onChange={(event) => selectDraft(event.target.value)} className="rounded-md border p-2 text-sm"><option value="">Select an existing draft</option>{(draftApi.drafts.data ?? []).map((item) => <option key={item._id} value={item._id}>{item.status} · r{item.draftRevision}</option>)}</select></>}{canCreate && <Button type="button" onClick={requestCreate} disabled={draftApi.createDraft.isPending}>Create draft</Button>}</div></section>;
   }
   if (!draft || !form) return null;
 
@@ -428,12 +429,12 @@ export default function StoryDraftEditor({
   };
 
   return <section aria-label="Story draft editor" className="min-w-0 space-y-5 p-4">
-    <header className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4 dark:border-slate-700">
+    <header className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-border)] pb-4">
       <div>
-        <p className="font-mono text-xs text-slate-500">Draft revision {draft.draftRevision}</p>
+        <p className="font-mono text-xs text-[var(--color-ink-2)]">Draft revision {draft.draftRevision}</p>
         <h2 className="mt-1 text-lg font-semibold">{contract.title}</h2>
-        {draft.baseStoryVersionId && <p className="mt-1 text-xs text-slate-500">Based on approved version {draft.baseStoryVersionId}</p>}
-        <p className="mt-1 text-sm text-slate-500">{draft.status === "active" ? "Edit explicitly, then save or submit." : `This ${draft.status} draft is read-only.`}</p>
+        {draft.baseStoryVersionId && <p className="mt-1 text-xs text-[var(--color-ink-2)]">Based on approved version {draft.baseStoryVersionId}</p>}
+        <p className="mt-1 text-sm text-[var(--color-ink-2)]">{draft.status === "active" ? "Edit explicitly, then save or submit." : `This ${draft.status} draft is read-only.`}</p>
       </div>
       <div className="flex flex-wrap gap-2">
         <label className="sr-only" htmlFor="draft-selector">Select draft</label>
@@ -468,7 +469,7 @@ export default function StoryDraftEditor({
       title="Confirm draft submission"
       hideCloseButton
       closeOnBackdrop={!draftApi.submitDraft.isPending}
-      footer={<><button type="button" onClick={() => { clearOperationKey(operation); setSubmitConfirming(false); }} disabled={draftApi.submitDraft.isPending} className="rounded border px-2 py-1">Cancel submit</button><button type="button" onClick={submit} disabled={draftApi.submitDraft.isPending} className="rounded bg-slate-900 px-2 py-1 text-white disabled:opacity-50">Confirm submit</button></>}
+      footer={<><Button type="button" variant="secondary" onClick={() => { clearOperationKey(operation); setSubmitConfirming(false); }} disabled={draftApi.submitDraft.isPending}>Cancel submit</Button><Button type="button" onClick={submit} disabled={draftApi.submitDraft.isPending}>Confirm submit</Button></>}
     >
       <p className="text-sm">Submit this Draft as an immutable Version?</p>
     </Modal>
@@ -568,10 +569,10 @@ export default function StoryDraftEditor({
       </fieldset>
     </fieldset>
 
-    <footer className="flex flex-wrap gap-2 border-t border-slate-200 pt-4 dark:border-slate-700">
+    <footer className="flex flex-wrap gap-2 border-t border-[var(--color-border)] pt-4">
       {draft.status === "active" && canEdit && <><button type="button" onClick={save} disabled={submitConfirming || conflict || draftApi.updateDraft.isPending || draftApi.submitDraft.isPending} className="rounded-md border px-3 py-2 text-sm disabled:opacity-50">Save draft</button><button type="button" onClick={abandon} disabled={submitConfirming || draftApi.abandonDraft.isPending || draftApi.submitDraft.isPending} className="rounded-md border px-3 py-2 text-sm disabled:opacity-50">Abandon draft</button></>}
-      {draft.status === "active" && canSubmit && <button type="button" onClick={() => setSubmitConfirming(true)} disabled={dirty || conflict || decisionDataUnavailable || ineligibleAttachedIds.length > 0 || draftApi.submitDraft.isPending} className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-50">Submit draft</button>}
-      {draft.status === "stale" && canEdit && <button type="button" onClick={rebase} disabled={draftApi.rebaseDraft.isPending || draftApi.submitDraft.isPending} className="rounded-md bg-slate-900 px-3 py-2 text-sm text-white disabled:opacity-50">Rebase draft</button>}
+      {draft.status === "active" && canSubmit && <Button type="button" onClick={() => setSubmitConfirming(true)} disabled={dirty || conflict || decisionDataUnavailable || ineligibleAttachedIds.length > 0 || draftApi.submitDraft.isPending}>Submit draft</Button>}
+      {draft.status === "stale" && canEdit && <Button type="button" onClick={rebase} disabled={draftApi.rebaseDraft.isPending || draftApi.submitDraft.isPending}>Rebase draft</Button>}
     </footer>
   </section>;
 }

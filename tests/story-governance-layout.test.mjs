@@ -1,8 +1,17 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+
+test("Story production components use the shared color tokens", () => {
+  const componentDirectory = new URL("../src/modules/story-governance/components/", import.meta.url);
+  const productionComponents = readdirSync(componentDirectory).filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"));
+
+  for (const file of productionComponents) {
+    assert.doesNotMatch(readFileSync(new URL(file, componentDirectory), "utf8"), /slate-/, `${file} still uses a Story-only slate token`);
+  }
+});
 
 test("Stories uses a master-detail workspace canvas", () => {
   const tab = read("src/modules/story-governance/components/StoryGovernanceTab.tsx");

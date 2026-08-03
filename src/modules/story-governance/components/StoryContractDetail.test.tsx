@@ -89,4 +89,23 @@ describe("StoryContractDetail criteria section", () => {
     render(<StoryContractDetail workspaceId="workspace-1" contract={contract({ status: "archived" })} section="criteria" permissions={permissions} onSectionChange={vi.fn()} onOpenVersion={vi.fn()} />);
     expect(screen.queryByRole("button", { name: "Add verification evidence" })).not.toBeInTheDocument();
   });
+
+  it("keeps section navigation horizontally scrollable and marks the current section", () => {
+    render(<StoryContractDetail workspaceId="workspace-1" contract={contract()} section="versions" permissions={[WORKSPACE_PERMISSIONS.STORY_READ]} onSectionChange={vi.fn()} onOpenVersion={vi.fn()} />);
+
+    const navigation = screen.getByRole("navigation", { name: "Story contract sections" });
+    expect(navigation).toHaveClass("overflow-x-auto");
+    expect(screen.getByRole("button", { name: "Versions" })).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("button", { name: "Overview" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("shows a visible centered selection status when no Contract is selected", () => {
+    render(<StoryContractDetail workspaceId="workspace-1" contract={null} section="overview" permissions={[WORKSPACE_PERMISSIONS.STORY_READ]} onSectionChange={vi.fn()} onOpenVersion={vi.fn()} />);
+
+    const status = screen.getByRole("status");
+    expect(status).toHaveTextContent("Select a story contract");
+    expect(status).toHaveTextContent("Choose one from the list to review its current record.");
+    expect(status).toHaveClass("items-center", "justify-center");
+    expect(status).not.toHaveClass("hidden");
+  });
 });
