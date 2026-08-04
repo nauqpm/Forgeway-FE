@@ -12,6 +12,7 @@ type BoardFiltersProps = {
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   uniqueAssignees: any[];
+  availableStatuses?: string[];
   extraActions?: React.ReactNode;
 };
 
@@ -22,6 +23,7 @@ export default function BoardFilters({
   filters,
   setFilters,
   uniqueAssignees,
+  availableStatuses,
   extraActions,
 }: BoardFiltersProps) {
   const [searchValue, setSearchValue] = useState(filters.search || "");
@@ -129,7 +131,9 @@ export default function BoardFilters({
 
   const tabs = ["Status", "Assignee", "Task type", "Priority"];
 
-  const allStatuses = ["To Do", "In Progress", "Testing", "Done"];
+  const allStatuses = availableStatuses && availableStatuses.length > 0 
+    ? availableStatuses 
+    : ["To Do", "In Progress", "Testing", "Done"];
   const filteredStatuses = allStatuses.filter(s => s.toLowerCase().includes(statusSearch.toLowerCase()));
 
   const filteredAssignees = filterBoardAssignees(uniqueAssignees, assigneeSearch);

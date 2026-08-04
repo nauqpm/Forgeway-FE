@@ -46,6 +46,7 @@ const LIST_SPLIT_SORT_OPTIONS: { id: ListSplitSortField; label: string }[] = [
 
 type ListTabProps = {
   filteredIssues: Issue[];
+  issues?: Issue[];
   selectedIssue: Issue | null;
   workspaceKey?: string;
   workspaceId: string;
@@ -82,6 +83,7 @@ const COLUMN_LABELS: Record<string, string> = {
 
 export default function ListTab({
   filteredIssues,
+  issues,
   selectedIssue,
   workspaceKey,
   workspaceId,
@@ -200,6 +202,7 @@ export default function ListTab({
       if (filters.priorities?.length) {
         params.set("priority", filters.priorities.map((p: string) => p.toLowerCase()).join(","));
       }
+      params.set("includeSubtasks", "true");
       if (filters.search) {
         params.set("search", filters.search);
       }
@@ -450,6 +453,7 @@ export default function ListTab({
           filters={filters}
           setFilters={setFilters}
           uniqueAssignees={uniqueAssignees}
+          availableStatuses={boardColumns?.map(c => c.name)}
           extraActions={<>{columnsButton}{viewToggle}{importExportMenu}</>}
         />
       </div>
@@ -480,6 +484,7 @@ export default function ListTab({
             <div className="flex min-h-0 min-w-0 flex-1">
             <DataGridListView
               issues={filteredIssues}
+              allIssues={issues}
               workspaceId={workspaceId}
               members={members}
               boardColumns={boardColumns}

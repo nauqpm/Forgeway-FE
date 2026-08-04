@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, FileText, Bug, Zap, BookOpen, ChevronDown } from "lucide-react";
 
-export const TASK_TYPES = ["Task", "Bug", "Epic", "Story"] as const;
+export const TASK_TYPES = ["Task", "Bug", "Story"] as const;
 export type TaskType = (typeof TASK_TYPES)[number];
 
 type IconComp = React.ComponentType<{ className?: string }>;
@@ -111,7 +111,7 @@ export default function TypePicker({
   };
 
   const resolvedValue = value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : "Task";
-  const isCustomOrHiddenType = !TASK_TYPES.includes(resolvedValue as any);
+  const isCustomOrHiddenType = !TASK_TYPES.includes(resolvedValue as typeof TASK_TYPES[number]);
   
   const resolved = isCustomOrHiddenType ? resolvedValue : (TASK_TYPES.find((t) => t.toLowerCase() === (value ?? "").toLowerCase()) ?? "Task");
   const cfg = TASK_TYPE_CONFIG[resolved] || TASK_TYPE_CONFIG["Task"];

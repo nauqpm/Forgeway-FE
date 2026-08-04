@@ -260,6 +260,8 @@ const toIssue = (task: TaskDto): Issue => {
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
+    subtaskProgress: task.subtaskProgress ?? undefined,
+    parentId: task.parentId ?? null,
   };
 };
 
@@ -292,6 +294,14 @@ const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
+    parent: task.parent
+      ? {
+          id: task.parent.id ?? task.parent._id ?? "",
+          key: task.parent.key ?? "",
+          title: task.parent.title ?? "",
+          type: task.parent.type ?? "task",
+        }
+      : undefined,
   };
 };
 

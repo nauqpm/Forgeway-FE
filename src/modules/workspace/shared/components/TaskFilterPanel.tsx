@@ -23,6 +23,7 @@ type TaskFilterPanelProps = {
   onDocumentLastUpdatedChange: (value: string | null) => void;
   documentAuthorIds: string[];
   onDocumentAuthorIdsChange: (authorIds: string[]) => void;
+  availableStatuses?: string[];
 };
 
 const lastUpdatedOptions = ["Any time", "Today", "Yesterday", "Past 7 days", "Past 30 days", "Past year"];
@@ -109,6 +110,7 @@ export default function TaskFilterPanel({
   onDocumentLastUpdatedChange,
   documentAuthorIds,
   onDocumentAuthorIdsChange,
+  availableStatuses,
 }: TaskFilterPanelProps) {
   const [showAllWorkspaces, setShowAllWorkspaces] = React.useState(false);
   const toggleArray = (field: "assignees" | "statuses" | "types" | "priorities", value: string) => {
@@ -301,7 +303,7 @@ export default function TaskFilterPanel({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div>
             <p className="mb-1 px-2 text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B]">Status</p>
-            {statuses.map((status) => (
+            {(availableStatuses && availableStatuses.length > 0 ? availableStatuses : statuses).map((status) => (
               <CheckboxRow
                 key={status}
                 checked={filters.statuses.includes(status)}

@@ -2,7 +2,7 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 import { useMemo, useRef, useState } from "react";
 import { Filters } from "@/modules/workspace/shared/types/filter.type";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
@@ -350,6 +350,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           filters={filters}
           setFilters={setFilters}
           uniqueAssignees={uniqueAssignees}
+          availableStatuses={columns.map(c => c.name)}
         />
       </div>
 
@@ -763,6 +764,16 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   This permanently deletes {issueToDelete.key}. Archive it instead if you may need it later.
                 </p>
+                {issueToDelete.subtaskProgress && issueToDelete.subtaskProgress.total > 0 && (
+                  <div className="mt-3 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-3 rounded-r-[6px]">
+                    <p className="text-[0.8125rem] font-medium text-red-800 dark:text-red-200">
+                      Warning: This task contains {issueToDelete.subtaskProgress.total} subtask(s).
+                    </p>
+                    <p className="text-[0.8125rem] text-red-700 dark:text-red-300 mt-0.5">
+                      Deleting this task will permanently delete all of its subtasks as well.
+                    </p>
+                  </div>
+                )}
               </div>
               <button
                 type="button"

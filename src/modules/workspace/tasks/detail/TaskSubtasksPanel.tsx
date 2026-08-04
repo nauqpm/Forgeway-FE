@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, ChevronRight, Plus, MoreHorizontal, Check, Loader2, Layers, FileText } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, MoreHorizontal, Check, Loader2, Layers, FileText, Trash2 } from "lucide-react";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import { useSubtasks } from "@/modules/workspace/shared/hooks/useSubtasks";
 import toast from "react-hot-toast";
@@ -10,6 +10,7 @@ import PriorityPicker from "@/shared/components/PriorityPicker";
 import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
 import type { WorkspaceMember } from "./task-detail-shared";
 import ConvertSubtaskConfirmModal from "./ConvertSubtaskConfirmModal";
+import DeleteSubtaskConfirmModal from "./DeleteSubtaskConfirmModal";
 interface TaskSubtasksPanelProps {
   issue: TaskDetailResponse;
   workspaceId: string;
@@ -19,7 +20,7 @@ interface TaskSubtasksPanelProps {
   boardColumns?: TaskStatusColumn[];
 }
 
-function SubtaskActionMenu({ onConvert, disabled }: { onConvert: () => void, disabled?: boolean }) {
+function SubtaskActionMenu({ onConvert, onDelete, disabled }: { onConvert: () => void, onDelete: () => void, disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -70,6 +71,13 @@ function SubtaskActionMenu({ onConvert, disabled }: { onConvert: () => void, dis
             <FileText className="w-3.5 h-3.5 text-[#787774]" />
             Convert to Task
           </button>
+          <button
+            onMouseDown={(e) => { e.stopPropagation(); setOpen(false); onDelete(); }}
+            className="w-full text-left px-3 py-1.5 text-[0.8125rem] text-[#DC2626] hover:bg-[#F9F9F8] dark:hover:bg-[#2A2A2A] flex items-center gap-2"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-[#DC2626]" />
+            Delete
+          </button>
         </div>,
         document.body
       )}
@@ -87,8 +95,9 @@ export default function TaskSubtasksPanel({
 }: TaskSubtasksPanelProps) {
   const [subtaskIdToConvert, setSubtaskIdToConvert] = useState<string | null>(null);
   const [subtaskTitleToConvert, setSubtaskTitleToConvert] = useState<string>("");
-  const { subtasks, isLoading, progress, createSubtask, convertToTask, updateSubtask } = useSubtasks(workspaceId, issue.id);
-  const assigneeUsers = toAssigneePickerUsers(workspaceMembers as any);
+  const [subtaskToDelete, setSubtaskToDelete] = useState<{ id: string; title: string } | null>(null);
+  const { subtasks, isLoading, progress, createSubtask, convertToTask, updateSubtask, deleteSubtask } = useSubtasks(workspaceId, issue.id);
+  const assigneeUsers = toAssigneePickerUsers(workspaceMembers as never[]);
   const [isAdding, setIsAdding] = useState(false);
   const [userExpanded, setUserExpanded] = useState<boolean | null>(null);
   const isExpanded = userExpanded !== null ? userExpanded : (subtasks.length > 0 || isAdding);
@@ -155,7 +164,7 @@ export default function TaskSubtasksPanel({
     e.preventDefault();
   };
 
-  if (issue.type?.toLowerCase() === "subtask") return null;
+  if (issue.type?.toLowerCase() === "subtask" || issue.type?.toLowerCase() === "epic") return null;
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,10 +183,30 @@ export default function TaskSubtasksPanel({
   const handleConvertToTask = async (subtaskId: string) => {
     try {
       await convertToTask.mutateAsync(subtaskId);
-      toast.success("Converted to task");
+      toast.success(
+        subtaskTitleToConvert
+          ? `Successfully converted "${subtaskTitleToConvert}" to task`
+          : "Successfully converted to task"
+      );
       setSubtaskIdToConvert(null);
+      setSubtaskTitleToConvert("");
     } catch (error: unknown) {
-      const message = (error as any)?.response?.data?.message || "Failed to convert subtask";
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to convert subtask";
+      toast.error(message);
+    }
+  };
+
+  const handleDeleteSubtask = async (subtaskId: string) => {
+    try {
+      await deleteSubtask.mutateAsync(subtaskId);
+      toast.success(
+        subtaskToDelete?.title
+          ? `Successfully deleted subtask "${subtaskToDelete.title}"`
+          : "Successfully deleted subtask"
+      );
+      setSubtaskToDelete(null);
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to delete subtask";
       toast.error(message);
     }
   };
@@ -251,15 +280,18 @@ export default function TaskSubtasksPanel({
                 </div>
               ) : (
                 <div className="flex flex-col divide-y divide-[#EAEAEA] dark:divide-white/[0.06] w-full">
-                  {subtasks.map((st) => (
+                  {subtasks.map((st) => {
+                    const stCol = boardColumns.find((c) => c.id === st.status || c.name === st.status);
+                    const stDone = stCol?.isDone || (stCol?.name ?? st.status ?? "").toLowerCase().includes("done");
+                    return (
                     <div key={st.id} className="flex items-center w-full hover:bg-[#F9F9F8] dark:hover:bg-[#2A2A2A] transition-colors relative group">
                       {/* Work Column */}
                       <div style={{ width: `${colWidths.work}%` }} className="shrink-0 flex items-center gap-2 p-2.5 pl-3 border-r border-[#EAEAEA] dark:border-white/[0.06] cursor-pointer" onClick={() => onSubtaskClick?.(st.key || st.id)}>
                         <Layers className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
-                        <span className="text-[0.8125rem] font-mono text-[#2563EB] hover:underline shrink-0">
+                        <span className={`text-[0.8125rem] font-mono shrink-0 ${stDone ? "line-through text-[#ABABAB] dark:text-[#6B6B6B]" : "text-[#2563EB] hover:underline"}`}>
                           {st.key}
                         </span>
-                        <span className={`text-[0.8125rem] truncate ${st.status === "done" ? "line-through text-[#ABABAB] dark:text-[#6B6B6B]" : "text-[#111111] dark:text-[#E8E8E7]"}`}>
+                        <span className="text-[0.8125rem] truncate text-[#111111] dark:text-[#E8E8E7]">
                           {st.title}
                         </span>
                       </div>
@@ -294,8 +326,8 @@ export default function TaskSubtasksPanel({
                         <StatusPicker
                           value={st.status}
                           options={boardColumns}
-                          onChange={(newStatus: string) => {
-                            updateSubtask.mutate({ subtaskId: st.id, updates: { status: newStatus } });
+                          onChange={(_newStatus, option) => {
+                            updateSubtask.mutate({ subtaskId: st.id, updates: { columnId: option.id, status: option.id } });
                           }}
                           disabled={!canEditTask}
                           variant="pill"
@@ -304,17 +336,19 @@ export default function TaskSubtasksPanel({
 
                         {/* Convert Action (Absolute over row on hover) */}
                         {canEditTask && !issue.isArchived && (
-                          <SubtaskActionMenu 
+                          <SubtaskActionMenu
                             onConvert={() => {
                               setSubtaskIdToConvert(st.id);
                               setSubtaskTitleToConvert(st.title);
                             }}
-                            disabled={convertToTask.isPending}
+                            onDelete={() => setSubtaskToDelete({ id: st.id, title: st.title })}
+                            disabled={convertToTask.isPending || deleteSubtask.isPending}
                           />
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -335,7 +369,7 @@ export default function TaskSubtasksPanel({
                   <div className="flex items-center gap-2 pl-2 border-l border-[#EAEAEA] dark:border-white/[0.08]">
                     <div className="flex items-center gap-1 text-[0.75rem] text-[#ABABAB]">
                       <Layers className="w-3.5 h-3.5" />
-                      Subtask <ChevronDown className="w-3 h-3" />
+                      Subtask
                     </div>
                     <button
                       type="submit"
@@ -362,13 +396,7 @@ export default function TaskSubtasksPanel({
             )}
             
             {isAdding && (
-              <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex items-center justify-between">
-                <button
-                  type="button"
-                  className="flex items-center gap-1 text-[0.8125rem] font-medium text-[#2563EB] hover:underline"
-                >
-                  Choose existing
-                </button>
+              <div className="p-2 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex items-center justify-end">
                 <button
                   type="button"
                   onClick={() => {
@@ -394,6 +422,16 @@ export default function TaskSubtasksPanel({
           }
         }}
         subtaskTitle={subtaskTitleToConvert}
+      />
+      <DeleteSubtaskConfirmModal
+        isOpen={!!subtaskToDelete}
+        onClose={() => setSubtaskToDelete(null)}
+        onConfirm={() => {
+          if (subtaskToDelete) {
+            handleDeleteSubtask(subtaskToDelete.id);
+          }
+        }}
+        subtaskTitle={subtaskToDelete?.title ?? ""}
       />
     </div>
   );

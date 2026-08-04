@@ -77,13 +77,13 @@ export default function TaskDetailModal({
   const handleConvertToTask = async () => {
     try {
       await api.post(apiRoutes.TASKS.BOARD_SUBTASK_CONVERT_TO_TASK(workspaceId, issue.id));
-      toast.success("Converted to task");
+      toast.success(`Successfully converted ${issue.key} to standalone task`);
       queryClient.invalidateQueries({ queryKey: [...queryKeys.tasks.all, "subtasks", workspaceId] });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
       setIsConvertToTaskOpen(false);
       if (onClose) onClose();
-    } catch (error: any) {
-      const message = error?.response?.data?.message || "Failed to convert to task";
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to convert to task";
       toast.error(message);
     }
   };
@@ -107,7 +107,16 @@ export default function TaskDetailModal({
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isConvertToSubtaskOpen && !isConvertToTaskOpen && !isLogWorkOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, isConvertToSubtaskOpen, isConvertToTaskOpen, isLogWorkOpen]);
 
   const { data: fetchedWorkspaceMembers = [] } = useQuery<WorkspaceMember[]>({
     queryKey: queryKeys.workspaces.members(workspaceId),
@@ -169,19 +178,27 @@ export default function TaskDetailModal({
         {/* Top Header */}
         <div className="app-header border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between shrink-0 bg-[#F9F9F8] dark:bg-[#252525]">
           <div className="flex items-center gap-2 text-[0.8125rem] font-medium">
-            <div className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors">
+            {/* <div className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors">
               <div className="w-5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[4px] text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
               </div>
               <span className="text-[#787774] dark:text-[#9B9A97]">Add epic</span>
-            </div>
+            </div> */}
             {issue.type?.toLowerCase() === 'subtask' && issue.parent && (
               <>
                 <span className="text-[#ABABAB] dark:text-[#6B6B6B]">/</span>
-                <div 
+                <div
                   className="flex items-center gap-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[6px] cursor-pointer transition-colors"
+                  title={issue.parent.title}
                   onClick={() => {
-                    if (onClose) onClose();
+                    const parentKey = issue.parent?.key;
+                    if (!parentKey) return;
+                    const currentPath = window.location.pathname;
+                    const newPath = currentPath.includes("/key/")
+                      ? currentPath.replace(/\/key\/[^/]+$/, `/key/${parentKey}`)
+                      : `${currentPath}/key/${parentKey}`;
+                    window.history.pushState(null, "", newPath);
+                    window.dispatchEvent(new Event("popstate"));
                   }}
                 >
                   <span className="text-[#111111] dark:text-[#E8E8E7]">{issue.parent.key}</span>

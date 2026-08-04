@@ -17,6 +17,12 @@ export interface Subtask {
   assigneeId?: string;
   assignee?: TaskDetailUser;
   priority?: string;
+  type?: string;
+  columnId?: string;
+  startDate?: string;
+  dueDate?: string;
+  updatedAt?: string;
+  storyPoints?: number;
 }
 
 export interface ParentTaskSummary {

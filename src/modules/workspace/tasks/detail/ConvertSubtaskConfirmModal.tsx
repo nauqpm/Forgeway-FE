@@ -67,8 +67,15 @@ export default function ConvertSubtaskConfirmModal({
             type="text"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && isValid && !isConverting) {
+                e.preventDefault();
+                handleConfirm();
+              }
+            }}
             className="w-full px-3 py-2 text-[0.875rem] border border-[#EAEAEA] dark:border-[#333333] rounded bg-white dark:bg-[#1A1A1A] focus:outline-none focus:ring-1 focus:ring-[#2563EB] text-[#111111] dark:text-white"
             placeholder={expectedText}
+            autoFocus
           />
         </div>
       </div>

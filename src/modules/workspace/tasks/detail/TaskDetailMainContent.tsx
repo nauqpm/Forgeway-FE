@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
 import TaskDescription from "@/modules/admin-shared/components/common/components/TaskDescription";
 import TaskAttachmentsPanel from "@/modules/workspace/tasks/attachments/TaskAttachmentsPanel";
@@ -64,10 +64,6 @@ export default function TaskDetailMainContent({
   onUpdateIssue,
   onSubtaskClick,
 }: TaskDetailMainContentProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
   const titleTextClass =
     titleSize === "3xl"
       ? "text-3xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4"
@@ -137,23 +133,25 @@ export default function TaskDetailMainContent({
         <TaskDescription initialContent={issue.description || ""} onSave={onSaveDescription} />
       </div>
 
-      <div className="order-5 w-full pt-4">
-        <TaskSubtasksPanel 
-          issue={issue} 
-          workspaceId={workspaceId} 
-          workspaceMembers={workspaceMembers}
-          boardColumns={boardColumns || []}
-          canEditTask={canEditTask} 
-          onSubtaskClick={onSubtaskClick || ((subtaskId) => {
-            const currentPath = window.location.pathname;
-            const newPath = currentPath.includes("/key/") 
-              ? currentPath.replace(/\/key\/[^/]+$/, `/key/${subtaskId}`)
-              : `${currentPath}/key/${subtaskId}`;
-            window.history.pushState(null, "", newPath);
-            window.dispatchEvent(new Event("popstate"));
-          })}
-        />
-      </div>
+      {issue.type?.toLowerCase() !== "subtask" && issue.type?.toLowerCase() !== "epic" && (
+        <div className="order-5 w-full pt-4">
+          <TaskSubtasksPanel 
+            issue={issue} 
+            workspaceId={workspaceId} 
+            workspaceMembers={workspaceMembers}
+            boardColumns={boardColumns || []}
+            canEditTask={canEditTask} 
+            onSubtaskClick={onSubtaskClick || ((subtaskId) => {
+              const currentPath = window.location.pathname;
+              const newPath = currentPath.includes("/key/") 
+                ? currentPath.replace(/\/key\/[^/]+$/, `/key/${subtaskId}`)
+                : `${currentPath}/key/${subtaskId}`;
+              window.history.pushState(null, "", newPath);
+              window.dispatchEvent(new Event("popstate"));
+            })}
+          />
+        </div>
+      )}
 
       <div className="order-6 w-full pt-4">
         <TaskAttachmentsPanel
