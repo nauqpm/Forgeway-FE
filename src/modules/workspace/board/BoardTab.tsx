@@ -311,7 +311,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
 
   if (workspace.type === "scrum" && !activeSprint) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div className="flex flex-1 flex-col h-full w-full items-center justify-center py-24 text-center">
         <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] rounded-full flex items-center justify-center mb-4">
           <PlayCircle className="w-8 h-8 text-[#2563EB] dark:text-[#60A5FA]" />
         </div>
