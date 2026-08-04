@@ -54,6 +54,7 @@ export function useWorkspaceSettings(workspaceKey: string): UseWorkspaceSettings
     description: "",
     status: "active",
     access: "public",
+    settings: { isImportant: false },
   });
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -74,6 +75,9 @@ export function useWorkspaceSettings(workspaceKey: string): UseWorkspaceSettings
           description: next.description || "",
           status: next.status || "active",
           access: next.access || "public",
+          settings: {
+            isImportant: next.settings?.isImportant ?? false,
+          },
         });
       })
       .catch(() => {
@@ -100,6 +104,7 @@ export function useWorkspaceSettings(workspaceKey: string): UseWorkspaceSettings
         description: form.description.trim(),
         status: form.status,
         access: form.access,
+        settings: form.settings,
       };
 
       const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceId), payload);
@@ -110,6 +115,9 @@ export function useWorkspaceSettings(workspaceKey: string): UseWorkspaceSettings
         description: updated.description || "",
         status: updated.status || "active",
         access: updated.access || "public",
+        settings: {
+          isImportant: updated.settings?.isImportant ?? false,
+        },
       });
 
       queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (old = []) =>

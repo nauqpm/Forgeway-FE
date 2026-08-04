@@ -9,6 +9,7 @@ export interface WorkspaceInfo {
   description?: string;
   status?: WorkspaceStatus;
   access?: WorkspaceAccess;
+  settings?: Record<string, any>;
   // visibility?: WorkspaceAccess;
 }
 
@@ -17,6 +18,7 @@ export interface WorkspaceSettingsForm {
   description: string;
   status: WorkspaceStatus;
   access: WorkspaceAccess;
+  settings?: Record<string, any>;
 }
 
 export interface WorkspaceMember {

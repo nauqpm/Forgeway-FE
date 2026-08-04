@@ -173,6 +173,38 @@ export default function GeneralSettings({
         </div>
       </section>
 
+      <section>
+        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">Settings</h2>
+        <div className="flex items-center justify-between p-4 bg-[#F9F9F8] dark:bg-[#252525] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06]">
+          <div>
+            <label className="block text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
+              Important Mode
+            </label>
+            <p className="text-xs text-[#787774] dark:text-[#9B9A97] mt-0.5">
+              Mark this workspace as highly important. It will be highlighted with a gold theme and star icon in the sidebar.
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={form.settings?.isImportant ?? false}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  settings: {
+                    ...form.settings,
+                    isImportant: e.target.checked,
+                  },
+                })
+              }
+              disabled={!canManageWorkspace}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 dark:peer-checked:bg-amber-500"></div>
+          </label>
+        </div>
+      </section>
+
       {canManageWorkspace && (
         <div className="flex items-center gap-3 pt-4">
           <button

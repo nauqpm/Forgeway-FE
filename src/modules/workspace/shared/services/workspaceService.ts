@@ -32,4 +32,11 @@ export const workspaceService = {
     const res = await api.put(apiRoutes.WORKSPACES.UPDATE(workspaceId), input);
     return normalize<Workspace>(res);
   },
+
+  updateWorkspaceOrder: async (
+    order: string[],
+  ): Promise<any> => {
+    const res = await api.put("/users/me", { workspaceOrder: order });
+    return normalize<any>(res);
+  },
 };

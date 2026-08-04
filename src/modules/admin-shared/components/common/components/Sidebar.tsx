@@ -14,6 +14,10 @@ import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspa
 import { useChatChannels } from "@/modules/client/chat/hooks/useChatQueries";
 import { useChatStore } from "@/stores/chatStore";
 import type { Channel } from "@/modules/client/chat/types/chat.types";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/shared/constants/queryKeys";
+import { workspaceService } from "@/modules/workspace/shared/services/workspaceService";
 import {
   LayoutDashboard,
   BookOpen,
@@ -97,9 +101,8 @@ const NavItem = ({
       href={item.href}
       onClick={onMobileClose}
       title={collapsed ? item.label : undefined}
-      className={`flex items-center gap-3 px-3 py-2 rounded-[6px] transition-all group relative ${collapsed ? 'justify-center' : ''} ${
-        isActive ? navActiveClass : navInactiveClass
-      }`}
+      className={`flex items-center gap-3 px-3 py-2 rounded-[6px] transition-all group relative ${collapsed ? 'justify-center' : ''} ${isActive ? navActiveClass : navInactiveClass
+        }`}
     >
       <item.icon
         className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${isActive ? iconActiveClass : iconInactiveClass}`}
@@ -127,6 +130,14 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const { currentWorkspace, workspaces: sidebarWorkspaces } = useCurrentWorkspace();
   const { user } = useAuth();
   const { data: channels = [] } = useChatChannels();
+  const queryClient = useQueryClient();
+  const [orderedWorkspaces, setOrderedWorkspaces] = useState<any[]>(sidebarWorkspaces || []);
+
+  useEffect(() => {
+    if (sidebarWorkspaces) {
+      setOrderedWorkspaces(sidebarWorkspaces);
+    }
+  }, [sidebarWorkspaces]);
 
   const getWorkspaceUnread = (wsId: string) => {
     const ch = channels.find(
@@ -184,19 +195,17 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
           router.push("/chat");
           onMobileClose();
         }}
-        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors ${
-          isSelected && pathname.startsWith('/chat')
-            ? 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]'
-            : 'text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]'
-        }`}
+        className={`w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors ${isSelected && pathname.startsWith('/chat')
+          ? 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]'
+          : 'text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+          }`}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <IconComponent
-            className={`w-3.5 h-3.5 flex-shrink-0 ${
-              isSelected && pathname.startsWith('/chat')
-                ? 'text-[#2563EB] dark:text-[#93C5FD]'
-                : 'text-[#ABABAB] dark:text-[#6B6B6B]'
-            }`}
+            className={`w-3.5 h-3.5 flex-shrink-0 ${isSelected && pathname.startsWith('/chat')
+              ? 'text-[#2563EB] dark:text-[#93C5FD]'
+              : 'text-[#ABABAB] dark:text-[#6B6B6B]'
+              }`}
           />
           <span className={`truncate text-left ${isUnread ? 'font-bold text-[#111111] dark:text-[#E8E8E7]' : ''}`}>
             {displayName}
@@ -216,8 +225,52 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
   const moreWorkspacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
-  const sidebarVisibleWorkspaces = sidebarWorkspaces.slice(0, SIDEBAR_WORKSPACE_LIMIT);
-  const hiddenSidebarWorkspaces = sidebarWorkspaces.slice(SIDEBAR_WORKSPACE_LIMIT);
+  const sidebarVisibleWorkspaces = orderedWorkspaces.slice(0, SIDEBAR_WORKSPACE_LIMIT);
+  const hiddenSidebarWorkspaces = orderedWorkspaces.slice(SIDEBAR_WORKSPACE_LIMIT);
+
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination) return;
+
+    const sourceIndex = result.source.index;
+    const destIndex = result.destination.index;
+    if (sourceIndex === destIndex) return;
+
+    const newOrdered = Array.from(orderedWorkspaces);
+    const isChatList = result.source.droppableId === "sidebar-chat-workspaces";
+
+    const draggedItem = isChatList
+      ? orderedWorkspaces[sourceIndex]
+      : sidebarVisibleWorkspaces[sourceIndex];
+    if (!draggedItem) return;
+
+    const actualSourceIndex = newOrdered.findIndex(
+      (w) => (w._id || w.id) === (draggedItem._id || draggedItem.id)
+    );
+    if (actualSourceIndex === -1) return;
+
+    const destItem = isChatList
+      ? orderedWorkspaces[destIndex]
+      : sidebarVisibleWorkspaces[destIndex];
+    if (!destItem) return;
+    const actualDestIndex = newOrdered.findIndex(
+      (w) => (w._id || w.id) === (destItem._id || destItem.id)
+    );
+    if (actualDestIndex === -1) return;
+
+    const [removed] = newOrdered.splice(actualSourceIndex, 1);
+    newOrdered.splice(actualDestIndex, 0, removed);
+
+    setOrderedWorkspaces(newOrdered);
+
+    try {
+      const orderIds = newOrdered.map((w) => w._id || w.id).filter(Boolean);
+      await workspaceService.updateWorkspaceOrder(orderIds);
+      await queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+    } catch (error) {
+      console.error("Failed to update workspace order", error);
+      setOrderedWorkspaces(sidebarWorkspaces);
+    }
+  };
   const filteredMoreWorkspaces = useMemo(() => {
     const query = moreWorkspaceSearch.trim().toLowerCase();
     if (!query) return hiddenSidebarWorkspaces;
@@ -239,7 +292,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
         const rect = moreWorkspacesBtnRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const popoverEstimateHeight = 420; // safe estimation of popover height
-        
+
         let top = rect.top;
         // If popover goes off-screen at the bottom, adjust top
         if (top + popoverEstimateHeight > viewportHeight) {
@@ -288,24 +341,21 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
       {/* Sidebar */}
       <aside
         data-collapsed={collapsed}
-        className={`app-sidebar fixed top-0 left-0 h-full bg-[#FBFBFA] dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] z-40 transition-all duration-200 flex flex-col group/main-sidebar ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`app-sidebar fixed top-0 left-0 h-full bg-[#FBFBFA] dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] z-40 transition-all duration-200 flex flex-col group/main-sidebar ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         {!collapsed && (
           <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="right" />
         )}
         {/* Logo / Brand + Toggle — all inside sidebar, never floating outside */}
         <div
-          className={`app-header flex items-center border-b border-[#EAEAEA] dark:border-white/[0.06] flex-shrink-0 ${
-            collapsed ? 'justify-between lg:justify-center' : 'justify-between'
-          }`}
+          className={`app-header flex items-center border-b border-[#EAEAEA] dark:border-white/[0.06] flex-shrink-0 ${collapsed ? 'justify-between lg:justify-center' : 'justify-between'
+            }`}
         >
           {/* Logo wrapper: smooth slide-out when collapsed on desktop; always visible on mobile */}
           <div
-            className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              collapsed ? 'max-w-60 opacity-100 lg:max-w-0 lg:opacity-0 lg:pointer-events-none' : 'max-w-60 opacity-100'
-            }`}
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${collapsed ? 'max-w-60 opacity-100 lg:max-w-0 lg:opacity-0 lg:pointer-events-none' : 'max-w-60 opacity-100'
+              }`}
           >
             <Link
               href="/"
@@ -380,89 +430,196 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
             {/* Dashboard */}
             <NavItem item={mainNav[0]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
 
-              {/* Chat */}
-              <div>
-                {collapsed ? (
-                  <NavItem 
-                    item={mainNav[1]} 
-                    pathname={pathname} 
-                    onMobileClose={onMobileClose} 
-                    collapsed={collapsed}
-                    badgeContent={
-                      totalUnreadCount > 0 ? (
-                        <span className="flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full leading-none shrink-0">
+            {/* Chat */}
+            <div>
+              {collapsed ? (
+                <NavItem
+                  item={mainNav[1]}
+                  pathname={pathname}
+                  onMobileClose={onMobileClose}
+                  collapsed={collapsed}
+                  badgeContent={
+                    totalUnreadCount > 0 ? (
+                      <span className="flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full leading-none shrink-0">
+                        {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
+                      </span>
+                    ) : undefined
+                  }
+                />
+              ) : (
+                <>
+                  <div
+                    className={`flex items-center justify-between w-full rounded-[6px] transition-all group ${pathname.startsWith('/chat')
+                      ? 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]'
+                      : 'hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                      }`}
+                  >
+                    <Link
+                      href="/chat"
+                      onClick={onMobileClose}
+                      className="flex-1 flex items-center gap-3 px-3 py-2 rounded-l-[6px] min-w-0 text-inherit"
+                    >
+                      <MessageCircle
+                        className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${pathname.startsWith('/chat') ? iconActiveClass : iconInactiveClass
+                          }`}
+                      />
+                      <span className="text-[0.8125rem] font-medium flex-1 text-left truncate">Chat</span>
+                      {totalUnreadCount > 0 && (
+                        <span className="flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full leading-none shrink-0 mr-1">
                           {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
                         </span>
-                      ) : undefined
-                    }
-                  />
-                ) : (
-                  <>
-                    <div
-                      className={`flex items-center justify-between w-full rounded-[6px] transition-all group ${
-                        pathname.startsWith('/chat')
-                          ? 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]'
-                          : 'hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'
-                      }`}
-                    >
-                      <Link
-                        href="/chat"
-                        onClick={onMobileClose}
-                        className="flex-1 flex items-center gap-3 px-3 py-2 rounded-l-[6px] min-w-0 text-inherit"
-                      >
-                        <MessageCircle
-                          className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${
-                            pathname.startsWith('/chat') ? iconActiveClass : iconInactiveClass
-                          }`}
-                        />
-                        <span className="text-[0.8125rem] font-medium flex-1 text-left truncate">Chat</span>
-                        {totalUnreadCount > 0 && (
-                          <span className="flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full leading-none shrink-0 mr-1">
-                            {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
-                          </span>
-                        )}
-                      </Link>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setChatOpen(!chatOpen);
-                        }}
-                        className={`p-1.5 rounded-[4px] mr-2 flex-shrink-0 transition-all ${
-                          pathname.startsWith('/chat')
-                            ? 'hover:bg-black/5 dark:hover:bg-white/10 text-[#1E40AF] dark:text-[#93C5FD]'
-                            : 'hover:bg-[#EAEAEA] dark:hover:bg-white/10 text-[#ABABAB] dark:text-[#6B6B6B] group-hover:text-[#787774] dark:group-hover:text-[#9B9A97]'
+                      )}
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setChatOpen(!chatOpen);
+                      }}
+                      className={`p-1.5 rounded-[4px] mr-2 flex-shrink-0 transition-all ${pathname.startsWith('/chat')
+                        ? 'hover:bg-black/5 dark:hover:bg-white/10 text-[#1E40AF] dark:text-[#93C5FD]'
+                        : 'hover:bg-[#EAEAEA] dark:hover:bg-white/10 text-[#ABABAB] dark:text-[#6B6B6B] group-hover:text-[#787774] dark:group-hover:text-[#9B9A97]'
                         }`}
-                        title={chatOpen ? "Collapse Chat" : "Expand Chat"}
-                      >
-                        {chatOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
+                      title={chatOpen ? "Collapse Chat" : "Expand Chat"}
+                    >
+                      {chatOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
 
-                    {chatOpen && (
-                      <div className="ml-6 mt-1 space-y-3 max-h-[300px] overflow-y-auto pr-1">
-                        {/* Global Channels */}
-                        <div>
-                          <div className="px-2 py-1 text-[0.625rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em]">
-                            Global Channels
-                          </div>
-                          <div className="space-y-0.5 mt-0.5">
-                            {channels
-                              .filter((c) => c.type === 'general' || c.type === 'announcement' || c.type === 'public')
-                              .map((channel) => renderSidebarChannel(channel))}
-                            {channels.filter((c) => c.type === 'general' || c.type === 'announcement' || c.type === 'public').length === 0 && (
-                              <p className="px-2 py-1 text-[10px] text-[#ABABAB] italic">No global channels</p>
-                            )}
-                          </div>
+                  {chatOpen && (
+                    <div className="ml-6 mt-1 space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                      {/* Global Channels */}
+                      <div>
+                        <div className="px-2 py-1 text-[0.625rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em]">
+                          Global Channels
                         </div>
+                        <div className="space-y-0.5 mt-0.5">
+                          {channels
+                            .filter((c) => c.type === 'general' || c.type === 'announcement' || c.type === 'public')
+                            .map((channel) => renderSidebarChannel(channel))}
+                          {channels.filter((c) => c.type === 'general' || c.type === 'announcement' || c.type === 'public').length === 0 && (
+                            <p className="px-2 py-1 text-[10px] text-[#ABABAB] italic">No global channels</p>
+                          )}
+                        </div>
+                      </div>
 
-                        {/* Workspace Channels */}
-                        <div>
-                          <div className="px-2 py-1 text-[0.625rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em]">
-                            Workspace Channels
-                          </div>
-                          <div className="space-y-1 mt-0.5">
-                            {sidebarWorkspaces.map((ws) => {
+                      {/* Workspace Channels */}
+                      <div>
+                        <div className="px-2 py-1 text-[0.625rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-[0.06em]">
+                          Workspace Channels
+                        </div>
+                        <div className="space-y-1 mt-0.5">
+                          {mounted ? (
+                            <DragDropContext onDragEnd={handleDragEnd}>
+                              <Droppable droppableId="sidebar-chat-workspaces">
+                                {(provided) => (
+                                  <div
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                    className="space-y-1"
+                                  >
+                                    {orderedWorkspaces.map((ws, index) => {
+                                      const wsId = ws._id;
+                                      const wsChannel = channels.find(
+                                        (c) => c.type === 'workspace' && String(c.workspaceId) === String(wsId)
+                                      );
+                                      const wsCustomChannels = channels.filter(
+                                        (c) => c.type === 'custom' && String(c.workspaceId) === String(wsId)
+                                      );
+                                      const isExpanded = !!wsCustomOpen[wsId];
+                                      const totalWsUnread = getWorkspaceTotalUnread(wsId);
+
+                                      const currentUserId = (user as AuthUser & { _id?: string })?._id || user?.id;
+                                      const isOwner = ws.ownerId?.toString() === String(currentUserId);
+                                      const member = ws.members?.find((m: { userId?: string | { _id?: string; id?: string } }) => {
+                                        const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+                                        return String(uId) === String(currentUserId);
+                                      });
+                                      const wsRole = isOwner ? 'workspace_admin' : (member?.role || 'member');
+                                      const isWsViewer = wsRole === 'viewer';
+
+                                      if (!wsChannel && wsCustomChannels.length === 0) return null;
+
+                                      const uniqueId = String(ws._id || ws.id);
+
+                                      return (
+                                        <Draggable
+                                          key={`chat-${uniqueId}`}
+                                          draggableId={`chat-${uniqueId}`}
+                                          index={index}
+                                        >
+                                          {(draggableProvided, snapshot) => (
+                                            <div
+                                              ref={draggableProvided.innerRef}
+                                              {...draggableProvided.draggableProps}
+                                              {...draggableProvided.dragHandleProps}
+                                              className={`space-y-0.5 rounded-[6px] transition-all border ${
+                                                ws.settings?.isImportant
+                                                  ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 shadow-sm"
+                                                  : "border-transparent"
+                                              } ${snapshot.isDragging
+                                                  ? "bg-[#EFF6FF] dark:bg-white/10"
+                                                  : ""
+                                                }`}
+                                            >
+                                              {/* Workspace Accordion Header */}
+                                              <div
+                                                onClick={() => {
+                                                  toggleWsCustomOpen(wsId);
+                                                  if (wsChannel) {
+                                                    useChatStore.getState().setActiveChannel(wsChannel._id);
+                                                    router.push("/chat");
+                                                    onMobileClose();
+                                                  }
+                                                }}
+                                                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] transition-colors cursor-pointer ${
+                                                  ws.settings?.isImportant
+                                                    ? "text-amber-700 dark:text-amber-400 font-semibold"
+                                                    : "text-[#787774] dark:text-[#9B9A97]"
+                                                } hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`}
+                                              >
+                                                <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                  {isExpanded ? (
+                                                    <ChevronDown className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
+                                                  ) : (
+                                                    <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
+                                                  )}
+                                                  <WorkspaceAvatar workspace={ws} size="xs" />
+                                                  <span className="font-bold text-[0.8125rem] truncate flex-1">
+                                                    {ws.name}
+                                                  </span>
+                                                  {ws.settings?.isImportant && (
+                                                    <span className="shrink-0 text-[13px] leading-none animate-pulse" title="Important workspace">
+                                                      ⭐
+                                                    </span>
+                                                  )}
+                                                </div>
+                                                {totalWsUnread > 0 && !isExpanded && (
+                                                  <span className="flex items-center justify-center min-w-[16px] h-4 px-1.5 bg-[#EF4444] text-white text-[8px] font-bold rounded-full ml-2">
+                                                    {totalWsUnread}
+                                                  </span>
+                                                )}
+                                              </div>
+
+                                              {/* Expanded Workspace Channels List */}
+                                              {isExpanded && (
+                                                <div className="pl-4 ml-3 border-l border-[#EAEAEA] dark:border-white/[0.06] space-y-0.5 mt-0.5">
+                                                  {!isWsViewer && wsChannel && renderSidebarChannel(wsChannel, wsChannel.name)}
+                                                  {!isWsViewer && wsCustomChannels.map((c) => renderSidebarChannel(c))}
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </Draggable>
+                                      );
+                                    })}
+                                    {provided.placeholder}
+                                  </div>
+                                )}
+                              </Droppable>
+                            </DragDropContext>
+                          ) : (
+                            orderedWorkspaces.map((ws) => {
                               const wsId = ws._id;
                               const wsChannel = channels.find(
                                 (c) => c.type === 'workspace' && String(c.workspaceId) === String(wsId)
@@ -485,7 +642,14 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                               if (!wsChannel && wsCustomChannels.length === 0) return null;
 
                               return (
-                                <div key={wsId} className="space-y-0.5">
+                                <div
+                                  key={wsId}
+                                  className={`space-y-0.5 rounded-[6px] border ${
+                                    ws.settings?.isImportant
+                                      ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 shadow-sm"
+                                      : "border-transparent"
+                                  }`}
+                                >
                                   {/* Workspace Accordion Header */}
                                   <div
                                     onClick={() => {
@@ -496,7 +660,11 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                         onMobileClose();
                                       }
                                     }}
-                                    className="w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer text-[#787774] dark:text-[#9B9A97] transition-colors"
+                                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] transition-colors cursor-pointer ${
+                                      ws.settings?.isImportant
+                                        ? "text-amber-700 dark:text-amber-400 font-semibold"
+                                        : "text-[#787774] dark:text-[#9B9A97]"
+                                    } hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`}
                                   >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
                                       {isExpanded ? (
@@ -505,9 +673,14 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                         <ChevronRight className="w-3.5 h-3.5 flex-shrink-0 transition-transform duration-200" />
                                       )}
                                       <WorkspaceAvatar workspace={ws} size="xs" />
-                                      <span className="font-bold text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] truncate">
+                                      <span className="font-bold text-[0.8125rem] truncate flex-1">
                                         {ws.name}
                                       </span>
+                                      {ws.settings?.isImportant && (
+                                        <span className="shrink-0 text-[13px] leading-none animate-pulse" title="Important workspace">
+                                          ⭐
+                                        </span>
+                                      )}
                                     </div>
                                     {totalWsUnread > 0 && !isExpanded && (
                                       <span className="flex items-center justify-center min-w-[16px] h-4 px-1.5 bg-[#EF4444] text-white text-[8px] font-bold rounded-full ml-2">
@@ -525,80 +698,153 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                   )}
                                 </div>
                               );
-                            })}
-                            {sidebarWorkspaces.filter((ws) => {
-                              const wsId = ws._id;
-                              const hasWsChannel = channels.some((c) => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
-                              const hasCustom = channels.some((c) => c.type === 'custom' && String(c.workspaceId) === String(wsId));
-                              return hasWsChannel || hasCustom;
-                            }).length === 0 && (
+                            })
+                          )}
+                          {orderedWorkspaces.filter((ws) => {
+                            const wsId = ws._id;
+                            const hasWsChannel = channels.some((c) => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
+                            const hasCustom = channels.some((c) => c.type === 'custom' && String(c.workspaceId) === String(wsId));
+                            return hasWsChannel || hasCustom;
+                          }).length === 0 && (
                               <p className="px-2 py-1 text-[10px] text-[#ABABAB] italic">No workspace channels</p>
                             )}
-                          </div>
                         </div>
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
 
-              {/* Workspaces */}
-              <div>
-                {collapsed ? (
+            {/* Workspaces */}
+            <div>
+              {collapsed ? (
+                <Link
+                  href="/workspaces"
+                  onClick={onMobileClose}
+                  title="Workspaces"
+                  className={`w-full flex items-center justify-center px-3 py-2 rounded-[6px] transition-colors ${pathname.startsWith('/workspaces') ? navActiveClass : `text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`
+                    }`}
+                >
+                  <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
+                </Link>
+              ) : (
+                <div className={`w-full flex items-center rounded-[6px] transition-colors group ${pathname.startsWith('/workspaces')
+                  ? navActiveClass
+                  : 'text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                  }`}>
                   <Link
                     href="/workspaces"
                     onClick={onMobileClose}
-                    title="Workspaces"
-                    className={`w-full flex items-center justify-center px-3 py-2 rounded-[6px] transition-colors ${
-                      pathname.startsWith('/workspaces') ? navActiveClass : `text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`
-                    }`}
+                    className="flex items-center gap-3 py-2 pl-3 flex-1 min-w-0"
                   >
                     <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
+                    <span className="text-[0.8125rem] font-medium flex-1 text-left">Workspaces</span>
                   </Link>
-                ) : (
-                  <div className={`w-full flex items-center rounded-[6px] transition-colors group ${
-                      pathname.startsWith('/workspaces') 
-                        ? navActiveClass 
-                        : 'text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]'
-                  }`}>
-                    <Link
-                      href="/workspaces"
-                      onClick={onMobileClose}
-                      className="flex items-center gap-3 py-2 pl-3 flex-1 min-w-0"
-                    >
-                      <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
-                      <span className="text-[0.8125rem] font-medium flex-1 text-left">Workspaces</span>
-                    </Link>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setWorkspaceOpen(!workspaceOpen);
-                      }}
-                      className="py-2 pr-3 pl-1 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
-                    >
-                      {workspaceOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    </button>
-                  </div>
-                )}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setWorkspaceOpen(!workspaceOpen);
+                    }}
+                    className="py-2 pr-3 pl-1 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
+                  >
+                    {workspaceOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </button>
+                </div>
+              )}
               {/* SUB NAV */}
               {workspaceOpen && !collapsed && (
                 <div className="ml-6 mt-1 space-y-0.5">
-                  {sidebarVisibleWorkspaces.map((workspace) => {
-                    const routeKey = workspace.key || workspace.slug || workspace._id;
+                  {mounted ? (
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                      <Droppable droppableId="sidebar-workspaces">
+                        {(provided) => (
+                          <div
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                            className="space-y-0.5"
+                          >
+                            {sidebarVisibleWorkspaces.map((workspace, index) => {
+                              const routeKey = workspace.key || workspace.slug || workspace._id;
+                              const uniqueId = String(workspace._id || workspace.id);
 
-                    return (
-                      <Link
-                        key={workspace._id || routeKey}
-                        href={`/workspaces/${routeKey}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors min-w-0 w-full"
-                        title={workspace.name}
-                      >
-                        <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
-                        <span className="truncate flex-1">{workspace.name}</span>
-                      </Link>
-                    );
-                  })}
+                              return (
+                                <Draggable
+                                  key={uniqueId}
+                                  draggableId={uniqueId}
+                                  index={index}
+                                >
+                                  {(draggableProvided, snapshot) => (
+                                    <div
+                                      ref={draggableProvided.innerRef}
+                                      {...draggableProvided.draggableProps}
+                                      {...draggableProvided.dragHandleProps}
+                                      className={`rounded-[6px] transition-all border ${
+                                        workspace.settings?.isImportant
+                                          ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 shadow-sm"
+                                          : "border-transparent"
+                                      } ${snapshot.isDragging
+                                        ? "bg-[#EFF6FF] dark:bg-white/10"
+                                        : ""
+                                        }`}
+                                      style={{
+                                        ...draggableProvided.draggableProps.style,
+                                      }}
+                                    >
+                                      <Link
+                                        href={`/workspaces/${routeKey}`}
+                                        className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full ${
+                                          workspace.settings?.isImportant
+                                            ? "text-amber-700 dark:text-amber-400 font-semibold"
+                                            : "text-[#787774] dark:text-[#9B9A97]"
+                                        } hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`}
+                                        title={workspace.name}
+                                      >
+                                        <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
+                                        <span className="truncate flex-1">{workspace.name}</span>
+                                        {workspace.settings?.isImportant && (
+                                          <span className="shrink-0 text-[13px] leading-none animate-pulse" title="Important workspace">
+                                            ⭐
+                                          </span>
+                                        )}
+                                      </Link>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              );
+                            })}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  ) : (
+                    sidebarVisibleWorkspaces.map((workspace) => {
+                      const routeKey = workspace.key || workspace.slug || workspace._id;
+
+                      return (
+                        <Link
+                          key={workspace._id || routeKey}
+                          href={`/workspaces/${routeKey}`}
+                          className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full border ${
+                            workspace.settings?.isImportant
+                              ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 text-amber-700 dark:text-amber-400 font-semibold shadow-sm"
+                              : "border-transparent text-[#787774] dark:text-[#9B9A97]"
+                          } hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`}
+                          title={workspace.name}
+                        >
+                          <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
+                          <span className="truncate flex-1">{workspace.name}</span>
+                          {workspace.settings?.isImportant && (
+                            <span className="shrink-0 text-[13px] leading-none animate-pulse" title="Important workspace">
+                              ⭐
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })
+                  )}
 
                   {hiddenSidebarWorkspaces.length > 0 && (
                     <button
@@ -612,7 +858,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                   )}
                 </div>
               )}
-             
+
             </div>
             {/* Documents */}
             <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
@@ -766,11 +1012,10 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                             setMoreWorkspaceSearch("");
                             onMobileClose();
                           }}
-                          className={`flex w-full items-center justify-between rounded-[6px] p-2 text-left transition-colors ${
-                            isActiveWorkspace
-                              ? navActiveClass
-                              : navInactiveClass
-                          }`}
+                          className={`flex w-full items-center justify-between rounded-[6px] p-2 text-left transition-colors ${isActiveWorkspace
+                            ? navActiveClass
+                            : navInactiveClass
+                            }`}
                         >
                           <div className="flex items-center gap-3 min-w-0 flex-1">
                             <WorkspaceAvatar workspace={workspace} size="md" />
