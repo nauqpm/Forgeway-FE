@@ -219,6 +219,8 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
         queryKeys.workspaces.members(workspaceId),
         (current = []) => current.filter((item) => item.userId?._id !== userId)
       );
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+      queryClient.invalidateQueries({ queryKey: ["chat", "members"] });
       toast.success("Member removed from workspace.");
     },
     onError: (err: unknown) => {
@@ -234,6 +236,8 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
 
   const handleInviteSuccess = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.members(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+    queryClient.invalidateQueries({ queryKey: ["chat", "members"] });
   };
 
   useEffect(() => {

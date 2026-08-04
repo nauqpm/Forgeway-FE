@@ -31,7 +31,7 @@ function normalize<T>(response: unknown, fallback: T): T {
 
 export const documentService = {
   listMine: async (): Promise<DocumentItem[]> => {
-    const res = await api.get(apiRoutes.DOCUMENTS.BASE);
+    const res = await api.get(apiRoutes.DOCUMENTS.BASE, { params: { _: Date.now() } });
     return normalize<DocumentItem[]>(res, []);
   },
   getByWorkspace: async (workspaceId: string): Promise<DocumentItem[]> => {

@@ -25,9 +25,11 @@ export interface Message {
   type: 'text' | 'system' | 'sticker' | 'file';
   stickerId?: Sticker;
   replyToId?: string | Message;
+  replyToSenderId?: string | ChatUser;
   createdAt: string;
   updatedAt?: string;
-  deletedAt?: string | null;
+  editedAt?: string | null;
+  deletedForUsers?: string[];
   reactions?: Record<string, string[]>;
   sentAt?: string;
   threadParentId?: string;
@@ -52,6 +54,7 @@ export interface Channel {
     userId: string;
     role: 'channel_admin' | 'channel_member';
     joinedAt: string;
+    joined?: boolean;
   }[];
   workspaceId?: string;
   unreadCount: number;

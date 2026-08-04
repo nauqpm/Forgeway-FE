@@ -10,6 +10,7 @@ import type { EditorMode } from "./TiptapEditor";
 import type { RealtimeStatusSnapshot } from "@/lib/socket/socket.types";
 import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 import { useDocsStore } from "../store/docs.store";
+import { buildWorkspacePagesHref } from "../utils/pageRoutes";
 
 interface EditorHeaderProps {
   doc: Document;
@@ -34,6 +35,7 @@ interface EditorHeaderProps {
   onExportDocx: () => void;
   isImportingDocx: boolean;
   onImportDocx: (file: File) => void;
+  workspaceKey?: string;
 }
 
 // ── Collaborators list ────────────────────────────────────────
@@ -212,6 +214,7 @@ export default function EditorHeader({
   onExportDocx,
   isImportingDocx,
   onImportDocx,
+  workspaceKey,
 }: EditorHeaderProps) {
   const { documents } = useWorkspaceDocs(doc.workspaceId);
   const { selectDocument } = useDocsStore();
@@ -250,16 +253,39 @@ export default function EditorHeader({
   };
 
   const breadcrumbs = getBreadcrumbs(doc);
+  const iconButtonClass =
+    "inline-flex items-center justify-center p-1.25 rounded-md border border-gray-200 bg-white text-gray-500 transition-all hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/[0.08] dark:bg-[#202020] dark:text-gray-400 dark:hover:bg-[#252525] dark:hover:text-gray-200";
+  const activeIndigoIconButtonClass =
+    "inline-flex items-center justify-center p-1.25 rounded-md border border-indigo-200 bg-indigo-50 text-indigo-700 transition-all hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-900/50";
+  const activeEmeraldIconButtonClass =
+    "inline-flex items-center justify-center p-1.25 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 transition-all hover:bg-emerald-100 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/50";
+  const textButtonClass =
+    "inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition-all hover:bg-gray-50 dark:border-white/[0.08] dark:bg-[#202020] dark:text-gray-300 dark:hover:bg-[#252525]";
+  const activeTextButtonClass =
+    "inline-flex items-center gap-1.5 rounded-md border border-emerald-600 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:bg-emerald-700";
+  const modePreviewButtonClass =
+    "inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 transition-all hover:bg-indigo-100 dark:border-indigo-900/60 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-900/50";
+  const primaryButtonClass =
+    "inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
-    <div className="flex flex-col bg-white dark:bg-gray-950 shrink-0 print:hidden">
+    <div className="flex flex-col bg-white dark:bg-[#202020] shrink-0 print:hidden">
       {/* Breadcrumbs + Controls Row */}
-      <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 dark:border-gray-800">
+      <div className="flex items-center justify-between px-6 py-2 border-b border-gray-100 dark:border-white/[0.06]">
         {/* Left — Breadcrumbs */}
         <div className="flex items-center text-[12px] text-gray-500 dark:text-gray-400 overflow-hidden flex-1">
           <button 
-            className="md:hidden mr-2 p-1 -ml-2 text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors"
-            onClick={() => selectDocument(null)}
+            className="mr-2 p-1 -ml-2 rounded-[4px] text-[#787774] hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:bg-white/5 dark:hover:text-[#E8E8E7] transition-colors"
+            onClick={() => {
+              selectDocument(null);
+              if (workspaceKey) {
+                // Use pushState to stay on [[...tab]] route without remounting workspace shell
+                window.history.pushState(null, "", buildWorkspacePagesHref(workspaceKey));
+                window.dispatchEvent(new Event("docs-location-change"));
+              }
+            }}
+            aria-label="Back to all documents"
+            title="Back"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -303,11 +329,7 @@ export default function EditorHeader({
           {mode === "edit" && (
             <button
               onClick={onToggleComments}
-              className={`inline-flex items-center justify-center p-1.25 rounded-md border transition-all ${
-                isCommentsOpen
-                  ? "bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-900/60 dark:text-indigo-400"
-                  : "bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-              }`}
+              className={isCommentsOpen ? activeIndigoIconButtonClass : iconButtonClass}
               title="Comments"
             >
               <MessageSquare className="h-4 w-4" />
@@ -318,11 +340,7 @@ export default function EditorHeader({
           {mode === "edit" && canEdit && (
             <button
               onClick={onToggleSuggestions}
-              className={`inline-flex items-center justify-center p-1.25 rounded-md border transition-all ${
-                isSuggestionsOpen
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900/60 dark:text-emerald-400"
-                  : "bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-              }`}
+              className={isSuggestionsOpen ? activeEmeraldIconButtonClass : iconButtonClass}
               title="Suggest changes"
             >
               <FileText className="h-4 w-4" />
@@ -332,11 +350,7 @@ export default function EditorHeader({
           {/* Version History Toggle Button */}
           <button
             onClick={onToggleVersionHistory}
-            className={`inline-flex items-center justify-center p-1.25 rounded-md border transition-all ${
-              isVersionHistoryOpen
-                ? "bg-indigo-50 border-indigo-200 text-indigo-700 dark:bg-indigo-950/40 dark:border-indigo-900/60 dark:text-indigo-400"
-                : "bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-            }`}
+            className={isVersionHistoryOpen ? activeIndigoIconButtonClass : iconButtonClass}
             title="Version history"
           >
             <History className="h-4 w-4" />
@@ -352,23 +366,25 @@ export default function EditorHeader({
           </button>
 
           {/* Export DOCX Button */}
-          <button
-            onClick={onExportDocx}
-            disabled={isExportingDocx}
-            className="inline-flex items-center justify-center p-1.25 rounded-md border bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all disabled:opacity-50"
-            title="Export Word (.docx)"
-          >
-            {isExportingDocx ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="h-4 w-4" />
-            )}
-          </button>
+          {canEdit && (
+            <button
+              onClick={onExportDocx}
+              disabled={isExportingDocx}
+              className={iconButtonClass}
+              title="Export Word (.docx)"
+            >
+              {isExportingDocx ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+            </button>
+          )}
 
           {/* Import DOCX Button */}
           {mode === "edit" && canEdit && (
             <label
-              className="inline-flex items-center justify-center p-1.25 rounded-md border bg-white border-gray-200 text-gray-500 hover:text-gray-700 dark:bg-gray-950 dark:border-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-all cursor-pointer"
+              className={`${iconButtonClass} cursor-pointer`}
               title="Import Word (.docx)"
             >
               {isImportingDocx ? (
@@ -396,11 +412,7 @@ export default function EditorHeader({
           {mode === "edit" && canEdit && (
             <button
               onClick={onToggleSuggestionMode}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all border ${
-                isSuggestionModeActive
-                  ? "bg-emerald-600 border-emerald-600 text-white hover:bg-emerald-700 shadow-sm"
-                  : "bg-gray-100 border-transparent text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              }`}
+              className={isSuggestionModeActive ? activeTextButtonClass : textButtonClass}
               title={isSuggestionModeActive ? "Switch to direct editing" : "Switch to suggesting changes"}
             >
               <Bookmark className="h-3.5 w-3.5" />
@@ -412,11 +424,7 @@ export default function EditorHeader({
           {canEdit && (
             <button
               onClick={onToggleMode}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all ${
-                mode === "edit"
-                  ? "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                  : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50"
-              }`}
+              className={mode === "edit" ? textButtonClass : modePreviewButtonClass}
             >
               {mode === "edit" ? (
                 <>
@@ -437,7 +445,7 @@ export default function EditorHeader({
             <button
               onClick={handleOpenVersionModal}
               disabled={isPublishing}
-              className="inline-flex items-center gap-1.5 rounded-md bg-indigo-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+              className={primaryButtonClass}
             >
               {isPublishing ? (
                 <>
@@ -457,19 +465,19 @@ export default function EditorHeader({
 
       {/* Named Version Dialog Modal */}
       {showVersionModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px] animate-fade-in">
           <form
             onSubmit={handleCreateVersionSubmit}
-            className="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xl w-full max-w-sm animate-scale-up"
+            className="w-full max-w-sm animate-scale-up rounded-[10px] border border-[#EAEAEA] bg-white p-5 shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.06)] dark:border-white/[0.06] dark:bg-[#202020]"
           >
-            <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-sm mb-1.5">
+            <h4 className="mb-1.5 text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
               Create named version
             </h4>
-            <p className="text-[11px] text-slate-500 mb-4">
+            <p className="mb-4 text-[0.8125rem] leading-5 text-[#787774] dark:text-[#9B9A97]">
               Save the current state of the document to easily compare and restore later.
             </p>
             <div className="mb-4">
-              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+              <label className="mb-1.5 block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]">
                 Version name
               </label>
               <input
@@ -479,7 +487,7 @@ export default function EditorHeader({
                 value={versionLabel}
                 onChange={(e) => setVersionLabel(e.target.value)}
                 placeholder="Enter version name (e.g. Review ready...)"
-                className="w-full text-xs px-3 py-2 border border-gray-200 dark:border-gray-800 rounded-lg outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 bg-white dark:bg-gray-950 text-slate-800 dark:text-slate-200"
+                className="w-full rounded-[6px] border border-[#EAEAEA] bg-[#F7F6F3] px-3 py-2 text-[0.8125rem] text-[#111111] outline-none transition-colors placeholder:text-[#ABABAB] focus:border-[#2563EB] focus:bg-white dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#E8E8E7] dark:placeholder:text-[#6B6B6B] dark:focus:border-[#3B82F6] dark:focus:bg-[#252525]"
               />
             </div>
             <div className="flex items-center justify-end gap-2">
@@ -487,14 +495,14 @@ export default function EditorHeader({
                 type="button"
                 disabled={isPublishing}
                 onClick={() => setShowVersionModal(false)}
-                className="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-gray-900 dark:hover:bg-gray-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition-colors"
+                className="rounded-[6px] border border-[#EAEAEA] px-4 py-2 text-[0.8125rem] font-medium text-[#787774] transition-colors hover:bg-[#F7F6F3] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/[0.06] dark:text-[#9B9A97] dark:hover:bg-white/5"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isPublishing || !versionLabel.trim()}
-                className="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all duration-200 flex items-center gap-1.5"
+                className="flex items-center gap-1.5 rounded-[6px] bg-[#2563EB] px-4 py-2 text-[0.8125rem] font-semibold text-white transition-colors hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#3B82F6] dark:hover:bg-[#2563EB]"
               >
                 {isPublishing ? (
                   <>

@@ -67,8 +67,8 @@ export default function ArchiveTab({
   }, [issues, searchTerm]);
 
   return (
-    <div className="workspace-panel bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
-      <div className="flex flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="workspace-panel flex min-h-0 flex-1 flex-col bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06]">
+      <div className="flex shrink-0 flex-col gap-3 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] p-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">
             Archived work items
@@ -91,7 +91,7 @@ export default function ArchiveTab({
         </div>
       </div>
 
-      <div className="relative min-h-80 overflow-auto">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-auto">
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-[#202020]/70">
             <Loader2 className="h-6 w-6 animate-spin text-[#2563EB] dark:text-[#3B82F6]" />
@@ -171,7 +171,7 @@ export default function ArchiveTab({
         </table>
 
         {!isLoading && visibleIssues.length === 0 && (
-          <div className="flex h-56 flex-col items-center justify-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <CheckSquare className="h-6 w-6 text-[#ABABAB] dark:text-[#6B6B6B]" />
             No archived work items match this list.
           </div>
@@ -179,7 +179,7 @@ export default function ArchiveTab({
       </div>
 
       {onLoadMore && total !== undefined && issues.length < total && (
-        <div className="flex justify-center border-t border-[#EAEAEA] dark:border-white/[0.06] p-3">
+        <div className="flex shrink-0 justify-center border-t border-[#EAEAEA] dark:border-white/[0.06] p-3">
           <button
             type="button"
             onClick={onLoadMore}

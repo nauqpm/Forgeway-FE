@@ -64,7 +64,7 @@ const MfaVerificationForm: React.FC = () => {
             {isTotp ? 'Enter the 6-digit code from your authenticator app' : 'Enter the 6-digit code sent to your email'}
           </p>
         </div>
-        <div className="bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/8 p-8">
+        <div className="bg-white dark:bg-[#202020] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] p-8">
           {!useBackupCode ? (
             <>
               <div className="flex justify-center gap-2 mb-6" onPaste={handlePaste}>
@@ -91,7 +91,7 @@ const MfaVerificationForm: React.FC = () => {
                 <label className="block text-[0.8125rem] font-medium text-[#111111] dark:text-[#E8E8E7] mb-1.5">Backup code</label>
                 <input type="text" value={backupCode} onChange={(e) => { setBackupCode(e.target.value); clearError(); }}
                   placeholder="Enter backup code" disabled={loading}
-                  className="w-full px-4 py-2.5 border border-[#EAEAEA] dark:border-white/8 rounded-[6px] text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] outline-none font-mono" />
+                  className="w-full px-4 py-2.5 border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] outline-none font-mono" />
               </div>
               {error && <p className="text-red-500 text-[0.8125rem] text-center">{error}</p>}
               <button type="submit" disabled={loading || !backupCode.trim()}
@@ -100,7 +100,7 @@ const MfaVerificationForm: React.FC = () => {
               </button>
             </form>
           )}
-          <div className="text-center mt-4 pt-4 border-t border-[#EAEAEA] dark:border-white/8">
+          <div className="text-center mt-4 pt-4 border-t border-[#EAEAEA] dark:border-white/[0.06]">
             <button type="button" onClick={() => { setUseBackupCode(!useBackupCode); clearError(); }}
               className="text-xs text-[#787774] dark:text-[#9B9A97] hover:text-[#2563EB] dark:hover:text-[#3B82F6]">{useBackupCode ? '← Back to code entry' : 'Use backup code'}</button>
           </div>

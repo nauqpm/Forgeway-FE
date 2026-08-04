@@ -114,8 +114,8 @@ export const addReactionAPI = async (
   await api.post(`/chat/messages/${messageId}/reactions`, { emoji });
 };
 
-export const createDMAPI = async (targetUserId: string): Promise<Channel> => {
-  const response = await api.post('/chat/dm', { targetUserId });
+export const createDMAPI = async (targetUserIds: string[]): Promise<Channel> => {
+  const response = await api.post('/chat/dm', { targetUserIds });
   const data = response.data?.data ?? response.data;
   return {
     ...data,
@@ -146,6 +146,10 @@ export const searchUsersAPI = async (search?: string): Promise<SearchUser[]> => 
 
 export const deleteMessageAPI = async (messageId: string): Promise<void> => {
   await api.delete(`/chat/messages/${messageId}`);
+};
+
+export const deleteMessageForMeAPI = async (messageId: string): Promise<void> => {
+  await api.delete(`/chat/messages/${messageId}/me`);
 };
 
 export const getChannelMembersAPI = async (channelId: string): Promise<ChatMember[]> => {
@@ -279,6 +283,18 @@ export const updateMemberRoleAPI = async (
     _id: data._id || data.id,
     unreadCount: data.unreadCount || 0,
   };
+};
+
+export const getMessageByIdAPI = async (
+  channelId: string,
+  messageId: string
+): Promise<Message> => {
+  const response = await api.get(`/chat/channels/${channelId}/messages/${messageId}`);
+  const data = response.data?.data ?? response.data;
+  return {
+    ...data,
+    _id: data._id || data.id || messageId,
+  } as Message;
 };
 
 export const getThreadRepliesAPI = async (

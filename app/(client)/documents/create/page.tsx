@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { usePageTitle } from "@/shared/hooks/usePageTitle";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,9 @@ import { toast } from "react-hot-toast";
 import { documentService } from "@/modules/docs/services/documentService";
 import EditorToolbar from "@/modules/docs/editor/EditorToolbar";
 import { getEditorExtensions } from "@/modules/docs/editor/editorExtensions";
+import PageCanvas from "@/modules/docs/editor/PageCanvas";
+import { DOCUMENTS_QUERY_KEY } from "@/modules/docs/hooks/useDocumentData";
+import type { DocumentItem } from "@/modules/docs/types/document.type";
 
 const sanitizeEditorHtml = (html: string): string => {
   if (typeof window === "undefined") return html;
@@ -33,6 +36,7 @@ const getErrorMessage = (error: unknown, fallback: string): string => {
 export default function CreateOnlineDocumentPage() {
   usePageTitle('New Document');
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState("");
   const [isDirty, setIsDirty] = useState(false);
 
@@ -43,7 +47,7 @@ export default function CreateOnlineDocumentPage() {
     editorProps: {
       attributes: {
         class:
-          "tiptap-content prose m-5 focus:outline-none max-w-none px-2 pb-32",
+          "tiptap-content prose focus:outline-none max-w-none pb-32",
       },
     },
     onUpdate: () => setIsDirty(true),
@@ -52,7 +56,13 @@ export default function CreateOnlineDocumentPage() {
   const createDocumentMutation = useMutation({
     mutationFn: ({ name, content }: { name: string; content: string }) =>
       documentService.createOnline(name, content),
-    onSuccess: () => {
+    onSuccess: async (createdDocument) => {
+      await queryClient.cancelQueries({ queryKey: DOCUMENTS_QUERY_KEY });
+      queryClient.setQueryData<DocumentItem[]>(DOCUMENTS_QUERY_KEY, (documents = []) => [
+        createdDocument,
+        ...documents.filter((document) => document._id !== createdDocument._id),
+      ]);
+      await queryClient.invalidateQueries({ queryKey: DOCUMENTS_QUERY_KEY, refetchType: "all" });
       setIsDirty(false);
       toast.success("Document created successfully");
       router.push("/documents");
@@ -87,7 +97,7 @@ export default function CreateOnlineDocumentPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="app-page-narrow py-8 pb-12 px-4">
+      <div className="w-full max-w-full py-8 pb-12 px-6">
       <div className="mb-6 flex items-center gap-3">
         <Link
           href="/documents"
@@ -105,37 +115,30 @@ export default function CreateOnlineDocumentPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]"
+        className="overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#202020]"
       >
-        <div className="workspace-panel space-y-5">
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
-              Document title *
-            </label>
-            <input
-              type="text"
-              required
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                setIsDirty(true);
-              }}
-              placeholder="Enter document title"
-              className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525] px-4 py-2.5 text-sm text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] outline-none focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
-              Content
-            </label>
-            <div className="overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#252525]">
-              <EditorToolbar editor={editor} />
-              <div className="min-h-[26.25rem] dark:prose-invert">
-                <EditorContent editor={editor} />
-              </div>
+        <EditorToolbar editor={editor} />
+        <div className="bg-[#F8F9FA] dark:bg-[#202020]">
+          <PageCanvas>
+            <div className="mb-6 print:mb-4">
+              <input
+                type="text"
+                required
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setIsDirty(true);
+                }}
+                placeholder="Enter document title"
+                className="w-full border-none bg-transparent text-4xl font-extrabold leading-tight tracking-tight text-[#111111] outline-none placeholder:text-[#ABABAB] focus:ring-0 dark:text-[#E8E8E7] dark:placeholder:text-[#6B6B6B] print:text-black"
+              />
+              <div className="mt-3 h-px bg-gray-200/60 dark:bg-gray-800 print:hidden" />
             </div>
+            <div className="min-h-[800px] text-gray-900 dark:text-[#E8E8E7] print:min-h-0">
+              <EditorContent editor={editor} />
+            </div>
+          </PageCanvas>
           </div>
-        </div>
         <div className="flex items-center justify-end gap-3 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#252525] px-[var(--workspace-surface-pad)] py-4">
           {/* <Link
             href="/documents"

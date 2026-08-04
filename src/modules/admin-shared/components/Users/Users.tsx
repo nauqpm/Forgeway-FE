@@ -162,7 +162,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
   const displayItems = tab === "workspace" ? filteredMembers : filteredUsers;
 
   return (
-    <div className={`app-page-wide ${className}`}>
+    <div className={`app-page-wide app-page-fluid-2xl ${className}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">User Management</h1>
@@ -183,7 +183,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
             className="bg-white dark:bg-[#202020] rounded-[10px] w-full max-w-[min(100%,var(--app-popover-w))]"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
           >
-            <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/8">
+            <div className="flex items-center justify-between p-5 border-b border-[#EAEAEA] dark:border-white/[0.06]">
               <h3 className="font-semibold text-[#111111] dark:text-[#E8E8E7]">Invite Member</h3>
               <button
                 onClick={() => setShowInvite(false)}
@@ -268,8 +268,8 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 overflow-hidden">
-        <div className="p-4 border-b border-[#EAEAEA] dark:border-white/8">
+      <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden">
+        <div className="p-4 border-b border-[#EAEAEA] dark:border-white/[0.06]">
           <div className="relative max-w-[min(100%,28rem)]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
             <input
@@ -284,7 +284,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
 
         <div className="overflow-x-auto">
           <table className="w-full app-table-min">
-            <thead className="bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/8">
+            <thead className="bg-[#F9F9F8] dark:bg-[#252525] border-b border-[#EAEAEA] dark:border-white/[0.06]">
               <tr>
                 <th className="text-left px-5 py-3 text-xs font-semibold text-[#787774] dark:text-[#9B9A97] uppercase tracking-wide">
                   Member

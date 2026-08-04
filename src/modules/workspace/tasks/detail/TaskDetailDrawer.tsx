@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   X,
@@ -8,12 +8,19 @@ import {
   FileText,
   Archive,
   Clock,
+  Copy,
+  Trash2,
+  ImagePlus,
+  ChevronRight,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import TaskCoverBanner from "@/modules/workspace/tasks/covers/TaskCoverBanner";
 import StatusPicker from "@/shared/components/StatusPicker";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
 import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
+import { useTaskCoverActions } from "@/modules/workspace/shared/hooks/useTaskCoverActions";
+import TaskCoverPickerPortal from "@/modules/workspace/tasks/covers/TaskCoverPickerPortal";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
@@ -42,6 +49,7 @@ interface TaskDetailDrawerProps {
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   onFieldUpdate?: (issueId: string, updates: Partial<Issue>) => void;
   onArchiveIssue?: (issue: TaskDetailResponse) => void;
+  onDeleteIssue?: (issue: TaskDetailResponse) => void;
   onRestoreIssue?: (issue: TaskDetailResponse) => void;
   detailUrl?: string;
   /** Embedded in split list view: no overlay, no fixed positioning */
@@ -60,7 +68,9 @@ export default function TaskDetailDrawer({
   onUpdateIssue,
   onFieldUpdate,
   onArchiveIssue,
+  onDeleteIssue,
   onRestoreIssue,
+  detailUrl,
   embedded = false,
 }: TaskDetailDrawerProps) {
   const { user, token } = useAuth();
@@ -84,6 +94,27 @@ export default function TaskDetailDrawer({
   // Resize state
   const [drawerWidth, setDrawerWidth] = useState(400);
   const [isResizing, setIsResizing] = useState(false);
+  const [coverAnchorRect, setCoverAnchorRect] = useState<DOMRect | null>(null);
+  const coverRowRef = useRef<HTMLButtonElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCoverMouseEnter = () => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    if (coverRowRef.current) setCoverAnchorRect(coverRowRef.current.getBoundingClientRect());
+  };
+
+  const handleCoverMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setCoverAnchorRect(null);
+    }, 150);
+  };
+
+  const { saving, applyCover, removeCover } = useTaskCoverActions({
+    workspaceId,
+    issue,
+    onCoverChange: setLocalCover,
+  });
+
 
   useEffect(() => {
     if (embedded) return;
@@ -198,7 +229,6 @@ export default function TaskDetailDrawer({
           </div>
 
           <div className="flex items-center gap-1">
-            {onArchiveIssue && (
               <div className="relative">
                 <button
                   type="button"
@@ -224,6 +254,50 @@ export default function TaskDetailDrawer({
                       <Clock className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
                       Log work
                     </button>
+                    {onUpdateIssue && (
+                      <button
+                        ref={coverRowRef}
+                        type="button"
+                        onMouseEnter={handleCoverMouseEnter}
+                        onMouseLeave={handleCoverMouseLeave}
+                        onClick={handleCoverMouseEnter}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-[0.8125rem] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                      >
+                        <span className="flex items-center gap-2">
+                          <ImagePlus className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                          Select cover
+                        </span>
+                        <ChevronRight className="h-4 w-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowActionMenu(false);
+                        const wKey = issue.key ? issue.key.substring(0, issue.key.lastIndexOf('-')) : workspaceId;
+                        const taskLink = detailUrl 
+                          ? `${window.location.origin}${detailUrl}`
+                          : `${window.location.origin}/workspaces/${wKey}/board?issue=${issue.key}`;
+                        navigator.clipboard.writeText(taskLink);
+                        toast.success("Task link copied");
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                    >
+                      <Copy className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                      Copy link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowActionMenu(false);
+                        navigator.clipboard.writeText(issue.key);
+                        toast.success("Task key copied");
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                    >
+                      <Copy className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                      Copy key
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -236,10 +310,41 @@ export default function TaskDetailDrawer({
                       <Archive className="h-4 w-4 text-[#787774]" />
                       Archive
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowActionMenu(false);
+                        onDeleteIssue?.(issue);
+                      }}
+                      disabled={!onDeleteIssue}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#EF4444] hover:bg-[#FEF2F2] dark:hover:bg-[rgba(239,68,68,0.12)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </button>
                   </div>
                 )}
+                
+                <TaskCoverPickerPortal
+                  anchorRect={coverAnchorRect}
+                  cover={localCover}
+                  disabled={issue.isArchived}
+                  saving={saving}
+                  onApplyCover={(cover) => {
+                    applyCover(cover);
+                    setCoverAnchorRect(null);
+                    setShowActionMenu(false);
+                  }}
+                  onRemoveCover={() => {
+                    removeCover();
+                    setCoverAnchorRect(null);
+                    setShowActionMenu(false);
+                  }}
+                  onRequestClose={() => setCoverAnchorRect(null)}
+                  onMouseEnter={handleCoverMouseEnter}
+                  onMouseLeave={handleCoverMouseLeave}
+                />
               </div>
-            )}
             <button
               onClick={onClose}
               className="p-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] transition-colors"
@@ -258,8 +363,8 @@ export default function TaskDetailDrawer({
         />
 
         {/* Content Body — single scrollable column */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
-          <div className="p-4 md:p-6 space-y-8">
+          <div className="min-w-0 flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
+            <div className="min-w-0 p-4 md:p-6 space-y-8">
             <TaskDetailMainContent
               issue={issue}
               workspaceId={workspaceId}

@@ -10,11 +10,9 @@ import {
   LogOut,
   Repeat,
   Settings,
-  Shield,
   User,
   X,
 } from "lucide-react";
-import { ADMIN_URL } from "@/lib/admin-url";
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import AccountSwitcher from "@/shared/components/layout/account-switcher/AccountSwitcher";
 
@@ -165,22 +163,7 @@ export default function Header() {
                   Settings
                 </Link>
 
-                {user?.role === "super_admin" && (
-                  <>
-                    <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] mt-2 pt-2" />
-                    <a
-                      href={ADMIN_URL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-[0.8125rem] font-medium text-[#2563EB] dark:text-indigo-300 hover:bg-[#EFF6FF] dark:hover:bg-indigo-500/10 transition-colors"
-                    >
-                      <Shield className="w-4 h-4" />
-                      Trang quản trị
-                      <span className="ml-auto text-[10px] uppercase tracking-wider text-[#9B9A97] dark:text-[#6B6B6B]">↗</span>
-                    </a>
-                  </>
-                )}
+
 
                 <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] mt-2 pt-2">
                   <button

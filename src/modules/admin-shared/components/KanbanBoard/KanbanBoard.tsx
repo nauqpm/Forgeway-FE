@@ -216,7 +216,7 @@ function TaskCard({ task, isOverlay }: { task: Task; isOverlay?: boolean }) {
       style={!isOverlay ? style : undefined}
       {...attributes}
       {...listeners}
-      className={`bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/8 hover:border-[#2563EB]/20 transition ${
+      className={`bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] hover:border-[#2563EB]/20 transition ${
         isOverlay
           ? "opacity-90 scale-105"
           : "cursor-grab active:cursor-grabbing"

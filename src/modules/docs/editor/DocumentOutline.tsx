@@ -56,15 +56,15 @@ export default function DocumentOutline({ editor }: { editor: Editor | null }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-950 p-5 overflow-y-auto custom-scrollbar shrink-0">
+    <div className="flex flex-col h-full bg-white dark:bg-[#202020] p-5 overflow-y-auto custom-scrollbar shrink-0">
       <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-4 shrink-0">
         <List className="w-3.5 h-3.5" />
         Outline
       </div>
 
       {headings.length === 0 ? (
-        <div className="text-xs text-gray-400 dark:text-gray-500 italic">
-          No headings found in the document. Add headings (H1, H2, H3) to display the outline.
+        <div className="whitespace-pre-line text-xs italic text-gray-400 dark:text-gray-500">
+          {"No headings found in the document.\nAdd headings (H1, H2, H3) to display the outline."}
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">

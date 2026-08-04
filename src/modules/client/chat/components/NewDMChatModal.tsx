@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Search, User, Loader2 } from 'lucide-react';
 import { useSearchUsers, useCreateDM } from '../hooks/useChatQueries';
 import type { SearchUser } from '@/modules/client/chat/types/chat.types';
+import { toast } from 'react-hot-toast';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface NewChatModalProps {
 export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
   // Debounce search input
   useEffect(() => {
@@ -31,18 +33,28 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
     if (!isOpen) {
       setSearch('');
       setDebouncedSearch('');
+      setSelectedUserIds([]);
     }
   }, [isOpen]);
 
-  const handleStartChat = async (targetUserId: string) => {
-    if (!targetUserId) return;
+  const toggleUserSelection = (targetUserId: string) => {
+    setSelectedUserIds((prev) =>
+      prev.includes(targetUserId)
+        ? prev.filter((id) => id !== targetUserId)
+        : [...prev, targetUserId]
+    );
+  };
+
+  const handleStartChat = async () => {
+    if (selectedUserIds.length === 0) return;
     try {
-      await createDMMutation.mutateAsync(targetUserId);
+      await createDMMutation.mutateAsync(selectedUserIds);
+      toast.success('Create DM successfully');
       onClose();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Failed to create DM:', error);
-      alert(`Error starting chat: ${error.response?.data?.message || error.message}`);
+      toast.error(error.response?.data?.message || error.message || 'Không thể tạo cuộc trò chuyện!');
     }
   };
 
@@ -90,41 +102,69 @@ export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
             </div>
           ) : (
             <div className="space-y-0.5">
-              {users.map((user: SearchUser, idx: number) => (
-                <button
-                  key={user._id || user.id || `u-${idx}`}
-                  disabled={creating}
-                  onClick={() => handleStartChat(user._id || user.id || '')}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-[8px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors group text-left disabled:opacity-50"
-                >
-                  <div className="w-10 h-10 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-bold shadow-sm overflow-hidden">
-                    {user.avatar ? (
-                      <img 
-                        src={user.avatar} 
-                        alt={user.fullName} 
-                        className="w-full h-full object-cover" 
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                          const parent = (e.target as HTMLImageElement).parentElement;
-                          if (parent && !parent.querySelector('span')) {
-                            const span = document.createElement('span');
-                            span.innerText = user.fullName?.charAt(0).toUpperCase() || 'U';
-                            parent.appendChild(span);
-                          }
-                        }}
-                      />
-                    ) : (
-                      <User className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] truncate">{user.fullName || user.email || 'User'}</p>
-                    <p className="text-[0.75rem] text-[#787774] dark:text-[#9B9A97] truncate">{user.email}</p>
-                  </div>
-                </button>
-              ))}
+              {users.map((user: SearchUser, idx: number) => {
+                const isSelected = selectedUserIds.includes(user._id || user.id || '');
+                return (
+                  <button
+                    key={user._id || user.id || `u-${idx}`}
+                    disabled={creating}
+                    onClick={() => toggleUserSelection(user._id || user.id || '')}
+                    className="w-full flex items-center justify-between p-2.5 rounded-[8px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors group text-left disabled:opacity-50"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-bold shadow-sm overflow-hidden flex-shrink-0">
+                        {user.avatar ? (
+                          <img 
+                            src={user.avatar} 
+                            alt={user.fullName} 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent && !parent.querySelector('span')) {
+                                const span = document.createElement('span');
+                                span.innerText = user.fullName?.charAt(0).toUpperCase() || 'U';
+                                parent.appendChild(span);
+                              }
+                            }}
+                          />
+                        ) : (
+                          <User className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] truncate">{user.fullName || user.email || 'User'}</p>
+                        <p className="text-[0.75rem] text-[#787774] dark:text-[#9B9A97] truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Checkbox */}
+                    <div className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center ${
+                      isSelected 
+                        ? 'bg-[#2563EB] border-[#2563EB]' 
+                        : 'border-[#EAEAEA] dark:border-[#383838]'
+                    }`}>
+                      {isSelected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           )}
+        </div>
+
+        {/* Footer actions */}
+        <div className="p-4 border-t border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#FBFBFA] dark:bg-[#202020]">
+          <p className="text-sm text-[#787774] font-medium">
+            {selectedUserIds.length} selected
+          </p>
+          <button 
+            onClick={handleStartChat}
+            disabled={selectedUserIds.length === 0 || creating}
+            className="px-4 py-2 bg-[#2563EB] text-white rounded-[8px] font-semibold text-sm hover:bg-[#1D4ED8] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Create Chat
+          </button>
         </div>
 
         {creating && (

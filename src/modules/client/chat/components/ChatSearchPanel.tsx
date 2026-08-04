@@ -9,6 +9,10 @@ import api from '@/lib/axiosIns';
 import { useChatStore } from '@/stores/chatStore';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
+import { ResizeHandle } from '@/shared/components/ResizeHandle';
+import { renderMessageContent } from '../utils/messageContentRenderer';
+import MediaLightbox from './MediaLightbox';
 
 interface ChatSearchPanelProps {
   channelId: string;
@@ -76,14 +80,14 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
       ]);
 
       const attachmentsData = attachmentsRes.data?.data ?? attachmentsRes.data ?? [];
-      
+
       const imagesResData = imagesRes.data;
       const imagesList = Array.isArray(imagesResData)
         ? imagesResData
         : (Array.isArray(imagesResData?.images)
           ? imagesResData.images
           : (Array.isArray(imagesResData?.data) ? imagesResData.data : []));
-      
+
       const normalizedImages = imagesList.map((img: any) => ({
         _id: img._id,
         originalName: img.originalName || img.filename || 'image.jpg',
@@ -115,13 +119,13 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
         params: { limit: 100 }
       });
       const messages = response.data?.messages || response.data?.data || response.data || [];
-      
+
       const links: { url: string; sender: any; createdAt: string; message: any }[] = [];
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      
+
       messages.forEach((msg: any) => {
-        if (!msg.content || msg.deletedAt) return;
-        
+        if (!msg.content) return;
+
         const matches = msg.content.match(urlRegex);
         if (matches) {
           matches.forEach((url: string) => {
@@ -132,7 +136,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                 cleanUrl = url.slice(0, -1);
               }
             }
-            
+
             links.push({
               url: cleanUrl,
               sender: msg.senderId,
@@ -142,7 +146,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
           });
         }
       });
-      
+
       return links;
     },
     enabled: activeTab === 'links' && Boolean(channelId),
@@ -192,9 +196,9 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     const isPdf = lowerMime === 'application/pdf';
     const isImg = lowerMime.startsWith('image/');
     const isTxt = lowerMime.startsWith('text/');
-    
+
     const isPreviewable = isPdf || isImg || isTxt;
-    
+
     if (isPreviewable) {
       const loadingToast = toast.loading('Opening file...');
       try {
@@ -218,11 +222,11 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
 
   const handleMessageClick = (msg: any) => {
     const messageId = msg._id || msg.id;
-    
+
     if (msg.threadParentId) {
       // If it is a reply, open the thread panel
       useChatStore.getState().setActiveThreadParentId(msg.threadParentId);
-      
+
       // Append threadParentId and messageId to URL
       const params = new URLSearchParams(window.location.search);
       params.set('channelId', channelId);
@@ -232,7 +236,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     } else {
       // If it is a main message, close thread index / panel
       useChatStore.getState().setActiveThreadParentId(null);
-      
+
       // Append channelId and messageId to URL
       const params = new URLSearchParams(window.location.search);
       params.set('channelId', channelId);
@@ -241,8 +245,20 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     }
   };
 
+  const { width: panelWidth, handleMouseDown, handleReset } = useResizablePanel({
+    defaultWidth: 360,
+    minWidth: 280,
+    maxWidth: 600,
+    side: 'left',
+    storageKey: 'al_chat_right_panel_w',
+  });
+
   return (
-    <div className="w-[350px] flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out]">
+    <div
+      style={{ width: `${panelWidth}px` }}
+      className="flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out] relative"
+    >
+      <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="left" />
       {/* Header */}
       <div className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
@@ -263,31 +279,28 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
       <div className="flex border-b border-[#EAEAEA] dark:border-white/[0.06] px-2 bg-[#FBFBFA] dark:bg-[#1C1C1C]">
         <button
           onClick={() => setActiveTab('messages')}
-          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
-            activeTab === 'messages'
-              ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
-              : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
-          }`}
+          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'messages'
+            ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
+            : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
+            }`}
         >
           Messages
         </button>
         <button
           onClick={() => setActiveTab('files')}
-          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
-            activeTab === 'files'
-              ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
-              : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
-          }`}
+          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'files'
+            ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
+            : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
+            }`}
         >
           Files & Images
         </button>
         <button
           onClick={() => setActiveTab('links')}
-          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${
-            activeTab === 'links'
-              ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
-              : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
-          }`}
+          className={`flex-1 py-2.5 text-xs font-semibold border-b-2 transition-colors ${activeTab === 'links'
+            ? 'border-[#2563EB] text-[#2563EB] dark:border-[#3B82F6] dark:text-[#3B82F6]'
+            : 'border-transparent text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]'
+            }`}
         >
           Links
         </button>
@@ -354,7 +367,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                     <>
                       {/* Backdrop to close dropdown */}
                       <div className="fixed inset-0 z-10" onClick={() => setShowSenderDropdown(false)} />
-                      
+
                       <div className="absolute z-20 w-full mt-1 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-md shadow-lg max-h-60 overflow-y-auto flex flex-col">
                         {/* Search inside dropdown */}
                         <div className="p-2 border-b border-[#EAEAEA] dark:border-white/[0.06] sticky top-0 bg-white dark:bg-[#252525] z-10">
@@ -431,7 +444,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                     const sender = msg.senderId;
                     const senderName = sender?.fullName || sender?.email || 'User';
                     const dateStr = format(new Date(msg.createdAt), 'MMM d, h:mm a');
-                    
+
                     return (
                       <div
                         key={msg._id || msg.id}
@@ -463,20 +476,20 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                                 Reply in thread
                               </span>
                             )}
-                            <p className="text-xs text-[#555555] dark:text-[#C4C4C3] line-clamp-3 mt-1 break-words">
-                              {msg.content || (msg.stickerId ? 'Sent a sticker' : '')}
-                            </p>
+                            <div className="text-xs text-[#555555] dark:text-[#C4C4C3] line-clamp-3 mt-1 break-words">
+                              {renderMessageContent(msg.content || (msg.stickerId ? 'Sent a sticker' : ''))}
+                            </div>
 
                             {/* Previews for Attachments in Search Result */}
-                            {!msg.deletedAt && msg.attachments && msg.attachments.length > 0 && (
+                            {msg.attachments && msg.attachments.length > 0 && (
                               <div className="mt-1.5 flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
                                 {msg.attachments.map((file: any, idx: number) => {
                                   const mime = file.mimeType || file.mimetype || '';
                                   const isImg = mime.toLowerCase().startsWith('image/');
-                                  
+
                                   if (isImg) {
                                     return (
-                                      <div 
+                                      <div
                                         key={idx}
                                         className="relative w-12 h-12 rounded-[4px] overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#1E1E1E] cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
                                         onClick={() => setLightboxFile({ url: file.url, originalName: file.name || 'Image', mimeType: file.mimeType })}
@@ -582,7 +595,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                       {docFiles.map((file) => {
                         const isPdf = file.mimeType?.toLowerCase() === 'application/pdf';
                         const isVideo = file.mimeType?.toLowerCase().startsWith('video/');
-                        
+
                         return (
                           <div
                             key={file._id}
@@ -609,7 +622,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                                 </p>
                               </div>
                             </div>
-                            
+
                             <button
                               onClick={() => handleDownload(file.url, file.originalName)}
                               className="p-1 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F0F0EE] dark:hover:bg-white/5 rounded transition-colors flex-shrink-0"
@@ -641,7 +654,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                 {allLinks.map((linkItem, idx) => {
                   const senderName = linkItem.sender?.fullName || linkItem.sender?.email || 'User';
                   const dateStr = format(new Date(linkItem.createdAt), 'MMM d, h:mm a');
-                  
+
                   return (
                     <div
                       key={idx}
@@ -664,7 +677,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                           {dateStr}
                         </span>
                       </div>
-                      
+
                       <a
                         href={linkItem.url}
                         target="_blank"
@@ -674,7 +687,7 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
                         <ExternalLink className="w-3 h-3 flex-shrink-0" />
                         {linkItem.url}
                       </a>
-                      
+
                       <div className="flex items-end justify-between gap-2 mt-1">
                         <p className="text-[11px] text-[#787774] dark:text-[#9B9A97] line-clamp-2 italic flex-1 break-words">
                           {`"${linkItem.message.content}"`}
@@ -695,55 +708,11 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
         )}
       </div>
       {/* Lightbox Preview Modal */}
-      {lightboxFile && (
-        <div 
-          className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center cursor-zoom-out"
-          onClick={() => setLightboxFile(null)}
-        >
-          {/* Top Bar */}
-          <div 
-            className="absolute top-0 inset-x-0 h-14 bg-gradient-to-b from-black/70 to-transparent flex items-center justify-between px-6 text-white z-10"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span className="text-xs font-medium truncate max-w-[70%]">
-              {lightboxFile.originalName}
-            </span>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleDownload(lightboxFile.url, lightboxFile.originalName)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                title="Download"
-              >
-                <Download className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setLightboxFile(null)}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {lightboxFile.mimeType?.toLowerCase().startsWith('video/') ? (
-            <video
-              src={lightboxFile.url}
-              controls
-              preload="metadata"
-              className="max-w-[90vw] max-h-[85vh] rounded-md shadow-2xl mt-10 focus:outline-none"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <img
-              src={lightboxFile.url}
-              alt="Preview"
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-md shadow-2xl select-none mt-10"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
-        </div>
-      )}
+      <MediaLightbox
+        file={lightboxFile ? { url: lightboxFile.url, name: lightboxFile.originalName, mimeType: lightboxFile.mimeType } : null}
+        onDownload={() => lightboxFile && handleDownload(lightboxFile.url, lightboxFile.originalName)}
+        onClose={() => setLightboxFile(null)}
+      />
     </div>
   );
 }

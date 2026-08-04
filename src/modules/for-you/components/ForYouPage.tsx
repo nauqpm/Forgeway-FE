@@ -19,7 +19,7 @@ export default function ForYouPage() {
 
   return (
     <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">
-      <div className="app-page-medium">
+      <div className="app-page-medium app-page-fluid-xl">
         <ForYouWorkspaceGrid workspaces={workspaces} stats={stats} error={error} />
 
         <DashboardTaskList

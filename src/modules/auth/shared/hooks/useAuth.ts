@@ -226,26 +226,34 @@ export const useAuth = () => {
 
   const login = useCallback(
     async (data: LoginRequest) => {
-      const emailError = validateEmail(data.email);
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const emailError = validateEmail(normalizedEmail);
       if (emailError) {
         toast.error(emailError);
         throw new Error(emailError);
       }
 
-      return loginMutation.mutateAsync(data);
+      return loginMutation.mutateAsync({
+        ...data,
+        email: normalizedEmail,
+      });
     },
     [loginMutation],
   );
 
   const register = useCallback(
     async (data: RegisterRequest) => {
-      const emailError = validateEmail(data.email);
+      const normalizedEmail = data.email.trim().toLowerCase();
+      const emailError = validateEmail(normalizedEmail);
       if (emailError) {
         toast.error(emailError);
         throw new Error(emailError);
       }
 
-      return registerMutation.mutateAsync(data);
+      return registerMutation.mutateAsync({
+        ...data,
+        email: normalizedEmail,
+      });
     },
     [registerMutation],
   );

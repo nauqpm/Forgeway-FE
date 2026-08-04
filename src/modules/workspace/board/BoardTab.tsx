@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
@@ -9,11 +9,15 @@ import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import { useQuery } from "@tanstack/react-query";
+import { taskService } from "@/modules/workspace/shared/services/taskService";
 import DeleteColumnModal from "@/modules/workspace/shared/components/DeleteColumnModal";
 import BoardFilters from "@/modules/workspace/shared/components/BoardFilters";
 import BoardTaskActionMenu from "@/modules/workspace/tasks/covers/BoardTaskActionMenu";
 import TaskLabelModal from "@/modules/workspace/tasks/labels/TaskLabelModal";
 import { compareIssueRank } from "@/modules/workspace/shared/utils/dragUtils";
+import { toast } from "react-hot-toast";
+import { MAX_COLUMN_NAME_LENGTH, COLUMN_NAME_MESSAGES } from "@/modules/workspace/shared/utils/columnName";
 
 import {
   Check,
@@ -87,7 +91,7 @@ type BoardTabProps = {
     handleBoardDragStart?: () => void;
     handleAddColumn: () => void;
     handleRenameColumn: (columnId: string, name: string) => void;
-    handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
+    handleDeleteColumn: (columnId: string, migrateTo?: string, archivedMigrateTo?: string) => void;
     handleMoveColumn: (columnId: string, newOrder: number) => void;
     updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
     onArchiveIssue?: (issue: Issue) => void;
@@ -155,6 +159,27 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const actionMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch archived tasks count for the column being deleted
+  const { data: archivedTasksInColumn } = useQuery({
+    queryKey: ["tasks-archived-column", workspace._id, columnToDelete?.id],
+    queryFn: () => taskService.getBoardTasks(workspace._id, {
+      archived: true,
+      columnId: columnToDelete!.id,
+      page: 1,
+      limit: 1,
+    }),
+    enabled: !!columnToDelete && deleteModalOpen,
+    staleTime: 0,
+  });
+
+  // Whether the column being deleted has any archived tasks
+  const archivedInColumn = (archivedTasksInColumn?.length ?? 0) > 0;
+
+
+
+
+
 
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
@@ -310,7 +335,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     : null;
 
   return (
-    <div className="flex flex-col gap-0.5 relative">
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-0.5">
       {filters.archived && (
         <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[0.6875rem] font-bold z-10">
           Archived View - Read Only
@@ -318,11 +343,13 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       )}
 
       {/* Quick Filters */}
-      <BoardFilters
-        filters={filters}
-        setFilters={setFilters}
-        uniqueAssignees={uniqueAssignees}
-      />
+      <div className="shrink-0">
+        <BoardFilters
+          filters={filters}
+          setFilters={setFilters}
+          uniqueAssignees={uniqueAssignees}
+        />
+      </div>
 
       <DragDropContext onBeforeDragStart={handleBoardDragStart} onDragEnd={handleBoardDragEnd}>
         <Droppable
@@ -332,12 +359,16 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         >
           {(provided) => (
             <div
-              className="workspace-board-height flex overflow-x-auto pt-2 px-[var(--workspace-surface-pad)] pb-[var(--workspace-surface-pad)]"
-              style={{ gap: "var(--workspace-board-gap)" }}
-              ref={provided.innerRef}
-              {...provided.droppableProps}
+              ref={columnsEndRef}
+              className="flex min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden"
             >
-              {columns.map((column, index) => (
+              <div
+                className="flex min-w-max pt-2 px-[var(--workspace-surface-pad)] pb-[var(--workspace-surface-pad)]"
+                style={{ gap: "var(--workspace-board-gap)" }}
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+              >
+                {columns.map((column, index) => (
                 <Draggable
                   key={column.id}
                   draggableId={`col-${column.id}`}
@@ -348,11 +379,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="workspace-column flex-shrink-0 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] flex flex-col max-h-full border border-[#EAEAEA] dark:border-white/[0.06] group/column overflow-hidden"
+                      className="workspace-column flex min-h-0 flex-shrink-0 flex-col bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] group/column overflow-hidden"
                     >
                       <div
                         {...(filters.archived ? {} : provided.dragHandleProps)}
-                        className={`p-3 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-t-[8px] ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
+                        className={`shrink-0 p-3 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-t-[8px] ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
                         onDoubleClick={() => {
                           if (filters.archived) return;
                           setEditingColumnId(column.id);
@@ -360,30 +391,50 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         }}
                       >
                         {editingColumnId === column.id ? (
-                          <input
-                            autoFocus
-                            value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleRenameColumn(column.id, editingName);
-                                setEditingColumnId(null);
-                              }
-                              if (e.key === "Escape") setEditingColumnId(null);
-                            }}
-                            onBlur={() => setEditingColumnId(null)}
-                            className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
-                          />
+                          <div className="w-full">
+                            <input
+                              autoFocus
+                              value={editingName}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val.length > MAX_COLUMN_NAME_LENGTH) {
+                                  toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+                                  setEditingName(val.slice(0, MAX_COLUMN_NAME_LENGTH));
+                                } else {
+                                  setEditingName(val);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleRenameColumn(column.id, editingName);
+                                  setEditingColumnId(null);
+                                }
+                                if (e.key === "Escape") setEditingColumnId(null);
+                              }}
+                              onBlur={() => setEditingColumnId(null)}
+                              className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
+                            />
+                            {editingName.length >= 40 && (
+                              <div className="text-[0.625rem] font-mono mt-1 text-right text-[#787774] dark:text-[#9B9A97]">
+                                <span className={editingName.length >= MAX_COLUMN_NAME_LENGTH ? "text-[#9F2F2D] font-bold" : ""}>
+                                  {editingName.length}
+                                </span>
+                                /{MAX_COLUMN_NAME_LENGTH}
+                              </div>
+                            )}
+                          </div>
                         ) : (
-                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2">
-                            {column.name}
-                            <span className="w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold">
+                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2 min-w-0 flex-1 mr-2">
+                            <span className="truncate" title={column.name}>
+                              {column.name}
+                            </span>
+                            <span className="shrink-0 w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold">
                               {getColumnIssues(column).length}
                             </span>
                           </h3>
                         )}
                         {!filters.archived && (canUpdateWorkspace || canCreateTask) && (
-                          <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+                          <div className="flex shrink-0 gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
                             {canUpdateWorkspace && (
                               <button
                                 onClick={() => {
@@ -405,7 +456,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 flex-1 overflow-y-auto space-y-3 min-h-[9.375rem] transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
+                            className={`flex min-h-0 flex-1 flex-col overflow-y-auto p-3 space-y-3 transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
                           >
                             {getColumnIssues(column)
                               .map((issue, issueIndex) => (
@@ -475,7 +526,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         </div>
                                       )}
                                       <div className="p-3.5">
-                                        <p className="mb-2 text-[0.8125rem] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
+                                        <p title={issue.title} className="mb-2 truncate text-[0.8125rem] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
                                           {issue.title}
                                         </p>
                                         <div className="mb-3 flex flex-wrap gap-1.5">
@@ -554,8 +605,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
 
               {/* Add new column */}
               <div
-                className="workspace-column flex-shrink-0 bg-transparent flex flex-col group/new-col"
-                ref={columnsEndRef}
+                className="workspace-column flex min-h-0 flex-shrink-0 flex-col bg-transparent group/new-col"
               >
                 {canUpdateWorkspace && showCreateColumn ? (
                   <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-3">
@@ -563,7 +613,15 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                       type="text"
                       autoFocus
                       value={newColumnName}
-                      onChange={(e) => setNewColumnName(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.length > MAX_COLUMN_NAME_LENGTH) {
+                          toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+                          setNewColumnName(val.slice(0, MAX_COLUMN_NAME_LENGTH));
+                        } else {
+                          setNewColumnName(val);
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleAddColumn();
                         if (e.key === "Escape") {
@@ -574,6 +632,14 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                       placeholder="New column name..."
                       className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] focus:border-[#2563EB] outline-none transition-colors"
                     />
+                    {newColumnName.length >= 40 && (
+                      <div className="text-[0.625rem] font-mono mt-1 text-right text-[#787774] dark:text-[#9B9A97]">
+                        <span className={newColumnName.length >= MAX_COLUMN_NAME_LENGTH ? "text-[#9F2F2D] font-bold" : ""}>
+                          {newColumnName.length}
+                        </span>
+                        /{MAX_COLUMN_NAME_LENGTH}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 mt-3">
                       <button
                         onClick={handleAddColumn}
@@ -602,6 +668,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 ) : null}
               </div>
             </div>
+          </div>
           )}
         </Droppable>
       </DragDropContext>
@@ -646,12 +713,13 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           column={columnToDelete}
           columns={columns}
           hasTasks={issues.some(i => issueMatchesColumn(i, columnToDelete))}
+          hasArchivedTasks={archivedInColumn}
           onClose={() => {
             setDeleteModalOpen(false);
             setColumnToDelete(null);
           }}
-          onConfirm={(migrateTo) => {
-            handleDeleteColumn(columnToDelete.id, migrateTo);
+          onConfirm={(migrateTo, archivedMigrateTo) => {
+            handleDeleteColumn(columnToDelete.id, migrateTo, archivedMigrateTo);
             setDeleteModalOpen(false);
             setColumnToDelete(null);
           }}

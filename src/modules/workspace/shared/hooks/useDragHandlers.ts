@@ -14,6 +14,7 @@ import {
   TaskReorderSyncInput,
 } from "@/modules/workspace/shared/utils/dragUtils";
 import { isNoopReorderError } from "@/modules/workspace/shared/utils/workspaceUtils";
+import { queryKeys } from "@/shared/constants/queryKeys";
 
 interface UseDragHandlersParams {
   workspaceId: string | undefined;
@@ -60,6 +61,24 @@ export function useDragHandlers({
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .then((updatedTask: any) => {
                 patchSelectedTaskView(updatedTask);
+                // Sync board cache with API response
+                queryClient.setQueriesData<Issue[]>(
+                  { queryKey: queryKeys.tasks.byWorkspace(workspaceId) },
+                  (current) =>
+                    Array.isArray(current)
+                      ? current.map((issue) =>
+                          (issue.id || issue._id) === updatedTask.id
+                            ? {
+                                ...issue,
+                                columnId: updatedTask.columnId,
+                                status: updatedTask.status,
+                                rank: updatedTask.rank,
+                                version: updatedTask.version,
+                              }
+                            : issue,
+                        )
+                      : current,
+                );
                 queryClient.invalidateQueries({
                   queryKey: ["taskActivities", workspaceId, taskId],
                 });
@@ -67,10 +86,10 @@ export function useDragHandlers({
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .catch((error: any) => {
                 if (isNoopReorderError(error)) {
-                  queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+                  queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
                   return;
                 }
-                queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+                queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
                 toast.error(error?.response?.data?.message || "Could not update task position");
               });
           }
@@ -113,7 +132,7 @@ export function useDragHandlers({
               })
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .catch((error: any) => {
-                queryClient.invalidateQueries({ queryKey: ["tasks", workspaceId] });
+                queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
                 toast.error(error?.response?.data?.message || "Could not update task sprint");
               });
           }

@@ -2,9 +2,9 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, User, Settings, LogOut, Repeat, Shield, X } from "lucide-react";
+import { LayoutDashboard, User, Settings, LogOut, Repeat, X } from "lucide-react";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
-import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
+
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import AccountSwitcher from "@/shared/components/layout/account-switcher/AccountSwitcher";
 
@@ -57,7 +57,7 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
     { icon: Settings, label: "Settings", onClick: () => navigate("/settings") },
   ];
 
-  const isSuperAdmin = IS_SUPER_ADMIN(user?.role);
+
 
   return (
     <div className={`relative ${className}`} ref={menuRef}>
@@ -77,7 +77,7 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-[#252525] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] z-50 shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-60 bg-white dark:bg-[#252525] rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] z-[9999] shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden">
           {/* Header: name + email on the left, switch-account icon on the right */}
           <div className="flex items-start gap-2 px-4 py-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
             <div className="min-w-0 flex-1">
@@ -94,11 +94,10 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
               title="Chuyển account"
               aria-label="Chuyển account"
               aria-expanded={showSwitcher}
-              className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-md transition ${
-                showSwitcher
+              className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-md transition ${showSwitcher
                   ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-indigo-500/15 dark:text-indigo-300"
                   : "text-[#2563EB] hover:bg-[#EFF6FF] dark:text-indigo-300 dark:hover:bg-indigo-500/10"
-              }`}
+                }`}
             >
               {showSwitcher ? <X className="h-3.5 w-3.5" /> : <Repeat className="h-4 w-4" />}
               {switchableCount > 0 && !showSwitcher && (
@@ -133,22 +132,6 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
               </button>
             ))}
 
-            {isSuperAdmin && (
-              <>
-                <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] my-1" />
-                <a
-                  href={ADMIN_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setIsOpen(false)}
-                  className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-[#2563EB] dark:text-indigo-300 hover:bg-[#EFF6FF] dark:hover:bg-indigo-500/10 transition-colors"
-                >
-                  <Shield className="w-4 h-4" />
-                  Trang quản trị
-                  <span className="ml-auto text-[10px] uppercase tracking-wider text-[#9B9A97] dark:text-[#6B6B6B]">↗</span>
-                </a>
-              </>
-            )}
 
             <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] my-1" />
 

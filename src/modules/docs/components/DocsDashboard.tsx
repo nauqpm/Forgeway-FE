@@ -11,15 +11,18 @@ import DashboardEmpty from "./DashboardEmpty";
 import { documentService } from "../services/documentService";
 import { DocumentItem } from "../types/document.type";
 import { Document } from "../types/docs.type";
-import { Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { buildWorkspacePageHref } from "../utils/pageRoutes";
 
-export default function DocsDashboard({ workspaceId }: { workspaceId: string }) {
+export default function DocsDashboard({ workspaceId, workspaceKey }: { workspaceId: string; workspaceKey: string }) {
   const {
     selectDocument,
     selectImportedDocument,
+    expandedNodes,
+    toggleExpand,
   } = useDocsStore();
-  const { documents, createDocument, renameDocument, deleteDocument } = useWorkspaceDocs(workspaceId);
+  const { documents, createDocument, renameDocument, deleteDocument, isLoading, isError, error, refetch } = useWorkspaceDocs(workspaceId);
   const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -122,10 +125,10 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
     return result;
   }, [filteredDocs, filteredUploadedDocs, sortOrder]);
 
-  const groups = useMemo(
-    () => (dashboardDocs.length ? [{ name: "Docs", docs: dashboardDocs }] : []),
-    [dashboardDocs],
-  );
+  const docsErrorMessage =
+    (error as { response?: { status?: number } } | null)?.response?.status === 403
+      ? "You do not have permission to view documents in this workspace."
+      : "Could not load documents. Please try again.";
 
   const handleCreate = async () => {
     const newDoc = await createDocument();
@@ -204,8 +207,22 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
       selectImportedDocument(id);
       return;
     }
+    const target = documents.find((doc) => doc.id === id);
+    if (!target) return;
+
+    // Prefill the byId query cache so TiptapEditor renders instantly from initialData
+    queryClient.setQueryData(queryKeys.docs.byId(workspaceId, target.id), target);
+
     selectDocument(id, documents);
+
+    // Use pushState instead of router.push() so the workspace shell ([[...tab]])
+    // is NOT remounted — only the Docs content area updates reactively.
+    window.history.pushState(null, "", buildWorkspacePageHref({ workspaceKey, doc: target }));
+    // Notify DocsLayout that the URL changed (pushState doesn't fire popstate)
+    window.dispatchEvent(new Event("docs-location-change"));
   };
+
+
 
   const importableLibraryDocs = useMemo(() => {
     const attachedIds = new Set(uploadedDocs.map((doc) => doc._id));
@@ -213,7 +230,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
   }, [personalDocs, uploadedDocs]);
 
   return (
-    <div className="flex-1 flex flex-col bg-[#FBFBFA] dark:bg-[#202020] overflow-hidden h-full">
+    <div className="flex-1 min-h-0 flex flex-col bg-[#FBFBFA] dark:bg-[#202020] overflow-hidden h-full">
       <DashboardHeader
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -283,7 +300,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
             role="dialog"
             aria-modal="true"
             aria-labelledby="rename-dashboard-document-title"
-            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-5"
+            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-5"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -307,12 +324,12 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
                 if (e.key === "Enter") { e.preventDefault(); handleRenameDocument(); }
                 if (e.key === "Escape") closeRenameDialog();
               }}
-              className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/8 bg-[#F7F6F3] dark:bg-[#252525] px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none transition focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#252525] disabled:cursor-not-allowed disabled:opacity-60 placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]"
+              className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-[#F7F6F3] dark:bg-[#252525] px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none transition focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#252525] disabled:cursor-not-allowed disabled:opacity-60 placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B]"
               placeholder="Document name"
             />
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" disabled={renaming} onClick={closeRenameDialog}
-                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/8 px-4 py-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] transition hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60">
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] transition hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60">
                 Cancel
               </button>
               <button type="button" disabled={renaming} onClick={handleRenameDocument}
@@ -333,7 +350,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-dashboard-document-title"
-            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/8 bg-white dark:bg-[#202020] p-5"
+            className="w-full max-w-md rounded-[10px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-5"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -356,7 +373,7 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
             </div>
             <div className="flex justify-end gap-2">
               <button type="button" disabled={deleting} onClick={closeDeleteDialog}
-                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/8 px-4 py-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] transition hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60">
+                className="rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] px-4 py-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] transition hover:bg-[#F7F6F3] dark:hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-60">
                 Cancel
               </button>
               <button type="button" disabled={deleting || detachDocumentMutation.isPending} onClick={handleDeleteDocument}
@@ -368,21 +385,34 @@ export default function DocsDashboard({ workspaceId }: { workspaceId: string }) 
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-6 py-5 custom-scrollbar">
-        <div className="space-y-6">
-          {groups.map((group, idx) => (
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 custom-scrollbar">
+        <div className="h-full min-h-0">
+          {isLoading ? (
+            <div className="flex h-full items-center justify-center text-[#787774] dark:text-[#9B9A97]">
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Loading documents...
+            </div>
+          ) : isError ? (
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <p className="text-[0.9375rem] font-medium text-[#111111] dark:text-[#E8E8E7]">{docsErrorMessage}</p>
+              <button onClick={() => refetch()} className="mt-3 text-[0.8125rem] font-semibold text-[#2563EB] hover:underline">Retry</button>
+            </div>
+          ) : dashboardDocs.length > 0 ? (
             <DashboardGroup
-              key={group.name}
-              name={group.name}
-              docs={group.docs}
-              idx={idx}
+              docs={dashboardDocs}
+              idx={0}
+              expandedNodes={expandedNodes}
+              onToggleExpand={toggleExpand}
               onSelect={handleSelect}
               onRename={handleRename}
               onDelete={handleDelete}
             />
-          ))}
-
-          {groups.length === 0 && <DashboardEmpty onClearFilters={() => setSearchQuery("")} />}
+          ) : (
+            <DashboardEmpty
+              hasSearchQuery={Boolean(searchQuery)}
+              onClearFilters={() => setSearchQuery("")}
+              onCreatePage={handleCreate}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -6,7 +6,11 @@ interface ChatStore {
   activeThreadParentId: string | null; // null = closed, 'index' = thread index panel, string = specific thread parent msg id
   typingUsers: Record<string, Record<string, number>>; // channelId: { userId: timestamp }
   replyingToMessage: Message | null;
-  
+  replyingToThreadMessage: Message | null;
+
+  // Tracks thread parentIds that have new replies the user hasn't seen yet per channel
+  unreadThreadIds: Record<string, Set<string>>;
+
   setActiveChannel: (channelId: string | null) => void;
   setActiveThreadParentId: (parentId: string | null) => void;
 
@@ -15,6 +19,11 @@ interface ChatStore {
   clearOldTyping: () => void;
   
   setReplyingToMessage: (message: Message | null) => void;
+  setReplyingToThreadMessage: (message: Message | null) => void;
+
+  markThreadUnread: (channelId: string, threadParentId: string) => void;
+  markThreadRead: (channelId: string, threadParentId: string) => void;
+  clearUnreadThreads: (channelId?: string) => void;
 }
 
 export const useChatStore = create<ChatStore>((set) => ({
@@ -22,8 +31,10 @@ export const useChatStore = create<ChatStore>((set) => ({
   activeThreadParentId: null,
   typingUsers: {},
   replyingToMessage: null,
+  replyingToThreadMessage: null,
+  unreadThreadIds: {},
 
-  setActiveChannel: (activeChannelId) => set({ activeChannelId, activeThreadParentId: null }), // Close thread on channel change
+  setActiveChannel: (activeChannelId) => set({ activeChannelId, activeThreadParentId: null, replyingToMessage: null, replyingToThreadMessage: null }), // Close thread on channel change, but keep unread thread badges
   setActiveThreadParentId: (activeThreadParentId) => set({ activeThreadParentId }),
 
   setTyping: (channelId, userId) => set((state) => ({
@@ -72,5 +83,33 @@ export const useChatStore = create<ChatStore>((set) => ({
     return changed ? { typingUsers: newTypingUsers } : state;
   }),
   
-  setReplyingToMessage: (replyingToMessage) => set({ replyingToMessage })
+  setReplyingToMessage: (replyingToMessage) => set({ replyingToMessage }),
+  setReplyingToThreadMessage: (replyingToThreadMessage) => set({ replyingToThreadMessage }),
+
+  markThreadUnread: (channelId, threadParentId) => set((state) => {
+    const nextUnread = { ...state.unreadThreadIds };
+    const channelSet = new Set(nextUnread[channelId] || []);
+    channelSet.add(threadParentId);
+    nextUnread[channelId] = channelSet;
+    return { unreadThreadIds: nextUnread };
+  }),
+
+  markThreadRead: (channelId, threadParentId) => set((state) => {
+    const nextUnread = { ...state.unreadThreadIds };
+    if (!nextUnread[channelId]) return state; // Nothing to do
+    
+    const channelSet = new Set(nextUnread[channelId]);
+    channelSet.delete(threadParentId);
+    nextUnread[channelId] = channelSet;
+    return { unreadThreadIds: nextUnread };
+  }),
+
+  clearUnreadThreads: (channelId) => set((state) => {
+    if (channelId) {
+      const nextUnread = { ...state.unreadThreadIds };
+      delete nextUnread[channelId];
+      return { unreadThreadIds: nextUnread };
+    }
+    return { unreadThreadIds: {} };
+  }),
 }));

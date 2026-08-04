@@ -9,7 +9,7 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
-import type { Channel } from '@/modules/client/chat/types/chat.types';
+import type { Channel, ChatUser } from '@/modules/client/chat/types/chat.types';
 import CreateChannelModal from './CreateChannelModal';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
@@ -141,8 +141,11 @@ export default function ChatSidebar() {
       </div>
     );
   }
-
-  const generalChannels = sortedChannels.filter(c => c.type === 'general' || c.type === 'announcement' || (c.type as string) === 'public');
+  // Global channels: fixed position order (announcement → general → public), not affected by new messages
+  const GLOBAL_CHANNEL_ORDER: Record<string, number> = { announcement: 0, general: 1, public: 2 };
+  const generalChannels = channels
+    .filter(c => c.type === 'general' || c.type === 'announcement' || (c.type as string) === 'public')
+    .sort((a, b) => (GLOBAL_CHANNEL_ORDER[a.type] ?? 99) - (GLOBAL_CHANNEL_ORDER[b.type] ?? 99));
   const dmChannels = sortedChannels.filter(c => c.type === 'dm');
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -150,11 +153,18 @@ export default function ChatSidebar() {
     const ch = channels.find(c => c.type === 'workspace' && String(c.workspaceId) === String(wsId));
     return ch ? ch.unreadCount : 0;
   };
-
   const getLastMessagePreview = (channel: Channel) => {
+    if (channel.type === 'custom') {
+      const member = channel.channelMembers?.find(
+        m => String(m.userId) === String(currentUserId)
+      );
+      if (!member || member.joined === false) {
+        return "Join to view messages";
+      }
+    }
+
     const lastMsg = channel.lastMessage;
-    if (!lastMsg || (!lastMsg.content && !lastMsg.senderId)) return "Start a conversation";
-    
+    if (!lastMsg || (!lastMsg.content && !lastMsg.senderId && !lastMsg.type && (!lastMsg.attachments || lastMsg.attachments.length === 0))) return "Start a conversation";
     const sender = lastMsg.senderId;
     const msgSenderId = sender && typeof sender === 'object'
       ? (sender._id || sender.id)
@@ -165,11 +175,36 @@ export default function ChatSidebar() {
       (sender && typeof sender === 'object' ? sender.fullName : undefined) ||
       lastMsg.senderName ||
       'Deleted User';
-    const formattedContent = lastMsg.deletedAt 
-      ? "[Message deleted]" 
-      : lastMsg.type === 'sticker'
-      ? "[Sticker]"
-      : (lastMsg.content || '').replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+
+    let formattedContent = '';
+    if (lastMsg.type === 'sticker') {
+      formattedContent = "[Sticker]";
+    } else if (lastMsg.content && lastMsg.content.trim()) {
+      let cleanContent = lastMsg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
+      // Strip simple markdown formatting: **bold**, *italic*, __underline__, ~~strikethrough~~, `code`
+      cleanContent = cleanContent.replace(/(\*\*|__|\*|_|~~|`)(.*?)\1/g, '$2');
+      // Strip blockquote >
+      cleanContent = cleanContent.replace(/^>\s+/gm, '');
+      
+      if (lastMsg.attachments && lastMsg.attachments.length > 0) {
+        const firstAttachment = lastMsg.attachments[0];
+        const isImage = firstAttachment.mimeType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(firstAttachment.url || firstAttachment.name || '');
+        const tag = isImage ? '[Image]' : '[File]';
+        formattedContent = `${tag} ${cleanContent}`;
+      } else {
+        formattedContent = cleanContent;
+      }
+    } else if (lastMsg.attachments && lastMsg.attachments.length > 0) {
+      const firstAttachment = lastMsg.attachments[0];
+      const isImage = firstAttachment.mimeType?.startsWith('image/') || /\.(png|jpe?g|gif|webp|svg)$/i.test(firstAttachment.url || firstAttachment.name || '');
+      formattedContent = isImage ? '[Image]' : '[File]';
+    } else if ((lastMsg.type as string) === 'image') {
+      formattedContent = '[Image]';
+    } else if (lastMsg.type === 'file') {
+      formattedContent = '[File]';
+    } else {
+      formattedContent = '[Attachment]';
+    }
     
     if (isMine) return `You: ${formattedContent}`;
     if (channel.type === 'dm') return formattedContent;
@@ -192,14 +227,21 @@ export default function ChatSidebar() {
     // For DMs, resolve the other member's details
     if (type === 'dm' && channel) {
       const members = channel.members || [];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const otherMember = members.find((m: any) => String(m._id || m.id) !== String(currentUserId));
+      const otherMembers = members.filter((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
       
-      if (otherMember && typeof otherMember === 'object') {
-        displayName = otherMember.fullName || otherMember.email || "Direct Message";
-        displayAvatar = otherMember.avatar;
+      if (channel.name && channel.name !== 'Direct Message' && members.length > 2) {
+        displayName = channel.name;
+        displayAvatar = null;
+      } else if (otherMembers.length > 0) {
+        const names = otherMembers.map((m: ChatUser) => m.fullName || m.email?.split('@')[0] || "User");
+        if (names.length > 3) {
+          displayName = `${names.slice(0, 3).join(", ")} & ${names.length - 3} others`;
+        } else {
+          displayName = names.join(", ");
+        }
+        displayAvatar = otherMembers.length === 1 ? otherMembers[0].avatar : null;
       } else {
-        displayName = "Deleted User";
+        displayName = "Just you";
         displayAvatar = null;
       }
     } else if (!displayName) {
@@ -234,8 +276,8 @@ export default function ChatSidebar() {
 
         {type === 'dm' ? (
           <div className="relative flex-shrink-0 mt-0.5">
-            <div className={cn("w-9 h-9 rounded-full text-white flex items-center justify-center shadow-sm overflow-hidden", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
-              {displayAvatar ? (
+            {displayAvatar ? (
+              <div className={cn("w-9 h-9 rounded-full text-white flex items-center justify-center shadow-sm overflow-hidden", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
                 <img 
                   src={displayAvatar} 
                   alt={displayName} 
@@ -251,10 +293,12 @@ export default function ChatSidebar() {
                     }
                   }}
                 />
-              ) : (
-                <span className="text-[13px] font-bold">{displayName?.charAt(0).toUpperCase()}</span>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div className={cn("w-9 h-9 rounded-full text-white flex items-center justify-center shadow-sm overflow-hidden", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
+                <span className="text-[13px] font-bold">{displayName?.charAt(0).toUpperCase() || 'U'}</span>
+              </div>
+            )}
           </div>
         ) : type === 'workspace' ? (
           <div className="relative flex-shrink-0 mt-0.5">
@@ -297,7 +341,7 @@ export default function ChatSidebar() {
         </div>
 
         {unreadCount > 0 && (
-          <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full border-2 border-white dark:border-[#252525]">
+          <span className="self-center flex-shrink-0 flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full border-2 border-white dark:border-[#252525] leading-none">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -380,13 +424,14 @@ export default function ChatSidebar() {
                 });
                 const wsRole = isOwner ? 'workspace_admin' : (member?.role || 'member');
                 const isWsViewer = wsRole === 'viewer';
-
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const isWsAdmin = (authUser as any)?.role === 'super_admin' || wsRole === 'workspace_admin';
                 return (
                   <div key={wsId} className="space-y-0.5">
                     {/* Workspace Accordion Header */}
                     <div 
                       className={cn(
-                        "w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer group text-[#787774] dark:text-[#9B9A97]"
+                        "w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer group text-[#787774] dark:text-[#9B9A97] gap-2"
                       )}
                       onClick={() => toggleWorkspace(wsId)}
                     >
@@ -424,7 +469,7 @@ export default function ChatSidebar() {
 
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {totalWsUnread > 0 && !isExpanded && (
-                          <span className="flex items-center justify-center min-w-[16px] h-4 px-1.5 bg-[#EF4444] text-white text-[8px] font-bold rounded-full">
+                          <span className="flex items-center justify-center min-w-[16px] h-4 px-1.5 bg-[#EF4444] text-white text-[8px] font-bold rounded-full leading-none">
                             {totalWsUnread}
                           </span>
                         )}
@@ -450,10 +495,13 @@ export default function ChatSidebar() {
                         {!isWsViewer && wsChannel && (
                           renderChannelLink(wsChannel._id, wsChannel.name, 'workspace', wsChannel.unreadCount, wsChannel.lastMessage, ws)
                         )}
-
                         {!isWsViewer && wsCustomChannels.map((c, cIdx) => {
                           const isMember = isChannelMember(c);
                           const isPrivate = c.isPrivate;
+                          // Private channels are only shown if the user is a member/invited, or is a super/workspace admin
+                          if (isPrivate && !isMember && !isWsAdmin) {
+                            return null;
+                          }
                           const dimClass = (!isMember && !isPrivate) ? "opacity-50 hover:opacity-80 transition-opacity" : "";
                           return (
                             <div key={c._id || `ws-custom-${cIdx}`} className={dimClass}>
@@ -461,7 +509,6 @@ export default function ChatSidebar() {
                             </div>
                           );
                         })}
-
                         {!isWsViewer && wsCustomChannels.length === 0 && (
                           <div className="px-2 py-1.5 text-left">
                             <p className="text-[10px] text-[#ABABAB] italic">No custom channels</p>

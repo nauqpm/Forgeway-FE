@@ -104,3 +104,97 @@ export const updateMessageInCache = (
     }
   );
 };
+
+const getReplyTargetId = (replyToId: unknown): string | null => {
+  if (!replyToId) return null;
+  if (typeof replyToId === 'string') return replyToId;
+  if (typeof replyToId === 'object' && replyToId !== null) {
+    const obj = replyToId as { _id?: string; id?: string };
+    return String(obj._id || obj.id || '');
+  }
+  return null;
+};
+
+const updateReplyTargetIfDeleted = (m: Message, targetMessageId: string): Message => {
+  const targetId = getReplyTargetId(m.replyToId);
+  if (targetId && String(targetId) === String(targetMessageId)) {
+    const existingSender =
+      m.replyToId && typeof m.replyToId === 'object'
+        ? (m.replyToId as Message).senderId
+        : (m as Message & { replyToSenderId?: unknown }).replyToSenderId || null;
+    return {
+      ...m,
+      replyToId: {
+        _id: String(targetMessageId),
+        content: '[Message deleted]',
+        senderId: existingSender,
+        isDeleted: true,
+      } as unknown as Message,
+    };
+  }
+  return m;
+};
+
+export const removeMessageFromCache = (
+  queryClient: QueryClient,
+  channelId: string,
+  messageId: string,
+  threadParentId?: string
+) => {
+  queryClient.setQueryData<InfiniteData<MessagesPage>>(
+    queryKeys.chat.messages(channelId),
+    (current) => {
+      if (!current) return current;
+
+      let wasMessageRemoved = false;
+      for (const page of current.pages) {
+        if (page.messages.some((m) => getMessageId(m) === messageId)) {
+          wasMessageRemoved = true;
+          break;
+        }
+      }
+
+      return {
+        ...current,
+        pages: current.pages.map((page) => ({
+          ...page,
+          messages: page.messages
+            .filter((m) => getMessageId(m) !== messageId)
+            .map((m) => {
+              const updated = updateReplyTargetIfDeleted(m, messageId);
+              if (threadParentId && getMessageId(updated) === threadParentId && wasMessageRemoved) {
+                return {
+                  ...updated,
+                  replyCount: Math.max(0, (updated.replyCount || 1) - 1),
+                };
+              }
+              return updated;
+            }),
+        })),
+      };
+    }
+  );
+
+  if (threadParentId) {
+    queryClient.setQueryData<Message[]>(
+      queryKeys.chat.threadReplies(channelId, threadParentId),
+      (current = []) =>
+        current
+          .filter((m) => getMessageId(m) !== messageId)
+          .map((m) => updateReplyTargetIfDeleted(m, messageId))
+    );
+  } else {
+    // If a top-level parent message was deleted, clear all its thread replies from cache
+    queryClient.setQueryData<Message[]>(
+      queryKeys.chat.threadReplies(channelId, messageId),
+      []
+    );
+    queryClient.removeQueries({
+      queryKey: queryKeys.chat.threadReplies(channelId, messageId),
+    });
+  }
+
+  queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+  queryClient.invalidateQueries({ queryKey: queryKeys.chat.activeThreads(channelId) });
+  queryClient.invalidateQueries({ queryKey: ['chat', 'messages', 'search', channelId] });
+};

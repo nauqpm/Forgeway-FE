@@ -37,6 +37,8 @@ import {
   Lock,
   Megaphone,
 } from "lucide-react";
+import { useResizablePanel } from "@/shared/hooks/useResizablePanel";
+import { ResizeHandle } from "@/shared/components/ResizeHandle";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -235,8 +237,17 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
     } else {
       if (moreWorkspacesBtnRef.current) {
         const rect = moreWorkspacesBtnRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const popoverEstimateHeight = 420; // safe estimation of popover height
+        
+        let top = rect.top;
+        // If popover goes off-screen at the bottom, adjust top
+        if (top + popoverEstimateHeight > viewportHeight) {
+          top = Math.max(12, viewportHeight - popoverEstimateHeight - 12);
+        }
+
         setMoreWorkspacesPos({
-          top: rect.top,
+          top: top,
           left: collapsed ? 'calc(var(--app-sidebar-collapsed) + 12px)' : 'calc(var(--app-sidebar-expanded) + 12px)',
         });
       }
@@ -250,6 +261,25 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
 
   const isAdmin = isGlobalAdminRole(user?.role);
 
+  const { width: mainSidebarWidth, handleMouseDown, handleReset } = useResizablePanel({
+    defaultWidth: 240,
+    minWidth: 190,
+    maxWidth: 380,
+    side: 'right',
+    storageKey: 'al_main_sidebar_w',
+    onWidthChange: (w) => {
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.setProperty('--app-sidebar-expanded', `${w}px`);
+      }
+    },
+  });
+
+  useEffect(() => {
+    if (mounted && !collapsed && typeof document !== 'undefined') {
+      document.documentElement.style.setProperty('--app-sidebar-expanded', `${mainSidebarWidth}px`);
+    }
+  }, [mounted, collapsed, mainSidebarWidth]);
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -258,10 +288,13 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
       {/* Sidebar */}
       <aside
         data-collapsed={collapsed}
-        className={`app-sidebar fixed top-0 left-0 h-full bg-[#FBFBFA] dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] z-40 transition-all duration-200 flex flex-col ${
+        className={`app-sidebar fixed top-0 left-0 h-full bg-[#FBFBFA] dark:bg-[#252525] border-r border-[#EAEAEA] dark:border-white/[0.06] z-40 transition-all duration-200 flex flex-col group/main-sidebar ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
+        {!collapsed && (
+          <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="right" />
+        )}
         {/* Logo / Brand + Toggle — all inside sidebar, never floating outside */}
         <div
           className={`app-header flex items-center border-b border-[#EAEAEA] dark:border-white/[0.06] flex-shrink-0 ${
@@ -365,20 +398,24 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                   />
                 ) : (
                   <>
-                    <div className="flex items-center justify-between w-full rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors group">
+                    <div
+                      className={`flex items-center justify-between w-full rounded-[6px] transition-all group ${
+                        pathname.startsWith('/chat')
+                          ? 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]'
+                          : 'hover:bg-[#F7F6F3] dark:hover:bg-white/5 text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                      }`}
+                    >
                       <Link
                         href="/chat"
                         onClick={onMobileClose}
-                        className={`flex-1 flex items-center gap-3 px-3 py-2 rounded-[6px] transition-colors ${
-                          pathname.startsWith('/chat') ? navActiveClass : `text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]`
-                        }`}
+                        className="flex-1 flex items-center gap-3 px-3 py-2 rounded-l-[6px] min-w-0 text-inherit"
                       >
                         <MessageCircle
                           className={`w-[1.125rem] h-[1.125rem] flex-shrink-0 ${
                             pathname.startsWith('/chat') ? iconActiveClass : iconInactiveClass
                           }`}
                         />
-                        <span className="text-[0.8125rem] font-medium flex-1 text-left">Chat</span>
+                        <span className="text-[0.8125rem] font-medium flex-1 text-left truncate">Chat</span>
                         {totalUnreadCount > 0 && (
                           <span className="flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[9px] font-bold rounded-full leading-none shrink-0 mr-1">
                             {totalUnreadCount > 99 ? "99+" : totalUnreadCount}
@@ -386,8 +423,17 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                         )}
                       </Link>
                       <button
-                        onClick={() => setChatOpen(!chatOpen)}
-                        className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded-[4px] text-[#ABABAB] dark:text-[#6B6B6B] mr-2"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setChatOpen(!chatOpen);
+                        }}
+                        className={`p-1.5 rounded-[4px] mr-2 flex-shrink-0 transition-all ${
+                          pathname.startsWith('/chat')
+                            ? 'hover:bg-black/5 dark:hover:bg-white/10 text-[#1E40AF] dark:text-[#93C5FD]'
+                            : 'hover:bg-[#EAEAEA] dark:hover:bg-white/10 text-[#ABABAB] dark:text-[#6B6B6B] group-hover:text-[#787774] dark:group-hover:text-[#9B9A97]'
+                        }`}
+                        title={chatOpen ? "Collapse Chat" : "Expand Chat"}
                       >
                         {chatOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                       </button>
@@ -442,7 +488,14 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                 <div key={wsId} className="space-y-0.5">
                                   {/* Workspace Accordion Header */}
                                   <div
-                                    onClick={() => toggleWsCustomOpen(wsId)}
+                                    onClick={() => {
+                                      toggleWsCustomOpen(wsId);
+                                      if (wsChannel) {
+                                        useChatStore.getState().setActiveChannel(wsChannel._id);
+                                        router.push("/chat");
+                                        onMobileClose();
+                                      }
+                                    }}
                                     className="w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] hover:bg-[#F7F6F3] dark:hover:bg-white/5 cursor-pointer text-[#787774] dark:text-[#9B9A97] transition-colors"
                                   >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -503,14 +556,30 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                     <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
                   </Link>
                 ) : (
-                  <button
-                    onClick={() => setWorkspaceOpen(!workspaceOpen)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-[6px] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
-                  >
-                    <BookOpen className="w-[1.125rem] h-[1.125rem] text-[#ABABAB] dark:text-[#6B6B6B]" />
-                    <span className="text-[0.8125rem] font-medium flex-1 text-left">Workspaces</span>
-                    {workspaceOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </button>
+                  <div className={`w-full flex items-center rounded-[6px] transition-colors group ${
+                      pathname.startsWith('/workspaces') 
+                        ? navActiveClass 
+                        : 'text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                  }`}>
+                    <Link
+                      href="/workspaces"
+                      onClick={onMobileClose}
+                      className="flex items-center gap-3 py-2 pl-3 flex-1 min-w-0"
+                    >
+                      <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
+                      <span className="text-[0.8125rem] font-medium flex-1 text-left">Workspaces</span>
+                    </Link>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setWorkspaceOpen(!workspaceOpen);
+                      }}
+                      className="py-2 pr-3 pl-1 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity"
+                    >
+                      {workspaceOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                    </button>
+                  </div>
                 )}
               {/* SUB NAV */}
               {workspaceOpen && !collapsed && (
@@ -522,10 +591,11 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                       <Link
                         key={workspace._id || routeKey}
                         href={`/workspaces/${routeKey}`}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors min-w-0 w-full"
+                        title={workspace.name}
                       >
-                        <WorkspaceAvatar workspace={workspace} size="xs" />
-                        <span className="truncate">{workspace.name}</span>
+                        <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
+                        <span className="truncate flex-1">{workspace.name}</span>
                       </Link>
                     );
                   })}
@@ -597,9 +667,9 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
         {/* Bottom: Workspace + Settings */}
         <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] p-3 space-y-1">
           {!collapsed && currentWorkspace && (
-            <div className="mb-2 flex items-center gap-2 rounded-[6px] bg-[#F9F9F8] px-3 py-2 dark:bg-white/5">
-              <WorkspaceAvatar workspace={currentWorkspace} size="sm" />
-              <div className="min-w-0">
+            <div className="mb-2 flex items-center gap-2 rounded-[6px] bg-[#F9F9F8] px-3 py-2 dark:bg-white/5 min-w-0 w-full" title={currentWorkspace.name}>
+              <WorkspaceAvatar workspace={currentWorkspace} size="sm" className="shrink-0" />
+              <div className="min-w-0 flex-1">
                 <p className="text-[0.625rem] font-semibold uppercase tracking-[0.06em] text-[#ABABAB] dark:text-[#6B6B6B]">
                   Workspace
                 </p>

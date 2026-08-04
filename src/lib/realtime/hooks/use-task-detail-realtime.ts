@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { realtimeSocketClient } from '@/lib/socket/socket.client';
-import { TASK_DETAIL_EVENTS } from '@/lib/socket/socket.events';
+import { TASK_DETAIL_EVENTS, TASK_EVENTS } from '@/lib/socket/socket.events';
 import type { RealtimeEnvelope } from '@/lib/socket/socket.types';
 import type {
   PaginatedActivitiesResponse,
@@ -151,6 +151,23 @@ export function useTaskDetailRealtime({
       );
     };
 
+    // Handle task move/reorder to sync detail modal status
+    const handleTaskMoved = (envelope: TaskDetailEnvelope) => {
+      if (!isCurrentTaskEvent(envelope)) return;
+      const { task } = envelope.data;
+      if (!task) return;
+      updateTaskDetail((current) => {
+        if (!current) return current;
+        return {
+          ...current,
+          columnId: task.columnId ?? current.columnId,
+          status: task.status ?? current.status,
+          rank: task.rank ?? current.rank,
+          version: envelope.data.version ?? task.version ?? current.version,
+        };
+      });
+    };
+
     socket.on(TASK_DETAIL_EVENTS.COMMENT_CREATED, handleCommentUpserted);
     socket.on(TASK_DETAIL_EVENTS.COMMENT_UPDATED, handleCommentUpserted);
     socket.on(TASK_DETAIL_EVENTS.COMMENT_DELETED, handleCommentDeleted);
@@ -159,6 +176,8 @@ export function useTaskDetailRealtime({
     socket.on(TASK_DETAIL_EVENTS.LABELS_UPDATED, handleLabelsUpdated);
     socket.on(TASK_DETAIL_EVENTS.COVER_UPDATED, handleCoverUpdated);
     socket.on(TASK_DETAIL_EVENTS.ACTIVITY_CREATED, handleActivityCreated);
+    socket.on(TASK_EVENTS.MOVED, handleTaskMoved);
+    socket.on(TASK_EVENTS.REORDERED, handleTaskMoved);
 
     return () => {
       socket.off(TASK_DETAIL_EVENTS.COMMENT_CREATED, handleCommentUpserted);
@@ -169,6 +188,8 @@ export function useTaskDetailRealtime({
       socket.off(TASK_DETAIL_EVENTS.LABELS_UPDATED, handleLabelsUpdated);
       socket.off(TASK_DETAIL_EVENTS.COVER_UPDATED, handleCoverUpdated);
       socket.off(TASK_DETAIL_EVENTS.ACTIVITY_CREATED, handleActivityCreated);
+      socket.off(TASK_EVENTS.MOVED, handleTaskMoved);
+      socket.off(TASK_EVENTS.REORDERED, handleTaskMoved);
     };
   }, [enabled, queryClient, taskId, taskKey, workspaceId]);
 }

@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, UserRound } from 'lucide-react';
 
 type FilterAssignee = {
@@ -21,9 +22,11 @@ interface FilterMenuProps {
   density: "compact" | "comfortable" | "spacious";
   setDensity: (val: "compact" | "comfortable" | "spacious") => void;
   assignees: FilterAssignee[];
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-export default function FilterMenu({ isOpen, onClose, filters, setFilters, density, setDensity, assignees }: FilterMenuProps) {
+export default function FilterMenu({ isOpen, onClose, filters, setFilters, density, setDensity, assignees, anchorRef }: FilterMenuProps) {
+  const [position, setPosition] = useState({ top: 0, left: 0 });
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && e.key.toLowerCase() === 'f') {
@@ -40,7 +43,25 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose, setFilters]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updatePosition = () => {
+      const rect = anchorRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPosition({ top: rect.bottom + 8, left: Math.max(8, rect.right - Math.min(480, window.innerWidth - 48)) });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [anchorRef, isOpen]);
+
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const getAssigneeLabel = (user: FilterAssignee) =>
     user.name || (user.id === 'U' ? 'Unassigned' : user.id);
@@ -77,10 +98,10 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
     }));
   };
 
-  return (
+  return createPortal(
     <div
-      className="absolute top-16 right-0 w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-40 animate-in slide-in-from-top-2 duration-200"
-      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      className="w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-40 animate-in slide-in-from-top-2 duration-200"
+      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)", position: "fixed", top: position.top, left: position.left }}
     >
       <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
         <h4 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Filters</h4>
@@ -200,5 +221,5 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         </button>
       </div>
     </div>
-  );
+  , document.body);
 }

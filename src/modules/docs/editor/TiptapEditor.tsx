@@ -2,9 +2,11 @@
 // managing edit/read modes, collaboration connection, auto-save, comments, and version history.
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useDocsStore } from "../store/docs.store";
-import { useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
+import { useWorkspaceDocs, useDocumentByIdQuery } from "../hooks/useWorkspaceDocs";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/shared/constants/queryKeys";
 import EditorHeader from "./EditorHeader";
 import EditorToolbar from "./EditorToolbar";
 import ReadOnlyEditor from "./ReadOnlyEditor";
@@ -24,9 +26,9 @@ import { toast } from "react-hot-toast";
 
 import EditorPageLayout from "./EditorPageLayout";
 import PageCanvas from "./PageCanvas";
-import DocumentOutline from "./DocumentOutline";
 import FindReplacePanel from "./FindReplacePanel";
 import EditorStatusBar from "./EditorStatusBar";
+import DocumentOutline from "./DocumentOutline";
 import TableContextMenu from "./TableContextMenu";
 import LinkBubbleMenu from "./LinkBubbleMenu";
 import CommentsSidebar from "./CommentsSidebar";
@@ -35,18 +37,51 @@ import SuggestionsSidebar from "./SuggestionsSidebar";
 import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 
 import { extractApiError } from "@/shared/utils/apiError";
+import { buildWorkspacePageHref } from "../utils/pageRoutes";
 
 export type EditorMode = "read" | "edit";
 
 const normalizeTitle = (value: string) => value.trim().toLocaleLowerCase();
 
-export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
+export default function TiptapEditor({
+  workspaceId,
+  workspaceKey,
+  initialMode = "read",
+  documentId: documentIdProp,
+}: {
+  workspaceId: string;
+  workspaceKey?: string;
+  initialMode?: EditorMode;
+  /** When provided, editor fetches this document directly (URL-driven). */
+  documentId?: string;
+}) {
   const { selectedDocumentId } = useDocsStore();
+  const queryClient = useQueryClient();
+  // The authoritative document id: prop (URL source of truth) > store
+  const effectiveDocumentId = documentIdProp ?? selectedDocumentId;
   const { documents, updateDocument, saveDocument } = useWorkspaceDocs(workspaceId);
-  const document = documents.find((d) => d.id === selectedDocumentId);
+  const didApplyInitialMode = useRef(false);
+
+  // Build initialData from list cache for instant rendering on click-navigation
+  const listInitialData = effectiveDocumentId
+    ? (queryClient.getQueryData<typeof documents>(queryKeys.docs.list(workspaceId)) ?? documents).find(
+        (d) => d.id === effectiveDocumentId,
+      )
+    : undefined;
+
+  // Fetch by id directly — initialData makes it instant if list has it
+  const { data: fetchedDocument } = useDocumentByIdQuery(
+    workspaceId,
+    effectiveDocumentId,
+    !!effectiveDocumentId,
+    listInitialData,
+  );
+
+  // Use fetched document; fall back to list scan for backward compat (temp docs)
+  const document = fetchedDocument ?? documents.find((d) => d.id === effectiveDocumentId);
   const persistedPageId =
-    selectedDocumentId && !selectedDocumentId.startsWith("temp-")
-      ? selectedDocumentId
+    effectiveDocumentId && !effectiveDocumentId.startsWith("temp-")
+      ? effectiveDocumentId
       : undefined;
   const { hasPermission } = useWorkspacePermission(document?.workspaceId ?? "");
   const canEditPage = hasPermission(WORKSPACE_PERMISSIONS.PAGE_EDIT);
@@ -98,7 +133,7 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     enterEditMode,
     exitEditMode,
   } = useCollaborativePage({
-    selectedDocumentId: selectedDocumentId || undefined,
+    selectedDocumentId: effectiveDocumentId || undefined,
     initialTitle: document?.title || "",
     initialContent: document?.content || "",
     mode,
@@ -178,13 +213,13 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     ydoc,
     mode,
     onSaveSuccess: useCallback((updatedDoc: WorkspaceDocument) => {
-      if (selectedDocumentId) {
-        updateDocument(selectedDocumentId, {
+      if (effectiveDocumentId) {
+        updateDocument(effectiveDocumentId, {
           title: updatedDoc.title,
           content: updatedDoc.content,
         });
       }
-    }, [selectedDocumentId, updateDocument]),
+    }, [effectiveDocumentId, updateDocument]),
   });
 
   // ── Comments Hook ──────────────────────────────────────────
@@ -272,7 +307,7 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
 
   // ── Legacy Update (publish) handler ──────────────────────────
   const handleCreateVersion = async (label: string) => {
-    if (!document || !selectedDocumentId) return;
+    if (!document || !effectiveDocumentId) return;
 
     const editor = editEditor;
     if (!editor) return;
@@ -280,7 +315,7 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     setIsPublishing(true);
     try {
       const title = ydoc?.getText("title").toString() || document.title;
-      const html = editor.getHTML(); // Will be sanitized on backend / store update
+      const html = editor.getHTML();
 
       const titleSaved = await saveTitle();
       if (!titleSaved) {
@@ -291,7 +326,7 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
       await flushSave();
 
       // Step 2: Sync content and title to page database
-      await pagesService.updatePage(selectedDocumentId, {
+      await pagesService.updatePage(effectiveDocumentId, {
         title,
         content: html,
       });
@@ -323,14 +358,14 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
   }, [document]);
 
   const handleImportDocx = useCallback(async (file: File) => {
-    if (!editEditor) return;
+    if (!editEditor || !document?.workspaceId) return;
     
     const confirm = window.confirm("Importing a Word file will overwrite all current page content. Do you want to continue?");
     if (!confirm) return;
 
     setIsImportingDocx(true);
     try {
-      const html = await pagesService.importDocx(file);
+      const html = await pagesService.importDocx(file, document.workspaceId);
       editEditor.commands.setContent(html);
       toast.success("Word file imported successfully");
     } catch (error) {
@@ -339,7 +374,7 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     } finally {
       setIsImportingDocx(false);
     }
-  }, [editEditor]);
+  }, [document?.workspaceId, editEditor]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     if (mode !== "edit") return;
@@ -412,13 +447,18 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
       if (!saved) return;
 
       exitEditMode();
+      if (workspaceKey && document) {
+        // Use replaceState to avoid remounting the workspace shell
+        window.history.replaceState(null, "", buildWorkspacePageHref({ workspaceKey, doc: document, mode: "view" }));
+        window.dispatchEvent(new Event("docs-location-change"));
+      }
       return;
     }
 
-    if (!document || !selectedDocumentId) return;
+    if (!document || !effectiveDocumentId) return;
 
-    if (selectedDocumentId.startsWith("temp-")) {
-      const savedDoc = await saveDocument(selectedDocumentId);
+    if (effectiveDocumentId.startsWith("temp-")) {
+      const savedDoc = await saveDocument(effectiveDocumentId);
       if (!savedDoc) return;
 
       enterEditMode({
@@ -426,24 +466,32 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
         initialTitle: savedDoc.title,
         initialContent: savedDoc.content,
       });
+      if (workspaceKey) {
+        window.history.replaceState(null, "", buildWorkspacePageHref({ workspaceKey, doc: savedDoc, mode: "edit" }));
+        window.dispatchEvent(new Event("docs-location-change"));
+      }
       return;
     }
 
     enterEditMode();
+    if (workspaceKey) {
+      window.history.replaceState(null, "", buildWorkspacePageHref({ workspaceKey, doc: document, mode: "edit" }));
+      window.dispatchEvent(new Event("docs-location-change"));
+    }
   };
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.get("edit") === "true" && mode === "read" && document && selectedDocumentId) {
-      const url = new URL(window.location.href);
-      url.searchParams.delete("edit");
-      window.history.replaceState(null, "", url.pathname + url.search);
-      
+    if (initialMode !== "edit") {
+      didApplyInitialMode.current = false;
+      return;
+    }
+
+    if (!didApplyInitialMode.current && mode === "read" && document && effectiveDocumentId) {
+      didApplyInitialMode.current = true;
       void handleToggleMode();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [document?.id, selectedDocumentId]);
+  }, [document?.id, initialMode, effectiveDocumentId]);
 
   const handleEditorTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -468,12 +516,14 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
     }
   };
 
+
+
   if (!document) return null;
 
   const activeEditor = mode === "edit" ? editEditor : readEditor;
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-950 overflow-hidden relative">
+    <div className="flex flex-col h-full min-h-0 bg-white dark:bg-[#202020] overflow-hidden relative">
       <EditorHeader
         doc={document}
         mode={mode}
@@ -498,9 +548,10 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
         onExportDocx={handleExportDocx}
         isImportingDocx={isImportingDocx}
         onImportDocx={handleImportDocx}
+        workspaceKey={workspaceKey}
       />
 
-      <div className="flex-1 relative overflow-hidden">
+      <div className="flex-1 min-h-0 relative overflow-hidden">
         <EditorPageLayout
           toolbar={
             mode === "edit" ? (
@@ -560,7 +611,7 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
                   onBlur={mode === "edit" ? handleEditorTitleBlur : undefined}
                   onKeyDown={mode === "edit" ? handleEditorTitleKeyDown : undefined}
                   readOnly={mode === "read"}
-                  className={`w-full text-3xl font-bold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-gray-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all tracking-tight leading-tight print:text-black ${
+                  className={`w-full text-3xl font-bold border-none outline-none focus:ring-0 bg-transparent text-[#172B4D] dark:text-[#E8E8E7] placeholder:text-slate-400 transition-all tracking-tight leading-tight print:text-black ${
                     titleError ? "text-rose-600 dark:text-rose-400" : ""
                   }`}
                   placeholder="Untitled"
@@ -583,7 +634,7 @@ export default function TiptapEditor({ workspaceId }: { workspaceId: string }) {
 
               {/* Editor content inside A4 Page canvas */}
               <div 
-                className="min-h-[800px] print:min-h-0 text-gray-900 dark:text-gray-100"
+                className="min-h-[800px] print:min-h-0 text-gray-900 dark:text-[#E8E8E7]"
                 onContextMenu={handleContextMenu}
               >
                 {mode === "read" ? (

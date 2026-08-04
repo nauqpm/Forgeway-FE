@@ -30,7 +30,9 @@ export function useCreateWorkspace() {
       return res.data?.data ?? res.data;
     },
     onSuccess: (data) => {
-      toast.success(`Workspace "${data?.name ?? ""}" has been created`);
+      const name = data?.name ?? "";
+      const truncatedName = name.length > 25 ? name.substring(0, 25) + "..." : name;
+      toast.success(`Workspace "${truncatedName}" has been created`);
       
       const normalizedId = data?._id ?? data?.id;
       if (normalizedId) {
@@ -51,6 +53,7 @@ export function useCreateWorkspace() {
       }
       
       queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string } } };

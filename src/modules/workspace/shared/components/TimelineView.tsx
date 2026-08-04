@@ -17,6 +17,7 @@ import {
   type TimelineDragSession,
 } from '@/modules/workspace/timeline/timelineDrag';
 import { getWeeklyBoundaryOffsets } from '@/modules/workspace/timeline/timelineDateMath';
+import { getHorizontalWheelDelta } from '@/modules/workspace/timeline/timelineScroll';
 import {
   buildTimelineRows,
   type TimelineRow,
@@ -85,8 +86,11 @@ export default function TimelineView({
   const [scrollTop,    setScrollTop]    = useState(0);
 
   const bodyRef       = useRef<HTMLDivElement>(null);
+  const headerRef     = useRef<HTMLDivElement>(null);
   const leftRef       = useRef<HTMLDivElement>(null);
+  const rightPanelRef = useRef<HTMLDivElement>(null);
   const syncingRef    = useRef(false);
+  const zoomAnchorDayRef = useRef<number | null>(null);
   const dragSessionRef = useRef<TimelineDragSession | null>(null);
   const suppressNextTaskClickRef = useRef(false);
 
@@ -99,6 +103,30 @@ export default function TimelineView({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  useEffect(() => {
+    const panel = rightPanelRef.current;
+    if (!panel) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      const delta = getHorizontalWheelDelta(event);
+      if (!delta || !bodyRef.current) return;
+      event.preventDefault();
+      bodyRef.current.scrollLeft += delta;
+    };
+
+    panel.addEventListener('wheel', handleWheel, { passive: false });
+    return () => panel.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  useEffect(() => {
+    const anchorDay = zoomAnchorDayRef.current;
+    const body = bodyRef.current;
+    if (anchorDay === null || !body) return;
+
+    body.scrollLeft = Math.max(0, anchorDay * pixelsPerDay - body.clientWidth / 2);
+    zoomAnchorDayRef.current = null;
+  }, [pixelsPerDay]);
 
   /* ── Build flat ordered row list ────────────────────────────────── */
   const rows = useMemo<TimelineRow[]>(() => {
@@ -220,6 +248,7 @@ export default function TimelineView({
   const handleBodyScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const st = e.currentTarget.scrollTop;
     setScrollTop(st);
+    if (headerRef.current) headerRef.current.scrollLeft = e.currentTarget.scrollLeft;
     if (!syncingRef.current && leftRef.current) {
       syncingRef.current = true;
       leftRef.current.scrollTop = st;
@@ -236,6 +265,14 @@ export default function TimelineView({
       syncingRef.current = false;
     }
   }, []);
+
+  const changeZoom = useCallback((delta: number) => {
+    const body = bodyRef.current;
+    if (body) {
+      zoomAnchorDayRef.current = (body.scrollLeft + body.clientWidth / 2) / pixelsPerDay;
+    }
+    setPixelsPerDay((current) => Math.max(10, Math.min(100, current + delta)));
+  }, [pixelsPerDay]);
 
   /* ── Drag / Resize callbacks ─────────────────────────────────────── */
   const onDragStop = useCallback((row: TimelineRow, x: number) => {
@@ -503,8 +540,8 @@ export default function TimelineView({
 
   /* ── Render ──────────────────────────────────────────────────────── */
   return (
-    <div className="workspace-list-height bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] overflow-hidden flex flex-col font-sans text-[#111111] dark:text-[#E8E8E7] relative">
-      <div className="flex flex-1 min-h-0 ">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col relative overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white font-sans text-[#111111] dark:border-white/[0.06] dark:bg-[#202020] dark:text-[#E8E8E7]">
+      <div className="flex min-h-0 min-w-0 flex-1">
 
         {/* ────────── LEFT PANEL ────────── */}
         <div
@@ -542,45 +579,46 @@ export default function TimelineView({
         </div>
 
         {/* ────────── RIGHT PANEL ────────── */}
-        <div className="flex-1 min-w-0 flex flex-col bg-white dark:bg-[#202020] overflow-hidden">
+        <div ref={rightPanelRef} className="flex-1 min-w-0 flex flex-col bg-white dark:bg-[#202020] overflow-hidden">
 
-          {/* Date header */}
-          <div
-            className="shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex"
-            style={{ width: totalWidth, minWidth: totalWidth, height: TIMELINE_HEADER_H }}
-          >
-            {daysArray.map((day, i) => (
-              <div
-                key={i}
-                className="flex-shrink-0 flex flex-col items-center justify-end pb-1 relative"
-                style={{ width: pixelsPerDay }}
-              >
-                {weeklyBoundaryKeys.has(format(day, 'yyyy-MM-dd')) && (
-                  <span className="absolute left-0 top-0 h-full w-px bg-[#EAEAEA] dark:bg-[#2A2A2A]" />
-                )}
-                {(day.getDate() === 1 || i === 0) && (
-                  <span className="absolute top-1.5 left-1.5 text-[0.5625rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider whitespace-nowrap">
-                    {format(day, 'MMM yy')}
+          <div ref={headerRef} className="shrink-0 overflow-hidden">
+            {/* Date header */}
+            <div
+              className="shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex"
+              style={{ width: totalWidth, minWidth: totalWidth, height: TIMELINE_HEADER_H }}
+            >
+              {daysArray.map((day, i) => (
+                <div
+                  key={i}
+                  className="flex-shrink-0 flex flex-col items-center justify-end pb-1 relative"
+                  style={{ width: pixelsPerDay }}
+                >
+                  {weeklyBoundaryKeys.has(format(day, 'yyyy-MM-dd')) && (
+                    <span className="absolute left-0 top-0 h-full w-px bg-[#EAEAEA] dark:bg-[#2A2A2A]" />
+                  )}
+                  {(day.getDate() === 1 || i === 0) && (
+                    <span className="absolute top-1.5 left-1.5 text-[0.5625rem] font-bold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wider whitespace-nowrap">
+                      {format(day, 'MMM yy')}
+                    </span>
+                  )}
+                  <span className={`text-[0.625rem] font-medium
+                    ${isToday(day)
+                      ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.15)] px-1 rounded-[3px]'
+                      : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`}>
+                    {format(day, 'd')}
                   </span>
-                )}
-                <span className={`text-[0.625rem] font-medium
-                  ${isToday(day)
-                    ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.15)] px-1 rounded-[3px]'
-                    : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`}>
-                  {format(day, 'd')}
-                </span>
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
 
-          {hasSprintTrack && renderSprintOverlay()}
+            {hasSprintTrack && renderSprintOverlay()}
+          </div>
 
           {/* Scrollable body */}
           <div
             ref={bodyRef}
             onScroll={handleBodyScroll}
-            className="flex-1 min-h-0 overflow-auto overflow-x-auto"
-            style={{ width: totalWidth }}
+            className="timeline-body-scroll flex-1 min-h-0 min-w-0 overflow-auto"
           >
             <div style={{ height: totalListH, position: 'relative', width: totalWidth }}>
 
@@ -631,7 +669,7 @@ export default function TimelineView({
       {/* Zoom controls */}
       <div className="absolute bottom-5 right-5 z-40 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] flex items-center p-1 gap-0.5" style={{ boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}>
         <button
-          onClick={() => setPixelsPerDay(p => Math.max(10, p - 10))}
+          onClick={() => changeZoom(-10)}
           className="p-1.5 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors"
           title="Zoom Out"
         >
@@ -641,7 +679,7 @@ export default function TimelineView({
           {pixelsPerDay}px
         </span>
         <button
-          onClick={() => setPixelsPerDay(p => Math.min(100, p + 10))}
+          onClick={() => changeZoom(10)}
           className="p-1.5 text-[#787774] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] transition-colors"
           title="Zoom In"
         >
@@ -666,7 +704,7 @@ export default function TimelineView({
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .timeline-body-scroll::-webkit-scrollbar { width: 5px; }
+        .timeline-body-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .timeline-body-scroll::-webkit-scrollbar-track { background: transparent; }
         .timeline-body-scroll::-webkit-scrollbar-thumb { background: #EAEAEA; border-radius: 3px; }
         .timeline-body-scroll::-webkit-scrollbar-thumb:hover { background: #ABABAB; }

@@ -48,6 +48,7 @@ export const WORKSPACE_EVENTS = {
   MEMBER_REMOVED: 'workspace.member.removed',
   MEMBER_ROLE_UPDATED: 'workspace.member.role_updated',
   INVITE_CREATED: 'workspace.invite.created',
+  INVITE_CANCELLED: 'workspace.invite.cancelled',
 } as const;
 
 export const TASK_DETAIL_EVENTS = {
@@ -80,6 +81,7 @@ export const CHAT_EVENTS = {
   EDITED: 'chat.message.edited',
   DELETE: 'chat.delete',
   DELETED: 'chat.message.deleted',
+  DELETED_FOR_ME: 'chat.message.deleted_for_me',
   REACTION: 'chat.reaction',
   REACTION_UPDATED: 'chat.reaction.updated',
 

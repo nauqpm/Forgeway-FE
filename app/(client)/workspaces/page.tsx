@@ -89,14 +89,28 @@ export default function WorkspacesPage() {
   if (isLoading) return <LoadingSpinner />;
 
   return (
-    <div className="flex-1 overflow-y-auto p-[var(--app-page-pad)]">
-      <div className="app-page-wide">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
-        <div>
+    <div className="flex-1 overflow-y-auto">
+      <div className="app-page-medium app-page-fluid-xl pt-6 pb-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8 min-w-0 w-full">
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-1">Workspaces</h1>
-          <p className="text-[#787774] dark:text-[#9B9A97] text-sm">Showing {workspaces.length} Workspace{workspaces.length !== 1 ? 's' : ''}{currentWorkspace ? ` (Current: ${currentWorkspace.name})` : ''}</p>
+          <p className="text-[#787774] dark:text-[#9B9A97] text-sm flex flex-wrap items-center gap-1">
+            <span>Showing {workspaces.length} Workspace{workspaces.length !== 1 ? 's' : ''}</span>
+            {currentWorkspace && (
+              <span className="text-[#ABABAB] dark:text-[#6B6B6B] flex items-center gap-1 min-w-0">
+                <span>(Current:</span>
+                <span 
+                  className="truncate max-w-[120px] sm:max-w-[200px] md:max-w-[300px] font-medium text-[#787774] dark:text-[#9B9A97] inline-block align-bottom" 
+                  title={currentWorkspace.name}
+                >
+                  {currentWorkspace.name}
+                </span>
+                <span>)</span>
+              </span>
+            )}
+          </p>
         </div>
-        <Link href="/workspaces/create" className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-5 py-2.5 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-sm transition-colors shadow-sm">
+        <Link href="/workspaces/create" className="inline-flex items-center gap-2 bg-[#2563EB] dark:bg-[#3B82F6] text-white px-5 py-2.5 rounded-[6px] hover:bg-[#1D4ED8] dark:hover:bg-[#2563EB] font-medium text-sm transition-colors shadow-sm shrink-0">
           <Plus className="w-4 h-4" /> Create New Workspace
         </Link>
       </div>
@@ -113,7 +127,7 @@ export default function WorkspacesPage() {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 min-[1920px]:grid-cols-4 min-[2560px]:grid-cols-5 gap-5">
           {workspaces.map((workspace) => {
             const workspaceType = getWorkspaceType(workspace);
             const workspaceStatus = getWorkspaceStatus(workspace);
@@ -126,9 +140,9 @@ export default function WorkspacesPage() {
 
                 {/* Header Card */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex gap-3 items-center">
+                  <div className="flex min-w-0 flex-1 gap-3 items-center">
                     <WorkspaceAvatar workspace={workspace} size="lg" className="shadow-inner" />
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         {workspace.access === "public" ? (
                           <Globe className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B]" />
@@ -137,7 +151,7 @@ export default function WorkspacesPage() {
                         )}
                         <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded text-[0.625rem] font-mono font-bold tracking-wider">{workspace.key || routeKey}</span>
                       </div>
-                      <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-lg group-hover:text-[#2563EB] dark:group-hover:text-[#3B82F6] transition-colors line-clamp-1">{workspace.name}</h3>
+                      <h3 title={workspace.name} className="truncate font-bold text-[#111111] text-lg transition-colors group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#3B82F6]">{workspace.name}</h3>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-[#EFF6FF] px-2 py-0.5 text-xs font-semibold capitalize text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
                           {workspaceType === "scrum" ? (
