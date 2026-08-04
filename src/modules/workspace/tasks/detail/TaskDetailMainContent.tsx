@@ -113,11 +113,10 @@ export default function TaskDetailMainContent({
             onClick={() => {
               if (canEditTask && !issue.isArchived) setIsEditingTitle(true);
             }}
-            className={`max-w-full break-words [overflow-wrap:anywhere] ${titleTextClass} p-2 -ml-2 rounded-[6px] transition-colors ${
-              canEditTask && !issue.isArchived
-                ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"
-                : "opacity-90"
-            }`}
+            className={`max-w-full break-words [overflow-wrap:anywhere] ${titleTextClass} p-2 -ml-2 rounded-[6px] transition-colors ${canEditTask && !issue.isArchived
+              ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"
+              : "opacity-90"
+              }`}
           >
             {localTitle}
           </h1>
@@ -135,15 +134,15 @@ export default function TaskDetailMainContent({
 
       {issue.type?.toLowerCase() !== "subtask" && issue.type?.toLowerCase() !== "epic" && (
         <div className="order-5 w-full pt-4">
-          <TaskSubtasksPanel 
-            issue={issue} 
-            workspaceId={workspaceId} 
+          <TaskSubtasksPanel
+            issue={issue}
+            workspaceId={workspaceId}
             workspaceMembers={workspaceMembers}
             boardColumns={boardColumns || []}
-            canEditTask={canEditTask} 
+            canEditTask={canEditTask}
             onSubtaskClick={onSubtaskClick || ((subtaskId) => {
               const currentPath = window.location.pathname;
-              const newPath = currentPath.includes("/key/") 
+              const newPath = currentPath.includes("/key/")
                 ? currentPath.replace(/\/key\/[^/]+$/, `/key/${subtaskId}`)
                 : `${currentPath}/key/${subtaskId}`;
               window.history.pushState(null, "", newPath);
@@ -171,31 +170,28 @@ export default function TaskDetailMainContent({
             <span>Show:</span>
             <button
               onClick={() => setActiveTab("comments")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "comments"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "comments"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               Comments
             </button>
             <button
               onClick={() => setActiveTab("history")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "history"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "history"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               History
             </button>
             <button
               onClick={() => setActiveTab("work_log")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "work_log"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "work_log"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               Work log
             </button>

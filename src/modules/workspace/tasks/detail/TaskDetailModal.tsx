@@ -384,9 +384,9 @@ export default function TaskDetailModal({
         />
 
         {/* Content Body */}
-        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
           {/* Left Column (Main) */}
-          <div className="min-w-0 flex-1 order-2 md:order-1 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] md:border-r border-[#EAEAEA] dark:border-white/[0.06] space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
+          <div className="min-w-0 flex-1 h-full overflow-y-auto order-2 md:order-1 p-[var(--workspace-surface-pad)] md:p-[clamp(24px,2vw,40px)] md:border-r border-[#EAEAEA] dark:border-white/[0.06] space-y-8 scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <TaskDetailMainContent
               issue={issue}
               workspaceId={workspaceId}
@@ -416,7 +416,7 @@ export default function TaskDetailModal({
           </div>
 
           {/* Right Column (Sidebar) */}
-          <div className="w-full md:w-[360px] order-1 md:order-2 workspace-detail-panel bg-[#F9F9F8] dark:bg-[#252525] p-[var(--workspace-surface-pad)] scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
+          <div className="w-full md:w-[360px] h-full overflow-y-auto order-1 md:order-2 workspace-detail-panel bg-[#F9F9F8] dark:bg-[#252525] p-[var(--workspace-surface-pad)] scrollbar-thin scrollbar-thumb-[#DFE1E6] scrollbar-track-transparent">
             <div className="flex items-center gap-2 mb-6">
               <StatusPicker
                 value={issue.status}

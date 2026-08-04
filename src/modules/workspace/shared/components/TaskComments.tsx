@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MentionsInput, Mention } from "react-mentions";
 import { AlertCircle, Check, Loader2, Pencil, Trash2, X } from "lucide-react";
@@ -175,6 +175,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   const [replyContent, setReplyContent] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const replyInputRef = useRef<HTMLTextAreaElement>(null);
 
   const { hasPermission } = useWorkspacePermission(workspaceId);
   const canComment = hasPermission("task:edit");
@@ -341,7 +342,14 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
 
   const handleReplyStart = useCallback((comment: TaskComment) => {
     setReplyingToId(comment.id);
-    setReplyContent(getReplyAuthorMention(comment));
+    const content = getReplyAuthorMention(comment);
+    setReplyContent(content);
+    setTimeout(() => {
+      if (replyInputRef.current) {
+        replyInputRef.current.focus();
+        replyInputRef.current.setSelectionRange(content.length, content.length);
+      }
+    }, 10);
   }, []);
 
   const handleReplyCancel = useCallback(() => {
@@ -498,6 +506,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                     {renderCurrentUserAvatar("w-7 h-7")}
                     <div className="min-w-0 flex-1">
                       <MentionsInput
+                        inputRef={replyInputRef}
                         autoFocus
                         value={replyContent}
                         onChange={(e) => setReplyContent(e.target.value)}
@@ -610,7 +619,8 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                   dangerouslySetInnerHTML={{
                     __html: `
                     .tc-m__control{min-height:36px}
-                    .tc-m__input{width:100%;outline:none;border:none;background:transparent;color:inherit;font-family:inherit;font-size:inherit}
+                    .tc-m__input{width:100%;outline:none;border:none;background:transparent;color:transparent !important;caret-color:currentColor;font-family:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit;word-wrap:break-word;word-break:break-word;overflow-wrap:anywhere;margin:0;padding:0}
+                    .tc-m__highlighter{font-family:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit;word-wrap:break-word;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;margin:0;padding:0}
                     .tc-m__suggestions__list{background:#F9F9F8;border:1px solid #EAEAEA;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);overflow:hidden;z-index:100;position:absolute;min-width:200px;margin-top:4px}
                     .tc-m__suggestions__item{padding:8px 12px;cursor:pointer;color:#111111;font-size:13px}
                     .tc-m__suggestions__item--focused{background:#F0F0EE}
