@@ -304,3 +304,36 @@ export function HeroAuthActions() {
     </>
   );
 }
+
+export function CtaAuthAction() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-8 py-4 text-sm font-semibold text-white">
+        <Loader2 className="h-4 w-4 animate-spin text-white" />
+        Checking workspace
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return (
+      <Link
+        href="/dashboard"
+        className="mt-8 relative inline-flex items-center gap-2 rounded-full bg-[#F5F3EF] dark:bg-white px-8 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_30px_rgba(249,115,22,0.7),0_0_12px_rgba(239,68,68,0.4)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(249,115,22,0.9),0_0_16px_rgba(239,68,68,0.6)] hover:scale-[1.03] active:scale-[0.98]"
+      >
+        Go to Dashboard <LayoutDashboard className="h-4 w-4 text-orange-600" />
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href="/register"
+      className="mt-8 relative inline-flex items-center gap-2 rounded-full bg-[#F5F3EF] dark:bg-white px-8 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_30px_rgba(249,115,22,0.7),0_0_12px_rgba(239,68,68,0.4)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(249,115,22,0.9),0_0_16px_rgba(239,68,68,0.6)] hover:scale-[1.03] active:scale-[0.98]"
+    >
+      Get Started Free <ArrowRight className="h-4 w-4 text-orange-600" />
+    </Link>
+  );
+}

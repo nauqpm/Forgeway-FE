@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "../public/apple-icon.png";
 import aboutUsImage from "../public/about-us.webp";
-import { HeroAuthActions, NavAuthActions } from "./LandingAuthActions";
+import { CtaAuthAction, HeroAuthActions, NavAuthActions } from "./LandingAuthActions";
 import BackToTop from "@/shared/components/back-to-top/BackToTop";
 import {
   Activity,
@@ -1393,9 +1393,7 @@ export default function LandingPage() {
             <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-amber-100/90 sm:text-lg">
               Move from scattered tasks and unclear ownership to a project operating system built for software delivery.
             </p>
-            <Link href="/register" className="mt-8 relative inline-flex items-center gap-2 rounded-full bg-[#F5F3EF] dark:bg-white px-8 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_30px_rgba(249,115,22,0.7),0_0_12px_rgba(239,68,68,0.4)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(249,115,22,0.9),0_0_16px_rgba(239,68,68,0.6)] hover:scale-[1.03] active:scale-[0.98]">
-              Get Started Free <Zap className="h-4 w-4 text-orange-600 fill-orange-600/20" />
-            </Link>
+            <CtaAuthAction />
           </div>
         </div>
       </section>
