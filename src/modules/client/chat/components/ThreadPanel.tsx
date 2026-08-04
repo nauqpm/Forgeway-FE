@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { X, Loader2, MessageSquare, AlertCircle, ArrowDown } from 'lucide-react';
 import { useThreadReplies, useChatChannels } from '../hooks/useChatQueries';
+import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useQueryClient, useQuery, type InfiniteData } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
@@ -37,6 +38,24 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
 
   const { data: channels = [] } = useChatChannels();
   const channel = channels.find(c => c._id === channelId);
+
+  const { data: workspaces = [] } = useWorkspaces();
+  const userRole = useAuthStore(state => state.user?.role);
+
+  const isWorkspaceAdmin = React.useMemo(() => {
+    if (channel?.type === 'dm') return false;
+    if (userRole === 'super_admin') return true;
+    if (!channel?.workspaceId) return false;
+    const ws = workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(channel.workspaceId));
+    if (!ws) return false;
+    const isOwner = String(ws.ownerId) === String(currentUserId);
+    const member = ws.members?.find((m: { userId?: { _id?: string; id?: string } | string }) => {
+      const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+      return String(uId) === String(currentUserId);
+    });
+    const role = isOwner ? 'workspace_admin' : ((member as { role?: string })?.role || 'member');
+    return role === 'workspace_admin';
+  }, [channel?.type, channel?.workspaceId, workspaces, currentUserId, userRole]);
 
   const { data: replies = [], isLoading } = useThreadReplies(channelId, messageId);
 
@@ -107,23 +126,14 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
 
   const parentMessage: Message | null = parentFromCache ?? parentFromAPI ?? null;
 
-  // ─── Scroll-to-reply logic ───────────────────────────────────────────────
-  // Use a dedicated state (NOT searchParams) as the source of truth.
-  // This prevents the URL-clear step inside scrollToMessage from re-triggering
-  // the scroll effect with targetId=null and scrolling back to the bottom.
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(
     () => searchParams.get('messageId')
   );
 
-  // Effect 1: Update scrollTargetId whenever the URL messageId param changes.
-  // Handles both: initial mount (thread was closed) AND panel already open (no re-mount).
   useEffect(() => {
     const targetId = searchParams.get('messageId');
     setScrollTargetId(targetId);
   }, [searchParams, messageId]);
-
-  // Effect 2: Perform the scroll whenever scrollTargetId is set and replies are loaded.
-  // Does NOT depend on searchParams — so clearing the URL won't re-trigger this.
   useEffect(() => {
     if (!scrollTargetId || isLoading) return;
 
@@ -173,7 +183,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
   }, [replies, isLoading]);
 
   return (
-    <div 
+    <div
       style={{ width: `${panelWidth}px` }}
       className="flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full min-h-0 overflow-hidden relative"
     >
@@ -237,6 +247,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
                 isSameUserAsPrevious={false}
                 isMine={String((parentMessage.senderId && typeof parentMessage.senderId === 'object') ? (parentMessage.senderId as ChatUser)._id || (parentMessage.senderId as ChatUser).id : parentMessage.senderId || '') === String(currentUserId)}
                 hideThreadBadge={true}
+                isWorkspaceAdmin={isWorkspaceAdmin}
               />
             </div>
 
@@ -276,6 +287,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
                       isSameUserAsPrevious={isSameUserAsPrevious}
                       isMine={String(currentSenderId) === String(currentUserId)}
                       hideThreadBadge={true}
+                      isWorkspaceAdmin={isWorkspaceAdmin}
                     />
                   );
                 })

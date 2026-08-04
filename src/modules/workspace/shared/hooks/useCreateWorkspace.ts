@@ -53,6 +53,7 @@ export function useCreateWorkspace() {
       }
       
       queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
     },
     onError: (err: unknown) => {
       const error = err as { response?: { data?: { message?: string } } };
