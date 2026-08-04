@@ -35,7 +35,7 @@ export default function SubtaskProgressBar({ done, total, isExpanded, onToggleEx
       {/* Progress bar - always visible */}
       <div className="w-full bg-[#DFE1E6] dark:bg-[#333333] h-1.5 rounded-full overflow-hidden">
         <div
-          className="bg-[#5E9C76] h-full transition-all duration-300"
+          className={`h-full transition-all duration-300 ${done / total >= 0.8 ? "bg-[#5E9C76]" : "bg-[#2563EB]"}`}
           style={{ width: `${total > 0 ? (done / total) * 100 : 0}%` }}
         />
       </div>

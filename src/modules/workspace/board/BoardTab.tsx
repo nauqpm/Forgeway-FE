@@ -28,6 +28,7 @@ import {
   Trash2,
   X,
   PlayCircle,
+  Calendar,
 } from "lucide-react";
 import AssigneePicker from "@/shared/components/AssigneePicker";
 import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
@@ -529,55 +530,79 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         </div>
                                       )}
                                       <div className="p-3.5">
-                                        <p title={issue.title} className="mb-2 truncate text-[0.8125rem] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
-                                          {issue.title}
-                                        </p>
-                                        <div className="mb-3 flex flex-wrap gap-1.5">
-                                          <span
-                                            className={`px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold ${issue.priority === "High" || issue.priority === "Highest" ? "bg-[#FDEBEC] text-[#9F2F2D]" : issue.priority === "Medium" ? "bg-[#FBF3DB] text-[#956400]" : "bg-[#EDF3EC] text-[#346538]"}`}
-                                          >
-                                            {issue.priority}
-                                          </span>
-                                          <span className="px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
-                                            {issue.type}
-                                          </span>
-                                          {(issue.labels ?? []).slice(0, 3).map((label) => (
-                                            <span
-                                              key={label.id}
-                                              title={label.name}
-                                              className="max-w-[7.5rem] truncate rounded-[4px] bg-[#EFF6FF] px-2 py-0.5 text-[0.625rem] font-semibold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
-                                            >
-                                              {label.name}
-                                            </span>
-                                          ))}
-                                          {(issue.labels?.length ?? 0) > 3 && (
-                                            <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-0.5 text-[0.625rem] font-semibold text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">
-                                              +{(issue.labels?.length ?? 0) - 3}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="mt-auto flex items-center justify-between border-t border-[#F0F0EE] dark:border-white/[0.04] pt-2">
-                                          <span className="text-[0.6875rem] font-mono font-bold text-[#ABABAB] dark:text-[#6B6B6B]">
+                                        <div className="mb-2">
+                                          <span className="text-[0.6875rem] font-mono font-bold text-[#6B778C] dark:text-[#9FADBC]">
                                             {issue.key}
                                           </span>
+                                        </div>
 
-                                          {canEditTask && !filters.archived ? (
-                                            <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                                              <AssigneePicker
-                                                users={workspaceMembers}
-                                                value={issue.assigneeId ?? issue.assignee ?? null}
-                                                onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
-                                                placement="auto"
-                                                size="sm"
-                                              />
-                                            </div>
-                                          ) : (
-                                            renderReadonlyAssignee(issue)
-                                          )}
+                                        <p title={issue.title} className="mb-2 line-clamp-2 text-[0.875rem] font-semibold leading-snug text-[#172B4D] group-hover:text-[#0052CC] dark:text-[#DFE1E6] dark:group-hover:text-[#4C9AFF]">
+                                          {issue.title}
+                                        </p>
+
+                                        <div className="flex items-end justify-between mt-3">
+                                          <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                                            <span
+                                              title={`Priority: ${issue.priority}`}
+                                              className={`px-1.5 py-0.5 rounded-[3px] text-[0.625rem] font-bold uppercase tracking-wide cursor-default ${issue.priority === "High" || issue.priority === "Highest" ? "bg-[#FFEBE6] text-[#BF2600] dark:bg-[rgba(191,38,0,0.2)] dark:text-[#FF8F73]" : issue.priority === "Medium" ? "bg-[#FFFAE6] text-[#FF8B00] dark:bg-[rgba(255,139,0,0.2)] dark:text-[#F6C343]" : "bg-[#E3FCEF] text-[#006644] dark:bg-[rgba(0,102,68,0.2)] dark:text-[#57D9A3]"}`}
+                                            >
+                                              {issue.priority}
+                                            </span>
+                                            <span 
+                                              title={`Type: ${issue.type}`}
+                                              className="px-1.5 py-0.5 rounded-[3px] text-[0.625rem] font-bold uppercase tracking-wide bg-[#DEEBFF] text-[#0747A6] dark:bg-[rgba(7,71,166,0.2)] dark:text-[#4C9AFF] cursor-default"
+                                            >
+                                              {issue.type}
+                                            </span>
+
+                                            {issue.dueDate && (() => {
+                                              const isOverdue = new Date(new Date(issue.dueDate).setHours(0,0,0,0)) < new Date(new Date().setHours(0,0,0,0));
+                                              return (
+                                                <span
+                                                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-[3px] text-[0.625rem] font-semibold w-fit cursor-default ${isOverdue ? "bg-[#FFEBE6] text-[#BF2600] dark:bg-[rgba(191,38,0,0.2)] dark:text-[#FF8F73]" : "bg-[#DFE1E6] text-[#42526E] dark:bg-[#2A2B2D] dark:text-[#A6B0C3]"}`}
+                                                  title={isOverdue ? "Overdue" : "Due Date"}
+                                                >
+                                                  <Calendar className="w-3 h-3" />
+                                                  {new Date(issue.dueDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                                                </span>
+                                              );
+                                            })()}
+
+                                            {(issue.labels ?? []).slice(0, 3).map((label) => (
+                                              <span
+                                                key={label.id}
+                                                title={label.name}
+                                                className="max-w-[7.5rem] truncate rounded-[3px] bg-[#DFE1E6] px-1.5 py-0.5 text-[0.625rem] font-semibold text-[#42526E] dark:bg-[#2A2B2D] dark:text-[#A6B0C3]"
+                                              >
+                                                {label.name}
+                                              </span>
+                                            ))}
+                                            {(issue.labels?.length ?? 0) > 3 && (
+                                              <span className="rounded-[3px] bg-[#DFE1E6] px-1.5 py-0.5 text-[0.625rem] font-semibold text-[#42526E] dark:bg-[#2A2B2D] dark:text-[#A6B0C3]">
+                                                +{(issue.labels?.length ?? 0) - 3}
+                                              </span>
+                                            )}
+                                          </div>
+                                          
+                                          <div className="ml-2 flex-shrink-0">
+                                            {canEditTask && !filters.archived ? (
+                                              <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                                <AssigneePicker
+                                                  users={workspaceMembers}
+                                                  value={issue.assigneeId ?? issue.assignee ?? null}
+                                                  onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
+                                                  placement="auto"
+                                                  size="sm"
+                                                />
+                                              </div>
+                                            ) : (
+                                              renderReadonlyAssignee(issue)
+                                            )}
+                                          </div>
                                         </div>
 
                                         {issue.type?.toLowerCase() !== "subtask" && (
-                                          <div className="mt-3">
+                                          <div className="mt-2">
                                             <BoardCardSubtasks
                                               workspaceId={data.workspace._id}
                                               taskId={issue.id}

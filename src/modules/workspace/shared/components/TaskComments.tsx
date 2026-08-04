@@ -13,17 +13,20 @@ import { queryKeys } from "@/shared/constants/queryKeys";
 import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
 
 type MentionMember = {
-  id: string;
-  display: string;
+  id: string | number;
+  display?: string;
+  avatar?: string;
 };
 
 type RawMemberDto = {
   id?: string;
   _id?: string;
-  userId?: { id?: string; _id?: string; fullName?: string; email?: string } | string;
-  user?: { id?: string; _id?: string; fullName?: string; email?: string };
+  userId?: { id?: string; _id?: string; fullName?: string; email?: string; avatar?: string; avatarUrl?: string; image?: string } | string;
+  user?: { id?: string; _id?: string; fullName?: string; email?: string; avatar?: string; avatarUrl?: string; image?: string };
   fullName?: string;
   email?: string;
+  avatar?: string;
+  avatarUrl?: string;
 };
 
 type TaskCommentsProps = {
@@ -59,8 +62,9 @@ const toMentionMember = (m: RawMemberDto): MentionMember | null => {
   const userObj = typeof m.userId === "object" && m.userId !== null ? m.userId : m.user;
   const id = userObj?.id ?? userObj?._id ?? m.id ?? m._id ?? (typeof m.userId === "string" ? m.userId : undefined);
   const display = userObj?.fullName || userObj?.email || m.fullName || m.email;
+  const avatar = userObj?.avatar ?? userObj?.avatarUrl ?? userObj?.image ?? m.avatar ?? m.avatarUrl;
   if (!id || !display) return null;
-  return { id, display };
+  return { id, display, avatar };
 };
 
 const toMentionMembers = (members: RawMemberDto[]): MentionMember[] =>
@@ -431,13 +435,17 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                       data={mentionMembers}
                       markup="[@__display__](__id__)"
                       renderSuggestion={(
-                        suggestion,
+                        suggestion: MentionMember,
                         _search,
                         highlightedDisplay,
                       ) => (
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
-                            {suggestion.display?.toString().charAt(0).toUpperCase()}
+                          <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden">
+                            {suggestion.avatar ? (
+                              <img src={suggestion.avatar} alt={suggestion.display} className="w-full h-full object-cover" />
+                            ) : (
+                              suggestion.display?.toString().charAt(0).toUpperCase()
+                            )}
                           </div>
                           <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
                             {highlightedDisplay}
@@ -648,10 +656,14 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                     trigger="@"
                     data={mentionMembers}
                     markup="[@__display__](__id__)"
-                    renderSuggestion={(suggestion, _search, highlightedDisplay) => (
+                    renderSuggestion={(suggestion: MentionMember, _search, highlightedDisplay) => (
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
-                          {suggestion.display?.toString().charAt(0).toUpperCase()}
+                        <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden">
+                          {suggestion.avatar ? (
+                            <img src={suggestion.avatar} alt={suggestion.display} className="w-full h-full object-cover" />
+                          ) : (
+                            suggestion.display?.toString().charAt(0).toUpperCase()
+                          )}
                         </div>
                         <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
                           {highlightedDisplay}
