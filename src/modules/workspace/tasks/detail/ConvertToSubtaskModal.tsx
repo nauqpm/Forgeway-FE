@@ -9,7 +9,7 @@ import { queryKeys } from "@/shared/constants/queryKeys";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
-import { toIssue, TaskDto } from "@/modules/workspace/shared/services/taskService";
+import { toIssue } from "@/modules/workspace/shared/services/taskService";
 
 interface ConvertToSubtaskModalProps {
   isOpen: boolean;

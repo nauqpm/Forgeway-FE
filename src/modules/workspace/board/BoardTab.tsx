@@ -2,7 +2,7 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 import { useMemo, useRef, useState } from "react";
 import { Filters } from "@/modules/workspace/shared/types/filter.type";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
