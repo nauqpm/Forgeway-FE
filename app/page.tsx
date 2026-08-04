@@ -19,19 +19,16 @@ import {
   ChevronRight,
   Cpu,
   FileText,
-  GitBranch,
   History,
   KanbanSquare,
   LayoutGrid,
   Lightbulb,
-  LockKeyhole,
   MessageSquare,
   MessageSquareText,
   MoreHorizontal,
   PanelRight,
   PencilLine,
   Plus,
-  Radio,
   Repeat,
   Rocket,
   Search,
@@ -43,7 +40,6 @@ import {
   TrendingUp,
   UserPlus,
   UsersRound,
-  Workflow,
   Zap,
 } from "lucide-react";
 
@@ -804,7 +800,7 @@ export default function LandingPage() {
                       <div className="rounded-xl bg-slate-950 p-3.5 text-slate-300 border border-slate-900 space-y-2">
                         <div className="flex items-center gap-1.5 text-indigo-400">
                           <span>$</span>
-                          <span className="text-slate-450">git commit -m "feat: setup oauth2 [close-task-42]"</span>
+                          <span className="text-slate-450">{`git commit -m "feat: setup oauth2 [close-task-42]"`}</span>
                         </div>
                         <div className="text-slate-500">
                           [main 4f1a9b2] feat: setup oauth2 authentication
@@ -877,7 +873,7 @@ export default function LandingPage() {
                             <span>2 mins ago</span>
                           </div>
                           <div className="flex justify-between">
-                            <span>User "Hoang" updated Role Permissions</span>
+                            <span>{`User "Hoang" updated Role Permissions`}</span>
                             <span>1 hr ago</span>
                           </div>
                         </div>

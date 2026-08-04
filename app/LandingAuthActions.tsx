@@ -18,7 +18,6 @@ import {
   Sun,
   User,
   X,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useTheme } from "@/shared/hooks/useTheme";
