@@ -12,7 +12,6 @@ import UserProfileCard from './UserProfileCard';
 import SystemMessage from './SystemMessage';
 import MessageHoverActions from './MessageHoverActions';
 import MessageContextMenu from './MessageContextMenu';
-import MessageEditForm from './MessageEditForm';
 import MessageContent from './MessageContent';
 import MessageAttachments from './MessageAttachments';
 import ConfirmActionModal from './ConfirmActionModal';
@@ -20,7 +19,6 @@ import DeleteChoiceModal from './DeleteChoiceModal';
 import MediaLightbox, { LightboxFile } from './MediaLightbox';
 
 import { useAttachmentPreview } from '../hooks/useAttachmentPreview';
-import { useMentionSearch } from '../hooks/useMentionSearch';
 import { getMessagePreviewText } from '../utils/messageContentRenderer';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
@@ -55,10 +53,17 @@ export default function MessageItem({
 
   const authUser = useAuthStore(state => state.user);
   const currentUserId = (authUser as { _id?: string; id?: string } | null)?._id || authUser?.id;
-  const { sendReaction, sendDeleteMessage, sendEditMessage } = useChatRealtime();
+  const { sendReaction, sendDeleteMessage } = useChatRealtime();
   const setReplyingToMessage = useChatStore(state => state.setReplyingToMessage);
   const setReplyingToThreadMessage = useChatStore(state => state.setReplyingToThreadMessage);
   const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
+  const setEditingMessage = useChatStore(state => state.setEditingMessage);
+  const setEditingThreadMessage = useChatStore(state => state.setEditingThreadMessage);
+  const editingMessage = useChatStore(state => state.editingMessage);
+  const editingThreadMessage = useChatStore(state => state.editingThreadMessage);
+
+  const currentEditingMessage = hideThreadBadge ? editingThreadMessage : editingMessage;
+  const isCurrentlyEditing = currentEditingMessage?._id === message._id;
 
   const activeChannelId = useChatStore(state => state.activeChannelId);
   const { data: channels = [] } = useChatChannels();
@@ -85,8 +90,6 @@ export default function MessageItem({
   const [showDeleteForMeConfirm, setShowDeleteForMeConfirm] = useState(false);
   const [showDeleteChoices, setShowDeleteChoices] = useState(false);
   const { mutate: deleteForMeMutate } = useDeleteMessageForMeMutation();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState('');
   const [lightboxFile, setLightboxFile] = useState<LightboxFile | null>(null);
   const [showProfileCard, setShowProfileCard] = useState(false);
   const [profileCardPos, setProfileCardPos] = useState({ x: 0, y: 0 });
@@ -95,11 +98,9 @@ export default function MessageItem({
 
   const messageRef = useRef<HTMLDivElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
-  const editInputRef = useRef<HTMLTextAreaElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   // Custom Hooks
-  const { handleMentionSearch } = useMentionSearch(message.channelId || activeChannelId);
   const {
     isDownloading,
     expandedPreviews,
@@ -140,13 +141,6 @@ export default function MessageItem({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
 
-  useEffect(() => {
-    if (isEditing && editInputRef.current) {
-      const len = editInputRef.current.value.length;
-      editInputRef.current.focus();
-      editInputRef.current.setSelectionRange(len, len);
-    }
-  }, [isEditing]);
 
   useEffect(() => {
     if (showEmojiPicker && pickerRef.current) {
@@ -216,11 +210,7 @@ export default function MessageItem({
     setShowEmojiPicker(false);
   };
 
-  const handleSaveEdit = () => {
-    if (!editContent.trim()) return;
-    sendEditMessage(message.channelId, message._id, editContent.trim(), message.threadParentId);
-    setIsEditing(false);
-  };
+
 
   const confirmDeleteForEveryone = () => {
     sendDeleteMessage(message.channelId, message._id, message.threadParentId);
@@ -300,9 +290,11 @@ export default function MessageItem({
       onContextMenu={handleContextMenu}
       className={cn(
         "group relative flex gap-4 transition-all flex-row mx-2 rounded-lg hover:z-10",
-        shouldHighlight 
-          ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4" 
-          : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4",
+        isCurrentlyEditing
+          ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/10 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/15 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4 shadow-sm"
+          : (shouldHighlight 
+              ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4" 
+              : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4"),
         spacingClasses
       )}
     >
@@ -323,8 +315,8 @@ export default function MessageItem({
         }}
         onReplyInThread={() => setActiveThreadParentId(message._id)}
         onEdit={() => {
-          setIsEditing(true);
-          setEditContent((message.content || '').replace(/@@@SOFTBREAK@@@/g, '\n'));
+          if (hideThreadBadge) setEditingThreadMessage(message);
+          else setEditingMessage(message);
         }}
         onDeleteClick={handleDeleteClick}
       />
@@ -421,23 +413,12 @@ export default function MessageItem({
           </div>
         )}
         
-        {isEditing ? (
-          <MessageEditForm
-            editContent={editContent}
-            editInputRef={editInputRef}
-            setEditContent={setEditContent}
-            onMentionSearch={handleMentionSearch}
-            onSave={handleSaveEdit}
-            onCancel={() => setIsEditing(false)}
-          />
-        ) : (
-          <MessageContent
-            message={message}
-            isDeleted={isDeleted}
-            currentUserId={currentUserId}
-            onMentionClick={handleMentionClick}
-          />
-        )}
+        <MessageContent
+          message={message}
+          isDeleted={isDeleted}
+          currentUserId={currentUserId}
+          onMentionClick={handleMentionClick}
+        />
 
         {/* Attachments List */}
         <MessageAttachments
@@ -584,8 +565,8 @@ export default function MessageItem({
         }}
         onReplyInThread={() => setActiveThreadParentId(message._id)}
         onEdit={() => {
-          setIsEditing(true);
-          setEditContent((message.content || '').replace(/@@@SOFTBREAK@@@/g, '\n'));
+          if (hideThreadBadge) setEditingThreadMessage(message);
+          else setEditingMessage(message);
         }}
         onDeleteForMe={() => setShowDeleteForMeConfirm(true)}
         onDeleteForEveryone={() => setShowDeleteConfirm(true)}

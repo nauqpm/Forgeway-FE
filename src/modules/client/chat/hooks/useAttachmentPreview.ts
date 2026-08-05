@@ -2,6 +2,25 @@ import { useState, useRef, useEffect, useCallback, RefObject } from 'react';
 import type { Attachment } from '@/modules/client/chat/types/chat.types';
 import api from '@/lib/axiosIns';
 
+const isOfficeFile = (filename: string, mimeType?: string) => {
+  const ext = filename.toLowerCase().split('.').pop() || '';
+  const officeExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+  if (officeExtensions.includes(ext)) return true;
+
+  if (mimeType) {
+    const officeMimes = [
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+    ];
+    if (officeMimes.includes(mimeType)) return true;
+  }
+  return false;
+};
+
 export function useAttachmentPreview(
   containerRef: RefObject<HTMLElement | null>,
   attachments?: Attachment[],
@@ -101,8 +120,16 @@ export function useAttachmentPreview(
   };
 
   const handleDownloadFile = async (file: { url: string; name?: string; mimeType?: string }) => {
-    if (isDownloading) return;
     const filename = file.name || 'file';
+    
+    // Check if it's an Office document, open in new tab via Microsoft Office Viewer
+    if (file.url && isOfficeFile(filename, file.mimeType)) {
+      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`;
+      window.open(officeViewerUrl, '_blank');
+      return;
+    }
+
+    if (isDownloading) return;
     setIsDownloading(file.url);
     try {
       const response = await api.get('/attachments/download-by-url', {

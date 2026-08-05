@@ -191,7 +191,32 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
     }
   };
 
+  const isOfficeFile = (filename: string, mimeType?: string) => {
+    const ext = filename.toLowerCase().split('.').pop() || '';
+    const officeExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+    if (officeExtensions.includes(ext)) return true;
+
+    if (mimeType) {
+      const officeMimes = [
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      ];
+      if (officeMimes.includes(mimeType)) return true;
+    }
+    return false;
+  };
+
   const handleFileClick = async (url: string, originalName: string, mimeType: string) => {
+    if (url && isOfficeFile(originalName, mimeType)) {
+      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+      window.open(officeViewerUrl, '_blank');
+      return;
+    }
+
     const lowerMime = mimeType?.toLowerCase() || '';
     const isPdf = lowerMime === 'application/pdf';
     const isImg = lowerMime.startsWith('image/');
