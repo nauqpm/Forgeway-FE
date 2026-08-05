@@ -35,8 +35,8 @@ export const workspaceService = {
 
   updateWorkspaceOrder: async (
     order: string[],
-  ): Promise<any> => {
+  ): Promise<any> => { // eslint-disable-line @typescript-eslint/no-explicit-any
     const res = await api.put("/users/me", { workspaceOrder: order });
-    return normalize<any>(res);
+    return normalize<any>(res); // eslint-disable-line @typescript-eslint/no-explicit-any
   },
 };

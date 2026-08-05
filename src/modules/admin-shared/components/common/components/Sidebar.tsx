@@ -131,7 +131,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const { user } = useAuth();
   const { data: channels = [] } = useChatChannels();
   const queryClient = useQueryClient();
-  const [orderedWorkspaces, setOrderedWorkspaces] = useState<any[]>(sidebarWorkspaces || []);
+  const [orderedWorkspaces, setOrderedWorkspaces] = useState<any[]>(sidebarWorkspaces || []); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   useEffect(() => {
     if (sidebarWorkspaces) {

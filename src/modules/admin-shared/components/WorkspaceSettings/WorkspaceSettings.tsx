@@ -30,7 +30,7 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
   const [form, setForm] = useState<{
     name: string;
     description: string;
-    settings?: Record<string, any>;
+    settings?: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   }>({ name: "", description: "", settings: { isImportant: false } });
 
   const workspacesQuery = useQuery<Workspace[]>({

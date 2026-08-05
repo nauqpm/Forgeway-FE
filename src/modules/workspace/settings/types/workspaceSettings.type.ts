@@ -9,7 +9,7 @@ export interface WorkspaceInfo {
   description?: string;
   status?: WorkspaceStatus;
   access?: WorkspaceAccess;
-  settings?: Record<string, any>;
+  settings?: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   // visibility?: WorkspaceAccess;
 }
 
@@ -18,7 +18,7 @@ export interface WorkspaceSettingsForm {
   description: string;
   status: WorkspaceStatus;
   access: WorkspaceAccess;
-  settings?: Record<string, any>;
+  settings?: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
 export interface WorkspaceMember {

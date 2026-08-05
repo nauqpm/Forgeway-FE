@@ -23,7 +23,7 @@ export interface Workspace {
   members?: WorkspaceMember[];
   description?: string;
   avatar?: string;
-  settings?: Record<string, any>;
+  settings?: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   access?: "private" | "public";
   template?: "kanban" | "scrum";
   type?: "kanban" | "scrum";
