@@ -12,6 +12,8 @@ import {
 } from "@/modules/notifications/services/notification.service";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
+import { syncExistingBrowserPush } from "@/modules/notifications/services/browser-push.service";
+import BrowserPushPermissionPrompt from "@/modules/notifications/components/BrowserPushPermissionPrompt";
 import { useWorkspaceRealtime } from "@/lib/realtime/hooks/use-workspace-realtime";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import {
@@ -208,6 +210,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     onReadAll: refreshUnreadNotificationCount,
   });
   useWorkspaceRealtime({ enabled: isAuthenticated });
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    void syncExistingBrowserPush().catch(() => undefined);
+  }, [isAuthenticated]);
 
   // Auth redirect
   useEffect(() => {
@@ -595,6 +602,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">{children}</main>
       </div>
       <ChatRealtimeHandler />
+      <BrowserPushPermissionPrompt />
     </div>
   );
 }

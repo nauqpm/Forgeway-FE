@@ -60,6 +60,15 @@ export interface NotificationListResponse {
   limit: number;
 }
 
+export interface PushSubscriptionInput {
+  endpoint: string;
+  expirationTime?: number | null;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
 export const notificationService = {
   async list(page = 1, limit = 20): Promise<NotificationListResponse> {
     const response = await api.get<NotificationListResponse>(apiRoutes.NOTIFICATIONS.BASE, {
@@ -89,5 +98,13 @@ export const notificationService = {
 
   async declineWorkspaceInvite(inviteId: string): Promise<void> {
     await api.post(apiRoutes.WORKSPACES.DECLINE_INVITE_BY_ID(inviteId));
+  },
+
+  async upsertPushSubscription(subscription: PushSubscriptionInput): Promise<void> {
+    await api.post(apiRoutes.NOTIFICATIONS.PUSH_SUBSCRIPTIONS, subscription);
+  },
+
+  async removePushSubscription(endpoint: string): Promise<void> {
+    await api.delete(apiRoutes.NOTIFICATIONS.PUSH_SUBSCRIPTIONS, { data: { endpoint } });
   },
 };

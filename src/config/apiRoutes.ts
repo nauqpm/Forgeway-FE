@@ -150,6 +150,7 @@ export const apiRoutes = {
         UNREAD_COUNT: '/notifications/unread-count',
         READ: (id: string) => `/notifications/${id}/read`,
         READ_ALL: '/notifications/read-all',
+        PUSH_SUBSCRIPTIONS: '/notifications/push-subscriptions',
     },
     DASHBOARD: {
         WORKSPACE: (workspaceId: string) => `/dashboard/workspace/${workspaceId}`,

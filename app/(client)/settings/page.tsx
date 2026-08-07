@@ -7,6 +7,7 @@ import api from "@/lib/axiosIns";
 import { Key, LogOut, Shield, User } from "lucide-react";
 import ThemeSwitcher from "@/shared/components/ThemeSwitcher";
 import FontSizeControl from "@/shared/components/FontSizeControl";
+import BrowserPushSettingsCard from "@/modules/notifications/components/BrowserPushSettingsCard";
 
 export default function SettingsPage() {
   usePageTitle("Settings");
@@ -104,6 +105,8 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+
+        <BrowserPushSettingsCard />
 
         <div className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
           <h2 className="mb-4 flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7]">
