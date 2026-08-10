@@ -667,7 +667,6 @@ export default function DataGridListView({
                         workspaceId={workspaceId}
                         visibleCells={row.getVisibleCells()}
                         onClickTask={onClickTask}
-                        onUpdateIssue={onUpdateIssue}
                         canEditTask={canEditTask}
                         boardColumns={boardColumns}
                         members={normalizedMembers}
@@ -785,19 +784,11 @@ export default function DataGridListView({
   );
 }
 
-function ExpandedSubtasksRow({ parentIssue, workspaceId, visibleCells, onClickTask, onUpdateIssue, canEditTask, boardColumns, members }: { parentIssue: Record<string, unknown> & { id: string }, workspaceId: string, visibleCells: { id: string; column: { id: string; getSize: () => number } }[], onClickTask?: (issue: Record<string, unknown>) => void, onUpdateIssue?: (id: string, updates: Record<string, unknown>) => void, canEditTask?: boolean, boardColumns?: BoardColumn[], members?: AssigneePickerUser[] }) {
-  const { subtasks, isLoading } = useSubtasks(workspaceId, parentIssue.id);
-  const queryClient = useQueryClient();
+function ExpandedSubtasksRow({ parentIssue, workspaceId, visibleCells, onClickTask, canEditTask, boardColumns, members }: { parentIssue: Record<string, unknown> & { id: string }, workspaceId: string, visibleCells: { id: string; column: { id: string; getSize: () => number } }[], onClickTask?: (issue: Record<string, unknown>) => void, canEditTask?: boolean, boardColumns?: BoardColumn[], members?: AssigneePickerUser[] }) {
+  const { subtasks, isLoading, updateSubtask } = useSubtasks(workspaceId, parentIssue.id);
 
   const handleUpdate = (id: string, updates: Record<string, unknown>) => {
-    onUpdateIssue?.(id, updates);
-    queryClient.setQueryData(queryKeys.tasks.subtasks(workspaceId, parentIssue.id), (old: { subtasks?: Subtask[] } | undefined) => {
-      if (!old || !old.subtasks) return old;
-      return {
-        ...old,
-        subtasks: old.subtasks.map((st: Subtask) => st.id === id ? { ...st, ...updates } : st),
-      };
-    });
+    updateSubtask.mutate({ subtaskId: id, updates, options: { invalidateWorkspace: false } });
   };
 
   if (isLoading) {
@@ -857,7 +848,7 @@ function ExpandedSubtasksRow({ parentIssue, workspaceId, visibleCells, onClickTa
                   <TypePicker
                     value={subtask.type ?? 'Subtask'}
                     onChange={type => handleUpdate(subtask.id, { type })}
-                    disabled={!canEditTask}
+                    disabled={true}
                     variant="pill"
                     size="sm"
                     placement="bottom"
@@ -1015,7 +1006,7 @@ function LocalSubtasksRow({ subtasks, visibleCells, onClickTask, boardColumns, o
                   <TypePicker
                     value={subtask.type ?? 'Subtask'}
                     onChange={type => onUpdateIssue?.(subtask.id, { type })}
-                    disabled={!canEditTask}
+                    disabled={true}
                     variant="pill"
                     size="sm"
                     placement="bottom"

@@ -1,9 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { Subtask, SubtaskProgress } from "../types/task-detail.type";
-import { toUiLabel } from "../services/taskNormalizer";
+import { Task } from "../types/task.type";
+import { toUiLabel, toStatusLabel } from "../services/taskNormalizer";
 import { taskService } from "../services/taskService";
 
 interface CreateSubtaskInput {
@@ -35,6 +36,7 @@ export function useSubtasks(workspaceId: string, parentId: string) {
         resData.subtasks = resData.subtasks.map((st: Subtask) => ({
           ...st,
           priority: toUiLabel(st.priority, "Medium"),
+          status: toStatusLabel(st),
         }));
       }
       return resData;
@@ -69,8 +71,8 @@ export function useSubtasks(workspaceId: string, parentId: string) {
   const updateSubtask = useMutation<
     Subtask,
     unknown,
-    { subtaskId: string; updates: SubtaskUpdateInput },
-    { previousData?: SubtasksData }
+    { subtaskId: string; updates: SubtaskUpdateInput; options?: { invalidateWorkspace?: boolean } },
+    { previousData?: SubtasksData; previousWorkspaceData?: [QueryKey, Task[] | undefined][] }
   >({
     mutationFn: async ({ subtaskId, updates }) => {
       const payload = { ...updates };
@@ -79,7 +81,8 @@ export function useSubtasks(workspaceId: string, parentId: string) {
       return data.data || data;
     },
     onMutate: async ({ subtaskId, updates }) => {
-      const queryKey = queryKeys.tasks.subtasks(workspaceId, parentId);
+      const queryKey = queryKeys.tasks.subtasks(workspaceId, parentId!);
+
       await queryClient.cancelQueries({ queryKey });
 
       const previousData = queryClient.getQueryData<SubtasksData>(queryKey);
@@ -97,12 +100,35 @@ export function useSubtasks(workspaceId: string, parentId: string) {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousData) {
-        queryClient.setQueryData(queryKeys.tasks.subtasks(workspaceId, parentId), context.previousData);
+        queryClient.setQueryData(queryKeys.tasks.subtasks(workspaceId, parentId!), context.previousData);
       }
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.subtasks(workspaceId, parentId) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
+    onSuccess: (savedSubtask, variables) => {
+      queryClient.setQueryData<SubtasksData>(
+        queryKeys.tasks.subtasks(workspaceId, parentId!),
+        (current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            subtasks: current.subtasks.map((st) =>
+              st.id === variables.subtaskId
+                ? {
+                    ...st,
+                    ...savedSubtask,
+                    priority: toUiLabel(savedSubtask.priority ?? st.priority, "Medium"),
+                    status: toStatusLabel(savedSubtask),
+                  }
+                : st
+            )
+          };
+        }
+      );
+    },
+    onSettled: (_data, _err, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.subtasks(workspaceId, parentId!) });
+      if (variables.options?.invalidateWorkspace !== false) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
+      }
     },
   });
 

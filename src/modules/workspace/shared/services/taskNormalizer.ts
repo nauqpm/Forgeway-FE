@@ -66,7 +66,7 @@ export const toUiLabel = (value?: string, fallback = ""): string => {
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
 
-const toStatusLabel = (task: TaskDto): string => {
+export const toStatusLabel = (task: { columnId?: string; boardColumnId?: string; status?: string }): string => {
   const column = task.columnId ?? task.boardColumnId ?? task.status;
   return STATUS_BY_COLUMN[column ?? ""] ?? task.status ?? "To Do";
 };

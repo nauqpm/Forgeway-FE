@@ -63,15 +63,31 @@ const getPopoverStyle = (
   placement: PopoverPlacement,
 ): React.CSSProperties => {
   const width = 320;
+  const height = 430; // Estimated maximum calendar height (6 rows + headers + footer)
   const gap = 8;
-  const top =
-    placement.startsWith("top")
-      ? Math.max(12, rect.top - 360 - gap)
-      : rect.bottom + gap;
-  const left =
-    placement.endsWith("end")
-      ? Math.max(12, rect.right - width)
-      : Math.max(12, rect.left);
+
+  let isTop = placement.startsWith("top");
+
+  // Auto-flip vertically if it goes off-screen
+  if (!isTop && rect.bottom + gap + height > window.innerHeight) {
+    // If there is more space above the element than below, flip to top
+    if (rect.top > window.innerHeight - rect.bottom) {
+      isTop = true;
+    }
+  } else if (isTop && rect.top - gap - height < 0) {
+    if (window.innerHeight - rect.bottom > rect.top) {
+      isTop = false;
+    }
+  }
+
+  // Ensure it doesn't go off the top/bottom edges completely
+  const top = isTop
+    ? Math.max(12, rect.top - height - gap)
+    : Math.min(rect.bottom + gap, window.innerHeight - height - 12);
+
+  const left = placement.endsWith("end")
+    ? Math.max(12, rect.right - width)
+    : Math.max(12, rect.left);
 
   return {
     position: "fixed",
