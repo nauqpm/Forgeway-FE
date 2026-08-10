@@ -18,7 +18,10 @@ import {
   extractSwitchRenewError,
 } from '@/shared/utils/apiError';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
-import { deregisterBrowserPushForLogout } from '@/modules/notifications/services/browser-push.service';
+import {
+  deregisterBrowserPushForLogout,
+  syncExistingBrowserPush,
+} from '@/modules/notifications/services/browser-push.service';
 
 interface AccountSwitcherState {
   accounts: DeviceSwitchAccountItem[];
@@ -66,8 +69,11 @@ export const useAccountSwitcherStore = create<AccountSwitcherState>(
       set({ isSwitching: true, error: null });
 
       try {
-        await deregisterBrowserPushForLogout().catch(() => undefined);
-        const result = await accountSwitcherService.switchTo(targetUserId);
+        await deregisterBrowserPushForLogout();
+        const result = await accountSwitcherService.switchTo(targetUserId).catch(async (error) => {
+          await syncExistingBrowserPush().catch(() => undefined);
+          throw error;
+        });
         resetClientStateForSwitch();
         window.location.assign(result.redirectTo);
       } catch (error) {
