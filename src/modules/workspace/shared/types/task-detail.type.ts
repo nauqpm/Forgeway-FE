@@ -106,7 +106,7 @@ export interface TaskDetailResponse {
   parent?: ParentTaskSummary;
   timeLogged?: number;
   timeEstimated?: string | number;
-  startDate?: string;
+  startDate?: string | null;
   cover?: TaskCover | null;
   labels?: TaskLabel[];
   labelIds?: string[];

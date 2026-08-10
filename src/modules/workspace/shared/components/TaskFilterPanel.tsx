@@ -28,7 +28,7 @@ type TaskFilterPanelProps = {
 
 const lastUpdatedOptions = ["Any time", "Today", "Yesterday", "Past 7 days", "Past 30 days", "Past year"];
 const statuses = ["To Do", "In Progress", "Testing", "Done"];
-const types = ["Task", "Bug", "Story", "Epic"];
+const types = ["Task", "Bug", "Story"];
 const priorities = ["Lowest", "Low", "Medium", "High", "Highest"];
 
 function Section({

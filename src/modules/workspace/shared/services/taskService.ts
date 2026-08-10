@@ -349,8 +349,8 @@ const toUpdatePayload = (updates: Partial<Issue>) => {
   if (columnId !== undefined) {
     payload.columnId = columnId;
   }
-  if (startDate !== undefined) payload.startDate = startDate || undefined;
-  if (dueDate !== undefined) payload.dueDate = dueDate || undefined;
+  if (startDate !== undefined) payload.startDate = startDate;
+  if (dueDate !== undefined) payload.dueDate = dueDate;
   if (assigneeId !== undefined) {
     payload.assigneeId = assigneeId || null;
   } else if (typeof assignee === "string" && assignee !== "U") {

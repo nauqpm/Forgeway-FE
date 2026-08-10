@@ -138,7 +138,7 @@ export default function BoardFilters({
 
   const filteredAssignees = filterBoardAssignees(uniqueAssignees, assigneeSearch);
 
-  const allTypes = ["Task", "Bug", "Story", "Epic", "Subtask"];
+  const allTypes = ["Task", "Bug", "Story", "Subtask"];
   const filteredTypes = allTypes.filter(t => t.toLowerCase().includes(typeSearch.toLowerCase()));
 
   const allPriorities = PRIORITY_OPTIONS;

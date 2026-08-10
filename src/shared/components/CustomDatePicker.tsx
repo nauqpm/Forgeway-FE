@@ -95,6 +95,8 @@ const getPopoverStyle = (
     left: Math.min(left, window.innerWidth - width - 12),
     width,
     zIndex: 100000,
+    opacity: 1,
+    pointerEvents: "auto",
   };
 };
 
@@ -113,7 +115,13 @@ export default function CustomDatePicker({
   const [inputValue, setInputValue] = useState(getDisplayValue(value));
   const [viewMonth, setViewMonth] = useState(selectedDate ?? new Date());
   const [isOpen, setIsOpen] = useState(false);
-  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
+  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
+    position: "fixed",
+    top: -9999,
+    left: -9999,
+    opacity: 0,
+    pointerEvents: "none",
+  });
   const rootRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   // Tracks a locally-committed value not yet reflected back via the value prop.
@@ -130,7 +138,16 @@ export default function CustomDatePicker({
   }, [selectedDate, value]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setPopoverStyle({
+        position: "fixed",
+        top: -9999,
+        left: -9999,
+        opacity: 0,
+        pointerEvents: "none",
+      });
+      return;
+    }
 
     const updatePosition = () => {
       const rect = rootRef.current?.getBoundingClientRect();

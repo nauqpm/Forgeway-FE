@@ -19,8 +19,8 @@ export interface Task {
   color: string;
   sprintId: string | null;
   storyPoints: number;
-  startDate?: string;
-  dueDate?: string;
+  startDate?: string | null;
+  dueDate?: string | null;
   epic?: string | null;
   parentId?: string | null;
   subtaskProgress?: { done: number; total: number };
