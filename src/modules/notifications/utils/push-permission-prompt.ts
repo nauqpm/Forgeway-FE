@@ -5,9 +5,10 @@ export interface PushPermissionPromptState {
 
 export type BrowserPushRequestResult = "enabled" | "denied" | "dismissed" | "unsupported";
 
-type PromptStorage = Pick<Storage, "getItem" | "setItem">;
+type PromptStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
-const STORAGE_KEY = "al-task.push-permission-prompt";
+const STORAGE_KEY = "sdlc-platform.push-permission-prompt";
+const LEGACY_STORAGE_KEY = "al-task.push-permission-prompt";
 const REMINDER_DELAY_MS = 7 * 24 * 60 * 60 * 1000;
 const initialState: PushPermissionPromptState = { dismissCount: 0, lastShownAt: null };
 
@@ -16,11 +17,28 @@ export const getBrowserPushRequestResult = (permission: NotificationPermission):
   return permission === "denied" ? "denied" : "dismissed";
 };
 
-export const getPushPermissionPromptState = (storage: Pick<Storage, "getItem">): PushPermissionPromptState => {
+export const getPushPermissionPromptState = (storage: PromptStorage): PushPermissionPromptState => {
+  let stored: string | null;
   try {
-    const stored = storage.getItem(STORAGE_KEY);
-    if (!stored) return initialState;
+    stored = storage.getItem(STORAGE_KEY);
+    if (!stored) {
+      stored = storage.getItem(LEGACY_STORAGE_KEY);
+      if (stored) {
+        try {
+          storage.setItem(STORAGE_KEY, stored);
+          storage.removeItem(LEGACY_STORAGE_KEY);
+        } catch {
+          // Keep reading the legacy value; it remains available for a later migration attempt.
+        }
+      }
+    }
+  } catch {
+    return initialState;
+  }
 
+  if (!stored) return initialState;
+
+  try {
     const value: unknown = JSON.parse(stored);
     if (!value || typeof value !== "object") return initialState;
 

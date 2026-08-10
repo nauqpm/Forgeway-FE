@@ -6,7 +6,7 @@ import { Bell } from "lucide-react";
 import { Modal } from "@/shared/components/ui";
 import {
   getBrowserPushStatus,
-  requestAndSyncBrowserPush,
+  enableBrowserPush,
 } from "@/modules/notifications/services/browser-push.service";
 import {
   getPushPermissionPromptDisplay,
@@ -50,7 +50,7 @@ export default function BrowserPushPermissionPrompt() {
     setBusy(true);
     setError("");
     try {
-      const result = await requestAndSyncBrowserPush();
+      const result = await enableBrowserPush();
       if (result === "denied") setDisplay("denied-banner");
       else if (result === "dismissed") dismiss();
       else setDisplay("hidden");
@@ -84,7 +84,7 @@ export default function BrowserPushPermissionPrompt() {
         onClose={dismiss}
         size="sm"
         title="Stay up to date"
-        description="Enable browser notifications to receive task, mention, and workspace updates when AL-TASK is not open."
+        description="Enable browser notifications to receive task, mention, and workspace updates when SDLC-Platform is not open."
         footer={
           <>
             <button

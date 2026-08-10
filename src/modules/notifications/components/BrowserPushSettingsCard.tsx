@@ -3,9 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, CheckCircle2, Info, ShieldAlert } from "lucide-react";
 import {
+  disableBrowserPush,
+  enableBrowserPush,
   getBrowserPushStatus,
-  removeCurrentBrowserPush,
-  requestAndSyncBrowserPush,
+  getBrowserPushStatusForRequestResult,
   type BrowserPushStatus,
 } from "@/modules/notifications/services/browser-push.service";
 
@@ -33,8 +34,8 @@ export default function BrowserPushSettingsCard() {
     setBusy(true);
     setError("");
     try {
-      const result = await requestAndSyncBrowserPush();
-      setStatus(result === "enabled" ? "enabled" : result === "denied" ? "denied" : "unsupported");
+      const result = await enableBrowserPush();
+      setStatus(getBrowserPushStatusForRequestResult(result));
     } catch {
       setError("Could not enable browser notifications. Please try again.");
       await refreshStatus();
@@ -47,7 +48,7 @@ export default function BrowserPushSettingsCard() {
     setBusy(true);
     setError("");
     try {
-      await removeCurrentBrowserPush();
+      await disableBrowserPush();
       setStatus("disabled");
     } catch {
       setError("Could not disable browser notifications. Please try again.");
@@ -64,8 +65,8 @@ export default function BrowserPushSettingsCard() {
         : status === "denied"
           ? "Browser permission is denied. Change it in your browser Site settings to enable notifications."
           : status === "enabled"
-            ? "This browser will receive notifications when AL-TASK is not focused."
-            : "Receive notifications when AL-TASK is not focused.";
+            ? "This browser will receive notifications when SDLC-Platform is not focused."
+            : "Receive notifications when SDLC-Platform is not focused.";
 
   return (
     <section className="workspace-panel mb-6 rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#252525]">
@@ -78,7 +79,7 @@ export default function BrowserPushSettingsCard() {
       {isAppleMobile() && (
         <p className="mt-3 flex gap-2 text-xs text-[#787774] dark:text-[#9B9A97]">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
-          On iPhone or iPad, add AL-TASK to your Home Screen before enabling notifications.
+          On iPhone or iPad, add SDLC-Platform to your Home Screen before enabling notifications.
         </p>
       )}
 
@@ -99,7 +100,7 @@ export default function BrowserPushSettingsCard() {
               {busy ? "Disabling..." : "Disable for this browser"}
             </button>
             <p className="mt-2 text-xs text-[#787774] dark:text-[#9B9A97]">
-              This removes this browser from AL-TASK. Browser permission is controlled in Site settings.
+              This removes this browser from SDLC-Platform. Browser permission is controlled in Site settings.
             </p>
           </>
         ) : status === "disabled" ? (

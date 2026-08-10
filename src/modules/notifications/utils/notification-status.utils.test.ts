@@ -1,14 +1,21 @@
-import * as assert from "node:assert/strict";
+import { describe, expect, it } from "vitest";
 
 import {
   formatTaskStatus,
   getTaskStatusTransition,
 } from "./notification-status.utils";
 
-assert.equal(formatTaskStatus("inprogress"), "In Progress");
-assert.equal(formatTaskStatus("in_review"), "In Review");
-assert.deepEqual(
-  getTaskStatusTransition({ fromStatus: "todo", toStatus: "inprogress" }),
-  { from: "To Do", to: "In Progress" },
-);
-assert.equal(getTaskStatusTransition({ fromStatus: "todo" }), undefined);
+describe("notification status formatting", () => {
+  it("formats known and fallback task statuses", () => {
+    expect(formatTaskStatus("inprogress")).toBe("In Progress");
+    expect(formatTaskStatus("in_review")).toBe("In Review");
+  });
+
+  it("formats complete transitions and ignores incomplete metadata", () => {
+    expect(getTaskStatusTransition({ fromStatus: "todo", toStatus: "inprogress" })).toEqual({
+      from: "To Do",
+      to: "In Progress",
+    });
+    expect(getTaskStatusTransition({ fromStatus: "todo" })).toBeUndefined();
+  });
+});

@@ -20,7 +20,7 @@ import { getMyPermissionsAPI } from "../../permission/services/permissionService
 import { AUTH_ROUTES } from "../constants/auth-routes";
 import { AuthErrorCode } from "../types/auth.types";
 import { validateEmail } from "../utils/emailValidation";
-import { removeCurrentBrowserPush } from "@/modules/notifications/services/browser-push.service";
+import { deregisterBrowserPushForLogout } from "@/modules/notifications/services/browser-push.service";
 import type { AuthUser, LoginRequest, RegisterRequest, AuthApiError, Permission } from "../types/auth.types";
 
 export const AUTH_ME_QUERY_KEY = ["auth", "me"] as const;
@@ -218,7 +218,7 @@ export const useAuth = () => {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await removeCurrentBrowserPush().catch(() => undefined);
+      await deregisterBrowserPushForLogout().catch(() => undefined);
       return logoutAPI();
     },
     retry: false,

@@ -34,13 +34,18 @@ const toSubscriptionInput = (subscription: PushSubscription): PushSubscriptionIn
   return { endpoint, expirationTime, keys: { p256dh: keys.p256dh, auth: keys.auth } };
 };
 
-const getServiceWorkerRegistration = async () => {
+const getServiceWorkerRegistrationForEnable = async () => {
   await navigator.serviceWorker.register("/push-notifications-sw.js", { scope: "/" });
   return navigator.serviceWorker.ready;
 };
 
-const getOrCreateSubscription = async () => {
-  const registration = await getServiceWorkerRegistration();
+const getExistingSubscription = async () => {
+  const registration = await navigator.serviceWorker.getRegistration("/");
+  return (await registration?.pushManager.getSubscription()) ?? null;
+};
+
+const createSubscriptionIfMissing = async () => {
+  const registration = await getServiceWorkerRegistrationForEnable();
   const existing = await registration.pushManager.getSubscription();
   if (existing) return existing;
 
@@ -53,9 +58,15 @@ const getOrCreateSubscription = async () => {
   });
 };
 
-const syncSubscription = async () => {
-  const subscription = await getOrCreateSubscription();
+const syncSubscription = async (subscription: PushSubscription) => {
   await notificationService.upsertPushSubscription(toSubscriptionInput(subscription));
+};
+
+export const getBrowserPushStatusForRequestResult = (
+  result: BrowserPushRequestResult,
+): BrowserPushStatus => {
+  if (result === "enabled" || result === "denied" || result === "unsupported") return result;
+  return "disabled";
 };
 
 export const getBrowserPushStatus = async (): Promise<BrowserPushStatus> => {
@@ -68,7 +79,7 @@ export const getBrowserPushStatus = async (): Promise<BrowserPushStatus> => {
   return subscription ? "enabled" : "disabled";
 };
 
-export const requestAndSyncBrowserPush = async (): Promise<BrowserPushRequestResult> => {
+export const enableBrowserPush = async (): Promise<BrowserPushRequestResult> => {
   if (!isBrowserPushSupported() || !isFeatureEnabled()) return "unsupported";
 
   const permission =
@@ -76,19 +87,30 @@ export const requestAndSyncBrowserPush = async (): Promise<BrowserPushRequestRes
   const result = getBrowserPushRequestResult(permission);
   if (result !== "enabled") return result;
 
-  await syncSubscription();
+  const subscription = await createSubscriptionIfMissing();
+  await syncSubscription(subscription);
   return "enabled";
 };
 
 export const syncExistingBrowserPush = async (): Promise<void> => {
   if (!isBrowserPushSupported() || !isFeatureEnabled() || Notification.permission !== "granted") return;
-  await syncSubscription();
+  const subscription = await getExistingSubscription();
+  if (subscription) await syncSubscription(subscription);
 };
 
-export const removeCurrentBrowserPush = async (): Promise<void> => {
+export const disableBrowserPush = async (): Promise<void> => {
   if (!isBrowserPushSupported()) return;
 
-  const registration = await navigator.serviceWorker.getRegistration("/");
-  const subscription = await registration?.pushManager.getSubscription();
+  const subscription = await getExistingSubscription();
+  if (!subscription) return;
+
+  await subscription.unsubscribe();
+  await notificationService.removePushSubscription(subscription.endpoint).catch(() => undefined);
+};
+
+export const deregisterBrowserPushForLogout = async (): Promise<void> => {
+  if (!isBrowserPushSupported()) return;
+
+  const subscription = await getExistingSubscription();
   if (subscription) await notificationService.removePushSubscription(subscription.endpoint);
 };
