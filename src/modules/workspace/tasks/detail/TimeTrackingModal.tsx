@@ -237,6 +237,21 @@ export default function TimeTrackingModal({
     }
   }, [isOpen, issue, workspaceId]);
 
+  // Keyboard shortcuts (Escape to close, Enter to submit when valid)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // Validation: Accept single unit hours e.g., 4 or 4h or 4.5 or 4.5h

@@ -41,7 +41,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
 
   const { data: workspaces = [] } = useWorkspaces();
   const userRole = useAuthStore(state => state.user?.role);
-  
+
   const isWorkspaceAdmin = React.useMemo(() => {
     if (channel?.type === 'dm') return false;
     if (userRole === 'super_admin') return true;
@@ -183,7 +183,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
   }, [replies, isLoading]);
 
   return (
-    <div 
+    <div
       style={{ width: `${panelWidth}px` }}
       className="flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full min-h-0 overflow-hidden relative"
     >

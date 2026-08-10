@@ -58,6 +58,8 @@ export const queryKeys = {
     attachments: (workspaceId: string, taskId: string) => [...TASKS, "attachments", workspaceId, taskId] as const,
     myTasks: (userId: string) => [...TASKS, "my-tasks", userId] as const,
     archived: (workspaceId: string, page: number) => [...TASKS, "archived", workspaceId, page] as const,
+    subtasks: (workspaceId: string, parentId: string) => [...TASKS, "subtasks", workspaceId, parentId] as const,
+
     searchDropdown: (workspaceId: string, filters: Record<string, unknown>) =>
       [...TASKS, "search-dropdown", workspaceId, filters] as const,
     searchDropdownFallback: (workspaceId: string, filters: Record<string, unknown>) =>

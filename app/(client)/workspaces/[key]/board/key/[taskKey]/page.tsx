@@ -63,21 +63,27 @@ export default function TaskDetailDeepLinkPage() {
     mutationFn: async (updatedIssue: TaskDetailResponse) => {
       if (!taskDetailQuery.data?.workspace || !updatedIssue.id) return null;
       const workspace = taskDetailQuery.data.workspace;
-      const updates: Partial<Issue> = {
-        title: updatedIssue.title,
-        description: updatedIssue.description,
-        status: updatedIssue.status,
-        priority: updatedIssue.priority,
-        type: updatedIssue.type,
-        columnId: updatedIssue.columnId,
-        sprintId: updatedIssue.sprintId ?? null,
-        storyPoints: updatedIssue.storyPoints ?? undefined,
-        startDate: updatedIssue.startDate ?? undefined,
-        dueDate: updatedIssue.dueDate ?? undefined,
-        assigneeId: updatedIssue.assigneeId ?? null,
-      };
+      const originalIssue = taskDetailQuery.data.issue;
+      type IssueUpdates = Partial<Issue> & { startDate?: string | null; dueDate?: string | null; assigneeId?: string | null };
+      const updates: IssueUpdates = {};
 
-      await taskService.updateBoardTask(workspace._id, updatedIssue.id, updates);
+      if (originalIssue) {
+        if (updatedIssue.title !== originalIssue.title) updates.title = updatedIssue.title;
+        if (updatedIssue.description !== originalIssue.description) updates.description = updatedIssue.description ?? undefined;
+        if (updatedIssue.status !== originalIssue.status) updates.status = updatedIssue.status;
+        if (updatedIssue.priority !== originalIssue.priority) updates.priority = updatedIssue.priority;
+        if (updatedIssue.type !== originalIssue.type) updates.type = updatedIssue.type;
+        if (updatedIssue.columnId !== originalIssue.columnId) updates.columnId = updatedIssue.columnId;
+        if (updatedIssue.sprintId !== originalIssue.sprintId) updates.sprintId = updatedIssue.sprintId ?? null;
+        if (updatedIssue.storyPoints !== originalIssue.storyPoints) updates.storyPoints = updatedIssue.storyPoints ?? undefined;
+        if (updatedIssue.startDate !== originalIssue.startDate) updates.startDate = updatedIssue.startDate ?? null;
+        if (updatedIssue.dueDate !== originalIssue.dueDate) updates.dueDate = updatedIssue.dueDate ?? null;
+        if (updatedIssue.assigneeId !== originalIssue.assigneeId) updates.assigneeId = updatedIssue.assigneeId ?? null;
+      }
+
+      if (Object.keys(updates).length === 0) return originalIssue;
+
+      await taskService.updateBoardTask(workspace._id, updatedIssue.id, updates as Partial<Issue>);
       const refreshedIssue = await taskService.getBoardTaskDetail(workspace._id, updatedIssue.key);
       return enrichTaskDetailUsers(refreshedIssue, workspace.members);
     },

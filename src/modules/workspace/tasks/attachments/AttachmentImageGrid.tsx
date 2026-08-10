@@ -2,8 +2,12 @@ import { isPreviewableAttachment, TaskAttachment } from "@/modules/workspace/sha
 import AttachmentActions from "./AttachmentActions";
 import AttachmentFileIcon from "./AttachmentFileIcon";
 import { formatAttachmentDate, formatAttachmentSize } from "./attachmentFormatters";
+import { useAttachmentPreview } from "@/modules/workspace/shared/hooks/useAttachmentPreview";
 
 interface AttachmentImageGridProps {
+  workspaceId: string;
+  taskId: string;
+  accessToken?: string | null;
   attachments: TaskAttachment[];
   canDeleteAttachment: (attachment: TaskAttachment) => boolean;
   onPreview: (attachment: TaskAttachment) => void;
@@ -11,7 +15,54 @@ interface AttachmentImageGridProps {
   onDelete: (attachment: TaskAttachment) => void;
 }
 
+function AttachmentThumbnail({
+  workspaceId,
+  taskId,
+  accessToken,
+  attachment,
+}: {
+  workspaceId: string;
+  taskId: string;
+  accessToken?: string | null;
+  attachment: TaskAttachment;
+}) {
+  const { objectUrl, isLoading } = useAttachmentPreview({ workspaceId, taskId, attachment, accessToken });
+
+  if (!objectUrl) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#F7F6F3] dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B]">
+        <AttachmentFileIcon mimeType={attachment.mimeType} className="h-8 w-8" />
+        <span className="max-w-[80%] truncate text-[0.6875rem] font-medium">
+          {isLoading ? "Loading preview..." : attachment.originalName}
+        </span>
+      </div>
+    );
+  }
+
+  if (attachment.mimeType.startsWith("video/")) {
+    return (
+      <video
+        src={objectUrl}
+        className="h-full w-full object-cover"
+        muted
+        playsInline
+      />
+    );
+  }
+
+  return (
+    <img
+      src={objectUrl}
+      alt={attachment.originalName}
+      className="h-full w-full object-cover"
+    />
+  );
+}
+
 export default function AttachmentImageGrid({
+  workspaceId,
+  taskId,
+  accessToken,
   attachments,
   canDeleteAttachment,
   onPreview,
@@ -33,12 +84,12 @@ export default function AttachmentImageGrid({
             className="block aspect-video w-full overflow-hidden bg-[#F7F6F3] dark:bg-[#252525]"
             aria-label={`Preview ${attachment.originalName}`}
           >
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#F7F6F3] dark:bg-[#252525] text-[#ABABAB] dark:text-[#6B6B6B]">
-              <AttachmentFileIcon mimeType={attachment.mimeType} className="h-8 w-8" />
-              <span className="max-w-[80%] truncate text-[0.6875rem] font-medium">
-                {attachment.originalName}
-              </span>
-            </div>
+            <AttachmentThumbnail
+              workspaceId={workspaceId}
+              taskId={taskId}
+              accessToken={accessToken}
+              attachment={attachment}
+            />
           </button>
           <div className="p-3">
             <div className="flex items-start justify-between gap-2">

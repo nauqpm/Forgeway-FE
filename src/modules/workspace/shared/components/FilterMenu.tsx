@@ -153,7 +153,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         <div className="space-y-2">
           <h5 className="text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wide">Work type</h5>
           <div className="grid grid-cols-2 gap-2">
-            {['Task', 'Bug', 'Story', 'Epic'].map(type => {
+            {['Task', 'Bug', 'Story'].map(type => {
               const isSelected = filters.types?.includes(type);
               return (
                 <label key={type} className="flex items-center gap-2 cursor-pointer">

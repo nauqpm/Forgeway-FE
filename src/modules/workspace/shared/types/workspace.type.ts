@@ -16,6 +16,7 @@ export interface WorkspaceMember {
 
 export interface Workspace {
   _id: string;
+  id?: string;
   name: string;
   key: string;
   slug?: string;
