@@ -64,7 +64,8 @@ export default function TaskDetailDeepLinkPage() {
       if (!taskDetailQuery.data?.workspace || !updatedIssue.id) return null;
       const workspace = taskDetailQuery.data.workspace;
       const originalIssue = taskDetailQuery.data.issue;
-      const updates: Partial<Issue> = {};
+      type IssueUpdates = Partial<Issue> & { startDate?: string | null; dueDate?: string | null; assigneeId?: string | null };
+      const updates: IssueUpdates = {};
 
       if (originalIssue) {
         if (updatedIssue.title !== originalIssue.title) updates.title = updatedIssue.title;
@@ -82,7 +83,7 @@ export default function TaskDetailDeepLinkPage() {
 
       if (Object.keys(updates).length === 0) return originalIssue;
 
-      await taskService.updateBoardTask(workspace._id, updatedIssue.id, updates);
+      await taskService.updateBoardTask(workspace._id, updatedIssue.id, updates as Partial<Issue>);
       const refreshedIssue = await taskService.getBoardTaskDetail(workspace._id, updatedIssue.key);
       return enrichTaskDetailUsers(refreshedIssue, workspace.members);
     },
