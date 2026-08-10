@@ -150,9 +150,24 @@ export function useWorkspaceSocket(workspaceId?: string) {
       queryClient.setQueriesData<Issue[]>({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) }, (current) => {
         switch (delta.action) {
           case "task:created":
-          case "task:updated":
-          case "task:moved":
-            return upsertIssue(current, toIssue(delta.payload.task));
+          case "task:moved": {
+            const issue = toIssue(delta.payload.task);
+            if (issue && issue.type?.toLowerCase() === "subtask") {
+              return current;
+            }
+            return upsertIssue(current, issue);
+          }
+          case "task:updated": {
+            const issue = toIssue(delta.payload.task);
+            if (issue && issue.type?.toLowerCase() === "subtask") {
+              return current;
+            }
+            // For updates, only update if it already exists. Don't add a new issue to the board.
+            if (!current || !issue) return current;
+            const exists = current.some(item => item.id === issue.id || item._id === issue.id);
+            if (!exists) return current;
+            return upsertIssue(current, issue);
+          }
           case "task:deleted":
             return removeIssue(current, delta.payload.taskId);
           default:

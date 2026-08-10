@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useState, useEffect, useMemo, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   flexRender,
   getCoreRowModel,
@@ -16,11 +17,17 @@ import { MoreHorizontal, FileText, RefreshCcw } from 'lucide-react';
 import TypePicker from '@/shared/components/TypePicker';
 import PriorityPicker from '@/shared/components/PriorityPicker';
 import BulkActionBar from './BulkActionBar';
-import AssigneePicker, { AssigneePickerMember, toAssigneePickerUsers } from '@/shared/components/AssigneePicker';
+import AssigneePicker, { AssigneePickerMember, AssigneePickerUser, toAssigneePickerUsers } from '@/shared/components/AssigneePicker';
 import CustomDatePicker from '@/shared/components/CustomDatePicker';
 import TaskLabelsField from '@/modules/workspace/tasks/labels/TaskLabelsField';
 import StatusPicker from '@/shared/components/StatusPicker';
-
+import { useSubtasks } from '@/modules/workspace/shared/hooks/useSubtasks';
+import { Subtask } from '@/modules/workspace/shared/types/task-detail.type';
+import { ChevronDown, ChevronRight, CornerDownRight } from 'lucide-react';
+import { queryKeys } from '@/shared/constants/queryKeys';
+import api from '@/lib/axiosIns';
+import { apiRoutes } from '@/config/apiRoutes';
+import { toUiLabel } from '@/modules/workspace/shared/services/taskNormalizer';
 type WorkspaceMember = AssigneePickerMember;
 
 type BoardColumn = {
@@ -36,6 +43,8 @@ type BoardColumn = {
 interface DataGridListViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   issues: any[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  allIssues?: any[];
   workspaceId?: string;
   members?: WorkspaceMember[];
   boardColumns?: BoardColumn[];
@@ -60,6 +69,7 @@ interface DataGridListViewProps {
 
 export default function DataGridListView({
   issues,
+  allIssues,
   workspaceId,
   members,
   boardColumns,
@@ -77,6 +87,7 @@ export default function DataGridListView({
   canEditTask = true,
   canDeleteTask = true,
 }: DataGridListViewProps) {
+  const queryClient = useQueryClient();
   const [columnSizing, setColumnSizing] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('list_column_sizing');
@@ -96,6 +107,45 @@ export default function DataGridListView({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const hasSelectionColumn = canEditTask || canDeleteTask;
+
+  // Expanded State for Subtasks
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const toggleExpanded = (rowId: string) => {
+    setExpanded(prev => ({ ...prev, [rowId]: !prev[rowId] }));
+  };
+
+  // Group subtasks from allIssues by parentId for client-side expand (no extra API call)
+  const subtasksByParentId = useMemo(() => {
+    if (!allIssues) return {} as Record<string, typeof allIssues>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return allIssues.reduce((acc: Record<string, any[]>, issue: any) => {
+      if (issue.parentId && issue.type?.toLowerCase() === 'subtask') {
+        if (!acc[issue.parentId]) acc[issue.parentId] = [];
+        acc[issue.parentId].push(issue);
+      }
+      return acc;
+    }, {});
+  }, [allIssues]);
+
+  const prefetchSubtasks = useCallback((issueId: string) => {
+    if (!workspaceId) return;
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.tasks.subtasks(workspaceId, issueId),
+      queryFn: async () => {
+        const { data } = await api.get(apiRoutes.TASKS.BOARD_TASK_SUBTASKS(workspaceId, issueId));
+        const resData = data.data || data;
+        if (resData.subtasks && Array.isArray(resData.subtasks)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          resData.subtasks = resData.subtasks.map((st: any) => ({
+            ...st,
+            priority: toUiLabel(st.priority, 'Medium'),
+          }));
+        }
+        return resData;
+      },
+      staleTime: 30_000,
+    });
+  }, [workspaceId, queryClient]);
 
   // Inline editing state
   const [editingCell, setEditingCell] = useState<{ rowId: string; col: string } | null>(null);
@@ -214,6 +264,10 @@ export default function DataGridListView({
       cell: info => {
         const issue = info.row.original;
         const isEditing = editingCell?.rowId === issue.id && editingCell?.col === 'title';
+        const localSubtasks = subtasksByParentId[issue.id] ?? [];
+        const hasSubtasks = localSubtasks.length > 0 || ((issue.subtaskProgress?.total ?? 0) > 0);
+        const isExpanded = expanded[issue.id];
+
         if (canEditTask && isEditing) {
           return (
             <div className="flex min-w-0 items-center gap-2" onClick={e => e.stopPropagation()}>
@@ -233,7 +287,18 @@ export default function DataGridListView({
           );
         }
         return (
-          <div className="flex items-center gap-2 group/title min-w-0">
+          <div className="flex items-center gap-1.5 group/title min-w-0">
+            {hasSubtasks ? (
+              <button
+                className="w-5 h-5 shrink-0 flex items-center justify-center rounded hover:bg-[#EAEAEA] dark:hover:bg-[#333] text-[#787774] dark:text-[#9B9A97]"
+                onClick={e => { e.stopPropagation(); toggleExpanded(issue.id); }}
+                title={isExpanded ? "Collapse subtasks" : "Expand subtasks"}
+              >
+                {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+              </button>
+            ) : (
+              <div className="w-5 h-5 shrink-0" /> // Spacer
+            )}
             <FileText className="w-4 h-4 shrink-0 text-[#1F6C9F]" />
             <span
               className="min-w-0 flex-1 truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
@@ -493,7 +558,7 @@ export default function DataGridListView({
         </button>
       ),
     },
-  ], [onClickTask, onUpdateIssue, normalizedMembers, boardColumns, editingCell, editValue, canEditTask, workspaceId, saveEdit, hasSelectionColumn]);
+  ], [onClickTask, onUpdateIssue, normalizedMembers, boardColumns, editingCell, editValue, canEditTask, workspaceId, saveEdit, hasSelectionColumn, expanded, subtasksByParentId]);
 
   const table = useReactTable({
     data: issues,
@@ -554,24 +619,63 @@ export default function DataGridListView({
           </thead>
           <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/[0.06] bg-white dark:bg-[#202020]">
             {table.getRowModel().rows.map(row => (
-              <tr
-                key={row.id}
-                className={`hover:bg-[#F9F9F8]/50 dark:hover:bg-white/5 transition-colors group ${row.getIsSelected() ? 'bg-[#EFF6FF]/70 dark:bg-[rgba(37,99,235,0.12)]' : ''}`}
-              >
-                {row.getVisibleCells().map(cell => {
-                  const isPinned = cell.column.id === 'checkbox' || cell.column.id === 'key';
-                  const left = cell.column.id === 'key' && hasSelectionColumn ? 40 : 0;
-                  return (
-                    <td
-                      key={cell.id}
-                      style={{ width: cell.column.getSize(), ...(isPinned ? { left } : {}) }}
-                      className={`px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/[0.06] last:border-r-0 overflow-visible ${isPinned ? 'sticky z-10 bg-white dark:bg-[#202020] group-hover:bg-[#F9F9F8] dark:group-hover:bg-[#252525]' : ''}`}
-                    >
-                      {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  );
-                })}
-              </tr>
+              <React.Fragment key={row.id}>
+                <tr
+                  className={`hover:bg-[#F9F9F8]/50 dark:hover:bg-white/5 transition-colors group ${row.getIsSelected() ? 'bg-[#EFF6FF]/70 dark:bg-[rgba(37,99,235,0.12)]' : ''}`}
+                  onMouseEnter={() => {
+                    const issue = row.original;
+                    const localSubtasks = subtasksByParentId[issue.id];
+                    const hasSubtasksData = (localSubtasks && localSubtasks.length > 0) || ((issue.subtaskProgress?.total ?? 0) > 0);
+                    if (hasSubtasksData && !localSubtasks?.length) {
+                      prefetchSubtasks(issue.id);
+                    }
+                  }}
+                >
+                  {row.getVisibleCells().map(cell => {
+                    const isPinned = cell.column.id === 'checkbox' || cell.column.id === 'key';
+                    const left = cell.column.id === 'key' && hasSelectionColumn ? 40 : 0;
+                    return (
+                      <td
+                        key={cell.id}
+                        style={{ width: cell.column.getSize(), ...(isPinned ? { left } : {}) }}
+                        className={`px-3 py-2 border-r border-transparent group-hover:border-[#EAEAEA] dark:group-hover:border-white/[0.06] last:border-r-0 overflow-visible ${isPinned ? 'sticky z-10 bg-white dark:bg-[#202020] group-hover:bg-[#F9F9F8] dark:group-hover:bg-[#252525]' : ''}`}
+                      >
+                        {cell.getIsPlaceholder() ? null : flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    );
+                  })}
+                </tr>
+                {expanded[row.original.id] && (() => {
+                  const localSubtasks = subtasksByParentId[row.original.id];
+                  if (localSubtasks && localSubtasks.length > 0) {
+                    return (
+                      <LocalSubtasksRow
+                        subtasks={localSubtasks}
+                        visibleCells={row.getVisibleCells()}
+                        onClickTask={onClickTask}
+                        boardColumns={boardColumns}
+                        onUpdateIssue={onUpdateIssue}
+                        canEditTask={canEditTask}
+                        members={normalizedMembers}
+                      />
+                    );
+                  }
+                  if (workspaceId) {
+                    return (
+                      <ExpandedSubtasksRow
+                        parentIssue={row.original}
+                        workspaceId={workspaceId}
+                        visibleCells={row.getVisibleCells()}
+                        onClickTask={onClickTask}
+                        canEditTask={canEditTask}
+                        boardColumns={boardColumns}
+                        members={normalizedMembers}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+              </React.Fragment>
             ))}
             {table.getRowModel().rows.length === 0 && (
               <tr>
@@ -639,7 +743,7 @@ export default function DataGridListView({
                 className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-sm font-medium px-3 py-1.5 rounded-[6px] flex items-center gap-1 transition-colors  ml-1"
               >
                 Create
-                <span className="text-[0.625rem] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] leading-none bg-[#3B82F6]/30">↵</span>
+                <span className="text-[0.625rem] opacity-80 border border-[#93C5FD] rounded-[2px] px-[2px] py-[1px] leading-none bg-[#3B82F6]/30">{"↵"}</span>
               </button>
             </div>
           </div>
@@ -677,5 +781,342 @@ export default function DataGridListView({
         />
       )}
     </div>
+  );
+}
+
+function ExpandedSubtasksRow({ parentIssue, workspaceId, visibleCells, onClickTask, canEditTask, boardColumns, members }: { parentIssue: Record<string, unknown> & { id: string }, workspaceId: string, visibleCells: { id: string; column: { id: string; getSize: () => number } }[], onClickTask?: (issue: Record<string, unknown>) => void, canEditTask?: boolean, boardColumns?: BoardColumn[], members?: AssigneePickerUser[] }) {
+  const { subtasks, isLoading, updateSubtask } = useSubtasks(workspaceId, parentIssue.id);
+
+  const handleUpdate = (id: string, updates: Record<string, unknown>) => {
+    updateSubtask.mutate({ subtaskId: id, updates, options: { invalidateWorkspace: false } });
+  };
+
+  if (isLoading) {
+    return (
+      <tr className="bg-[#F9F9F8]/20 dark:bg-white/[0.02]">
+        <td colSpan={visibleCells.length} className="px-3 py-3 text-sm text-[#787774] dark:text-[#9B9A97] pl-10">
+          Loading subtasks...
+        </td>
+      </tr>
+    );
+  }
+
+  if (!subtasks || subtasks.length === 0) {
+    return null;
+  }
+
+  const hasSelectionColumn = visibleCells.some(c => c.column.id === 'checkbox');
+
+  return (
+    <>
+      {subtasks.map((subtask: Subtask) => (
+        <tr key={subtask.id} className="bg-[#F9F9F8]/40 dark:bg-white/[0.03] hover:bg-[#F9F9F8] dark:hover:bg-white/5 transition-colors group/subtask border-t border-[#EAEAEA]/50 dark:border-white/[0.04]">
+          {visibleCells.map(cell => {
+            const colId = cell.column.id;
+            const isPinned = colId === 'checkbox' || colId === 'key';
+            const left = colId === 'key' && hasSelectionColumn ? 40 : 0;
+            const cellWidth = cell.column.getSize();
+            
+            let content: React.ReactNode = null;
+            
+            if (colId === 'checkbox') {
+              content = <div className="w-4 h-4" />; // Empty placeholder for subtask checkbox
+            } else if (colId === 'key') {
+              content = (
+                <div className="flex items-center justify-between min-w-0 group/key">
+                  <div className="flex items-center gap-1.5 pl-4 truncate">
+                    <CornerDownRight className="w-3 h-3 shrink-0 text-[#2563EB]/50 dark:text-[#3B82F6]/50" />
+                    <span className="text-[#787774] dark:text-[#9B9A97] font-mono text-xs truncate mr-2">{subtask.key}</span>
+                  </div>
+                </div>
+              );
+            } else if (colId === 'title') {
+              content = (
+                <div className="flex items-center gap-2 min-w-0 pl-6">
+                  <div className="w-4 h-4 shrink-0 bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD] flex items-center justify-center rounded-[4px] text-[0.5625rem] font-bold border border-[#BFDBFE] dark:border-[#3B82F6]/30 flex-shrink-0">S</div>
+                  <span 
+                    className="min-w-0 flex-1 truncate text-[#111111] dark:text-[#E8E8E7] font-medium cursor-pointer hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
+                    onClick={(e) => { e.stopPropagation(); if(onClickTask) onClickTask({...subtask, type: 'Subtask'}); }}
+                  >
+                    {subtask.title}
+                  </span>
+                </div>
+              );
+            } else if (colId === 'type') {
+              content = (
+                <div onClick={e => e.stopPropagation()}>
+                  <TypePicker
+                    value={subtask.type ?? 'Subtask'}
+                    onChange={type => handleUpdate(subtask.id, { type })}
+                    disabled={true}
+                    variant="pill"
+                    size="sm"
+                    placement="bottom"
+                  />
+                </div>
+              );
+            } else if (colId === 'status') {
+              content = (
+                <StatusPicker
+                  value={subtask.status}
+                  columnId={subtask.columnId}
+                  options={(boardColumns || []).map(col => ({ id: col.id, name: col.name }))}
+                  variant="pill"
+                  size="sm"
+                  disabled={!canEditTask}
+                  onChange={(status, option) =>
+                    handleUpdate(subtask.id, { columnId: option.id, status })
+                  }
+                />
+              );
+            } else if (colId === 'priority') {
+              content = (
+                <div onClick={e => e.stopPropagation()}>
+                  <PriorityPicker
+                    value={subtask.priority || '-'}
+                    onChange={p => handleUpdate(subtask.id, { priority: p })}
+                    disabled={!canEditTask}
+                    variant="pill"
+                    size="sm"
+                  />
+                </div>
+              );
+            } else if (colId === 'assigneeId') {
+              content = (
+                <div onClick={e => e.stopPropagation()}>
+                  <AssigneePicker
+                    users={members || []}
+                    value={subtask.assignee?.id ?? null}
+                    onChange={uid => {
+                      const selectedUser = (members || []).find(user => user.id === uid);
+                      handleUpdate(subtask.id, {
+                        assigneeId: uid,
+                        assignee: {
+                           ...subtask.assignee,
+                           id: uid,
+                           fullName: uid ? selectedUser?.name ?? uid : 'Unassigned',
+                           avatar: uid ? selectedUser?.avatar : undefined,
+                        }
+                      });
+                    }}
+                    placement="bottom"
+                    size="md"
+                    disabled={!canEditTask}
+                  />
+                </div>
+              );
+            } else if (colId === 'startDate') {
+              const v = subtask.startDate;
+              content = (
+                <div onClick={e => e.stopPropagation()}>
+                  <CustomDatePicker
+                    value={v}
+                    onChange={nextValue => handleUpdate(subtask.id, { startDate: nextValue })}
+                    disabled={!canEditTask}
+                    inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent px-2 pl-8"
+                    popoverPlacement="bottom-start"
+                    ariaLabel="Task start date"
+                  />
+                </div>
+              );
+            } else if (colId === 'dueDate') {
+              const v = subtask.dueDate;
+              const isOverdue = v && new Date(v) < new Date() && !subtask.status?.toLowerCase().includes('done');
+              content = (
+                <div className={isOverdue ? "text-[#9F2F2D] dark:text-[#F87171]" : ""} onClick={e => e.stopPropagation()}>
+                  <CustomDatePicker
+                    value={v}
+                    onChange={nextValue => handleUpdate(subtask.id, { dueDate: nextValue })}
+                    disabled={!canEditTask}
+                    inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent px-2 pl-8"
+                    popoverPlacement="bottom-start"
+                    ariaLabel="Task due date"
+                  />
+                </div>
+              );
+            } else {
+              content = <span className="text-[#ABABAB] dark:text-[#6B6B6B] text-[0.8125rem]">-</span>;
+            }
+            
+            return (
+              <td
+                key={cell.id}
+                style={{ width: cellWidth, ...(isPinned ? { left } : {}) }}
+                className={`px-3 py-2 border-r border-transparent group-hover/subtask:border-[#EAEAEA] dark:group-hover/subtask:border-white/[0.06] last:border-r-0 overflow-visible ${isPinned ? 'sticky z-10 bg-[#F9F9F8]/40 dark:bg-[#202020] group-hover/subtask:bg-[#F9F9F8] dark:group-hover/subtask:bg-[#252525]' : ''}`}
+              >
+                {content}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
+    </>
+  );
+}
+
+function LocalSubtasksRow({ subtasks, visibleCells, onClickTask, boardColumns, onUpdateIssue, canEditTask, members }: { subtasks: Subtask[], visibleCells: { id: string; column: { id: string; getSize: () => number } }[], onClickTask?: (issue: Subtask) => void, boardColumns?: BoardColumn[], onUpdateIssue?: (id: string, updates: Record<string, unknown>) => void, canEditTask?: boolean, members?: AssigneePickerUser[] }) {
+  if (!subtasks || subtasks.length === 0) return null;
+
+  const hasSelectionColumn = visibleCells.some((c: { column: { id: string } }) => c.column.id === 'checkbox');
+
+  return (
+    <>
+      {subtasks.map((subtask: Subtask) => (
+        <tr
+          key={subtask.id}
+          className="bg-[#F9F9F8]/40 dark:bg-white/[0.03] hover:bg-[#F0F7FF] dark:hover:bg-[rgba(37,99,235,0.06)] transition-colors group/subtask border-t border-[#EAEAEA]/50 dark:border-white/[0.04] cursor-pointer"
+          onClick={() => onClickTask?.(subtask)}
+        >
+          {visibleCells.map((cell: { id: string; column: { id: string; getSize: () => number } }) => {
+            const colId = cell.column.id;
+            const isPinned = colId === 'checkbox' || colId === 'key';
+            const left = colId === 'key' && hasSelectionColumn ? 40 : 0;
+            const cellWidth = cell.column.getSize();
+
+            let content: React.ReactNode = null;
+
+            if (colId === 'checkbox') {
+              content = <div className="w-4 h-4" />;
+            } else if (colId === 'key') {
+              content = (
+                <div className="flex items-center justify-between min-w-0 group/key">
+                  <div className="flex items-center gap-1.5 pl-4 truncate">
+                    <CornerDownRight className="w-3 h-3 shrink-0 text-[#2563EB]/50 dark:text-[#3B82F6]/50" />
+                    <span className="text-[#787774] dark:text-[#9B9A97] font-mono text-xs truncate mr-2">{subtask.key}</span>
+                  </div>
+                </div>
+              );
+            } else if (colId === 'title') {
+              content = (
+                <div className="flex items-center gap-2 min-w-0 pl-6">
+                  <div className="w-4 h-4 shrink-0 bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD] flex items-center justify-center rounded-[4px] text-[0.5625rem] font-bold border border-[#BFDBFE] dark:border-[#3B82F6]/30 flex-shrink-0">
+                    S
+                  </div>
+                  <span
+                    className="min-w-0 flex-1 truncate text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] font-medium hover:text-[#2563EB] dark:hover:text-[#3B82F6]"
+                    onClick={(e) => { e.stopPropagation(); onClickTask?.(subtask); }}
+                  >
+                    {subtask.title}
+                  </span>
+                </div>
+              );
+            } else if (colId === 'type') {
+              content = (
+                <div onClick={e => e.stopPropagation()}>
+                  <TypePicker
+                    value={subtask.type ?? 'Subtask'}
+                    onChange={type => onUpdateIssue?.(subtask.id, { type })}
+                    disabled={true}
+                    variant="pill"
+                    size="sm"
+                    placement="bottom"
+                  />
+                </div>
+              );
+            } else if (colId === 'status') {
+              content = (
+                <StatusPicker
+                  value={subtask.status}
+                  columnId={subtask.columnId}
+                  options={(boardColumns || []).map(col => ({ id: col.id, name: col.name }))}
+                  variant="pill"
+                  size="sm"
+                  disabled={!canEditTask}
+                  onChange={(status, option) =>
+                    onUpdateIssue?.(subtask.id, { columnId: option.id, status })
+                  }
+                />
+              );
+            } else if (colId === 'priority') {
+              content = (
+                <div onClick={e => e.stopPropagation()}>
+                  <PriorityPicker
+                    value={subtask.priority || '-'}
+                    onChange={p => onUpdateIssue?.(subtask.id, { priority: p })}
+                    disabled={!canEditTask}
+                    variant="pill"
+                    size="sm"
+                  />
+                </div>
+              );
+            } else if (colId === 'assigneeId') {
+              content = (
+                <div onClick={e => e.stopPropagation()}>
+                  <AssigneePicker
+                    users={members || []}
+                    value={subtask.assigneeId ?? null}
+                    onChange={uid => {
+                      const selectedUser = (members || []).find(user => user.id === uid);
+                      onUpdateIssue?.(subtask.id, {
+                        assigneeId: uid,
+                        assignee: uid ?? 'U',
+                        assigneeDisplayName: uid ? selectedUser?.name ?? uid : 'Unassigned',
+                        assigneeAvatar: uid ? selectedUser?.avatar : undefined,
+                      });
+                    }}
+                    placement="bottom"
+                    size="md"
+                    disabled={!canEditTask}
+                  />
+                </div>
+              );
+            } else if (colId === 'startDate') {
+              const v = subtask.startDate;
+              content = (
+                <div onClick={e => e.stopPropagation()}>
+                  <CustomDatePicker
+                    value={v}
+                    onChange={nextValue => onUpdateIssue?.(subtask.id, { startDate: nextValue })}
+                    disabled={!canEditTask}
+                    inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent px-2 pl-8"
+                    popoverPlacement="bottom-start"
+                    ariaLabel="Task start date"
+                  />
+                </div>
+              );
+            } else if (colId === 'dueDate') {
+              const v = subtask.dueDate;
+              const isOverdue = v && new Date(v) < new Date() && !subtask.status?.toLowerCase().includes('done');
+              content = (
+                <div className={isOverdue ? "text-[#9F2F2D] dark:text-[#F87171]" : ""} onClick={e => e.stopPropagation()}>
+                  <CustomDatePicker
+                    value={v}
+                    onChange={nextValue => onUpdateIssue?.(subtask.id, { dueDate: nextValue })}
+                    disabled={!canEditTask}
+                    inputClassName="h-8 border-transparent bg-transparent dark:bg-transparent px-2 pl-8"
+                    popoverPlacement="bottom-start"
+                    ariaLabel="Task due date"
+                  />
+                </div>
+              );
+            } else if (colId === 'updatedAt') {
+              const v = subtask.updatedAt;
+              content = <span className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">{v ? v.slice(0, 10) : '-'}</span>;
+            } else if (colId === 'storyPoints') {
+              const pts = subtask.storyPoints;
+              content = (
+                <span className="w-6 h-6 flex items-center justify-center bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-[6px] text-xs font-bold text-[#787774] dark:text-[#9B9A97]">
+                  {pts || '-'}
+                </span>
+              );
+            } else if (colId === 'actions') {
+              content = null;
+            } else {
+              content = <span className="text-[#ABABAB] dark:text-[#6B6B6B] text-[0.8125rem]">-</span>;
+            }
+
+            return (
+              <td
+                key={`${subtask.id}-${colId}`}
+                style={{ width: cellWidth, ...(isPinned ? { left } : {}) }}
+                className={`px-3 py-2 border-r border-transparent group-hover/subtask:border-[#EAEAEA] dark:group-hover/subtask:border-white/[0.06] last:border-r-0 overflow-visible ${isPinned ? 'sticky z-10 bg-[#F9F9F8]/40 dark:bg-[#202020] group-hover/subtask:bg-[#F0F7FF] dark:group-hover/subtask:bg-[rgba(37,99,235,0.06)]' : ''}`}
+              >
+                {content}
+              </td>
+            );
+          })}
+        </tr>
+      ))}
+    </>
   );
 }

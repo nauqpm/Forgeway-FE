@@ -88,6 +88,11 @@ export const apiRoutes = {
         BOARD_TASK_WORK_LOG_REPORT: (workspaceId: string) => `/workspaces/${workspaceId}/reports/worklogs`,
         BOARD_TASK_WORK_LOG_UPDATE: (workspaceId: string, taskId: string, logId: string) => `/workspaces/${workspaceId}/board-tasks/${taskId}/work-logs/${logId}`,
         BOARD_TASK_WORK_LOG_DELETE: (workspaceId: string, taskId: string, logId: string) => `/workspaces/${workspaceId}/board-tasks/${taskId}/work-logs/${logId}`,
+        // Subtasks
+        BOARD_TASK_SUBTASKS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/tasks/${taskId}/subtasks`,
+        BOARD_TASK_SUBTASK: (workspaceId: string, taskId: string, subtaskId: string) => `/workspaces/${workspaceId}/board/tasks/${taskId}/subtasks/${subtaskId}`,
+        BOARD_TASK_CONVERT_TO_SUBTASK: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/tasks/${taskId}/convert-to-subtask`,
+        BOARD_SUBTASK_CONVERT_TO_TASK: (workspaceId: string, subtaskId: string) => `/workspaces/${workspaceId}/board/subtasks/${subtaskId}/convert-to-task`,
         BY_SPRINT: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/board/tasks?sprintId=${sprintId}`,
         // Calendar & Timeline views
         CALENDAR: (workspaceId: string) => `/workspaces/${workspaceId}/board/calendar`,

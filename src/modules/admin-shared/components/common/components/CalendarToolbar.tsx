@@ -69,7 +69,7 @@ export default function CalendarToolbar({
           className={SELECT_CLASS}
         >
           <option value="">All Types</option>
-          {['Task', 'Bug', 'Story', 'Epic'].map((t) => (
+          {['Task', 'Bug', 'Story'].map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
         </select>

@@ -11,9 +11,30 @@ export interface Comment {
 
 export interface Subtask {
   id: string;
+  key: string;
   title: string;
-  completed?: boolean;
+  status: string;
   assigneeId?: string;
+  assignee?: TaskDetailUser;
+  priority?: string;
+  type?: string;
+  columnId?: string;
+  startDate?: string;
+  dueDate?: string;
+  updatedAt?: string;
+  storyPoints?: number;
+}
+
+export interface ParentTaskSummary {
+  id: string;
+  key: string;
+  title: string;
+  type: string;
+}
+
+export interface SubtaskProgress {
+  done: number;
+  total: number;
 }
 
 export interface TaskDetailUser {
@@ -80,9 +101,12 @@ export interface TaskDetailResponse {
   // Frontend-specific fields currently expected by the UI Drawer
   comments?: Comment[];
   subtasks?: Subtask[];
+  subtaskProgress?: SubtaskProgress;
+  parentId?: string | null;
+  parent?: ParentTaskSummary;
   timeLogged?: number;
   timeEstimated?: string | number;
-  startDate?: string;
+  startDate?: string | null;
   cover?: TaskCover | null;
   labels?: TaskLabel[];
   labelIds?: string[];

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
 import TaskDescription from "@/modules/admin-shared/components/common/components/TaskDescription";
 import TaskAttachmentsPanel from "@/modules/workspace/tasks/attachments/TaskAttachmentsPanel";
@@ -9,7 +10,8 @@ import TaskActivityHistory from "@/modules/workspace/shared/components/TaskActiv
 import { getIssueAssigneeId } from "./task-detail-shared";
 import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
 import type { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
-import type { WorkspaceMember } from "./task-detail-shared";
+import TaskSubtasksPanel from "./TaskSubtasksPanel";
+import { type WorkspaceMember } from "./task-detail-shared";
 
 interface TaskDetailMainContentProps {
   issue: TaskDetailResponse;
@@ -34,6 +36,7 @@ interface TaskDetailMainContentProps {
   boardColumns?: TaskStatusColumn[];
   onRestoreIssue?: () => void;
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
+  onSubtaskClick?: (subtaskId: string) => void;
 }
 
 import TaskWorkLogs from "@/modules/workspace/shared/components/TaskWorkLogs";
@@ -59,6 +62,7 @@ export default function TaskDetailMainContent({
   boardColumns,
   onRestoreIssue,
   onUpdateIssue,
+  onSubtaskClick,
 }: TaskDetailMainContentProps) {
   const titleTextClass =
     titleSize === "3xl"
@@ -109,11 +113,10 @@ export default function TaskDetailMainContent({
             onClick={() => {
               if (canEditTask && !issue.isArchived) setIsEditingTitle(true);
             }}
-            className={`max-w-full break-words [overflow-wrap:anywhere] ${titleTextClass} p-2 -ml-2 rounded-[6px] transition-colors ${
-              canEditTask && !issue.isArchived
-                ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"
-                : "opacity-90"
-            }`}
+            className={`max-w-full break-words [overflow-wrap:anywhere] ${titleTextClass} p-2 -ml-2 rounded-[6px] transition-colors ${canEditTask && !issue.isArchived
+              ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"
+              : "opacity-90"
+              }`}
           >
             {localTitle}
           </h1>
@@ -129,7 +132,27 @@ export default function TaskDetailMainContent({
         <TaskDescription initialContent={issue.description || ""} onSave={onSaveDescription} />
       </div>
 
-      <div className="order-5 w-full">
+      {issue.type?.toLowerCase() !== "subtask" && issue.type?.toLowerCase() !== "epic" && (
+        <div className="order-5 w-full pt-4">
+          <TaskSubtasksPanel
+            issue={issue}
+            workspaceId={workspaceId}
+            workspaceMembers={workspaceMembers}
+            boardColumns={boardColumns || []}
+            canEditTask={canEditTask}
+            onSubtaskClick={onSubtaskClick || ((subtaskId) => {
+              const currentPath = window.location.pathname;
+              const newPath = currentPath.includes("/key/")
+                ? currentPath.replace(/\/key\/[^/]+$/, `/key/${subtaskId}`)
+                : `${currentPath}/key/${subtaskId}`;
+              window.history.pushState(null, "", newPath);
+              window.dispatchEvent(new Event("popstate"));
+            })}
+          />
+        </div>
+      )}
+
+      <div className="order-6 w-full pt-4">
         <TaskAttachmentsPanel
           workspaceId={workspaceId}
           taskId={issue.id}
@@ -140,38 +163,35 @@ export default function TaskDetailMainContent({
       </div>
 
       {/* Activity */}
-      <div className="order-6 space-y-4 pt-4">
+      <div className="order-7 space-y-4 pt-4">
         <div className="flex items-center justify-between">
           <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h3>
           <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <span>Show:</span>
             <button
               onClick={() => setActiveTab("comments")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "comments"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "comments"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               Comments
             </button>
             <button
               onClick={() => setActiveTab("history")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "history"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "history"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               History
             </button>
             <button
               onClick={() => setActiveTab("work_log")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "work_log"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "work_log"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               Work log
             </button>
