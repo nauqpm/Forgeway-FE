@@ -14,8 +14,15 @@ export interface WorkspaceMember {
   role: string;
 }
 
+export interface WorkspaceSettings {
+  isImportant?: boolean;
+  theme?: string;
+  [key: string]: unknown;
+}
+
 export interface Workspace {
   _id: string;
+  id?: string;
   name: string;
   key: string;
   slug?: string;
@@ -23,7 +30,7 @@ export interface Workspace {
   members?: WorkspaceMember[];
   description?: string;
   avatar?: string;
-  settings?: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  settings?: WorkspaceSettings;
   access?: "private" | "public";
   template?: "kanban" | "scrum";
   type?: "kanban" | "scrum";

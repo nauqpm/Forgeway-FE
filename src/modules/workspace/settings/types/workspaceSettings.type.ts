@@ -2,6 +2,12 @@ export type WorkspaceStatus = "active" | "archived";
 export type WorkspaceAccess = "public" | "private";
 export type InviteRole = "workspace_admin" | "space_admin" | "admin" | "member" | "viewer";
 
+export interface WorkspaceSettings {
+  isImportant?: boolean;
+  theme?: string;
+  [key: string]: unknown;
+}
+
 export interface WorkspaceInfo {
   _id: string;
   name: string;
@@ -9,7 +15,7 @@ export interface WorkspaceInfo {
   description?: string;
   status?: WorkspaceStatus;
   access?: WorkspaceAccess;
-  settings?: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  settings?: WorkspaceSettings;
   // visibility?: WorkspaceAccess;
 }
 
@@ -18,7 +24,7 @@ export interface WorkspaceSettingsForm {
   description: string;
   status: WorkspaceStatus;
   access: WorkspaceAccess;
-  settings?: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  settings?: WorkspaceSettings;
 }
 
 export interface WorkspaceMember {

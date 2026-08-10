@@ -122,11 +122,13 @@ export function useAttachmentPreview(
   const handleDownloadFile = async (file: { url: string; name?: string; mimeType?: string }) => {
     const filename = file.name || 'file';
     
-    // Check if it's an Office document, open in new tab via Microsoft Office Viewer
+    // Check if it's an Office document with a valid public HTTP/HTTPS URL, open in new tab via Microsoft Office Viewer
     if (file.url && isOfficeFile(filename, file.mimeType)) {
-      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`;
-      window.open(officeViewerUrl, '_blank');
-      return;
+      if (file.url.startsWith('http://') || file.url.startsWith('https://')) {
+        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`;
+        window.open(officeViewerUrl, '_blank', 'noopener,noreferrer');
+        return;
+      }
     }
 
     if (isDownloading) return;

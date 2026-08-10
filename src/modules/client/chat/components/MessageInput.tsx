@@ -120,7 +120,8 @@ function parseMarkdownToHtml(markdown: string): string {
 
   let html = markdown;
 
-  // 1. Escape HTML special characters but avoid escaping raw markdown elements
+  // 1. Escape HTML special characters (&, <, >) first to prevent raw HTML injection.
+  // Note: Since '>' is escaped to '&gt;', blockquote matcher in step 4 explicitly looks for '^&gt; '.
   html = html
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -135,7 +136,7 @@ function parseMarkdownToHtml(markdown: string): string {
   // 3. Handle inline code: `code`
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
 
-  // 4. Handle Blockquotes (starts with &gt; )
+  // 4. Handle Blockquotes (starts with &gt; due to HTML escaping in step 1)
   html = html.replace(/^&gt;\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>');
 
   // 5. Handle Bold: **text**
@@ -147,16 +148,23 @@ function parseMarkdownToHtml(markdown: string): string {
   // 7. Handle Strikethrough: ~~text~~
   html = html.replace(/~~([^~]+)~~/g, '<del>$1</del>');
 
-  // 8. Handle Bullet list items: - item
-  html = html.replace(/^-\s+(.+)$/gm, '<ul><li>$1</li></ul>');
+  // 8. Handle Bullet list items (group consecutive bullet items into a single <ul>)
+  html = html.replace(/(?:^-\s+[^\n]+(?:\n|$))+/gm, (match) => {
+    const items = match.trim().split('\n').map(line => `<li>${line.replace(/^-\s+/, '')}</li>`).join('');
+    return `<ul>${items}</ul>`;
+  });
 
-  // 9. Handle Ordered list items: 1. item
-  html = html.replace(/^\d+\.\s+(.+)$/gm, '<ol><li>$1</li></ol>');
+  // 9. Handle Ordered list items (group consecutive numbered items into a single <ol>)
+  html = html.replace(/(?:^\d+\.\s+[^\n]+(?:\n|$))+/gm, (match) => {
+    const items = match.trim().split('\n').map(line => `<li>${line.replace(/^\d+\.\s+/, '')}</li>`).join('');
+    return `<ol>${items}</ol>`;
+  });
 
-  // 10. Handle Mentions: [@displayName](userId)
+  // 10. Handle Mentions: [@displayName](userId) with attribute escaping to prevent attribute breakout/XSS
+  const escAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const mentionRegex = /\[@([^\]]+)\]\(([^)]+)\)/g;
   html = html.replace(mentionRegex, (_, displayName, userId) => {
-    return `<span data-type="mention" data-id="${userId}" data-label="${displayName}">@${displayName}</span>`;
+    return `<span data-type="mention" data-id="${escAttr(userId)}" data-label="${escAttr(displayName)}">@${escAttr(displayName)}</span>`;
   });
 
   // 11. Handle newlines:
@@ -176,9 +184,7 @@ function parseMarkdownToHtml(markdown: string): string {
       trimmed.startsWith('<ol>') ||
       trimmed.startsWith('</ol>') ||
       trimmed.startsWith('<li>') ||
-      trimmed.startsWith('</li>') ||
-      trimmed.startsWith('<code>') ||
-      trimmed.endsWith('</code>')
+      trimmed.startsWith('</li>')
     ) {
       return line;
     }
@@ -238,7 +244,6 @@ export default function MessageInput({
 
   const currentEditingMessage = threadParentId ? editingThreadMessage : editingMessage;
   const setEditingMessageState = threadParentId ? setEditingThreadMessage : setEditingMessage;
-
 
   const channelIdRef = useRef(channelId);
   React.useEffect(() => {

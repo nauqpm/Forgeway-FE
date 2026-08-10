@@ -190,8 +190,11 @@ export const apiRoutes = {
     },
     USERS: {
         BASE: '/users',
+        ME: '/users/me',
+        UPDATE_ME: '/users/me',
         PROFILE: '/users/profile',
         BY_ID: (id: string) => `/users/${id}`,
+        PUBLIC_PROFILE: (userId: string) => `/users/${userId}/public-profile`,
         WORKSPACE_MEMBERS: '/workspaces/members',
         ALL: '/users/all',
     },

@@ -174,7 +174,7 @@ export default function GeneralSettings({
       </section>
 
       <section>
-        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">Settings</h2>
+        <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7] mb-4">Visibility & Priority</h2>
         <div className="flex items-center justify-between p-4 bg-[#F9F9F8] dark:bg-[#252525] rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06]">
           <div>
             <label className="block text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">

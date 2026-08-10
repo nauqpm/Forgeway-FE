@@ -68,11 +68,11 @@ export const useChatStore = create<ChatStore>((set) => ({
     const now = Date.now();
     const newTypingUsers = { ...state.typingUsers };
     let changed = false;
- 
+
     Object.keys(newTypingUsers).forEach((channelId) => {
       const channelTyping = { ...newTypingUsers[channelId] };
       let channelChanged = false;
- 
+
       Object.keys(channelTyping).forEach((userId) => {
         if (now - channelTyping[userId] > 3000) { // 3 seconds TTL
           delete channelTyping[userId];
@@ -80,12 +80,12 @@ export const useChatStore = create<ChatStore>((set) => ({
           changed = true;
         }
       });
- 
+
       if (channelChanged) {
         newTypingUsers[channelId] = channelTyping;
       }
     });
- 
+
     return changed ? { typingUsers: newTypingUsers } : state;
   }),
   

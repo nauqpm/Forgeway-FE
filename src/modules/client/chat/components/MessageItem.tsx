@@ -28,6 +28,7 @@ interface MessageItemProps {
   isSameUserAsPrevious: boolean;
   isMine: boolean;
   hideThreadBadge?: boolean;
+  isThreadPanel?: boolean;
   showContextBadge?: boolean;
   contextName?: string;
   isWorkspaceAdmin?: boolean;
@@ -40,6 +41,7 @@ export default function MessageItem({
   isSameUserAsPrevious,
   isMine,
   hideThreadBadge = false,
+  isThreadPanel,
   showContextBadge = false,
   contextName,
   isWorkspaceAdmin = false
@@ -62,7 +64,8 @@ export default function MessageItem({
   const editingMessage = useChatStore(state => state.editingMessage);
   const editingThreadMessage = useChatStore(state => state.editingThreadMessage);
 
-  const currentEditingMessage = hideThreadBadge ? editingThreadMessage : editingMessage;
+  const isThread = isThreadPanel ?? hideThreadBadge;
+  const currentEditingMessage = isThread ? editingThreadMessage : editingMessage;
   const isCurrentlyEditing = currentEditingMessage?._id === message._id;
 
   const activeChannelId = useChatStore(state => state.activeChannelId);

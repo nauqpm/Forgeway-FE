@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MessageSquare, UserPen } from 'lucide-react';
+import { MessageSquare, UserPen, X } from 'lucide-react';
 import { useCreateDM } from '@/modules/client/chat/hooks/useChatQueries';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -174,7 +174,7 @@ export default function UserProfileCard({ user, position, onClose, isCurrentUser
               onClick={() => setIsZoomed(false)}
               className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white dark:bg-[#2c2c2c] text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white flex items-center justify-center shadow-lg border border-gray-100 dark:border-white/10 hover:scale-105 transition-transform z-10"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>,

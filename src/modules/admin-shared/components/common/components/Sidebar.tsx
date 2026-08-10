@@ -11,6 +11,7 @@ import type { AuthUser } from "@/modules/auth/shared/types/auth.types";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
+import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import { useChatChannels } from "@/modules/client/chat/hooks/useChatQueries";
 import { useChatStore } from "@/stores/chatStore";
 import type { Channel } from "@/modules/client/chat/types/chat.types";
@@ -131,7 +132,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const { user } = useAuth();
   const { data: channels = [] } = useChatChannels();
   const queryClient = useQueryClient();
-  const [orderedWorkspaces, setOrderedWorkspaces] = useState<any[]>(sidebarWorkspaces || []); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [orderedWorkspaces, setOrderedWorkspaces] = useState<Workspace[]>(sidebarWorkspaces || []);
 
   useEffect(() => {
     if (sidebarWorkspaces) {
@@ -236,39 +237,34 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
     if (sourceIndex === destIndex) return;
 
     const newOrdered = Array.from(orderedWorkspaces);
-    const isChatList = result.source.droppableId === "sidebar-chat-workspaces";
-
-    const draggedItem = isChatList
-      ? orderedWorkspaces[sourceIndex]
-      : sidebarVisibleWorkspaces[sourceIndex];
+    const draggedItem = sidebarVisibleWorkspaces[sourceIndex];
     if (!draggedItem) return;
 
     const actualSourceIndex = newOrdered.findIndex(
-      (w) => (w._id || w.id) === (draggedItem._id || draggedItem.id)
+      (w) => (w._id || (w as { id?: string }).id) === (draggedItem._id || (draggedItem as { id?: string }).id)
     );
     if (actualSourceIndex === -1) return;
 
-    const destItem = isChatList
-      ? orderedWorkspaces[destIndex]
-      : sidebarVisibleWorkspaces[destIndex];
+    const destItem = sidebarVisibleWorkspaces[destIndex];
     if (!destItem) return;
     const actualDestIndex = newOrdered.findIndex(
-      (w) => (w._id || w.id) === (destItem._id || destItem.id)
+      (w) => (w._id || (w as { id?: string }).id) === (destItem._id || (destItem as { id?: string }).id)
     );
     if (actualDestIndex === -1) return;
 
     const [removed] = newOrdered.splice(actualSourceIndex, 1);
     newOrdered.splice(actualDestIndex, 0, removed);
 
+    const previousOrder = [...orderedWorkspaces];
     setOrderedWorkspaces(newOrdered);
 
     try {
-      const orderIds = newOrdered.map((w) => w._id || w.id).filter(Boolean);
+      const orderIds = newOrdered.map((w) => w._id || (w as { id?: string }).id).filter(Boolean) as string[];
       await workspaceService.updateWorkspaceOrder(orderIds);
       await queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
     } catch (error) {
       console.error("Failed to update workspace order", error);
-      setOrderedWorkspaces(sidebarWorkspaces);
+      setOrderedWorkspaces(previousOrder);
     }
   };
   const filteredMoreWorkspaces = useMemo(() => {
