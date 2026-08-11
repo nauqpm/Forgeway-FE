@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { ResizeHandle } from '@/shared/components/ResizeHandle';
 import type { Message } from '@/modules/client/chat/types/chat.types';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface ThreadIndexPanelProps {
   channelId: string;
@@ -16,6 +17,7 @@ interface ThreadIndexPanelProps {
 }
 
 export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPanelProps) {
+  useEscapeStack(onClose);
   const [filter, setFilter] = useState<'all' | 'mine'>('all');
   const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
   const unreadThreadIds = useChatStore(state => state.unreadThreadIds);

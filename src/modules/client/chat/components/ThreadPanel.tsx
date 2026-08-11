@@ -14,6 +14,7 @@ import MessageInput from './MessageInput';
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { ResizeHandle } from '@/shared/components/ResizeHandle';
 import { getMessageByIdAPI } from '../services/chatService';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface ThreadPanelProps {
   channelId: string;
@@ -22,6 +23,7 @@ interface ThreadPanelProps {
 }
 
 export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPanelProps) {
+  useEscapeStack(onClose);
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const authUser = useAuthStore(state => state.user);

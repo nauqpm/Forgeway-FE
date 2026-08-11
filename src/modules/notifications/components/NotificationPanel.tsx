@@ -18,6 +18,7 @@ import {
   getTaskStatusTransition,
   TaskStatusTransition,
 } from "@/modules/notifications/utils/notification-status.utils";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface NotificationPanelProps {
   onClose: () => void;
@@ -279,6 +280,7 @@ export default function NotificationPanel({
   onClose,
   onUnreadCountChange,
 }: NotificationPanelProps) {
+  useEscapeStack(onClose);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<NotificationCategory>("DIRECT");

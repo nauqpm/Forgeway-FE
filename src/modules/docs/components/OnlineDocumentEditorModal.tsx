@@ -24,6 +24,7 @@ import PageCanvas from "../editor/PageCanvas";
 import TableContextMenu from "../editor/TableContextMenu";
 import VersionHistorySidebar from "../editor/VersionHistorySidebar";
 import type { DocumentVersion } from "../types/docs.type";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 const sanitizeEditorHtml = (html: string): string => {
   if (typeof window === "undefined") return html;
@@ -51,6 +52,7 @@ type Props = {
 };
 
 export default function OnlineDocumentEditorModal({ doc, open, onClose, onSaved }: Props) {
+  useEscapeStack(onClose, open);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("saved");
   const [title, setTitle] = useState(doc.name);

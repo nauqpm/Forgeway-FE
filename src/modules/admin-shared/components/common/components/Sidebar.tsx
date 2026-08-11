@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import sdlcLogo from "../../../../../../app/Logo_AutomationLand_AI_SDLC-removebg.png";
@@ -29,7 +28,6 @@ import {
   Building2,
   Clock7,
   Star,
-  Search,
   FolderOpen,
   Sparkles,
   MessageCircle,
@@ -39,6 +37,7 @@ import {
 } from "lucide-react";
 import { useResizablePanel } from "@/shared/hooks/useResizablePanel";
 import { ResizeHandle } from "@/shared/components/ResizeHandle";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -66,11 +65,6 @@ const adminNav = [
 ];
 
 const SHOW_ADMIN_NAV = false;
-const SIDEBAR_WORKSPACE_LIMIT = 3;
-const MORE_WORKSPACE_LIMIT = 3;
-
-type SidebarPopoverType = 'for_you' | 'recent' | 'starred' | 'more_workspaces';
-
 const navActiveClass = 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]';
 const navInactiveClass =
   'text-[#787774] hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:bg-white/5 dark:hover:text-[#E8E8E7]';
@@ -123,17 +117,11 @@ const NavItem = ({
 
 
 export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClose }: SidebarProps) {
+  useEscapeStack(onMobileClose, mobileOpen);
   const pathname = usePathname();
   const { currentWorkspace, workspaces: sidebarWorkspaces } = useCurrentWorkspace();
   const { user } = useAuth();
   const { data: channels = [] } = useChatChannels();
-
-  const getWorkspaceUnread = (wsId: string) => {
-    const ch = channels.find(
-      (c) => c.type === "workspace" && String(c.workspaceId) === String(wsId)
-    );
-    return ch ? ch.unreadCount : 0;
-  };
 
   const totalUnreadCount = useMemo(() => {
     return channels.reduce((sum, ch) => sum + (ch.unreadCount || 0), 0);
@@ -211,49 +199,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
     );
   };
 
-  const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
-  const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: '0px' });
-  const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
-  const moreWorkspacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
-  const sidebarVisibleWorkspaces = sidebarWorkspaces.slice(0, SIDEBAR_WORKSPACE_LIMIT);
-  const hiddenSidebarWorkspaces = sidebarWorkspaces.slice(SIDEBAR_WORKSPACE_LIMIT);
-  const filteredMoreWorkspaces = useMemo(() => {
-    const query = moreWorkspaceSearch.trim().toLowerCase();
-    if (!query) return hiddenSidebarWorkspaces;
-
-    return hiddenSidebarWorkspaces.filter((workspace) =>
-      [workspace.name, workspace.key, workspace.slug, workspace.description]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query))
-    );
-  }, [hiddenSidebarWorkspaces, moreWorkspaceSearch]);
-  const visibleMoreWorkspaces = filteredMoreWorkspaces.slice(0, MORE_WORKSPACE_LIMIT);
-
-  const handleToggleMoreWorkspaces = () => {
-    if (activePopover === 'more_workspaces') {
-      setActivePopover(null);
-      setMoreWorkspaceSearch('');
-    } else {
-      if (moreWorkspacesBtnRef.current) {
-        const rect = moreWorkspacesBtnRef.current.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const popoverEstimateHeight = 420; // safe estimation of popover height
-        
-        let top = rect.top;
-        // If popover goes off-screen at the bottom, adjust top
-        if (top + popoverEstimateHeight > viewportHeight) {
-          top = Math.max(12, viewportHeight - popoverEstimateHeight - 12);
-        }
-
-        setMoreWorkspacesPos({
-          top: top,
-          left: collapsed ? 'calc(var(--app-sidebar-collapsed) + 12px)' : 'calc(var(--app-sidebar-expanded) + 12px)',
-        });
-      }
-      setActivePopover('more_workspaces');
-    }
-  };
 
   useEffect(() => {
     setMounted(true);
@@ -583,8 +529,14 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                 )}
               {/* SUB NAV */}
               {workspaceOpen && !collapsed && (
-                <div className="ml-6 mt-1 space-y-0.5">
-                  {sidebarVisibleWorkspaces.map((workspace) => {
+                <div
+                  className="ml-6 mt-1 max-h-[300px] space-y-0.5 overflow-y-auto overscroll-contain pr-1"
+                  onWheel={(event) => {
+                    event.stopPropagation();
+                    event.currentTarget.scrollTop += event.deltaY * 0.20;
+                  }}
+                >
+                  {sidebarWorkspaces.map((workspace) => {
                     const routeKey = workspace.key || workspace.slug || workspace._id;
 
                     return (
@@ -600,16 +552,6 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                     );
                   })}
 
-                  {hiddenSidebarWorkspaces.length > 0 && (
-                    <button
-                      ref={moreWorkspacesBtnRef}
-                      onClick={handleToggleMoreWorkspaces}
-                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] group transition-colors"
-                    >
-                      <span>More Workspaces</span>
-                      <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                  )}
                 </div>
               )}
              
@@ -692,125 +634,6 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
         </div>
       </aside>
 
-      {/* More Workspaces Popover */}
-      {activePopover === 'more_workspaces' &&
-        mounted &&
-        createPortal(
-          <>
-            <div className="fixed inset-0 z-[9998]" onClick={() => setActivePopover(null)} />
-            <div
-              className="app-popover fixed bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[10px] z-[9999] flex flex-col"
-              style={{
-                top: `${moreWorkspacesPos.top}px`,
-                left: moreWorkspacesPos.left,
-                boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)',
-              }}
-            >
-              <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Workspaces</span>
-                <button
-                  onClick={() => setActivePopover(null)}
-                  className="p-1.5 hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-[#ABABAB] dark:text-[#6B6B6B] absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    value={moreWorkspaceSearch}
-                    onChange={(event) => setMoreWorkspaceSearch(event.target.value)}
-                    placeholder="Search all Workspaces"
-                    className="w-full pl-9 pr-3 py-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:border-[#111111] dark:focus:border-[#3B82F6] outline-none transition-colors"
-                  />
-                </div>
-              </div>
-
-              <div className="max-h-[16.25rem] overflow-y-auto p-2">
-                {hiddenSidebarWorkspaces.length === 0 ? (
-                  <div className="px-3 py-8 text-center">
-                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
-                      <BookOpen className="h-5 w-5" />
-                    </div>
-                    <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No more workspaces</p>
-                    <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">All available workspaces are already shown in the sidebar.</p>
-                  </div>
-                ) : visibleMoreWorkspaces.length === 0 ? (
-                  <div className="px-3 py-8 text-center">
-                    <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#F0F0EE] dark:bg-white/5 text-[#787774] dark:text-[#9B9A97]">
-                      <Search className="h-5 w-5" />
-                    </div>
-                    <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">No matching workspaces</p>
-                    <p className="mt-1 text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Try another workspace name or key.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-0.5">
-                    {visibleMoreWorkspaces.map((workspace) => {
-                      const routeKey = workspace.key || workspace.slug || workspace._id;
-                      const isActiveWorkspace =
-                        currentWorkspace?._id === workspace._id ||
-                        currentWorkspace?.key === workspace.key ||
-                        currentWorkspace?.slug === workspace.slug;
-                      const wsId = workspace._id || "";
-                      const hasUnread = getWorkspaceUnread(wsId) > 0;
-
-                      return (
-                        <Link
-                          key={workspace._id || routeKey}
-                          href={`/workspaces/${routeKey}`}
-                          onClick={() => {
-                            setActivePopover(null);
-                            setMoreWorkspaceSearch("");
-                            onMobileClose();
-                          }}
-                          className={`flex w-full items-center justify-between rounded-[6px] p-2 text-left transition-colors ${
-                            isActiveWorkspace
-                              ? navActiveClass
-                              : navInactiveClass
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <WorkspaceAvatar workspace={workspace} size="md" />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-[0.8125rem] font-semibold">{workspace.name || "Untitled workspace"}</p>
-                              <p className="truncate text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">{workspace.key || workspace.slug || "Workspace"}</p>
-                            </div>
-                          </div>
-                          {hasUnread && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] shrink-0 ml-2 mr-1" />
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] p-2">
-                <Link
-                  href="/workspaces"
-                  onClick={() => setActivePopover(null)}
-                  className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
-                >
-                  <BookOpen className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
-                  View all Workspaces
-                </Link>
-                <Link
-                  href="/workspaces/create"
-                  onClick={() => setActivePopover(null)}
-                  className="w-full flex items-center gap-3 p-2 text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 rounded-[6px] transition-colors"
-                >
-                  <Plus className="w-4 h-4 text-[#ABABAB] dark:text-[#6B6B6B]" />
-                  Create Workspace
-                </Link>
-              </div>
-            </div>
-          </>,
-          document.body
-        )}
     </>
   );
 }

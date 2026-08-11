@@ -23,6 +23,7 @@ import { getUserDisplayName, formatDateTime, type WorkspaceMember, type SprintOp
 import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
 import TimeTrackingModal from "./TimeTrackingModal";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 import TaskHeaderTypePicker from "./TaskHeaderTypePicker";
 import ConvertToSubtaskModal from "./ConvertToSubtaskModal";
 import ConvertSubtaskConfirmModal from "./ConvertSubtaskConfirmModal";
@@ -59,6 +60,7 @@ export default function TaskDetailModal({
   onSubtaskClick,
   detailUrl,
 }: TaskDetailModalProps) {
+  useEscapeStack(onClose, Boolean(issue));
   const { user, token } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"comments" | "history" | "work_log">("comments");

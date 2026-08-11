@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { Editor } from "@tiptap/react";
 import { Search, Replace, X } from "lucide-react";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface FindReplacePanelProps {
   editor: Editor | null;
@@ -11,6 +12,7 @@ interface FindReplacePanelProps {
 }
 
 export default function FindReplacePanel({ editor, onClose }: FindReplacePanelProps) {
+  useEscapeStack(onClose);
   const [searchTerm, setSearchTerm] = useState("");
   const [replaceTerm, setReplaceTerm] = useState("");
   const [matchCount, setMatchCount] = useState(0);

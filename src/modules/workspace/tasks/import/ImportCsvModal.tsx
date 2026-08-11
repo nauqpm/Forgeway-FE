@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Upload, X, FileDown, CheckCircle2, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import {
@@ -11,6 +11,7 @@ import {
   ImportBulkResult
 } from "@/modules/workspace/shared/services/taskCsvImport.service";
 import toast from "react-hot-toast";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type ImportCsvModalProps = {
   isOpen: boolean;
@@ -26,10 +27,10 @@ const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }: ImportCsvModalProps) {
   const [step, setStep] = useState<Step>("upload");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [previewData, setPreviewData] = useState<ImportCsvPreviewResponse | null>(null);
   const [resultData, setResultData] = useState<ImportBulkResult | null>(null);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleClose = useCallback(() => {
@@ -44,17 +45,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
     }
   }, [step, resultData, onClose, onSuccess]);
 
-  // Key Binding: Close on Escape key
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isLoading) {
-        handleClose();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, isLoading, handleClose]);
+  useEscapeStack(handleClose, isOpen && !isLoading);
 
   if (!isOpen) return null;
 
@@ -125,7 +116,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
         <div className="p-6 overflow-y-auto min-h-[300px]">
           {step === "upload" && (
             <div className="flex flex-col items-center justify-center py-10">
-              <div 
+              <div
                 className="w-full max-w-lg border-2 border-dashed border-[#EAEAEA] dark:border-white/[0.1] rounded-[8px] flex flex-col items-center justify-center p-12 bg-[#FAFAFA] dark:bg-[#252525] hover:bg-[#F5F5F5] dark:hover:bg-[#2A2A2A] transition-colors cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -134,17 +125,17 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                 ) : (
                   <Upload className="w-10 h-10 text-[#ABABAB] mb-4" />
                 )}
-                
+
                 <h4 className="text-[0.9375rem] font-medium text-[#111111] dark:text-[#E8E8E7] mb-1">
                   {isLoading ? "Processing..." : "Click or drag and drop CSV/Excel file here"}
                 </h4>
                 <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   Supports .csv, .xlsx, .xls (Max 2MB, &le; 200 rows)
                 </p>
-                <input 
-                  type="file" 
-                  accept=".csv, text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" 
-                  className="hidden" 
+                <input
+                  type="file"
+                  accept=".csv, text/csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                  className="hidden"
                   ref={fileInputRef}
                   onChange={handleFileSelect}
                   disabled={isLoading}
@@ -187,7 +178,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                     <div className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">Valid (Will be created)</div>
                   </div>
                 </div>
-                
+
                 <div className="flex-1 bg-[#FFF8E6] dark:bg-[#332C1A] rounded-[8px] p-4 flex items-center gap-3">
                   <AlertTriangle className="w-6 h-6 text-yellow-600" />
                   <div>
@@ -221,8 +212,8 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
                   </thead>
                   <tbody className="divide-y divide-[#EAEAEA] dark:divide-white/[0.04]">
                     {previewData.rows.map((row, idx) => (
-                      <tr 
-                        key={idx} 
+                      <tr
+                        key={idx}
                         className={`
                           ${row.status === 'error' ? 'bg-[#FDF5F4]/50 dark:bg-[#382323]/30' : ''}
                           ${row.status === 'warning' ? 'bg-[#FFF8E6]/50 dark:bg-[#332C1A]/30' : ''}
@@ -295,7 +286,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
               Cancel
             </button>
           )}
-          
+
           {step === "preview" && (
             <button
               onClick={handleConfirm}

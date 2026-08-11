@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import InviteModal from "@/modules/admin-shared/components/common/components/InviteModal";
 import { workspaceService } from "@/modules/workspace/shared/services/workspaceService";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 import type { WorkspaceSampleAvatar } from "@/modules/workspace/shared/utils/workspaceAvatar";
 import WorkspaceAvatar from "./WorkspaceAvatar";
 import WorkspaceAvatarPicker from "./WorkspaceAvatarPicker";
@@ -65,6 +66,7 @@ const Header = ({
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
+  useEscapeStack(() => setIsAvatarPickerOpen(false), isAvatarPickerOpen);
   const [avatarSamples, setAvatarSamples] = useState<WorkspaceSampleAvatar[]>([]);
   const [loadingAvatars, setLoadingAvatars] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(workspace.avatar);

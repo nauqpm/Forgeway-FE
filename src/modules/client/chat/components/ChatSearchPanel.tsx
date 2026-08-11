@@ -3,6 +3,8 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { X, Search, Loader2, FileText, Image as ImageIcon, File, Download, ExternalLink, Calendar, Video, Play } from 'lucide-react';
+import MediaLightbox from './MediaLightbox';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 import { useChannelMembers, useSearchChannelMessages } from '../hooks/useChatQueries';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axiosIns';
@@ -12,7 +14,6 @@ import { format } from 'date-fns';
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { ResizeHandle } from '@/shared/components/ResizeHandle';
 import { renderMessageContent } from '../utils/messageContentRenderer';
-import MediaLightbox from './MediaLightbox';
 
 interface ChatSearchPanelProps {
   channelId: string;
@@ -29,6 +30,7 @@ interface Attachment {
 }
 
 export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelProps) {
+  useEscapeStack(onClose);
   const [activeTab, setActiveTab] = useState<'messages' | 'files' | 'links'>('messages');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -709,8 +711,12 @@ export default function ChatSearchPanel({ channelId, onClose }: ChatSearchPanelP
       </div>
       {/* Lightbox Preview Modal */}
       <MediaLightbox
-        file={lightboxFile ? { url: lightboxFile.url, name: lightboxFile.originalName, mimeType: lightboxFile.mimeType } : null}
-        onDownload={() => lightboxFile && handleDownload(lightboxFile.url, lightboxFile.originalName)}
+        file={lightboxFile ? {
+          url: lightboxFile.url,
+          name: lightboxFile.originalName,
+          mimeType: lightboxFile.mimeType,
+        } : null}
+        onDownload={(file) => handleDownload(file.url, file.name)}
         onClose={() => setLightboxFile(null)}
       />
     </div>

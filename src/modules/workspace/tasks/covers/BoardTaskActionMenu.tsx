@@ -17,6 +17,7 @@ import type { Issue } from "@/modules/workspace/shared/types/issue.type";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
 import { useTaskCoverActions } from "@/modules/workspace/shared/hooks/useTaskCoverActions";
 import TaskCoverPickerPortal from "./TaskCoverPickerPortal";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type BoardTaskActionMenuProps = {
   workspaceId: string;
@@ -66,6 +67,8 @@ export default function BoardTaskActionMenu({
   onCoverChange,
 }: BoardTaskActionMenuProps) {
   const [mounted, setMounted] = useState(false);
+  // The menu is portaled to document.body, so enable Escape only after client mounting.
+  useEscapeStack(onClose, mounted);
   const [menuPosition, setMenuPosition] = useState({ left: PAD, top: PAD });
   const [statusOpen, setStatusOpen] = useState(false);
   const [coverAnchorRect, setCoverAnchorRect] = useState<DOMRect | null>(null);
@@ -141,15 +144,9 @@ export default function BoardTaskActionMenu({
       if (menuRef.current?.contains(target)) return;
       onClose();
     };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
     document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [mounted, onClose]);
 
