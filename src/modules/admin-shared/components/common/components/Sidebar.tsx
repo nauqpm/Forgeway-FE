@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import sdlcLogo from "../../../../../../app/Logo_AutomationLand_AI_SDLC-removebg.png";
@@ -37,6 +38,7 @@ import {
   FolderOpen,
   Sparkles,
   MessageCircle,
+  Search,
   Hash,
   Lock,
   Megaphone,
@@ -219,6 +221,10 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
     );
   };
 
+  const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
+  const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: '0px' });
+  const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
+  const moreWorkspacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
   const starredWorkspaces = useMemo(
     () => orderedWorkspaces.filter((workspace) => workspace.isStarred),
@@ -996,7 +1002,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                         currentWorkspace?.key === workspace.key ||
                         currentWorkspace?.slug === workspace.slug;
                       const wsId = workspace._id || "";
-                      const hasUnread = getWorkspaceUnread(wsId) > 0;
+                      const hasUnread = getWorkspaceTotalUnread(wsId) > 0;
 
                       return (
                         <Link

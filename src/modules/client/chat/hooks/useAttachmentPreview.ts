@@ -3,7 +3,6 @@ import toast from 'react-hot-toast';
 import type { Attachment } from '@/modules/client/chat/types/chat.types';
 import api from '@/lib/axiosIns';
 
-<<<<<<< HEAD
 const isOfficeFile = (filename: string, mimeType?: string) => {
   const ext = filename.toLowerCase().split('.').pop() || '';
   const officeExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
@@ -16,12 +15,13 @@ const isOfficeFile = (filename: string, mimeType?: string) => {
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/vnd.ms-powerpoint',
-      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
     ];
     if (officeMimes.includes(mimeType)) return true;
   }
   return false;
-=======
+};
+
 const convertImageBlobToPng = async (blob: Blob): Promise<Blob> => {
   if (blob.type === 'image/png') return blob;
 
@@ -72,7 +72,6 @@ const prepareClipboardImage = (file: Attachment): Promise<Blob> => {
   }
 
   return preparedImage;
->>>>>>> origin/dev
 };
 
 export function useAttachmentPreview(
@@ -176,7 +175,7 @@ export function useAttachmentPreview(
 
   const handleDownloadFile = async (file: { url: string; name?: string; mimeType?: string }) => {
     const filename = file.name || 'file';
-    
+
     // Check if it's an Office document with a valid public HTTP/HTTPS URL, open in new tab via Microsoft Office Viewer
     if (file.url && isOfficeFile(filename, file.mimeType)) {
       if (file.url.startsWith('http://') || file.url.startsWith('https://')) {
@@ -196,9 +195,9 @@ export function useAttachmentPreview(
       const blob = response.data;
       const mime = file.mimeType || blob.type || '';
       const blobUrl = URL.createObjectURL(blob);
-      
+
       const isPreviewable = mime === 'application/pdf' || mime.startsWith('image/') || mime.startsWith('text/');
-      
+
       if (isPreviewable) {
         window.open(blobUrl, '_blank');
         setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000);
