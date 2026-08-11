@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useEffect, useLayoutEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Filters } from "../types/filter.type";
 import { Search, X, Filter } from "lucide-react";
@@ -32,7 +32,7 @@ export default function BoardFilters({
   const popoverRef = useRef<HTMLDivElement>(null);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const filterPopoverRef = useRef<HTMLDivElement>(null);
-  const [popoverPosition, setPopoverPosition] = useState({ top: 0, left: 0 });
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null);
 
   const [statusSearch, setStatusSearch] = useState("");
   const [assigneeSearch, setAssigneeSearch] = useState("");
@@ -74,7 +74,7 @@ export default function BoardFilters({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isPopoverOpen) return;
 
     updatePopoverPosition();
@@ -185,10 +185,10 @@ export default function BoardFilters({
         {extraActions}
       </div>
 
-      {isPopoverOpen && typeof document !== "undefined" && createPortal(
+      {isPopoverOpen && popoverPosition && typeof document !== "undefined" && createPortal(
         <div
           ref={filterPopoverRef}
-          className="fixed z-50 flex h-80 max-h-[calc(100vh-1rem)] w-[30rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#202020]"
+          className="fixed z-50 flex h-80 max-h-[calc(100vh-1rem)] w-[30rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#202020] animate-in fade-in zoom-in-95 duration-200"
           style={{
             position: "fixed",
             top: popoverPosition.top,
