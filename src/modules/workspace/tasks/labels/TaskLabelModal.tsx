@@ -10,6 +10,7 @@ import type { TaskLabel } from "@/modules/workspace/shared/types/label.type";
 import { labelService } from "@/modules/workspace/shared/services/labelService";
 import { taskService } from "@/modules/workspace/shared/services/taskService";
 import { extractApiError } from "@/shared/utils/apiError";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type TaskLabelModalProps = {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export default function TaskLabelModal({
   onClose,
   onSaved,
 }: TaskLabelModalProps) {
+  useEscapeStack(onClose, isOpen);
   const queryClient = useQueryClient();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [query, setQuery] = useState("");

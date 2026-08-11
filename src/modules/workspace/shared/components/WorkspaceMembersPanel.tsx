@@ -10,6 +10,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { WORKSPACE_PERMISSIONS } from "../constants/workspacePermissions";
 import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type WorkspaceMember = {
   userId: {
@@ -71,6 +72,7 @@ type InviteFormProps = {
 };
 
 function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: InviteFormProps) {
+  useEscapeStack(onClose);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [submitting, setSubmitting] = useState(false);

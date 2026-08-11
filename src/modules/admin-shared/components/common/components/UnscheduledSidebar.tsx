@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { Draggable } from '@fullcalendar/interaction';
 import { X } from 'lucide-react';
 import { Issue } from '@/modules/workspace/shared/types/issue.type';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface UnscheduledSidebarProps {
   tasks: Issue[];
@@ -19,6 +20,7 @@ const PRIORITY_STYLES: Record<string, string> = {
 };
 
 export default function UnscheduledSidebar({ tasks, isOpen, onClose }: UnscheduledSidebarProps) {
+  useEscapeStack(onClose, isOpen);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Trash2, X, Loader2 } from 'lucide-react';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface DeleteChannelConfirmModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export default function DeleteChannelConfirmModal({
   onConfirm,
   onClose,
 }: DeleteChannelConfirmModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
 

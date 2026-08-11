@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Check, UserRound } from 'lucide-react';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 type FilterAssignee = {
   id: string;
@@ -27,6 +28,7 @@ interface FilterMenuProps {
 
 export default function FilterMenu({ isOpen, onClose, filters, setFilters, density, setDensity, assignees, anchorRef }: FilterMenuProps) {
   const [position, setPosition] = useState({ top: 0, left: 0 });
+  useEscapeStack(onClose, isOpen);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && e.key.toLowerCase() === 'f') {
@@ -34,9 +36,6 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         if (isOpen) onClose();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         else setFilters((prev: any) => ({ ...prev }));
-      }
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
