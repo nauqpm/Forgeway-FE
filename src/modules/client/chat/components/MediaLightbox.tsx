@@ -140,6 +140,7 @@ export default function MediaLightbox({
       ref={lightboxRef}
       className="fixed inset-0 z-[9999] bg-black/85 backdrop-blur-sm flex flex-col items-center justify-center cursor-zoom-out select-none animate-in fade-in duration-150"
       onClick={onClose}
+      onContextMenu={(e) => e.stopPropagation()}
     >
       {/* Top Bar */}
       <div 
