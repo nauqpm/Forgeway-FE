@@ -71,6 +71,7 @@ export default function TaskDetailModal({
   const [isConvertToSubtaskOpen, setIsConvertToSubtaskOpen] = useState(false);
   const [isConvertToTaskOpen, setIsConvertToTaskOpen] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+  const workLogRefreshRef = useRef<(() => void) | null>(null);
   const [mounted, setMounted] = useState(false);
   const [coverAnchorRect, setCoverAnchorRect] = useState<DOMRect | null>(null);
   const coverRowRef = useRef<HTMLButtonElement>(null);
@@ -414,6 +415,7 @@ export default function TaskDetailModal({
               boardColumns={boardColumns}
               onRestoreIssue={() => onRestoreIssue && onRestoreIssue(issue)}
               onUpdateIssue={onUpdateIssue}
+              onWorkLogCreated={(cb) => { workLogRefreshRef.current = cb; }}
             />
           </div>
 
@@ -461,7 +463,10 @@ export default function TaskDetailModal({
         onClose={() => setIsLogWorkOpen(false)}
         issue={issue}
         workspaceId={workspaceId}
-        onUpdateIssue={onUpdateIssue}
+        onUpdateIssue={(updatedIssue) => {
+          if (onUpdateIssue) onUpdateIssue(updatedIssue);
+          if (workLogRefreshRef.current) workLogRefreshRef.current();
+        }}
       />
       <ConvertToSubtaskModal
         isOpen={isConvertToSubtaskOpen}
