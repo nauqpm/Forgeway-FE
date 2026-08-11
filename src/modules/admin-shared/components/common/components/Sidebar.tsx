@@ -10,6 +10,7 @@ import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import type { AuthUser } from "@/modules/auth/shared/types/auth.types";
 import { isGlobalAdminRole } from "@/modules/auth/shared/utils/admin-role";
 import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
+import WorkspaceStarButton from "@/modules/workspace/shared/components/WorkspaceStarButton";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import { useChatChannels } from "@/modules/client/chat/hooks/useChatQueries";
@@ -57,7 +58,6 @@ const mainNav = [
   { icon: MessageCircle, label: "Chat", href: "/chat" },
   { icon: Sparkles, label: "For You", href: "/for-you" },
   { icon: Clock7, label: "Recent", href: "/recent" },
-  { icon: Star, label: "Starred", href: "/starred" },
   { icon: BookOpen, label: 'Workspaces', href: '/workspaces' },
 
   { icon: FolderOpen, label: 'Documents', href: '/documents' },
@@ -74,7 +74,7 @@ const SHOW_ADMIN_NAV = false;
 const SIDEBAR_WORKSPACE_LIMIT = 3;
 const MORE_WORKSPACE_LIMIT = 3;
 
-type SidebarPopoverType = 'for_you' | 'recent' | 'starred' | 'more_workspaces';
+type SidebarPopoverType = 'for_you' | 'recent' | 'more_workspaces';
 
 const navActiveClass = 'bg-[#EFF6FF] text-[#1E40AF] dark:bg-[rgba(37,99,235,0.15)] dark:text-[#93C5FD]';
 const navInactiveClass =
@@ -133,6 +133,10 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const { data: channels = [] } = useChatChannels();
   const queryClient = useQueryClient();
   const [orderedWorkspaces, setOrderedWorkspaces] = useState<Workspace[]>(sidebarWorkspaces || []);
+  const chatWorkspaces = useMemo(
+    () => [...(sidebarWorkspaces || [])].sort((a, b) => a.name.localeCompare(b.name)),
+    [sidebarWorkspaces],
+  );
 
   useEffect(() => {
     if (sidebarWorkspaces) {
@@ -163,6 +167,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   };
   const [adminOpen, setAdminOpen] = useState(pathname.startsWith("/dashboard"));
   const [workspaceOpen, setWorkspaceOpen] = useState(true);
+  const [starredOpen, setStarredOpen] = useState(true);
 
   const getWorkspaceTotalUnread = (wsId: string) => {
     const wsChannel = channels.find(
@@ -226,8 +231,17 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
   const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
   const moreWorkspacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
-  const sidebarVisibleWorkspaces = orderedWorkspaces.slice(0, SIDEBAR_WORKSPACE_LIMIT);
-  const hiddenSidebarWorkspaces = orderedWorkspaces.slice(SIDEBAR_WORKSPACE_LIMIT);
+  const starredWorkspaces = useMemo(
+    () => orderedWorkspaces.filter((workspace) => workspace.isStarred),
+    [orderedWorkspaces],
+  );
+  const unstarredWorkspaces = useMemo(
+    () => orderedWorkspaces.filter((workspace) => !workspace.isStarred),
+    [orderedWorkspaces],
+  );
+  const sidebarVisibleWorkspaces = unstarredWorkspaces.slice(0, SIDEBAR_WORKSPACE_LIMIT);
+  const hiddenSidebarWorkspaces = unstarredWorkspaces.slice(SIDEBAR_WORKSPACE_LIMIT);
+  const isWorkspaceSectionActive = pathname.startsWith('/workspaces') || pathname === '/starred';
 
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
@@ -236,24 +250,17 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
     const destIndex = result.destination.index;
     if (sourceIndex === destIndex) return;
 
-    const newOrdered = Array.from(orderedWorkspaces);
-    const draggedItem = sidebarVisibleWorkspaces[sourceIndex];
-    if (!draggedItem) return;
+    const reorderedUnstarred = Array.from(unstarredWorkspaces);
+    const [removed] = reorderedUnstarred.splice(sourceIndex, 1);
+    if (!removed) return;
+    reorderedUnstarred.splice(destIndex, 0, removed);
 
-    const actualSourceIndex = newOrdered.findIndex(
-      (w) => (w._id || (w as { id?: string }).id) === (draggedItem._id || (draggedItem as { id?: string }).id)
+    let unstarredIndex = 0;
+    const newOrdered = orderedWorkspaces.map((workspace) =>
+      workspace.isStarred
+        ? workspace
+        : reorderedUnstarred[unstarredIndex++] ?? workspace,
     );
-    if (actualSourceIndex === -1) return;
-
-    const destItem = sidebarVisibleWorkspaces[destIndex];
-    if (!destItem) return;
-    const actualDestIndex = newOrdered.findIndex(
-      (w) => (w._id || (w as { id?: string }).id) === (destItem._id || (destItem as { id?: string }).id)
-    );
-    if (actualDestIndex === -1) return;
-
-    const [removed] = newOrdered.splice(actualSourceIndex, 1);
-    newOrdered.splice(actualDestIndex, 0, removed);
 
     const previousOrder = [...orderedWorkspaces];
     setOrderedWorkspaces(newOrdered);
@@ -506,7 +513,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                         </div>
                         <div className="space-y-1 mt-0.5">
                           {mounted ? (
-                            <DragDropContext onDragEnd={handleDragEnd}>
+                              <DragDropContext onDragEnd={() => undefined}>
                               <Droppable droppableId="sidebar-chat-workspaces">
                                 {(provided) => (
                                   <div
@@ -514,7 +521,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                     ref={provided.innerRef}
                                     className="space-y-1"
                                   >
-                                    {orderedWorkspaces.map((ws, index) => {
+                                    {chatWorkspaces.map((ws, index) => {
                                       const wsId = ws._id;
                                       const wsChannel = channels.find(
                                         (c) => c.type === 'workspace' && String(c.workspaceId) === String(wsId)
@@ -543,17 +550,14 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                           key={`chat-${uniqueId}`}
                                           draggableId={`chat-${uniqueId}`}
                                           index={index}
+                                          isDragDisabled
                                         >
                                           {(draggableProvided, snapshot) => (
                                             <div
                                               ref={draggableProvided.innerRef}
                                               {...draggableProvided.draggableProps}
                                               {...draggableProvided.dragHandleProps}
-                                              className={`space-y-0.5 rounded-[6px] transition-all border ${
-                                                ws.settings?.isImportant
-                                                  ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 shadow-sm"
-                                                  : "border-transparent"
-                                              } ${snapshot.isDragging
+                                              className={`space-y-0.5 rounded-[6px] transition-all border border-transparent ${snapshot.isDragging
                                                   ? "bg-[#EFF6FF] dark:bg-white/10"
                                                   : ""
                                                 }`}
@@ -568,11 +572,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                                     onMobileClose();
                                                   }
                                                 }}
-                                                className={`w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] transition-colors cursor-pointer ${
-                                                  ws.settings?.isImportant
-                                                    ? "text-amber-700 dark:text-amber-400 font-semibold"
-                                                    : "text-[#787774] dark:text-[#9B9A97]"
-                                                } hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`}
+                                                className="w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] transition-colors cursor-pointer text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
                                               >
                                                 <div className="flex items-center gap-2 min-w-0 flex-1">
                                                   {isExpanded ? (
@@ -584,11 +584,6 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                                   <span className="font-bold text-[0.8125rem] truncate flex-1">
                                                     {ws.name}
                                                   </span>
-                                                  {ws.settings?.isImportant && (
-                                                    <span className="shrink-0 text-[13px] leading-none animate-pulse" title="Important workspace">
-                                                      ⭐
-                                                    </span>
-                                                  )}
                                                 </div>
                                                 {totalWsUnread > 0 && !isExpanded && (
                                                   <span className="flex items-center justify-center min-w-[16px] h-4 px-1.5 bg-[#EF4444] text-white text-[8px] font-bold rounded-full ml-2">
@@ -615,7 +610,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                               </Droppable>
                             </DragDropContext>
                           ) : (
-                            orderedWorkspaces.map((ws) => {
+                            chatWorkspaces.map((ws) => {
                               const wsId = ws._id;
                               const wsChannel = channels.find(
                                 (c) => c.type === 'workspace' && String(c.workspaceId) === String(wsId)
@@ -640,11 +635,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                               return (
                                 <div
                                   key={wsId}
-                                  className={`space-y-0.5 rounded-[6px] border ${
-                                    ws.settings?.isImportant
-                                      ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 shadow-sm"
-                                      : "border-transparent"
-                                  }`}
+                                  className="space-y-0.5 rounded-[6px] border border-transparent"
                                 >
                                   {/* Workspace Accordion Header */}
                                   <div
@@ -656,11 +647,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                         onMobileClose();
                                       }
                                     }}
-                                    className={`w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] transition-colors cursor-pointer ${
-                                      ws.settings?.isImportant
-                                        ? "text-amber-700 dark:text-amber-400 font-semibold"
-                                        : "text-[#787774] dark:text-[#9B9A97]"
-                                    } hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`}
+                                    className="w-full flex items-center justify-between px-2 py-1.5 rounded-[6px] transition-colors cursor-pointer text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
                                   >
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
                                       {isExpanded ? (
@@ -672,11 +659,6 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                       <span className="font-bold text-[0.8125rem] truncate flex-1">
                                         {ws.name}
                                       </span>
-                                      {ws.settings?.isImportant && (
-                                        <span className="shrink-0 text-[13px] leading-none animate-pulse" title="Important workspace">
-                                          ⭐
-                                        </span>
-                                      )}
                                     </div>
                                     {totalWsUnread > 0 && !isExpanded && (
                                       <span className="flex items-center justify-center min-w-[16px] h-4 px-1.5 bg-[#EF4444] text-white text-[8px] font-bold rounded-full ml-2">
@@ -719,13 +701,13 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                   href="/workspaces"
                   onClick={onMobileClose}
                   title="Workspaces"
-                  className={`w-full flex items-center justify-center px-3 py-2 rounded-[6px] transition-colors ${pathname.startsWith('/workspaces') ? navActiveClass : `text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`
+                  className={`w-full flex items-center justify-center px-3 py-2 rounded-[6px] transition-colors ${isWorkspaceSectionActive ? navActiveClass : `text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`
                     }`}
                 >
-                  <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
+                  <BookOpen className={`w-[1.125rem] h-[1.125rem] ${isWorkspaceSectionActive ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
                 </Link>
               ) : (
-                <div className={`w-full flex items-center rounded-[6px] transition-colors group ${pathname.startsWith('/workspaces')
+                <div className={`w-full flex items-center rounded-[6px] transition-colors group ${isWorkspaceSectionActive
                   ? navActiveClass
                   : 'text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]'
                   }`}>
@@ -734,7 +716,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                     onClick={onMobileClose}
                     className="flex items-center gap-3 py-2 pl-3 flex-1 min-w-0"
                   >
-                    <BookOpen className={`w-[1.125rem] h-[1.125rem] ${pathname.startsWith('/workspaces') ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
+                    <BookOpen className={`w-[1.125rem] h-[1.125rem] ${isWorkspaceSectionActive ? iconActiveClass : 'text-[#ABABAB] dark:text-[#6B6B6B]'}`} />
                     <span className="text-[0.8125rem] font-medium flex-1 text-left">Workspaces</span>
                   </Link>
                   <button
@@ -752,6 +734,49 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
               {/* SUB NAV */}
               {workspaceOpen && !collapsed && (
                 <div className="ml-6 mt-1 space-y-0.5">
+                  {starredWorkspaces.length > 0 && (
+                    <div className="mb-2">
+                      <button
+                        type="button"
+                        onClick={() => setStarredOpen((current) => !current)}
+                        className="flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-[0.6875rem] font-semibold text-[#787774] transition-colors hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-white/5"
+                      >
+                        <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
+                        <span className="flex-1 text-left">Starred</span>
+                        <span className="text-[0.625rem] font-medium opacity-70">{starredWorkspaces.length}</span>
+                        {starredOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                      </button>
+
+                      {starredOpen && (
+                        <div className="ml-2 mt-0.5 space-y-0.5 border-l border-[#EAEAEA] pl-2 dark:border-white/[0.06]">
+                          {starredWorkspaces.map((workspace) => {
+                            const routeKey = workspace.key || workspace.slug || workspace._id;
+                            return (
+                              <Link
+                                key={`starred-${workspace._id}`}
+                                href={`/workspaces/${routeKey}`}
+                                onClick={onMobileClose}
+                                className="flex min-w-0 items-center gap-2 rounded-[6px] px-2 py-1.5 text-[0.8125rem] text-[#787774] transition-colors hover:bg-[#F7F6F3] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:bg-white/5 dark:hover:text-[#E8E8E7]"
+                                title={workspace.name}
+                              >
+                                <WorkspaceAvatar workspace={workspace} size="xs" />
+                                <span className="flex-1 truncate">{workspace.name}</span>
+                                <WorkspaceStarButton workspace={workspace} />
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="flex w-full items-center gap-2 rounded-[6px] px-2 py-1.5 text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97]">
+                      <BookOpen className="h-3.5 w-3.5" />
+                      <span className="flex-1">Workspaces</span>
+                      <span className="text-[0.625rem] font-medium opacity-70">{unstarredWorkspaces.length}</span>
+                    </div>
+                    <div className="ml-2 mt-0.5 space-y-0.5 border-l border-[#EAEAEA] pl-2 dark:border-white/[0.06]">
                   {mounted ? (
                     <DragDropContext onDragEnd={handleDragEnd}>
                       <Droppable droppableId="sidebar-workspaces">
@@ -776,34 +801,25 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                       ref={draggableProvided.innerRef}
                                       {...draggableProvided.draggableProps}
                                       {...draggableProvided.dragHandleProps}
-                                      className={`rounded-[6px] transition-all border ${
-                                        workspace.settings?.isImportant
-                                          ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 shadow-sm"
-                                          : "border-transparent"
-                                      } ${snapshot.isDragging
-                                        ? "bg-[#EFF6FF] dark:bg-white/10"
+                                      className={`will-change-transform rounded-[6px] border border-transparent transition-colors ${snapshot.isDragging
+                                        ? "bg-[#EFF6FF] shadow-sm dark:bg-white/10"
                                         : ""
                                         }`}
                                       style={{
                                         ...draggableProvided.draggableProps.style,
+                                        transition: snapshot.isDropAnimating
+                                          ? 'transform 160ms cubic-bezier(0.2, 0, 0, 1)'
+                                          : draggableProvided.draggableProps.style?.transition,
                                       }}
                                     >
                                       <Link
                                         href={`/workspaces/${routeKey}`}
-                                        className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full ${
-                                          workspace.settings?.isImportant
-                                            ? "text-amber-700 dark:text-amber-400 font-semibold"
-                                            : "text-[#787774] dark:text-[#9B9A97]"
-                                        } hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`}
+                                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
                                         title={workspace.name}
                                       >
                                         <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
                                         <span className="truncate flex-1">{workspace.name}</span>
-                                        {workspace.settings?.isImportant && (
-                                          <span className="shrink-0 text-[13px] leading-none animate-pulse" title="Important workspace">
-                                            ⭐
-                                          </span>
-                                        )}
+                                        <WorkspaceStarButton workspace={workspace} />
                                       </Link>
                                     </div>
                                   )}
@@ -823,26 +839,18 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                         <Link
                           key={workspace._id || routeKey}
                           href={`/workspaces/${routeKey}`}
-                          className={`flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full border ${
-                            workspace.settings?.isImportant
-                              ? "border-amber-500/30 bg-amber-50/50 dark:bg-amber-500/5 text-amber-700 dark:text-amber-400 font-semibold shadow-sm"
-                              : "border-transparent text-[#787774] dark:text-[#9B9A97]"
-                          } hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]`}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full border border-transparent text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
                           title={workspace.name}
                         >
                           <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
                           <span className="truncate flex-1">{workspace.name}</span>
-                          {workspace.settings?.isImportant && (
-                            <span className="shrink-0 text-[13px] leading-none animate-pulse" title="Important workspace">
-                              ⭐
-                            </span>
-                          )}
+                          <WorkspaceStarButton workspace={workspace} />
                         </Link>
                       );
                     })
                   )}
 
-                  {hiddenSidebarWorkspaces.length > 0 && (
+                    {hiddenSidebarWorkspaces.length > 0 && (
                     <button
                       ref={moreWorkspacesBtnRef}
                       onClick={handleToggleMoreWorkspaces}
@@ -851,13 +859,15 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                       <span>More Workspaces</span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
-                  )}
+                    )}
+                    </div>
+                  </div>
                 </div>
               )}
 
             </div>
             {/* Documents */}
-            <NavItem item={mainNav[6]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
+            <NavItem item={mainNav[5]} pathname={pathname} onMobileClose={onMobileClose} collapsed={collapsed} />
           </div>
 
           {/* Admin Section */}
@@ -1023,6 +1033,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                           {hasUnread && (
                             <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] shrink-0 ml-2 mr-1" />
                           )}
+                          <WorkspaceStarButton workspace={workspace} />
                         </Link>
                       );
                     })}

@@ -14,10 +14,29 @@ export interface UpdateWorkspaceInput {
   access?: "private" | "public";
 }
 
+export interface WorkspacePreference {
+  workspaceId: string;
+  isStarred: boolean;
+  position: number;
+}
+
 export const workspaceService = {
   listMine: async (): Promise<Workspace[]> => {
     const res = await api.get(apiRoutes.WORKSPACES.BASE);
     return normalize<Workspace[]>(res);
+  },
+
+  listStarred: async (): Promise<Workspace[]> => {
+    const res = await api.get(apiRoutes.WORKSPACES.STARRED);
+    return normalize<Workspace[]>(res);
+  },
+
+  setWorkspaceStar: async (
+    workspaceId: string,
+    isStarred: boolean,
+  ): Promise<WorkspacePreference> => {
+    const res = await api.put(apiRoutes.WORKSPACE_PREFERENCES.STAR(workspaceId), { isStarred });
+    return normalize<WorkspacePreference>(res);
   },
 
   listAvatarSamples: async (): Promise<WorkspaceSampleAvatar[]> => {
@@ -36,7 +55,7 @@ export const workspaceService = {
   updateWorkspaceOrder: async (
     order: string[],
   ): Promise<void> => {
-    const res = await api.put(apiRoutes.USERS.UPDATE_ME, { workspaceOrder: order });
+    const res = await api.put(apiRoutes.WORKSPACE_PREFERENCES.ORDER, { workspaceIds: order });
     return normalize<void>(res);
   },
 };

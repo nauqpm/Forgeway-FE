@@ -15,7 +15,6 @@ export interface WorkspaceMember {
 }
 
 export interface WorkspaceSettings {
-  isImportant?: boolean;
   theme?: string;
   [key: string]: unknown;
 }
@@ -31,6 +30,8 @@ export interface Workspace {
   description?: string;
   avatar?: string;
   settings?: WorkspaceSettings;
+  isStarred?: boolean;
+  position?: number;
   access?: "private" | "public";
   template?: "kanban" | "scrum";
   type?: "kanban" | "scrum";

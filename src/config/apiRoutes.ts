@@ -19,6 +19,7 @@ export const apiRoutes = {
         BY_ID: (workspaceId: string) => `/workspaces/${workspaceId}`,
         UPDATE: (workspaceId: string) => `/workspaces/${workspaceId}`,
         AVATAR_SAMPLES: '/workspaces/avatar-samples',
+        STARRED: '/workspaces/starred',
         MEMBERS: (workspaceId: string) => `/workspaces/${workspaceId}/members`,
         ADD_MEMBER: (workspaceId: string) => `/workspaces/${workspaceId}/members`,
         LEAVE: (workspaceId: string) => `/workspaces/${workspaceId}/members/me`,
@@ -45,6 +46,11 @@ export const apiRoutes = {
         BACKLOG: (workspaceId: string) => `/workspaces/${workspaceId}/backlog`,
         LABELS: (workspaceId: string) => `/workspaces/${workspaceId}/labels`,
         LABEL: (workspaceId: string, labelId: string) => `/workspaces/${workspaceId}/labels/${labelId}`,
+    },
+    WORKSPACE_PREFERENCES: {
+        BASE: '/workspace-preferences',
+        ORDER: '/workspace-preferences/order',
+        STAR: (workspaceId: string) => `/workspace-preferences/${workspaceId}/star`,
     },
     PROJECTS: {
         BASE: '/projects',

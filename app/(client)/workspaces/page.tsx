@@ -10,6 +10,7 @@ import type { Workspace } from "@/modules/workspace/shared/types/workspace.type"
 import { realtimeSocketClient } from "@/lib/socket/socket.client";
 import { SOCKET_EVENTS } from "@/lib/socket/socket.events";
 import WorkspaceAvatar from "@/modules/workspace/shared/components/WorkspaceAvatar";
+import WorkspaceStarButton from "@/modules/workspace/shared/components/WorkspaceStarButton";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
 
@@ -167,6 +168,7 @@ export default function WorkspacesPage() {
                       </div>
                     </div>
                   </div>
+                  <WorkspaceStarButton workspace={workspace} className="ml-2" />
                 </div>
 
 

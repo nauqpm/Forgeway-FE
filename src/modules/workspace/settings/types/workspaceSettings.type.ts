@@ -3,7 +3,6 @@ export type WorkspaceAccess = "public" | "private";
 export type InviteRole = "workspace_admin" | "space_admin" | "admin" | "member" | "viewer";
 
 export interface WorkspaceSettings {
-  isImportant?: boolean;
   theme?: string;
   [key: string]: unknown;
 }
@@ -24,7 +23,6 @@ export interface WorkspaceSettingsForm {
   description: string;
   status: WorkspaceStatus;
   access: WorkspaceAccess;
-  settings?: WorkspaceSettings;
 }
 
 export interface WorkspaceMember {
