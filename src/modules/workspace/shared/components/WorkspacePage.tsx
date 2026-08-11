@@ -159,7 +159,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
 
   return (
     <WorkspaceTabShell mode="canvas">
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex h-full w-full min-h-0 min-w-0 flex-1 flex-col">
         <div className="shrink-0">
           <Header
             workspace={workspace}
@@ -246,6 +246,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           }}
           listProps={{
             filteredIssues,
+            issues,
             selectedIssue: activeTab === "list" ? (activeIssueDetail as Issue | null) : selectedIssue,
             workspaceKey: workspace.key,
             workspaceId: workspace._id,
@@ -332,6 +333,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           handleUpdateIssue={handleUpdateIssue}
           updateIssueDirectly={updateIssueDirectly}
           handleArchiveIssue={handleArchiveIssue}
+          handleDeleteIssue={handleDeleteIssue}
           handleRestoreIssue={handleRestoreIssue ? (i: TaskDetailResponse) => handleRestoreIssue(i as unknown as Issue) : undefined}
           detailUrl={detailUrl}
           canEditTask={canEditTask}

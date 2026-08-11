@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
@@ -16,6 +16,7 @@ import type { Issue } from "@/modules/workspace/shared/types/issue.type";
 import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import type { Filters } from "@/modules/workspace/shared/types/filter.type";
 import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
+import BoardCardSubtasks from "@/modules/workspace/tasks/detail/BoardCardSubtasks";
 
 type BacklogTabProps = {
   data: {
@@ -459,7 +460,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...(canMoveTask ? provided.dragHandleProps : {})}
-                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-colors group`}
+                              className={`flex flex-col bg-white dark:bg-[#202020] ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-colors group`}
                               style={{
                                 ...provided.draggableProps.style,
                                 ...(snapshot.isDragging
@@ -467,7 +468,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   : {}),
                               }}
                             >
-                              <div className="flex min-w-0 flex-1 items-center gap-3">
+                              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <input
                                   type="checkbox"
                                   checked={selectedTaskIds.includes(issue.id)}
@@ -565,6 +567,28 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 )}
                               </div>
                             </div>
+                            
+                            {issue.type?.toLowerCase() !== "subtask" && (
+                              <div className="mt-3">
+                                <BoardCardSubtasks
+                                  workspaceId={workspace.id || workspace._id}
+                                  taskId={issue.id}
+                                  taskType={issue.type}
+                                  workspaceMembers={workspaceMembers}
+                                  canEditTask={canEditTask}
+                                  boardColumns={columns}
+                                  onSubtaskClick={(key) => {
+                                    const currentPath = window.location.pathname;
+                                    const newPath = currentPath.includes("/key/") 
+                                      ? currentPath.replace(/\/key\/[^/]+$/, `/key/${key}`)
+                                      : `${currentPath}/key/${key}`;
+                                    window.history.pushState(null, "", newPath);
+                                    window.dispatchEvent(new Event("popstate"));
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                           )}
                         </Draggable>
                       ))}
@@ -683,7 +707,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...(canMoveTask ? provided.dragHandleProps : {})}
-                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-colors group`}
+                            className={`flex flex-col bg-white dark:bg-[#202020] ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-colors group`}
                             style={{
                               ...provided.draggableProps.style,
                               ...(snapshot.isDragging
@@ -691,7 +715,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 : {}),
                             }}
                           >
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                              <div className="flex min-w-0 flex-1 items-center gap-3">
                               <input
                                 type="checkbox"
                                 checked={selectedTaskIds.includes(issue.id)}
@@ -789,6 +814,28 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               )}
                             </div>
                           </div>
+
+                          {issue.type?.toLowerCase() !== "subtask" && (
+                            <div className="mt-3">
+                              <BoardCardSubtasks
+                                workspaceId={workspace.id || workspace._id}
+                                taskId={issue.id}
+                                taskType={issue.type}
+                                workspaceMembers={workspaceMembers}
+                                canEditTask={canEditTask}
+                                boardColumns={columns}
+                                onSubtaskClick={(key) => {
+                                  const currentPath = window.location.pathname;
+                                  const newPath = currentPath.includes("/key/") 
+                                    ? currentPath.replace(/\/key\/[^/]+$/, `/key/${key}`)
+                                    : `${currentPath}/key/${key}`;
+                                  window.history.pushState(null, "", newPath);
+                                  window.dispatchEvent(new Event("popstate"));
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
                         )}
                       </Draggable>
                     ))}

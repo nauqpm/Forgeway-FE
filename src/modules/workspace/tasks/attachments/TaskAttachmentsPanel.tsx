@@ -161,6 +161,9 @@ export default function TaskAttachmentsPanel({
       )}
 
       <AttachmentImageGrid
+        workspaceId={workspaceId}
+        taskId={taskId}
+        accessToken={accessToken}
         attachments={imageAttachments}
         canDeleteAttachment={canDeleteAttachment}
         onPreview={onPreview}

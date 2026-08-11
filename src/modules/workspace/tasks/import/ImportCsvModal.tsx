@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Upload, X, FileDown, CheckCircle2, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import {
@@ -32,9 +32,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (!isOpen) return null;
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     const shouldCallSuccess = step === "result" && resultData && resultData.created > 0;
     setStep("upload");
     setPreviewData(null);
@@ -44,7 +42,21 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
     if (shouldCallSuccess && onSuccess) {
       onSuccess();
     }
-  };
+  }, [step, resultData, onClose, onSuccess]);
+
+  // Key Binding: Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isLoading) {
+        handleClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, isLoading, handleClose]);
+
+  if (!isOpen) return null;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

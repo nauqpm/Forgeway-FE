@@ -31,25 +31,48 @@ export function useDashboardTaskModal(workspaces: ForYouWorkspace[], options?: {
   const [isLoading, setIsLoading] = useState(false);
 
   const open = async (task: DashboardTask) => {
+    const wasOpen = isOpen;
     setSelectedTask(task);
     setIsOpen(true);
-    setIsLoading(true);
+    if (!wasOpen) {
+      setIsLoading(true);
+    }
 
     try {
       const workspace = workspaces.find(w => workspaceRouteKeyOf(w) === task.workspaceKey);
       if (!workspace) throw new Error("Workspace not found");
       const workspaceId = workspaceIdOf(workspace);
 
+      // If already open, we might not need to refetch boardData, sprints, members, but Promise.all is fine.
       const [detail, boardData, sprintList, membersRes] = await Promise.all([
-        taskService.getBoardTaskDetail(workspaceId, task.key),
-        boardService.getBoardByWorkspace(workspaceId).catch(() => ({ boardId: "", columns: [] })),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.tasks.detail(workspaceId, task.key),
+          queryFn: () => taskService.getBoardTaskDetail(workspaceId, task.key),
+          staleTime: 30_000,
+        }),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.workspaces.board(workspaceId),
+          queryFn: () => boardService.getBoardByWorkspace(workspaceId).catch(() => ({ boardId: "", columns: [] })),
+          staleTime: 60_000,
+        }),
         workspace.type === "scrum"
-          ? sprintService.listSprints(workspaceId).catch(() => [])
+          ? queryClient.fetchQuery({
+              queryKey: queryKeys.sprints.byWorkspace(workspaceId),
+              queryFn: () => sprintService.listSprints(workspaceId).catch(() => []),
+              staleTime: 60_000,
+            })
           : Promise.resolve([] as Sprint[]),
-        api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId)).catch(() => ({ data: [] })),
+        queryClient.fetchQuery({
+          queryKey: queryKeys.workspaces.members(workspaceId),
+          queryFn: async () => {
+            const res = await api.get(apiRoutes.WORKSPACES.MEMBERS(workspaceId)).catch(() => ({ data: [] }));
+            return res.data?.data ?? res.data ?? [];
+          },
+          staleTime: 60_000,
+        }),
       ]);
 
-      const members = membersRes?.data?.data ?? membersRes?.data ?? [];
+      const members = Array.isArray(membersRes) ? membersRes : (membersRes?.data?.data ?? membersRes?.data ?? []);
       setTaskDetail(enrichTaskDetailUsers(detail, members));
       setWorkspaceMembers(members);
       setBoardColumns(boardData.columns ?? []);
@@ -65,7 +88,9 @@ export function useDashboardTaskModal(workspaces: ForYouWorkspace[], options?: {
       toast.error("Failed to load task details");
       setIsOpen(false);
     } finally {
-      setIsLoading(false);
+      if (!wasOpen) {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -107,6 +132,18 @@ export function useDashboardTaskModal(workspaces: ForYouWorkspace[], options?: {
     await queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboardForUser(user?.id ?? "anonymous") });
   };
 
+  const openSubtask = (subtaskKey: string) => {
+    if (!selectedTask) return;
+    open({
+      id: subtaskKey,
+      key: subtaskKey,
+      title: "Loading...",
+      workspaceKey: selectedTask.workspaceKey,
+      type: "assigned",
+      meta: "Subtask",
+    });
+  };
+
   return {
     selectedTask,
     taskDetail,
@@ -116,6 +153,7 @@ export function useDashboardTaskModal(workspaces: ForYouWorkspace[], options?: {
     isOpen,
     isLoading,
     open,
+    openSubtask,
     close,
     archive,
     update,
