@@ -21,6 +21,7 @@ export const queryKeys = {
   workspaces: {
     all: WORKSPACES,
     list: () => [...WORKSPACES, "list"] as const,
+    starred: () => [...WORKSPACES, "starred"] as const,
     forYou: () => [...WORKSPACES, "for-you"] as const,
     byId: (id: string) => [...WORKSPACES, "detail", "id", id] as const,
     bySlug: (slug: string) => [...WORKSPACES, "detail", "slug", slug] as const,

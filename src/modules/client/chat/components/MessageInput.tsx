@@ -108,7 +108,90 @@ function serializeTiptapContent(editor: Editor | null): string {
     return '';
   };
 
-  return json.content.map((paragraph: TiptapNode) => processNode(paragraph)).join('\n').trim();
+  const rawText = json.content.map((paragraph: TiptapNode) => processNode(paragraph)).join('\n');
+  return rawText
+    .replace(/^(?:\s|@@@SOFTBREAK@@@)+/, '')
+    .replace(/(?:\s|@@@SOFTBREAK@@@)+$/, '');
+}
+
+// Helper to convert stored Markdown format back into HTML for Tiptap editor
+function parseMarkdownToHtml(markdown: string): string {
+  if (!markdown) return '';
+
+  let html = markdown;
+
+  // 1. Escape HTML special characters (&, <, >) first to prevent raw HTML injection.
+  // Note: Since '>' is escaped to '&gt;', blockquote matcher in step 4 explicitly looks for '^&gt; '.
+  html = html
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // 2. Handle code blocks: ```\ncode\n```
+  html = html.replace(/```([\s\S]*?)```/g, (_, code) => {
+    const cleanCode = code.replace(/^\n/, '').replace(/\n$/, '');
+    return `<pre><code>${cleanCode}</code></pre>`;
+  });
+
+  // 3. Handle inline code: `code`
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // 4. Handle Blockquotes (starts with &gt; due to HTML escaping in step 1)
+  html = html.replace(/^&gt;\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>');
+
+  // 5. Handle Bold: **text**
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+  // 6. Handle Italic: *text*
+  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+  // 7. Handle Strikethrough: ~~text~~
+  html = html.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+
+  // 8. Handle Bullet list items (group consecutive bullet items into a single <ul>)
+  html = html.replace(/(?:^-\s+[^\n]+(?:\n|$))+/gm, (match) => {
+    const items = match.trim().split('\n').map(line => `<li>${line.replace(/^-\s+/, '')}</li>`).join('');
+    return `<ul>${items}</ul>`;
+  });
+
+  // 9. Handle Ordered list items (group consecutive numbered items into a single <ol>)
+  html = html.replace(/(?:^\d+\.\s+[^\n]+(?:\n|$))+/gm, (match) => {
+    const items = match.trim().split('\n').map(line => `<li>${line.replace(/^\d+\.\s+/, '')}</li>`).join('');
+    return `<ol>${items}</ol>`;
+  });
+
+  // 10. Handle Mentions: [@displayName](userId) with attribute escaping to prevent attribute breakout/XSS
+  const escAttr = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const mentionRegex = /\[@([^\]]+)\]\(([^)]+)\)/g;
+  html = html.replace(mentionRegex, (_, displayName, userId) => {
+    return `<span data-type="mention" data-id="${escAttr(userId)}" data-label="${escAttr(displayName)}">@${escAttr(displayName)}</span>`;
+  });
+
+  // 11. Handle newlines:
+  html = html.replace(/@@@SOFTBREAK@@@/g, '<br />');
+
+  // 12. Split by newline and wrap lines in paragraph tags unless they are block elements
+  const lines = html.split('\n');
+  const processedLines = lines.map(line => {
+    const trimmed = line.trim();
+    if (
+      trimmed.startsWith('<pre>') || 
+      trimmed.startsWith('<blockquote>') || 
+      trimmed.startsWith('</pre>') || 
+      trimmed.startsWith('</blockquote>') ||
+      trimmed.startsWith('<ul>') ||
+      trimmed.startsWith('</ul>') ||
+      trimmed.startsWith('<ol>') ||
+      trimmed.startsWith('</ol>') ||
+      trimmed.startsWith('<li>') ||
+      trimmed.startsWith('</li>')
+    ) {
+      return line;
+    }
+    return `<p>${line || '<br />'}</p>`;
+  });
+
+  return processedLines.join('');
 }
 
 export default function MessageInput({
@@ -127,7 +210,7 @@ export default function MessageInput({
   const [showMediaPicker, setShowMediaPicker] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
   const [, setSelectionTick] = useState(0);
-  const { sendMessage, sendTyping } = useChatRealtime();
+  const { sendMessage, sendTyping, sendEditMessage } = useChatRealtime();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const lastTypingSentRef = useRef<number>(0);
 
@@ -153,6 +236,14 @@ export default function MessageInput({
   const replyingSender = typeof replyingToMessage?.senderId === 'object' && replyingToMessage.senderId
     ? replyingToMessage.senderId
     : null;
+
+  const editingMessage = useChatStore(state => state.editingMessage);
+  const setEditingMessage = useChatStore(state => state.setEditingMessage);
+  const editingThreadMessage = useChatStore(state => state.editingThreadMessage);
+  const setEditingThreadMessage = useChatStore(state => state.setEditingThreadMessage);
+
+  const currentEditingMessage = threadParentId ? editingThreadMessage : editingMessage;
+  const setEditingMessageState = threadParentId ? setEditingThreadMessage : setEditingMessage;
 
   const channelIdRef = useRef(channelId);
   React.useEffect(() => {
@@ -415,6 +506,28 @@ export default function MessageInput({
     },
   }, [channelId]);
 
+  const lastEditingMessageIdRef = useRef<string | null>(null);
+
+  React.useEffect(() => {
+    const editId = currentEditingMessage?._id || null;
+    if (editId !== lastEditingMessageIdRef.current) {
+      if (currentEditingMessage && editor) {
+        setReplyingToMessage(null);
+        const content = currentEditingMessage.content || '';
+        const html = parseMarkdownToHtml(content);
+        editor.commands.setContent(html);
+        editor.commands.focus();
+      }
+      lastEditingMessageIdRef.current = editId;
+    }
+  }, [currentEditingMessage, editor, setReplyingToMessage]);
+
+  const handleCancelEdit = () => {
+    setEditingMessageState(null);
+    editor?.commands.clearContent();
+    setIsEmpty(true);
+  };
+
   // 3. File Upload Handler
   const uploadFiles = async (filesToUpload: File[]) => {
     const currentChannel = channels.find(c => c._id === channelId);
@@ -638,6 +751,17 @@ export default function MessageInput({
       return;
     }
 
+    if (currentEditingMessage) {
+      sendEditMessage(channelId, currentEditingMessage._id, contentText.trim(), threadParentId);
+      setEditingMessageState(null);
+      editor.commands.clearContent();
+      setIsEmpty(true);
+      if (onSuccess) {
+        onSuccess();
+      }
+      return;
+    }
+
     const completedAttachments = uploadedFiles
       .filter(f => f.status === 'completed')
       .map(file => ({
@@ -700,6 +824,26 @@ export default function MessageInput({
 
   return (
     <div className="w-full bg-white dark:bg-[#202020] p-3 border-t border-[#EAEAEA] dark:border-white/[0.06] select-text">
+      {/* Editing Banner */}
+      {currentEditingMessage && (
+        <div className="flex items-center justify-between bg-[#FFF9E6] dark:bg-[#F59E0B]/10 border-l-2 border-[#F59E0B] px-3 py-1.5 rounded-r-[6px] mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs font-semibold text-[#F59E0B] shrink-0">
+              Editing message
+            </span>
+            <span className="text-xs text-[#787774] dark:text-[#9B9A97] truncate">
+              {currentEditingMessage.content?.replace(/@@@SOFTBREAK@@@/g, ' ')}
+            </span>
+          </div>
+          <button
+            onClick={handleCancelEdit}
+            className="p-1 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded transition-colors text-[#787774]"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       {/* Replying Banner */}
       {replyingToMessage && (
         <div className="flex items-center justify-between bg-[#F7F6F3] dark:bg-white/5 border-l-2 border-[#2563EB] px-3 py-1.5 rounded-r-[6px] mb-2">
@@ -727,7 +871,7 @@ export default function MessageInput({
       >
         {/* Uploaded File Previews */}
         {uploadedFiles.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3 pb-2 border-b border-[#EAEAEA] dark:border-white/[0.06]">
+          <div className="flex flex-wrap gap-2 mb-3 pt-1.5 pb-2 border-b border-[#EAEAEA] dark:border-white/[0.06] max-h-[150px] overflow-y-auto pr-1 scrollbar-thin">
             {uploadedFiles.map(file => (
               <div key={file.key} className="relative group flex items-center gap-2 bg-[#F0F0EE] dark:bg-white/5 px-2.5 py-1.5 rounded-[6px] text-xs max-w-[200px]">
                 {file.isImage && file.url ? (

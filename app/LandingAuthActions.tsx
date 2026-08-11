@@ -321,9 +321,12 @@ export function CtaAuthAction() {
     return (
       <Link
         href="/dashboard"
-        className="mt-8 relative inline-flex items-center gap-2 rounded-full bg-[#F5F3EF] dark:bg-white px-8 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_30px_rgba(249,115,22,0.7),0_0_12px_rgba(239,68,68,0.4)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(249,115,22,0.9),0_0_16px_rgba(239,68,68,0.6)] hover:scale-[1.03] active:scale-[0.98]"
+        className="group mt-8 relative inline-flex items-center gap-2.5 rounded-full bg-[#F5F3EF] dark:bg-white px-9 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_35px_rgba(249,115,22,0.75),0_0_15px_rgba(239,68,68,0.5)] transition-all duration-300 hover:shadow-[0_0_50px_rgba(249,115,22,0.95),0_0_22px_rgba(239,68,68,0.7)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
       >
-        Go to Dashboard <LayoutDashboard className="h-4 w-4 text-orange-600" />
+        {/* Continuous shimmer sheen layer */}
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        <span className="relative z-10">Go to Dashboard</span>
+        <LayoutDashboard className="relative z-10 h-4 w-4 text-orange-600 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300" />
       </Link>
     );
   }
@@ -331,9 +334,12 @@ export function CtaAuthAction() {
   return (
     <Link
       href="/register"
-      className="mt-8 relative inline-flex items-center gap-2 rounded-full bg-[#F5F3EF] dark:bg-white px-8 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_30px_rgba(249,115,22,0.7),0_0_12px_rgba(239,68,68,0.4)] transition-all duration-300 hover:shadow-[0_0_40px_rgba(249,115,22,0.9),0_0_16px_rgba(239,68,68,0.6)] hover:scale-[1.03] active:scale-[0.98]"
+      className="group mt-8 relative inline-flex items-center gap-2.5 rounded-full bg-[#F5F3EF] dark:bg-white px-9 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_35px_rgba(249,115,22,0.75),0_0_15px_rgba(239,68,68,0.5)] transition-all duration-300 hover:shadow-[0_0_50px_rgba(249,115,22,0.95),0_0_22px_rgba(239,68,68,0.7)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
     >
-      Get Started Free <ArrowRight className="h-4 w-4 text-orange-600" />
+      {/* Continuous shimmer sheen layer */}
+      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      <span className="relative z-10">Get Started Free</span>
+      <ArrowRight className="relative z-10 h-4 w-4 text-orange-600 group-hover:translate-x-1.5 transition-transform duration-300" />
     </Link>
   );
 }
