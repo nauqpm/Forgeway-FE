@@ -45,7 +45,7 @@ export default function ImportCsvModal({ isOpen, onClose, workspace, onSuccess }
     }
   }, [step, resultData, onClose, onSuccess]);
 
-  useEscapeStack(handleClose, isOpen);
+  useEscapeStack(handleClose, isOpen && !isLoading);
 
   if (!isOpen) return null;
 
