@@ -4,6 +4,7 @@ import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { renderMessageContent } from '../utils/messageContentRenderer';
 import type { Message } from '../types/chat.types';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface ConfirmActionModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export default function ConfirmActionModal({
   onConfirm,
   onClose,
 }: ConfirmActionModalProps) {
+  useEscapeStack(onClose, isOpen);
   if (!isOpen) return null;
 
   const isOrange = confirmVariant === 'orange';

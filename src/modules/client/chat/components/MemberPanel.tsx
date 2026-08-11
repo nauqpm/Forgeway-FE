@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 import { Modal, ModalFooter } from '@/shared/components/ui/Modal';
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { ResizeHandle } from '@/shared/components/ResizeHandle';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface MemberPanelProps {
   channelId: string;
@@ -89,6 +90,7 @@ const getRoleBadge = (role?: string) => {
 };
 
 export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
+  useEscapeStack(onClose);
   const { data: members = [], isLoading } = useChannelMembers(channelId);
   const createDMMutation = useCreateDM();
   const [searchQuery, setSearchQuery] = useState('');

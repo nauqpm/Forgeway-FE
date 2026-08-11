@@ -4,6 +4,7 @@ import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { toast } from "react-hot-toast";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface TimeTrackingModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function TimeTrackingModal({
   onUpdateIssue,
   editWorkLog,
 }: TimeTrackingModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [timeSpent, setTimeSpent] = useState("");
   const [timeRemaining, setTimeRemaining] = useState("");
   const [dateStarted, setDateStarted] = useState(() => {

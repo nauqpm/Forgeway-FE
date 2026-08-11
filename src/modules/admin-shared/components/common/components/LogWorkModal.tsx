@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { parseTimeToMinutes } from '@/shared/utils/timeTracking';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface LogWorkModalProps {
   onClose: () => void;
@@ -10,6 +11,7 @@ interface LogWorkModalProps {
 const inputCls = "w-full p-2.5 border border-[#EAEAEA] dark:border-white/10 bg-[#F9F9F8] dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:border-[#2563EB] dark:focus:border-[#3B82F6] focus:bg-white dark:focus:bg-[#2A2A2A] rounded-[6px] text-[0.8125rem] outline-none transition-colors";
 
 export default function LogWorkModal({ onClose, onSave }: LogWorkModalProps) {
+  useEscapeStack(onClose);
   const [timeSpent, setTimeSpent] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');

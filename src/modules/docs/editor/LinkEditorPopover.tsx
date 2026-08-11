@@ -8,6 +8,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "react-hot-toast";
 import { stopUndoCapturing } from "./undoCapture";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type LinkEditorPopoverProps = {
   editor: Editor;
@@ -45,6 +46,7 @@ const getSelectedText = (editor: Editor) => {
 };
 
 export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEditorPopoverProps) {
+  useEscapeStack(onClose, Boolean(anchorEl));
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
   const [position, setPosition] = useState({ left: 0, top: 0 });
@@ -80,18 +82,13 @@ export default function LinkEditorPopover({ editor, anchorEl, onClose }: LinkEdi
         onClose();
       }
     };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
     setMounted(true);
     updatePosition();
     window.addEventListener("pointerdown", handlePointerDown);
-    window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
     return () => {
       window.removeEventListener("pointerdown", handlePointerDown);
-      window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };

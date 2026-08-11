@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import sdlcLogo from "../../../../../../app/Logo_AutomationLand_AI_SDLC-removebg.png";
@@ -35,7 +34,6 @@ import {
   Building2,
   Clock7,
   Star,
-  Search,
   FolderOpen,
   Sparkles,
   MessageCircle,
@@ -45,6 +43,7 @@ import {
 } from "lucide-react";
 import { useResizablePanel } from "@/shared/hooks/useResizablePanel";
 import { ResizeHandle } from "@/shared/components/ResizeHandle";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface SidebarProps {
   collapsed: boolean;
@@ -127,6 +126,7 @@ const NavItem = ({
 
 
 export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClose }: SidebarProps) {
+  useEscapeStack(onMobileClose, mobileOpen);
   const pathname = usePathname();
   const { currentWorkspace, workspaces: sidebarWorkspaces } = useCurrentWorkspace();
   const { user } = useAuth();
@@ -143,13 +143,6 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
       setOrderedWorkspaces(sidebarWorkspaces);
     }
   }, [sidebarWorkspaces]);
-
-  const getWorkspaceUnread = (wsId: string) => {
-    const ch = channels.find(
-      (c) => c.type === "workspace" && String(c.workspaceId) === String(wsId)
-    );
-    return ch ? ch.unreadCount : 0;
-  };
 
   const totalUnreadCount = useMemo(() => {
     return channels.reduce((sum, ch) => sum + (ch.unreadCount || 0), 0);
@@ -226,10 +219,6 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
     );
   };
 
-  const [activePopover, setActivePopover] = useState<SidebarPopoverType | null>(null);
-  const [moreWorkspacesPos, setMoreWorkspacesPos] = useState({ top: 0, left: '0px' });
-  const [moreWorkspaceSearch, setMoreWorkspaceSearch] = useState('');
-  const moreWorkspacesBtnRef = useRef<HTMLButtonElement>(null);
   const [mounted, setMounted] = useState(false);
   const starredWorkspaces = useMemo(
     () => orderedWorkspaces.filter((workspace) => workspace.isStarred),
@@ -513,7 +502,7 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                         </div>
                         <div className="space-y-1 mt-0.5">
                           {mounted ? (
-                              <DragDropContext onDragEnd={() => undefined}>
+                            <DragDropContext onDragEnd={() => undefined}>
                               <Droppable droppableId="sidebar-chat-workspaces">
                                 {(provided) => (
                                   <div
@@ -558,8 +547,8 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                                               {...draggableProvided.draggableProps}
                                               {...draggableProvided.dragHandleProps}
                                               className={`space-y-0.5 rounded-[6px] transition-all border border-transparent ${snapshot.isDragging
-                                                  ? "bg-[#EFF6FF] dark:bg-white/10"
-                                                  : ""
+                                                ? "bg-[#EFF6FF] dark:bg-white/10"
+                                                : ""
                                                 }`}
                                             >
                                               {/* Workspace Accordion Header */}
@@ -777,89 +766,89 @@ export default function Sidebar({ collapsed, onCollapse, mobileOpen, onMobileClo
                       <span className="text-[0.625rem] font-medium opacity-70">{unstarredWorkspaces.length}</span>
                     </div>
                     <div className="ml-2 mt-0.5 space-y-0.5 border-l border-[#EAEAEA] pl-2 dark:border-white/[0.06]">
-                  {mounted ? (
-                    <DragDropContext onDragEnd={handleDragEnd}>
-                      <Droppable droppableId="sidebar-workspaces">
-                        {(provided) => (
-                          <div
-                            {...provided.droppableProps}
-                            ref={provided.innerRef}
-                            className="space-y-0.5"
-                          >
-                            {sidebarVisibleWorkspaces.map((workspace, index) => {
-                              const routeKey = workspace.key || workspace.slug || workspace._id;
-                              const uniqueId = String(workspace._id || workspace.id);
+                      {mounted ? (
+                        <DragDropContext onDragEnd={handleDragEnd}>
+                          <Droppable droppableId="sidebar-workspaces">
+                            {(provided) => (
+                              <div
+                                {...provided.droppableProps}
+                                ref={provided.innerRef}
+                                className="space-y-0.5"
+                              >
+                                {sidebarVisibleWorkspaces.map((workspace, index) => {
+                                  const routeKey = workspace.key || workspace.slug || workspace._id;
+                                  const uniqueId = String(workspace._id || workspace.id);
 
-                              return (
-                                <Draggable
-                                  key={uniqueId}
-                                  draggableId={uniqueId}
-                                  index={index}
-                                >
-                                  {(draggableProvided, snapshot) => (
-                                    <div
-                                      ref={draggableProvided.innerRef}
-                                      {...draggableProvided.draggableProps}
-                                      {...draggableProvided.dragHandleProps}
-                                      className={`will-change-transform rounded-[6px] border border-transparent transition-colors ${snapshot.isDragging
-                                        ? "bg-[#EFF6FF] shadow-sm dark:bg-white/10"
-                                        : ""
-                                        }`}
-                                      style={{
-                                        ...draggableProvided.draggableProps.style,
-                                        transition: snapshot.isDropAnimating
-                                          ? 'transform 160ms cubic-bezier(0.2, 0, 0, 1)'
-                                          : draggableProvided.draggableProps.style?.transition,
-                                      }}
+                                  return (
+                                    <Draggable
+                                      key={uniqueId}
+                                      draggableId={uniqueId}
+                                      index={index}
                                     >
-                                      <Link
-                                        href={`/workspaces/${routeKey}`}
-                                        className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
-                                        title={workspace.name}
-                                      >
-                                        <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
-                                        <span className="truncate flex-1">{workspace.name}</span>
-                                        <WorkspaceStarButton workspace={workspace} />
-                                      </Link>
-                                    </div>
-                                  )}
-                                </Draggable>
-                              );
-                            })}
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                    </DragDropContext>
-                  ) : (
-                    sidebarVisibleWorkspaces.map((workspace) => {
-                      const routeKey = workspace.key || workspace.slug || workspace._id;
+                                      {(draggableProvided, snapshot) => (
+                                        <div
+                                          ref={draggableProvided.innerRef}
+                                          {...draggableProvided.draggableProps}
+                                          {...draggableProvided.dragHandleProps}
+                                          className={`will-change-transform rounded-[6px] border border-transparent transition-colors ${snapshot.isDragging
+                                            ? "bg-[#EFF6FF] shadow-sm dark:bg-white/10"
+                                            : ""
+                                            }`}
+                                          style={{
+                                            ...draggableProvided.draggableProps.style,
+                                            transition: snapshot.isDropAnimating
+                                              ? 'transform 160ms cubic-bezier(0.2, 0, 0, 1)'
+                                              : draggableProvided.draggableProps.style?.transition,
+                                          }}
+                                        >
+                                          <Link
+                                            href={`/workspaces/${routeKey}`}
+                                            className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+                                            title={workspace.name}
+                                          >
+                                            <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
+                                            <span className="truncate flex-1">{workspace.name}</span>
+                                            <WorkspaceStarButton workspace={workspace} />
+                                          </Link>
+                                        </div>
+                                      )}
+                                    </Draggable>
+                                  );
+                                })}
+                                {provided.placeholder}
+                              </div>
+                            )}
+                          </Droppable>
+                        </DragDropContext>
+                      ) : (
+                        sidebarVisibleWorkspaces.map((workspace) => {
+                          const routeKey = workspace.key || workspace.slug || workspace._id;
 
-                      return (
-                        <Link
-                          key={workspace._id || routeKey}
-                          href={`/workspaces/${routeKey}`}
-                          className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full border border-transparent text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
-                          title={workspace.name}
+                          return (
+                            <Link
+                              key={workspace._id || routeKey}
+                              href={`/workspaces/${routeKey}`}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[0.8125rem] transition-colors min-w-0 w-full border border-transparent text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7]"
+                              title={workspace.name}
+                            >
+                              <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
+                              <span className="truncate flex-1">{workspace.name}</span>
+                              <WorkspaceStarButton workspace={workspace} />
+                            </Link>
+                          );
+                        })
+                      )}
+
+                      {hiddenSidebarWorkspaces.length > 0 && (
+                        <button
+                          ref={moreWorkspacesBtnRef}
+                          onClick={handleToggleMoreWorkspaces}
+                          className="w-full text-left flex items-center justify-between px-2 py-1.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] group transition-colors"
                         >
-                          <WorkspaceAvatar workspace={workspace} size="xs" className="shrink-0" />
-                          <span className="truncate flex-1">{workspace.name}</span>
-                          <WorkspaceStarButton workspace={workspace} />
-                        </Link>
-                      );
-                    })
-                  )}
-
-                    {hiddenSidebarWorkspaces.length > 0 && (
-                    <button
-                      ref={moreWorkspacesBtnRef}
-                      onClick={handleToggleMoreWorkspaces}
-                      className="w-full text-left flex items-center justify-between px-2 py-1.5 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] rounded-[6px] group transition-colors"
-                    >
-                      <span>More Workspaces</span>
-                      <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-                    )}
+                          <span>More Workspaces</span>
+                          <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

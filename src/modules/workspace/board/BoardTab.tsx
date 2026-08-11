@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import AssigneePicker from "@/shared/components/AssigneePicker";
 import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 const normalizeObjectId = (value: unknown): string => {
   if (!value) return "";
@@ -297,6 +298,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     setIssueToDelete(null);
     setDeleteConfirmText("");
   };
+
+  useEscapeStack(closeDeleteIssueModal, Boolean(issueToDelete));
 
   const confirmDeleteIssue = () => {
     if (!issueToDelete || deleteConfirmText !== "delete") return;
@@ -819,7 +822,6 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 onChange={(event) => setDeleteConfirmText(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") confirmDeleteIssue();
-                  if (event.key === "Escape") closeDeleteIssueModal();
                 }}
                 className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#202020] px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D] transition-colors"
                 placeholder="delete"

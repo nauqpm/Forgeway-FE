@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { useChatStore } from '@/stores/chatStore';
-import type { ChatUser, Message, Channel } from '@/modules/client/chat/types/chat.types';
+import type { Attachment, ChatUser, Message, Channel } from '@/modules/client/chat/types/chat.types';
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
 import { useChatChannels, useChannelMembers, useDeleteMessageForMeMutation } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
@@ -98,6 +98,7 @@ export default function MessageItem({
   const [profileCardPos, setProfileCardPos] = useState({ x: 0, y: 0 });
   const [cardUser, setCardUser] = useState<ChatUser | null>(null);
   const [contextMenuPos, setContextMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [contextImage, setContextImage] = useState<Attachment | null>(null);
 
   const messageRef = useRef<HTMLDivElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -109,8 +110,11 @@ export default function MessageItem({
     expandedPreviews,
     previewUrls,
     loadingPreviews,
+    copyingImageUrl,
     togglePreview,
     handleDownloadFile,
+    prepareCopyImage,
+    handleCopyImage,
   } = useAttachmentPreview(messageRef, message.attachments, isDeleted);
 
   // Event Handlers & Effects
@@ -177,6 +181,22 @@ export default function MessageItem({
     const x = Math.min(e.clientX, window.innerWidth - menuWidth - 10);
     const y = Math.min(e.clientY, window.innerHeight - menuHeight - 10);
 
+    setContextImage(null);
+    setContextMenuPos({ x: Math.max(10, x), y: Math.max(10, y) });
+  };
+
+  const handleImageContextMenu = (event: React.MouseEvent, file: Attachment) => {
+    if (isDeleted) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const menuWidth = 230;
+    const menuHeight = 370;
+    const x = Math.min(event.clientX, window.innerWidth - menuWidth - 10);
+    const y = Math.min(event.clientY, window.innerHeight - menuHeight - 10);
+
+    setContextImage(file);
+    prepareCopyImage(file);
     setContextMenuPos({ x: Math.max(10, x), y: Math.max(10, y) });
   };
 
@@ -434,6 +454,7 @@ export default function MessageItem({
           onDownloadFile={handleDownloadFile}
           onTogglePreview={togglePreview}
           onOpenLightbox={(file) => setLightboxFile(file)}
+          onImageContextMenu={handleImageContextMenu}
         />
 
         {/* Reaction badges */}
@@ -573,7 +594,13 @@ export default function MessageItem({
         }}
         onDeleteForMe={() => setShowDeleteForMeConfirm(true)}
         onDeleteForEveryone={() => setShowDeleteConfirm(true)}
-        onClose={() => setContextMenuPos(null)}
+        contextImage={contextImage}
+        copyingImageUrl={copyingImageUrl}
+        onCopyImage={handleCopyImage}
+        onClose={() => {
+          setContextMenuPos(null);
+          setContextImage(null);
+        }}
       />
     </div>
   );

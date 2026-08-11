@@ -3,6 +3,7 @@
 import { X, AlertTriangle, Archive } from "lucide-react";
 import { useState } from "react";
 import { BoardColumn } from "../types/board.type";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type DeleteColumnModalProps = {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export default function DeleteColumnModal({
   hasTasks,
   hasArchivedTasks,
 }: DeleteColumnModalProps) {
+  useEscapeStack(onClose, isOpen && Boolean(column));
   const otherColumns = columns.filter((c) => c.id !== column?.id);
   const defaultTarget = otherColumns[0]?.id || "";
 

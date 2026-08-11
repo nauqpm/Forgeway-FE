@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback, RefObject } from 'react';
+import toast from 'react-hot-toast';
 import type { Attachment } from '@/modules/client/chat/types/chat.types';
 import api from '@/lib/axiosIns';
 
+<<<<<<< HEAD
 const isOfficeFile = (filename: string, mimeType?: string) => {
   const ext = filename.toLowerCase().split('.').pop() || '';
   const officeExtensions = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
@@ -19,6 +21,58 @@ const isOfficeFile = (filename: string, mimeType?: string) => {
     if (officeMimes.includes(mimeType)) return true;
   }
   return false;
+=======
+const convertImageBlobToPng = async (blob: Blob): Promise<Blob> => {
+  if (blob.type === 'image/png') return blob;
+
+  const bitmap = await createImageBitmap(blob);
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const context = canvas.getContext('2d');
+
+    if (!context) throw new Error('Unable to prepare image for clipboard');
+    context.drawImage(bitmap, 0, 0);
+
+    return await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (pngBlob) => pngBlob ? resolve(pngBlob) : reject(new Error('Unable to convert image to PNG')),
+        'image/png'
+      );
+    });
+  } finally {
+    bitmap.close();
+  }
+};
+
+const CLIPBOARD_IMAGE_CACHE_LIMIT = 20;
+// Stores Blob promises rather than object URLs, so URL.revokeObjectURL is not needed.
+// Failed promises are removed below so a later copy attempt can retry the request.
+const clipboardImageCache = new Map<string, Promise<Blob>>();
+
+const prepareClipboardImage = (file: Attachment): Promise<Blob> => {
+  const cachedImage = clipboardImageCache.get(file.url);
+  if (cachedImage) return cachedImage;
+
+  const preparedImage = api.get('/attachments/download-by-url', {
+    params: { url: file.url },
+    responseType: 'blob',
+  })
+    .then((response) => convertImageBlobToPng(response.data))
+    .catch((error) => {
+      clipboardImageCache.delete(file.url);
+      throw error;
+    });
+
+  clipboardImageCache.set(file.url, preparedImage);
+  if (clipboardImageCache.size > CLIPBOARD_IMAGE_CACHE_LIMIT) {
+    const oldestUrl = clipboardImageCache.keys().next().value;
+    if (oldestUrl) clipboardImageCache.delete(oldestUrl);
+  }
+
+  return preparedImage;
+>>>>>>> origin/dev
 };
 
 export function useAttachmentPreview(
@@ -31,6 +85,7 @@ export function useAttachmentPreview(
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const [loadingPreviews, setLoadingPreviews] = useState<Record<string, boolean>>({});
   const [isInViewport, setIsInViewport] = useState(false);
+  const [copyingImageUrl, setCopyingImageUrl] = useState<string | null>(null);
 
   const previewUrlsRef = useRef<Record<string, string>>({});
   const loadingPreviewsRef = useRef<Record<string, boolean>>({});
@@ -164,12 +219,40 @@ export function useAttachmentPreview(
     }
   };
 
+  const prepareCopyImage = useCallback((file: Attachment) => {
+    void prepareClipboardImage(file).catch(() => undefined);
+  }, []);
+
+  const handleCopyImage = async (file: Attachment) => {
+    if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
+      toast.error('Copy image is not supported in this browser');
+      return;
+    }
+
+    setCopyingImageUrl(file.url);
+    try {
+      const pngBlobPromise = prepareClipboardImage(file);
+
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': pngBlobPromise }),
+      ]);
+    } catch (error) {
+      console.error('Failed to copy image:', error);
+      toast.error('Failed to copy image');
+    } finally {
+      setCopyingImageUrl(null);
+    }
+  };
+
   return {
     isDownloading,
     expandedPreviews,
     previewUrls,
     loadingPreviews,
+    copyingImageUrl,
     togglePreview,
     handleDownloadFile,
+    prepareCopyImage,
+    handleCopyImage,
   };
 }

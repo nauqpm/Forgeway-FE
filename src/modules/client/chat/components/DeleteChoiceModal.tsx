@@ -5,6 +5,7 @@ import { Trash2, X } from 'lucide-react';
 import { TrashForMeIcon, TrashForEveryoneIcon } from './MessageContextMenu';
 import { renderMessageContent } from '../utils/messageContentRenderer';
 import type { Message } from '../types/chat.types';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface DeleteChoiceModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export default function DeleteChoiceModal({
   onDeleteForMe,
   onClose,
 }: DeleteChoiceModalProps) {
+  useEscapeStack(onClose, isOpen);
   if (!isOpen) return null;
 
   return (

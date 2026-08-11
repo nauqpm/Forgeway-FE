@@ -16,6 +16,7 @@ interface MessageAttachmentsProps {
   onDownloadFile: (file: Attachment) => void;
   onTogglePreview: (url: string) => void;
   onOpenLightbox: (file: { url: string; name: string; mimeType?: string }) => void;
+  onImageContextMenu: (event: React.MouseEvent, file: Attachment) => void;
 }
 
 export default function MessageAttachments({
@@ -28,6 +29,7 @@ export default function MessageAttachments({
   onDownloadFile,
   onTogglePreview,
   onOpenLightbox,
+  onImageContextMenu,
 }: MessageAttachmentsProps) {
   if (isDeleted || !attachments || attachments.length === 0) return null;
 
@@ -58,6 +60,7 @@ export default function MessageAttachments({
                 alt={filename} 
                 className="w-full h-auto max-h-[300px] object-contain block hover:opacity-95 transition-opacity cursor-pointer" 
                 onClick={() => onOpenLightbox({ url: file.url, name: filename, mimeType: file.mimeType })}
+                onContextMenu={(event) => onImageContextMenu(event, file)}
               />
             ) : isVideo ? (
               <div 

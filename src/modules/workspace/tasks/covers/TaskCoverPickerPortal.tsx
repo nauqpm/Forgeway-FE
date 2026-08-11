@@ -4,6 +4,7 @@ import { useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import TaskCoverPopover from "./TaskCoverPopover";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type TaskCoverPickerPortalProps = {
   anchorRect: DOMRect | null;
@@ -67,6 +68,8 @@ export default function TaskCoverPickerPortal({
       window.removeEventListener("scroll", updatePosition, true);
     };
   }, [anchorRect]);
+
+  useEscapeStack(onRequestClose, mounted && Boolean(anchorRect));
 
   if (!mounted || !anchorRect) return null;
 

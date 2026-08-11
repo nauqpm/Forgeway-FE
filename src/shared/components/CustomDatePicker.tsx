@@ -17,6 +17,7 @@ import {
   subMonths,
 } from "date-fns";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type ThemeMode = "light" | "dark";
 type PopoverPlacement = "bottom-start" | "bottom-end" | "top-start" | "top-end";
@@ -115,6 +116,7 @@ export default function CustomDatePicker({
   const [inputValue, setInputValue] = useState(getDisplayValue(value));
   const [viewMonth, setViewMonth] = useState(selectedDate ?? new Date());
   const [isOpen, setIsOpen] = useState(false);
+  useEscapeStack(() => setIsOpen(false), isOpen);
   const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
     position: "fixed",
     top: -9999,
@@ -171,15 +173,9 @@ export default function CustomDatePicker({
       if (rootRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
       setIsOpen(false);
     };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
-    };
-
     document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 

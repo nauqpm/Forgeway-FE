@@ -1,8 +1,11 @@
+"use client";
+
 import { Pencil, Trash2, X } from "lucide-react";
 import { DocumentItem } from "../types/document.type";
 import ImportedDocumentViewer from "./ImportedDocumentViewer";
 import OnlineDocumentEditorModal from "./OnlineDocumentEditorModal";
 import DocumentWorkspaceLinkModal from "./DocumentWorkspaceLinkModal";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 function formatSize(size: number) {
   const kb = size / 1024;
@@ -51,6 +54,17 @@ export default function DocumentModals({
   onSaved,
   closeRenameDialog,
 }: DocumentModalsProps) {
+  useEscapeStack(() => {
+    if (deleteTarget) {
+      if (!deleting) setDeleteTarget(null);
+      return;
+    }
+    if (renameTarget) {
+      closeRenameDialog(renaming);
+      return;
+    }
+    if (viewingDoc) setViewingDoc(null);
+  }, Boolean(deleteTarget || renameTarget || viewingDoc));
   return (
     <>
       {editingDoc && (

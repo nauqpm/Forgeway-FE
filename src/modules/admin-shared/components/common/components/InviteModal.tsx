@@ -6,6 +6,7 @@ import RoleChanger, {
   WorkspaceRoleValue,
 } from "@/modules/workspace/shared/components/RoleChanger";
 import { inviteService } from "@/modules/workspace/shared/services/inviteService";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface SearchUserResult {
   _id?: string;
@@ -25,6 +26,7 @@ interface InviteModalProps {
 const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem] outline-none transition-colors focus:border-[#2563EB] dark:focus:border-[#3B82F6]";
 
 export default function InviteModal({ isOpen, onClose, projectId }: InviteModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<SearchUserResult[]>([]);
