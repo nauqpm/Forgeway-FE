@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useCallback } from "react";
 
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
 import TaskDescription from "@/modules/admin-shared/components/common/components/TaskDescription";
@@ -37,6 +37,8 @@ interface TaskDetailMainContentProps {
   onRestoreIssue?: () => void;
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   onSubtaskClick?: (subtaskId: string) => void;
+  /** Called when a new work log is created from an external source (e.g. Drawer toolbar) */
+  onWorkLogCreated?: (cb: () => void) => void;
 }
 
 import TaskWorkLogs from "@/modules/workspace/shared/components/TaskWorkLogs";
@@ -63,7 +65,16 @@ export default function TaskDetailMainContent({
   onRestoreIssue,
   onUpdateIssue,
   onSubtaskClick,
+  onWorkLogCreated,
 }: TaskDetailMainContentProps) {
+  const workLogRefreshRef = useRef<(() => void) | null>(null);
+
+  const handleWorkLogRefresh = useCallback((refetch: () => void) => {
+    workLogRefreshRef.current = refetch;
+    if (onWorkLogCreated) {
+      onWorkLogCreated(() => refetch());
+    }
+  }, [onWorkLogCreated]);
   const titleTextClass =
     titleSize === "3xl"
       ? "text-3xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4"
@@ -226,6 +237,7 @@ export default function TaskDetailMainContent({
             issue={issue}
             onUpdateIssue={onUpdateIssue}
             canEdit={canEditTask}
+            onRefresh={handleWorkLogRefresh}
           />
         )}
       </div>

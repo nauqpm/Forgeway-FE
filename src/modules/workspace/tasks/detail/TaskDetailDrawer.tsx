@@ -88,6 +88,7 @@ export default function TaskDetailDrawer({
   const [isConvertToSubtaskOpen, setIsConvertToSubtaskOpen] = useState(false);
   const [isConvertToTaskOpen, setIsConvertToTaskOpen] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+  const workLogRefreshRef = useRef<(() => void) | null>(null);
 
   const handleConvertToTask = async () => {
     try {
@@ -498,6 +499,8 @@ export default function TaskDetailDrawer({
                   </div>
                 </div>
               }
+              onUpdateIssue={updateIssueFields as never}
+              onWorkLogCreated={(cb) => { workLogRefreshRef.current = cb; }}
             />
 
             {/* Meta */}
@@ -515,7 +518,10 @@ export default function TaskDetailDrawer({
         onClose={() => setIsLogWorkOpen(false)}
         issue={issue}
         workspaceId={workspaceId}
-        onUpdateIssue={updateIssueFields as never}
+        onUpdateIssue={(updatedIssue) => {
+          (updateIssueFields as unknown as (v: TaskDetailResponse) => void)(updatedIssue);
+          if (workLogRefreshRef.current) workLogRefreshRef.current();
+        }}
       />
       <ConvertToSubtaskModal
         isOpen={isConvertToSubtaskOpen}

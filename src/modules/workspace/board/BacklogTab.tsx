@@ -322,11 +322,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
               <FilterMenu
                 isOpen={isFilterOpen}
                 onClose={() => setIsFilterOpen(false)}
+                onOpen={() => setIsFilterOpen(true)}
                 filters={filters}
                 setFilters={setFilters}
                 density={density}
                 setDensity={setDensity}
                 assignees={filterAssignees}
+                availableStatuses={columns?.map((c) => c.name)}
                 anchorRef={filterButtonRef}
               />
             </div>
@@ -339,8 +341,14 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
               (sum, i) => sum + (i.storyPoints || 0),
               0,
             );
+            
+            const doneColumnIds = columns?.filter(c => c.isDone).map(c => c.id) || [];
+            if (doneColumnIds.length === 0 && columns && columns.length > 0) {
+              doneColumnIds.push(columns[columns.length - 1].id);
+            }
+            
             const donePoints = sprintIssues
-              .filter((i) => i.status === "Done")
+              .filter((i) => doneColumnIds.includes(i.columnId))
               .reduce((sum, i) => sum + (i.storyPoints || 0), 0);
             const sprintTaskIds = sprintIssues.map((i) => i.id);
             const isAllSelected =
@@ -369,30 +377,42 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer shrink-0"
                     />
                     <h3
-                      className="flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer whitespace-nowrap"
+                      className="flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer min-w-0"
                       onClick={() => {
                         if (sprint.status === "completed") return;
                         setEditingSprint(sprint);
                         setIsSprintModalOpen(true);
                       }}
+                      title={sprint.name}
                     >
-                      {sprint.name}
+                      <span className="truncate">{sprint.name}</span>
                       {sprint.status === "active" && (
-                        <span className="px-2 py-0.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD] text-[0.6875rem] font-semibold rounded-full uppercase tracking-wide">
+                        <span className="shrink-0 px-2 py-0.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD] text-[0.6875rem] font-semibold rounded-full uppercase tracking-wide">
                           Active
                         </span>
                       )}
                     </h3>
                     <div className="flex gap-1.5 items-center group relative cursor-help shrink-0">
-                      <span className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] font-bold flex items-center justify-center">
-                        {sprintIssues.filter((i) => i.status === "To Do").length}
-                      </span>
-                      <span className="w-6 h-6 rounded-full bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] text-[#956400] dark:text-[#F0C040] text-[0.6875rem] font-bold flex items-center justify-center">
-                        {sprintIssues.filter((i) => i.status === "In Progress").length}
-                      </span>
-                      <span className="w-6 h-6 rounded-full bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.15)] text-[#346538] dark:text-[#6FCF7B] text-[0.6875rem] font-bold flex items-center justify-center">
-                        {sprintIssues.filter((i) => i.status === "Done").length}
-                      </span>
+                      {columns?.map((col, idx) => {
+                        const count = sprintIssues.filter((i) => i.columnId === col.id).length;
+                        
+                        let colorClass = "bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] text-[#956400] dark:text-[#F0C040]"; // default (middle)
+                        if (idx === 0) {
+                          colorClass = "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97]";
+                        } else if (idx === columns.length - 1 || col.isDone) {
+                          colorClass = "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.15)] text-[#346538] dark:text-[#6FCF7B]";
+                        }
+
+                        return (
+                          <span
+                            key={col.id}
+                            title={col.name}
+                            className={`w-6 h-6 rounded-full text-[0.6875rem] font-bold flex items-center justify-center ${colorClass}`}
+                          >
+                            {count}
+                          </span>
+                        );
+                      })}
                       <div className="absolute top-full mt-2 left-0 bg-[#111111] dark:bg-[#2A2A2A] text-[#E8E8E7] text-[0.6875rem] px-3 py-2 rounded-[6px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                         Progress: {donePoints} / {totalPoints} story points
                       </div>
@@ -441,6 +461,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <Droppable
                   droppableId={`sprint-${sprint.id}`}
                   type="backlog-issue"
+                  isDropDisabled={sprint.status === "completed"}
                 >
                   {(provided, snapshot) => (
                     <div
