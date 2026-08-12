@@ -17,7 +17,7 @@ import {
 import { queryKeys } from '@/shared/constants/queryKeys';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
+import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import type { Channel, Message } from '@/modules/client/chat/types/chat.types';
 
 const fetchingChannels = new Set<string>();
@@ -37,7 +37,7 @@ export default function ChatRealtimeHandler() {
   const { data: channels = [] } = useChatChannels();
   const setTyping = useChatStore(state => state.setTyping);
   const user = useAuthStore(state => state.user);
-  const currentWorkspaceId = useWorkspaceStore(state => state.currentWorkspaceId);
+  const { data: workspaces = [] } = useWorkspaces();
   const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -45,27 +45,37 @@ export default function ChatRealtimeHandler() {
     chatSocketClient.joinChannels(channels.map(channel => channel._id));
   }, [channels, user]);
 
+  const workspaceIdsKey = workspaces.map(ws => ws._id).sort().join(',');
+
   useEffect(() => {
-    const socket = chatSocketClient.getSocket();
-    if (!socket || !currentWorkspaceId) return;
+    const workspaceIds = workspaceIdsKey ? workspaceIdsKey.split(',') : [];
+    if (workspaceIds.length === 0) return;
+
+    const socket = chatSocketClient.connect();
+    if (!socket) return;
+
+    const joinAllWorkspaces = () => {
+      console.log('[ChatRT] Joining workspace rooms:', workspaceIds);
+      workspaceIds.forEach(wsId => {
+        socket.emit('chat.joinWorkspace', { workspaceId: wsId });
+      });
+    };
 
     if (socket.connected) {
-      socket.emit('chat.joinWorkspace', { workspaceId: currentWorkspaceId });
+      joinAllWorkspaces();
     }
 
-    const onConnect = () => {
-      socket.emit('chat.joinWorkspace', { workspaceId: currentWorkspaceId });
-    };
-
-    socket.on('connect', onConnect);
+    socket.on('connect', joinAllWorkspaces);
 
     return () => {
-      socket.off('connect', onConnect);
+      socket.off('connect', joinAllWorkspaces);
       if (socket.connected) {
-        socket.emit('chat.leaveWorkspace', { workspaceId: currentWorkspaceId });
+        workspaceIds.forEach(wsId => {
+          socket.emit('chat.leaveWorkspace', { workspaceId: wsId });
+        });
       }
     };
-  }, [currentWorkspaceId]);
+  }, [workspaceIdsKey]);
 
   const ensureChannelInCache = useCallback((channelId: string) => {
     const cachedChannels = queryClient.getQueryData<Channel[]>(queryKeys.chat.channels()) || [];
@@ -326,10 +336,30 @@ export default function ChatRealtimeHandler() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChannelCreated = useCallback((envelope: any) => {
-    const channel = (envelope.data || envelope) as Channel;
-    if (!channel?._id) return;
-    upsertChannelInCache(queryClient, channel);
-    chatSocketClient.joinChannel(channel._id);
+    console.log('[ChatRT] chat.channel.created received', envelope);
+    const raw = (envelope.data || envelope) as Channel;
+    const channelId = String(raw?._id || raw?.id || '');
+    if (!channelId) return;
+
+    const normalized: Channel = {
+      ...raw,
+      _id: channelId,
+      unreadCount: raw.unreadCount ?? 0,
+    };
+
+    const currentUser = useAuthStore.getState().user;
+    const currentUserId = (currentUser as { _id?: string } | null)?._id || currentUser?.id;
+
+    if (normalized.isPrivate) {
+      const isMember = normalized.channelMembers?.some(
+        m => String(m.userId) === String(currentUserId)
+      );
+      if (!isMember) return;
+    }
+
+    upsertChannelInCache(queryClient, normalized);
+    chatSocketClient.joinChannel(channelId);
+    queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

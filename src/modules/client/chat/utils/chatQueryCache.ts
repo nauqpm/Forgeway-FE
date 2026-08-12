@@ -135,24 +135,27 @@ const updateReplyTargetIfDeleted = (m: Message, targetMessageId: string): Messag
   return m;
 };
 
+const processedDeletedMessages = new Set<string>();
+
 export const removeMessageFromCache = (
   queryClient: QueryClient,
   channelId: string,
   messageId: string,
   threadParentId?: string
 ) => {
+  if (processedDeletedMessages.has(messageId)) {
+    return;
+  }
+  processedDeletedMessages.add(messageId);
+  if (processedDeletedMessages.size > 1000) {
+    const first = processedDeletedMessages.values().next().value;
+    if (first) processedDeletedMessages.delete(first);
+  }
+
   queryClient.setQueryData<InfiniteData<MessagesPage>>(
     queryKeys.chat.messages(channelId),
     (current) => {
       if (!current) return current;
-
-      let wasMessageRemoved = false;
-      for (const page of current.pages) {
-        if (page.messages.some((m) => getMessageId(m) === messageId)) {
-          wasMessageRemoved = true;
-          break;
-        }
-      }
 
       return {
         ...current,
@@ -162,7 +165,7 @@ export const removeMessageFromCache = (
             .filter((m) => getMessageId(m) !== messageId)
             .map((m) => {
               const updated = updateReplyTargetIfDeleted(m, messageId);
-              if (threadParentId && getMessageId(updated) === threadParentId && wasMessageRemoved) {
+              if (threadParentId && getMessageId(updated) === threadParentId) {
                 return {
                   ...updated,
                   replyCount: Math.max(0, (updated.replyCount || 1) - 1),
