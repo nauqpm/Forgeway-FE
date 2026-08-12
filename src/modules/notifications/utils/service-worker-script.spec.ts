@@ -99,6 +99,7 @@ describe("buildPushServiceWorkerScript", () => {
     expect(exactClient.focus).toHaveBeenCalledOnce();
     expect(otherClient.navigate).not.toHaveBeenCalled();
     expect(clients.openWindow).not.toHaveBeenCalled();
+    expect(clients.matchAll).toHaveBeenLastCalledWith({ type: "window" });
 
     clients.matchAll.mockResolvedValue([otherClient]);
     await dispatch(listeners.get("notificationclick")!, {
@@ -107,6 +108,7 @@ describe("buildPushServiceWorkerScript", () => {
 
     expect(otherClient.focus).not.toHaveBeenCalled();
     expect(clients.openWindow).toHaveBeenCalledWith("https://app.example/tasks/456");
+    expect(clients.matchAll).toHaveBeenLastCalledWith({ type: "window" });
   });
 
   it("does not open a protocol-relative notification URL outside the app origin", async () => {

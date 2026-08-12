@@ -58,7 +58,7 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     (async () => {
       const targetUrl = new URL(safeUrl(event.notification.data?.url), self.location.origin).href;
-      const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      const windows = await self.clients.matchAll({ type: "window" });
       const client = windows.find((windowClient) => windowClient.url === targetUrl);
 
       if (client) {
