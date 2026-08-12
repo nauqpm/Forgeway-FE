@@ -21,6 +21,7 @@ import { AUTH_ROUTES } from "../constants/auth-routes";
 import { AuthErrorCode } from "../types/auth.types";
 import { validateEmail } from "../utils/emailValidation";
 import { deregisterBrowserPushForLogout } from "@/modules/notifications/services/browser-push.service";
+import { createLogoutWithPushCleanupCallbacks, logoutWithPushCleanup } from "../services/logout-with-push-cleanup";
 import type { AuthUser, LoginRequest, RegisterRequest, AuthApiError, Permission } from "../types/auth.types";
 
 export const AUTH_ME_QUERY_KEY = ["auth", "me"] as const;
@@ -217,15 +218,13 @@ export const useAuth = () => {
   }, [clearAuth, queryClient]);
 
   const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await deregisterBrowserPushForLogout().catch(() => undefined);
-      return logoutAPI();
-    },
+    mutationFn: () => logoutWithPushCleanup(deregisterBrowserPushForLogout, logoutAPI),
     retry: false,
-    onSettled: () => {
-      clearClientAuthState();
-      router.push(AUTH_ROUTES.LOGIN);
-    },
+    ...createLogoutWithPushCleanupCallbacks(
+      clearClientAuthState,
+      () => router.push(AUTH_ROUTES.LOGIN),
+      toast.error,
+    ),
   });
 
   const login = useCallback(
@@ -266,7 +265,7 @@ export const useAuth = () => {
     try {
       await logoutMutation.mutateAsync();
     } catch {
-      // Cleanup and redirect are handled in onSettled.
+      // The mutation displays the error while preserving the local auth state.
     }
   }, [logoutMutation]);
 
