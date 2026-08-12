@@ -76,7 +76,7 @@ export default function TaskDetailFields({
     const updates: Record<string, unknown> = {};
 
     if (field === "storyPoints") {
-      updates.storyPoints = value === "" ? null : Number(value);
+      updates.storyPoints = value === "" ? null : Math.min(Math.max(Number(value), 0), 100);
     } else if (field === "startDate") {
       const dueVal = toDateInputValue(issue.dueDate);
       if (value && dueVal && value > dueVal) {

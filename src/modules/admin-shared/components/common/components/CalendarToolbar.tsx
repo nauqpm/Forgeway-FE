@@ -13,13 +13,13 @@ interface CalendarToolbarProps {
   onFiltersChange: (f: CalendarFilters) => void;
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
-  assignees: { id: string; color: string }[];
+  assignees: { id: string; color: string; name?: string }[];
 }
 
 const SELECT_CLASS =
   'px-2.5 py-1.5 text-sm font-medium border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] ' +
   'bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] ' +
-  'focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20';
+  'focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 max-w-[200px] truncate';
 
 export default function CalendarToolbar({
   calendarRef,
@@ -56,7 +56,7 @@ export default function CalendarToolbar({
           <option value="">All Assignees</option>
           {assignees.map((a) => (
             <option key={a.id} value={a.id}>
-              {a.id}
+              {a.name || a.id}
             </option>
           ))}
         </select>

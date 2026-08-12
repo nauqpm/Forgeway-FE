@@ -39,6 +39,7 @@ export default function ChatRealtimeHandler() {
   const user = useAuthStore(state => state.user);
   const { data: workspaces = [] } = useWorkspaces();
   const rateLimitIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const joinedWorkspacesRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user || channels.length === 0) return;
@@ -48,33 +49,60 @@ export default function ChatRealtimeHandler() {
   const workspaceIdsKey = workspaces.map(ws => ws._id).sort().join(',');
 
   useEffect(() => {
-    const workspaceIds = workspaceIdsKey ? workspaceIdsKey.split(',') : [];
-    if (workspaceIds.length === 0) return;
-
     const socket = chatSocketClient.connect();
     if (!socket) return;
 
-    const joinAllWorkspaces = () => {
-      console.log('[ChatRT] Joining workspace rooms:', workspaceIds);
-      workspaceIds.forEach(wsId => {
-        socket.emit('chat.joinWorkspace', { workspaceId: wsId });
-      });
-    };
-
-    if (socket.connected) {
-      joinAllWorkspaces();
-    }
-
-    socket.on('connect', joinAllWorkspaces);
-
-    return () => {
-      socket.off('connect', joinAllWorkspaces);
-      if (socket.connected) {
-        workspaceIds.forEach(wsId => {
-          socket.emit('chat.leaveWorkspace', { workspaceId: wsId });
+    const handleReconnect = () => {
+      const ids = Array.from(joinedWorkspacesRef.current);
+      if (ids.length > 0) {
+        console.log('[ChatRT] Reconnected. Re-joining workspace rooms:', ids);
+        ids.forEach(wsId => {
+          socket.emit('chat.joinWorkspace', { workspaceId: wsId });
         });
       }
     };
+
+    socket.on('connect', handleReconnect);
+
+    return () => {
+      socket.off('connect', handleReconnect);
+      if (socket.connected) {
+        joinedWorkspacesRef.current.forEach(wsId => {
+          socket.emit('chat.leaveWorkspace', { workspaceId: wsId });
+        });
+      }
+      joinedWorkspacesRef.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    const currentIds = new Set(workspaceIdsKey ? workspaceIdsKey.split(',') : []);
+    const socket = chatSocketClient.getSocket();
+    
+    if (socket && socket.connected) {
+      const toJoin: string[] = [];
+      const toLeave: string[] = [];
+
+      joinedWorkspacesRef.current.forEach(wsId => {
+        if (!currentIds.has(wsId)) {
+          toLeave.push(wsId);
+          socket.emit('chat.leaveWorkspace', { workspaceId: wsId });
+        }
+      });
+
+      currentIds.forEach(wsId => {
+        if (!joinedWorkspacesRef.current.has(wsId)) {
+          toJoin.push(wsId);
+          socket.emit('chat.joinWorkspace', { workspaceId: wsId });
+        }
+      });
+
+      if (toJoin.length > 0 || toLeave.length > 0) {
+        console.log('[ChatRT] Syncing workspace rooms. Join:', toJoin, 'Leave:', toLeave);
+      }
+    }
+    
+    joinedWorkspacesRef.current = currentIds;
   }, [workspaceIdsKey]);
 
   const ensureChannelInCache = useCallback((channelId: string) => {
@@ -323,8 +351,7 @@ export default function ChatRealtimeHandler() {
     // 4. Mark thread as unread if:
     //    - The reply is from someone else (not myself)
     //    - The user is not currently viewing that exact thread
-    const currentUser = useAuthStore.getState().user;
-    const currentUserId = (currentUser as { id: string; _id?: string } | null)?._id || currentUser?.id;
+    const currentUserId = (user as { _id?: string } | null)?._id || user?.id;
     const isMyOwnReply = senderId && currentUserId && String(senderId) === String(currentUserId);
     const activeThreadParentId = useChatStore.getState().activeThreadParentId;
     const isViewingThisThread = activeThreadParentId === parentId;
@@ -332,7 +359,7 @@ export default function ChatRealtimeHandler() {
     if (!isMyOwnReply && !isViewingThisThread) {
       useChatStore.getState().markThreadUnread(channelId, parentId);
     }
-  }, [queryClient]);
+  }, [queryClient, user]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChannelCreated = useCallback((envelope: any) => {
@@ -347,8 +374,7 @@ export default function ChatRealtimeHandler() {
       unreadCount: raw.unreadCount ?? 0,
     };
 
-    const currentUser = useAuthStore.getState().user;
-    const currentUserId = (currentUser as { _id?: string } | null)?._id || currentUser?.id;
+    const currentUserId = (user as { _id?: string } | null)?._id || user?.id;
 
     if (normalized.isPrivate) {
       const isMember = normalized.channelMembers?.some(
@@ -360,7 +386,7 @@ export default function ChatRealtimeHandler() {
     upsertChannelInCache(queryClient, normalized);
     chatSocketClient.joinChannel(channelId);
     queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
-  }, [queryClient]);
+  }, [queryClient, user]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChannelUpdated = useCallback((envelope: any) => {

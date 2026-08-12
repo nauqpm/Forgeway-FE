@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-
+import { useCurrentWorkspace } from "./useWorkspaces";
 import { Issue } from "../types/issue.type";
 import { Workspace } from "../types/workspace.type";
 
@@ -82,8 +82,12 @@ export const useAssignees = (
   issues: Issue[],
   workspace?: Workspace | null,
 ) => {
+  const { currentWorkspace } = useCurrentWorkspace();
+  const activeWorkspace = workspace || currentWorkspace;
+
   return useMemo(
-    () => buildAssigneeFilters(issues, workspace),
-    [issues, workspace],
+    () => buildAssigneeFilters(issues, activeWorkspace),
+    [issues, activeWorkspace],
   );
 };
+

@@ -4,7 +4,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Trash2 } from "lucide-react";
 import AssigneePicker, { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import FilterMenu from "@/modules/workspace/shared/components/FilterMenu";
 import StatusPicker from "@/shared/components/StatusPicker";
 import PriorityPicker from "@/shared/components/PriorityPicker";
@@ -133,6 +133,46 @@ type AssigneeInfo = {
   role?: string;
   avatar?: string;
   initials: string;
+};
+
+const StoryPointBadge = ({ issue, updateIssueDirectly }: { issue: Issue, updateIssueDirectly: (id: string, updates: Partial<Issue>) => void }) => {
+  const [val, setVal] = useState<string | number>(issue.storyPoints === 0 ? "" : (issue.storyPoints || ""));
+  
+  useEffect(() => {
+    setVal(issue.storyPoints === 0 ? "" : (issue.storyPoints || ""));
+  }, [issue.storyPoints]);
+
+  const handleBlur = () => {
+    const parsed = parseInt(val as string) || 0;
+    if (parsed !== (issue.storyPoints || 0)) {
+      updateIssueDirectly(issue.id, { storyPoints: parsed });
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      value={val}
+      onChange={(e) => {
+        let nextVal = e.target.value;
+        if (nextVal !== "") {
+          const num = parseInt(nextVal);
+          if (num > 100) nextVal = "100";
+          else if (num < 0) nextVal = "0";
+        }
+        setVal(nextVal);
+      }}
+      onBlur={handleBlur}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+        }
+      }}
+      placeholder="-"
+      className="w-9 h-6 px-0 py-0 text-center text-[0.75rem] font-semibold text-[#111111] dark:text-[#E8E8E7] bg-[#F1F1F0] dark:bg-[#202020] hover:bg-[#E8E8E7] dark:hover:bg-[#2A2A2A] rounded-full border border-transparent focus:bg-white dark:focus:bg-[#202020] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield] placeholder:text-[#ABABAB]"
+      title="Story Points"
+    />
+  );
 };
 
 
@@ -519,18 +559,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 {canEditTask ? (
                                   <>
                                     <div className="relative group/pts">
-                                      <input
-                                        type="number"
-                                        value={issue.storyPoints === 0 ? "" : issue.storyPoints}
-                                        onChange={(e) =>
-                                          updateIssueDirectly(issue.id, {
-                                            storyPoints: parseInt(e.target.value) || 0,
-                                          })
-                                        }
-                                        placeholder="-"
-                                        className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
-                                        title="Story Points"
-                                      />
+                                      <StoryPointBadge issue={issue} updateIssueDirectly={updateIssueDirectly} />
                                     </div>
                                     <StatusPicker
                                       value={issue.status}
@@ -766,18 +795,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               {canEditTask ? (
                                 <>
                                   <div className="relative group/pts">
-                                    <input
-                                      type="number"
-                                      value={issue.storyPoints === 0 ? "" : issue.storyPoints}
-                                      onChange={(e) =>
-                                        updateIssueDirectly(issue.id, {
-                                          storyPoints: parseInt(e.target.value) || 0,
-                                        })
-                                      }
-                                      placeholder="-"
-                                      className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
-                                      title="Story Points"
-                                    />
+                                    <StoryPointBadge issue={issue} updateIssueDirectly={updateIssueDirectly} />
                                   </div>
                                   <StatusPicker
                                     value={issue.status}
