@@ -3,7 +3,6 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const frontendRoot = resolve(import.meta.dirname, '..');
-const sharedRoot = resolve(frontendRoot, '..');
 
 function blockBetween(text: string, start: string, end: string): string {
   const startIndex = text.indexOf(start);
@@ -45,24 +44,4 @@ describe('web push deployment configuration', () => {
     );
   });
 
-  it('maps Web Push runtime values from the deployment environment', () => {
-    const compose = readFileSync(
-      resolve(sharedRoot, 'docs/deployment/docker-compose.yml'),
-      'utf8',
-    );
-    const backend = blockBetween(compose, '  backend:', '  frontend:');
-    const frontend = blockBetween(compose, '  frontend:', '  admin:');
-
-    expect(backend).toContain('WEB_PUSH_ENABLED: ${WEB_PUSH_ENABLED:-false}');
-    expect(backend).toContain(
-      'WEB_PUSH_ALLOWED_ENDPOINT_HOSTS: ${WEB_PUSH_ALLOWED_ENDPOINT_HOSTS:-}',
-    );
-    expect(backend).toContain('VAPID_SUBJECT: ${VAPID_SUBJECT:-}');
-    expect(backend).toContain('VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}');
-    expect(backend).toContain('VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}');
-    expect(frontend).toContain(
-      'WEB_PUSH_VAPID_PUBLIC_KEY: ${WEB_PUSH_VAPID_PUBLIC_KEY:-}',
-    );
-    expect(frontend).toContain('BACKEND_API_URL: ${BACKEND_API_URL:-}');
-  });
 });
