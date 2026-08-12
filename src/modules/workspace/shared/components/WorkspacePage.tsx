@@ -279,6 +279,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
             workspaceMongoId: workspace?._id,
           }}
           calendarProps={{
+            workspace,
             issues,
             sprints,
             handleUpdateIssueDate,

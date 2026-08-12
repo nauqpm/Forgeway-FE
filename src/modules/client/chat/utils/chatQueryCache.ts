@@ -137,6 +137,10 @@ const updateReplyTargetIfDeleted = (m: Message, targetMessageId: string): Messag
 
 const processedDeletedMessages = new Set<string>();
 
+export const resetProcessedDeletedMessages = () => {
+  processedDeletedMessages.clear();
+};
+
 export const removeMessageFromCache = (
   queryClient: QueryClient,
   channelId: string,
