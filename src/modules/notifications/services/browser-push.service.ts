@@ -104,8 +104,8 @@ export const disableBrowserPush = async (): Promise<void> => {
   const subscription = await getExistingSubscription();
   if (!subscription) return;
 
+  await notificationService.removePushSubscription(subscription.endpoint);
   await subscription.unsubscribe();
-  await notificationService.removePushSubscription(subscription.endpoint).catch(() => undefined);
 };
 
 export const deregisterBrowserPushForLogout = async (): Promise<void> => {

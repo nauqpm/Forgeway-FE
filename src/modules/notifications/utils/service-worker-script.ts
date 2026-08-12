@@ -43,12 +43,13 @@ self.addEventListener("pushsubscriptionchange", (event) => {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
       });
-      await fetch("/api/push-subscriptions", {
+      const response = await fetch("/api/push-subscriptions", {
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
         body: JSON.stringify(subscription.toJSON()),
       });
+      if (!response.ok) throw new Error("Push subscription renewal failed");
     })(),
   );
 });

@@ -55,6 +55,20 @@ describe("buildPushServiceWorkerScript", () => {
     });
   });
 
+  it("rejects renewal when the authenticated proxy returns a non-success response", async () => {
+    const { listeners, subscribe } = installWorker("public-vapid-key");
+    subscribe.mockResolvedValue({
+      toJSON: () => ({ endpoint: "https://push.example/new", keys: { auth: "a", p256dh: "p" } }),
+    });
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 503 }));
+
+    await expect(dispatch(listeners.get("pushsubscriptionchange")!, {})).rejects.toThrow(
+      "Push subscription renewal failed",
+    );
+
+    expect(buildPushServiceWorkerScript("public-vapid-key")).toContain("if (!response.ok)");
+  });
+
   it("uses SDLC-Platform fallbacks and exposes no private VAPID material", async () => {
     const { clients, listeners, showNotification } = installWorker("public-vapid-key");
     clients.matchAll.mockResolvedValue([]);

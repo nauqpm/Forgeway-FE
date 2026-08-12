@@ -110,15 +110,22 @@ describe("browser push lifecycle", () => {
     expect(getBrowserPushStatusForRequestResult("dismissed")).toBe("disabled");
   });
 
-  it("unsubscribes in the browser before best-effort Backend removal", async () => {
+  it("keeps the browser subscription when Backend removal fails", async () => {
     vi.mocked(notificationService.removePushSubscription).mockRejectedValue(new Error("offline"));
 
+    await expect(disableBrowserPush()).rejects.toThrow("offline");
+
+    expect(notificationService.removePushSubscription).toHaveBeenCalledWith(endpoint);
+    expect(subscription.unsubscribe).not.toHaveBeenCalled();
+  });
+
+  it("removes the Backend binding before unsubscribing in the browser", async () => {
     await expect(disableBrowserPush()).resolves.toBeUndefined();
 
-    expect(subscription.unsubscribe).toHaveBeenCalledOnce();
     expect(notificationService.removePushSubscription).toHaveBeenCalledWith(endpoint);
-    expect(vi.mocked(subscription.unsubscribe).mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(notificationService.removePushSubscription).mock.invocationCallOrder[0],
+    expect(subscription.unsubscribe).toHaveBeenCalledOnce();
+    expect(vi.mocked(notificationService.removePushSubscription).mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(subscription.unsubscribe).mock.invocationCallOrder[0],
     );
   });
 
