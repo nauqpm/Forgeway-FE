@@ -131,7 +131,7 @@ export default function StatusPicker({
   const dropdown = open && variant !== "input" && typeof document !== "undefined"
     ? createPortal(
         <div
-          className="fixed z-[999999] min-w-40 overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white py-1 dark:border-white/[0.06] dark:bg-[#202020]"
+          className="fixed z-[999999] min-w-40 max-w-[280px] overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white py-1 shadow-lg dark:border-white/[0.06] dark:bg-[#202020]"
           style={{ ...dropdownStyle, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         >
           {finalOptions.map((option) => {
