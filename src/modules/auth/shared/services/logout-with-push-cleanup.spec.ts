@@ -12,14 +12,23 @@ describe("logoutWithPushCleanup", () => {
     const cleanupFailure = new Error("offline");
     const deregisterBrowserPush = vi.fn().mockRejectedValue(cleanupFailure);
     const logout = vi.fn().mockResolvedValue({ message: "signed out" });
+    let thrownError: unknown;
 
-    await expect(logoutWithPushCleanup(deregisterBrowserPush, logout)).rejects.toMatchObject({
-      name: "BrowserPushDeregistrationError",
-      cause: cleanupFailure,
-    });
+    try {
+      await logoutWithPushCleanup(deregisterBrowserPush, logout);
+    } catch (error) {
+      thrownError = error;
+    }
 
+    expect(thrownError).toBeInstanceOf(BrowserPushDeregistrationError);
+    expect(thrownError).toMatchObject({ cause: cleanupFailure });
     expect(deregisterBrowserPush).toHaveBeenCalledOnce();
     expect(logout).not.toHaveBeenCalled();
+
+    const showError = vi.fn();
+    createLogoutWithPushCleanupCallbacks(vi.fn(), vi.fn(), showError).onError(thrownError);
+
+    expect(showError).toHaveBeenCalledWith(SECURE_LOGOUT_FAILURE_MESSAGE);
   });
 
   it("preserves a logout API failure after successful Browser Push deregistration", async () => {
