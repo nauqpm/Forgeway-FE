@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:push": "vitest run src/modules/notifications app/push-notifications-sw.js app/api/push-subscriptions"
+    "test:push": "vitest run src/modules/notifications app/push-notifications-sw.js app/api/push-subscriptions scripts/web-push-deploy-config.spec.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
