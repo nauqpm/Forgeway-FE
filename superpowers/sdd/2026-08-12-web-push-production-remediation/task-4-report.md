@@ -6,7 +6,7 @@ DONE
 
 ## Commit
 
-Pending commit: `fix: preserve push privacy during logout`
+`240d554 fix: preserve push privacy during logout`
 
 ## TDD evidence
 
