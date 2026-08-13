@@ -1089,27 +1089,38 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   }
 }
 
-/* ── React Mentions (Chat Message Input) ── */
-.chat-m {
+/* ── React Mentions (Chat & Task Comments Input) ── */
+.chat-m,
+.tc-m {
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: #111111;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.dark .chat-m {
+.dark .chat-m,
+.dark .tc-m {
   color: #E8E8E7;
 }
 
-.chat-m__control {
+.chat-m__control,
+.tc-m__control {
   min-height: 24px;
   max-height: 200px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.25rem;
+  overflow-x: hidden;
 }
 
-.chat-m__highlighter {
+.chat-m__highlighter,
+.tc-m__highlighter {
   padding: 0px;
   border: 1px solid transparent;
   font-family: inherit;
@@ -1117,11 +1128,16 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   line-height: 1.25rem;
   max-height: 200px;
   overflow: hidden !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  white-space: pre-wrap !important;
+  max-width: 100% !important;
   box-sizing: border-box;
 }
 
-.chat-m__input {
-  width: 100%;
+.chat-m__input,
+.tc-m__input {
+  width: 100% !important;
   outline: none;
   border: 1px solid transparent;
   background: transparent;
@@ -1135,6 +1151,11 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   min-height: 24px;
   max-height: 200px;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  white-space: pre-wrap !important;
+  max-width: 100% !important;
   box-sizing: border-box;
 }
 

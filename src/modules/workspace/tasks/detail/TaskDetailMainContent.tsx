@@ -91,7 +91,7 @@ export default function TaskDetailMainContent({
       )}
 
       {/* Title */}
-      <div className="order-2">
+      <div className="order-2 min-w-0 max-w-full">
         {canEditTask && isEditingTitle && !issue.isArchived ? (
           <input
             autoFocus
@@ -102,14 +102,14 @@ export default function TaskDetailMainContent({
             onKeyDown={(e) => {
               if (e.key === "Enter") onSaveTitle();
             }}
-            className={`w-full min-w-0 break-words ${titleTextClass} bg-[#F7F6F3] dark:bg-[#252525] border-2 border-[#2563EB] rounded-[6px] px-2 py-1 outline-none`}
+            className={`w-full min-w-0 max-w-full break-words ${titleTextClass} bg-[#F7F6F3] dark:bg-[#252525] border-2 border-[#2563EB] rounded-[6px] px-2 py-1 outline-none`}
           />
         ) : (
           <h1
             onClick={() => {
               if (canEditTask && !issue.isArchived) setIsEditingTitle(true);
             }}
-            className={`max-w-full break-words [overflow-wrap:anywhere] ${titleTextClass} p-2 -ml-2 rounded-[6px] transition-colors ${
+            className={`min-w-0 max-w-full break-words [overflow-wrap:anywhere] [word-break:break-word] ${titleTextClass} p-2 -ml-2 rounded-[6px] transition-colors ${
               canEditTask && !issue.isArchived
                 ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"
                 : "opacity-90"
