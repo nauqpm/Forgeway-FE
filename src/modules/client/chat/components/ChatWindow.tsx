@@ -24,6 +24,7 @@ import ThreadIndexPanel from './ThreadIndexPanel';
 import toast from 'react-hot-toast';
 import type { Channel, ChatUser } from '../types/chat.types';
 import DeleteChannelConfirmModal from './DeleteChannelConfirmModal';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 export default function ChatWindow() {
   const queryClient = useQueryClient();
@@ -49,6 +50,9 @@ export default function ChatWindow() {
   const [searchQuery, setSearchQuery] = useState("");
   const [hasNewUnread, setHasNewUnread] = useState(false);
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false);
+  // Register the thread modal first so the later name-editor layer has priority.
+  useEscapeStack(() => setShowCreateThreadModal(false), showCreateThreadModal);
+  useEscapeStack(() => setIsEditingName(false), isEditingName);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showChannelSettingsMenu, setShowChannelSettingsMenu] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);

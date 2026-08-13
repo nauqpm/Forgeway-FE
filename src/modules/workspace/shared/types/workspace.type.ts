@@ -1,21 +1,27 @@
 export interface WorkspaceMember {
   userId:
-    | string
-    | {
-        _id?: string;
-        id?: string;
-        fullName?: string;
-        name?: string;
-        email?: string;
-        avatar?: string;
-        avatarUrl?: string;
-        image?: string;
-      };
+  | string
+  | {
+    _id?: string;
+    id?: string;
+    fullName?: string;
+    name?: string;
+    email?: string;
+    avatar?: string;
+    avatarUrl?: string;
+    image?: string;
+  };
   role: string;
+}
+
+export interface WorkspaceSettings {
+  theme?: string;
+  [key: string]: unknown;
 }
 
 export interface Workspace {
   _id: string;
+  id?: string;
   name: string;
   key: string;
   slug?: string;
@@ -23,6 +29,9 @@ export interface Workspace {
   members?: WorkspaceMember[];
   description?: string;
   avatar?: string;
+  settings?: WorkspaceSettings;
+  isStarred?: boolean;
+  position?: number;
   access?: "private" | "public";
   template?: "kanban" | "scrum";
   type?: "kanban" | "scrum";

@@ -23,12 +23,13 @@ interface Props {
   onUpdate: (issue: any) => Promise<void>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onArchive: (issue: any) => Promise<void>;
+  onSubtaskClick?: (subtaskId: string) => void;
 }
 
 export function DashboardTaskModal({
   isOpen, isLoading, selectedTask, taskDetail,
   boardColumns, sprints, workspaceMembers, workspaces,
-  onClose, onUpdate, onArchive,
+  onClose, onUpdate, onArchive, onSubtaskClick,
 }: Props) {
   if (!isOpen) return null;
 
@@ -59,6 +60,7 @@ export function DashboardTaskModal({
       onClose={onClose}
       onUpdateIssue={onUpdate}
       onArchiveIssue={onArchive}
+      onSubtaskClick={onSubtaskClick}
     />
   );
 }

@@ -32,6 +32,7 @@ interface WorkLogDto {
 import TimeTrackingModal from "@/modules/workspace/tasks/detail/TimeTrackingModal";
 import DeleteWorkLogModal from "./DeleteWorkLogModal";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
+import { renderMessageContent } from "@/modules/client/chat/utils/messageContentRenderer";
 
 interface TaskWorkLogsProps {
   workspaceId: string;
@@ -41,6 +42,8 @@ interface TaskWorkLogsProps {
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
   /** Whether the current user has TASK_EDIT permission in this workspace */
   canEdit?: boolean;
+  /** Called externally to trigger a re-fetch (e.g. after creating a new worklog from Drawer) */
+  onRefresh?: (refetch: () => void) => void;
 }
 
 // Helper to get display name from member list
@@ -123,7 +126,7 @@ const getAvatarUrl = (url?: string | null) => {
   return `${baseUrl}${path}`;
 };
 
-export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [], issue, onUpdateIssue, canEdit = true }: TaskWorkLogsProps) {
+export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [], issue, onUpdateIssue, canEdit = true, onRefresh }: TaskWorkLogsProps) {
   // Derive read-only state: archived tasks, deleted tasks, or lack of edit permission
   const isReadOnly = !canEdit || !!issue?.isArchived || !!issue?.isDeleted;
   const [logs, setLogs] = useState<WorkLogDto[]>([]);
@@ -163,6 +166,12 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
     }
   }, [workspaceId, taskId, fetchLogs]);
 
+  useEffect(() => {
+    if (onRefresh) {
+      onRefresh(fetchLogs);
+    }
+  }, [onRefresh, fetchLogs]);
+
   const handleConfirmDelete = async (adjustTimeRemaining: boolean, newTimeEstimatedHours: number) => {
     if (!deletingLog) return;
     
@@ -200,7 +209,6 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
     if (onUpdateIssue) {
       onUpdateIssue(updatedIssue);
     }
-    // Re-fetch logs to show the updated log
     fetchLogs();
   };
 
@@ -267,7 +275,7 @@ export default function TaskWorkLogs({ workspaceId, taskId, workspaceMembers = [
               
               {log.description && (
                 <div className="text-[0.875rem] text-[#111111] dark:text-[#E8E8E7] mb-2 whitespace-pre-wrap">
-                  {log.description}
+                  {renderMessageContent(log.description)}
                 </div>
               )}
               

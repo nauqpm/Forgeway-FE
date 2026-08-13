@@ -7,6 +7,7 @@ import TokenHandler from "@/modules/auth/shared/components/TokenHandler";
 import ToastProvider from "@/shared/providers/ToastProvider";
 import CountryFlagPolyfill from "@/shared/providers/CountryFlagPolyfill";
 import { Suspense } from "react";
+import { EscapeStackProvider } from "@/shared/hooks/useEscapeStack";
 
 export const metadata = {
   title: {
@@ -70,10 +71,12 @@ export default function RootLayout({
       <body className="" suppressHydrationWarning>
         <Suspense>
           <QueryProvider>
-            <CountryFlagPolyfill />
-            <TokenHandler />
-            <ToastProvider />
-            {children}
+            <EscapeStackProvider>
+              <CountryFlagPolyfill />
+              <TokenHandler />
+              <ToastProvider />
+              {children}
+            </EscapeStackProvider>
           </QueryProvider>
         </Suspense>
       </body>

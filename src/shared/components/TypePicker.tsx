@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Check, FileText, Bug, Zap, BookOpen, ChevronDown } from "lucide-react";
 
-export const TASK_TYPES = ["Task", "Bug", "Epic", "Story"] as const;
+export const TASK_TYPES = ["Task", "Bug", "Story"] as const;
 export type TaskType = (typeof TASK_TYPES)[number];
 
 type IconComp = React.ComponentType<{ className?: string }>;
@@ -43,6 +43,13 @@ export const TASK_TYPE_CONFIG: Record<string, {
     pillBg: "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.12)]",
     pillText: "text-[#346538] dark:text-[#6FCF7B]",
     dotColor: "bg-[#346538]",
+  },
+  Subtask: {
+    Icon: FileText,
+    iconColor: "text-[#787774] dark:text-[#9B9A97]",
+    pillBg: "bg-[#F7F6F3] dark:bg-[rgba(120,119,116,0.12)]",
+    pillText: "text-[#787774] dark:text-[#9B9A97]",
+    dotColor: "bg-[#787774]",
   },
 };
 
@@ -103,8 +110,11 @@ export default function TypePicker({
     setOpen((p) => !p);
   };
 
-  const resolved = TASK_TYPES.find((t) => t.toLowerCase() === (value ?? "").toLowerCase()) ?? "Task";
-  const cfg = TASK_TYPE_CONFIG[resolved];
+  const resolvedValue = value ? value.charAt(0).toUpperCase() + value.slice(1).toLowerCase() : "Task";
+  const isCustomOrHiddenType = !TASK_TYPES.includes(resolvedValue as typeof TASK_TYPES[number]);
+  
+  const resolved = isCustomOrHiddenType ? resolvedValue : (TASK_TYPES.find((t) => t.toLowerCase() === (value ?? "").toLowerCase()) ?? "Task");
+  const cfg = TASK_TYPE_CONFIG[resolved] || TASK_TYPE_CONFIG["Task"];
   const label = resolved;
   const Icon = cfg?.Icon ?? FileText;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

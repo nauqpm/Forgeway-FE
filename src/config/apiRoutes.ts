@@ -19,6 +19,7 @@ export const apiRoutes = {
         BY_ID: (workspaceId: string) => `/workspaces/${workspaceId}`,
         UPDATE: (workspaceId: string) => `/workspaces/${workspaceId}`,
         AVATAR_SAMPLES: '/workspaces/avatar-samples',
+        STARRED: '/workspaces/starred',
         MEMBERS: (workspaceId: string) => `/workspaces/${workspaceId}/members`,
         ADD_MEMBER: (workspaceId: string) => `/workspaces/${workspaceId}/members`,
         LEAVE: (workspaceId: string) => `/workspaces/${workspaceId}/members/me`,
@@ -45,6 +46,11 @@ export const apiRoutes = {
         BACKLOG: (workspaceId: string) => `/workspaces/${workspaceId}/backlog`,
         LABELS: (workspaceId: string) => `/workspaces/${workspaceId}/labels`,
         LABEL: (workspaceId: string, labelId: string) => `/workspaces/${workspaceId}/labels/${labelId}`,
+    },
+    WORKSPACE_PREFERENCES: {
+        BASE: '/workspace-preferences',
+        ORDER: '/workspace-preferences/order',
+        STAR: (workspaceId: string) => `/workspace-preferences/${workspaceId}/star`,
     },
     PROJECTS: {
         BASE: '/projects',
@@ -88,6 +94,11 @@ export const apiRoutes = {
         BOARD_TASK_WORK_LOG_REPORT: (workspaceId: string) => `/workspaces/${workspaceId}/reports/worklogs`,
         BOARD_TASK_WORK_LOG_UPDATE: (workspaceId: string, taskId: string, logId: string) => `/workspaces/${workspaceId}/board-tasks/${taskId}/work-logs/${logId}`,
         BOARD_TASK_WORK_LOG_DELETE: (workspaceId: string, taskId: string, logId: string) => `/workspaces/${workspaceId}/board-tasks/${taskId}/work-logs/${logId}`,
+        // Subtasks
+        BOARD_TASK_SUBTASKS: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/tasks/${taskId}/subtasks`,
+        BOARD_TASK_SUBTASK: (workspaceId: string, taskId: string, subtaskId: string) => `/workspaces/${workspaceId}/board/tasks/${taskId}/subtasks/${subtaskId}`,
+        BOARD_TASK_CONVERT_TO_SUBTASK: (workspaceId: string, taskId: string) => `/workspaces/${workspaceId}/board/tasks/${taskId}/convert-to-subtask`,
+        BOARD_SUBTASK_CONVERT_TO_TASK: (workspaceId: string, subtaskId: string) => `/workspaces/${workspaceId}/board/subtasks/${subtaskId}/convert-to-task`,
         BY_SPRINT: (workspaceId: string, sprintId: string) => `/workspaces/${workspaceId}/board/tasks?sprintId=${sprintId}`,
         // Calendar & Timeline views
         CALENDAR: (workspaceId: string) => `/workspaces/${workspaceId}/board/calendar`,
@@ -190,8 +201,11 @@ export const apiRoutes = {
     },
     USERS: {
         BASE: '/users',
+        ME: '/users/me',
+        UPDATE_ME: '/users/me',
         PROFILE: '/users/profile',
         BY_ID: (id: string) => `/users/${id}`,
+        PUBLIC_PROFILE: (userId: string) => `/users/${userId}/public-profile`,
         WORKSPACE_MEMBERS: '/workspaces/members',
         ALL: '/users/all',
     },

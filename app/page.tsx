@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Cpu,
   FileText,
+  GitBranch,
   History,
   KanbanSquare,
   LayoutGrid,
@@ -516,10 +517,10 @@ export default function LandingPage() {
     <main className="min-h-screen bg-[#F2FAFF] dark:bg-[#1A1A1A] text-[#111111] dark:text-[#E8E8E7]">
       {/* ambient glow — Option 1 Warm Glowing Atmospheric Orbs */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute left-1/2 top-0 h-[40rem] w-[64rem] -translate-x-1/2 rounded-full bg-orange-400/20 dark:bg-orange-600/18 blur-[130px] animate-pulse" style={{ animationDuration: '7s' }} />
-        <div className="absolute -right-20 top-1/4 h-[32rem] w-[32rem] rounded-full bg-amber-300/25 dark:bg-amber-500/12 blur-[110px]" style={{ animation: 'float 8s ease-in-out infinite' }} />
-        <div className="absolute -left-20 bottom-1/4 h-[26rem] w-[26rem] rounded-full bg-rose-300/20 dark:bg-rose-600/10 blur-[110px]" style={{ animation: 'float 10s ease-in-out infinite reverse' }} />
-        <div className="absolute right-1/3 bottom-0 h-[22rem] w-[22rem] rounded-full bg-orange-200/20 dark:bg-orange-500/8 blur-[90px]" style={{ animation: 'float 12s ease-in-out infinite' }} />
+        <div className="absolute left-1/2 top-0 h-[40rem] w-[64rem] -translate-x-1/2 rounded-full bg-orange-400/10 dark:bg-orange-500/8 blur-[130px]" />
+        <div className="absolute -right-20 top-1/4 h-[32rem] w-[32rem] rounded-full bg-amber-300/15 dark:bg-amber-500/8 blur-[110px]" style={{ animation: 'float 8s ease-in-out infinite' }} />
+        <div className="absolute -left-20 bottom-1/4 h-[26rem] w-[26rem] rounded-full bg-rose-300/12 dark:bg-rose-600/6 blur-[110px]" style={{ animation: 'float 10s ease-in-out infinite reverse' }} />
+        <div className="absolute right-1/3 bottom-0 h-[22rem] w-[22rem] rounded-full bg-orange-200/12 dark:bg-orange-500/6 blur-[90px]" style={{ animation: 'float 12s ease-in-out infinite' }} />
       </div>
 
       {/* nav */}
@@ -560,7 +561,7 @@ export default function LandingPage() {
         />
 
         {/* Option 1 + 2: Warm Glowing Atmospheric Spotlight Layer */}
-        <div className="absolute left-1/2 top-1/3 -z-10 h-[30rem] w-[50rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.24)_0%,rgba(245,158,11,0.12)_45%,transparent_75%)] blur-[75px] pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
+        <div className="absolute left-1/2 top-1/3 -z-10 h-[30rem] w-[50rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.12)_0%,rgba(245,158,11,0.06)_45%,transparent_75%)] blur-[75px] pointer-events-none" />
 
         {/* Option 2: Floating Tech Node Particles (Rich Micro Particle Field) */}
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -591,7 +592,67 @@ export default function LandingPage() {
           <div className="absolute bottom-10 right-[42%] h-[2px] w-[2px] rounded-full bg-orange-300/80 shadow-[0_0_6px_rgba(253,186,116,0.8)]" style={{ animation: 'particle-pulse 3.7s infinite ease-in-out 2.2s' }} />
         </div>
 
-        <div className="mx-auto max-w-7xl">
+        <div className="relative mx-auto max-w-7xl">
+          {/* Hero Flank Floating Cards (Left & Right Flanks) */}
+          <div className="hidden xl:block pointer-events-none">
+            {/* Left Flank Card 1 - Active Sprint Progress */}
+            <div className="pointer-events-auto absolute top-20 left-0 2xl:-left-12 w-60 rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-[#1A1A1A]/80 p-3.5 shadow-xl shadow-orange-500/5 dark:shadow-black/40 backdrop-blur-md transition-all duration-500 hover:scale-105 hover:border-orange-400/60 -rotate-3 hover:rotate-0" style={{ animation: 'float 8s ease-in-out infinite' }}>
+              <div className="flex items-center justify-between text-[10px] font-bold">
+                <span className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Active Sprint 24
+                </span>
+                <span className="text-orange-500 font-mono">94%</span>
+              </div>
+              <div className="mt-2.5 h-1.5 w-full rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden">
+                <div className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-400" style={{ width: '94%' }} />
+              </div>
+              <p className="mt-2 text-[9px] font-medium text-slate-400 dark:text-slate-500">18 tasks remaining in release</p>
+            </div>
+
+            {/* Left Flank Card 2 - Merged PR Signal (Positioned at Top-48) */}
+            <div className="pointer-events-auto absolute top-48 left-2 2xl:-left-8 w-56 rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-[#1A1A1A]/80 p-3 shadow-xl shadow-orange-500/5 dark:shadow-black/40 backdrop-blur-md transition-all duration-500 hover:scale-105 hover:border-orange-400/60 rotate-2 hover:rotate-0" style={{ animation: 'float 10s ease-in-out infinite reverse 1s' }}>
+              <div className="flex items-center gap-2.5">
+                <div className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400">
+                  <GitBranch className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">PR #142 Merged</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">OAuth2 flow ready</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Flank Card 1 - Realtime Team Members */}
+            <div className="pointer-events-auto absolute top-20 right-0 2xl:-right-12 w-60 rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-[#1A1A1A]/80 p-3.5 shadow-xl shadow-orange-500/5 dark:shadow-black/40 backdrop-blur-md transition-all duration-500 hover:scale-105 hover:border-orange-400/60 rotate-3 hover:rotate-0" style={{ animation: 'float 9s ease-in-out infinite 0.5s' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-2">
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-orange-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-[#1A1A1A]">H</span>
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-amber-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-[#1A1A1A]">L</span>
+                    <span className="grid h-6 w-6 place-items-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white dark:ring-[#1A1A1A]">M</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-800 dark:text-slate-200">+5 Online</span>
+                </div>
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+              <p className="mt-2 text-[10px] font-medium text-slate-400 dark:text-slate-500">Workspace sync active</p>
+            </div>
+
+            {/* Right Flank Card 2 - Cycle Time Insight (Positioned at Top-48) */}
+            <div className="pointer-events-auto absolute top-48 right-2 2xl:-right-8 w-56 rounded-2xl border border-slate-200/60 dark:border-white/10 bg-white/80 dark:bg-[#1A1A1A]/80 p-3.5 shadow-xl shadow-orange-500/5 dark:shadow-black/40 backdrop-blur-md transition-all duration-500 hover:scale-105 hover:border-orange-400/60 -rotate-2 hover:rotate-0" style={{ animation: 'float 11s ease-in-out infinite reverse 1.5s' }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Release Cycle</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white mt-0.5">3.4 Days Avg</p>
+                </div>
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+                  <TrendingUp className="h-4 w-4" />
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="mx-auto max-w-4xl text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-300/60 dark:border-orange-800/40 bg-white/80 dark:bg-white/[0.04] px-4 py-1.5 text-xs font-bold text-orange-600 dark:text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.2)] backdrop-blur-sm" style={{ backgroundImage: 'linear-gradient(90deg, transparent, rgba(249,115,22,0.1), transparent)', backgroundSize: '200% 100%', animation: 'shimmer 3s linear infinite' }}>
               <Sparkles className="h-3.5 w-3.5 text-orange-500 animate-pulse" />
@@ -636,15 +697,16 @@ export default function LandingPage() {
       </section>
 
       {/* trusted by / solutions by team */}
-      <section
-        ref={solutionsReveal.ref}
-        id="solutions"
-        className={`relative border-y border-[#CBD5E1] dark:border-white/10 bg-slate-50/30 dark:bg-white/[0.01] px-4 py-20 sm:px-6 lg:px-8 transition-all duration-1000 overflow-hidden ${
-          solutionsReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden border-y border-[#CBD5E1] dark:border-white/10 bg-slate-50/30 dark:bg-white/[0.01]">
         {/* Section Ambient Glow Orb */}
         <div className="absolute left-1/4 top-1/2 -z-10 h-[28rem] w-[28rem] -translate-y-1/2 rounded-full bg-orange-400/10 dark:bg-orange-500/8 blur-[100px] pointer-events-none" />
+        <section
+          ref={solutionsReveal.ref}
+          id="solutions"
+          className={`px-4 py-20 sm:px-6 lg:px-8 transition-all duration-700 ${
+            solutionsReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto max-w-7xl">
           <p className="text-center text-[10px] font-bold uppercase tracking-[0.25em] text-[#64748b] dark:text-slate-400">
             Trusted operating layer for
@@ -893,17 +955,19 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* features */}
-      <section
-        ref={featuresReveal.ref}
-        id="features"
-        className={`relative px-4 py-24 sm:px-6 lg:px-8 transition-all duration-1000 overflow-hidden ${
-          featuresReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden">
         {/* Section Ambient Glow Orb */}
         <div className="absolute right-0 top-1/3 -z-10 h-[32rem] w-[32rem] rounded-full bg-amber-400/10 dark:bg-amber-500/8 blur-[120px] pointer-events-none" />
+        <section
+          ref={featuresReveal.ref}
+          id="features"
+          className={`px-4 py-24 sm:px-6 lg:px-8 transition-all duration-700 ${
+            featuresReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto max-w-7xl">
           <SectionHeader
             eyebrow="Feature showcase"
@@ -928,16 +992,18 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* product preview */}
-      <section
-        ref={productReveal.ref}
-        className={`relative px-4 py-24 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-white/10 bg-slate-100/50 dark:bg-[#1a1a1a]/40 transition-all duration-1000 overflow-hidden ${
-          productReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden border-t border-slate-100 dark:border-white/10 bg-slate-100/50 dark:bg-[#1a1a1a]/40">
         {/* Section Ambient Glow Orb */}
         <div className="absolute left-10 top-1/2 -z-10 h-[28rem] w-[36rem] -translate-y-1/2 rounded-full bg-orange-500/12 dark:bg-orange-500/10 blur-[110px] pointer-events-none" />
+        <section
+          ref={productReveal.ref}
+          className={`px-4 py-24 sm:px-6 lg:px-8 transition-all duration-700 ${
+            productReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto grid max-w-7xl items-center gap-16 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-orange-200/60 dark:border-orange-800/40 bg-orange-50/60 dark:bg-orange-950/20 px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest text-orange-600 dark:text-orange-400 shadow-sm">
@@ -1012,17 +1078,19 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* kanban */}
-      <section
-        ref={kanbanReveal.ref}
-        id="kanban"
-        className={`relative px-4 py-24 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-white/10 transition-all duration-1000 overflow-hidden ${
-          kanbanReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden border-t border-slate-100 dark:border-white/10">
         {/* Section Ambient Glow Spotlight */}
         <div className="absolute left-1/2 top-1/2 -z-10 h-[28rem] w-[48rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.12)_0%,transparent_70%)] blur-[110px] pointer-events-none" />
+        <section
+          ref={kanbanReveal.ref}
+          id="kanban"
+          className={`px-4 py-24 sm:px-6 lg:px-8 transition-all duration-700 ${
+            kanbanReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto max-w-7xl">
           <SectionHeader
             eyebrow="Kanban workflow"
@@ -1068,17 +1136,19 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* solutions */}
-      <section
-        ref={collaborationReveal.ref}
-        id="collaboration"
-        className={`relative px-4 py-24 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-white/10 bg-slate-50/20 dark:bg-transparent transition-all duration-1000 overflow-hidden ${
-          collaborationReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden border-t border-slate-100 dark:border-white/10 bg-slate-50/20 dark:bg-transparent">
         {/* Section Ambient Glow Orb */}
         <div className="absolute right-10 top-1/3 -z-10 h-[30rem] w-[30rem] rounded-full bg-orange-400/12 dark:bg-orange-500/10 blur-[110px] pointer-events-none" />
+        <section
+          ref={collaborationReveal.ref}
+          id="collaboration"
+          className={`px-4 py-24 sm:px-6 lg:px-8 transition-all duration-700 ${
+            collaborationReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 items-center">
           {/* Left Column - Collaboration */}
           <div className="flex flex-col justify-center">
@@ -1146,17 +1216,19 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* permissions */}
-      <section
-        ref={securityReveal.ref}
-        id="security"
-        className={`relative px-4 py-24 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-white/10 bg-slate-50/10 dark:bg-transparent transition-all duration-1000 overflow-hidden ${
-          securityReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden border-t border-slate-100 dark:border-white/10 bg-slate-50/10 dark:bg-transparent">
         {/* Section Ambient Glow Orb */}
         <div className="absolute right-1/4 top-1/2 -z-10 h-[28rem] w-[28rem] -translate-y-1/2 rounded-full bg-amber-500/10 dark:bg-amber-500/8 blur-[110px] pointer-events-none" />
+        <section
+          ref={securityReveal.ref}
+          id="security"
+          className={`px-4 py-24 sm:px-6 lg:px-8 transition-all duration-700 ${
+            securityReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
             <span className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-orange-200/60 dark:border-orange-800/40 bg-orange-50/60 dark:bg-orange-950/20 px-3.5 py-1 text-[10px] font-bold uppercase tracking-widest text-orange-600 dark:text-orange-400 shadow-sm">
@@ -1197,16 +1269,18 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* how it works */}
-      <section
-        ref={howItWorksReveal.ref}
-        className={`relative px-4 py-20 sm:px-6 lg:px-8 transition-all duration-1000 overflow-hidden ${
-          howItWorksReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden">
         {/* Section Ambient Glow Spotlight */}
-        <div className="absolute left-1/2 top-1/2 -z-10 h-[24rem] w-[56rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.15)_0%,transparent_75%)] blur-[85px] pointer-events-none" />
+        <div className="absolute left-1/2 top-1/2 -z-10 h-[24rem] w-[56rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,0.12)_0%,transparent_75%)] blur-[85px] pointer-events-none" />
+        <section
+          ref={howItWorksReveal.ref}
+          className={`px-4 py-20 sm:px-6 lg:px-8 transition-all duration-700 ${
+            howItWorksReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto max-w-7xl">
           <SectionHeader
             eyebrow="How it works"
@@ -1250,17 +1324,19 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* about */}
-      <section
-        ref={aboutReveal.ref}
-        id="about"
-        className={`relative px-4 py-24 sm:px-6 lg:px-8 border-t border-slate-100 dark:border-white/10 transition-all duration-1000 overflow-hidden ${
-          aboutReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden border-t border-slate-100 dark:border-white/10">
         {/* Section Ambient Glow Orb */}
         <div className="absolute left-10 top-1/4 -z-10 h-[34rem] w-[34rem] rounded-full bg-orange-400/10 dark:bg-orange-500/8 blur-[120px] pointer-events-none" />
+        <section
+          ref={aboutReveal.ref}
+          id="about"
+          className={`px-4 py-24 sm:px-6 lg:px-8 transition-all duration-700 ${
+            aboutReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto max-w-7xl">
           {/* Top Half: About Automation Land */}
           <div className="grid gap-12 lg:grid-cols-2 items-center">
@@ -1342,16 +1418,18 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* FAQ */}
-      <section
-        ref={faqReveal.ref}
-        className={`relative px-4 py-20 sm:px-6 lg:px-8 transition-all duration-1000 overflow-hidden ${
-          faqReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
-        }`}
-      >
+      <div className="relative overflow-hidden">
         {/* Section Ambient Glow Spotlight */}
         <div className="absolute left-1/2 top-1/2 -z-10 h-[26rem] w-[44rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(245,158,11,0.12)_0%,transparent_75%)] blur-[95px] pointer-events-none" />
+        <section
+          ref={faqReveal.ref}
+          className={`px-4 py-20 sm:px-6 lg:px-8 transition-all duration-700 ${
+            faqReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+          }`}
+        >
         <div className="mx-auto max-w-4xl">
           <SectionHeader
             eyebrow="FAQ"
@@ -1371,6 +1449,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* CTA */}
       <section
@@ -1379,18 +1458,30 @@ export default function LandingPage() {
           ctaReveal.isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
         }`}
       >
-        <div className="mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-gradient-to-br from-orange-600 via-amber-600 to-rose-600 p-8 text-center shadow-2xl shadow-orange-500/25 sm:p-12 relative">
-          {/* Animated sparkle pattern */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.12)_0%,transparent_50%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.08)_0%,transparent_50%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.04)_50%,transparent_75%)] bg-[length:250%_250%]" style={{ animation: 'shimmer 4s linear infinite' }} />
+        <div className="group mx-auto max-w-6xl overflow-hidden rounded-[32px] bg-gradient-to-br from-orange-600 via-amber-600 to-rose-600 p-8 text-center shadow-2xl shadow-orange-500/25 sm:p-14 relative border border-white/20">
+          {/* Animated background aurora wave & pulsing aura */}
+          <div className="absolute left-1/2 top-1/2 -z-10 h-[36rem] w-[36rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-400/12 blur-[90px] pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.16)_0%,transparent_50%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1)_0%,transparent_50%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.06)_50%,transparent_75%)] bg-[length:250%_250%]" style={{ animation: 'shimmer 4s linear infinite' }} />
+
+          {/* Floating starlight micro particles inside CTA container */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute top-6 left-[15%] h-1.5 w-1.5 rounded-full bg-white/90 shadow-[0_0_8px_white]" style={{ animation: 'particle-pulse 2.5s infinite ease-in-out 0.2s' }} />
+            <div className="absolute top-12 right-[18%] h-2 w-2 rounded-full bg-amber-200/90 shadow-[0_0_10px_white]" style={{ animation: 'particle-pulse 3.2s infinite ease-in-out 1s' }} />
+            <div className="absolute bottom-8 left-[22%] h-1 w-1 rounded-full bg-white/80 shadow-[0_0_6px_white]" style={{ animation: 'particle-pulse 2.8s infinite ease-in-out 0.5s' }} />
+            <div className="absolute bottom-12 right-[25%] h-1.5 w-1.5 rounded-full bg-orange-100/90 shadow-[0_0_8px_white]" style={{ animation: 'particle-pulse 3.5s infinite ease-in-out 1.5s' }} />
+          </div>
+
           <div className="relative z-10">
-            <div className="mx-auto mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-white/20 text-white backdrop-blur shadow-lg shadow-white/10 ring-1 ring-white/30">
-              <Rocket className="h-7 w-7" />
+            {/* Animated Rocket Icon container with floating motion & glowing ring */}
+            <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-white/20 text-white backdrop-blur-md shadow-xl shadow-black/10 ring-2 ring-white/40 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500" style={{ animation: 'float 6s ease-in-out infinite' }}>
+              <Rocket className="h-8 w-8 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
             </div>
-            <h2 className="mx-auto max-w-3xl text-3xl font-extrabold tracking-tight text-white sm:text-5xl leading-tight">
+
+            <h2 className="mx-auto max-w-3xl text-3xl font-extrabold tracking-tight text-white sm:text-5xl leading-tight drop-shadow-sm">
               Ready to organize your team&apos;s work?
             </h2>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-amber-100/90 sm:text-lg">
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-amber-100/95 sm:text-lg">
               Move from scattered tasks and unclear ownership to a project operating system built for software delivery.
             </p>
             <CtaAuthAction />

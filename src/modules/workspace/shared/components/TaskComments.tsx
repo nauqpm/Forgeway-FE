@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MentionsInput, Mention } from "react-mentions";
 import { AlertCircle, Check, Loader2, Pencil, Trash2, X } from "lucide-react";
@@ -13,17 +13,20 @@ import { queryKeys } from "@/shared/constants/queryKeys";
 import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
 
 type MentionMember = {
-  id: string;
-  display: string;
+  id: string | number;
+  display?: string;
+  avatar?: string;
 };
 
 type RawMemberDto = {
   id?: string;
   _id?: string;
-  userId?: { id?: string; _id?: string; fullName?: string; email?: string } | string;
-  user?: { id?: string; _id?: string; fullName?: string; email?: string };
+  userId?: { id?: string; _id?: string; fullName?: string; email?: string; avatar?: string; avatarUrl?: string; image?: string } | string;
+  user?: { id?: string; _id?: string; fullName?: string; email?: string; avatar?: string; avatarUrl?: string; image?: string };
   fullName?: string;
   email?: string;
+  avatar?: string;
+  avatarUrl?: string;
 };
 
 type TaskCommentsProps = {
@@ -59,8 +62,9 @@ const toMentionMember = (m: RawMemberDto): MentionMember | null => {
   const userObj = typeof m.userId === "object" && m.userId !== null ? m.userId : m.user;
   const id = userObj?.id ?? userObj?._id ?? m.id ?? m._id ?? (typeof m.userId === "string" ? m.userId : undefined);
   const display = userObj?.fullName || userObj?.email || m.fullName || m.email;
+  const avatar = userObj?.avatar ?? userObj?.avatarUrl ?? userObj?.image ?? m.avatar ?? m.avatarUrl;
   if (!id || !display) return null;
-  return { id, display };
+  return { id, display, avatar };
 };
 
 const toMentionMembers = (members: RawMemberDto[]): MentionMember[] =>
@@ -175,6 +179,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   const [replyContent, setReplyContent] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
+  const replyInputRef = useRef<HTMLTextAreaElement>(null);
 
   const { hasPermission } = useWorkspacePermission(workspaceId);
   const canComment = hasPermission("task:edit");
@@ -341,7 +346,14 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
 
   const handleReplyStart = useCallback((comment: TaskComment) => {
     setReplyingToId(comment.id);
-    setReplyContent(getReplyAuthorMention(comment));
+    const content = getReplyAuthorMention(comment);
+    setReplyContent(content);
+    setTimeout(() => {
+      if (replyInputRef.current) {
+        replyInputRef.current.focus();
+        replyInputRef.current.setSelectionRange(content.length, content.length);
+      }
+    }, 10);
   }, []);
 
   const handleReplyCancel = useCallback(() => {
@@ -423,13 +435,17 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                       data={mentionMembers}
                       markup="[@__display__](__id__)"
                       renderSuggestion={(
-                        suggestion,
+                        suggestion: MentionMember,
                         _search,
                         highlightedDisplay,
                       ) => (
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
-                            {suggestion.display?.toString().charAt(0).toUpperCase()}
+                          <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden">
+                            {suggestion.avatar ? (
+                              <img src={suggestion.avatar} alt={suggestion.display} className="w-full h-full object-cover" />
+                            ) : (
+                              suggestion.display?.toString().charAt(0).toUpperCase()
+                            )}
                           </div>
                           <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
                             {highlightedDisplay}
@@ -498,6 +514,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                     {renderCurrentUserAvatar("w-7 h-7")}
                     <div className="min-w-0 max-w-full flex-1">
                       <MentionsInput
+                        inputRef={replyInputRef}
                         autoFocus
                         value={replyContent}
                         onChange={(e) => setReplyContent(e.target.value)}
@@ -611,8 +628,8 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                     __html: `
                     .tc-m{width:100%;max-width:100%;min-width:0}
                     .tc-m__control{min-height:36px;width:100%;max-width:100%;min-width:0;overflow-x:hidden}
-                    .tc-m__highlighter{overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;max-width:100%;box-sizing:border-box;overflow-x:hidden}
-                    .tc-m__input{width:100%!important;outline:none;border:none;background:transparent;color:inherit;font-family:inherit;font-size:inherit;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;max-width:100%;box-sizing:border-box;overflow-x:hidden}
+                    .tc-m__input{width:100%!important;outline:none;border:none;background:transparent;color:transparent !important;caret-color:currentColor;font-family:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;max-width:100%;box-sizing:border-box;overflow-x:hidden;margin:0;padding:0}
+                    .tc-m__highlighter{font-family:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;max-width:100%;box-sizing:border-box;overflow-x:hidden;margin:0;padding:0}
                     .tc-m__suggestions__list{background:#F9F9F8;border:1px solid #EAEAEA;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);overflow:hidden;z-index:100;position:absolute;min-width:200px;margin-top:4px}
                     .tc-m__suggestions__item{padding:8px 12px;cursor:pointer;color:#111111;font-size:13px}
                     .tc-m__suggestions__item--focused{background:#F0F0EE}
@@ -640,10 +657,14 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                     trigger="@"
                     data={mentionMembers}
                     markup="[@__display__](__id__)"
-                    renderSuggestion={(suggestion, _search, highlightedDisplay) => (
+                    renderSuggestion={(suggestion: MentionMember, _search, highlightedDisplay) => (
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0">
-                          {suggestion.display?.toString().charAt(0).toUpperCase()}
+                        <div className="w-6 h-6 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden">
+                          {suggestion.avatar ? (
+                            <img src={suggestion.avatar} alt={suggestion.display} className="w-full h-full object-cover" />
+                          ) : (
+                            suggestion.display?.toString().charAt(0).toUpperCase()
+                          )}
                         </div>
                         <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">
                           {highlightedDisplay}

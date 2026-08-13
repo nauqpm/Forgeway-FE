@@ -171,10 +171,19 @@ export default function ChatSidebar() {
       : sender;
 
     const isMine = String(msgSenderId) === String(currentUserId);
-    const senderName =
-      (sender && typeof sender === 'object' ? sender.fullName : undefined) ||
-      lastMsg.senderName ||
-      'Deleted User';
+    const senderName = (() => {
+      let name = '';
+      if (sender && typeof sender === 'object') {
+        name = sender.fullName?.trim() || (sender.email ? sender.email.split('@')[0] : '');
+      }
+      if (!name) {
+        name = lastMsg.senderName?.trim() || '';
+      }
+      if (!name) {
+        name = 'User';
+      }
+      return name;
+    })();
 
     let formattedContent = '';
     if (lastMsg.type === 'sticker') {

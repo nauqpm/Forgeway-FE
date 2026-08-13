@@ -5,6 +5,7 @@ import { X, Search, User, Loader2 } from 'lucide-react';
 import { useSearchUsers, useCreateDM } from '../hooks/useChatQueries';
 import type { SearchUser } from '@/modules/client/chat/types/chat.types';
 import { toast } from 'react-hot-toast';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface NewChatModalProps {
 }
 
 export default function NewDMChatModal({ isOpen, onClose }: NewChatModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
