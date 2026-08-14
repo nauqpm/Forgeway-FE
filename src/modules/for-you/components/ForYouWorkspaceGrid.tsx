@@ -40,18 +40,18 @@ export function ForYouWorkspaceGrid({ workspaces, stats, error }: Props) {
         </Link>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
-          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Owned</p>
-          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.owned}</p>
+      <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-2.5 py-2.5 sm:px-4 sm:py-3">
+          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] truncate">Owned</p>
+          <p className="mt-1 text-lg sm:text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.owned}</p>
         </div>
-        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
-          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Joined</p>
-          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.joined}</p>
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-2.5 py-2.5 sm:px-4 sm:py-3">
+          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] truncate">Joined</p>
+          <p className="mt-1 text-lg sm:text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.joined}</p>
         </div>
-        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-4 py-3">
-          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">Active</p>
-          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.active}</p>
+        <div className="rounded-[8px] border border-[#EAEAEA] dark:border-[rgba(255,255,255,0.08)] bg-white dark:bg-[#202020] px-2.5 py-2.5 sm:px-4 sm:py-3">
+          <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] truncate">Active</p>
+          <p className="mt-1 text-lg sm:text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{stats.active}</p>
         </div>
       </div>
 

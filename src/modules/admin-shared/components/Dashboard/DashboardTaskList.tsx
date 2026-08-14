@@ -25,18 +25,18 @@ export function DashboardTaskList({ assignedTasks, completedCount, workspaceCoun
         )}
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
-          <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Assigned tasks</p>
-          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{assignedTasks.length}</p>
+      <div className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
+        <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-2.5 py-2.5 sm:px-4 sm:py-3 dark:border-white/[0.06] dark:bg-[#202020]">
+          <p className="text-[0.6875rem] sm:text-xs text-[#787774] dark:text-[#9B9A97] truncate">Assigned tasks</p>
+          <p className="mt-1 text-lg sm:text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{assignedTasks.length}</p>
         </div>
-        <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
-          <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recently completed</p>
-          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{completedCount}</p>
+        <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-2.5 py-2.5 sm:px-4 sm:py-3 dark:border-white/[0.06] dark:bg-[#202020]">
+          <p className="text-[0.6875rem] sm:text-xs text-[#787774] dark:text-[#9B9A97] truncate">Recently completed</p>
+          <p className="mt-1 text-lg sm:text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{completedCount}</p>
         </div>
-        <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-4 py-3 dark:border-white/[0.06] dark:bg-[#202020]">
-          <p className="text-xs text-[#787774] dark:text-[#9B9A97]">Recommended workspaces</p>
-          <p className="mt-1 text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspaceCount}</p>
+        <div className="rounded-[8px] border border-[#EAEAEA] bg-white px-2.5 py-2.5 sm:px-4 sm:py-3 dark:border-white/[0.06] dark:bg-[#202020]">
+          <p className="text-[0.6875rem] sm:text-xs text-[#787774] dark:text-[#9B9A97] truncate">Recommended workspaces</p>
+          <p className="mt-1 text-lg sm:text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspaceCount}</p>
         </div>
       </div>
 

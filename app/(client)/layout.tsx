@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -592,7 +592,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           />
         )}
 
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative [&>div]:flex-1 [&>div]:flex [&>div]:flex-col [&>div]:min-h-0 [&>div]:h-full [&>div]:w-full">{children}</main>
       </div>
       <ChatRealtimeHandler />
     </div>
