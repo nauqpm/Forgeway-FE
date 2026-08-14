@@ -13,6 +13,8 @@ interface DashboardRowProps {
   onSelect: (id: string) => void;
   onRename: (id: string, currentTitle: string) => void;
   onDelete: (doc: Document) => void;
+  onDownload: (doc: Document) => void;
+  isDownloading: boolean;
 }
 
 export default function DashboardRow({
@@ -24,6 +26,8 @@ export default function DashboardRow({
   onSelect,
   onRename,
   onDelete,
+  onDownload,
+  isDownloading,
 }: DashboardRowProps) {
   return (
     <tr
@@ -122,6 +126,19 @@ export default function DashboardRow({
             </>
           ) : (
             <>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDownload(doc);
+                }}
+                disabled={isDownloading}
+                className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] disabled:cursor-wait disabled:opacity-50 transition-all border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/[0.06]"
+                title="Download"
+                aria-label={`Download ${doc.title}`}
+              >
+                <Download className="w-4 h-4" />
+              </button>
               <button
                 onClick={(e) => { e.stopPropagation(); onRename(doc.id, doc.title); }}
                 className="p-2 hover:bg-white dark:hover:bg-[#2A2A2A] rounded-[6px] text-[#ABABAB] dark:text-[#6B6B6B] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-all border border-transparent hover:border-[#EAEAEA] dark:hover:border-white/[0.06]"

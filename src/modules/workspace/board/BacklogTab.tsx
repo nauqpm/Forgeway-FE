@@ -2,13 +2,13 @@
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
-import { FileText, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import AssigneePicker, { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
 import { useMemo, useRef, useState, useEffect } from "react";
 import FilterMenu from "@/modules/workspace/shared/components/FilterMenu";
 import StatusPicker from "@/shared/components/StatusPicker";
 import PriorityPicker from "@/shared/components/PriorityPicker";
-import TypePicker from "@/shared/components/TypePicker";
+import TypePicker, { TASK_TYPE_CONFIG } from "@/shared/components/TypePicker";
 import { compareIssueRank } from "@/modules/workspace/shared/utils/dragUtils";
 import type { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
@@ -80,6 +80,16 @@ type BacklogTabProps = {
     canMoveTask: boolean;
     canManageSprint: boolean;
   };
+};
+
+const BacklogIssueTypeIcon = ({ type }: { type?: string | null }) => {
+  const normalizedType = type
+    ? type.charAt(0).toUpperCase() + type.slice(1).toLowerCase()
+    : "Task";
+  const config = TASK_TYPE_CONFIG[normalizedType] ?? TASK_TYPE_CONFIG.Task;
+  const Icon = config.Icon;
+
+  return <Icon className={`h-4 w-4 shrink-0 ${config.iconColor}`} />;
 };
 
 const getInitials = (value: string) =>
@@ -544,9 +554,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   className="flex min-w-0 flex-1 items-center gap-3"
                                   onClick={() => setSelectedIssue(issue)}
                                 >
-                                  <FileText
-                                    className={`w-4 h-4 ${issue.type === "Bug" ? "text-[#9F2F2D]" : issue.type === "Story" ? "text-[#346538]" : "text-[#2563EB] dark:text-[#60A5FA]"}`}
-                                  />
+                                  <BacklogIssueTypeIcon type={issue.type} />
                                   <span className="text-[0.6875rem] font-mono font-medium text-[#ABABAB] dark:text-[#6B6B6B] w-16 hover:underline cursor-pointer">
                                     {issue.key}
                                   </span>
@@ -780,9 +788,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 className="flex min-w-0 flex-1 items-center gap-3"
                                 onClick={() => setSelectedIssue(issue)}
                               >
-                                <FileText
-                                  className={`w-4 h-4 ${issue.type === "Bug" ? "text-[#9F2F2D]" : issue.type === "Story" ? "text-[#346538]" : "text-[#ABABAB] dark:text-[#6B6B6B]"}`}
-                                />
+                                <BacklogIssueTypeIcon type={issue.type} />
                                 <span className="text-[0.6875rem] font-mono font-medium text-[#ABABAB] dark:text-[#6B6B6B] w-16 hover:underline cursor-pointer">
                                   {issue.key}
                                 </span>
@@ -827,7 +833,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                         assigneeAvatar: uid ? workspaceMembers.find((m: any) => m.id === uid)?.avatar : undefined,
                                       })}
-                                      placement="bottom"
+                                      placement="auto"
                                       size="sm"
                                     />
                                   </div>

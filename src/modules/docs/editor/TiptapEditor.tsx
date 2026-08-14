@@ -38,6 +38,7 @@ import { useAuthStore } from "@/modules/auth/shared/stores/authStore";
 
 import { extractApiError } from "@/shared/utils/apiError";
 import { buildWorkspacePageHref } from "../utils/pageRoutes";
+import { Modal, ModalFooter } from "@/shared/components/ui/Modal";
 
 export type EditorMode = "read" | "edit";
 
@@ -99,6 +100,10 @@ export default function TiptapEditor({
   const [workspacePages, setWorkspacePages] = useState<{ id: string; title: string }[]>([]);
   const [titleError, setTitleError] = useState<string | null>(null);
   const [isSavingTitle, setIsSavingTitle] = useState(false);
+  const [draftRenameOpen, setDraftRenameOpen] = useState(false);
+  const [draftRenameValue, setDraftRenameValue] = useState("");
+  const [draftRenameError, setDraftRenameError] = useState<string | null>(null);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   useEffect(() => {
     const handleCloseMenu = () => setTableMenu(null);
@@ -458,7 +463,26 @@ export default function TiptapEditor({
     if (!document || !effectiveDocumentId) return;
 
     if (effectiveDocumentId.startsWith("temp-")) {
-      const savedDoc = await saveDocument(effectiveDocumentId);
+      const titleAlreadyExists = (title: string) =>
+        documents.some(
+          (page) =>
+            page.id !== document.id &&
+            normalizeTitle(page.title) === normalizeTitle(title),
+        );
+      const titleToSave = document.title.trim() || "Untitled Document";
+
+      if (titleAlreadyExists(titleToSave)) {
+        setDraftRenameValue(titleToSave);
+        setDraftRenameError(
+          "A document with this name already exists in this workspace",
+        );
+        setDraftRenameOpen(true);
+        return;
+      }
+
+      const savedDoc = await saveDocument(effectiveDocumentId, {
+        title: titleToSave,
+      });
       if (!savedDoc) return;
 
       enterEditMode({
@@ -513,6 +537,58 @@ export default function TiptapEditor({
 
     if (e.key === "Escape" && ydoc) {
       resetTitleToSaved();
+    }
+  };
+
+  const handleSaveRenamedDraft = async () => {
+    if (!document || !effectiveDocumentId || !effectiveDocumentId.startsWith("temp-")) {
+      return;
+    }
+
+    const titleToSave = draftRenameValue.trim();
+    if (!titleToSave) {
+      setDraftRenameError("Document name is required");
+      return;
+    }
+
+    const titleAlreadyExists = documents.some(
+      (page) =>
+        page.id !== document.id &&
+        normalizeTitle(page.title) === normalizeTitle(titleToSave),
+    );
+    if (titleAlreadyExists) {
+      setDraftRenameError(
+        "A document with this name already exists in this workspace",
+      );
+      return;
+    }
+
+    setIsSavingDraft(true);
+    setDraftRenameError(null);
+    updateDocument(effectiveDocumentId, { title: titleToSave });
+
+    const savedDoc = await saveDocument(effectiveDocumentId, {
+      title: titleToSave,
+    });
+    setIsSavingDraft(false);
+    if (!savedDoc) {
+      setDraftRenameOpen(false);
+      return;
+    }
+
+    setDraftRenameOpen(false);
+    enterEditMode({
+      documentId: savedDoc.id,
+      initialTitle: savedDoc.title,
+      initialContent: savedDoc.content,
+    });
+    if (workspaceKey) {
+      window.history.replaceState(
+        null,
+        "",
+        buildWorkspacePageHref({ workspaceKey, doc: savedDoc, mode: "edit" }),
+      );
+      window.dispatchEvent(new Event("docs-location-change"));
     }
   };
 
@@ -670,6 +746,67 @@ export default function TiptapEditor({
           <LinkBubbleMenu editor={editEditor} />
         )}
       </div>
+
+      <Modal
+        open={draftRenameOpen}
+        onClose={() => {
+          if (!isSavingDraft) setDraftRenameOpen(false);
+        }}
+        title="Choose a different document name"
+        description="A document with the default name already exists in this workspace."
+        size="sm"
+        closeOnBackdrop={!isSavingDraft}
+        footer={
+          <ModalFooter
+            onCancel={() => setDraftRenameOpen(false)}
+            onConfirm={() => {
+              void handleSaveRenamedDraft();
+            }}
+            cancelLabel="Cancel"
+            confirmLabel="Save and edit"
+            loading={isSavingDraft}
+          />
+        }
+      >
+        <label
+          htmlFor="draft-document-name"
+          className="mb-1.5 block text-sm font-medium text-[#111111] dark:text-[#E8E8E7]"
+        >
+          Document name
+        </label>
+        <input
+          id="draft-document-name"
+          autoFocus
+          value={draftRenameValue}
+          disabled={isSavingDraft}
+          onChange={(event) => {
+            setDraftRenameValue(event.target.value);
+            if (draftRenameError) setDraftRenameError(null);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              void handleSaveRenamedDraft();
+            }
+          }}
+          aria-invalid={Boolean(draftRenameError)}
+          aria-describedby={draftRenameError ? "draft-document-name-error" : undefined}
+          className={`w-full rounded-[6px] border bg-[#F9F9F8] px-3 py-2.5 text-sm text-[#111111] outline-none transition-colors focus:bg-white disabled:cursor-not-allowed disabled:opacity-60 dark:bg-[#2A2A2A] dark:text-[#E8E8E7] ${
+            draftRenameError
+              ? "border-rose-500 focus:border-rose-500"
+              : "border-[#EAEAEA] focus:border-[#2563EB] dark:border-white/[0.06] dark:focus:border-[#3B82F6]"
+          }`}
+          placeholder="Enter a unique document name"
+        />
+        {draftRenameError && (
+          <p
+            id="draft-document-name-error"
+            className="mt-1.5 text-xs text-rose-600 dark:text-rose-400"
+          >
+            {draftRenameError}
+          </p>
+        )}
+      </Modal>
     </div>
   );
 }
