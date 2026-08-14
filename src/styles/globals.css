@@ -1101,6 +1101,10 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   min-width: 0;
 }
 
+.tc-m {
+  font-size: 0.8125rem;
+}
+
 .dark .chat-m,
 .dark .tc-m {
   color: #E8E8E7;
@@ -1119,6 +1123,10 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   overflow-x: hidden;
 }
 
+.tc-m__control {
+  font-size: 0.8125rem;
+}
+
 .chat-m__highlighter,
 .tc-m__highlighter {
   padding: 0px;
@@ -1133,6 +1141,10 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   white-space: pre-wrap !important;
   max-width: 100% !important;
   box-sizing: border-box;
+}
+
+.tc-m__highlighter {
+  font-size: 0.8125rem;
 }
 
 .chat-m__input,
@@ -1157,6 +1169,10 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   white-space: pre-wrap !important;
   max-width: 100% !important;
   box-sizing: border-box;
+}
+
+.tc-m__input {
+  font-size: 0.8125rem;
 }
 
 /* ── Tiptap Rich Text Chat Editor ── */
@@ -1357,6 +1373,42 @@ body[style*="cursor: col-resize"] * {
 
 .dark .chat-m__suggestions__item--focused {
   background: rgba(255, 255, 255, 0.06);
+}
+
+.tc-m__suggestions__list {
+  background: #F9F9F8;
+  border: 1px solid #EAEAEA;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  z-index: 100;
+  position: absolute;
+  min-width: 200px;
+  margin-top: 4px;
+}
+
+.tc-m__suggestions__item {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #111111;
+  font-size: 13px;
+}
+
+.tc-m__suggestions__item--focused {
+  background: #F0F0EE;
+}
+
+.dark .tc-m__suggestions__list {
+  background: #252525;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .tc-m__suggestions__item {
+  color: #E8E8E7;
+}
+
+.dark .tc-m__suggestions__item--focused {
+  background: #2A2A2A;
 }
 
 /* ── Custom Emoji Picker Overrides ── */

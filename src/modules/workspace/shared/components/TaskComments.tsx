@@ -623,23 +623,6 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
               {renderCurrentUserAvatar()}
               <div className="flex-1 min-w-0 max-w-full border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
                 <div className="mb-4 text-[0.8125rem] relative z-10 min-w-0 max-w-full">
-                <style
-                  dangerouslySetInnerHTML={{
-                    __html: `
-                    .tc-m{width:100%;max-width:100%;min-width:0}
-                    .tc-m__control{min-height:36px;width:100%;max-width:100%;min-width:0;overflow-x:hidden}
-                    .tc-m__input{width:100%!important;outline:none;border:none;background:transparent;color:transparent !important;caret-color:currentColor;font-family:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;max-width:100%;box-sizing:border-box;overflow-x:hidden;margin:0;padding:0}
-                    .tc-m__highlighter{font-family:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit;overflow-wrap:anywhere;word-break:break-word;white-space:pre-wrap;max-width:100%;box-sizing:border-box;overflow-x:hidden;margin:0;padding:0}
-                    .tc-m__suggestions__list{background:#F9F9F8;border:1px solid #EAEAEA;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);overflow:hidden;z-index:100;position:absolute;min-width:200px;margin-top:4px}
-                    .tc-m__suggestions__item{padding:8px 12px;cursor:pointer;color:#111111;font-size:13px}
-                    .tc-m__suggestions__item--focused{background:#F0F0EE}
-
-                    .dark .tc-m__suggestions__list{background:#252525;border-color:rgba(255,255,255,0.1)}
-                    .dark .tc-m__suggestions__item{color:#E8E8E7}
-                    .dark .tc-m__suggestions__item--focused{background:#2A2A2A}
-                  `,
-                  }}
-                />
                 <MentionsInput
                   value={commentInput}
                   onChange={(e) => setCommentInput(e.target.value)}
