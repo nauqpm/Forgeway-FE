@@ -46,6 +46,7 @@ const LIST_SPLIT_SORT_OPTIONS: { id: ListSplitSortField; label: string }[] = [
 
 type ListTabProps = {
   filteredIssues: Issue[];
+  issues?: Issue[];
   selectedIssue: Issue | null;
   workspaceKey?: string;
   workspaceId: string;
@@ -82,6 +83,7 @@ const COLUMN_LABELS: Record<string, string> = {
 
 export default function ListTab({
   filteredIssues,
+  issues,
   selectedIssue,
   workspaceKey,
   workspaceId,
@@ -140,7 +142,7 @@ export default function ListTab({
         Columns
       </button>
       {showColumnMenu && (
-        <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 p-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+        <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-[100] p-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
           <div className="text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-2 px-2 uppercase tracking-wider">Show / Hide</div>
           {Object.keys(COLUMN_LABELS).map(id => (
             <label key={id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] cursor-pointer">
@@ -200,6 +202,7 @@ export default function ListTab({
       if (filters.priorities?.length) {
         params.set("priority", filters.priorities.map((p: string) => p.toLowerCase()).join(","));
       }
+      params.set("includeSubtasks", "true");
       if (filters.search) {
         params.set("search", filters.search);
       }
@@ -244,7 +247,7 @@ export default function ListTab({
         <MoreHorizontal className="w-4 h-4" />
       </button>
       {showImportExportMenu && (
-        <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+        <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-[100] py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
           {canImportCsv && (
             <button
               onClick={() => {
@@ -265,7 +268,7 @@ export default function ListTab({
               </div>
               <ChevronRight className="w-4 h-4 text-[#888888]" />
             </button>
-            <div className="absolute right-[100%] top-0 hidden group-hover:block w-28 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 py-1 before:absolute before:content-[''] before:-right-3 before:top-0 before:w-3 before:h-full" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="absolute right-[100%] top-0 hidden group-hover:block w-28 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-[100] py-1 before:absolute before:content-[''] before:-right-3 before:top-0 before:w-3 before:h-full" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
               <button
                 onClick={() => handleExport("csv")}
                 className="w-full text-left flex items-center gap-2 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
@@ -450,6 +453,7 @@ export default function ListTab({
           filters={filters}
           setFilters={setFilters}
           uniqueAssignees={uniqueAssignees}
+          availableStatuses={boardColumns?.map(c => c.name)}
           extraActions={<>{columnsButton}{viewToggle}{importExportMenu}</>}
         />
       </div>
@@ -480,6 +484,7 @@ export default function ListTab({
             <div className="flex min-h-0 min-w-0 flex-1">
             <DataGridListView
               issues={filteredIssues}
+              allIssues={issues}
               workspaceId={workspaceId}
               members={members}
               boardColumns={boardColumns}

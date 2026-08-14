@@ -17,6 +17,7 @@ import {
   subMonths,
 } from "date-fns";
 import { Calendar, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type ThemeMode = "light" | "dark";
 type PopoverPlacement = "bottom-start" | "bottom-end" | "top-start" | "top-end";
@@ -63,15 +64,31 @@ const getPopoverStyle = (
   placement: PopoverPlacement,
 ): React.CSSProperties => {
   const width = 320;
+  const height = 430; // Estimated maximum calendar height (6 rows + headers + footer)
   const gap = 8;
-  const top =
-    placement.startsWith("top")
-      ? Math.max(12, rect.top - 360 - gap)
-      : rect.bottom + gap;
-  const left =
-    placement.endsWith("end")
-      ? Math.max(12, rect.right - width)
-      : Math.max(12, rect.left);
+
+  let isTop = placement.startsWith("top");
+
+  // Auto-flip vertically if it goes off-screen
+  if (!isTop && rect.bottom + gap + height > window.innerHeight) {
+    // If there is more space above the element than below, flip to top
+    if (rect.top > window.innerHeight - rect.bottom) {
+      isTop = true;
+    }
+  } else if (isTop && rect.top - gap - height < 0) {
+    if (window.innerHeight - rect.bottom > rect.top) {
+      isTop = false;
+    }
+  }
+
+  // Ensure it doesn't go off the top/bottom edges completely
+  const top = isTop
+    ? Math.max(12, rect.top - height - gap)
+    : Math.min(rect.bottom + gap, window.innerHeight - height - 12);
+
+  const left = placement.endsWith("end")
+    ? Math.max(12, rect.right - width)
+    : Math.max(12, rect.left);
 
   return {
     position: "fixed",
@@ -79,6 +96,8 @@ const getPopoverStyle = (
     left: Math.min(left, window.innerWidth - width - 12),
     width,
     zIndex: 100000,
+    opacity: 1,
+    pointerEvents: "auto",
   };
 };
 
@@ -97,7 +116,14 @@ export default function CustomDatePicker({
   const [inputValue, setInputValue] = useState(getDisplayValue(value));
   const [viewMonth, setViewMonth] = useState(selectedDate ?? new Date());
   const [isOpen, setIsOpen] = useState(false);
-  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
+  useEscapeStack(() => setIsOpen(false), isOpen);
+  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
+    position: "fixed",
+    top: -9999,
+    left: -9999,
+    opacity: 0,
+    pointerEvents: "none",
+  });
   const rootRef = useRef<HTMLDivElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   // Tracks a locally-committed value not yet reflected back via the value prop.
@@ -114,7 +140,16 @@ export default function CustomDatePicker({
   }, [selectedDate, value]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setPopoverStyle({
+        position: "fixed",
+        top: -9999,
+        left: -9999,
+        opacity: 0,
+        pointerEvents: "none",
+      });
+      return;
+    }
 
     const updatePosition = () => {
       const rect = rootRef.current?.getBoundingClientRect();
@@ -138,15 +173,9 @@ export default function CustomDatePicker({
       if (rootRef.current?.contains(target) || popoverRef.current?.contains(target)) return;
       setIsOpen(false);
     };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setIsOpen(false);
-    };
-
     document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [isOpen]);
 

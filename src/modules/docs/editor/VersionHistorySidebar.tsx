@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { History, Eye, RotateCcw, AlertTriangle, X, Calendar, User, FileText } from "lucide-react";
 import type { DocumentVersion } from "../types/docs.type";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface VersionHistorySidebarProps {
   versions: DocumentVersion[];
@@ -21,6 +22,13 @@ export default function VersionHistorySidebar({
   const [previewVersion, setPreviewVersion] = useState<DocumentVersion | null>(null);
   const [confirmRestoreId, setConfirmRestoreId] = useState<string | null>(null);
   const [isRestoring, setIsRestoring] = useState(false);
+  useEscapeStack(() => {
+    if (confirmRestoreId) {
+      setConfirmRestoreId(null);
+      return;
+    }
+    setPreviewVersion(null);
+  }, Boolean(previewVersion || confirmRestoreId));
 
   const formatTime = (dateStr: string) => {
     try {

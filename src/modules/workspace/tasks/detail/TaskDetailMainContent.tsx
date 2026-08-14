@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useRef, useCallback } from "react";
+
 import { AlertTriangle, ArchiveRestore } from "lucide-react";
 import TaskDescription from "@/modules/admin-shared/components/common/components/TaskDescription";
 import TaskAttachmentsPanel from "@/modules/workspace/tasks/attachments/TaskAttachmentsPanel";
@@ -9,7 +10,8 @@ import TaskActivityHistory from "@/modules/workspace/shared/components/TaskActiv
 import { getIssueAssigneeId } from "./task-detail-shared";
 import type { TaskStatusColumn } from "@/modules/workspace/shared/utils/taskStatusColumns";
 import type { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
-import type { WorkspaceMember } from "./task-detail-shared";
+import TaskSubtasksPanel from "./TaskSubtasksPanel";
+import { type WorkspaceMember } from "./task-detail-shared";
 
 interface TaskDetailMainContentProps {
   issue: TaskDetailResponse;
@@ -34,6 +36,9 @@ interface TaskDetailMainContentProps {
   boardColumns?: TaskStatusColumn[];
   onRestoreIssue?: () => void;
   onUpdateIssue?: (updatedIssue: TaskDetailResponse) => void;
+  onSubtaskClick?: (subtaskId: string) => void;
+  /** Called when a new work log is created from an external source (e.g. Drawer toolbar) */
+  onWorkLogCreated?: (cb: () => void) => void;
 }
 
 import TaskWorkLogs from "@/modules/workspace/shared/components/TaskWorkLogs";
@@ -59,7 +64,17 @@ export default function TaskDetailMainContent({
   boardColumns,
   onRestoreIssue,
   onUpdateIssue,
+  onSubtaskClick,
+  onWorkLogCreated,
 }: TaskDetailMainContentProps) {
+  const workLogRefreshRef = useRef<(() => void) | null>(null);
+
+  const handleWorkLogRefresh = useCallback((refetch: () => void) => {
+    workLogRefreshRef.current = refetch;
+    if (onWorkLogCreated) {
+      onWorkLogCreated(() => refetch());
+    }
+  }, [onWorkLogCreated]);
   const titleTextClass =
     titleSize === "3xl"
       ? "text-3xl font-semibold text-[#111111] dark:text-[#E8E8E7] leading-tight mb-4"
@@ -91,7 +106,7 @@ export default function TaskDetailMainContent({
       )}
 
       {/* Title */}
-      <div className="order-2">
+      <div className="order-2 min-w-0 max-w-full">
         {canEditTask && isEditingTitle && !issue.isArchived ? (
           <input
             autoFocus
@@ -102,14 +117,14 @@ export default function TaskDetailMainContent({
             onKeyDown={(e) => {
               if (e.key === "Enter") onSaveTitle();
             }}
-            className={`w-full min-w-0 break-words ${titleTextClass} bg-[#F7F6F3] dark:bg-[#252525] border-2 border-[#2563EB] rounded-[6px] px-2 py-1 outline-none`}
+            className={`w-full min-w-0 max-w-full break-words ${titleTextClass} bg-[#F7F6F3] dark:bg-[#252525] border-2 border-[#2563EB] rounded-[6px] px-2 py-1 outline-none`}
           />
         ) : (
           <h1
             onClick={() => {
               if (canEditTask && !issue.isArchived) setIsEditingTitle(true);
             }}
-            className={`max-w-full break-words [overflow-wrap:anywhere] ${titleTextClass} p-2 -ml-2 rounded-[6px] transition-colors ${
+            className={`min-w-0 max-w-full break-words [overflow-wrap:anywhere] [word-break:break-word] ${titleTextClass} p-2 -ml-2 rounded-[6px] transition-colors ${
               canEditTask && !issue.isArchived
                 ? "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] cursor-pointer"
                 : "opacity-90"
@@ -129,7 +144,27 @@ export default function TaskDetailMainContent({
         <TaskDescription initialContent={issue.description || ""} onSave={onSaveDescription} />
       </div>
 
-      <div className="order-5 w-full">
+      {issue.type?.toLowerCase() !== "subtask" && issue.type?.toLowerCase() !== "epic" && (
+        <div className="order-5 w-full pt-4">
+          <TaskSubtasksPanel
+            issue={issue}
+            workspaceId={workspaceId}
+            workspaceMembers={workspaceMembers}
+            boardColumns={boardColumns || []}
+            canEditTask={canEditTask}
+            onSubtaskClick={onSubtaskClick || ((subtaskId) => {
+              const currentPath = window.location.pathname;
+              const newPath = currentPath.includes("/key/")
+                ? currentPath.replace(/\/key\/[^/]+$/, `/key/${subtaskId}`)
+                : `${currentPath}/key/${subtaskId}`;
+              window.history.pushState(null, "", newPath);
+              window.dispatchEvent(new Event("popstate"));
+            })}
+          />
+        </div>
+      )}
+
+      <div className="order-6 w-full pt-4">
         <TaskAttachmentsPanel
           workspaceId={workspaceId}
           taskId={issue.id}
@@ -140,38 +175,35 @@ export default function TaskDetailMainContent({
       </div>
 
       {/* Activity */}
-      <div className="order-6 space-y-4 pt-4">
+      <div className="order-7 space-y-4 pt-4">
         <div className="flex items-center justify-between">
           <h3 className="text-[0.9375rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Activity</h3>
           <div className="flex items-center gap-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
             <span>Show:</span>
             <button
               onClick={() => setActiveTab("comments")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "comments"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "comments"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               Comments
             </button>
             <button
               onClick={() => setActiveTab("history")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "history"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "history"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               History
             </button>
             <button
               onClick={() => setActiveTab("work_log")}
-              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${
-                activeTab === "work_log"
-                  ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
-                  : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-              }`}
+              className={`px-3 py-1 rounded-[4px] font-medium transition-colors ${activeTab === "work_log"
+                ? "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]"
+                : "hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                }`}
             >
               Work log
             </button>
@@ -206,6 +238,7 @@ export default function TaskDetailMainContent({
             issue={issue}
             onUpdateIssue={onUpdateIssue}
             canEdit={canEditTask}
+            onRefresh={handleWorkLogRefresh}
           />
         )}
       </div>

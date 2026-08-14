@@ -7,6 +7,8 @@ interface ChatStore {
   typingUsers: Record<string, Record<string, number>>; // channelId: { userId: timestamp }
   replyingToMessage: Message | null;
   replyingToThreadMessage: Message | null;
+  editingMessage: Message | null;
+  editingThreadMessage: Message | null;
 
   // Tracks thread parentIds that have new replies the user hasn't seen yet per channel
   unreadThreadIds: Record<string, Set<string>>;
@@ -20,6 +22,8 @@ interface ChatStore {
   
   setReplyingToMessage: (message: Message | null) => void;
   setReplyingToThreadMessage: (message: Message | null) => void;
+  setEditingMessage: (message: Message | null) => void;
+  setEditingThreadMessage: (message: Message | null) => void;
 
   markThreadUnread: (channelId: string, threadParentId: string) => void;
   markThreadRead: (channelId: string, threadParentId: string) => void;
@@ -32,9 +36,11 @@ export const useChatStore = create<ChatStore>((set) => ({
   typingUsers: {},
   replyingToMessage: null,
   replyingToThreadMessage: null,
+  editingMessage: null,
+  editingThreadMessage: null,
   unreadThreadIds: {},
 
-  setActiveChannel: (activeChannelId) => set({ activeChannelId, activeThreadParentId: null, replyingToMessage: null, replyingToThreadMessage: null }), // Close thread on channel change, but keep unread thread badges
+  setActiveChannel: (activeChannelId) => set({ activeChannelId, activeThreadParentId: null, replyingToMessage: null, replyingToThreadMessage: null, editingMessage: null, editingThreadMessage: null }), // Close thread on channel change, but keep unread thread badges
   setActiveThreadParentId: (activeThreadParentId) => set({ activeThreadParentId }),
 
   setTyping: (channelId, userId) => set((state) => ({
@@ -85,6 +91,8 @@ export const useChatStore = create<ChatStore>((set) => ({
   
   setReplyingToMessage: (replyingToMessage) => set({ replyingToMessage }),
   setReplyingToThreadMessage: (replyingToThreadMessage) => set({ replyingToThreadMessage }),
+  setEditingMessage: (editingMessage) => set({ editingMessage }),
+  setEditingThreadMessage: (editingThreadMessage) => set({ editingThreadMessage }),
 
   markThreadUnread: (channelId, threadParentId) => set((state) => {
     const nextUnread = { ...state.unreadThreadIds };

@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import { sprintService } from '@/modules/workspace/shared/services/sprintService';
 import { Sprint } from '@/modules/workspace/shared/types/sprint.type';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface CompleteSprintModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export default function CompleteSprintModal({
   sprints,
   workspaceId,
 }: CompleteSprintModalProps) {
+  useEscapeStack(onClose, isOpen && Boolean(sprint));
   const [moveToSprintId, setMoveToSprintId] = useState<string>('');
   const previewQuery = useQuery<PreviewData>({
     queryKey: queryKeys.sprints.completePreview(workspaceId, sprint?._id ?? ''),

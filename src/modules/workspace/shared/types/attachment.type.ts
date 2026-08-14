@@ -91,8 +91,9 @@ export const normalizeTaskAttachment = (attachment: RawTaskAttachment): TaskAtta
 
 export const isPreviewableAttachment = (attachment: Pick<TaskAttachment, "mimeType">) =>
   attachment.mimeType.startsWith("image/") ||
+  attachment.mimeType.startsWith("video/") ||
   attachment.mimeType === "application/pdf" ||
   attachment.mimeType === "text/plain";
 
 export const isImageAttachment = (attachment: Pick<TaskAttachment, "mimeType">) =>
-  attachment.mimeType.startsWith("image/");
+  attachment.mimeType.startsWith("image/") || attachment.mimeType.startsWith("video/");

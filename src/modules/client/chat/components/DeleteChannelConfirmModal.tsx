@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle, Trash2, X, Loader2 } from 'lucide-react';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface DeleteChannelConfirmModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ export default function DeleteChannelConfirmModal({
   onConfirm,
   onClose,
 }: DeleteChannelConfirmModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmInput, setConfirmInput] = useState('');
 
@@ -77,8 +79,8 @@ export default function DeleteChannelConfirmModal({
         {/* Body */}
         <div className="px-6 py-5 space-y-4">
           <div className="text-sm text-[#787774] dark:text-[#9B9A97] leading-relaxed space-y-2">
-            <p>
-              Are you sure you want to delete the channel <strong className="text-[#111111] dark:text-[#E8E8E7]">#{channelName}</strong>?
+            <p className="break-words">
+              Are you sure you want to delete the channel <strong className="text-[#111111] dark:text-[#E8E8E7] break-all">#{channelName}</strong>?
             </p>
             <p>
               All message history, uploaded files, links, and replies will be permanently deleted and cannot be recovered.

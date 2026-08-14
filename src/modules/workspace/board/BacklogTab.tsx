@@ -1,10 +1,10 @@
-﻿"use client";
+"use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import { FileText, Pencil, Trash2 } from "lucide-react";
 import AssigneePicker, { toAssigneePickerUsers } from "@/shared/components/AssigneePicker";
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import FilterMenu from "@/modules/workspace/shared/components/FilterMenu";
 import StatusPicker from "@/shared/components/StatusPicker";
 import PriorityPicker from "@/shared/components/PriorityPicker";
@@ -16,6 +16,7 @@ import type { Issue } from "@/modules/workspace/shared/types/issue.type";
 import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import type { Filters } from "@/modules/workspace/shared/types/filter.type";
 import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
+import BoardCardSubtasks from "@/modules/workspace/tasks/detail/BoardCardSubtasks";
 
 type BacklogTabProps = {
   data: {
@@ -132,6 +133,46 @@ type AssigneeInfo = {
   role?: string;
   avatar?: string;
   initials: string;
+};
+
+const StoryPointBadge = ({ issue, updateIssueDirectly }: { issue: Issue, updateIssueDirectly: (id: string, updates: Partial<Issue>) => void }) => {
+  const [val, setVal] = useState<string | number>(issue.storyPoints === 0 ? "" : (issue.storyPoints || ""));
+  
+  useEffect(() => {
+    setVal(issue.storyPoints === 0 ? "" : (issue.storyPoints || ""));
+  }, [issue.storyPoints]);
+
+  const handleBlur = () => {
+    const parsed = parseInt(val as string) || 0;
+    if (parsed !== (issue.storyPoints || 0)) {
+      updateIssueDirectly(issue.id, { storyPoints: parsed });
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      value={val}
+      onChange={(e) => {
+        let nextVal = e.target.value;
+        if (nextVal !== "") {
+          const num = parseInt(nextVal);
+          if (num > 100) nextVal = "100";
+          else if (num < 0) nextVal = "0";
+        }
+        setVal(nextVal);
+      }}
+      onBlur={handleBlur}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.currentTarget.blur();
+        }
+      }}
+      placeholder="-"
+      className="w-9 h-6 px-0 py-0 text-center text-[0.75rem] font-semibold text-[#111111] dark:text-[#E8E8E7] bg-[#F1F1F0] dark:bg-[#202020] hover:bg-[#E8E8E7] dark:hover:bg-[#2A2A2A] rounded-full border border-transparent focus:bg-white dark:focus:bg-[#202020] focus:border-[#2563EB] focus:ring-1 focus:ring-[#2563EB] outline-none transition-all appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield] placeholder:text-[#ABABAB]"
+      title="Story Points"
+    />
+  );
 };
 
 
@@ -321,11 +362,13 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
               <FilterMenu
                 isOpen={isFilterOpen}
                 onClose={() => setIsFilterOpen(false)}
+                onOpen={() => setIsFilterOpen(true)}
                 filters={filters}
                 setFilters={setFilters}
                 density={density}
                 setDensity={setDensity}
                 assignees={filterAssignees}
+                availableStatuses={columns?.map((c) => c.name)}
                 anchorRef={filterButtonRef}
               />
             </div>
@@ -338,8 +381,14 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
               (sum, i) => sum + (i.storyPoints || 0),
               0,
             );
+            
+            const doneColumnIds = columns?.filter(c => c.isDone).map(c => c.id) || [];
+            if (doneColumnIds.length === 0 && columns && columns.length > 0) {
+              doneColumnIds.push(columns[columns.length - 1].id);
+            }
+            
             const donePoints = sprintIssues
-              .filter((i) => i.status === "Done")
+              .filter((i) => doneColumnIds.includes(i.columnId))
               .reduce((sum, i) => sum + (i.storyPoints || 0), 0);
             const sprintTaskIds = sprintIssues.map((i) => i.id);
             const isAllSelected =
@@ -368,30 +417,42 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                       className="w-4 h-4 rounded accent-[#2563EB] cursor-pointer shrink-0"
                     />
                     <h3
-                      className="flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer whitespace-nowrap"
+                      className="flex items-center gap-2 font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer min-w-0"
                       onClick={() => {
                         if (sprint.status === "completed") return;
                         setEditingSprint(sprint);
                         setIsSprintModalOpen(true);
                       }}
+                      title={sprint.name}
                     >
-                      {sprint.name}
+                      <span className="truncate">{sprint.name}</span>
                       {sprint.status === "active" && (
-                        <span className="px-2 py-0.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD] text-[0.6875rem] font-semibold rounded-full uppercase tracking-wide">
+                        <span className="shrink-0 px-2 py-0.5 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#1F6C9F] dark:text-[#93C5FD] text-[0.6875rem] font-semibold rounded-full uppercase tracking-wide">
                           Active
                         </span>
                       )}
                     </h3>
                     <div className="flex gap-1.5 items-center group relative cursor-help shrink-0">
-                      <span className="w-6 h-6 rounded-full bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] font-bold flex items-center justify-center">
-                        {sprintIssues.filter((i) => i.status === "To Do").length}
-                      </span>
-                      <span className="w-6 h-6 rounded-full bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] text-[#956400] dark:text-[#F0C040] text-[0.6875rem] font-bold flex items-center justify-center">
-                        {sprintIssues.filter((i) => i.status === "In Progress").length}
-                      </span>
-                      <span className="w-6 h-6 rounded-full bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.15)] text-[#346538] dark:text-[#6FCF7B] text-[0.6875rem] font-bold flex items-center justify-center">
-                        {sprintIssues.filter((i) => i.status === "Done").length}
-                      </span>
+                      {columns?.map((col, idx) => {
+                        const count = sprintIssues.filter((i) => i.columnId === col.id).length;
+                        
+                        let colorClass = "bg-[#FBF3DB] dark:bg-[rgba(149,100,0,0.15)] text-[#956400] dark:text-[#F0C040]"; // default (middle)
+                        if (idx === 0) {
+                          colorClass = "bg-[#F7F6F3] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97]";
+                        } else if (idx === columns.length - 1 || col.isDone) {
+                          colorClass = "bg-[#EDF3EC] dark:bg-[rgba(52,101,56,0.15)] text-[#346538] dark:text-[#6FCF7B]";
+                        }
+
+                        return (
+                          <span
+                            key={col.id}
+                            title={col.name}
+                            className={`w-6 h-6 rounded-full text-[0.6875rem] font-bold flex items-center justify-center ${colorClass}`}
+                          >
+                            {count}
+                          </span>
+                        );
+                      })}
                       <div className="absolute top-full mt-2 left-0 bg-[#111111] dark:bg-[#2A2A2A] text-[#E8E8E7] text-[0.6875rem] px-3 py-2 rounded-[6px] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                         Progress: {donePoints} / {totalPoints} story points
                       </div>
@@ -440,6 +501,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                 <Droppable
                   droppableId={`sprint-${sprint.id}`}
                   type="backlog-issue"
+                  isDropDisabled={sprint.status === "completed"}
                 >
                   {(provided, snapshot) => (
                     <div
@@ -459,7 +521,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               ref={provided.innerRef}
                               {...provided.draggableProps}
                               {...(canMoveTask ? provided.dragHandleProps : {})}
-                              className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-colors group`}
+                              className={`flex flex-col bg-white dark:bg-[#202020] ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:border-[#2563EB]/30 dark:hover:border-[#3B82F6]/30"} transition-colors group`}
                               style={{
                                 ...provided.draggableProps.style,
                                 ...(snapshot.isDragging
@@ -467,7 +529,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                   : {}),
                               }}
                             >
-                              <div className="flex min-w-0 flex-1 items-center gap-3">
+                              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                                <div className="flex min-w-0 flex-1 items-center gap-3">
                                 <input
                                   type="checkbox"
                                   checked={selectedTaskIds.includes(issue.id)}
@@ -496,18 +559,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 {canEditTask ? (
                                   <>
                                     <div className="relative group/pts">
-                                      <input
-                                        type="number"
-                                        value={issue.storyPoints === 0 ? "" : issue.storyPoints}
-                                        onChange={(e) =>
-                                          updateIssueDirectly(issue.id, {
-                                            storyPoints: parseInt(e.target.value) || 0,
-                                          })
-                                        }
-                                        placeholder="-"
-                                        className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
-                                        title="Story Points"
-                                      />
+                                      <StoryPointBadge issue={issue} updateIssueDirectly={updateIssueDirectly} />
                                     </div>
                                     <StatusPicker
                                       value={issue.status}
@@ -565,6 +617,28 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 )}
                               </div>
                             </div>
+                            
+                            {issue.type?.toLowerCase() !== "subtask" && (
+                              <div className="mt-3">
+                                <BoardCardSubtasks
+                                  workspaceId={workspace.id || workspace._id}
+                                  taskId={issue.id}
+                                  taskType={issue.type}
+                                  workspaceMembers={workspaceMembers}
+                                  canEditTask={canEditTask}
+                                  boardColumns={columns}
+                                  onSubtaskClick={(key) => {
+                                    const currentPath = window.location.pathname;
+                                    const newPath = currentPath.includes("/key/") 
+                                      ? currentPath.replace(/\/key\/[^/]+$/, `/key/${key}`)
+                                      : `${currentPath}/key/${key}`;
+                                    window.history.pushState(null, "", newPath);
+                                    window.dispatchEvent(new Event("popstate"));
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
                           )}
                         </Draggable>
                       ))}
@@ -683,7 +757,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             {...(canMoveTask ? provided.dragHandleProps : {})}
-                            className={`flex flex-col gap-3 bg-white dark:bg-[#202020] lg:flex-row lg:items-center lg:justify-between ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-colors group`}
+                            className={`flex flex-col bg-white dark:bg-[#202020] ${density === "compact" ? "p-2" : "p-3"} rounded-[6px] border ${snapshot.isDragging ? "border-[#2563EB] rotate-1 z-50 relative" : "border-[#F0F0EE] dark:border-white/[0.04] hover:bg-[#F9F9F8] dark:hover:bg-[#2E2E2E]"} transition-colors group`}
                             style={{
                               ...provided.draggableProps.style,
                               ...(snapshot.isDragging
@@ -691,7 +765,8 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                                 : {}),
                             }}
                           >
-                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                              <div className="flex min-w-0 flex-1 items-center gap-3">
                               <input
                                 type="checkbox"
                                 checked={selectedTaskIds.includes(issue.id)}
@@ -720,18 +795,7 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               {canEditTask ? (
                                 <>
                                   <div className="relative group/pts">
-                                    <input
-                                      type="number"
-                                      value={issue.storyPoints === 0 ? "" : issue.storyPoints}
-                                      onChange={(e) =>
-                                        updateIssueDirectly(issue.id, {
-                                          storyPoints: parseInt(e.target.value) || 0,
-                                        })
-                                      }
-                                      placeholder="-"
-                                      className="w-8 h-6 text-center text-[0.6875rem] font-bold text-[#787774] dark:text-[#9B9A97] bg-[#F7F6F3] dark:bg-[#2A2A2A] hover:bg-[#F0F0EE] dark:hover:bg-[#333333] rounded-[4px] border border-transparent focus:bg-white dark:focus:bg-[#2A2A2A] focus:border-[#2563EB] outline-none transition-colors appearance-none"
-                                      title="Story Points"
-                                    />
+                                    <StoryPointBadge issue={issue} updateIssueDirectly={updateIssueDirectly} />
                                   </div>
                                   <StatusPicker
                                     value={issue.status}
@@ -789,6 +853,28 @@ export default function BacklogTab({ data, ui, actions, permissions }: BacklogTa
                               )}
                             </div>
                           </div>
+
+                          {issue.type?.toLowerCase() !== "subtask" && (
+                            <div className="mt-3">
+                              <BoardCardSubtasks
+                                workspaceId={workspace.id || workspace._id}
+                                taskId={issue.id}
+                                taskType={issue.type}
+                                workspaceMembers={workspaceMembers}
+                                canEditTask={canEditTask}
+                                boardColumns={columns}
+                                onSubtaskClick={(key) => {
+                                  const currentPath = window.location.pathname;
+                                  const newPath = currentPath.includes("/key/") 
+                                    ? currentPath.replace(/\/key\/[^/]+$/, `/key/${key}`)
+                                    : `${currentPath}/key/${key}`;
+                                  window.history.pushState(null, "", newPath);
+                                  window.dispatchEvent(new Event("popstate"));
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
                         )}
                       </Draggable>
                     ))}

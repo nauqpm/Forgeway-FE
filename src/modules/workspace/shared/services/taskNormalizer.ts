@@ -66,7 +66,7 @@ export const toUiLabel = (value?: string, fallback = ""): string => {
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
 
-const toStatusLabel = (task: TaskDto): string => {
+export const toStatusLabel = (task: { columnId?: string; boardColumnId?: string; status?: string }): string => {
   const column = task.columnId ?? task.boardColumnId ?? task.status;
   return STATUS_BY_COLUMN[column ?? ""] ?? task.status ?? "To Do";
 };
@@ -141,6 +141,8 @@ export const toIssue = (task: TaskDto): Issue => {
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
+    subtaskProgress: task.subtaskProgress ?? undefined,
+    parentId: task.parentId ?? null,
   };
 };
 
@@ -174,6 +176,14 @@ export const toTaskDetail = (task: TaskDto): TaskDetailResponse => {
     cover: task.cover ?? null,
     labels: toTaskLabels(task),
     labelIds: task.labelIds ?? toTaskLabels(task).map((label) => label.id),
+    parent: task.parent
+      ? {
+          id: task.parent.id ?? task.parent._id ?? "",
+          key: task.parent.key ?? "",
+          title: task.parent.title ?? "",
+          type: task.parent.type ?? "task",
+        }
+      : undefined,
   };
 };
 

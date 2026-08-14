@@ -3,7 +3,7 @@
 import React from 'react';
 import { Reply, MessageSquare, Copy, Pencil, Trash2, User, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
-import type { Message } from '../types/chat.types';
+import type { Attachment, Message } from '../types/chat.types';
 
 export function TrashForMeIcon({ className = "w-4 h-4 text-red-500" }: { className?: string }) {
   return (
@@ -37,6 +37,9 @@ interface MessageContextMenuProps {
   onEdit: () => void;
   onDeleteForMe: () => void;
   onDeleteForEveryone: () => void;
+  contextImage: Attachment | null;
+  copyingImageUrl: string | null;
+  onCopyImage: (file: Attachment) => Promise<void>;
   onClose: () => void;
 }
 
@@ -54,6 +57,9 @@ export default function MessageContextMenu({
   onEdit,
   onDeleteForMe,
   onDeleteForEveryone,
+  contextImage,
+  copyingImageUrl,
+  onCopyImage,
   onClose,
 }: MessageContextMenuProps) {
   if (!contextMenuPos) return null;
@@ -121,6 +127,20 @@ export default function MessageContextMenu({
           className="w-full flex items-center justify-between px-2.5 py-1.5 text-[0.8125rem] font-medium hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-md transition-colors cursor-pointer"
         >
           <span>Copy text</span>
+          <Copy className="w-3.5 h-3.5 text-[#787774] dark:text-[#9B9A97]" />
+        </button>
+      )}
+
+      {contextImage && (
+        <button
+          disabled={copyingImageUrl === contextImage.url}
+          onClick={async () => {
+            await onCopyImage(contextImage);
+            onClose();
+          }}
+          className="w-full flex items-center justify-between px-2.5 py-1.5 text-[0.8125rem] font-medium hover:bg-[#F0F0EE] dark:hover:bg-white/10 rounded-md transition-colors cursor-pointer disabled:cursor-wait disabled:opacity-60"
+        >
+          <span>{copyingImageUrl === contextImage.url ? 'Copying...' : 'Copy image'}</span>
           <Copy className="w-3.5 h-3.5 text-[#787774] dark:text-[#9B9A97]" />
         </button>
       )}

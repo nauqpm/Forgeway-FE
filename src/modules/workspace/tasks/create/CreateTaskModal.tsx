@@ -7,6 +7,7 @@ import TypePicker from "@/shared/components/TypePicker";
 import PriorityPicker from "@/shared/components/PriorityPicker";
 import AssigneePicker, { toAssigneePickerUsers, AssigneePickerMember } from "@/shared/components/AssigneePicker";
 import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type CreateTaskModalProps = {
   showCreateIssue: boolean;
@@ -33,6 +34,7 @@ export default function CreateTaskModal({
   workspace,
   boardColumns = [],
 }: CreateTaskModalProps) {
+  useEscapeStack(() => setShowCreateIssue(false), showCreateIssue);
   if (!showCreateIssue) return null;
 
   const assigneeUsers = toAssigneePickerUsers(workspace.members as AssigneePickerMember[]);

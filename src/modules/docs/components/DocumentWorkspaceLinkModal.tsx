@@ -7,6 +7,7 @@ import { toast } from "react-hot-toast";
 import { DocumentItem } from "../types/document.type";
 import { documentService } from "../services/documentService";
 import { useWorkspaces } from "@/modules/workspace/shared/hooks/useWorkspaces";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type Props = {
   doc: DocumentItem;
@@ -21,6 +22,7 @@ export default function DocumentWorkspaceLinkModal({
   onClose,
   onSaved,
 }: Props) {
+  useEscapeStack(onClose, open);
   const { data: workspaces = [], isLoading: loading, error: workspacesError } = useWorkspaces();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showConfirm, setShowConfirm] = useState(false);

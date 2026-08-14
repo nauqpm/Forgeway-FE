@@ -20,8 +20,11 @@ export const useAttachmentPreview = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const attachmentId = attachment?.id;
+  const attachmentMimeType = attachment?.mimeType;
+
   useEffect(() => {
-    if (!attachment) {
+    if (!attachmentId || !attachmentMimeType) {
       setObjectUrl(null);
       setTextContent(null);
       setError(null);
@@ -42,14 +45,14 @@ export const useAttachmentPreview = ({
       .getPreviewBlob({
         workspaceId,
         taskId,
-        attachmentId: attachment.id,
+        attachmentId,
         accessToken,
         signal: controller.signal,
       })
       .then(async (blob) => {
         if (cancelled) return;
         nextObjectUrl = URL.createObjectURL(blob);
-        if (attachment.mimeType === "text/plain") {
+        if (attachmentMimeType === "text/plain") {
           const nextTextContent = await blob.text();
           if (cancelled) return;
           setTextContent(nextTextContent);
@@ -69,7 +72,7 @@ export const useAttachmentPreview = ({
       controller.abort();
       if (nextObjectUrl) URL.revokeObjectURL(nextObjectUrl);
     };
-  }, [accessToken, attachment, taskId, workspaceId]);
+  }, [accessToken, attachmentId, attachmentMimeType, taskId, workspaceId]);
 
   return {
     objectUrl,

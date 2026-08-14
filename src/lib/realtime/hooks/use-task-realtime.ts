@@ -79,6 +79,7 @@ export function useTaskRealtime(
           });
         }
         queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
+        queryClient.invalidateQueries({ queryKey: [...queryKeys.tasks.all, "subtasks", workspaceId] });
         return;
       }
 
@@ -114,6 +115,7 @@ export function useTaskRealtime(
         );
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.dashboard() });
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.tasks.all, "subtasks", workspaceId] });
       onTaskUpserted?.(issue);
     };
 

@@ -467,7 +467,7 @@ export default function TaskActivityHistory({
     setPage((p) => p + 1);
   }, []);
 
-  const visibleActivities = allActivities.filter((activity) => !isRankActivity(activity));
+  const visibleActivities = allActivities.filter((activity) => !isRankActivity(activity) && activity.type !== "COLUMN_CHANGED");
   const hasMore = allActivities.length < total;
 
   if (isFetching && page === 1 && allActivities.length === 0) {

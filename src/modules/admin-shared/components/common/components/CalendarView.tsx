@@ -20,6 +20,8 @@ import { useCalendarHandlers } from '@/modules/workspace/shared/hooks/useCalenda
 import { useAssignees } from '@/modules/workspace/shared/hooks/useAssignees';
 import { toCalendarDateKey } from '@/modules/workspace/shared/utils/calendarDateKey';
 
+import { Workspace } from '@/modules/workspace/shared/types/workspace.type';
+
 // Minimal event shape used by the popover — works for both EventApi and OverflowEntry
 type MorePopoverState = {
   date: Date;
@@ -71,6 +73,7 @@ interface CalendarViewProps {
   onUpdateIssueDate: (id: string, start: string, end: string) => void;
   onSelectIssue: (issue: Issue | null) => void;
   onQuickCreateTask?: (title: string, date: string) => Promise<void> | void;
+  workspace?: Workspace;
 }
 
 export default function CalendarView({
@@ -79,6 +82,7 @@ export default function CalendarView({
   onUpdateIssueDate,
   onSelectIssue,
   onQuickCreateTask,
+  workspace,
 }: CalendarViewProps) {
   const calendarRef = useRef<FullCalendar>(null);
   const calendarShellRef = useRef<HTMLDivElement>(null);
@@ -144,7 +148,7 @@ export default function CalendarView({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-  const assignees = useAssignees(issues);
+  const assignees = useAssignees(issues, workspace);
 
   useLayoutEffect(() => {
     if (!morePopover) {

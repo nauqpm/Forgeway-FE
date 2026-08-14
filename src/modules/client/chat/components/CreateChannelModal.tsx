@@ -6,8 +6,10 @@ import { createChannelAPI } from '../services/chatService';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import { useChatStore } from '@/stores/chatStore';
+import { upsertChannelInCache } from '@/modules/client/chat/utils/chatQueryCache';
 import toast from 'react-hot-toast';
 import { useChatChannels } from '../hooks/useChatQueries';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface CreateChannelModalProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ interface CreateChannelModalProps {
 }
 
 export default function CreateChannelModal({ isOpen, onClose, workspaceId }: CreateChannelModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
@@ -73,11 +76,9 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
         description: description.trim() || undefined,
       });
 
-      // Refetch channel list
-      await queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
-      
-      // Navigate/Select the newly created channel
+      upsertChannelInCache(queryClient, channel);
       setActiveChannel(channel._id);
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
       
       toast.success(`Channel #${name} created successfully!`);
       onClose();

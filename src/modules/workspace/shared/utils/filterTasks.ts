@@ -48,6 +48,11 @@ export const filterTasks = (
   if (!workspace) return [];
 
   return issues.filter((issue) => {
+    // Subtasks should never appear as standalone tasks in the main board views
+    if (issue.type?.toLowerCase() === "subtask") {
+      return false;
+    }
+
     const matchSearch = matchesTaskSearch(issue, filters.search);
 
     // Board quick filters
