@@ -47,9 +47,9 @@ export default function ReportsTab(props: ReportsTabProps) {
   }
 
   return (
-    <div className="w-full space-y-6">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {/* Dropdown Selection */}
-      <div className="flex justify-start">
+      <div className="flex shrink-0 justify-start">
         <div ref={dropdownRef} className="relative z-30">
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -107,7 +107,7 @@ export default function ReportsTab(props: ReportsTabProps) {
         </div>
       </div>
 
-      <div>
+      <div className="min-h-0 flex-1 overflow-y-auto pt-6">
         {activeSubTab === "worklogs" && <WorklogReportTab {...props} />}
         {activeSubTab === "velocity" && <SprintVelocityChartTab {...props} />}
         {activeSubTab === "cfd" && <CumulativeFlowChartTab workspaceId={props.workspaceId} />}

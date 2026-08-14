@@ -4,6 +4,9 @@ import { FormEvent, KeyboardEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/shared/constants/queryKeys";
+import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { resolveWorkspaceFromRouteKey } from "@/modules/workspace/shared/services/resolveWorkspace";
@@ -38,6 +41,7 @@ export interface UseWorkspaceSettingsReturn {
 
 export function useWorkspaceSettings(workspaceKey: string): UseWorkspaceSettingsReturn {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [workspace, setWorkspace] = useState<WorkspaceInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,6 +111,13 @@ export function useWorkspaceSettings(workspaceKey: string): UseWorkspaceSettings
         status: updated.status || "active",
         access: updated.access || "public",
       });
+
+      queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (old = []) =>
+        old.map((w) => (w._id === workspaceId ? ({ ...w, ...updated } as Workspace) : w)),
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+      void queryClient.invalidateQueries({ queryKey: ["admin"] });
+
       toast.success("Workspace settings saved.");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
@@ -128,6 +139,13 @@ export function useWorkspaceSettings(workspaceKey: string): UseWorkspaceSettings
       if (!workspaceId) throw new Error("Missing workspace id");
 
       await api.delete(apiRoutes.WORKSPACES.BY_ID(workspaceId));
+
+      queryClient.setQueryData<Workspace[]>(queryKeys.workspaces.list(), (old = []) =>
+        old.filter((w) => w._id !== workspaceId),
+      );
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.list() });
+      void queryClient.invalidateQueries({ queryKey: ["admin"] });
+
       toast.success("Workspace deleted.");
       setShowDeleteDialog(false);
       router.push("/workspaces");

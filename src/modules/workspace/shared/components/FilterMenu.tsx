@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, UserRound } from 'lucide-react';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 type FilterAssignee = {
   id: string;
@@ -14,6 +16,7 @@ type FilterAssignee = {
 interface FilterMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpen?: () => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   filters: any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,26 +24,44 @@ interface FilterMenuProps {
   density: "compact" | "comfortable" | "spacious";
   setDensity: (val: "compact" | "comfortable" | "spacious") => void;
   assignees: FilterAssignee[];
+  availableStatuses?: string[];
+  anchorRef: React.RefObject<HTMLButtonElement | null>;
 }
 
-export default function FilterMenu({ isOpen, onClose, filters, setFilters, density, setDensity, assignees }: FilterMenuProps) {
+export default function FilterMenu({ isOpen, onClose, onOpen, filters, setFilters, density, setDensity, assignees, availableStatuses, anchorRef }: FilterMenuProps) {
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  useEscapeStack(onClose, isOpen);
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.shiftKey && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         if (isOpen) onClose();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        else setFilters((prev: any) => ({ ...prev }));
-      }
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
+        else onOpen?.();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, setFilters]);
+  }, [isOpen, onClose, onOpen]);
 
-  if (!isOpen) return null;
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+
+    const updatePosition = () => {
+      const rect = anchorRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPosition({ top: rect.bottom + 8, left: Math.max(8, rect.right - Math.min(480, window.innerWidth - 48)) });
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [anchorRef, isOpen]);
+
+  if (!isOpen || !position || typeof document === 'undefined') return null;
 
   const getAssigneeLabel = (user: FilterAssignee) =>
     user.name || (user.id === 'U' ? 'Unassigned' : user.id);
@@ -77,10 +98,12 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
     }));
   };
 
-  return (
+  const statusOptions = availableStatuses && availableStatuses.length > 0 ? availableStatuses : ['To Do', 'In Progress', 'Done'];
+
+  return createPortal(
     <div
-      className="absolute top-16 right-0 w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-40 animate-in slide-in-from-top-2 duration-200"
-      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
+      className="w-[min(calc(100vw-48px),var(--app-popover-w))] bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-40 animate-in fade-in zoom-in-95 duration-200"
+      style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)", position: "fixed", top: position.top, left: position.left }}
     >
       <div className="flex items-center justify-between p-3 border-b border-[#EAEAEA] dark:border-white/[0.06]">
         <h4 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">Filters</h4>
@@ -132,7 +155,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         <div className="space-y-2">
           <h5 className="text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wide">Work type</h5>
           <div className="grid grid-cols-2 gap-2">
-            {['Task', 'Bug', 'Story', 'Epic'].map(type => {
+            {['Task', 'Bug', 'Story'].map(type => {
               const isSelected = filters.types?.includes(type);
               return (
                 <label key={type} className="flex items-center gap-2 cursor-pointer">
@@ -148,7 +171,7 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         <div className="space-y-2">
           <h5 className="text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] uppercase tracking-wide">Status</h5>
           <div className="grid grid-cols-2 gap-2">
-            {['To Do', 'In Progress', 'Done'].map(status => {
+            {statusOptions.map(status => {
               const isSelected = filters.statuses?.includes(status);
               return (
                 <label key={status} className="flex items-center gap-2 cursor-pointer">
@@ -200,5 +223,5 @@ export default function FilterMenu({ isOpen, onClose, filters, setFilters, densi
         </button>
       </div>
     </div>
-  );
+  , document.body);
 }

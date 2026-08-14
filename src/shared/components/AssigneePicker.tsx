@@ -159,7 +159,7 @@ export default function AssigneePicker({
       ref={menuRef}
       data-assignee-picker-menu="true"
       style={{ ...menuStyle, boxShadow: "0 4px 20px rgba(0,0,0,0.14), 0 1px 4px rgba(0,0,0,0.06)" }}
-      className="max-h-52 overflow-y-auto bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[8px]"
+      className="max-w-[280px] min-w-[200px] max-h-52 overflow-y-auto bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.08] rounded-[8px]"
     >
       <div className="px-3 py-2 text-[0.6875rem] font-semibold text-[#787774] dark:text-[#9B9A97] border-b border-[#EAEAEA] dark:border-white/[0.08] uppercase tracking-wide">
         Assign to

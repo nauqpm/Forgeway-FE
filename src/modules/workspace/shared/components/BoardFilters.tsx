@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback, useState, useEffect, useLayoutEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { Filters } from "../types/filter.type";
 import { Search, X, Filter } from "lucide-react";
 import {
@@ -11,6 +12,7 @@ type BoardFiltersProps = {
   setFilters: React.Dispatch<React.SetStateAction<Filters>>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   uniqueAssignees: any[];
+  availableStatuses?: string[];
   extraActions?: React.ReactNode;
 };
 
@@ -21,17 +23,34 @@ export default function BoardFilters({
   filters,
   setFilters,
   uniqueAssignees,
+  availableStatuses,
   extraActions,
 }: BoardFiltersProps) {
   const [searchValue, setSearchValue] = useState(filters.search || "");
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Status");
   const popoverRef = useRef<HTMLDivElement>(null);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+  const filterPopoverRef = useRef<HTMLDivElement>(null);
+  const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null);
 
   const [statusSearch, setStatusSearch] = useState("");
   const [assigneeSearch, setAssigneeSearch] = useState("");
   const [typeSearch, setTypeSearch] = useState("");
   const [prioritySearch, setPrioritySearch] = useState("");
+
+  const updatePopoverPosition = useCallback(() => {
+    const button = filterButtonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const popoverWidth = Math.min(480, window.innerWidth - 16);
+    const popoverHeight = Math.min(320, window.innerHeight - 16);
+    setPopoverPosition({
+      top: Math.max(8, Math.min(rect.bottom + 6, window.innerHeight - popoverHeight - 8)),
+      left: Math.max(8, Math.min(rect.left, window.innerWidth - popoverWidth - 8)),
+    });
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -44,13 +63,24 @@ export default function BoardFilters({
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+      if (
+        !popoverRef.current?.contains(event.target as Node) &&
+        !filterPopoverRef.current?.contains(event.target as Node)
+      ) {
         setIsPopoverOpen(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!isPopoverOpen) return;
+
+    updatePopoverPosition();
+    window.addEventListener("resize", updatePopoverPosition);
+    return () => window.removeEventListener("resize", updatePopoverPosition);
+  }, [isPopoverOpen, updatePopoverPosition]);
 
   const toggleArrayFilter = (field: "statuses" | "assignees" | "types" | "priorities", value: string) => {
     setFilters((prev) => {
@@ -84,6 +114,11 @@ export default function BoardFilters({
     setPrioritySearch("");
   };
 
+  const togglePopover = () => {
+    if (!isPopoverOpen) updatePopoverPosition();
+    setIsPopoverOpen((current) => !current);
+  };
+
   const hasActiveFilters =
     searchValue ||
     filters.assignees.length > 0 ||
@@ -96,12 +131,14 @@ export default function BoardFilters({
 
   const tabs = ["Status", "Assignee", "Task type", "Priority"];
 
-  const allStatuses = ["To Do", "In Progress", "Testing", "Done"];
+  const allStatuses = availableStatuses && availableStatuses.length > 0 
+    ? availableStatuses 
+    : ["To Do", "In Progress", "Testing", "Done"];
   const filteredStatuses = allStatuses.filter(s => s.toLowerCase().includes(statusSearch.toLowerCase()));
 
   const filteredAssignees = filterBoardAssignees(uniqueAssignees, assigneeSearch);
 
-  const allTypes = ["Task", "Bug", "Story"];
+  const allTypes = ["Task", "Bug", "Story", "Subtask"];
   const filteredTypes = allTypes.filter(t => t.toLowerCase().includes(typeSearch.toLowerCase()));
 
   const allPriorities = PRIORITY_OPTIONS;
@@ -122,7 +159,8 @@ export default function BoardFilters({
         </div>
 
         <button
-          onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+          ref={filterButtonRef}
+          onClick={togglePopover}
           className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-[6px] text-[0.8125rem] transition-colors ${
             isPopoverOpen || hasActiveFilters
               ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] border-[#2563EB]/30 dark:border-[#2563EB]/30 text-[#1F6C9F] dark:text-[#93C5FD]"
@@ -147,10 +185,16 @@ export default function BoardFilters({
         {extraActions}
       </div>
 
-      {isPopoverOpen && (
+      {isPopoverOpen && popoverPosition && typeof document !== "undefined" && createPortal(
         <div
-          className="absolute top-[calc(100%+6px)] left-[var(--workspace-surface-pad)] w-[30rem] h-80 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 flex overflow-hidden"
-          style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.05)" }}
+          ref={filterPopoverRef}
+          className="fixed z-50 flex h-80 max-h-[calc(100vh-1rem)] w-[30rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white dark:border-white/[0.06] dark:bg-[#202020] animate-in fade-in zoom-in-95 duration-200"
+          style={{
+            position: "fixed",
+            top: popoverPosition.top,
+            left: popoverPosition.left,
+            boxShadow: "0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.05)",
+          }}
         >
           <div className="w-1/3 border-r border-[#EAEAEA] dark:border-white/[0.06] bg-[#F9F9F8] dark:bg-[#252525] flex flex-col">
             {tabs.map(tab => (
@@ -245,7 +289,8 @@ export default function BoardFilters({
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );

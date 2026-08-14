@@ -36,7 +36,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="app-page-narrow py-8 pb-12 px-4">
+      <div className="w-full max-w-full py-8 pb-12 px-4">
         <h1 className="mb-6 text-2xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
           Settings
         </h1>
@@ -150,11 +150,11 @@ export default function SettingsPage() {
           </button>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 w-full">
           <ThemeSwitcher />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 w-full">
           <FontSizeControl />
         </div>
       </div>

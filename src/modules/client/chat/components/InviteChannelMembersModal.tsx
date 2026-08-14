@@ -8,6 +8,7 @@ import { inviteMembersAPI } from '../services/chatService';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import toast from 'react-hot-toast';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface ChannelCandidateUser {
   _id?: string;
@@ -37,6 +38,7 @@ export default function InviteChannelMembersModal({
   workspaceId,
   existingMemberIds,
 }: InviteChannelMembersModalProps) {
+  useEscapeStack(onClose, isOpen);
   const queryClient = useQueryClient();
   const [workspaceMembers, setWorkspaceMembers] = useState<ChannelCandidateMember[]>([]);
   const [loading, setLoading] = useState(false);

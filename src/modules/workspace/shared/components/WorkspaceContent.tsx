@@ -99,9 +99,7 @@ export default function WorkspaceContent({
   reportsProps,
 }: WorkspaceContentProps) {
   return (
-    <div
-      className={activeTab === "pages" ? "flex min-h-0 flex-1" : "rounded-[10px]"}
-    >
+    <div className="flex h-full w-full min-h-0 min-w-0 flex-1 flex-col">
       {activeTab === "pages" && (
         <DocsLayout workspaceId={workspaceId} workspaceKey={workspace.key || workspace.slug || workspaceId} />
       )}

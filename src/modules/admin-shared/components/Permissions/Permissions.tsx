@@ -93,7 +93,7 @@ export default function Permissions() {
   };
 
   return (
-    <div className="app-page-wide">
+    <div className="app-page-wide app-page-fluid-2xl">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-[#111111] dark:text-[#E8E8E7]">Roles & Permissions</h1>

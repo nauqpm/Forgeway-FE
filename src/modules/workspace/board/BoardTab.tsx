@@ -1,7 +1,8 @@
-﻿"use client";
+"use client";
 
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import Link from "next/link";
+
 import { useMemo, useRef, useState } from "react";
 import { Filters } from "@/modules/workspace/shared/types/filter.type";
 import { Issue } from "@/modules/workspace/shared/types/issue.type";
@@ -9,11 +10,16 @@ import { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 import { Sprint } from "@/modules/workspace/shared/types/sprint.type";
 import type { TaskCover } from "@/modules/workspace/shared/types/task-cover.type";
+import { useQuery } from "@tanstack/react-query";
+import { taskService } from "@/modules/workspace/shared/services/taskService";
 import DeleteColumnModal from "@/modules/workspace/shared/components/DeleteColumnModal";
 import BoardFilters from "@/modules/workspace/shared/components/BoardFilters";
 import BoardTaskActionMenu from "@/modules/workspace/tasks/covers/BoardTaskActionMenu";
 import TaskLabelModal from "@/modules/workspace/tasks/labels/TaskLabelModal";
+import BoardCardSubtasks from "@/modules/workspace/tasks/detail/BoardCardSubtasks";
 import { compareIssueRank } from "@/modules/workspace/shared/utils/dragUtils";
+import { toast } from "react-hot-toast";
+import { MAX_COLUMN_NAME_LENGTH, COLUMN_NAME_MESSAGES } from "@/modules/workspace/shared/utils/columnName";
 
 import {
   Check,
@@ -22,9 +28,11 @@ import {
   Trash2,
   X,
   PlayCircle,
+  Calendar,
 } from "lucide-react";
 import AssigneePicker from "@/shared/components/AssigneePicker";
 import type { AssigneePickerUser } from "@/shared/components/AssigneePicker";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 const normalizeObjectId = (value: unknown): string => {
   if (!value) return "";
@@ -87,7 +95,7 @@ type BoardTabProps = {
     handleBoardDragStart?: () => void;
     handleAddColumn: () => void;
     handleRenameColumn: (columnId: string, name: string) => void;
-    handleDeleteColumn: (columnId: string, migrateTo?: string) => void;
+    handleDeleteColumn: (columnId: string, migrateTo?: string, archivedMigrateTo?: string) => void;
     handleMoveColumn: (columnId: string, newOrder: number) => void;
     updateIssueDirectly: (issueId: string, updates: Partial<Issue>) => void;
     onArchiveIssue?: (issue: Issue) => void;
@@ -155,6 +163,27 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
   const [issueToDelete, setIssueToDelete] = useState<Issue | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const actionMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch archived tasks count for the column being deleted
+  const { data: archivedTasksInColumn } = useQuery({
+    queryKey: ["tasks-archived-column", workspace._id, columnToDelete?.id],
+    queryFn: () => taskService.getBoardTasks(workspace._id, {
+      archived: true,
+      columnId: columnToDelete!.id,
+      page: 1,
+      limit: 1,
+    }),
+    enabled: !!columnToDelete && deleteModalOpen,
+    staleTime: 0,
+  });
+
+  // Whether the column being deleted has any archived tasks
+  const archivedInColumn = (archivedTasksInColumn?.length ?? 0) > 0;
+
+
+
+
+
 
   const workspaceMembers = useMemo(() => {
     return (workspace.members ?? [])
@@ -270,6 +299,8 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     setDeleteConfirmText("");
   };
 
+  useEscapeStack(closeDeleteIssueModal, Boolean(issueToDelete));
+
   const confirmDeleteIssue = () => {
     if (!issueToDelete || deleteConfirmText !== "delete") return;
     onDeleteIssue?.(issueToDelete);
@@ -284,7 +315,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
 
   if (workspace.type === "scrum" && !activeSprint) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
+      <div className="flex flex-1 flex-col h-full w-full items-center justify-center py-24 text-center">
         <div className="w-16 h-16 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] rounded-full flex items-center justify-center mb-4">
           <PlayCircle className="w-8 h-8 text-[#2563EB] dark:text-[#60A5FA]" />
         </div>
@@ -310,7 +341,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
     : null;
 
   return (
-    <div className="flex flex-col gap-0.5 relative">
+    <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-0.5">
       {filters.archived && (
         <div className="absolute top-0 right-[var(--workspace-surface-pad)] mt-2 bg-[#FDEBEC] text-[#9F2F2D] px-3 py-1 rounded-[4px] text-[0.6875rem] font-bold z-10">
           Archived View - Read Only
@@ -318,11 +349,14 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
       )}
 
       {/* Quick Filters */}
-      <BoardFilters
-        filters={filters}
-        setFilters={setFilters}
-        uniqueAssignees={uniqueAssignees}
-      />
+      <div className="shrink-0">
+        <BoardFilters
+          filters={filters}
+          setFilters={setFilters}
+          uniqueAssignees={uniqueAssignees}
+          availableStatuses={columns.map(c => c.name)}
+        />
+      </div>
 
       <DragDropContext onBeforeDragStart={handleBoardDragStart} onDragEnd={handleBoardDragEnd}>
         <Droppable
@@ -332,12 +366,16 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
         >
           {(provided) => (
             <div
-              className="flex overflow-x-auto pt-2 px-[var(--workspace-surface-pad)] pb-[var(--workspace-surface-pad)]"
-              style={{ gap: "var(--workspace-board-gap)" }}
-              ref={provided.innerRef}
-              {...provided.droppableProps}
+              ref={columnsEndRef}
+              className="flex min-h-0 min-w-0 flex-1 overflow-x-auto overflow-y-hidden"
             >
-              {columns.map((column, index) => (
+              <div
+                className="flex min-w-max pt-2 px-[var(--workspace-surface-pad)] pb-[var(--workspace-surface-pad)]"
+                style={{ gap: "var(--workspace-board-gap)" }}
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+              >
+                {columns.map((column, index) => (
                 <Draggable
                   key={column.id}
                   draggableId={`col-${column.id}`}
@@ -348,11 +386,11 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}
-                      className="workspace-column flex-shrink-0 bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] flex flex-col border border-[#EAEAEA] dark:border-white/[0.06] group/column overflow-hidden"
+                      className="workspace-column flex min-h-0 flex-shrink-0 flex-col bg-[#F9F9F8] dark:bg-[#252525] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] group/column overflow-hidden"
                     >
                       <div
                         {...(filters.archived ? {} : provided.dragHandleProps)}
-                        className={`p-3 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-t-[8px] ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
+                        className={`shrink-0 p-3 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between bg-[#F7F6F3] dark:bg-[#2A2A2A] rounded-t-[8px] ${filters.archived ? "" : "cursor-grab active:cursor-grabbing"} group/header`}
                         onDoubleClick={() => {
                           if (filters.archived) return;
                           setEditingColumnId(column.id);
@@ -360,30 +398,50 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                         }}
                       >
                         {editingColumnId === column.id ? (
-                          <input
-                            autoFocus
-                            value={editingName}
-                            onChange={(e) => setEditingName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleRenameColumn(column.id, editingName);
-                                setEditingColumnId(null);
-                              }
-                              if (e.key === "Escape") setEditingColumnId(null);
-                            }}
-                            onBlur={() => setEditingColumnId(null)}
-                            className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
-                          />
+                          <div className="w-full">
+                            <input
+                              autoFocus
+                              value={editingName}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val.length > MAX_COLUMN_NAME_LENGTH) {
+                                  toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+                                  setEditingName(val.slice(0, MAX_COLUMN_NAME_LENGTH));
+                                } else {
+                                  setEditingName(val);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleRenameColumn(column.id, editingName);
+                                  setEditingColumnId(null);
+                                }
+                                if (e.key === "Escape") setEditingColumnId(null);
+                              }}
+                              onBlur={() => setEditingColumnId(null)}
+                              className="w-full text-[0.8125rem] font-semibold px-2 py-1 border border-[#2563EB] rounded-[4px] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] outline-none"
+                            />
+                            {editingName.length >= 40 && (
+                              <div className="text-[0.625rem] font-mono mt-1 text-right text-[#787774] dark:text-[#9B9A97]">
+                                <span className={editingName.length >= MAX_COLUMN_NAME_LENGTH ? "text-[#9F2F2D] font-bold" : ""}>
+                                  {editingName.length}
+                                </span>
+                                /{MAX_COLUMN_NAME_LENGTH}
+                              </div>
+                            )}
+                          </div>
                         ) : (
-                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2">
-                            {column.name}
-                            <span className="w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold">
+                          <h3 className="font-semibold text-[#787774] dark:text-[#9B9A97] text-[0.6875rem] uppercase tracking-[0.06em] flex items-center gap-2 min-w-0 flex-1 mr-2">
+                            <span className="truncate" title={column.name}>
+                              {column.name}
+                            </span>
+                            <span className="shrink-0 w-4 h-4 rounded-full bg-[#EAEAEA] dark:bg-[#2A2A2A] text-[#787774] dark:text-[#9B9A97] flex items-center justify-center text-[0.625rem] font-bold">
                               {getColumnIssues(column).length}
                             </span>
                           </h3>
                         )}
                         {!filters.archived && (canUpdateWorkspace || canCreateTask) && (
-                          <div className="flex gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
+                          <div className="flex shrink-0 gap-1 opacity-0 group-hover/header:opacity-100 transition-opacity">
                             {canUpdateWorkspace && (
                               <button
                                 onClick={() => {
@@ -405,7 +463,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                           <div
                             ref={provided.innerRef}
                             {...provided.droppableProps}
-                            className={`p-3 space-y-3 transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
+                            className={`flex min-h-0 flex-1 flex-col overflow-y-auto p-3 space-y-3 transition-colors ${snapshot.isDraggingOver ? "bg-[#EFF6FF]/40 dark:bg-[rgba(37,99,235,0.08)]" : ""}`}
                           >
                             {getColumnIssues(column)
                               .map((issue, issueIndex) => (
@@ -475,52 +533,97 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                                         </div>
                                       )}
                                       <div className="p-3.5">
-                                        <p className="mb-2 text-[0.8125rem] font-medium leading-snug text-[#111111] group-hover:text-[#2563EB] dark:text-[#E8E8E7] dark:group-hover:text-[#60A5FA]">
-                                          {issue.title}
-                                        </p>
-                                        <div className="mb-3 flex flex-wrap gap-1.5">
-                                          <span
-                                            className={`px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold ${issue.priority === "High" || issue.priority === "Highest" ? "bg-[#FDEBEC] text-[#9F2F2D]" : issue.priority === "Medium" ? "bg-[#FBF3DB] text-[#956400]" : "bg-[#EDF3EC] text-[#346538]"}`}
-                                          >
-                                            {issue.priority}
-                                          </span>
-                                          <span className="px-2 py-0.5 rounded-[4px] text-[0.625rem] font-semibold bg-[#EFF6FF] text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]">
-                                            {issue.type}
-                                          </span>
-                                          {(issue.labels ?? []).slice(0, 3).map((label) => (
-                                            <span
-                                              key={label.id}
-                                              title={label.name}
-                                              className="max-w-[7.5rem] truncate rounded-[4px] bg-[#EFF6FF] px-2 py-0.5 text-[0.625rem] font-semibold text-[#1F6C9F] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#93C5FD]"
-                                            >
-                                              {label.name}
-                                            </span>
-                                          ))}
-                                          {(issue.labels?.length ?? 0) > 3 && (
-                                            <span className="rounded-[4px] bg-[#F7F6F3] px-2 py-0.5 text-[0.625rem] font-semibold text-[#787774] dark:bg-[#2A2A2A] dark:text-[#9B9A97]">
-                                              +{(issue.labels?.length ?? 0) - 3}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <div className="mt-auto flex items-center justify-between border-t border-[#F0F0EE] dark:border-white/[0.04] pt-2">
-                                          <span className="text-[0.6875rem] font-mono font-bold text-[#ABABAB] dark:text-[#6B6B6B]">
+                                        <div className="mb-2">
+                                          <span className="text-[0.6875rem] font-mono font-bold text-[#6B778C] dark:text-[#9FADBC]">
                                             {issue.key}
                                           </span>
-
-                                          {canEditTask && !filters.archived ? (
-                                            <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-                                              <AssigneePicker
-                                                users={workspaceMembers}
-                                                value={issue.assigneeId ?? issue.assignee ?? null}
-                                                onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
-                                                placement="auto"
-                                                size="sm"
-                                              />
-                                            </div>
-                                          ) : (
-                                            renderReadonlyAssignee(issue)
-                                          )}
                                         </div>
+
+                                        <p title={issue.title} className="mb-2 line-clamp-2 text-[0.875rem] font-semibold leading-snug text-[#172B4D] group-hover:text-[#0052CC] dark:text-[#DFE1E6] dark:group-hover:text-[#4C9AFF]">
+                                          {issue.title}
+                                        </p>
+
+                                        <div className="flex items-end justify-between mt-3">
+                                          <div className="flex flex-wrap items-center gap-1.5 flex-1">
+                                            <span
+                                              title={`Priority: ${issue.priority}`}
+                                              className={`px-1.5 py-0.5 rounded-[3px] text-[0.625rem] font-bold uppercase tracking-wide cursor-default ${issue.priority === "High" || issue.priority === "Highest" ? "bg-[#FFEBE6] text-[#BF2600] dark:bg-[rgba(191,38,0,0.2)] dark:text-[#FF8F73]" : issue.priority === "Medium" ? "bg-[#FFFAE6] text-[#FF8B00] dark:bg-[rgba(255,139,0,0.2)] dark:text-[#F6C343]" : "bg-[#E3FCEF] text-[#006644] dark:bg-[rgba(0,102,68,0.2)] dark:text-[#57D9A3]"}`}
+                                            >
+                                              {issue.priority}
+                                            </span>
+                                            <span 
+                                              title={`Type: ${issue.type}`}
+                                              className="px-1.5 py-0.5 rounded-[3px] text-[0.625rem] font-bold uppercase tracking-wide bg-[#DEEBFF] text-[#0747A6] dark:bg-[rgba(7,71,166,0.2)] dark:text-[#4C9AFF] cursor-default"
+                                            >
+                                              {issue.type}
+                                            </span>
+
+                                            {issue.dueDate && (() => {
+                                              const isOverdue = new Date(new Date(issue.dueDate).setHours(0,0,0,0)) < new Date(new Date().setHours(0,0,0,0));
+                                              return (
+                                                <span
+                                                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-[3px] text-[0.625rem] font-semibold w-fit cursor-default ${isOverdue ? "bg-[#FFEBE6] text-[#BF2600] dark:bg-[rgba(191,38,0,0.2)] dark:text-[#FF8F73]" : "bg-[#DFE1E6] text-[#42526E] dark:bg-[#2A2B2D] dark:text-[#A6B0C3]"}`}
+                                                  title={isOverdue ? "Overdue" : "Due Date"}
+                                                >
+                                                  <Calendar className="w-3 h-3" />
+                                                  {new Date(issue.dueDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+                                                </span>
+                                              );
+                                            })()}
+
+                                            {(issue.labels ?? []).slice(0, 3).map((label) => (
+                                              <span
+                                                key={label.id}
+                                                title={label.name}
+                                                className="max-w-[7.5rem] truncate rounded-[3px] bg-[#DFE1E6] px-1.5 py-0.5 text-[0.625rem] font-semibold text-[#42526E] dark:bg-[#2A2B2D] dark:text-[#A6B0C3]"
+                                              >
+                                                {label.name}
+                                              </span>
+                                            ))}
+                                            {(issue.labels?.length ?? 0) > 3 && (
+                                              <span className="rounded-[3px] bg-[#DFE1E6] px-1.5 py-0.5 text-[0.625rem] font-semibold text-[#42526E] dark:bg-[#2A2B2D] dark:text-[#A6B0C3]">
+                                                +{(issue.labels?.length ?? 0) - 3}
+                                              </span>
+                                            )}
+                                          </div>
+                                          
+                                          <div className="ml-2 flex-shrink-0">
+                                            {canEditTask && !filters.archived ? (
+                                              <div onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
+                                                <AssigneePicker
+                                                  users={workspaceMembers}
+                                                  value={issue.assigneeId ?? issue.assignee ?? null}
+                                                  onChange={uid => updateIssueDirectly(issue.id, { assigneeId: uid, assignee: uid ?? "" })}
+                                                  placement="auto"
+                                                  size="sm"
+                                                />
+                                              </div>
+                                            ) : (
+                                              renderReadonlyAssignee(issue)
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {issue.type?.toLowerCase() !== "subtask" && (
+                                          <div className="mt-2">
+                                            <BoardCardSubtasks
+                                              workspaceId={data.workspace._id}
+                                              taskId={issue.id}
+                                              taskType={issue.type}
+                                              workspaceMembers={workspaceMembers}
+                                              canEditTask={canEditTask}
+                                              boardColumns={columns}
+                                              onSubtaskClick={(key) => {
+                                                const currentPath = window.location.pathname;
+                                                const newPath = currentPath.includes("/key/") 
+                                                  ? currentPath.replace(/\/key\/[^/]+$/, `/key/${key}`)
+                                                  : `${currentPath}/key/${key}`;
+                                                window.history.pushState(null, "", newPath);
+                                                window.dispatchEvent(new Event("popstate"));
+                                              }}
+                                            />
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   )}
@@ -554,8 +657,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
 
               {/* Add new column */}
               <div
-                className="workspace-column flex-shrink-0 bg-transparent flex flex-col group/new-col"
-                ref={columnsEndRef}
+                className="workspace-column flex min-h-0 flex-shrink-0 flex-col bg-transparent group/new-col"
               >
                 {canUpdateWorkspace && showCreateColumn ? (
                   <div className="bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-3">
@@ -563,7 +665,15 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                       type="text"
                       autoFocus
                       value={newColumnName}
-                      onChange={(e) => setNewColumnName(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.length > MAX_COLUMN_NAME_LENGTH) {
+                          toast.error(COLUMN_NAME_MESSAGES.TOO_LONG, { id: "column-name-too-long" });
+                          setNewColumnName(val.slice(0, MAX_COLUMN_NAME_LENGTH));
+                        } else {
+                          setNewColumnName(val);
+                        }
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleAddColumn();
                         if (e.key === "Escape") {
@@ -574,6 +684,14 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                       placeholder="New column name..."
                       className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7] rounded-[6px] text-[0.8125rem] focus:border-[#2563EB] outline-none transition-colors"
                     />
+                    {newColumnName.length >= 40 && (
+                      <div className="text-[0.625rem] font-mono mt-1 text-right text-[#787774] dark:text-[#9B9A97]">
+                        <span className={newColumnName.length >= MAX_COLUMN_NAME_LENGTH ? "text-[#9F2F2D] font-bold" : ""}>
+                          {newColumnName.length}
+                        </span>
+                        /{MAX_COLUMN_NAME_LENGTH}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 mt-3">
                       <button
                         onClick={handleAddColumn}
@@ -602,6 +720,7 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 ) : null}
               </div>
             </div>
+          </div>
           )}
         </Droppable>
       </DragDropContext>
@@ -646,12 +765,13 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
           column={columnToDelete}
           columns={columns}
           hasTasks={issues.some(i => issueMatchesColumn(i, columnToDelete))}
+          hasArchivedTasks={archivedInColumn}
           onClose={() => {
             setDeleteModalOpen(false);
             setColumnToDelete(null);
           }}
-          onConfirm={(migrateTo) => {
-            handleDeleteColumn(columnToDelete.id, migrateTo);
+          onConfirm={(migrateTo, archivedMigrateTo) => {
+            handleDeleteColumn(columnToDelete.id, migrateTo, archivedMigrateTo);
             setDeleteModalOpen(false);
             setColumnToDelete(null);
           }}
@@ -672,6 +792,16 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 <p className="mt-1 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                   This permanently deletes {issueToDelete.key}. Archive it instead if you may need it later.
                 </p>
+                {issueToDelete.subtaskProgress && issueToDelete.subtaskProgress.total > 0 && (
+                  <div className="mt-3 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-3 rounded-r-[6px]">
+                    <p className="text-[0.8125rem] font-medium text-red-800 dark:text-red-200">
+                      Warning: This task contains {issueToDelete.subtaskProgress.total} subtask(s).
+                    </p>
+                    <p className="text-[0.8125rem] text-red-700 dark:text-red-300 mt-0.5">
+                      Deleting this task will permanently delete all of its subtasks as well.
+                    </p>
+                  </div>
+                )}
               </div>
               <button
                 type="button"
@@ -692,7 +822,6 @@ export default function BoardTab({ data, ui, actions, refs, permissions }: Board
                 onChange={(event) => setDeleteConfirmText(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") confirmDeleteIssue();
-                  if (event.key === "Escape") closeDeleteIssueModal();
                 }}
                 className="w-full rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-white dark:bg-[#202020] px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] outline-none focus:border-[#9F2F2D] transition-colors"
                 placeholder="delete"

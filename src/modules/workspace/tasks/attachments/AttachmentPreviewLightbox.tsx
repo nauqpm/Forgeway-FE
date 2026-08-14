@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { ChevronLeft, ChevronRight, Download, Loader2, X } from "lucide-react";
 import { useAttachmentPreview } from "@/modules/workspace/shared/hooks/useAttachmentPreview";
 import { TaskAttachment } from "@/modules/workspace/shared/types/attachment.type";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface AttachmentPreviewLightboxProps {
   workspaceId: string;
@@ -24,6 +25,7 @@ export default function AttachmentPreviewLightbox({
   onSelect,
   onDownload,
 }: AttachmentPreviewLightboxProps) {
+  useEscapeStack(onClose, Boolean(activeAttachment));
   const activeIndex = useMemo(
     () => attachments.findIndex((attachment) => attachment.id === activeAttachment?.id),
     [activeAttachment?.id, attachments],
@@ -42,14 +44,13 @@ export default function AttachmentPreviewLightbox({
     if (!activeAttachment) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
       if (event.key === "ArrowLeft" && hasPrevious) onSelect(attachments[activeIndex - 1]);
       if (event.key === "ArrowRight" && hasNext) onSelect(attachments[activeIndex + 1]);
     };
 
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [activeAttachment, activeIndex, attachments, hasNext, hasPrevious, onClose, onSelect]);
+  }, [activeAttachment, activeIndex, attachments, hasNext, hasPrevious, onSelect]);
 
   if (!activeAttachment) return null;
 

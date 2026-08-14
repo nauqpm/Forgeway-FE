@@ -7,6 +7,8 @@ import { queryKeys } from "@/shared/constants/queryKeys";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { boardService } from "@/modules/workspace/shared/services/boardService";
 import { taskService } from "@/modules/workspace/shared/services/taskService";
+import { workspaceService } from "@/modules/workspace/shared/services/workspaceService";
+import type { Workspace } from "@/modules/workspace/shared/types/workspace.type";
 import type { Issue } from "@/modules/workspace/shared/types/issue.type";
 import type { BoardColumn } from "@/modules/workspace/shared/types/board.type";
 import type { DashboardData, ForYouWorkspace, UserDashboardStats } from "../types/dashboard.types";
@@ -26,14 +28,26 @@ export function useDashboardData() {
   return useQuery<DashboardData>({
     queryKey: queryKeys.admin.dashboardForUser(user?.id ?? "anonymous"),
     queryFn: async () => {
-      const [forYouResponse, userDashboardResponse] = await Promise.all([
+      const [forYouResponse, userDashboardResponse, myWorkspaces] = await Promise.all([
         api.get(apiRoutes.FOR_YOU).catch(() => ({ data: [] as ForYouWorkspace[] })),
         api.get(apiRoutes.DASHBOARD.USER).catch(() => ({ data: {} })),
+        workspaceService.listMine().catch(() => [] as Workspace[]),
       ]);
 
-      const workspaces: ForYouWorkspace[] = extractWorkspaces(
+      const rawWorkspaces: ForYouWorkspace[] = extractWorkspaces(
         normalizePayload<ForYouWorkspace[]>(forYouResponse),
       );
+
+      const workspaces: ForYouWorkspace[] = rawWorkspaces.map((ws) => {
+        const matched = (myWorkspaces ?? []).find(
+          (m) => m._id === ws.id || m._id === ws._id || m.key === ws.key || m.slug === ws.slug,
+        );
+        return {
+          ...ws,
+          avatar: ws.avatar || matched?.avatar || null,
+        };
+      });
+
       const userStats = normalizePayload<UserDashboardStats>(userDashboardResponse) ?? null;
 
       if (!user?.id || workspaces.length === 0) {

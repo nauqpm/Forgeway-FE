@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import LoadingSpinner from "@/modules/admin-shared/components/common/components/LoadingSpinner";
 import WorkspaceContent from "./WorkspaceContent";
+import WorkspaceTabShell from "./WorkspaceTabShell";
 import Header from "@/modules/workspace/shared/components/Header";
 import ImportCsvModal from "@/modules/workspace/tasks/import/ImportCsvModal";
 import Tabs from "@/modules/workspace/shared/components/Tabs";
@@ -156,21 +157,23 @@ export default function WorkspacePage(props: WorkspacePageProps) {
     );
   }
 
-  const isDocsTab = activeTab === "pages";
-
   return (
-    <div className={isDocsTab ? "flex min-h-0 flex-1 overflow-hidden p-[var(--workspace-surface-pad)]" : "flex-1 overflow-y-auto p-[var(--workspace-surface-pad)]"}>
-      <div className={isDocsTab ? "flex min-h-0 flex-1 flex-col" : "workspace-surface pb-12"}>
-        <Header
-          workspace={workspace}
-          workspaceId={workspace.key}
-          setShowCreateIssue={handleOpenGlobalCreateIssue}
-          canCreateTask={canCreateTask}
-          canUpdateWorkspace={canUpdateWorkspace}
-          onWorkspaceUpdated={handleWorkspaceUpdated}
-        />
+    <WorkspaceTabShell mode="canvas">
+      <div className="flex h-full w-full min-h-0 min-w-0 flex-1 flex-col">
+        <div className="shrink-0">
+          <Header
+            workspace={workspace}
+            workspaceId={workspace.key}
+            setShowCreateIssue={handleOpenGlobalCreateIssue}
+            canCreateTask={canCreateTask}
+            canUpdateWorkspace={canUpdateWorkspace}
+            onWorkspaceUpdated={handleWorkspaceUpdated}
+          />
+        </div>
 
-        <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={handleTabChange} />
+        <div className="shrink-0">
+          <Tabs workspace={workspace} activeTab={activeTab} setActiveTab={handleTabChange} />
+        </div>
 
         <WorkspaceContent
           activeTab={activeTab}
@@ -243,6 +246,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           }}
           listProps={{
             filteredIssues,
+            issues,
             selectedIssue: activeTab === "list" ? (activeIssueDetail as Issue | null) : selectedIssue,
             workspaceKey: workspace.key,
             workspaceId: workspace._id,
@@ -275,6 +279,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
             workspaceMongoId: workspace?._id,
           }}
           calendarProps={{
+            workspace,
             issues,
             sprints,
             handleUpdateIssueDate,
@@ -329,6 +334,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           handleUpdateIssue={handleUpdateIssue}
           updateIssueDirectly={updateIssueDirectly}
           handleArchiveIssue={handleArchiveIssue}
+          handleDeleteIssue={handleDeleteIssue}
           handleRestoreIssue={handleRestoreIssue ? (i: TaskDetailResponse) => handleRestoreIssue(i as unknown as Issue) : undefined}
           detailUrl={detailUrl}
           canEditTask={canEditTask}
@@ -358,6 +364,6 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           }}
         />
       </div>
-    </div>
+    </WorkspaceTabShell>
   );
 }

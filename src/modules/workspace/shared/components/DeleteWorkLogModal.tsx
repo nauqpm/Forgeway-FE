@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface DeleteWorkLogModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export default function DeleteWorkLogModal({
   initialTimeRemainingHours,
   deletedHours,
 }: DeleteWorkLogModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [adjustTimeRemaining, setAdjustTimeRemaining] = useState(true);
 
   // Default new time remaining = current remaining + deleted hours (as per stated behaviour)

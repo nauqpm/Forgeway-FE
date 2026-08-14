@@ -13,6 +13,7 @@ import { useAuthStore, useMfaStore, useSecurityStore, useSessionStore } from "..
 import { usePermissionStore } from "../../permission/stores/permissionStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 import { chatSocketClient } from "@/lib/socket/chat.client";
+import { resetProcessedDeletedMessages } from "@/modules/client/chat/utils/chatQueryCache";
 import { ADMIN_URL } from "@/lib/admin-url";
 import { loginAPI, registerAPI, logoutAPI, getCurrentUserAPI } from "../services/authService";
 import { clearTokens } from "../services/tokenService";
@@ -226,6 +227,7 @@ export const useAuth = () => {
     useWorkspaceStore.getState().clearWorkspace();
     queryClient.clear();
     chatSocketClient.disconnect();
+    resetProcessedDeletedMessages();
   }, [clearAuth, queryClient]);
 
   const logoutMutation = useMutation({

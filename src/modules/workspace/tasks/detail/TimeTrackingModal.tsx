@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { X, Calendar, Sparkles, ChevronDown, Link, Undo, Redo, History, Info, Paperclip } from "lucide-react";
 import { TaskDetailResponse } from "@/modules/workspace/shared/types/task-detail.type";
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 import { toast } from "react-hot-toast";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface TimeTrackingModalProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function TimeTrackingModal({
   onUpdateIssue,
   editWorkLog,
 }: TimeTrackingModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [timeSpent, setTimeSpent] = useState("");
   const [timeRemaining, setTimeRemaining] = useState("");
   const [dateStarted, setDateStarted] = useState(() => {
@@ -39,6 +41,7 @@ export default function TimeTrackingModal({
   });
   const [description, setDescription] = useState("");
   const [prevLogged, setPrevLogged] = useState(0);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Initialize for edit
   useEffect(() => {
@@ -63,6 +66,7 @@ export default function TimeTrackingModal({
 
   const [historyStack, setHistoryStack] = useState<string[]>([""]);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const savedSelectionRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
 
   // Popup overlay states
   const [isLinkPopupOpen, setIsLinkPopupOpen] = useState(false);
@@ -71,16 +75,42 @@ export default function TimeTrackingModal({
   const [isHistoryPopupOpen, setIsHistoryPopupOpen] = useState(false);
 
   const pushToHistory = (newVal: string) => {
-    const updatedStack = historyStack.slice(0, historyIndex + 1);
-    updatedStack.push(newVal);
-    setHistoryStack(updatedStack);
-    setHistoryIndex(updatedStack.length - 1);
+    setHistoryStack((prev) => {
+      const updatedStack = prev.slice(0, historyIndex + 1);
+      updatedStack.push(newVal);
+      setHistoryIndex(updatedStack.length - 1);
+      return updatedStack;
+    });
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
   };
 
   const handleDescriptionBlur = () => {
     if (description !== historyStack[historyIndex]) {
       pushToHistory(description);
     }
+  };
+
+  const insertAtCursor = (before: string, after: string = "", placeholder: string = "") => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selected = text.substring(start, end);
+    const inner = selected || placeholder;
+    const replacement = before + inner + after;
+    const newVal = text.substring(0, start) + replacement + text.substring(end);
+    setDescription(newVal);
+    pushToHistory(newVal);
+    const cursorStart = selected ? start + before.length : start + before.length;
+    const cursorEnd = selected ? start + before.length + inner.length : start + before.length + inner.length;
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(cursorStart, cursorEnd);
+    }, 0);
   };
 
   const handleAiClick = () => {
@@ -91,43 +121,47 @@ export default function TimeTrackingModal({
       "Optimized database indexing and queries.",
     ];
     const randomSnippet = aiSnippets[Math.floor(Math.random() * aiSnippets.length)];
-    const newVal = description ? `${description}\n- ${randomSnippet}` : `- ${randomSnippet}`;
-    setDescription(newVal);
-    pushToHistory(newVal);
-  };
-
-  const handleTtClick = () => {
-    const textarea = document.getElementById("work-desc-textarea") as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (!textarea) return;
     const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
     const text = textarea.value;
-    const selected = text.substring(start, end);
-    const replacement = selected ? `**${selected}**` : `**Bold text**`;
-    const newVal = text.substring(0, start) + replacement + text.substring(end);
+    const prefix = start > 0 && text[start - 1] !== "\n" ? "\n" : "";
+    const insertion = `${prefix}- ${randomSnippet}`;
+    const newVal = text.substring(0, start) + insertion + text.substring(start);
     setDescription(newVal);
     pushToHistory(newVal);
+    const newCursor = start + insertion.length;
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(start + 2, start + 2 + (selected ? selected.length : 9));
+      textarea.setSelectionRange(newCursor, newCursor);
     }, 0);
   };
 
+  const handleTtClick = () => {
+    insertAtCursor("**", "**", "Bold text");
+  };
+
   const handleInsertClick = () => {
-    const newVal = description ? `${description}\n- ` : `- `;
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const text = textarea.value;
+    const prefix = start > 0 && text[start - 1] !== "\n" ? "\n" : "";
+    const insertion = `${prefix}- `;
+    const newVal = text.substring(0, start) + insertion + text.substring(start);
     setDescription(newVal);
     pushToHistory(newVal);
-    const textarea = document.getElementById("work-desc-textarea") as HTMLTextAreaElement;
-    if (textarea) {
-      setTimeout(() => {
-        textarea.focus();
-      }, 0);
-    }
+    const newCursor = start + insertion.length;
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursor, newCursor);
+    }, 0);
   };
 
   const handleLinkClick = () => {
-    const textarea = document.getElementById("work-desc-textarea") as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (textarea) {
+      savedSelectionRef.current = { start: textarea.selectionStart, end: textarea.selectionEnd };
       const selected = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd);
       setLinkText(selected);
     }
@@ -137,10 +171,9 @@ export default function TimeTrackingModal({
 
   const handleInsertLink = () => {
     if (!linkUrl) return;
-    const textarea = document.getElementById("work-desc-textarea") as HTMLTextAreaElement;
+    const textarea = textareaRef.current;
     if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    const { start, end } = savedSelectionRef.current;
     const text = textarea.value;
     const selected = text.substring(start, end);
     const label = linkText || selected || "Link label";
@@ -151,17 +184,26 @@ export default function TimeTrackingModal({
     setIsLinkPopupOpen(false);
     setLinkUrl("");
     setLinkText("");
+    const newCursor = start + replacement.length;
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(newCursor, newCursor);
+    }, 0);
   };
 
   const handleUploadClick = () => {
+    const textarea = textareaRef.current;
+    const cursorPos = textarea ? textarea.selectionStart : description.length;
     const fileInput = document.createElement("input");
     fileInput.type = "file";
     fileInput.onchange = (e: Event) => {
       const input = e.target as HTMLInputElement;
       const file = input.files?.[0];
       if (file) {
-        const attachmentText = description ? `\n[Attachment: ${file.name}]` : `[Attachment: ${file.name}]`;
-        const newVal = description + attachmentText;
+        const text = description;
+        const prefix = cursorPos > 0 && text[cursorPos - 1] !== "\n" ? "\n" : "";
+        const insertion = `${prefix}[Attachment: ${file.name}]`;
+        const newVal = text.substring(0, cursorPos) + insertion + text.substring(cursorPos);
         setDescription(newVal);
         pushToHistory(newVal);
       }
@@ -170,10 +212,15 @@ export default function TimeTrackingModal({
   };
 
   const handleUndo = () => {
+    if (description !== historyStack[historyIndex]) {
+      pushToHistory(description);
+      return;
+    }
     if (historyIndex > 0) {
       const prevIdx = historyIndex - 1;
       setHistoryIndex(prevIdx);
       setDescription(historyStack[prevIdx]);
+      setTimeout(() => textareaRef.current?.focus(), 0);
     }
   };
 
@@ -182,6 +229,7 @@ export default function TimeTrackingModal({
       const nextIdx = historyIndex + 1;
       setHistoryIndex(nextIdx);
       setDescription(historyStack[nextIdx]);
+      setTimeout(() => textareaRef.current?.focus(), 0);
     }
   };
 
@@ -194,6 +242,7 @@ export default function TimeTrackingModal({
     setHistoryIndex(idx);
     setDescription(historyStack[idx]);
     setIsHistoryPopupOpen(false);
+    setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
   // Load previously logged work from localStorage for persistence
@@ -236,6 +285,21 @@ export default function TimeTrackingModal({
       setIsHistoryPopupOpen(false);
     }
   }, [isOpen, issue, workspaceId]);
+
+  // Keyboard shortcuts (Escape to close, Enter to submit when valid)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -350,7 +414,7 @@ export default function TimeTrackingModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[420px] bg-white dark:bg-[#1E1E1E] text-[#172B4D] dark:text-[#E8E8E7] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-xl overflow-hidden"
+        className="w-full max-w-[420px] bg-white dark:bg-[#1E1E1E] text-[#172B4D] dark:text-[#E8E8E7] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] shadow-xl"
         style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -458,9 +522,12 @@ export default function TimeTrackingModal({
               {/* Work Description with Toolbar */}
               <div className="space-y-1.5">
                 <label className="block text-[0.8125rem] font-semibold text-[#5E6C84] dark:text-[#9B9A97]">Work description</label>
-                <div className="relative border-2 border-[#DFE1E6] dark:border-[#2A2A2A] rounded-[3px] overflow-hidden">
+                <div className="relative border-2 border-[#DFE1E6] dark:border-[#2A2A2A] rounded-[3px]">
                   {/* Toolbar */}
-                  <div className="flex items-center gap-1.5 px-2 py-1 bg-[#F4F5F7] dark:bg-[#2A2A2A] border-b border-[#DFE1E6] dark:border-[#2A2A2A]">
+                  <div 
+                    className="flex items-center gap-1.5 px-2 py-1 bg-[#F4F5F7] dark:bg-[#2A2A2A] border-b border-[#DFE1E6] dark:border-[#2A2A2A] rounded-t-[2px]"
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
                     <button type="button" onClick={handleAiClick} tabIndex={-1} className="p-1 hover:bg-[#EBECF0] dark:hover:bg-white/5 rounded text-[#5E6C84] dark:text-[#9B9A97]" title="AI Assistant">
                       <Sparkles className="w-3.5 h-3.5" />
                     </button>
@@ -494,12 +561,13 @@ export default function TimeTrackingModal({
 
                   {/* Textarea */}
                   <textarea
+                    ref={textareaRef}
                     id="work-desc-textarea"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={handleDescriptionChange}
                     onBlur={handleDescriptionBlur}
                     placeholder="Type /ai to Ask Rovo or @ to mention and notify someone."
-                    className="w-full p-3 bg-white dark:bg-[#252525] text-[#172B4D] dark:text-[#E8E8E7] text-[0.875rem] min-h-[90px] outline-none resize-y text-left"
+                    className="w-full p-3 bg-white dark:bg-[#252525] text-[#172B4D] dark:text-[#E8E8E7] text-[0.875rem] min-h-[90px] outline-none resize-y text-left rounded-b-[2px]"
                   />
 
                   {/* Link Popup Overlay */}
@@ -586,7 +654,7 @@ export default function TimeTrackingModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-2 p-4 bg-[#F4F5F7] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
+        <div className="flex items-center justify-end gap-2 p-4 bg-[#F4F5F7] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06] rounded-b-[8px]">
           {isSaveDisabled ? (
             <button
               disabled

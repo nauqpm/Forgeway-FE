@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface ModalProps {
   open: boolean;
@@ -36,16 +37,7 @@ function Modal({
   className = "",
 }: ModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Close on Escape key
-  useEffect(() => {
-    if (!open) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [open, onClose]);
+  useEscapeStack(onClose, open);
 
   // Prevent body scroll when open
   useEffect(() => {
@@ -63,7 +55,7 @@ function Modal({
 
   const content = (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100000] flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? "modal-title" : undefined}

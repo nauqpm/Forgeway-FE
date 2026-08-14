@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   X,
   MoreHorizontal,
@@ -35,6 +35,10 @@ import {
 import TaskDetailMainContent from "./TaskDetailMainContent";
 import TaskDetailFields from "./TaskDetailFields";
 import TimeTrackingModal from "./TimeTrackingModal";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
+import TaskHeaderTypePicker from "./TaskHeaderTypePicker";
+import ConvertToSubtaskModal from "./ConvertToSubtaskModal";
+import ConvertSubtaskConfirmModal from "./ConvertSubtaskConfirmModal";
 
 interface TaskDetailDrawerProps {
   isOpen: boolean;
@@ -73,13 +77,32 @@ export default function TaskDetailDrawer({
   detailUrl,
   embedded = false,
 }: TaskDetailDrawerProps) {
+  useEscapeStack(onClose, isOpen && Boolean(issue));
   const { user, token } = useAuth();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"comments" | "history" | "work_log">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [isLogWorkOpen, setIsLogWorkOpen] = useState(false);
+  const [isConvertToSubtaskOpen, setIsConvertToSubtaskOpen] = useState(false);
+  const [isConvertToTaskOpen, setIsConvertToTaskOpen] = useState(false);
   const [localCover, setLocalCover] = useState<TaskCover | null>(null);
+  const workLogRefreshRef = useRef<(() => void) | null>(null);
+
+  const handleConvertToTask = async () => {
+    try {
+      await api.post(apiRoutes.TASKS.BOARD_SUBTASK_CONVERT_TO_TASK(workspaceId, issue.id));
+      toast.success(`Successfully converted ${issue.key} to standalone task`);
+      queryClient.invalidateQueries({ queryKey: [...queryKeys.tasks.all, "subtasks", workspaceId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.byWorkspace(workspaceId) });
+      setIsConvertToTaskOpen(false);
+      if (onClose) onClose();
+    } catch (error: unknown) {
+      const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || "Failed to convert to task";
+      toast.error(message);
+    }
+  };
 
   const { data: fetchedWorkspaceMembers = [] } = useQuery<WorkspaceMember[]>({
     queryKey: queryKeys.workspaces.members(workspaceId),
@@ -213,18 +236,47 @@ export default function TaskDetailDrawer({
         {/* Top Header */}
         <div className="app-header border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between shrink-0 bg-[#F7F6F3] dark:bg-[#252525]">
           <div className="flex min-w-0 items-center gap-2 text-[0.8125rem] font-medium">
-            <div className="hidden items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors sm:flex">
+            {/* <div className="hidden items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors sm:flex">
               <div className="w-5 h-5 bg-[#2563EB] dark:bg-[#3B82F6] rounded-[4px] text-white flex items-center justify-center">
                 <FileText className="w-3 h-3" />
               </div>
               <span className="text-[#787774] dark:text-[#9B9A97]">Add epic</span>
-            </div>
+            </div> */}
+            
+            {issue.type?.toLowerCase() === 'subtask' && issue.parent && (
+              <>
+                <span className="hidden text-[#ABABAB] dark:text-[#6B6B6B] sm:inline">/</span>
+                <div
+                  className="flex min-w-0 items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors"
+                  title={issue.parent.title}
+                  onClick={() => {
+                    const parentKey = issue.parent?.key;
+                    if (!parentKey) return;
+                    const currentPath = window.location.pathname;
+                    const newPath = currentPath.includes("/key/")
+                      ? currentPath.replace(/\/key\/[^/]+$/, `/key/${parentKey}`)
+                      : `${currentPath}/key/${parentKey}`;
+                    window.history.pushState(null, "", newPath);
+                    window.dispatchEvent(new Event("popstate"));
+                  }}
+                >
+                  <span className="truncate text-[#111111] dark:text-[#E8E8E7]">{issue.parent.key}</span>
+                </div>
+              </>
+            )}
+
             <span className="hidden text-[#ABABAB] dark:text-[#6B6B6B] sm:inline">/</span>
-            <div className="flex min-w-0 items-center gap-2 hover:bg-[#F0F0EE] dark:hover:bg-[#2E2E2E] px-2 py-1 rounded-[4px] cursor-pointer transition-colors">
-              <div className="w-4 h-4 bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center rounded-[3px]">
-                <span className="text-[0.625rem]">✓</span>
-              </div>
-              <span className="truncate text-[#111111] dark:text-[#E8E8E7]">{issue.key}</span>
+            <div className="flex min-w-0 items-center gap-2 px-2 py-1 rounded-[4px] transition-colors">
+              <TaskHeaderTypePicker
+                type={issue.type}
+                isSubtask={issue.type?.toLowerCase() === 'subtask'}
+                disabled={!canEditTask || issue.isArchived}
+                onUpdateType={(newType) => updateIssueFields({ type: newType })}
+              />
+              <span className="truncate text-[#111111] dark:text-[#E8E8E7] cursor-pointer hover:underline" onClick={() => {
+                navigator.clipboard.writeText(issue.key);
+                toast.success("Task key copied");
+              }}>{issue.key}</span>
             </div>
           </div>
 
@@ -286,6 +338,31 @@ export default function TaskDetailDrawer({
                       <Copy className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
                       Copy link
                     </button>
+                    {issue.type?.toLowerCase() === 'subtask' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowActionMenu(false);
+                          setIsConvertToTaskOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                      >
+                        <FileText className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                        Convert to Task
+                      </button>
+                    ) : issue.type?.toLowerCase() !== 'epic' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowActionMenu(false);
+                          setIsConvertToSubtaskOpen(true);
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] transition-colors hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+                      >
+                        <FileText className="h-4 w-4 text-[#787774] dark:text-[#9B9A97]" />
+                        Convert to Subtask
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       onClick={() => {
@@ -363,8 +440,8 @@ export default function TaskDetailDrawer({
         />
 
         {/* Content Body — single scrollable column */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
-          <div className="p-4 md:p-6 space-y-8">
+          <div className="min-w-0 flex-1 overflow-y-auto custom-scrollbar bg-white dark:bg-[#202020]">
+            <div className="min-w-0 p-4 md:p-6 space-y-8">
             <TaskDetailMainContent
               issue={issue}
               workspaceId={workspaceId}
@@ -422,6 +499,8 @@ export default function TaskDetailDrawer({
                   </div>
                 </div>
               }
+              onUpdateIssue={updateIssueFields as never}
+              onWorkLogCreated={(cb) => { workLogRefreshRef.current = cb; }}
             />
 
             {/* Meta */}
@@ -439,7 +518,26 @@ export default function TaskDetailDrawer({
         onClose={() => setIsLogWorkOpen(false)}
         issue={issue}
         workspaceId={workspaceId}
-        onUpdateIssue={onUpdateIssue}
+        onUpdateIssue={(updatedIssue) => {
+          (updateIssueFields as unknown as (v: TaskDetailResponse) => void)(updatedIssue);
+          if (workLogRefreshRef.current) workLogRefreshRef.current();
+        }}
+      />
+      <ConvertToSubtaskModal
+        isOpen={isConvertToSubtaskOpen}
+        onClose={() => setIsConvertToSubtaskOpen(false)}
+        workspaceId={workspaceId}
+        issueKey={issue.key}
+        issueId={issue.id}
+        onSuccess={() => {
+          if (onClose) onClose();
+        }}
+      />
+      <ConvertSubtaskConfirmModal
+        isOpen={isConvertToTaskOpen}
+        onClose={() => setIsConvertToTaskOpen(false)}
+        onConfirm={handleConvertToTask}
+        subtaskTitle={issue.title}
       />
 
       <style

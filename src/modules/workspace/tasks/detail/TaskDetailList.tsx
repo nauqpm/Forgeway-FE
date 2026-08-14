@@ -76,6 +76,7 @@ export default function TaskDetailList({
   const [activeTab, setActiveTab] = useState<"comments" | "history" | "work_log">("comments");
   const [localTitle, setLocalTitle] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const workLogRefreshRef = useRef<(() => void) | null>(null);
   const [showActionMenu, setShowActionMenu] = useState(false);
   const [isLogWorkOpen, setIsLogWorkOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(true);
@@ -296,7 +297,7 @@ export default function TaskDetailList({
       {/* ── BODY: LEFT MAIN + RIGHT SIDEBAR ── */}
       <div className="flex flex-1 overflow-hidden">
         {/* ── LEFT COLUMN: Main content ── */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 border-r border-[#EAEAEA] dark:border-white/[0.06]">
+        <div className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 border-r border-[#EAEAEA] dark:border-white/[0.06]">
           <TaskDetailMainContent
             issue={issue}
             workspaceId={workspaceId}
@@ -320,6 +321,7 @@ export default function TaskDetailList({
             titleSize="2xl"
             boardColumns={boardColumns}
             onRestoreIssue={() => onRestoreIssue && onRestoreIssue(issue)}
+            onWorkLogCreated={(cb) => { workLogRefreshRef.current = cb; }}
           />
         </div>
 
@@ -382,7 +384,10 @@ export default function TaskDetailList({
         onClose={() => setIsLogWorkOpen(false)}
         issue={issue}
         workspaceId={workspaceId}
-        onUpdateIssue={onUpdateIssue}
+        onUpdateIssue={(updatedIssue) => {
+          if (onUpdateIssue) onUpdateIssue(updatedIssue);
+          if (workLogRefreshRef.current) workLogRefreshRef.current();
+        }}
       />
     </div>
   );

@@ -29,7 +29,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
   if (dashboardQuery.isLoading) return null;
 
   return (
-    <div className={`app-page-medium pt-6 ${className}`}>
+    <div className={`app-page-medium app-page-fluid-xl pt-6 ${className}`}>
       <DashboardWorkspaceGrid workspaces={displayWorkspaces} />
 
       <DashboardTaskList
@@ -52,6 +52,7 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
         onClose={modal.close}
         onUpdate={modal.update}
         onArchive={modal.archive}
+        onSubtaskClick={modal.openSubtask}
       />
 
     </div>

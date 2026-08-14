@@ -3,6 +3,7 @@
 import CalendarView from '@/modules/admin-shared/components/common/components/CalendarView';
 import { Issue } from '@/modules/workspace/shared/types/issue.type';
 import { Sprint } from '@/modules/workspace/shared/types/sprint.type';
+import { Workspace } from '@/modules/workspace/shared/types/workspace.type';
 
 interface CalendarTabProps {
   issues: Issue[];
@@ -10,6 +11,7 @@ interface CalendarTabProps {
   handleUpdateIssueDate: (id: string, start: string, end: string) => void;
   setSelectedIssue: (issue: Issue | null) => void;
   onQuickCreateTask?: (title: string, date: string) => Promise<void> | void;
+  workspace?: Workspace;
 }
 
 export default function CalendarTab({
@@ -18,16 +20,20 @@ export default function CalendarTab({
   handleUpdateIssueDate,
   setSelectedIssue,
   onQuickCreateTask,
+  workspace,
 }: CalendarTabProps) {
   return (
-    <div className="workspace-board-height px-2 py-2">
-      <CalendarView
-        issues={issues}
-        sprints={sprints}
-        onUpdateIssueDate={handleUpdateIssueDate}
-        onSelectIssue={setSelectedIssue}
-        onQuickCreateTask={onQuickCreateTask}
-      />
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col p-2">
+      <div className="flex min-h-0 min-w-0 flex-1">
+        <CalendarView
+          issues={issues}
+          sprints={sprints}
+          onUpdateIssueDate={handleUpdateIssueDate}
+          onSelectIssue={setSelectedIssue}
+          onQuickCreateTask={onQuickCreateTask}
+          workspace={workspace}
+        />
+      </div>
     </div>
   );
 }

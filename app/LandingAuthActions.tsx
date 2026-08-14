@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowUpRight,
   Bell,
   ChevronDown,
   LayoutDashboard,
@@ -17,7 +18,6 @@ import {
   Sun,
   User,
   X,
-  Zap,
 } from "lucide-react";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { useTheme } from "@/shared/hooks/useTheme";
@@ -120,7 +120,7 @@ export function NavAuthActions() {
           onClick={() => setDropdownOpen((open) => !open)}
           className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-[#444444] dark:text-gray-200 transition hover:bg-[#DBEAFE] dark:hover:bg-white/10"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 overflow-hidden text-sm font-semibold text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 overflow-hidden text-sm font-semibold text-white">
             {user?.avatar ? (
               <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
             ) : (
@@ -156,15 +156,14 @@ export function NavAuthActions() {
                 title="Chuyển account"
                 aria-label="Chuyển account"
                 aria-expanded={showSwitcher}
-                className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-md transition ${
-                  showSwitcher
-                    ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-indigo-500/15 dark:text-indigo-300"
-                    : "text-[#2563EB] hover:bg-[#EFF6FF] dark:text-indigo-300 dark:hover:bg-indigo-500/10"
-                }`}
+                className={`relative grid h-7 w-7 shrink-0 place-items-center rounded-md transition ${showSwitcher
+                    ? "bg-[#EFF6FF] text-[#2563EB] dark:bg-orange-500/15 dark:text-orange-300"
+                    : "text-[#2563EB] hover:bg-[#EFF6FF] dark:text-orange-300 dark:hover:bg-orange-500/10"
+                  }`}
               >
                 {showSwitcher ? <X className="h-3.5 w-3.5" /> : <Repeat className="h-4 w-4" />}
                 {switchableCount > 0 && !showSwitcher && (
-                  <span className="absolute -right-0.5 -top-0.5 min-w-[14px] rounded-full bg-[#2563EB] px-1 text-[9px] font-semibold leading-[14px] text-white dark:bg-indigo-500">
+                  <span className="absolute -right-0.5 -top-0.5 min-w-[14px] rounded-full bg-[#2563EB] px-1 text-[9px] font-semibold leading-[14px] text-white dark:bg-orange-500">
                     {switchableCount}
                   </span>
                 )}
@@ -187,7 +186,7 @@ export function NavAuthActions() {
               className="flex items-center gap-3 px-4 py-2.5 text-sm text-[#111111] dark:text-[#E8E8E7] transition hover:bg-[#F7F6F3] dark:hover:bg-[#252525]"
               onClick={() => setDropdownOpen(false)}
             >
-              <LayoutDashboard className="h-4 w-4 text-[#2563EB]" />
+              <LayoutDashboard className="h-4 w-4 text-orange-500" />
               Dashboard
             </Link>
 
@@ -217,10 +216,10 @@ export function NavAuthActions() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setDropdownOpen(false)}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-[#2563EB] dark:text-indigo-300 transition hover:bg-[#EFF6FF] dark:hover:bg-indigo-500/10"
+                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-orange-600 dark:text-orange-300 transition hover:bg-orange-50 dark:hover:bg-orange-500/10"
                   >
                     <Shield className="h-4 w-4" />
-                    Trang quản trị
+                    Admin
                     <span className="ml-auto text-[10px] uppercase tracking-wider text-[#9B9A97] dark:text-[#6B6B6B]">↗</span>
                   </a>
                 </div>
@@ -251,15 +250,15 @@ export function NavAuthActions() {
       <ThemeToggleButton />
       <Link
         href="/login"
-        className="hidden rounded-lg px-3 py-2 text-sm font-medium text-[#64748b] dark:text-gray-300 transition hover:text-[#2563EB] dark:hover:text-indigo-300 sm:inline-flex"
+        className="hidden rounded-lg px-3 py-2 text-sm font-medium text-[#64748b] dark:text-gray-300 transition hover:text-orange-500 dark:hover:text-orange-400 sm:inline-flex"
       >
         Login
       </Link>
       <Link
         href="/register"
-        className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+        className="relative inline-flex items-center justify-center gap-2 rounded-full bg-[#F5F3EF] dark:bg-white px-5 py-2 text-xs font-black uppercase tracking-wider text-[#2A1810] shadow-[0_0_20px_rgba(249,115,22,0.6),0_0_8px_rgba(239,68,68,0.35)] transition-all duration-300 hover:shadow-[0_0_28px_rgba(249,115,22,0.85),0_0_12px_rgba(239,68,68,0.5)] hover:scale-[1.03] active:scale-[0.98]"
       >
-        Get Started <ArrowRight className="h-4 w-4" />
+        Get Started <ArrowRight className="h-3.5 w-3.5 text-orange-600" />
       </Link>
     </div>
   );
@@ -270,8 +269,8 @@ export function HeroAuthActions() {
 
   if (isLoading) {
     return (
-      <div className="inline-flex items-center gap-2 rounded-lg border border-[#CBD5E1] dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-3 text-sm font-semibold text-[#64748b] dark:text-gray-300">
-        <Loader2 className="h-4 w-4 animate-spin" />
+      <div className="inline-flex items-center gap-2 rounded-full border border-[#CBD5E1] dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-3 text-sm font-semibold text-[#64748b] dark:text-gray-300">
+        <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
         Checking workspace
       </div>
     );
@@ -281,9 +280,9 @@ export function HeroAuthActions() {
     return (
       <Link
         href="/dashboard"
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-950/30 transition hover:bg-indigo-700 sm:w-auto"
+        className="relative inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#F5F3EF] dark:bg-white px-8 py-3.5 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_25px_rgba(249,115,22,0.65),0_0_10px_rgba(239,68,68,0.4)] transition-all duration-300 hover:shadow-[0_0_35px_rgba(249,115,22,0.85),0_0_15px_rgba(239,68,68,0.6)] hover:scale-[1.03] active:scale-[0.98] sm:w-auto"
       >
-        Go to Dashboard <LayoutDashboard className="h-4 w-4" />
+        Go to Dashboard <LayoutDashboard className="h-4 w-4 text-orange-600" />
       </Link>
     );
   }
@@ -292,16 +291,55 @@ export function HeroAuthActions() {
     <>
       <Link
         href="/register"
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-950/30 transition hover:bg-indigo-700 sm:w-auto"
+        className="relative inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-[#F5F3EF] dark:bg-white px-8 py-3.5 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_25px_rgba(249,115,22,0.65),0_0_10px_rgba(239,68,68,0.4)] transition-all duration-300 hover:shadow-[0_0_35px_rgba(249,115,22,0.85),0_0_15px_rgba(239,68,68,0.6)] hover:scale-[1.03] active:scale-[0.98] sm:w-auto"
       >
-        Get Started Free <ArrowRight className="h-4 w-4" />
+        Get Started Free <ArrowRight className="h-4 w-4 text-orange-600" />
       </Link>
       <Link
         href="/login"
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#CBD5E1] dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-3 text-sm font-semibold text-[#444444] dark:text-gray-100 transition hover:border-[#2563EB] dark:hover:border-indigo-500 hover:text-[#2563EB] dark:hover:text-indigo-200 sm:w-auto"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-slate-200/80 dark:border-white/10 bg-white/60 dark:bg-white/[0.05] px-7 py-3.5 text-sm font-bold text-slate-700 dark:text-slate-200 backdrop-blur-sm hover:border-orange-500/40 hover:bg-white dark:hover:bg-white/10 transition-all duration-200 sm:w-auto"
       >
-        View Demo Workspace <Zap className="h-4 w-4" />
+        View Demo Workspace <ArrowUpRight className="h-4 w-4 text-orange-500" />
       </Link>
     </>
+  );
+}
+
+export function CtaAuthAction() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-8 py-4 text-sm font-semibold text-white">
+        <Loader2 className="h-4 w-4 animate-spin text-white" />
+        Checking workspace
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return (
+      <Link
+        href="/dashboard"
+        className="group mt-8 relative inline-flex items-center gap-2.5 rounded-full bg-[#F5F3EF] dark:bg-white px-9 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_35px_rgba(249,115,22,0.75),0_0_15px_rgba(239,68,68,0.5)] transition-all duration-300 hover:shadow-[0_0_50px_rgba(249,115,22,0.95),0_0_22px_rgba(239,68,68,0.7)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
+      >
+        {/* Continuous shimmer sheen layer */}
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+        <span className="relative z-10">Go to Dashboard</span>
+        <LayoutDashboard className="relative z-10 h-4 w-4 text-orange-600 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300" />
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href="/register"
+      className="group mt-8 relative inline-flex items-center gap-2.5 rounded-full bg-[#F5F3EF] dark:bg-white px-9 py-4 text-sm font-extrabold uppercase tracking-wider text-[#2A1810] shadow-[0_0_35px_rgba(249,115,22,0.75),0_0_15px_rgba(239,68,68,0.5)] transition-all duration-300 hover:shadow-[0_0_50px_rgba(249,115,22,0.95),0_0_22px_rgba(239,68,68,0.7)] hover:scale-[1.04] active:scale-[0.97] overflow-hidden"
+    >
+      {/* Continuous shimmer sheen layer */}
+      <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+      <span className="relative z-10">Get Started Free</span>
+      <ArrowRight className="relative z-10 h-4 w-4 text-orange-600 group-hover:translate-x-1.5 transition-transform duration-300" />
+    </Link>
   );
 }

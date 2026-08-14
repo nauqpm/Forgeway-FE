@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { toast } from "react-hot-toast";
 import CustomDatePicker from '@/shared/components/CustomDatePicker';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface SprintModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ const inputCls = "w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.
 const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
 
 export default function SprintModal({ isOpen, onClose, onSave, initialData, sprintCount = 0 }: SprintModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [formData, setFormData] = useState({
     name: '',
     duration: '2 weeks',

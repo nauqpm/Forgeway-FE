@@ -27,7 +27,10 @@ export interface WorkspaceSettingsProps {
 export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsProps) {
   const queryClient = useQueryClient();
   const { currentWorkspace } = useCurrentWorkspace();
-  const [form, setForm] = useState({ name: "", description: "" });
+  const [form, setForm] = useState<{
+    name: string;
+    description: string;
+  }>({ name: "", description: "" });
 
   const workspacesQuery = useQuery<Workspace[]>({
     queryKey: queryKeys.workspaces.list(),
@@ -85,15 +88,15 @@ export default function WorkspaceSettings({ className = "" }: WorkspaceSettingsP
       queryClient.setQueryData<WorkspaceDetail>(queryKeys.admin.settings(workspaceQuery.data._id), (current) =>
         current
           ? {
-              ...current,
-              members: (current.members ?? []).filter((member) => {
-                const memberId =
-                  typeof member.userId === "string"
-                    ? member.userId
-                    : member.userId?._id ?? member.userId?.id ?? "";
-                return memberId !== userId;
-              }),
-            }
+            ...current,
+            members: (current.members ?? []).filter((member) => {
+              const memberId =
+                typeof member.userId === "string"
+                  ? member.userId
+                  : member.userId?._id ?? member.userId?.id ?? "";
+              return memberId !== userId;
+            }),
+          }
           : current,
       );
     },

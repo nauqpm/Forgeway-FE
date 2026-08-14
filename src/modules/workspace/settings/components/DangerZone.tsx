@@ -96,7 +96,7 @@ export default function DangerZone({
               </div>
               <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">Delete workspace</h2>
             </div>
-            <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4">
+            <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4 break-words [overflow-wrap:anywhere]">
               This action will delete workspace{" "}
               <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspace.name}</span> and cannot be
               undone. Enter <span className="font-mono font-semibold">delete</span> to confirm.
@@ -148,7 +148,7 @@ export default function DangerZone({
                     You are the owner of this workspace
                   </h2>
                 </div>
-                <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-6">
+                <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-6 break-words [overflow-wrap:anywhere]">
                   Do you want to delete workspace{" "}
                   <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspace.name}</span> now? This
                   action will delete all data and cannot be undone.
@@ -186,7 +186,7 @@ export default function DangerZone({
                   </div>
                   <h2 className="text-lg font-bold text-[#111111] dark:text-[#E8E8E7]">Leave workspace</h2>
                 </div>
-                <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4">
+                <p className="text-sm text-[#787774] dark:text-[#9B9A97] mb-4 break-words [overflow-wrap:anywhere]">
                   You will lose access to workspace{" "}
                   <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">{workspace.name}</span>. Enter{" "}
                   <span className="font-mono font-semibold">leave</span> to confirm.

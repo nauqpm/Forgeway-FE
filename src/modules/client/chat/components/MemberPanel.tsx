@@ -14,6 +14,9 @@ import InviteChannelMembersModal from './InviteChannelMembersModal';
 import { kickMemberAPI } from '@/modules/client/chat/services/chatService';
 import toast from 'react-hot-toast';
 import { Modal, ModalFooter } from '@/shared/components/ui/Modal';
+import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
+import { ResizeHandle } from '@/shared/components/ResizeHandle';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface MemberPanelProps {
   channelId: string;
@@ -87,6 +90,7 @@ const getRoleBadge = (role?: string) => {
 };
 
 export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
+  useEscapeStack(onClose);
   const { data: members = [], isLoading } = useChannelMembers(channelId);
   const createDMMutation = useCreateDM();
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,7 +100,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
     
     const loadingToast = toast.loading('Starting conversation...');
     try {
-      await createDMMutation.mutateAsync(memberId);
+      await createDMMutation.mutateAsync([memberId]);
       toast.success('Create DM successfully', { id: loadingToast });
       onClose();
     } catch (error) {
@@ -120,7 +124,7 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   const isChannelAdmin = currentUserMember?.role === 'channel_admin';
 
   // Get workspace role
-  const workspaces = queryClient.getQueryData<Workspace[]>(['workspaces']) || [];
+  const workspaces = queryClient.getQueryData<Workspace[]>(queryKeys.workspaces.list()) || [];
   const activeWorkspace = workspaces.find(
     (w) => String(w._id) === String(activeChannel?.workspaceId)
   );
@@ -191,21 +195,52 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
   // Sort: admins first, then alphabetically
   const sortedMembers = useMemo(() => {
     return [...filteredMembers].sort((a: ChatMember, b: ChatMember) => {
-      const roleOrder = (r?: string) => {
-        if (!r) return 3;
+      const getEffectiveRole = (member: ChatMember & { globalRole?: string }) => {
+        if (member.globalRole === 'super_admin' || member.globalRole === 'superadmin') return 'super_admin';
+        const wsMem = activeWorkspace?.members?.find(
+          (m: WorkspaceMember) => {
+            const uId = typeof m.userId === 'object' && m.userId ? m.userId._id || m.userId.id : m.userId;
+            return String(uId) === String(member._id);
+          }
+        );
+        if (wsMem?.role === 'workspace_admin' || String(activeWorkspace?.ownerId) === String(member._id)) return 'workspace_admin';
+        if (wsMem?.role === 'viewer') return 'viewer';
+        if (wsMem?.role === 'member') return 'member';
+        return member.role || 'viewer';
+      };
+
+      const roleOrder = (r: string) => {
         const nr = r.toLowerCase();
         if (nr === 'super_admin' || nr === 'superadmin') return 0;
         if (nr === 'workspace_admin' || nr === 'admin') return 1;
-        return 3;
+        if (nr === 'member' || nr === 'channel_admin' || nr === 'channel_member') return 2;
+        if (nr === 'viewer') return 3;
+        return 4;
       };
-      const diff = roleOrder(a.role) - roleOrder(b.role);
+
+      const roleA = getEffectiveRole(a);
+      const roleB = getEffectiveRole(b);
+
+      const diff = roleOrder(roleA) - roleOrder(roleB);
       if (diff !== 0) return diff;
       return (a.fullName || '').localeCompare(b.fullName || '');
     });
-  }, [filteredMembers]);
+  }, [filteredMembers, activeWorkspace]);
+
+  const { width: panelWidth, handleMouseDown, handleReset } = useResizablePanel({
+    defaultWidth: 320,
+    minWidth: 260,
+    maxWidth: 600,
+    side: 'left',
+    storageKey: 'al_chat_right_panel_w',
+  });
 
   return (
-    <div className="w-[280px] flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out]">
+    <div 
+      style={{ width: `${panelWidth}px` }}
+      className="flex-shrink-0 border-l border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] flex flex-col h-full animate-[slideInRight_0.2s_ease-out] relative"
+    >
+      <ResizeHandle onMouseDown={handleMouseDown} onDoubleClick={handleReset} side="left" />
       {/* Header */}
       <div className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
         <div className="flex items-center gap-2">

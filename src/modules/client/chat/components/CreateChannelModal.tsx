@@ -6,8 +6,10 @@ import { createChannelAPI } from '../services/chatService';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import { useChatStore } from '@/stores/chatStore';
+import { upsertChannelInCache } from '@/modules/client/chat/utils/chatQueryCache';
 import toast from 'react-hot-toast';
 import { useChatChannels } from '../hooks/useChatQueries';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 interface CreateChannelModalProps {
   isOpen: boolean;
@@ -16,6 +18,7 @@ interface CreateChannelModalProps {
 }
 
 export default function CreateChannelModal({ isOpen, onClose, workspaceId }: CreateChannelModalProps) {
+  useEscapeStack(onClose, isOpen);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isPrivate, setIsPrivate] = useState(false);
@@ -43,20 +46,20 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
       setLoading(false);
     }
   }, [isOpen]);
-
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // lowercase, alphanumeric and hyphens only
-    const value = e.target.value
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-    setName(value);
+    setName(e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       toast.error('Channel name is required');
+      return;
+    }
+    const isValidName = /^[a-zA-Z0-9\s-_àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]+$/.test(trimmedName);
+    if (!isValidName) {
+      toast.error('Channel name can only contain letters, numbers, spaces, hyphens, and underscores');
       return;
     }
     if (!workspaceId) {
@@ -67,17 +70,15 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
     setLoading(true);
     try {
       const channel = await createChannelAPI({
-        name: name.trim(),
+        name: trimmedName,
         workspaceId,
         isPrivate,
         description: description.trim() || undefined,
       });
 
-      // Refetch channel list
-      await queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
-      
-      // Navigate/Select the newly created channel
+      upsertChannelInCache(queryClient, channel);
       setActiveChannel(channel._id);
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
       
       toast.success(`Channel #${name} created successfully!`);
       onClose();
@@ -142,7 +143,7 @@ export default function CreateChannelModal({ isOpen, onClose, workspaceId }: Cre
               />
             </div>
             <p className="text-[10px] text-[#787774] mt-1">
-              Names must be lowercase, without spaces or periods, and shorter than 80 characters.
+              Names can contain Vietnamese, spaces, and must be shorter than 80 characters.
             </p>
           </div>
 

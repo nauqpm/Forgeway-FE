@@ -56,7 +56,7 @@ export default function SearchPage() {
   };
 
   return (
-    <main className="app-main mx-auto w-full max-w-4xl px-4 py-8">
+    <main className="app-main app-page-fluid-2xl mx-auto w-full max-w-4xl px-4 py-8">
       <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">Search</h1>
       <form onSubmit={submit} className="mt-5 flex gap-2">
         <div className="relative flex-1">

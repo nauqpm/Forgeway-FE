@@ -162,7 +162,7 @@ export default function AdminUsers({ className = "" }: AdminUsersProps) {
   const displayItems = tab === "workspace" ? filteredMembers : filteredUsers;
 
   return (
-    <div className={`app-page-wide ${className}`}>
+    <div className={`app-page-wide app-page-fluid-2xl ${className}`}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#111111] dark:text-[#E8E8E7]">User Management</h1>

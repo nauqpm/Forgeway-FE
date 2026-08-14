@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
@@ -8,48 +8,124 @@ import MessageItem from './MessageItem';
 import MessageInput from './MessageInput';
 import MemberPanel from './MemberPanel';
 import ChatSearchPanel from './ChatSearchPanel';
-import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft } from 'lucide-react';
+
+import { Hash, Megaphone, Loader2, Info, Search, Video, Users, MessageSquare, ChevronLeft, Edit2, X, Trash2, Lock, Settings, ArrowDown } from 'lucide-react';
 import { useChatRealtime } from '../hooks/useChatRealtime';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import MeetingBanner from './MeetingBanner';
 import Link from 'next/link';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
-import { useChatChannels, useChatMessages } from '@/modules/client/chat/hooks/useChatQueries';
-import { joinChannelAPI } from '../services/chatService';
+import { useChatChannels, useChatMessages, useUpdateChannel } from '@/modules/client/chat/hooks/useChatQueries';
+import { joinChannelAPI, deleteChannelAPI } from '../services/chatService';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import ThreadPanel from './ThreadPanel';
 import ThreadIndexPanel from './ThreadIndexPanel';
 import toast from 'react-hot-toast';
 import type { Channel, ChatUser } from '../types/chat.types';
+import DeleteChannelConfirmModal from './DeleteChannelConfirmModal';
+import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
 export default function ChatWindow() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
-  const targetMessageId = searchParams.get('messageId');
   // Use specific selectors to prevent unnecessary re-renders and reference changes
   const activeChannelId = useChatStore(state => state.activeChannelId);
   const activeThreadParentId = useChatStore(state => state.activeThreadParentId);
   const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
   const typingUsers = useChatStore(state => state.typingUsers);
   const clearOldTyping = useChatStore(state => state.clearOldTyping);
-  
+  const unreadThreadIds = useChatStore(state => state.unreadThreadIds);
+  const unreadThreadsCount = activeChannelId ? (unreadThreadIds[activeChannelId]?.size || 0) : 0;
+
   const { data: channels = [] } = useChatChannels();
-  
+
   const [unreadCountAtOpen, setUnreadCountAtOpen] = useState<number>(0);
   const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(null);
+  const [firstNewMessageId, setFirstNewMessageId] = useState<string | null>(null);
   const prevActiveChannelIdRef = useRef<string | null>(null);
   const scrolledMessageIdRef = useRef<string | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [hasNewUnread, setHasNewUnread] = useState(false);
+  const [showCreateThreadModal, setShowCreateThreadModal] = useState(false);
+  // Register the thread modal first so the later name-editor layer has priority.
+  useEscapeStack(() => setShowCreateThreadModal(false), showCreateThreadModal);
+  useEscapeStack(() => setIsEditingName(false), isEditingName);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showChannelSettingsMenu, setShowChannelSettingsMenu] = useState(false);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(e.target as Node)) {
+        setShowChannelSettingsMenu(false);
+      }
+    };
+    if (showChannelSettingsMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showChannelSettingsMenu]);
+
+  const updateChannelMutation = useUpdateChannel();
 
   // Capture the unread count before we mark the channel as read
   if (activeChannelId !== prevActiveChannelIdRef.current) {
     prevActiveChannelIdRef.current = activeChannelId;
     const channel = channels.find(c => c._id === activeChannelId);
     setUnreadCountAtOpen(channel?.unreadCount || 0);
-    setFirstUnreadMessageId(null); // Reset first unread message ID on channel change
-    scrolledMessageIdRef.current = null; // Reset scroll tracker on channel change
+    setFirstUnreadMessageId(null);
+    setFirstNewMessageId(null);
+    scrolledMessageIdRef.current = null;
+    setIsEditingName(false);
+    setSearchQuery("");
+    setShowCreateThreadModal(false);
+    setShowDeleteModal(false);
+    setShowChannelSettingsMenu(false);
   }
 
+  const handleSaveName = async () => {
+    if (!activeChannelId) return;
+    if (!editNameValue.trim()) {
+      setIsEditingName(false);
+      return;
+    }
+    try {
+      await updateChannelMutation.mutateAsync({ channelId: activeChannelId, updateData: { name: editNameValue.trim() } });
+      toast.success("Conversation renamed successfully");
+      setIsEditingName(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to rename conversation");
+    }
+  };
+  const handleDeleteChannel = async () => {
+    if (!activeChannel) return;
+
+    try {
+      await deleteChannelAPI(activeChannel._id);
+      toast.success(`Channel #${activeChannel.name} deleted successfully`);
+
+      const wsId = activeChannel.workspaceId;
+      const generalChannel = channels.find(
+        (c: Channel) => c.type === 'workspace' && String(c.workspaceId) === String(wsId)
+      );
+
+      await queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+      setShowDeleteModal(false);
+
+      if (generalChannel) {
+        useChatStore.getState().setActiveChannel(generalChannel._id);
+      } else {
+        useChatStore.getState().setActiveChannel(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete channel:', error);
+      toast.error('Failed to delete channel');
+    }
+  };
   const {
     data: messagesData,
     isLoading: loading,
@@ -83,6 +159,14 @@ export default function ChatWindow() {
     return role === 'workspace_admin';
   }, [activeChannel?.workspaceId, workspaces, currentUserId, userRole]);
 
+  const isChannelAdmin = useMemo(() => {
+    if (!activeChannel || !activeChannel.channelMembers) return false;
+    const member = activeChannel.channelMembers.find(
+      m => String(m.userId) === String(currentUserId)
+    );
+    return member?.role === 'channel_admin';
+  }, [activeChannel, currentUserId]);
+
   const { markAsRead, joinChannel, leaveChannel } = useChatRealtime();
   const [showMembers, setShowMembers] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -90,17 +174,17 @@ export default function ChatWindow() {
   const shouldScrollToBottomRef = useRef(true);
   const lastMessageIdRef = useRef<string | null>(null);
   const prevChannelIdRef = useRef<string | null>(null);
-
   const isMemberOfActiveChannel = useMemo(() => {
     if (!activeChannel) return false;
     if (activeChannel.type !== 'custom') return true;
-    if (isWorkspaceAdmin) return true;
-    if (!activeChannel.channelMembers) return false;
-    return activeChannel.channelMembers.some(
+
+    const member = activeChannel.channelMembers?.find(
       m => String(m.userId) === String(currentUserId)
     );
-  }, [activeChannel, currentUserId, isWorkspaceAdmin]);
-
+    if (!member) return false;
+    if (member.joined === false) return false;
+    return true;
+  }, [activeChannel, currentUserId]);
   const handleJoinChannel = async () => {
     if (!activeChannelId) return;
     setJoining(true);
@@ -122,22 +206,31 @@ export default function ChatWindow() {
       setJoining(false);
     }
   };
-  
+
   const activeWorkspace = useMemo(() => {
     if (activeChannel?.type !== 'workspace' || !activeChannel?.workspaceId) return null;
     return workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(activeChannel.workspaceId));
   }, [activeChannel, workspaces]);
-
   const messages = useMemo(() => {
-    const rawMessages = messagesData?.pages.flatMap((page) => page.messages) || [];
+    let rawMessages = messagesData?.pages.flatMap((page) => page.messages) || [];
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      rawMessages = rawMessages.filter(msg => {
+        const contentMatch = msg.content?.toLowerCase().includes(query);
+        const sender = msg.senderId;
+        const senderName = (sender && typeof sender === 'object' ? sender.fullName : undefined) || msg.senderName;
+        const senderMatch = senderName?.toLowerCase().includes(query);
+        return contentMatch || senderMatch;
+      });
+    }
+
     // Ensure chronological order (oldest to newest)
     return [...rawMessages].sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
-  }, [messagesData]);
-
-  // Calculate firstUnreadMessageId once when messages load
+  }, [messagesData, searchQuery]);
   useEffect(() => {
     if (unreadCountAtOpen <= 0 || messages.length === 0 || firstUnreadMessageId) return;
 
@@ -180,6 +273,7 @@ export default function ChatWindow() {
   useEffect(() => {
     const lastMsg = messages[messages.length - 1];
     const lastMsgId = lastMsg ? lastMsg._id : null;
+    const isMine = lastMsg ? String(getSenderId(lastMsg)) === String(currentUserId) : false;
 
     const channelChanged = activeChannelId !== prevChannelIdRef.current;
     const lastMsgChanged = lastMsgId !== lastMessageIdRef.current;
@@ -187,34 +281,68 @@ export default function ChatWindow() {
     prevChannelIdRef.current = activeChannelId;
     lastMessageIdRef.current = lastMsgId;
 
-    if (shouldScrollToBottomRef.current) {
+    const forceScroll = channelChanged || (lastMsgChanged && isMine);
+
+    if (shouldScrollToBottomRef.current || forceScroll) {
       if (scrollRef.current) {
         if (channelChanged || lastMsgChanged) {
           // Always scroll directly to the bottom of the chat window
           setTimeout(() => {
             if (scrollRef.current) {
               scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+              shouldScrollToBottomRef.current = true;
+              setShowScrollBottom(false);
+              setHasNewUnread(false);
             }
           }, 50);
         }
       }
-    } else {
-      shouldScrollToBottomRef.current = true;
+
+      // If the current user sends a new message, they have seen everything,
+      // so clear the 'New Messages' dividers.
+      if (lastMsgChanged && isMine) {
+        setFirstNewMessageId(null);
+        setFirstUnreadMessageId(null);
+      }
+    } else if (lastMsgChanged && !isMine && scrollRef.current) {
+      // If we are not scrolling to bottom and a new message arrives from someone else,
+      // make sure the scroll-to-bottom button is visible by updating state
+      const container = scrollRef.current;
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (distanceFromBottom > 100) {
+        setShowScrollBottom(true);
+      }
+      setHasNewUnread(true);
+      setFirstNewMessageId((prev) => prev || lastMsgId);
     }
-  }, [messages, activeChannelId]);
+  }, [messages, activeChannelId, currentUserId]);
+
+  // Track target message ID from URL parameter reactively
+  const [scrollTargetId, setScrollTargetId] = useState<string | null>(() => searchParams.get('messageId'));
 
   useEffect(() => {
-    if (loading || !targetMessageId || activeThreadParentId) return;
-    if (scrolledMessageIdRef.current === targetMessageId) return;
+    const targetId = searchParams.get('messageId');
+    if (!activeThreadParentId) {
+      setScrollTargetId(targetId);
+    }
+  }, [searchParams, activeThreadParentId, activeChannelId]);
 
-    const timer = setTimeout(() => {
-      const el = document.getElementById(`msg-${targetMessageId}`);
+  // Attempt scroll to target message; auto-fetch older pages if target message is not loaded yet
+  useEffect(() => {
+    if (!scrollTargetId || loading || activeThreadParentId) return;
+
+    let attempts = 0;
+    let isCancelled = false;
+
+    const tryScrollOrFetch = async () => {
+      if (isCancelled) return;
+      const el = document.getElementById(`msg-${scrollTargetId}`);
       if (el) {
+        shouldScrollToBottomRef.current = false;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
-        scrolledMessageIdRef.current = targetMessageId;
+        setScrollTargetId(null);
 
-        // Remove messageId from URL so it doesn't scroll on refresh
         const url = new URL(window.location.href);
         url.searchParams.delete('messageId');
         window.history.replaceState({}, '', url.toString());
@@ -222,19 +350,33 @@ export default function ChatWindow() {
         setTimeout(() => {
           el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
         }, 2000);
+      } else {
+        // Element not in DOM yet. If there are more historical pages, fetch next page automatically.
+        if (hasNextPage && !isFetchingNextPage) {
+          shouldScrollToBottomRef.current = false;
+          await fetchNextPage();
+        } else if (attempts < 20) {
+          attempts++;
+          setTimeout(tryScrollOrFetch, 200);
+        }
       }
-    }, 150);
-    return () => clearTimeout(timer);
-  }, [messages, loading, targetMessageId, activeThreadParentId]);
+    };
+
+    const timer = setTimeout(tryScrollOrFetch, 100);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timer);
+    };
+  }, [scrollTargetId, loading, activeThreadParentId, messages, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
     const interval = setInterval(clearOldTyping, 2000);
     return () => clearInterval(interval);
   }, [clearOldTyping]);
 
-  const handleLoadMore = async () => {
+  const handleLoadMore = useCallback(async () => {
     if (!activeChannelId || !hasNextPage || isFetchingNextPage) return;
-    
+
     const container = scrollRef.current;
     const previousScrollHeight = container ? container.scrollHeight : 0;
     const previousScrollTop = container ? container.scrollTop : 0;
@@ -254,7 +396,34 @@ export default function ChatWindow() {
     } catch (err) {
       console.error("Failed to load older messages:", err);
     }
-  };
+  }, [activeChannelId, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+
+  // Auto load older messages when user scrolls near top (Facebook Messenger style)
+  const handleScroll = useCallback(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+
+    // Update ref so we know whether to auto-scroll on new messages
+    if (distanceFromBottom <= 50) {
+      shouldScrollToBottomRef.current = true;
+      setHasNewUnread(false);
+      setShowScrollBottom(false);
+    } else {
+      shouldScrollToBottomRef.current = false;
+      setHasNewUnread((prev) => {
+        setShowScrollBottom(distanceFromBottom > (prev ? 200 : 1500));
+        return prev;
+      });
+    }
+
+    if (container.scrollTop <= 150 && hasNextPage && !isFetchingNextPage) {
+      handleLoadMore();
+    }
+  }, [hasNextPage, isFetchingNextPage, handleLoadMore]);
 
   const errorMessage = useMemo(() => {
     if (!isError) return null;
@@ -310,340 +479,552 @@ export default function ChatWindow() {
 
   if (activeChannel.type === 'dm') {
     const members = activeChannel.members || [];
-    const otherMember = members.find((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
+    const otherMembers = members.filter((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
 
-    if (otherMember && typeof otherMember === 'object') {
-      headerName = otherMember.fullName || otherMember.email || "Direct Message";
-      headerDescription = otherMember.email || "Direct Message";
+    if (activeChannel.name && activeChannel.name !== 'Direct Message' && members.length > 2) {
+      headerName = activeChannel.name;
+      headerDescription = `${members.length} members`;
+    } else if (otherMembers.length > 0) {
+      const names = otherMembers.map((m: ChatUser) => m.fullName || m.email?.split('@')[0] || "User");
+      if (names.length > 3) {
+        headerName = `${names.slice(0, 3).join(", ")} & ${names.length - 3} others`;
+      } else {
+        headerName = names.join(", ");
+      }
+      headerDescription = otherMembers.length === 1 ? otherMembers[0].email || "Direct Message" : `${members.length} members`;
     } else {
-      headerName = "Deleted User";
+      headerName = "Just you";
       headerDescription = "Direct Message";
     }
   }
 
   return (
     <div className="flex-1 flex min-w-0 min-h-0 overflow-hidden bg-white dark:bg-[#202020]">
-    <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-      {/* Header */}
-      <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <button 
-            className="md:hidden p-1 -ml-2 mr-1 text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors"
-            onClick={() => useChatStore.getState().setActiveChannel(null)}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          {activeChannel.type === 'announcement' ? (
-            <Megaphone className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" />
-          ) : activeWorkspace ? (
-            <div className="w-9 h-9 rounded-[6px] overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] text-white font-bold text-sm shadow-sm">
-              <img 
-                src={getWorkspaceAvatarUrl(activeWorkspace)} 
-                alt={headerName} 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  const parent = (e.target as HTMLImageElement).parentElement;
-                  if (parent && !parent.querySelector('span')) {
-                    const span = document.createElement('span');
-                    span.innerText = headerName?.charAt(0).toUpperCase() || 'W';
-                    parent.appendChild(span);
-                  }
-                }}
-              />
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden relative">
+        {/* Header */}
+        <header className="h-14 flex-shrink-0 border-b border-[#EAEAEA] dark:border-white/[0.06] flex items-center justify-between px-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              className="md:hidden p-1 -ml-2 mr-1 text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors"
+              onClick={() => useChatStore.getState().setActiveChannel(null)}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            {activeChannel.type === 'announcement' ? (
+              <Megaphone className="w-5 h-5 text-[#2563EB] dark:text-[#3B82F6]" />
+            ) : activeWorkspace ? (
+              <div className="w-9 h-9 rounded-[6px] overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] text-white font-bold text-sm shadow-sm">
+                <img
+                  src={getWorkspaceAvatarUrl(activeWorkspace)}
+                  alt={headerName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent && !parent.querySelector('span')) {
+                      const span = document.createElement('span');
+                      span.innerText = headerName?.charAt(0).toUpperCase() || 'W';
+                      parent.appendChild(span);
+                    }
+                  }}
+                />
+              </div>
+            ) : activeChannel.type === 'dm' ? (
+              (() => {
+                const members = activeChannel.members || [];
+                const otherMembers = members.filter((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
+                const displayAvatar = otherMembers.length === 1 ? otherMembers[0]?.avatar : null;
+                let initials = "";
+                if (members.length > 2 && (!activeChannel.name || activeChannel.name === 'Direct Message')) {
+                  initials = otherMembers.length.toString();
+                } else if (otherMembers.length === 1) {
+                  initials = (otherMembers[0]?.fullName || otherMembers[0]?.email || "User").charAt(0).toUpperCase();
+                } else {
+                  initials = headerName?.charAt(0).toUpperCase() || "G";
+                }
+
+                return (
+                  <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white font-bold text-sm shadow-sm">
+                    {displayAvatar ? (
+                      <img src={displayAvatar} alt={headerName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                  </div>
+                );
+              })()
+            ) : (
+              <Hash className="w-5 h-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
+            )}
+
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-sm truncate leading-snug">{headerName}</span>
+                {activeWorkspace && activeWorkspace.key && (
+                  <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
+                    {activeWorkspace.key}
+                  </span>
+                )}
+              </div>
+
+              <span className="text-[11px] text-[#787774] dark:text-[#9B9A97] truncate leading-none mt-0.5">
+                {activeWorkspace?.description || headerDescription || (
+                  <>
+                    {activeChannel.type === 'general' && "Everyone in the organization"}
+                    {activeChannel.type === 'announcement' && "Only admins can post messages here"}
+                    {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
+                    {activeChannel.type === 'dm' && "Direct conversation"}
+                  </>
+                )}
+              </span>
             </div>
-          ) : activeChannel.type === 'dm' ? (
-            (() => {
-              const members = activeChannel.members || [];
-              const otherMember = members.find((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
-              const displayAvatar = otherMember?.avatar;
-              const initials = (otherMember?.fullName || otherMember?.email || "Deleted User").charAt(0).toUpperCase();
+          </div>
+
+          <div className="flex items-center gap-3 text-[#787774] dark:text-[#9B9A97]">
+            <Link
+              href={`/meeting/init?channel=${activeChannelId}&type=video`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+              title="Start video meeting"
+            >
+              <Video className="w-4 h-4" />
+            </Link>
+
+            <div className="w-px h-4 bg-[#EAEAEA] dark:bg-white/[0.06] mx-1" />
+
+            <button
+              className={`p-1 transition-colors rounded-md relative ${activeThreadParentId === 'index'
+                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15'
+                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                }`}
+              title="View active threads"
+              onClick={() => {
+                setShowMembers(false);
+                setShowSearch(false);
+                setActiveThreadParentId(activeThreadParentId === 'index' ? null : 'index');
+              }}
+            >
+              <MessageSquare className="w-4 h-4" />
+              {unreadThreadsCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-[16px] px-1 bg-[#EF4444] text-white text-[8px] font-bold rounded-full border-2 border-white dark:border-[#202020] animate-pulse leading-none">
+                  {unreadThreadsCount > 99 ? '99+' : unreadThreadsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              className={`p-1 transition-colors rounded-md ${showMembers
+                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15'
+                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                }`}
+              title="View members"
+              onClick={() => {
+                setActiveThreadParentId(null);
+                setShowSearch(false);
+                setShowMembers(!showMembers);
+              }}
+            >
+              <Users className="w-4 h-4" />
+            </button>
+            <button
+              className={`p-1 transition-colors rounded-md ${showSearch
+                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15'
+                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                }`}
+              title="Search channel"
+              onClick={() => {
+                setActiveThreadParentId(null);
+                setShowMembers(false);
+                setShowSearch(!showSearch);
+              }}
+            >
+              <Search className="w-4 h-4" />
+            </button>
+
+            {(() => {
+              const canEditName = activeChannel.type === 'custom' || (activeChannel.type === 'dm' && (activeChannel.members?.length ?? 0) > 2);
+              const canDeleteChannel = activeChannel.type === 'custom' && (userRole === 'super_admin' || isWorkspaceAdmin || isChannelAdmin || activeChannel.createdBy === currentUserId);
+              if (!canEditName && !canDeleteChannel) return null;
+
               return (
-                <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center bg-[#2563EB] dark:bg-[#3B82F6] text-white font-bold text-sm shadow-sm">
-                  {displayAvatar ? (
-                    <img src={displayAvatar} alt={headerName} className="w-full h-full object-cover" />
-                  ) : (
-                    <span>{initials}</span>
+                <div className="relative flex items-center" ref={settingsMenuRef}>
+                  <button
+                    onClick={() => setShowChannelSettingsMenu(prev => !prev)}
+                    className={`p-1 transition-colors rounded-md ${showChannelSettingsMenu
+                      ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15'
+                      : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
+                      }`}
+                    title="Channel Settings"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </button>
+
+                  {showChannelSettingsMenu && (
+                    <div className="absolute right-0 top-full mt-1.5 w-48 bg-white dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/10 rounded-lg shadow-xl py-1 z-50">
+                      {canEditName && (
+                        <button
+                          onClick={() => {
+                            setShowChannelSettingsMenu(false);
+                            setEditNameValue(activeChannel.name === 'Direct Message' ? headerName : activeChannel.name);
+                            setIsEditingName(true);
+                          }}
+                          className="w-full px-3 py-2 text-xs font-medium text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-white/5 flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-[#787774] dark:text-[#9B9A97]" />
+                          <span>Rename Channel</span>
+                        </button>
+                      )}
+                      {canDeleteChannel && (
+                        <button
+                          onClick={() => {
+                            setShowChannelSettingsMenu(false);
+                            setShowDeleteModal(true);
+                          }}
+                          className="w-full px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Delete Channel</span>
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               );
-            })()
-          ) : (
-            <Hash className="w-5 h-5 text-[#ABABAB] dark:text-[#6B6B6B]" />
-          )}
+            })()}
+          </div>
+        </header>
+        {/* Active Meeting Banner */}
+        <MeetingBanner channelId={activeChannelId} />
 
-          <div className="flex flex-col min-w-0">
+        {/* Search & Create Thread Bar for Default Workspace Channels Only */}
+        {activeChannel && activeChannel.workspaceId && activeChannel.type === 'workspace' && isMemberOfActiveChannel && (
+          <div className="p-3 flex items-center gap-3 bg-white dark:bg-[#202020] border-b border-[#EAEAEA] dark:border-white/[0.06] select-none">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#787774] dark:text-[#9B9A97]" />
+              <input
+                type="text"
+                placeholder="Search messages in this channel..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-[0.8125rem] bg-[#F7F6F3] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-lg text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-[#2563EB]"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setShowCreateThreadModal(true)}
+              className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[8px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors cursor-pointer shadow-sm select-none"
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Create Thread</span>
+            </button>
+          </div>
+        )}
+
+        {/* Sync/Load Error Banner (when there is cached history) */}
+        {errorMessage && messages.length > 0 && (
+          <div className="bg-red-50 dark:bg-red-950/20 border-b border-red-100 dark:border-red-900/30 px-4 py-2 flex items-center justify-between gap-3 text-xs text-red-600 dark:text-red-400">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[#111111] dark:text-[#E8E8E7] text-sm truncate leading-snug">{headerName}</span>
-              {activeWorkspace && activeWorkspace.key && (
-                <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
-                  {activeWorkspace.key}
-                </span>
-              )}
+              <Info className="w-4 h-4 flex-shrink-0" />
+              <span>Failed to sync latest messages. Showing cached history.</span>
             </div>
-            
-            <span className="text-[11px] text-[#787774] dark:text-[#9B9A97] truncate leading-none mt-0.5">
-              {activeWorkspace?.description || headerDescription || (
-                <>
-                  {activeChannel.type === 'general' && "Everyone in the organization"}
-                  {activeChannel.type === 'announcement' && "Only admins can post messages here"}
-                  {activeChannel.type === 'workspace' && `Channel for workspace · ${activeChannel.name}`}
-                  {activeChannel.type === 'dm' && "Direct conversation"}
-                </>
-              )}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3 text-[#787774] dark:text-[#9B9A97]">
-          <Link
-            href={`/meeting/init?channel=${activeChannelId}&type=video`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-1 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
-            title="Start video meeting"
-          >
-            <Video className="w-4 h-4" />
-          </Link>
-
-          <div className="w-px h-4 bg-[#EAEAEA] dark:bg-white/[0.06] mx-1" />
-          
-          <button 
-            className={`p-1 transition-colors rounded-md ${
-              activeThreadParentId === 'index'
-                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
-                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
-            }`}
-            title="View active threads"
-            onClick={() => {
-              setShowMembers(false);
-              setShowSearch(false);
-              setActiveThreadParentId(activeThreadParentId === 'index' ? null : 'index');
-            }}
-          >
-            <MessageSquare className="w-4 h-4" />
-          </button>
-
-          <button 
-            className={`p-1 transition-colors rounded-md ${
-              showMembers 
-                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
-                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
-            }`}
-            title="View members"
-            onClick={() => {
-              setActiveThreadParentId(null);
-              setShowSearch(false);
-              setShowMembers(!showMembers);
-            }}
-          >
-            <Users className="w-4 h-4" />
-          </button>
-          <button 
-            className={`p-1 transition-colors rounded-md ${
-              showSearch 
-                ? 'text-[#2563EB] dark:text-[#3B82F6] bg-[#2563EB]/10 dark:bg-[#3B82F6]/15' 
-                : 'hover:text-[#111111] dark:hover:text-[#E8E8E7]'
-            }`}
-            title="Search channel"
-            onClick={() => {
-              setActiveThreadParentId(null);
-              setShowMembers(false);
-              setShowSearch(!showSearch);
-            }}
-          >
-            <Search className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
-
-      {/* Active Meeting Banner */}
-      <MeetingBanner channelId={activeChannelId} />
-
-      {/* Sync/Load Error Banner (when there is cached history) */}
-      {errorMessage && messages.length > 0 && (
-        <div className="bg-red-50 dark:bg-red-950/20 border-b border-red-100 dark:border-red-900/30 px-4 py-2 flex items-center justify-between gap-3 text-xs text-red-600 dark:text-red-400">
-          <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 flex-shrink-0" />
-            <span>Failed to sync latest messages. Showing cached history.</span>
-          </div>
-          <button
-            onClick={() => refetch()}
-            disabled={loading}
-            className="px-2 py-1 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/70 text-red-700 dark:text-red-300 rounded font-medium transition-colors disabled:opacity-50"
-          >
-            {loading ? "Retrying..." : "Retry"}
-          </button>
-        </div>
-      )}
-
-      {/* Messages area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto min-h-0">
-        {loading && messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
-          </div>
-        ) : errorMessage && messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-            <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-3">
-              <Info className="w-6 h-6 text-red-500" />
-            </div>
-            <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic mb-4">
-              {errorMessage}
-            </p>
             <button
               onClick={() => refetch()}
               disabled={loading}
-              className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-[6px] transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-2 py-1 bg-red-100 dark:bg-red-900/50 hover:bg-red-200 dark:hover:bg-red-900/70 text-red-700 dark:text-red-300 rounded font-medium transition-colors disabled:opacity-50"
             >
-              {loading ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Retrying...
-                </>
-              ) : (
-                "Retry"
-              )}
+              {loading ? "Retrying..." : "Retry"}
             </button>
           </div>
-        ) : (
-          <div className="py-4">
-            {hasNextPage && (
-              <div className="flex justify-center mb-4">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={isFetchingNextPage}
-                  className="px-4 py-1.5 text-xs font-medium text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] bg-[#F0F0EE] dark:bg-white/5 hover:bg-[#EAEAEA] dark:hover:bg-white/10 rounded-[6px] transition-colors flex items-center gap-2"
-                >
-                  {isFetchingNextPage ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Loading history...
-                    </>
-                  ) : (
-                    "Load older messages"
-                  )}
-                </button>
+        )}
+
+        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+          {!isMemberOfActiveChannel ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-[#FBFBFA] dark:bg-[#1E1E1E] select-none">
+              <div className="w-16 h-16 rounded-2xl bg-[#2563EB]/10 dark:bg-[#2563EB]/25 flex items-center justify-center mb-4 text-[#2563EB] dark:text-[#60A5FA] shadow-sm border border-[#2563EB]/15 dark:border-[#2563EB]/30">
+                {activeChannel.isPrivate ? <Lock className="w-8 h-8" /> : <Hash className="w-8 h-8" />}
               </div>
-            )}
-            {messages.map((msg, idx) => {
-              const previousMsg = messages[idx - 1];
-              const currentSenderId = getSenderId(msg);
-              const previousSenderId = getSenderId(previousMsg);
+              <h2 className="text-xl font-bold text-[#111111] dark:text-[#E8E8E7] mb-2">
+                Join #{activeChannel.name}
+              </h2>
+              <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-sm mb-6 leading-relaxed">
+                {activeChannel.description || `This is a ${activeChannel.isPrivate ? 'private' : 'public'} custom channel. Join to view its message history and post messages.`}
+              </p>
+              {(!activeChannel.isPrivate || isWorkspaceAdmin || activeChannel.channelMembers?.some(m => String(m.userId) === String(currentUserId))) ? (
+                <button
+                  onClick={handleJoinChannel}
+                  disabled={joining}
+                  className="flex items-center gap-2 px-6 h-10 text-sm font-semibold rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  {joining && <Loader2 className="w-4 h-4 animate-spin" />}
+                  <span>Join Channel</span>
+                </button>
+              ) : (
+                <p className="text-xs text-red-500 font-semibold italic bg-red-100/50 dark:bg-red-950/20 px-3 py-1.5 rounded-lg border border-red-500/10">
+                  You must be invited by a channel administrator to join this private channel.
+                </p>
+              )}
+            </div>
+          ) : loading && messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full flex-1">
+              <Loader2 className="w-6 h-6 animate-spin text-[#787774]" />
+            </div>
+          ) : errorMessage && messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full flex-1 p-4 text-center">
+              <div className="w-12 h-12 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mb-3">
+                <Info className="w-6 h-6 text-red-500" />
+              </div>
+              <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-[250px] italic mb-4">
+                {errorMessage}
+              </p>
+              <button
+                onClick={() => refetch()}
+                disabled={loading}
+                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-[6px] transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    Retrying...
+                  </>
+                ) : (
+                  "Retry"
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="py-4 flex-1">
+              {isFetchingNextPage && (
+                <div className="flex justify-center mb-3">
+                  <div className="px-3.5 py-1 text-xs font-medium text-[#787774] dark:text-[#9B9A97] bg-[#F0F0EE]/80 dark:bg-white/5 rounded-full flex items-center gap-2 shadow-sm border border-[#EAEAEA] dark:border-white/[0.06]">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />
+                    <span>Loading older messages...</span>
+                  </div>
+                </div>
+              )}
+              {messages.map((msg, idx) => {
+                const previousMsg = messages[idx - 1];
+                const currentSenderId = getSenderId(msg);
+                const previousSenderId = getSenderId(previousMsg);
 
-              const isSameUser =
-                previousSenderId &&
-                currentSenderId &&
-                previousSenderId === currentSenderId;
+                const isSameUser =
+                  previousSenderId &&
+                  currentSenderId &&
+                  previousSenderId === currentSenderId;
 
-              // Only group if within 5 minutes
-              const timeDiff = previousMsg
-                ? (new Date(msg.createdAt).getTime() -
+                // Only group if within 5 minutes
+                const timeDiff = previousMsg
+                  ? (new Date(msg.createdAt).getTime() -
                     new Date(previousMsg.createdAt).getTime()) /
                   1000 /
                   60
-                : 10;
+                  : 10;
 
-              const isSameUserAsPrevious = isSameUser && timeDiff < 5;
-              const isMine = String(currentSenderId) === String(currentUserId);
-              const isFirstUnread = msg._id === firstUnreadMessageId;
+                const isSameUserAsPrevious = isSameUser && timeDiff < 5;
+                const isMine = String(currentSenderId) === String(currentUserId);
+                const isFirstUnread = msg._id === firstUnreadMessageId || msg._id === firstNewMessageId;
 
-              return (
-                <React.Fragment key={msg._id || (msg as { id?: string }).id}>
-                  {isFirstUnread && (
-                    <div className="flex items-center my-4 px-4 select-none">
-                      <div className="flex-1 h-px bg-red-500/30"></div>
-                      <span className="mx-4 text-[10px] font-bold text-red-500 uppercase tracking-wider px-2.5 py-0.5 bg-red-500/10 dark:bg-red-500/20 rounded-full border border-red-500/20">
-                        New Messages
-                      </span>
-                      <div className="flex-1 h-px bg-red-500/30"></div>
-                    </div>
-                  )}
-                  <MessageItem
-                    message={msg}
-                    isSameUserAsPrevious={isSameUserAsPrevious}
-                    isMine={isMine}
-                  />
-                </React.Fragment>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Footer / Input */}
-      <div className="flex-shrink-0 border-t border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
-        <div className="px-4 h-5 flex items-center">
-          {!isReadOnly && typingUserIds.length > 0 && (
-            <div className="text-[10px] text-[#787774] italic animate-pulse">
-              {getTypingText()}
+                return (
+                  <React.Fragment key={msg._id || (msg as { id?: string }).id}>
+                    {isFirstUnread && (
+                      <div className="flex items-center my-4 px-4 select-none">
+                        <div className="flex-1 h-px bg-red-500/30"></div>
+                        <span className="mx-4 text-[10px] font-bold text-red-500 uppercase tracking-wider px-2.5 py-0.5 bg-red-500/10 dark:bg-red-500/20 rounded-full border border-red-500/20">
+                          New Messages
+                        </span>
+                        <div className="flex-1 h-px bg-red-500/30"></div>
+                      </div>
+                    )}
+                    <MessageItem
+                      message={msg}
+                      isSameUserAsPrevious={isSameUserAsPrevious}
+                      isMine={isMine}
+                    />
+                  </React.Fragment>
+                );
+              })}
             </div>
           )}
+
         </div>
 
-        {isReadOnly ? (
-          <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
-            <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] font-medium italic">
-              This channel is read-only. Only administrators can post updates.
-            </p>
-          </div>
-        ) : !isMemberOfActiveChannel ? (
-          <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06] flex flex-col items-center justify-center gap-3">
-            <p className="text-[0.875rem] text-[#787774] dark:text-[#9B9A97] font-medium">
-              You are viewing <span className="font-semibold text-[#111111] dark:text-[#E8E8E7]">#{activeChannel.name}</span>. This is a {activeChannel.isPrivate ? 'private' : 'public'} custom channel.
-            </p>
-            {(!activeChannel.isPrivate || isWorkspaceAdmin) && (
-              <button
-                onClick={handleJoinChannel}
-                disabled={joining}
-                className="flex items-center gap-1.5 px-4 h-9 text-xs font-semibold rounded-[6px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white transition-colors disabled:opacity-50 cursor-pointer"
-              >
-                {joining && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>Join Channel</span>
-              </button>
+        {/* Scroll to bottom button */}
+        {showScrollBottom && (
+          <button
+            onClick={() => {
+              if (scrollRef.current) {
+                scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+                setHasNewUnread(false);
+              }
+            }}
+            className="absolute bottom-20 right-6 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] text-white rounded-full shadow-lg text-xs font-semibold transition-all transform hover:scale-105 active:scale-95 animate-fade-in"
+            title="Scroll to latest messages"
+          >
+            <ArrowDown className="w-3.5 h-3.5" />
+            <span>{hasNewUnread ? "New Message" : "Latest Messages"}</span>
+            {hasNewUnread && (
+              <>
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#2563EB] dark:border-[#3B82F6] animate-ping" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#2563EB] dark:border-[#3B82F6]" />
+              </>
             )}
-          </div>
-        ) : (
-          <MessageInput
-            channelId={activeChannelId}
-            channelName={activeChannel.name}
-          />
+          </button>
         )}
+
+        {!(activeChannel && activeChannel.workspaceId && activeChannel.type === 'workspace' && isMemberOfActiveChannel) ? (
+          activeChannel.type === 'custom' && !isMemberOfActiveChannel ? null : (
+            <div className="flex-shrink-0 bg-white dark:bg-[#202020]">
+              {!isReadOnly && typingUserIds.length > 0 && (
+                <div className="px-4 py-1 text-[11px] text-[#787774] dark:text-[#9B9A97] italic animate-pulse">
+                  {getTypingText()}
+                </div>
+              )}
+
+              {isReadOnly ? (
+                <div className="px-4 py-6 text-center bg-[#FBFBFA] dark:bg-[#252525] border-t border-[#EAEAEA] dark:border-white/[0.06]">
+                  <p className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] font-medium italic">
+                    This channel is read-only. Only administrators can post updates.
+                  </p>
+                </div>
+              ) : (
+                <MessageInput
+                  channelId={activeChannelId}
+                  channelName={activeChannel.name}
+                />
+              )}
+            </div>
+          )
+        ) : null}
       </div>
-    </div>
 
-    {/* Member Panel */}
-    {showMembers && activeChannelId && (
-      <MemberPanel
-        channelId={activeChannelId}
-        onClose={() => setShowMembers(false)}
-      />
-    )}
 
-    {/* Search Panel */}
-    {showSearch && activeChannelId && (
-      <ChatSearchPanel
-        channelId={activeChannelId}
-        onClose={() => setShowSearch(false)}
-      />
-    )}
+      {/* Member Panel */}
+      {showMembers && activeChannelId && (
+        <MemberPanel
+          channelId={activeChannelId}
+          onClose={() => setShowMembers(false)}
+        />
+      )}
 
-    {/* Thread List Index Panel */}
-    {activeThreadParentId === 'index' && activeChannelId && (
-      <ThreadIndexPanel
-        channelId={activeChannelId}
-        onClose={() => setActiveThreadParentId(null)}
-      />
-    )}
+      {/* Search Panel */}
+      {showSearch && activeChannelId && (
+        <ChatSearchPanel
+          channelId={activeChannelId}
+          onClose={() => setShowSearch(false)}
+        />
+      )}
 
-    {/* Thread Detail Panel */}
-    {activeThreadParentId && activeThreadParentId !== 'index' && activeChannelId && (
-      <ThreadPanel
-        channelId={activeChannelId}
-        messageId={activeThreadParentId}
-        onClose={() => setActiveThreadParentId(null)}
+      {/* Thread List Index Panel */}
+      {activeThreadParentId === 'index' && activeChannelId && (
+        <ThreadIndexPanel
+          channelId={activeChannelId}
+          onClose={() => setActiveThreadParentId(null)}
+        />
+      )}
+
+      {/* Thread Detail Panel */}
+      {activeThreadParentId && activeThreadParentId !== 'index' && activeChannelId && (
+        <ThreadPanel
+          channelId={activeChannelId}
+          messageId={activeThreadParentId}
+          onClose={() => setActiveThreadParentId(null)}
+        />
+      )}
+
+      {showCreateThreadModal && activeChannel && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#202020] rounded-xl shadow-xl w-full max-w-lg overflow-visible border border-[#EAEAEA] dark:border-white/[0.06] flex flex-col animate-in zoom-in-95 duration-150">
+            <div className="px-5 py-3.5 border-b border-[#EAEAEA] dark:border-white/[0.06] flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7] text-base">Create a new Thread</h3>
+                <p className="text-xs text-[#787774] dark:text-[#9B9A97] mt-0.5 leading-relaxed">
+                  This thread will be posted in{" "}
+                  <span className="font-semibold truncate max-w-[200px] inline-block align-bottom" title={`#${activeChannel.name}`}>
+                    #{activeChannel.name}
+                  </span>{" "}
+                  and will automatically notify all members.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowCreateThreadModal(false)}
+                className="text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7] transition-colors p-1.5 rounded-lg hover:bg-[#F0F0EE] dark:hover:bg-white/10 cursor-pointer shrink-0 ml-3"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-0 overflow-visible rounded-b-xl">
+              <MessageInput
+                channelId={activeChannelId}
+                channelName={activeChannel.name}
+                autoMentionAll={true}
+                ignoreReply={true}
+                onSuccess={() => setShowCreateThreadModal(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <DeleteChannelConfirmModal
+        isOpen={showDeleteModal}
+        channelName={activeChannel?.name || ''}
+        onConfirm={handleDeleteChannel}
+        onClose={() => setShowDeleteModal(false)}
       />
-    )}
+
+      {isEditingName && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#202020] rounded-xl shadow-xl w-full max-w-md overflow-hidden border border-[#EAEAEA] dark:border-white/[0.06] flex flex-col">
+            <div className="px-6 py-4 border-b border-[#EAEAEA] dark:border-white/[0.06] flex justify-between items-center">
+              <h3 className="font-bold text-[#111111] dark:text-[#E8E8E7]">Edit Conversation Name</h3>
+              <button onClick={() => setIsEditingName(false)} className="text-[#787774] hover:text-[#111111] dark:text-[#9B9A97] dark:hover:text-[#E8E8E7]">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <label className="block text-sm font-medium text-[#787774] dark:text-[#9B9A97] mb-2">
+                Conversation Name
+              </label>
+              <input
+                autoFocus
+                className="w-full px-3 py-2 border border-[#EAEAEA] dark:border-white/[0.06] rounded-lg bg-[#F7F6F3] dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                value={editNameValue}
+                onChange={(e) => setEditNameValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && editNameValue.trim()) handleSaveName();
+                  if (e.key === 'Escape') setIsEditingName(false);
+                }}
+                maxLength={50}
+                placeholder="Enter a new name..."
+              />
+            </div>
+            <div className="px-6 py-4 bg-[#F7F6F3] dark:bg-black/20 border-t border-[#EAEAEA] dark:border-white/[0.06] flex justify-end gap-2">
+              <button
+                onClick={() => setIsEditingName(false)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-[#4B5563] dark:text-[#A3A3A3] hover:bg-[#E5E7EB] dark:hover:bg-[#383838] transition-colors"
+                disabled={updateChannelMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveName}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] transition-colors flex items-center gap-2"
+                disabled={updateChannelMutation.isPending || !editNameValue.trim()}
+              >
+                {updateChannelMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

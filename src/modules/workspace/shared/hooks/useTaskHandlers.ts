@@ -97,8 +97,15 @@ export const useTaskHandlers = ({
                 : current
           );
 
+          // Force refetch to ensure all populated fields (like assigneeAvatar) are accurate
+          queryClient.invalidateQueries({ queryKey: queryKeyPrefix });
+
           if (nextIssue.key) {
             queryClient.setQueryData(queryKeys.tasks.detail(workspaceId, nextIssue.key), nextIssue);
+          }
+
+          if (nextIssue.parentId) {
+            queryClient.invalidateQueries({ queryKey: queryKeys.tasks.subtasks(workspaceId, nextIssue.parentId) });
           }
 
           queryClient.invalidateQueries({ queryKey: queryKeys.tasks.activities(workspaceId, id) });

@@ -18,6 +18,7 @@ import {
   getTaskStatusTransition,
   TaskStatusTransition,
 } from "@/modules/notifications/utils/notification-status.utils";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 interface NotificationPanelProps {
   onClose: () => void;
@@ -279,6 +280,7 @@ export default function NotificationPanel({
   onClose,
   onUnreadCountChange,
 }: NotificationPanelProps) {
+  useEscapeStack(onClose);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<NotificationCategory>("DIRECT");
@@ -780,13 +782,13 @@ export default function NotificationPanel({
                               )}
 
                               {notification.type === "INVITE" && notification.inviteData && (
-                                <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] p-3">
-                                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{notification.inviteData.workspaceName}</p>
+                                <div className="mt-2 bg-[#F9F9F8] dark:bg-[#252525] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[6px] p-3 min-w-0">
+                                  <p className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] truncate" title={notification.inviteData.workspaceName}>{notification.inviteData.workspaceName}</p>
                                   {notification.inviteData.role && (
-                                    <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1">Role: {notification.inviteData.role}</p>
+                                    <p className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97] mt-1 truncate" title={notification.inviteData.role}>Role: {notification.inviteData.role}</p>
                                   )}
                                   {isPendingInvite && notification.inviteData.message && (
-                                    <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1">{notification.inviteData.message}</p>
+                                    <p className="text-[0.6875rem] text-[#ABABAB] dark:text-[#6B6B6B] mt-1 break-words [overflow-wrap:anywhere]">{notification.inviteData.message}</p>
                                   )}
                                   {isPendingInvite ? (
                                     <div className="mt-3 flex items-center gap-2" onClick={(event) => event.stopPropagation()}>

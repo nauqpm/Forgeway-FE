@@ -12,11 +12,13 @@ import {
   getThreadRepliesAPI,
   getActiveThreadsAPI,
   searchMessagesAPI,
+  updateChannelAPI,
+  deleteMessageForMeAPI,
 } from '@/modules/client/chat/services/chatService';
 import { getActiveMeetingAPI } from '@/modules/client/meeting/services/meeting.api';
 import { useChatStore } from '@/stores/chatStore';
 import type { MentionMember, MessagesPage, Message } from '@/modules/client/chat/types/chat.types';
-import { updateChannelInCache, upsertChannelInCache } from '@/modules/client/chat/utils/chatQueryCache';
+import { updateChannelInCache, upsertChannelInCache, removeMessageFromCache } from '@/modules/client/chat/utils/chatQueryCache';
 
 type ActiveThreadsResponse = { threads: Message[]; nextCursor: string | null };
 
@@ -163,5 +165,32 @@ export const useSearchChannelMessages = (
     queryFn: () => searchMessagesAPI(channelId as string, filters),
     enabled: Boolean(channelId && (filters.q?.trim() || filters.senderId)),
     staleTime: 0,
+  });
+};
+
+export const useUpdateChannel = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ channelId, updateData }: { channelId: string; updateData: { name?: string } }) =>
+      updateChannelAPI(channelId, updateData),
+    onSuccess: (channel) => {
+      updateChannelInCache(queryClient, (channel._id || channel.id) as string, () => channel);
+    },
+  });
+};
+
+export const useDeleteMessageForMeMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ messageId }: { messageId: string; channelId: string; threadParentId?: string }) =>
+      deleteMessageForMeAPI(messageId),
+    onMutate: ({ messageId, channelId, threadParentId }) => {
+      removeMessageFromCache(queryClient, channelId, messageId, threadParentId);
+    },
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat'] });
+    },
   });
 };

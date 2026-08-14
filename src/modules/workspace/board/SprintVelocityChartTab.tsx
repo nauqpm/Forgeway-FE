@@ -232,7 +232,7 @@ export default function SprintVelocityChartTab({ workspaceId }: SprintVelocityCh
                     fontSize={12}
                     tickLine={false}
                     axisLine={false}
-                    tickFormatter={(val) => `${val}`}
+                    tickFormatter={(val: number) => `${val}`}
                   />
                   <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(0,0,0,0.02)" }} />
                   <Legend

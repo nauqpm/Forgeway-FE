@@ -10,6 +10,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { WORKSPACE_PERMISSIONS } from "../constants/workspacePermissions";
 import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
+import { useEscapeStack } from "@/shared/hooks/useEscapeStack";
 
 type WorkspaceMember = {
   userId: {
@@ -71,6 +72,7 @@ type InviteFormProps = {
 };
 
 function InviteForm({ workspaceId, workspaceMongoId, onClose, onSuccess }: InviteFormProps) {
+  useEscapeStack(onClose);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [submitting, setSubmitting] = useState(false);
@@ -219,6 +221,8 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
         queryKeys.workspaces.members(workspaceId),
         (current = []) => current.filter((item) => item.userId?._id !== userId)
       );
+      queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+      queryClient.invalidateQueries({ queryKey: ["chat", "members"] });
       toast.success("Member removed from workspace.");
     },
     onError: (err: unknown) => {
@@ -234,6 +238,8 @@ export default function WorkspaceMembersPanel({ workspaceId, workspaceMongoId }:
 
   const handleInviteSuccess = () => {
     queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.members(workspaceId) });
+    queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+    queryClient.invalidateQueries({ queryKey: ["chat", "members"] });
   };
 
   useEffect(() => {
