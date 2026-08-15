@@ -12,7 +12,7 @@ steps:
       - NEXT_PUBLIC_API_URL=http://localhost:5512 npm run build
 
   docker-build-dry-run:
-    image: woodpeckerci/plugin-docker-buildx
+    image: woodpeckerci/plugin-docker
     privileged: true
     settings:
       mtu: 1400
@@ -28,7 +28,7 @@ steps:
         branch: production
 
   docker-build-and-push:
-    image: woodpeckerci/plugin-docker-buildx
+    image: woodpeckerci/plugin-docker
     privileged: true
     settings:
       mtu: 1400
