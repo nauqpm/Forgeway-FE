@@ -32,7 +32,7 @@ export function DashboardTaskList({ assignedTasks, completedCount, workspaceCoun
   }, [assignedTasks, showSort, sortBy]);
 
   return (
-    <div className="mt-10">
+    <div className="mt-6 flex-1 flex flex-col min-h-0">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-[#111111] dark:text-[#E8E8E7]">{title}</h2>
         {showAllHref && (
@@ -73,7 +73,7 @@ export function DashboardTaskList({ assignedTasks, completedCount, workspaceCoun
         </div>
       )}
 
-      <div className="max-h-[320px] space-y-2 overflow-y-auto overscroll-contain pb-1 pr-1">
+      <div className="flex-1 space-y-2 overflow-y-auto overscroll-contain pb-1 pr-1 min-h-0 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700">
         {assignedTasks.length === 0 ? (
           <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] px-4 py-8 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
             No tasks assigned to you yet.
