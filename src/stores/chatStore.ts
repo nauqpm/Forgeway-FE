@@ -13,8 +13,12 @@ interface ChatStore {
   // Tracks thread parentIds that have new replies the user hasn't seen yet per channel
   unreadThreadIds: Record<string, Set<string>>;
 
+  // Global target message to scroll and highlight (supports auto-fetching older paginated messages)
+  scrollTargetId: string | null;
+
   setActiveChannel: (channelId: string | null) => void;
   setActiveThreadParentId: (parentId: string | null) => void;
+  setScrollTargetId: (scrollTargetId: string | null) => void;
 
   setTyping: (channelId: string, userId: string) => void;
   removeTyping: (channelId: string, userId: string) => void;
@@ -39,9 +43,10 @@ export const useChatStore = create<ChatStore>((set) => ({
   editingMessage: null,
   editingThreadMessage: null,
   unreadThreadIds: {},
-
-  setActiveChannel: (activeChannelId) => set({ activeChannelId, activeThreadParentId: null, replyingToMessage: null, replyingToThreadMessage: null, editingMessage: null, editingThreadMessage: null }), // Close thread on channel change, but keep unread thread badges
+  scrollTargetId: null,
+  setActiveChannel: (activeChannelId) => set({ activeChannelId, activeThreadParentId: null, replyingToMessage: null, replyingToThreadMessage: null, editingMessage: null, editingThreadMessage: null, scrollTargetId: null }), // Close thread on channel change, but keep unread thread badges
   setActiveThreadParentId: (activeThreadParentId) => set({ activeThreadParentId }),
+  setScrollTargetId: (scrollTargetId) => set({ scrollTargetId }),
 
   setTyping: (channelId, userId) => set((state) => ({
     typingUsers: {

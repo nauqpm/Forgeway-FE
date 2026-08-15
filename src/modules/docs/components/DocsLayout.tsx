@@ -40,7 +40,11 @@ function getCurrentPathname() {
 
 export default function DocsLayout({ workspaceId, workspaceKey }: { workspaceId: string; workspaceKey: string }) {
   const queryClient = useQueryClient();
-  const { selectedDocumentId, selectDocument, selectedImportedDocumentId } = useDocsStore();
+  const {
+    selectedDocumentId,
+    selectDocument,
+    selectedImportedDocumentId,
+  } = useDocsStore();
   const uploadedDocsQuery = useUploadedWorkspaceDocsQuery(workspaceId);
   const [mounted, setMounted] = useState(false);
 
@@ -67,7 +71,17 @@ export default function DocsLayout({ workspaceId, workspaceKey }: { workspaceId:
     // Listen for browser back/forward (popstate) AND for the custom
     // "docs-push-state" event dispatched by our pushState wrappers.
     const handleLocationChange = () => {
-      setCurrentPathname(window.location.pathname);
+      const nextPathname = window.location.pathname;
+      const { pageId } = parseDocsPathname(nextPathname);
+
+      if (!pageId) {
+        const docsState = useDocsStore.getState();
+        docsState.draftDocuments
+          .filter((draft) => draft.workspaceId === workspaceId)
+          .forEach((draft) => docsState.removeDraftDocument(draft.id));
+      }
+
+      setCurrentPathname(nextPathname);
     };
 
     window.addEventListener("popstate", handleLocationChange);
@@ -147,9 +161,10 @@ export default function DocsLayout({ workspaceId, workspaceKey }: { workspaceId:
   const uploadedDocs = uploadedDocsQuery.data ?? [];
   const selectedImportedDoc = uploadedDocs.find((doc) => doc._id === selectedImportedDocumentId) ?? null;
 
-  // Use URL pageId as primary signal; store as secondary
-  const effectiveDocumentId =
-    previousWorkspaceIdRef.current !== workspaceId ? urlPageId : urlPageId ?? selectedDocumentId;
+  // The URL is the source of truth for whether the dashboard or a page is
+  // visible. A stale/temp selection must never keep the editor mounted after
+  // navigation back to `/pages`.
+  const effectiveDocumentId = urlPageId;
 
   // Show spinner only when fetching from API with no cached data
   const isUrlPageLoading = needsUrlFetch && !initialDataFromList && urlPageQuery.isLoading;

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -340,7 +340,7 @@ export default function DataGridListView({
 
           {showColumnMenu && (
             <div
-              className="absolute right-0 z-50 mt-2 w-52 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-2"
+              className="absolute right-0 z-[100] mt-2 w-52 rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020] p-2"
               style={{ boxShadow: "0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div className="mb-2 px-2 text-[0.6875rem] font-semibold uppercase text-[#787774] dark:text-[#9B9A97]">

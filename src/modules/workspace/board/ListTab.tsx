@@ -132,17 +132,17 @@ export default function ListTab({
   }, []);
 
   const columnsButton = (
-    <div className="relative" ref={columnMenuRef}>
+    <div className="relative shrink-0" ref={columnMenuRef}>
       <button
         type="button"
         onClick={() => setShowColumnMenu(o => !o)}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border text-[0.8125rem] bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors"
+        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 rounded-[6px] border text-[0.8125rem] bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] transition-colors shrink-0 whitespace-nowrap"
       >
         <Columns className="w-4 h-4" />
-        Columns
+        <span>Columns</span>
       </button>
       {showColumnMenu && (
-        <div className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 p-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+        <div className="absolute right-0 sm:left-0 top-full mt-1 w-48 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 p-2" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
           <div className="text-[0.6875rem] font-semibold text-[#ABABAB] dark:text-[#6B6B6B] mb-2 px-2 uppercase tracking-wider">Show / Hide</div>
           {Object.keys(COLUMN_LABELS).map(id => (
             <label key={id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[4px] cursor-pointer">
@@ -247,7 +247,7 @@ export default function ListTab({
         <MoreHorizontal className="w-4 h-4" />
       </button>
       {showImportExportMenu && (
-        <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+        <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-[100] py-1" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
           {canImportCsv && (
             <button
               onClick={() => {
@@ -268,7 +268,7 @@ export default function ListTab({
               </div>
               <ChevronRight className="w-4 h-4 text-[#888888]" />
             </button>
-            <div className="absolute right-[100%] top-0 hidden group-hover:block w-28 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-50 py-1 before:absolute before:content-[''] before:-right-3 before:top-0 before:w-3 before:h-full" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="absolute right-[100%] top-0 hidden group-hover:block w-28 bg-white dark:bg-[#202020] border border-[#EAEAEA] dark:border-white/[0.06] rounded-[8px] z-[100] py-1 before:absolute before:content-[''] before:-right-3 before:top-0 before:w-3 before:h-full" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}>
               <button
                 onClick={() => handleExport("csv")}
                 className="w-full text-left flex items-center gap-2 px-3 py-2 text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
@@ -460,7 +460,7 @@ export default function ListTab({
 
       {listViewMode === "grid" ? (
         selectedIssue ? (
-          <div className="flex min-h-0 flex-1 overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
+          <div className="flex min-h-0 min-w-0 flex-1 overflow-y-auto md:overflow-hidden rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] transition-all duration-200">
             <TaskDetailList
               issue={selectedIssue}
               workspaceId={workspaceId}
@@ -648,7 +648,7 @@ export default function ListTab({
             </div>
           </aside>
 
-          <section className="flex min-h-80 flex-col overflow-hidden bg-white dark:bg-[#202020] lg:min-h-0">
+          <section className="flex min-h-80 flex-col overflow-y-auto lg:overflow-hidden bg-white dark:bg-[#202020] lg:min-h-0">
             {!selectedIssue ? (
               <div className="flex flex-1 items-center justify-center p-8 text-center text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
                 Select a task in the left column to view details.

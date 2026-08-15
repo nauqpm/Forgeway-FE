@@ -89,43 +89,43 @@ export default function CalendarToolbar({
       </div>
 
       {/* Row 2: Nav + View switch + Sidebar toggle */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <button
             onClick={() => api()?.today()}
-            className="px-3 py-1.5 text-sm font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+            className="px-2.5 py-1 sm:px-3 sm:py-1.5 text-xs sm:text-sm font-semibold rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors shrink-0"
           >
             Today
           </button>
 
           <button
             onClick={() => api()?.prev()}
-            className="p-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+            className="p-1 sm:p-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors shrink-0"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
 
           <button
             onClick={() => api()?.next()}
-            className="p-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors"
+            className="p-1 sm:p-1.5 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 transition-colors shrink-0"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
 
-          <span className="text-base font-bold text-[#111111] dark:text-[#E8E8E7] min-w-[9.375rem]">
+          <span className="text-sm sm:text-base font-bold text-[#111111] dark:text-[#E8E8E7] truncate min-w-0 sm:min-w-[9.375rem]">
             {currentDateTitle}
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {/* Month / Week toggle */}
-          <div className="flex bg-[#F7F6F3] dark:bg-[#252525] rounded-[8px] p-1 gap-1">
+          <div className="flex bg-[#F7F6F3] dark:bg-[#252525] rounded-[8px] p-1 gap-1 shrink-0">
             {(['dayGridMonth', 'dayGridWeek'] as CalendarViewType[]).map((view) => (
               <button
                 key={view}
                 onClick={() => onViewChange(view)}
                 className={[
-                  'px-3 py-1 text-xs font-medium rounded-[6px] transition-all',
+                  'px-2.5 py-1 sm:px-3 sm:py-1 text-xs font-medium rounded-[6px] transition-all shrink-0 whitespace-nowrap',
                   currentView === view
                     ? 'bg-white dark:bg-[#2A2A2A] text-[#111111] dark:text-[#E8E8E7]'
                     : 'text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7]',
@@ -141,7 +141,7 @@ export default function CalendarToolbar({
             onClick={onToggleSidebar}
             title="Unscheduled work"
             className={[
-              'p-1.5 rounded-[6px] border transition-colors',
+              'p-1.5 rounded-[6px] border transition-colors shrink-0',
               isSidebarOpen
                 ? 'border-[#2563EB]/30 dark:border-[#3B82F6]/40 bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] text-[#2563EB] dark:text-[#3B82F6]'
                 : 'border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5',

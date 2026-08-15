@@ -103,13 +103,30 @@ export default function SearchPage() {
       <div className="mt-6 divide-y divide-[#EAEAEA] overflow-hidden rounded-xl border border-[#EAEAEA] bg-white dark:divide-white/[0.08] dark:border-white/[0.08] dark:bg-[#252525]">
         {items.map((item) => {
           const Icon = iconFor(item);
+          const isUser = item.type === "user";
+          const userAvatar = isUser
+            ? ((item.metadata as { avatar?: string; avatarUrl?: string })?.avatar ||
+               (item.metadata as { avatar?: string; avatarUrl?: string })?.avatarUrl)
+            : undefined;
+          const initial = item.title?.trim()?.charAt(0)?.toUpperCase() || "U";
+
           return (
             <Link
               key={`${item.type}-${item.id}`}
               href={item.url}
-              className="flex gap-3 p-4 transition-colors hover:bg-[#F9F9F8] dark:hover:bg-[#2A2A2A]"
+              className="flex items-center gap-3 p-4 transition-colors hover:bg-[#F9F9F8] dark:hover:bg-[#2A2A2A]"
             >
-              <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#2563EB]" />
+              {isUser ? (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#7C3AED] dark:bg-[#8B5CF6] text-[0.8125rem] font-semibold text-white shadow-sm">
+                  {userAvatar ? (
+                    <img src={userAvatar} alt={item.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <span>{initial}</span>
+                  )}
+                </div>
+              ) : (
+                <Icon className="h-5 w-5 shrink-0 text-[#2563EB]" />
+              )}
               <div className="min-w-0">
                 <div className="truncate text-sm font-semibold text-[#111111] dark:text-[#E8E8E7]">
                   {item.key ? `${item.key} ${item.title}` : item.title}

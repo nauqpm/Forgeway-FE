@@ -55,7 +55,7 @@ export function useDashboardData() {
       }
 
       const workspaceDataList = await Promise.all(
-        workspaces.slice(0, 6).map(async (workspace) => {
+        workspaces.map(async (workspace) => {
           const workspaceId = workspaceIdOf(workspace);
           if (!workspaceId) {
             return { tasks: [] as Issue[], columnMap: {} as Record<string, string>, doneColumnIds: new Set<string>(), workspace };

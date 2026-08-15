@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { X, Loader2, MessageSquare, UserCheck } from 'lucide-react';
 import { useActiveThreads, useChatChannels } from '../hooks/useChatQueries';
 import { useChatStore } from '@/stores/chatStore';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
-import { formatDistanceToNow } from 'date-fns';
+import UserAvatar from '@/shared/components/UserAvatar';
 import { useResizablePanel } from '@/shared/hooks/useResizablePanel';
 import { ResizeHandle } from '@/shared/components/ResizeHandle';
 import type { Message } from '@/modules/client/chat/types/chat.types';
@@ -169,7 +170,6 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
           filteredThreads.map((thread) => {
             const senderName = getSenderName(thread);
             const avatar = getSenderAvatar(thread);
-            const initialLetter = senderName.charAt(0).toUpperCase();
             const timeAgo = thread.lastReplyAt
               ? formatDistanceToNow(new Date(thread.lastReplyAt), { addSuffix: true })
               : '';
@@ -197,13 +197,12 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
                 {/* Thread Card Header */}
                 <div className="flex items-center gap-2 pr-4">
                   {/* Sender Avatar */}
-                  <div className="w-6 h-6 rounded-full overflow-hidden bg-[#2563EB] flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0">
-                    {avatar ? (
-                      <img src={avatar} alt={senderName} className="h-full w-full object-cover" />
-                    ) : (
-                      <span>{initialLetter}</span>
-                    )}
-                  </div>
+                  <UserAvatar 
+                    userId={typeof thread.senderId !== 'string' && thread.senderId ? String(thread.senderId._id || thread.senderId.id || '') : undefined}
+                    name={senderName}
+                    avatarUrl={avatar || undefined}
+                    className="w-6 h-6 text-[10px]"
+                  />
                   <span className={`font-semibold text-xs truncate flex-1 ${isUnread ? 'text-[#1D4ED8] dark:text-[#93C5FD]' : 'text-[#111111] dark:text-[#E8E8E7]'}`}>
                     {senderName}
                   </span>
@@ -232,16 +231,13 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
                         (p): p is { userId: string; fullName: string; avatar?: string } => Boolean(p)
                       )
                       .map((p, idx) => (
-                      <div
-                        key={idx}
-                        className="inline-block h-[18px] w-[18px] rounded-full ring-2 ring-white dark:ring-[#252525] bg-[#2563EB] overflow-hidden flex-shrink-0 flex items-center justify-center text-white font-bold text-[8px]"
-                        title={p.fullName}
-                      >
-                        {p.avatar ? (
-                          <img src={p.avatar} alt={p.fullName} className="h-full w-full object-cover" />
-                        ) : (
-                          <span>{p.fullName?.charAt(0).toUpperCase() || 'U'}</span>
-                        )}
+                      <div key={idx} className="inline-block ring-2 ring-white dark:ring-[#252525] rounded-full">
+                        <UserAvatar 
+                          userId={p.userId}
+                          name={p.fullName}
+                          avatarUrl={p.avatar}
+                          className="h-[18px] w-[18px] text-[8px]"
+                        />
                       </div>
                     ))}
                   </div>
@@ -273,3 +269,4 @@ export default function ThreadIndexPanel({ channelId, onClose }: ThreadIndexPane
     </div>
   );
 }
+

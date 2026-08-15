@@ -6,7 +6,7 @@ import { ProfileInfoForm } from "./ProfileInfoForm";
 import { ChangePasswordForm } from "./ChangePasswordForm";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 
-export function ProfilePage() {
+export function ProfilePage({ userId }: { userId?: string }) {
   const { user } = useAuth();
   const {
     profile,
@@ -17,7 +17,8 @@ export function ProfilePage() {
     updateInfo,
     uploadAvatar,
     changePassword,
-  } = useAppProfile();
+    readOnly,
+  } = useAppProfile(userId);
 
   if (loading) {
     return (
@@ -41,9 +42,9 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="w-full max-w-full px-6 py-8 space-y-6">
+    <div className="w-full max-w-full px-6 py-8 space-y-6 overflow-y-auto flex-1 min-h-0">
       <h1 className="text-xl font-semibold text-[#111111] dark:text-[#E8E8E7]">
-        Personal profile
+        {readOnly ? "User profile" : "Personal profile"}
       </h1>
 
       {error && (
@@ -64,23 +65,26 @@ export function ProfilePage() {
           avatarUploading={avatarUploading}
           onUpdateInfo={updateInfo}
           onUploadAvatar={uploadAvatar}
+          readOnly={readOnly}
         />
       </div>
 
-      <div className="w-full bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
-        <h2 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
-          <Key className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
-          Password
-        </h2>
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        {user?.ssoProvider === 'google' || (user as any)?.googleId || (profile as any)?.ssoProvider === 'google' || (profile as any)?.googleId ? (
-          <div className="p-3 rounded-[6px] bg-[#F9F9F8] dark:bg-[#2A2A2A] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
-            Your account is linked with Google. Password management is handled directly through your Google account.
-          </div>
-        ) : (
-          <ChangePasswordForm saving={saving} onChangePassword={changePassword} />
-        )}
-      </div>
+      {!readOnly && (
+        <div className="w-full bg-white dark:bg-[#202020] rounded-[8px] border border-[#EAEAEA] dark:border-white/[0.06] p-6">
+          <h2 className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] mb-5 flex items-center gap-2">
+            <Key className="w-4 h-4 text-[#2563EB] dark:text-[#3B82F6]" />
+            Password
+          </h2>
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {user?.ssoProvider === 'google' || (user as any)?.googleId || (profile as any)?.ssoProvider === 'google' || (profile as any)?.googleId ? (
+            <div className="p-3 rounded-[6px] bg-[#F9F9F8] dark:bg-[#2A2A2A] text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+              Your account is linked with Google. Password management is handled directly through your Google account.
+            </div>
+          ) : (
+            <ChangePasswordForm saving={saving} onChangePassword={changePassword} />
+          )}
+        </div>
+      )}
     </div>
   );
 }

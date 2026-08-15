@@ -197,19 +197,24 @@ export function useWorkspaceDocs(workspaceId: string) {
   );
 
   const saveDocument = useCallback(
-    async (id: string) => {
+    async (
+      id: string,
+      pendingUpdates: Partial<Pick<Document, "title" | "content">> = {},
+    ) => {
       const document = documents.find((item) => item.id === id);
       if (!document) return null;
+
+      const documentToSave = { ...document, ...pendingUpdates };
 
       try {
         if (isTemporaryDocument(id)) {
           const savedDocument = await createPageMutation.mutateAsync({
-            title: document.title.trim() || "Untitled Document",
-            content: document.content,
-            workspaceId: document.workspaceId,
-            parentId: document.parentId ?? undefined,
-            slug: document.slug,
-            labels: document.labels,
+            title: documentToSave.title.trim() || "Untitled Document",
+            content: documentToSave.content,
+            workspaceId: documentToSave.workspaceId,
+            parentId: documentToSave.parentId ?? undefined,
+            slug: documentToSave.slug,
+            labels: documentToSave.labels,
           });
 
           removeDraftDocument(id);
@@ -223,8 +228,8 @@ export function useWorkspaceDocs(workspaceId: string) {
         const savedDocument = await savePageMutation.mutateAsync({
           id,
           payload: {
-            title: document.title.trim() || "Untitled Document",
-            content: document.content,
+            title: documentToSave.title.trim() || "Untitled Document",
+            content: documentToSave.content,
           },
         });
 

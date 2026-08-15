@@ -23,6 +23,8 @@ import ThreadPanel from './ThreadPanel';
 import ThreadIndexPanel from './ThreadIndexPanel';
 import toast from 'react-hot-toast';
 import type { Channel, ChatUser } from '../types/chat.types';
+import { usePresence } from '@/lib/realtime/hooks/use-presence';
+import { formatLastSeen } from '@/lib/utils/presence.utils';
 import DeleteChannelConfirmModal from './DeleteChannelConfirmModal';
 import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
@@ -142,6 +144,19 @@ export default function ChatWindow() {
   const userRole = useAuthStore(state => state.user?.role);
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
+
+  const dmOtherUserId = useMemo(() => {
+    if (activeChannel?.type === 'dm') {
+      const members = activeChannel.members || [];
+      const otherMembers = members.filter((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
+      if (members.length <= 2 && otherMembers.length === 1) {
+        return String(otherMembers[0]._id || otherMembers[0].id);
+      }
+    }
+    return undefined;
+  }, [activeChannel, currentUserId]);
+
+  const presence = usePresence(dmOtherUserId);
 
   const [joining, setJoining] = useState(false);
 
@@ -317,21 +332,28 @@ export default function ChatWindow() {
     }
   }, [messages, activeChannelId, currentUserId]);
 
-  // Track target message ID from URL parameter reactively
-  const [scrollTargetId, setScrollTargetId] = useState<string | null>(() => searchParams.get('messageId'));
+  // Track target message ID from store and URL parameter reactively
+  const scrollTargetId = useChatStore(state => state.scrollTargetId);
+  const setScrollTargetId = useChatStore(state => state.setScrollTargetId);
 
   useEffect(() => {
     const targetId = searchParams.get('messageId');
-    if (!activeThreadParentId) {
+    if (targetId && !activeThreadParentId) {
       setScrollTargetId(targetId);
     }
-  }, [searchParams, activeThreadParentId, activeChannelId]);
+  }, [searchParams, activeThreadParentId, activeChannelId, setScrollTargetId]);
+
+  const scrollAttemptsRef = useRef(0);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    scrollAttemptsRef.current = 0;
+  }, [scrollTargetId]);
 
   // Attempt scroll to target message; auto-fetch older pages if target message is not loaded yet
   useEffect(() => {
     if (!scrollTargetId || loading || activeThreadParentId) return;
 
-    let attempts = 0;
     let isCancelled = false;
 
     const tryScrollOrFetch = async () => {
@@ -340,34 +362,60 @@ export default function ChatWindow() {
       if (el) {
         shouldScrollToBottomRef.current = false;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+        el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/20', 'ring-2', 'ring-[#2563EB]/40', 'transition-all', 'duration-300');
         setScrollTargetId(null);
 
         const url = new URL(window.location.href);
-        url.searchParams.delete('messageId');
-        window.history.replaceState({}, '', url.toString());
+        if (url.searchParams.has('messageId')) {
+          url.searchParams.delete('messageId');
+          window.history.replaceState({}, '', url.toString());
+        }
 
-        setTimeout(() => {
-          el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
-        }, 2000);
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = setTimeout(() => {
+          el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/20', 'ring-2', 'ring-[#2563EB]/40');
+        }, 2500);
       } else {
         // Element not in DOM yet. If there are more historical pages, fetch next page automatically.
         if (hasNextPage && !isFetchingNextPage) {
           shouldScrollToBottomRef.current = false;
+          scrollAttemptsRef.current += 1;
           await fetchNextPage();
-        } else if (attempts < 20) {
-          attempts++;
-          setTimeout(tryScrollOrFetch, 200);
+          if (!isCancelled) {
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = setTimeout(tryScrollOrFetch, 250);
+          }
+        } else if (!hasNextPage && !isFetchingNextPage) {
+          // Reached the oldest message and target still not found
+          if (scrollAttemptsRef.current >= 4) {
+            toast.error('Tin nhắn gốc không tồn tại hoặc đã bị xóa');
+            setScrollTargetId(null);
+          } else {
+            scrollAttemptsRef.current += 1;
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = setTimeout(tryScrollOrFetch, 200);
+          }
+        } else if (scrollAttemptsRef.current < 30) {
+          scrollAttemptsRef.current += 1;
+          if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+          scrollTimeoutRef.current = setTimeout(tryScrollOrFetch, 200);
+        } else {
+          setScrollTargetId(null);
         }
       }
     };
 
-    const timer = setTimeout(tryScrollOrFetch, 100);
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(tryScrollOrFetch, 100);
+
     return () => {
       isCancelled = true;
-      clearTimeout(timer);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
     };
-  }, [scrollTargetId, loading, activeThreadParentId, messages, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [scrollTargetId, loading, activeThreadParentId, hasNextPage, isFetchingNextPage, fetchNextPage, setScrollTargetId]);
 
   useEffect(() => {
     const interval = setInterval(clearOldTyping, 2000);
@@ -564,6 +612,27 @@ export default function ChatWindow() {
                   <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
                     {activeWorkspace.key}
                   </span>
+                )}
+                
+                {activeChannel.type === 'dm' && dmOtherUserId && presence && (
+                  <>
+                    {presence.status === 'online' ? (
+                      <>
+                        <span className="block w-2 h-2 rounded-full bg-[#10B981] shrink-0"></span>
+                        <span className="text-[#10B981] text-xs font-medium leading-none">Active now</span>
+                      </>
+                    ) : presence.lastSeenAt ? (
+                      <>
+                        <span className="block w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
+                        <span className="text-xs text-[#787774] dark:text-[#9B9A97] leading-none">{formatLastSeen(presence.lastSeenAt)}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="block w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
+                        <span className="text-xs text-[#787774] dark:text-[#9B9A97] leading-none">Offline</span>
+                      </>
+                    )}
+                  </>
                 )}
               </div>
 

@@ -11,6 +11,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
+import UserAvatar from "@/shared/components/UserAvatar";
 
 type MentionMember = {
   id: string | number;
@@ -82,16 +83,7 @@ const formatDateTime = (value?: string | null): string => {
   }
 };
 
-const getAuthorInitials = (author: TaskComment["author"]): string => {
-  const name = author?.fullName || author?.email || "?";
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-};
+
 
 const MENTION_MARKUP_REGEX = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
 
@@ -373,19 +365,17 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   }, [commentTree]);
   const currentUserName = user?.fullName || user?.email || "Current user";
   const renderCurrentUserAvatar = (className = "w-8 h-8") => (
-    <div className={`${className} rounded-full flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden ${user?.avatar ? "" : "bg-[#2563EB] dark:bg-[#3B82F6] text-white"}`}>
-      {user?.avatar ? (
-        <img src={user.avatar} alt={currentUserName} className="w-full h-full object-cover" />
-      ) : (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        user ? getAuthorInitials(user as any) : "U"
-      )}
-    </div>
+    <UserAvatar
+      userId={currentUserId ?? undefined}
+      name={currentUserName}
+      email={user?.email}
+      avatarUrl={user?.avatar}
+      className={className}
+    />
   );
 
   const renderCommentNode = (node: CommentNode, depth: number = 0) => {
     const authorName = node.author?.fullName || node.author?.email || "Unknown";
-    const initials = getAuthorInitials(node.author);
     const isEditing = editingId === node.id;
     const isOwnComment = Boolean(
       currentUserId && (node.authorId === currentUserId || node.author?.id === currentUserId)
@@ -394,18 +384,20 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
     const visualDepth = Math.min(depth, 3);
 
     return (
-      <div id={`comment-${node.id}`} key={node.id} className="mt-4 scroll-mt-6">
-        <div className="flex gap-4" style={{ marginLeft: `${visualDepth * 1.5}rem` }}>
-          <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden">
-            {node.author?.avatar ? (
-              <img src={node.author.avatar} alt={authorName} className="w-full h-full object-cover" />
-            ) : (
-              initials
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7]">{authorName}</span>
+      <div id={`comment-${node.id}`} key={node.id} className="mt-4 scroll-mt-6 min-w-0 max-w-full">
+        <div className="flex gap-4 min-w-0 max-w-full" style={{ marginLeft: `${visualDepth * 1.5}rem` }}>
+          <UserAvatar
+            userId={node.authorId || node.author?.id}
+            name={authorName}
+            email={node.author?.email}
+            avatarUrl={node.author?.avatar}
+            className="w-8 h-8 shrink-0"
+          />
+          <div className="flex-1 min-w-0 max-w-full">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] truncate">
+                {authorName}
+              </span>
               <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                 {formatDateTime(node.createdAt)}
               </span>
@@ -413,8 +405,8 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
             </div>
 
             {isEditing ? (
-              <div className="space-y-2">
-                <div className="border border-[#2563EB] rounded-[6px] px-2 py-1.5 text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]">
+              <div className="space-y-2 min-w-0 max-w-full">
+                <div className="border border-[#2563EB] rounded-[6px] px-2 py-1.5 text-[0.8125rem] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] min-w-0 max-w-full overflow-hidden">
                   <MentionsInput
                     autoFocus
                     value={editContent}
@@ -477,7 +469,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
               </div>
             ) : (
               <>
-                <p className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] whitespace-pre-wrap break-words leading-relaxed">
+                <p className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7] whitespace-pre-wrap break-words [overflow-wrap:anywhere] [word-break:break-word] min-w-0 max-w-full leading-relaxed">
                   {renderRichText(node.content)}
                 </p>
                 <div className="flex gap-3 mt-2 text-[0.6875rem] font-medium text-[#787774] dark:text-[#9B9A97]">
@@ -510,9 +502,9 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                   )}
                 </div>
                 {replyingToId === node.id && (
-                  <div className="mt-3 flex gap-3 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] p-3">
+                  <div className="mt-3 flex gap-3 rounded-[6px] border border-[#EAEAEA] dark:border-white/[0.08] bg-[#F9F9F8] dark:bg-[#252525] p-3 min-w-0 max-w-full">
                     {renderCurrentUserAvatar("w-7 h-7")}
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 max-w-full flex-1">
                       <MentionsInput
                         inputRef={replyInputRef}
                         autoFocus
@@ -526,7 +518,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                           if (e.key === "Escape") handleReplyCancel();
                         }}
                         placeholder={`Reply to ${authorName}... (@ to mention)`}
-                        className="tc-m w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem]"
+                        className="tc-m w-full min-w-0 max-w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem]"
                         a11ySuggestionsListLabel="Suggested mentions"
                       >
                         <Mention
@@ -597,7 +589,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 max-w-full">
       {actionError && (
         <div
           role="alert"
@@ -619,26 +611,10 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
       {!isArchived && (
         canComment ? (
           <>
-            <div className="flex gap-4 pt-2">
+            <div className="flex gap-4 pt-2 min-w-0 max-w-full">
               {renderCurrentUserAvatar()}
-              <div className="flex-1 border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
-                <div className="mb-4 text-[0.8125rem] relative z-50">
-                <style
-                  dangerouslySetInnerHTML={{
-                    __html: `
-                    .tc-m__control{min-height:36px}
-                    .tc-m__input{width:100%;outline:none;border:none;background:transparent;color:transparent !important;caret-color:currentColor;font-family:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit;word-wrap:break-word;word-break:break-word;overflow-wrap:anywhere;margin:0;padding:0}
-                    .tc-m__highlighter{font-family:inherit;font-size:inherit;line-height:inherit;letter-spacing:inherit;word-wrap:break-word;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap;margin:0;padding:0}
-                    .tc-m__suggestions__list{background:#F9F9F8;border:1px solid #EAEAEA;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,0.08);overflow:hidden;z-index:100;position:absolute;min-width:200px;margin-top:4px}
-                    .tc-m__suggestions__item{padding:8px 12px;cursor:pointer;color:#111111;font-size:13px}
-                    .tc-m__suggestions__item--focused{background:#F0F0EE}
-
-                    .dark .tc-m__suggestions__list{background:#252525;border-color:rgba(255,255,255,0.1)}
-                    .dark .tc-m__suggestions__item{color:#E8E8E7}
-                    .dark .tc-m__suggestions__item--focused{background:#2A2A2A}
-                  `,
-                  }}
-                />
+              <div className="flex-1 min-w-0 max-w-full border border-[#EAEAEA] dark:border-white/[0.08] rounded-[6px] bg-[#F9F9F8] dark:bg-[#252525] hover:bg-[#F0F0EE] dark:hover:bg-[rgba(255,255,255,0.04)] focus-within:bg-white dark:focus-within:bg-[#202020] focus-within:border-[#2563EB] transition-colors p-4 cursor-text relative">
+                <div className="mb-4 text-[0.8125rem] relative z-10 min-w-0 max-w-full">
                 <MentionsInput
                   value={commentInput}
                   onChange={(e) => setCommentInput(e.target.value)}
@@ -649,7 +625,7 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
                     }
                   }}
                   placeholder="Add a comment... (@ to mention)"
-                  className="tc-m w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem]"
+                  className="tc-m w-full min-w-0 max-w-full bg-transparent text-[#111111] dark:text-[#E8E8E7] text-[0.8125rem]"
                   a11ySuggestionsListLabel="Suggested mentions"
                 >
                   <Mention

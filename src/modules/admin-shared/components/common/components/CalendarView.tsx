@@ -370,6 +370,7 @@ export default function CalendarView({
         tasks={unscheduledTasks}
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
+        onOpen={() => setIsSidebarOpen(true)}
       />
 
       {quickCreate && (

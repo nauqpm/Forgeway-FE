@@ -2,8 +2,9 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, User, Settings, LogOut, Repeat, X } from "lucide-react";
+import { LayoutDashboard, User, Settings, LogOut, Repeat, X, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
+import { useInvisibleMode } from "@/lib/realtime/hooks/useInvisibleMode";
 
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import AccountSwitcher from "@/shared/components/layout/account-switcher/AccountSwitcher";
@@ -19,6 +20,7 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { isInvisible, toggle: handleToggleInvisible } = useInvisibleMode();
 
   const switchableCount = useAccountSwitcherStore((state) =>
     state.accounts.reduce(
@@ -68,7 +70,7 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
         aria-expanded={isOpen}
       >
         {user?.avatar ? (
-          <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+          <img src={user.avatar} alt="avatar" className="w-full h-full object-cover rounded-full" />
         ) : (
           <span>
             {user?.fullName?.charAt(0).toUpperCase() ?? user?.email?.charAt(0).toUpperCase() ?? "U"}
@@ -132,6 +134,20 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
               </button>
             ))}
 
+            <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] my-1" />
+
+            <button
+              onClick={handleToggleInvisible}
+              className="w-full flex items-center justify-between px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                {isInvisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                Invisible mode
+              </div>
+              <div className={`w-7 h-4 flex items-center rounded-full p-0.5 transition-colors ${isInvisible ? 'bg-[#2563EB] dark:bg-[#3B82F6]' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isInvisible ? 'translate-x-3' : 'translate-x-0'}`} />
+              </div>
+            </button>
 
             <div className="border-t border-[#EAEAEA] dark:border-white/[0.06] my-1" />
 
@@ -148,5 +164,8 @@ export default function UserMenu({ className = "" }: UserMenuProps) {
     </div>
   );
 }
+
+
+
 
 

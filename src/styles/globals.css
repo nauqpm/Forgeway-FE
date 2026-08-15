@@ -575,6 +575,18 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   text-decoration: none;
 }
 
+@media (max-width: 640px) {
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.625rem;
+    padding: 4px 1px;
+    letter-spacing: 0;
+  }
+  .fc .fc-daygrid-day-number {
+    font-size: 0.6875rem;
+    padding: 2px 2px;
+  }
+}
+
 .fc .fc-daygrid-day-number {
   text-decoration: none;
 }
@@ -1089,27 +1101,46 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   }
 }
 
-/* ── React Mentions (Chat Message Input) ── */
-.chat-m {
+/* ── React Mentions (Chat & Task Comments Input) ── */
+.chat-m,
+.tc-m {
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: #111111;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.dark .chat-m {
+.tc-m {
+  font-size: 0.8125rem;
+}
+
+.dark .chat-m,
+.dark .tc-m {
   color: #E8E8E7;
 }
 
-.chat-m__control {
+.chat-m__control,
+.tc-m__control {
   min-height: 24px;
   max-height: 200px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   font-family: inherit;
   font-size: 0.875rem;
   line-height: 1.25rem;
+  overflow-x: hidden;
 }
 
-.chat-m__highlighter {
+.tc-m__control {
+  font-size: 0.8125rem;
+}
+
+.chat-m__highlighter,
+.tc-m__highlighter {
   padding: 0px;
   border: 1px solid transparent;
   font-family: inherit;
@@ -1117,11 +1148,20 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   line-height: 1.25rem;
   max-height: 200px;
   overflow: hidden !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  white-space: pre-wrap !important;
+  max-width: 100% !important;
   box-sizing: border-box;
 }
 
-.chat-m__input {
-  width: 100%;
+.tc-m__highlighter {
+  font-size: 0.8125rem;
+}
+
+.chat-m__input,
+.tc-m__input {
+  width: 100% !important;
   outline: none;
   border: 1px solid transparent;
   background: transparent;
@@ -1135,7 +1175,16 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   min-height: 24px;
   max-height: 200px;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  white-space: pre-wrap !important;
+  max-width: 100% !important;
   box-sizing: border-box;
+}
+
+.tc-m__input {
+  font-size: 0.8125rem;
 }
 
 /* ── Tiptap Rich Text Chat Editor ── */
@@ -1336,6 +1385,42 @@ body[style*="cursor: col-resize"] * {
 
 .dark .chat-m__suggestions__item--focused {
   background: rgba(255, 255, 255, 0.06);
+}
+
+.tc-m__suggestions__list {
+  background: #F9F9F8;
+  border: 1px solid #EAEAEA;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  z-index: 100;
+  position: absolute;
+  min-width: 200px;
+  margin-top: 4px;
+}
+
+.tc-m__suggestions__item {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #111111;
+  font-size: 13px;
+}
+
+.tc-m__suggestions__item--focused {
+  background: #F0F0EE;
+}
+
+.dark .tc-m__suggestions__list {
+  background: #252525;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .tc-m__suggestions__item {
+  color: #E8E8E7;
+}
+
+.dark .tc-m__suggestions__item--focused {
+  background: #2A2A2A;
 }
 
 /* ── Custom Emoji Picker Overrides ── */

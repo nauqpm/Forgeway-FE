@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import Image from "next/image";
 import Link from "next/link";
 import appleIcon from "../public/apple-icon.png";
@@ -498,6 +500,24 @@ function DashboardPreview() {
 }
 
 export default function LandingPage() {
+  const { isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        router.replace("/dashboard");
+      } else {
+        router.replace("/login");
+      }
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  return null;
+}
+
+// Code cũ của trang Home được giữ lại theo yêu cầu
+export function LandingPageOld() {
   const [activeTeamIndex, setActiveTeamIndex] = useState(0);
   const activeTeam = teamSolutions[activeTeamIndex];
 
