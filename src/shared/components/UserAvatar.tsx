@@ -55,10 +55,7 @@ export default function UserAvatar({
       ? formatLastSeen(presence.lastSeenAt)
       : undefined;
 
-  // DEBUG
-  if (userId) {
-    console.log(`[UserAvatar] render ${name || userId}: inView=${inView}, isOnline=${isOnline}, presence=`, presence);
-  }
+
 
   return (
     <div
