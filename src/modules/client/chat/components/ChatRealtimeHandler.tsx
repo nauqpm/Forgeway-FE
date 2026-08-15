@@ -400,25 +400,42 @@ export default function ChatRealtimeHandler() {
     const data = envelope.data || envelope;
     if (!data?.channelId || !data?.userId) return;
 
-    updateChannelInCache(queryClient, data.channelId, (channel) => {
-      const currentMembers = channel.channelMembers || [];
-      const exists = currentMembers.some(m => String(m.userId) === String(data.userId));
-      if (exists) return {};
+    const currentUser = useAuthStore.getState().user;
+    const currentUserId = (currentUser as { id?: string; _id?: string } | null)?._id || currentUser?.id;
+    const isMe = currentUserId && String(data.userId) === String(currentUserId);
 
-      return {
-        channelMembers: [
-          ...currentMembers,
-          {
-            userId: data.userId,
-            role: data.role || 'channel_member',
-            joinedAt: data.joinedAt || new Date().toISOString()
-          }
-        ]
-      };
-    });
+    if (isMe) {
+      if (data.channel) {
+        upsertChannelInCache(queryClient, data.channel);
+        chatSocketClient.joinChannel(data.channelId);
+      } else {
+        ensureChannelInCache(data.channelId);
+      }
+      void queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
+      const channelName = data.channel?.name || data.channelName;
+      toast.success(`You were added to ${channelName ? `#${channelName}` : 'a channel'}`);
+    } else {
+      updateChannelInCache(queryClient, data.channelId, (channel) => {
+        const currentMembers = channel.channelMembers || [];
+        const exists = currentMembers.some(m => String(m.userId) === String(data.userId));
+        if (exists) return {};
+
+        return {
+          channelMembers: [
+            ...currentMembers,
+            {
+              userId: data.userId,
+              role: data.role || 'channel_member',
+              joinedAt: data.joinedAt || new Date().toISOString(),
+              joined: true,
+            }
+          ]
+        };
+      });
+    }
 
     void queryClient.invalidateQueries({ queryKey: queryKeys.chat.members(data.channelId) });
-  }, [queryClient]);
+  }, [ensureChannelInCache, queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChannelMemberRemoved = useCallback((envelope: any) => {

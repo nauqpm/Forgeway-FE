@@ -194,6 +194,8 @@ export default function ChatSidebar() {
       cleanContent = cleanContent.replace(/(\*\*|__|\*|_|~~|`)(.*?)\1/g, '$2');
       // Strip blockquote >
       cleanContent = cleanContent.replace(/^>\s+/gm, '');
+      // Strip softbreak tokens, newlines, and collapse extra whitespaces
+      cleanContent = cleanContent.replace(/@@@SOFTBREAK@@@/g, ' ').replace(/\s+/g, ' ').trim();
       
       if (lastMsg.attachments && lastMsg.attachments.length > 0) {
         const firstAttachment = lastMsg.attachments[0];

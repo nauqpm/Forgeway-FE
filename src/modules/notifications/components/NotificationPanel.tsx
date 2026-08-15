@@ -62,6 +62,7 @@ const DIRECT_TYPES: NotificationType[] = [
   "TASK_ASSIGNED",
   "COMMENT_MENTIONED",
   "WORKSPACE_INVITED",
+  "CHANNEL_INVITED",
   "THREAD_REPLY",
   "CHAT_MENTIONED",
 ];
@@ -93,6 +94,8 @@ function actionText(type: NotificationType): string {
       return "commented on a task";
     case "WORKSPACE_INVITED":
       return "invited you to a workspace";
+    case "CHANNEL_INVITED":
+      return "invited you to a chat channel";
     case "THREAD_REPLY":
       return "replied to a thread";
     case "CHAT_MENTIONED":
@@ -182,6 +185,16 @@ function buildNotificationHref(notification: AppNotification): string | undefine
     }
   }
 
+  if (notification.type === "CHANNEL_INVITED") {
+    const channelId =
+      (typeof metadata.channelId === "string" ? metadata.channelId : undefined) ||
+      (typeof notification.entityId === "string" ? notification.entityId : undefined);
+    if (channelId) {
+      return `/chat?channelId=${encodeURIComponent(channelId)}`;
+    }
+    return `/chat`;
+  }
+
   const taskKey = typeof metadata.taskKey === "string" ? metadata.taskKey : undefined;
   const workspaceRouteKey =
     (typeof metadata.workspaceKey === "string" ? metadata.workspaceKey : undefined) ||
@@ -198,7 +211,7 @@ function buildNotificationHref(notification: AppNotification): string | undefine
 function mapNotification(notification: AppNotification): NotificationViewModel {
   const name = actorName(notification);
   const metadata = notification.metadata ?? {};
-  const isChatNotification = ["THREAD_REPLY", "CHAT_MENTIONED"].includes(notification.type);
+  const isChatNotification = ["THREAD_REPLY", "CHAT_MENTIONED", "CHANNEL_INVITED"].includes(notification.type);
   const taskKey = typeof metadata.taskKey === "string" ? metadata.taskKey : undefined;
   const taskTitle = typeof metadata.taskTitle === "string" ? metadata.taskTitle : notification.message;
   const workspaceName =

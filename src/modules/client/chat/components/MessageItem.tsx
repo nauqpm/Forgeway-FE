@@ -7,6 +7,7 @@ import type { Attachment, ChatUser, Message, Channel } from '@/modules/client/ch
 import { useChatRealtime } from '@/modules/client/chat/hooks/useChatRealtime';
 import { useChatChannels, useChannelMembers, useDeleteMessageForMeMutation } from '@/modules/client/chat/hooks/useChatQueries';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import toast from 'react-hot-toast';
 
 import UserProfileCard from './UserProfileCard';
 import SystemMessage from './SystemMessage';
@@ -61,6 +62,7 @@ export default function MessageItem({
   const setActiveThreadParentId = useChatStore(state => state.setActiveThreadParentId);
   const setEditingMessage = useChatStore(state => state.setEditingMessage);
   const setEditingThreadMessage = useChatStore(state => state.setEditingThreadMessage);
+  const setScrollTargetId = useChatStore(state => state.setScrollTargetId);
   const editingMessage = useChatStore(state => state.editingMessage);
   const editingThreadMessage = useChatStore(state => state.editingThreadMessage);
 
@@ -71,7 +73,7 @@ export default function MessageItem({
   const activeChannelId = useChatStore(state => state.activeChannelId);
   const { data: channels = [] } = useChatChannels();
   const activeChannel = channels.find((c: Channel) => c._id === activeChannelId);
-  
+
   const { data: fetchedMembers = [] } = useChannelMembers(message.channelId || activeChannelId);
   const channelMembers = fetchedMembers.length > 0 ? fetchedMembers : (activeChannel?.members || []);
 
@@ -280,8 +282,8 @@ export default function MessageItem({
   const isReplyToMe = (() => {
     if (!replyParent || !currentUserId) return false;
     const parentSender = replyParent.senderId;
-    const parentSenderId = typeof parentSender === 'object' && parentSender 
-      ? (parentSender._id || (parentSender as { _id?: string; id?: string }).id) 
+    const parentSenderId = typeof parentSender === 'object' && parentSender
+      ? (parentSender._id || (parentSender as { _id?: string; id?: string }).id)
       : parentSender;
     return String(parentSenderId) === String(currentUserId);
   })();
@@ -307,7 +309,7 @@ export default function MessageItem({
 
   // Branch 2: Standard User Message
   return (
-    <div 
+    <div
       ref={messageRef}
       id={`msg-${message._id}`}
       onContextMenu={handleContextMenu}
@@ -315,9 +317,9 @@ export default function MessageItem({
         "group relative flex gap-4 transition-all flex-row mx-2 rounded-lg hover:z-10",
         isCurrentlyEditing
           ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/10 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/15 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4 shadow-sm"
-          : (shouldHighlight 
-              ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4" 
-              : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4"),
+          : (shouldHighlight
+            ? "bg-[#FFF9E6] dark:bg-[#F59E0B]/5 hover:bg-[#FFF3CD] dark:hover:bg-[#F59E0B]/10 border-l-[3px] border-[#F59E0B] pl-[13px] pr-4"
+            : "hover:bg-[#F7F6F3] dark:hover:bg-white/5 border-l-[3px] border-transparent pl-[13px] pr-4"),
         spacingClasses
       )}
     >
@@ -347,15 +349,15 @@ export default function MessageItem({
       {/* Avatar column */}
       <div className="w-10 flex-shrink-0 flex justify-center mt-0.5">
         {!isSameUserAsPrevious ? (
-          <div 
+          <div
             className="w-10 h-10 rounded-full overflow-hidden bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-medium shadow-sm cursor-pointer"
             onClick={handleUserClick}
           >
             {sender.avatar ? (
-              <img 
-                src={sender.avatar} 
-                alt={displayName} 
-                className="w-full h-full object-cover" 
+              <img
+                src={sender.avatar}
+                alt={displayName}
+                className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
@@ -380,18 +382,23 @@ export default function MessageItem({
       {/* Content column */}
       <div className="flex flex-col flex-1 min-w-0 items-start max-w-full overflow-hidden">
         {replyParent && (
-          <div 
+          <div
             className="flex items-center gap-2 text-[11px] text-[#787774] dark:text-[#9B9A97] mb-1.5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors cursor-pointer group/reply pl-2 border-l-2 border-[#2563EB] w-full"
-            onClick={() => {
-              const el = document.getElementById(`msg-${replyParent._id}`);
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            onClick={(e) => {
+              e.stopPropagation();
+              const targetId = replyParent._id;
+              const el = document.getElementById(`msg-${targetId}`);
+              if (!el) {
+                toast('Đang tìm tin nhắn gốc...', { icon: '🔍', duration: 1500 });
+              }
+              setScrollTargetId(targetId);
             }}
           >
             {replySender?.avatar ? (
-              <img 
-                src={replySender.avatar} 
-                alt={replyDisplayName} 
-                className="w-4 h-4 rounded-full object-cover shrink-0" 
+              <img
+                src={replySender.avatar}
+                alt={replyDisplayName}
+                className="w-4 h-4 rounded-full object-cover shrink-0"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                   const parent = (e.target as HTMLImageElement).parentElement;
@@ -419,7 +426,7 @@ export default function MessageItem({
 
         {!isSameUserAsPrevious && (
           <div className="flex items-baseline gap-2 mb-0.5">
-            <span 
+            <span
               className="text-[0.875rem] font-semibold text-[#111111] dark:text-[#E8E8E7] hover:underline cursor-pointer"
               onClick={handleUserClick}
             >
@@ -435,7 +442,7 @@ export default function MessageItem({
             )}
           </div>
         )}
-        
+
         <MessageContent
           message={message}
           isDeleted={isDeleted}
@@ -463,7 +470,7 @@ export default function MessageItem({
             {Object.entries(message.reactions).map(([emoji, userIds]) => {
               const hasReacted = userIds.includes(String(currentUserId));
               return (
-                <button 
+                <button
                   key={emoji}
                   onClick={() => handleToggleReaction(emoji)}
                   title={getReactionTooltip(userIds)}
@@ -493,9 +500,9 @@ export default function MessageItem({
           >
             <div className="flex -space-x-1.5 overflow-hidden">
               {message.lastReplyParticipants?.filter(Boolean).map((p, idx) => (
-                <div 
-                  key={idx} 
-                  className="inline-block h-5 w-5 rounded-full ring-2 ring-white dark:ring-[#202020] bg-[#2563EB] overflow-hidden flex-shrink-0 flex items-center justify-center text-white font-bold" 
+                <div
+                  key={idx}
+                  className="inline-block h-5 w-5 rounded-full ring-2 ring-white dark:ring-[#202020] bg-[#2563EB] overflow-hidden flex-shrink-0 flex items-center justify-center text-white font-bold"
                   title={p.fullName}
                 >
                   {p.avatar ? (
@@ -562,13 +569,13 @@ export default function MessageItem({
         onDownload={handleDownloadFile}
         onClose={() => setLightboxFile(null)}
       />
-      
+
       {/* User Profile Card */}
       {showProfileCard && (
-        <UserProfileCard 
-          user={cardUser || (sender as ChatUser)} 
-          position={profileCardPos} 
-          onClose={() => setShowProfileCard(false)} 
+        <UserProfileCard
+          user={cardUser || (sender as ChatUser)}
+          position={profileCardPos}
+          onClose={() => setShowProfileCard(false)}
           isCurrentUser={String((cardUser || sender)._id || (cardUser || sender).id) === String(currentUserId)}
         />
       )}

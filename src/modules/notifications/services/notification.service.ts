@@ -7,6 +7,7 @@ export type NotificationType =
   | "COMMENT_MENTIONED"
   | "TASK_COMMENT_CREATED"
   | "WORKSPACE_INVITED"
+  | "CHANNEL_INVITED"
   | "THREAD_REPLY"
   | "CHAT_MENTIONED";
 
@@ -26,7 +27,7 @@ export interface AppNotification {
   type: NotificationType;
   title: string;
   message?: string;
-  entityType: "task" | "comment" | "workspace" | "invite" | "message";
+  entityType: "task" | "comment" | "workspace" | "invite" | "message" | "channel";
   entityId?: string;
   metadata?: {
     taskId?: string;

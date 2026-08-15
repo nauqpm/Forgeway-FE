@@ -317,21 +317,28 @@ export default function ChatWindow() {
     }
   }, [messages, activeChannelId, currentUserId]);
 
-  // Track target message ID from URL parameter reactively
-  const [scrollTargetId, setScrollTargetId] = useState<string | null>(() => searchParams.get('messageId'));
+  // Track target message ID from store and URL parameter reactively
+  const scrollTargetId = useChatStore(state => state.scrollTargetId);
+  const setScrollTargetId = useChatStore(state => state.setScrollTargetId);
 
   useEffect(() => {
     const targetId = searchParams.get('messageId');
-    if (!activeThreadParentId) {
+    if (targetId && !activeThreadParentId) {
       setScrollTargetId(targetId);
     }
-  }, [searchParams, activeThreadParentId, activeChannelId]);
+  }, [searchParams, activeThreadParentId, activeChannelId, setScrollTargetId]);
+
+  const scrollAttemptsRef = useRef(0);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    scrollAttemptsRef.current = 0;
+  }, [scrollTargetId]);
 
   // Attempt scroll to target message; auto-fetch older pages if target message is not loaded yet
   useEffect(() => {
     if (!scrollTargetId || loading || activeThreadParentId) return;
 
-    let attempts = 0;
     let isCancelled = false;
 
     const tryScrollOrFetch = async () => {
@@ -340,34 +347,60 @@ export default function ChatWindow() {
       if (el) {
         shouldScrollToBottomRef.current = false;
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
+        el.classList.add('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/20', 'ring-2', 'ring-[#2563EB]/40', 'transition-all', 'duration-300');
         setScrollTargetId(null);
 
         const url = new URL(window.location.href);
-        url.searchParams.delete('messageId');
-        window.history.replaceState({}, '', url.toString());
+        if (url.searchParams.has('messageId')) {
+          url.searchParams.delete('messageId');
+          window.history.replaceState({}, '', url.toString());
+        }
 
-        setTimeout(() => {
-          el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/10');
-        }, 2000);
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = setTimeout(() => {
+          el.classList.remove('bg-[#FFF3CD]', 'dark:bg-[#F59E0B]/20', 'ring-2', 'ring-[#2563EB]/40');
+        }, 2500);
       } else {
         // Element not in DOM yet. If there are more historical pages, fetch next page automatically.
         if (hasNextPage && !isFetchingNextPage) {
           shouldScrollToBottomRef.current = false;
+          scrollAttemptsRef.current += 1;
           await fetchNextPage();
-        } else if (attempts < 20) {
-          attempts++;
-          setTimeout(tryScrollOrFetch, 200);
+          if (!isCancelled) {
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = setTimeout(tryScrollOrFetch, 250);
+          }
+        } else if (!hasNextPage && !isFetchingNextPage) {
+          // Reached the oldest message and target still not found
+          if (scrollAttemptsRef.current >= 4) {
+            toast.error('Tin nhắn gốc không tồn tại hoặc đã bị xóa');
+            setScrollTargetId(null);
+          } else {
+            scrollAttemptsRef.current += 1;
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = setTimeout(tryScrollOrFetch, 200);
+          }
+        } else if (scrollAttemptsRef.current < 30) {
+          scrollAttemptsRef.current += 1;
+          if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+          scrollTimeoutRef.current = setTimeout(tryScrollOrFetch, 200);
+        } else {
+          setScrollTargetId(null);
         }
       }
     };
 
-    const timer = setTimeout(tryScrollOrFetch, 100);
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(tryScrollOrFetch, 100);
+
     return () => {
       isCancelled = true;
-      clearTimeout(timer);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = null;
+      }
     };
-  }, [scrollTargetId, loading, activeThreadParentId, messages, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [scrollTargetId, loading, activeThreadParentId, hasNextPage, isFetchingNextPage, fetchNextPage, setScrollTargetId]);
 
   useEffect(() => {
     const interval = setInterval(clearOldTyping, 2000);
