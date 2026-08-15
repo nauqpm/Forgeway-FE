@@ -23,6 +23,8 @@ import ThreadPanel from './ThreadPanel';
 import ThreadIndexPanel from './ThreadIndexPanel';
 import toast from 'react-hot-toast';
 import type { Channel, ChatUser } from '../types/chat.types';
+import { usePresence } from '@/lib/realtime/hooks/use-presence';
+import { formatLastSeen } from '@/lib/utils/presence.utils';
 import DeleteChannelConfirmModal from './DeleteChannelConfirmModal';
 import { useEscapeStack } from '@/shared/hooks/useEscapeStack';
 
@@ -142,6 +144,19 @@ export default function ChatWindow() {
   const userRole = useAuthStore(state => state.user?.role);
 
   const activeChannel = channels.find(c => c._id === activeChannelId);
+
+  const dmOtherUserId = useMemo(() => {
+    if (activeChannel?.type === 'dm') {
+      const members = activeChannel.members || [];
+      const otherMembers = members.filter((m: ChatUser) => String(m._id || m.id) !== String(currentUserId));
+      if (members.length <= 2 && otherMembers.length === 1) {
+        return String(otherMembers[0]._id || otherMembers[0].id);
+      }
+    }
+    return undefined;
+  }, [activeChannel, currentUserId]);
+
+  const presence = usePresence(dmOtherUserId);
 
   const [joining, setJoining] = useState(false);
 
@@ -597,6 +612,27 @@ export default function ChatWindow() {
                   <span className="px-1.5 py-0.5 bg-[#F7F6F3] dark:bg-[#252525] text-[#787774] dark:text-[#9B9A97] rounded-[4px] text-[0.625rem] font-mono font-bold uppercase tracking-wider leading-none">
                     {activeWorkspace.key}
                   </span>
+                )}
+                
+                {activeChannel.type === 'dm' && dmOtherUserId && presence && (
+                  <>
+                    {presence.status === 'online' ? (
+                      <>
+                        <span className="block w-2 h-2 rounded-full bg-[#10B981] shrink-0"></span>
+                        <span className="text-[#10B981] text-xs font-medium leading-none">Active now</span>
+                      </>
+                    ) : presence.lastSeenAt ? (
+                      <>
+                        <span className="block w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
+                        <span className="text-xs text-[#787774] dark:text-[#9B9A97] leading-none">{formatLastSeen(presence.lastSeenAt)}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="block w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0"></span>
+                        <span className="text-xs text-[#787774] dark:text-[#9B9A97] leading-none">Offline</span>
+                      </>
+                    )}
+                  </>
                 )}
               </div>
 

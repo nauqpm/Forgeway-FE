@@ -21,6 +21,7 @@ import MediaLightbox, { LightboxFile } from './MediaLightbox';
 
 import { useAttachmentPreview } from '../hooks/useAttachmentPreview';
 import { getMessagePreviewText } from '../utils/messageContentRenderer';
+import UserAvatar from '@/shared/components/UserAvatar';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -270,7 +271,6 @@ export default function MessageItem({
   const replyDisplayName = replySender
     ? (replySender.fullName || replySender.email || 'Deleted User')
     : 'Deleted User';
-  const replyInitialLetter = replyDisplayName.charAt(0).toUpperCase();
 
   const isMentioned = (() => {
     if (!currentUserId || !message.content) return false;
@@ -349,28 +349,14 @@ export default function MessageItem({
       {/* Avatar column */}
       <div className="w-10 flex-shrink-0 flex justify-center mt-0.5">
         {!isSameUserAsPrevious ? (
-          <div
-            className="w-10 h-10 rounded-full overflow-hidden bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-sm font-medium shadow-sm cursor-pointer"
-            onClick={handleUserClick}
-          >
-            {sender.avatar ? (
-              <img
-                src={sender.avatar}
-                alt={displayName}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  const parent = (e.target as HTMLImageElement).parentElement;
-                  if (parent) {
-                    const span = document.createElement('span');
-                    span.innerText = initialLetter;
-                    parent.appendChild(span);
-                  }
-                }}
-              />
-            ) : (
-              <span>{initialLetter}</span>
-            )}
+          <div onClick={handleUserClick} className="cursor-pointer">
+            <UserAvatar 
+              userId={String(sender._id || sender.id || '')}
+              name={displayName}
+              email={sender.email}
+              avatarUrl={sender.avatar}
+              className="w-10 h-10 text-sm shadow-sm"
+            />
           </div>
         ) : (
           <div className="w-10 text-[0.625rem] text-[#ABABAB] dark:text-[#6B6B6B] opacity-0 group-hover:opacity-100 flex items-center justify-center h-full">
@@ -383,39 +369,29 @@ export default function MessageItem({
       <div className="flex flex-col flex-1 min-w-0 items-start max-w-full overflow-hidden">
         {replyParent && (
           <div
-            className="flex items-center gap-2 text-[11px] text-[#787774] dark:text-[#9B9A97] mb-1.5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors cursor-pointer group/reply pl-2 border-l-2 border-[#2563EB] w-full"
+            className="flex items-center gap-1.5 mb-1 cursor-pointer group/reply"
             onClick={(e) => {
               e.stopPropagation();
               const targetId = replyParent._id;
               const el = document.getElementById(`msg-${targetId}`);
               if (!el) {
-                toast('Đang tìm tin nhắn gốc...', { icon: '🔍', duration: 1500 });
+                toast('Looking for the original message...', { icon: '🔍', duration: 1500 });
               }
               setScrollTargetId(targetId);
             }}
           >
-            {replySender?.avatar ? (
-              <img
-                src={replySender.avatar}
-                alt={replyDisplayName}
-                className="w-4 h-4 rounded-full object-cover shrink-0"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                  const parent = (e.target as HTMLImageElement).parentElement;
-                  if (parent && !parent.querySelector('.reply-avatar-fallback')) {
-                    const span = document.createElement('span');
-                    span.className = 'reply-avatar-fallback w-4 h-4 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[9px] font-bold shrink-0';
-                    span.innerText = replyInitialLetter;
-                    parent.insertBefore(span, parent.firstChild);
-                  }
-                }}
-              />
-            ) : (
-              <div className="w-4 h-4 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-[9px] font-bold shrink-0">
-                {replyInitialLetter}
-              </div>
-            )}
-            <span className="font-bold hover:underline">
+            <div className="w-4 flex items-center justify-end h-full">
+              <div className="w-3 h-3 rounded-tl-lg border-t-2 border-l-2 border-[#E5E5E5] dark:border-[#404040]" />
+            </div>
+
+            <UserAvatar
+              userId={replySender ? String(replySender._id || replySender.id || '') : undefined}
+              name={replySender?.fullName || replyDisplayName}
+              email={replySender?.email}
+              avatarUrl={replySender?.avatar}
+              className="w-4 h-4 text-[9px]"
+            />
+            <span className="font-bold hover:underline text-[11px] text-[#787774] dark:text-[#9B9A97]">
               @{replyDisplayName}
             </span>
             <span className="truncate opacity-80 flex-1 text-left">
@@ -423,7 +399,6 @@ export default function MessageItem({
             </span>
           </div>
         )}
-
         {!isSameUserAsPrevious && (
           <div className="flex items-baseline gap-2 mb-0.5">
             <span

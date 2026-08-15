@@ -11,6 +11,7 @@ import { apiRoutes } from "@/config/apiRoutes";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useWorkspacePermission } from "../hooks/useWorkspacePermission";
+import UserAvatar from "@/shared/components/UserAvatar";
 
 type MentionMember = {
   id: string | number;
@@ -82,16 +83,7 @@ const formatDateTime = (value?: string | null): string => {
   }
 };
 
-const getAuthorInitials = (author: TaskComment["author"]): string => {
-  const name = author?.fullName || author?.email || "?";
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-};
+
 
 const MENTION_MARKUP_REGEX = /(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g;
 
@@ -373,19 +365,17 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
   }, [commentTree]);
   const currentUserName = user?.fullName || user?.email || "Current user";
   const renderCurrentUserAvatar = (className = "w-8 h-8") => (
-    <div className={`${className} rounded-full flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden ${user?.avatar ? "" : "bg-[#2563EB] dark:bg-[#3B82F6] text-white"}`}>
-      {user?.avatar ? (
-        <img src={user.avatar} alt={currentUserName} className="w-full h-full object-cover" />
-      ) : (
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        user ? getAuthorInitials(user as any) : "U"
-      )}
-    </div>
+    <UserAvatar
+      userId={currentUserId ?? undefined}
+      name={currentUserName}
+      email={user?.email}
+      avatarUrl={user?.avatar}
+      className={className}
+    />
   );
 
   const renderCommentNode = (node: CommentNode, depth: number = 0) => {
     const authorName = node.author?.fullName || node.author?.email || "Unknown";
-    const initials = getAuthorInitials(node.author);
     const isEditing = editingId === node.id;
     const isOwnComment = Boolean(
       currentUserId && (node.authorId === currentUserId || node.author?.id === currentUserId)
@@ -396,16 +386,18 @@ export default function TaskComments({ workspaceId, taskId, isArchived, isDelete
     return (
       <div id={`comment-${node.id}`} key={node.id} className="mt-4 scroll-mt-6 min-w-0 max-w-full">
         <div className="flex gap-4 min-w-0 max-w-full" style={{ marginLeft: `${visualDepth * 1.5}rem` }}>
-          <div className="w-8 h-8 rounded-full bg-[#2563EB] dark:bg-[#3B82F6] text-white flex items-center justify-center text-[0.6875rem] font-bold shrink-0 overflow-hidden">
-            {node.author?.avatar ? (
-              <img src={node.author.avatar} alt={authorName} className="w-full h-full object-cover" />
-            ) : (
-              initials
-            )}
-          </div>
+          <UserAvatar
+            userId={node.authorId || node.author?.id}
+            name={authorName}
+            email={node.author?.email}
+            avatarUrl={node.author?.avatar}
+            className="w-8 h-8 shrink-0"
+          />
           <div className="flex-1 min-w-0 max-w-full">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] truncate">{authorName}</span>
+              <span className="text-[0.8125rem] font-semibold text-[#111111] dark:text-[#E8E8E7] truncate">
+                {authorName}
+              </span>
               <span className="text-[0.6875rem] text-[#787774] dark:text-[#9B9A97]">
                 {formatDateTime(node.createdAt)}
               </span>
