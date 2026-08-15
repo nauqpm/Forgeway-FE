@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { BookOpen, CheckCircle2 } from "lucide-react";
 import type { DashboardTask } from "@/modules/admin-shared/types/dashboard.types";
 
@@ -11,9 +12,25 @@ interface Props {
   onOpenTask: (task: DashboardTask) => void;
   title?: string;
   showAllHref?: string;
+  showSort?: boolean;
 }
 
-export function DashboardTaskList({ assignedTasks, completedCount, workspaceCount, onOpenTask, title = "For you", showAllHref }: Props) {
+type TaskSort = "name" | "newest";
+
+export function DashboardTaskList({ assignedTasks, completedCount, workspaceCount, onOpenTask, title = "For you", showAllHref, showSort = false }: Props) {
+  const [sortBy, setSortBy] = useState<TaskSort>("newest");
+  const visibleTasks = useMemo(() => {
+    if (!showSort) return assignedTasks;
+    return [...assignedTasks].sort((left, right) => {
+      if (sortBy === "name") {
+        return left.title.localeCompare(right.title, undefined, { sensitivity: "base" });
+      }
+      const leftDate = new Date(left.updatedAt ?? left.createdAt ?? 0).getTime();
+      const rightDate = new Date(right.updatedAt ?? right.createdAt ?? 0).getTime();
+      return rightDate - leftDate;
+    });
+  }, [assignedTasks, showSort, sortBy]);
+
   return (
     <div className="mt-10">
       <div className="mb-4 flex items-center justify-between">
@@ -40,13 +57,29 @@ export function DashboardTaskList({ assignedTasks, completedCount, workspaceCoun
         </div>
       </div>
 
-      <div className="space-y-2">
+      {showSort && assignedTasks.length > 0 && (
+        <div className="mb-4 flex justify-end">
+          <label className="flex items-center gap-2 text-sm text-[#787774] dark:text-[#9B9A97]">
+            Sort tasks by
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value as TaskSort)}
+              className="rounded-[6px] border border-[#EAEAEA] bg-white px-3 py-2 text-sm text-[#111111] outline-none focus:border-[#2563EB] dark:border-white/[0.08] dark:bg-[#202020] dark:text-[#E8E8E7]"
+            >
+              <option value="newest">Newest updated</option>
+              <option value="name">Name A–Z</option>
+            </select>
+          </label>
+        </div>
+      )}
+
+      <div className="max-h-[320px] space-y-2 overflow-y-auto overscroll-contain pb-1 pr-1">
         {assignedTasks.length === 0 ? (
           <div className="rounded-[8px] border border-dashed border-[#EAEAEA] bg-[#F9F9F8] px-4 py-8 text-center text-sm text-[#787774] dark:border-white/[0.06] dark:bg-[#252525] dark:text-[#9B9A97]">
             No tasks assigned to you yet.
           </div>
         ) : (
-          assignedTasks.map((task) => (
+          visibleTasks.map((task) => (
             <div
               key={task.id}
               onClick={() => onOpenTask(task)}

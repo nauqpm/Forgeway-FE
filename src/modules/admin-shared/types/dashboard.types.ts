@@ -44,6 +44,8 @@ export type DashboardTask = {
   workspaceKey: string;
   meta: string;
   dueDate?: string | null;
+  updatedAt?: string;
+  createdAt?: string;
 };
 
 export type DashboardWorkspaceCard = ForYouWorkspace & {

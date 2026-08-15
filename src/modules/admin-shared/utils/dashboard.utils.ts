@@ -100,6 +100,8 @@ export const toDashboardTask = (
     workspaceKey,
     meta: `${issue.key} - ${wsName} - ${resolveStatusLabel(issue, columnMap)}`,
     dueDate: issue.dueDate,
+    updatedAt: issue.updatedAt,
+    createdAt: issue.createdAt,
   };
 };
 
