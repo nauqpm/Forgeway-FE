@@ -47,9 +47,9 @@ export default function AdminDashboard({ className = "" }: AdminDashboardProps) 
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className={`flex-1 h-full w-full min-h-0 overflow-y-auto overflow-x-hidden [webkit-overflow-scrolling:touch] p-4 sm:p-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 ${className}`}
+      className={`flex-1 h-full w-full min-h-0 overflow-hidden p-4 sm:p-6 ${className}`}
     >
-      <div className="app-page-medium app-page-fluid-xl pt-2 sm:pt-4 pb-20 relative">
+      <div className="app-page-medium app-page-fluid-xl h-full flex flex-col min-h-0 pt-2 sm:pt-4 pb-4 sm:pb-6 relative">
         <DashboardWorkspaceGrid workspaces={displayWorkspaces} />
 
         <DashboardTaskList
