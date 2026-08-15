@@ -272,7 +272,7 @@ export default function ChatWindow() {
     shouldScrollToBottomRef.current = true;
 
     // Clear the messages cache for this channel to force a fresh fetch of the latest messages
-    queryClient.removeQueries({ queryKey: queryKeys.chat.messages(activeChannelId) });
+    queryClient.resetQueries({ queryKey: queryKeys.chat.messages(activeChannelId) });
 
     markAsRead(activeChannelId);
     joinChannel(activeChannelId);
