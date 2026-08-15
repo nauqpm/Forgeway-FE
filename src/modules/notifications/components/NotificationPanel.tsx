@@ -65,6 +65,7 @@ const DIRECT_TYPES: NotificationType[] = [
   "CHANNEL_INVITED",
   "THREAD_REPLY",
   "CHAT_MENTIONED",
+  "CHANNEL_INVITED",
 ];
 
 function actorName(notification: AppNotification): string {
@@ -100,6 +101,8 @@ function actionText(type: NotificationType): string {
       return "replied to a thread";
     case "CHAT_MENTIONED":
       return "mentioned you in a chat channel";
+    case "CHANNEL_INVITED":
+      return "added you to a channel";
     default:
       return "sent you a notification";
   }
@@ -176,7 +179,7 @@ function buildNotificationHref(notification: AppNotification): string | undefine
     }
   }
 
-  if (notification.type === "CHAT_MENTIONED") {
+  if (["CHAT_MENTIONED", "CHANNEL_INVITED"].includes(notification.type)) {
     const channelId = typeof metadata.channelId === "string" ? metadata.channelId : undefined;
     const messageId = typeof metadata.messageId === "string" ? metadata.messageId : undefined;
     if (channelId) {

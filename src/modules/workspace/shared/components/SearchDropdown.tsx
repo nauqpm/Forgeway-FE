@@ -573,17 +573,27 @@ export default function SearchDropdown({
                       </p>
                     )}
                   {isGlobalSearchActive &&
-                    visibleGlobalItems.map((item, index) => (
-                      <RecentItem
-                        key={`${item.type}-${item.id}`}
-                        icon={resultIcon(item)}
-                        title={activeApp === "Docs" ? item.title : item.key ? `${item.key} ${item.title}` : item.title}
-                        meta={[item.type, item.workspaceName, item.description].filter(Boolean).join(" · ")}
-                        tone={item.type === "task" ? "red" : "gray"}
-                        active={activeResultIndex === index}
-                        onClick={() => openGlobalResult(item)}
-                      />
-                    ))}
+                    visibleGlobalItems.map((item, index) => {
+                      const isUser = item.type === "user";
+                      const userAvatar = isUser
+                        ? ((item.metadata as { avatar?: string; avatarUrl?: string })?.avatar ||
+                           (item.metadata as { avatar?: string; avatarUrl?: string })?.avatarUrl)
+                        : undefined;
+
+                      return (
+                        <RecentItem
+                          key={`${item.type}-${item.id}`}
+                          icon={resultIcon(item)}
+                          title={activeApp === "Docs" ? item.title : item.key ? `${item.key} ${item.title}` : item.title}
+                          meta={[item.type, item.workspaceName, item.description].filter(Boolean).join(" · ")}
+                          tone={item.type === "task" ? "red" : "gray"}
+                          active={activeResultIndex === index}
+                          onClick={() => openGlobalResult(item)}
+                          isUser={isUser}
+                          avatarUrl={userAvatar}
+                        />
+                      );
+                    })}
                   {activeApp === "Docs" && (!globalSearchEnabled || debouncedSearch.trim().length < 2) &&
                     visibleDocs.map((doc, index) => (
                       <RecentItem

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Paperclip, Play } from 'lucide-react';
+import { Paperclip, Play, Download } from 'lucide-react';
 import type { Attachment } from '../types/chat.types';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
@@ -13,7 +13,7 @@ interface MessageAttachmentsProps {
   expandedPreviews: Record<string, boolean>;
   previewUrls: Record<string, string>;
   loadingPreviews: Record<string, boolean>;
-  onDownloadFile: (file: Attachment) => void;
+  onDownloadFile: (file: Attachment, forceDownload?: boolean) => void;
   onTogglePreview: (url: string) => void;
   onOpenLightbox: (file: { url: string; name: string; mimeType?: string }) => void;
   onImageContextMenu: (event: React.MouseEvent, file: Attachment) => void;
@@ -92,6 +92,15 @@ export default function MessageAttachments({
                         className="text-xs font-medium hover:underline text-[#2563EB] dark:text-[#3B82F6] block truncate text-left disabled:opacity-60 disabled:no-underline flex-1 cursor-pointer"
                       >
                         {isDownloading === file.url ? 'Downloading...' : filename}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDownloadFile(file, true)}
+                        disabled={isDownloading === file.url}
+                        className="w-5 h-5 flex items-center justify-center rounded hover:bg-[#F0F0EE] dark:hover:bg-white/10 text-[#787774] hover:text-[#2563EB] dark:hover:text-[#3B82F6] transition-colors shrink-0 cursor-pointer disabled:opacity-50"
+                        title="Download file"
+                      >
+                        <Download className="w-3.5 h-3.5" />
                       </button>
                       {canPreview && (
                         <button

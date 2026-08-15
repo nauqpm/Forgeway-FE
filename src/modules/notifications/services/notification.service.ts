@@ -9,7 +9,8 @@ export type NotificationType =
   | "WORKSPACE_INVITED"
   | "CHANNEL_INVITED"
   | "THREAD_REPLY"
-  | "CHAT_MENTIONED";
+  | "CHAT_MENTIONED"
+  | "CHANNEL_INVITED";
 
 export interface NotificationActor {
   id: string;
@@ -43,6 +44,7 @@ export interface AppNotification {
     fromStatus?: string;
     toStatus?: string;
     channelId?: string;
+    channelName?: string;
     messageId?: string;
     parentContent?: string;
     replyContent?: string;
