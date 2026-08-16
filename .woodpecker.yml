@@ -2,6 +2,13 @@ when:
   - event: [push, pull_request, manual]
     branch: [dev, production]
 
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      partial: false
+      depth: 1
+
 steps:
   test-and-build:
     image: node:20-alpine
