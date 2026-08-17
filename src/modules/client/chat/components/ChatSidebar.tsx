@@ -8,6 +8,7 @@ import { getWorkspaceUI } from '@/shared/utils/workSpaceUI';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getWorkspaceAvatarUrl } from '@/modules/workspace/shared/utils/workspaceAvatar';
 import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
+import UserAvatar from '@/shared/components/UserAvatar';
 import { useChatChannels } from '@/modules/client/chat/hooks/useChatQueries';
 import type { Channel, ChatUser } from '@/modules/client/chat/types/chat.types';
 import CreateChannelModal from './CreateChannelModal';
@@ -194,6 +195,8 @@ export default function ChatSidebar() {
       cleanContent = cleanContent.replace(/(\*\*|__|\*|_|~~|`)(.*?)\1/g, '$2');
       // Strip blockquote >
       cleanContent = cleanContent.replace(/^>\s+/gm, '');
+      // Strip softbreak tokens, newlines, and collapse extra whitespaces
+      cleanContent = cleanContent.replace(/@@@SOFTBREAK@@@/g, ' ').replace(/\s+/g, ' ').trim();
       
       if (lastMsg.attachments && lastMsg.attachments.length > 0) {
         const firstAttachment = lastMsg.attachments[0];
@@ -232,6 +235,8 @@ export default function ChatSidebar() {
 
     let displayName = name;
     let displayAvatar = null;
+    let singleOtherUserId: string | null = null;
+    let singleOtherUserEmail: string | null = null;
 
     // For DMs, resolve the other member's details
     if (type === 'dm' && channel) {
@@ -249,6 +254,10 @@ export default function ChatSidebar() {
           displayName = names.join(", ");
         }
         displayAvatar = otherMembers.length === 1 ? otherMembers[0].avatar : null;
+        if (otherMembers.length === 1) {
+          singleOtherUserId = String(otherMembers[0]._id || otherMembers[0].id);
+          singleOtherUserEmail = otherMembers[0].email;
+        }
       } else {
         displayName = "Just you";
         displayAvatar = null;
@@ -285,7 +294,15 @@ export default function ChatSidebar() {
 
         {type === 'dm' ? (
           <div className="relative flex-shrink-0 mt-0.5">
-            {displayAvatar ? (
+            {singleOtherUserId ? (
+              <UserAvatar
+                userId={singleOtherUserId}
+                name={displayName}
+                email={singleOtherUserEmail || undefined}
+                avatarUrl={displayAvatar || undefined}
+                className="w-9 h-9"
+              />
+            ) : displayAvatar ? (
               <div className={cn("w-9 h-9 rounded-full text-white flex items-center justify-center shadow-sm overflow-hidden", "bg-[#2563EB] dark:bg-[#3B82F6]")}>
                 <img 
                   src={displayAvatar} 

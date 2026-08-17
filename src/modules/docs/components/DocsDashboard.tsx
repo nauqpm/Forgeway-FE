@@ -14,6 +14,7 @@ import { Document } from "../types/docs.type";
 import { Loader2, Pencil, Trash2 } from "lucide-react";
 import { useUploadedWorkspaceDocsQuery, useWorkspaceDocs } from "../hooks/useWorkspaceDocs";
 import { buildWorkspacePageHref } from "../utils/pageRoutes";
+import { pagesService } from "../services/pages.service";
 
 export default function DocsDashboard({ workspaceId, workspaceKey }: { workspaceId: string; workspaceKey: string }) {
   const {
@@ -34,6 +35,7 @@ export default function DocsDashboard({ workspaceId, workspaceKey }: { workspace
   const [renaming, setRenaming] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Document | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [downloadingPageId, setDownloadingPageId] = useState<string | null>(null);
 
   const uploadedDocsQuery = useUploadedWorkspaceDocsQuery(workspaceId);
 
@@ -70,8 +72,10 @@ export default function DocsDashboard({ workspaceId, workspaceKey }: { workspace
   });
 
   const filteredDocs = useMemo(() => {
-    const result = documents.filter((doc) =>
-      doc.title.toLowerCase().includes(searchQuery.toLowerCase()),
+    const result = documents.filter(
+      (doc) =>
+        !doc.id.startsWith("temp-") &&
+        doc.title.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 
     if (sortOrder === "az") {
@@ -132,7 +136,15 @@ export default function DocsDashboard({ workspaceId, workspaceKey }: { workspace
 
   const handleCreate = async () => {
     const newDoc = await createDocument();
-    if (newDoc) selectDocument(newDoc.id, [...documents, newDoc]);
+    if (!newDoc) return;
+
+    selectDocument(newDoc.id, [...documents, newDoc]);
+    window.history.pushState(
+      null,
+      "",
+      buildWorkspacePageHref({ workspaceKey, doc: newDoc }),
+    );
+    window.dispatchEvent(new Event("docs-location-change"));
   };
 
   const handleRename = (id: string, currentTitle: string) => {
@@ -175,6 +187,19 @@ export default function DocsDashboard({ workspaceId, workspaceKey }: { workspace
 
   const handleDelete = (doc: Document) => {
     setDeleteTarget(doc);
+  };
+
+  const handleDownloadPage = async (doc: Document) => {
+    if (downloadingPageId) return;
+
+    setDownloadingPageId(doc.id);
+    try {
+      await pagesService.exportDocx(doc.id, doc.title);
+    } catch {
+      toast.error("Failed to download document");
+    } finally {
+      setDownloadingPageId(null);
+    }
   };
 
   const closeDeleteDialog = () => {
@@ -405,6 +430,10 @@ export default function DocsDashboard({ workspaceId, workspaceKey }: { workspace
               onSelect={handleSelect}
               onRename={handleRename}
               onDelete={handleDelete}
+              onDownload={(doc) => {
+                void handleDownloadPage(doc);
+              }}
+              downloadingPageId={downloadingPageId}
             />
           ) : (
             <DashboardEmpty

@@ -13,11 +13,13 @@ export function useWorkspaces() {
   });
 }
 
+const EMPTY_WORKSPACES: Workspace[] = [];
+
 export function useCurrentWorkspace() {
   const currentWorkspaceId = useWorkspaceStore((state) => state.currentWorkspaceId);
   const setCurrentWorkspaceId = useWorkspaceStore((state) => state.setCurrentWorkspaceId);
   const workspacesQuery = useWorkspaces();
-  const workspaces = workspacesQuery.data ?? [];
+  const workspaces = workspacesQuery.data ?? EMPTY_WORKSPACES;
   const currentWorkspace =
     workspaces.find((workspace) => workspace._id === currentWorkspaceId) ??
     workspaces[0] ??

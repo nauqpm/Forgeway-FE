@@ -140,7 +140,7 @@ export default function TaskDetailList({
   };
 
   return (
-    <div className="flex flex-col h-full w-full bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-white dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] overflow-y-auto md:overflow-hidden custom-scrollbar">
       {/* ── TOP TOOLBAR ── */}
       <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-[#EAEAEA] dark:border-white/[0.06] bg-white dark:bg-[#202020]">
         {/* Breadcrumb */}
@@ -295,9 +295,9 @@ export default function TaskDetailList({
       />
 
       {/* ── BODY: LEFT MAIN + RIGHT SIDEBAR ── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 overflow-y-auto md:overflow-hidden min-h-0 min-w-0">
         {/* ── LEFT COLUMN: Main content ── */}
-        <div className="min-w-0 flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 border-r border-[#EAEAEA] dark:border-white/[0.06]">
+        <div className="w-full shrink-0 md:shrink md:flex-1 md:overflow-y-auto custom-scrollbar p-4 md:p-6 space-y-6 border-b md:border-b-0 md:border-r border-[#EAEAEA] dark:border-white/[0.06]">
           <TaskDetailMainContent
             issue={issue}
             workspaceId={workspaceId}
@@ -326,7 +326,7 @@ export default function TaskDetailList({
         </div>
 
         {/* ── RIGHT COLUMN: Sidebar ── */}
-        <div className="w-72 shrink-0 overflow-y-auto custom-scrollbar bg-[#F9F9F8] dark:bg-[#252525] p-4 space-y-5">
+        <div className="w-full md:w-72 shrink-0 md:overflow-y-auto custom-scrollbar bg-[#F9F9F8] dark:bg-[#252525] p-4 pb-32 md:pb-4 space-y-5">
           {/* Status */}
           <div className="flex items-center gap-2 flex-wrap">
             <StatusPicker

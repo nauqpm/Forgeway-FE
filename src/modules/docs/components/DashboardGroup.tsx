@@ -14,6 +14,8 @@ interface DashboardGroupProps {
   onSelect: (id: string) => void;
   onRename: (id: string, currentTitle: string) => void;
   onDelete: (doc: Document) => void;
+  onDownload: (doc: Document) => void;
+  downloadingPageId: string | null;
 }
 
 type DashboardTreeRow = {
@@ -53,6 +55,8 @@ export default function DashboardGroup({
   onSelect,
   onRename,
   onDelete,
+  onDownload,
+  downloadingPageId,
 }: DashboardGroupProps) {
   const rows = buildTreeRows(docs, expandedNodes);
 
@@ -116,15 +120,27 @@ export default function DashboardGroup({
                       <Download className="h-4 w-4" />
                     </a>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => onRename(doc.id, doc.title)}
-                      className="rounded-[6px] p-2 text-[#ABABAB] transition-colors hover:bg-[#EFF6FF] hover:text-[#2563EB] dark:hover:bg-[rgba(37,99,235,0.12)] dark:hover:text-[#3B82F6]"
-                      title="Rename"
-                      aria-label={`Rename ${doc.title}`}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onDownload(doc)}
+                        disabled={downloadingPageId === doc.id}
+                        className="rounded-[6px] p-2 text-[#ABABAB] transition-colors hover:bg-[#EFF6FF] hover:text-[#2563EB] disabled:cursor-wait disabled:opacity-50 dark:hover:bg-[rgba(37,99,235,0.12)] dark:hover:text-[#3B82F6]"
+                        title="Download"
+                        aria-label={`Download ${doc.title}`}
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRename(doc.id, doc.title)}
+                        className="rounded-[6px] p-2 text-[#ABABAB] transition-colors hover:bg-[#EFF6FF] hover:text-[#2563EB] dark:hover:bg-[rgba(37,99,235,0.12)] dark:hover:text-[#3B82F6]"
+                        title="Rename"
+                        aria-label={`Rename ${doc.title}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                    </>
                   )}
                   <button
                     type="button"
@@ -163,6 +179,8 @@ export default function DashboardGroup({
                   onSelect={onSelect}
                   onRename={onRename}
                   onDelete={onDelete}
+                  onDownload={onDownload}
+                  isDownloading={downloadingPageId === doc.id}
                 />
               ))}
             </tbody>

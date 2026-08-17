@@ -3,8 +3,9 @@
 import React, { useState, useMemo } from 'react';
 import { X, Search, Loader2, Users, UserPlus, UserMinus } from 'lucide-react';
 import { useChannelMembers, useCreateDM } from '@/modules/client/chat/hooks/useChatQueries';
-import type { ChatMember } from '@/modules/client/chat/types/chat.types';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
+import UserAvatar from '@/shared/components/UserAvatar';
+import type { ChatMember } from '@/modules/client/chat/types/chat.types';
 import type { AuthUser } from '@/modules/auth/shared/types/auth.types';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/shared/constants/queryKeys';
@@ -310,26 +311,13 @@ export default function MemberPanel({ channelId, onClose }: MemberPanelProps) {
                 className="flex items-center gap-3 px-4 py-2 hover:bg-[#F7F6F3] dark:hover:bg-white/[0.04] transition-colors cursor-pointer"
               >
                 {/* Avatar */}
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#2563EB] dark:bg-[#3B82F6] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                  {member.avatar ? (
-                    <img
-                      src={member.avatar}
-                      alt={member.fullName}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                        const parent = (e.target as HTMLImageElement).parentElement;
-                        if (parent && !parent.querySelector('span')) {
-                          const span = document.createElement('span');
-                          span.innerText = member.fullName?.charAt(0).toUpperCase() || 'U';
-                          parent.appendChild(span);
-                        }
-                      }}
-                    />
-                  ) : (
-                    <span>{member.fullName?.charAt(0).toUpperCase() || 'U'}</span>
-                  )}
-                </div>
+                <UserAvatar 
+                  userId={String(member._id || member.id || '')}
+                  name={member.fullName}
+                  email={member.email}
+                  avatarUrl={member.avatar}
+                  className="w-8 h-8 flex-shrink-0"
+                />
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">

@@ -75,7 +75,15 @@ export default function DocsSidebar({ workspaceId, workspaceKey }: { workspaceId
 
   const handleCreate = async () => {
     const newDoc = await createDocument();
-    if (newDoc) selectDocument(newDoc.id, [...documents, newDoc]);
+    if (!newDoc) return;
+
+    selectDocument(newDoc.id, [...documents, newDoc]);
+    window.history.pushState(
+      null,
+      "",
+      buildWorkspacePageHref({ workspaceKey, doc: newDoc }),
+    );
+    window.dispatchEvent(new Event("docs-location-change"));
   };
 
   return (

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, RefObject } from 'react';
 import toast from 'react-hot-toast';
 import type { Attachment } from '@/modules/client/chat/types/chat.types';
 import api from '@/lib/axiosIns';
+import { openMediaInNewTab } from '@/shared/utils/openMediaTab';
 
 const isOfficeFile = (filename: string, mimeType?: string) => {
   const ext = filename.toLowerCase().split('.').pop() || '';
@@ -173,16 +174,17 @@ export function useAttachmentPreview(
     await loadPreview(url);
   };
 
-  const handleDownloadFile = async (file: { url: string; name?: string; mimeType?: string }) => {
+  const handleDownloadFile = async (
+    file: { url: string; name?: string; mimeType?: string },
+    forceDownload = false
+  ) => {
     const filename = file.name || 'file';
 
-    // Check if it's an Office document with a valid public HTTP/HTTPS URL, open in new tab via Microsoft Office Viewer
-    if (file.url && isOfficeFile(filename, file.mimeType)) {
-      if (file.url.startsWith('http://') || file.url.startsWith('https://')) {
-        const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`;
-        window.open(officeViewerUrl, '_blank', 'noopener,noreferrer');
-        return;
-      }
+    // Check if it's an Office document, open in new tab via Microsoft Office Viewer
+    if (!forceDownload && file.url && isOfficeFile(filename, file.mimeType)) {
+      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`;
+      window.open(officeViewerUrl, '_blank');
+      return;
     }
 
     if (isDownloading) return;
@@ -199,8 +201,12 @@ export function useAttachmentPreview(
       const isPreviewable = mime === 'application/pdf' || mime.startsWith('image/') || mime.startsWith('text/');
 
       if (isPreviewable) {
-        window.open(blobUrl, '_blank');
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000);
+        if (mime.startsWith('image/')) {
+          openMediaInNewTab(blobUrl, filename);
+        } else {
+          window.open(blobUrl, '_blank');
+          setTimeout(() => URL.revokeObjectURL(blobUrl), 5 * 60 * 1000);
+        }
       } else {
         const anchor = document.createElement('a');
         anchor.href = blobUrl;

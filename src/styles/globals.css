@@ -575,6 +575,18 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   text-decoration: none;
 }
 
+@media (max-width: 640px) {
+  .fc .fc-col-header-cell-cushion {
+    font-size: 0.625rem;
+    padding: 4px 1px;
+    letter-spacing: 0;
+  }
+  .fc .fc-daygrid-day-number {
+    font-size: 0.6875rem;
+    padding: 2px 2px;
+  }
+}
+
 .fc .fc-daygrid-day-number {
   text-decoration: none;
 }

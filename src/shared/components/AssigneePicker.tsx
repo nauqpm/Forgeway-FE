@@ -109,6 +109,11 @@ export default function AssigneePicker({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const openMenu = () => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;

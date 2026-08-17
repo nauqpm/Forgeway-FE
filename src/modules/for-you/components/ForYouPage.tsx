@@ -28,6 +28,7 @@ export default function ForYouPage() {
           completedCount={completedAssignedTasks.length}
           workspaceCount={workspaces.length}
           onOpenTask={modal.open}
+          showSort
         />
 
         <DashboardTaskModal

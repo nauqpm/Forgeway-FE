@@ -21,6 +21,7 @@ import { useWorkspaces } from '@/modules/workspace/shared/hooks/useWorkspaces';
 import { useAuthStore } from '@/modules/auth/shared/stores/authStore';
 import { searchUsersAPI } from '../services/chatService';
 import MentionList, { MentionItem } from './MentionList';
+import { openMediaInNewTab } from '@/shared/utils/openMediaTab';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
@@ -873,9 +874,38 @@ export default function MessageInput({
         {uploadedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3 pt-1.5 pb-2 border-b border-[#EAEAEA] dark:border-white/[0.06] max-h-[150px] overflow-y-auto pr-1 scrollbar-thin">
             {uploadedFiles.map(file => (
-              <div key={file.key} className="relative group flex items-center gap-2 bg-[#F0F0EE] dark:bg-white/5 px-2.5 py-1.5 rounded-[6px] text-xs max-w-[200px]">
+              <div 
+                key={file.key} 
+                role={file.url ? "button" : undefined}
+                tabIndex={file.url ? 0 : undefined}
+                onKeyDown={(e) => {
+                  if ((e.key === 'Enter' || e.key === ' ') && file.url) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (file.isImage) {
+                      openMediaInNewTab(file.url, file.name);
+                    } else {
+                      window.open(file.url, '_blank', 'noopener,noreferrer');
+                    }
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (file.url) {
+                    if (file.isImage) {
+                      openMediaInNewTab(file.url, file.name);
+                    } else {
+                      window.open(file.url, '_blank', 'noopener,noreferrer');
+                    }
+                  }
+                }}
+                className={`relative group flex items-center gap-2 bg-[#F0F0EE] dark:bg-white/5 px-2.5 py-1.5 rounded-[6px] text-xs max-w-[200px] select-none ${
+                  file.url ? 'cursor-pointer hover:bg-[#E5E5E3] dark:hover:bg-white/10 transition-colors' : ''
+                }`}
+                title={file.url ? `Click to view ${file.isImage ? 'image' : 'file'} in a new tab` : file.name}
+              >
                 {file.isImage && file.url ? (
-                  <img src={file.url} alt={file.name} className="w-8 h-8 object-cover rounded shrink-0" />
+                  <img src={file.url} alt={file.name} className="w-8 h-8 object-cover rounded shrink-0 pointer-events-none" />
                 ) : (
                   <Paperclip className="w-4 h-4 text-[#787774] shrink-0" />
                 )}
@@ -885,8 +915,11 @@ export default function MessageInput({
                 )}
                 <button
                   type="button"
-                  onClick={() => handleRemoveFile(file.key)}
-                  className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 transition-colors shadow-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile(file.key);
+                  }}
+                  className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 transition-colors shadow-sm cursor-pointer z-10"
                   title="Remove file"
                 >
                   <X className="w-2.5 h-2.5" />

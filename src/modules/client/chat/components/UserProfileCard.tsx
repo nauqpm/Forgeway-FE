@@ -2,12 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { MessageSquare, UserPen, X } from 'lucide-react';
 import { useCreateDM } from '@/modules/client/chat/hooks/useChatQueries';
+import UserAvatar from '@/shared/components/UserAvatar';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
 interface UserProfileCardProps {
   user: {
     _id: string;
+    id?: string;
     fullName: string;
     email: string;
     avatar?: string;
@@ -84,16 +86,14 @@ export default function UserProfileCard({ user, position, onClose, isCurrentUser
           className="fixed z-[9999] w-[340px] bg-white dark:bg-[#252525] rounded-xl shadow-2xl border border-[#EAEAEA] dark:border-white/[0.06] p-4 flex gap-4 animate-in fade-in zoom-in-95 duration-200"
           style={{ top: safePosition.top, left: safePosition.left }}
         >
-          <div 
-            onClick={() => setIsZoomed(true)}
-            className="w-20 h-20 rounded-[14px] bg-gradient-to-br from-indigo-500 to-purple-500 text-white flex items-center justify-center text-3xl font-bold shrink-0 overflow-hidden shadow-inner ring-1 ring-black/5 dark:ring-white/10 cursor-pointer hover:opacity-90 transition-opacity"
-            title="Click to view large avatar"
-          >
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.fullName} className="w-full h-full object-cover" />
-            ) : (
-              initialLetter
-            )}
+          <div onClick={() => setIsZoomed(true)} className="cursor-pointer" title="Click to view large avatar">
+            <UserAvatar 
+              userId={String(user._id || user.id || '')}
+              name={user.fullName}
+              email={user.email}
+              avatarUrl={user.avatar}
+              className="w-20 h-20 text-3xl shadow-inner ring-1 ring-black/5 dark:ring-white/10 hover:opacity-90 transition-opacity"
+            />
           </div>
           
           <div className="flex flex-col justify-center min-w-0 flex-1">
@@ -183,3 +183,4 @@ export default function UserProfileCard({ user, position, onClose, isCurrentUser
     </>
   );
 }
+

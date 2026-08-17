@@ -146,43 +146,46 @@ export default function BoardFilters({
 
   return (
     <div className="flex flex-col gap-3 px-[var(--workspace-surface-pad)] pt-0 mb-2 relative" ref={popoverRef}>
-      <div className="flex items-center gap-2.5">
-        <div className="relative">
+      <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-2.5">
+        <div className="relative w-full sm:w-60 flex-1 sm:flex-none">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
           <input
             type="text"
             placeholder="Search tasks..."
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className={`min-w-60 ${searchInputCls}`}
+            className={searchInputCls}
           />
         </div>
 
-        <button
-          ref={filterButtonRef}
-          onClick={togglePopover}
-          className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-[6px] text-[0.8125rem] transition-colors ${
-            isPopoverOpen || hasActiveFilters
-              ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] border-[#2563EB]/30 dark:border-[#2563EB]/30 text-[#1F6C9F] dark:text-[#93C5FD]"
-              : "bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
-          }`}
-        >
-          <Filter className="w-3.5 h-3.5" />
-          <span>Filter</span>
-          {hasActiveFilters && (
-            <span className="w-1.5 h-1.5 rounded-full bg-[#9F2F2D]" />
-          )}
-        </button>
-
-        {hasActiveFilters && (
+        <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto justify-start">
           <button
-            onClick={handleClearFilters}
-            className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] flex items-center gap-1 transition-colors px-1.5"
+            ref={filterButtonRef}
+            onClick={togglePopover}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 border rounded-[6px] text-[0.8125rem] transition-colors shrink-0 whitespace-nowrap ${
+              isPopoverOpen || hasActiveFilters
+                ? "bg-[#EFF6FF] dark:bg-[rgba(37,99,235,0.12)] border-[#2563EB]/30 dark:border-[#2563EB]/30 text-[#1F6C9F] dark:text-[#93C5FD]"
+                : "bg-white dark:bg-[#252525] border-[#EAEAEA] dark:border-white/[0.08] text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E]"
+            }`}
           >
-            <X className="w-3.5 h-3.5" /> Clear
+            <Filter className="w-3.5 h-3.5" />
+            <span>Filter</span>
+            {hasActiveFilters && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#9F2F2D]" />
+            )}
           </button>
-        )}
-        {extraActions}
+
+          {hasActiveFilters && (
+            <button
+              onClick={handleClearFilters}
+              className="text-[0.8125rem] text-[#787774] dark:text-[#9B9A97] hover:text-[#111111] dark:hover:text-[#E8E8E7] flex items-center gap-1 transition-colors px-1.5 shrink-0 whitespace-nowrap"
+            >
+              <X className="w-3.5 h-3.5" /> Clear
+            </button>
+          )}
+
+          {extraActions}
+        </div>
       </div>
 
       {isPopoverOpen && popoverPosition && typeof document !== "undefined" && createPortal(

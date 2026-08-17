@@ -14,7 +14,10 @@ import {
 import { queryKeys } from "@/shared/constants/queryKeys";
 import { useNotificationRealtime } from "@/lib/realtime/hooks/use-notification-realtime";
 import { useWorkspaceRealtime } from "@/lib/realtime/hooks/use-workspace-realtime";
+import { presenceClient } from "@/lib/realtime/presence.client";
+import { useInvisibleMode } from "@/lib/realtime/hooks/useInvisibleMode";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
+import UserAvatar from "@/shared/components/UserAvatar";
 import {
   ChevronDown,
   LayoutDashboard,
@@ -30,6 +33,8 @@ import {
   LogOut,
   X,
   Search,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -88,6 +93,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSwitcher, setShowSwitcher] = useState(false);
   const [hasFetchedSwitcher, setHasFetchedSwitcher] = useState(false);
+
+  const { isInvisible, toggle: handleToggleInvisible } = useInvisibleMode();
   const userMenuRef = useRef<HTMLDivElement>(null);
   const switchableCount = useAccountSwitcherStore((state) =>
     state.accounts.reduce(
@@ -120,6 +127,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     },
     [queryClient]
   );
+  const mustChangePassword = user?.mustChangePassword;
 
   // Default workspace keys for search
   const searchProjects = useMemo(
@@ -210,7 +218,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   });
   useWorkspaceRealtime({ enabled: isAuthenticated });
 
-  const mustChangePassword = user?.mustChangePassword;
+  useEffect(() => {
+    if (isAuthenticated) {
+      presenceClient.init();
+      return () => presenceClient.destroy();
+    }
+  }, [isAuthenticated]);
 
   // Auth redirect
   useEffect(() => {
@@ -460,13 +473,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 aria-label="User menu"
                 aria-expanded={showUserMenu}
               >
-                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-indigo-600 text-sm font-semibold text-white">
-                  {user?.avatar ? (
-                    <img src={user.avatar} alt="avatar" className="h-full w-full object-cover" />
-                  ) : (
-                    (user?.fullName?.charAt(0).toUpperCase() ?? user?.email?.charAt(0).toUpperCase() ?? "U")
-                  )}
-                </div>
+                <UserAvatar
+                  userId={user?.id}
+                  name={user?.fullName || "User"}
+                  email={user?.email}
+                  avatarUrl={user?.avatar}
+                  className="h-8 w-8 text-sm"
+                />
                 <span className="hidden max-w-36 truncate text-sm font-medium sm:block">
                   {user?.fullName ?? user?.email}
                 </span>
@@ -553,6 +566,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     Settings
                   </Link>
 
+                  <div className="mt-2 border-t border-[#EAEAEA] pt-2 dark:border-white/[0.06]">
+                    <button
+                      onClick={handleToggleInvisible}
+                      className="flex w-full items-center justify-between px-4 py-2 text-sm text-[#787774] dark:text-[#9B9A97] hover:bg-[#F7F6F3] dark:hover:bg-white/5 hover:text-[#111111] dark:hover:text-[#E8E8E7] transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {isInvisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        Invisible mode
+                      </div>
+                      <div className={`w-7 h-4 flex items-center rounded-full p-0.5 transition-colors ${isInvisible ? 'bg-[#2563EB] dark:bg-[#3B82F6]' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                        <div className={`w-3 h-3 bg-white rounded-full shadow-sm transition-transform ${isInvisible ? 'translate-x-3' : 'translate-x-0'}`} />
+                      </div>
+                    </button>
+                  </div>
+
                   {IS_SUPER_ADMIN(user?.role) && (
                     <div className="mt-2 border-t border-[#EAEAEA] pt-2 dark:border-white/[0.06]">
                       <a
@@ -601,7 +629,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           />
         )}
 
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative [&>div]:flex-1 [&>div]:flex [&>div]:flex-col [&>div]:min-h-0 [&>div]:h-full [&>div]:w-full">{children}</main>
       </div>
       <ChatRealtimeHandler />
     </div>

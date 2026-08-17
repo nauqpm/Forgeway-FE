@@ -5,14 +5,20 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axiosIns";
 import { queryKeys } from "@/shared/constants/queryKeys";
 import type { AppUserProfile, UpdateProfilePayload, ChangePasswordPayload } from "../types/profile.types";
+import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
-export function useAppProfile() {
+export function useAppProfile(userId?: string) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [localError, setLocalError] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+
+  const currentUserId = user?.id || (user as any)?._id; // eslint-disable-line @typescript-eslint/no-explicit-any
+  const isMe = !userId || String(userId) === String(currentUserId);
+  const readOnly = !isMe;
 
   const {
     data: profileData,
@@ -20,9 +26,9 @@ export function useAppProfile() {
     error: queryError,
     refetch,
   } = useQuery<AppUserProfile>({
-    queryKey: queryKeys.profile.detail(),
+    queryKey: isMe ? queryKeys.profile.detail() : [...queryKeys.profile.detail(), userId],
     queryFn: async () => {
-      const res = await api.get("/users/me");
+      const res = isMe ? await api.get("/users/me") : await api.get(`/users/${userId}/public`);
       return res.data?.data ?? res.data;
     },
   });
@@ -207,5 +213,6 @@ export function useAppProfile() {
     uploadAvatar,
     changePassword,
     refreshProfile: refetch,
+    readOnly,
   };
 }

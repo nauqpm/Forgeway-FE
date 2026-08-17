@@ -19,6 +19,7 @@ interface Props {
     payload: UpdateProfilePayload,
   ) => Promise<{ success: boolean; fieldErrors?: Record<string, string> }>;
   onUploadAvatar: (file: File) => Promise<boolean>;
+  readOnly?: boolean;
 }
 
 const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97] mb-1.5";
@@ -32,6 +33,7 @@ export function ProfileInfoForm({
   avatarUploading,
   onUpdateInfo,
   onUploadAvatar,
+  readOnly = false,
 }: Props) {
   const { verifyToken } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,15 +169,17 @@ export function ProfileInfoForm({
             </div>
           )}
 
-          <button
-            type="button"
-            disabled={avatarUploading}
-            onClick={() => fileInputRef.current?.click()}
-            className="absolute bottom-0 right-0 w-7 h-7 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white rounded-full flex items-center justify-center transition-colors"
-            aria-label="Change avatar"
-          >
-            <Camera className="w-3.5 h-3.5" />
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              disabled={avatarUploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="absolute bottom-0 right-0 w-7 h-7 bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-50 text-white rounded-full flex items-center justify-center transition-colors"
+              aria-label="Change avatar"
+            >
+              <Camera className="w-3.5 h-3.5" />
+            </button>
+          )}
 
           <input
             ref={fileInputRef}
@@ -214,6 +218,7 @@ export function ProfileInfoForm({
             onChange={handleChange}
             placeholder="Enter full name"
             className={fieldErrors.fullName ? inputErrorCls : inputNormalCls}
+            disabled={readOnly}
           />
           {fieldErrors.fullName && (
             <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
@@ -244,6 +249,7 @@ export function ProfileInfoForm({
             onChange={handleChange}
             placeholder="Enter phone number"
             className={fieldErrors.phone ? inputErrorCls : inputNormalCls}
+            disabled={readOnly}
           />
           {fieldErrors.phone && (
             <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
@@ -258,12 +264,12 @@ export function ProfileInfoForm({
             value={form.birthday}
             onChange={handleBirthdayChange}
             placeholder="DD/MM/YYYY"
-            inputClassName={`h-9 rounded-[6px] ${
-              fieldErrors.birthday
+            inputClassName={`h-9 rounded-[6px] ${fieldErrors.birthday
                 ? "border-[#9F2F2D] focus:border-[#9F2F2D]"
                 : "border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]"
-            } bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]`}
+              } bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7]`}
             ariaLabel="Date of birth"
+            disabled={readOnly}
           />
           {fieldErrors.birthday && (
             <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
@@ -279,6 +285,7 @@ export function ProfileInfoForm({
             value={form.gender}
             onChange={handleChange}
             className={fieldErrors.gender ? inputErrorCls : inputNormalCls}
+            disabled={readOnly}
           >
             <option value="male">Male</option>
             <option value="female">Female</option>
@@ -300,6 +307,7 @@ export function ProfileInfoForm({
             onChange={handleChange}
             placeholder="Enter address"
             className={fieldErrors.address ? inputErrorCls : inputNormalCls}
+            disabled={readOnly}
           />
           {fieldErrors.address && (
             <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D]">
@@ -309,16 +317,18 @@ export function ProfileInfoForm({
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[0.8125rem] font-medium transition-colors flex items-center gap-2"
-        >
-          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-          {saving ? "Saving..." : "Save changes"}
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[0.8125rem] font-medium transition-colors flex items-center gap-2"
+          >
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {saving ? "Saving..." : "Save changes"}
+          </button>
+        </div>
+      )}
     </form>
   );
 }
