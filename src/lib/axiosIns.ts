@@ -7,7 +7,7 @@ import { useAuthStore, useSessionStore } from "@/modules/auth/shared/stores/auth
  * API configuration with base URL and endpoints
  */
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const RESOLVED_API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SERVER_URL;
+export const RESOLVED_API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5512";
 
 /**
  * Standard headers for API requests

@@ -5,10 +5,10 @@
 
  */
 
-import api from '@/lib/axiosIns';
+import api, { RESOLVED_API_URL } from '@/lib/axiosIns';
 import type { AuthUser } from '../../shared/types/auth.types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = RESOLVED_API_URL;
 
 // ─── Initiate Google Login ───────────────────────────────────────────────────
 
