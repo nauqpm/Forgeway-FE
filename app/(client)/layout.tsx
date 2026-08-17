@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/modules/auth/shared/hooks/useAuth";
+
 import Sidebar from "@/modules/admin-shared/components/common/components/Sidebar";
 import NotificationPanel from "@/modules/admin-shared/components/common/components/NotificationPanel";
 import {
@@ -126,6 +127,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     },
     [queryClient]
   );
+  const mustChangePassword = user?.mustChangePassword;
 
   // Default workspace keys for search
   const searchProjects = useMemo(
@@ -225,10 +227,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   // Auth redirect
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace("/login");
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.replace("/login");
+      } else if (mustChangePassword && pathname !== "/change-password") {
+        router.replace("/change-password");
+      }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, mustChangePassword, pathname]);
 
   // Hydrate filters from URL on mount
   useEffect(() => {
@@ -325,6 +331,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) return null;
+
+
 
   return (
     <div className="h-screen overflow-hidden bg-[#F2FAFF] dark:bg-[#202020] text-[#111111] dark:text-[#E8E8E7] transition-colors duration-200">
