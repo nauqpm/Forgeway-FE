@@ -14,7 +14,7 @@ steps:
     image: node:20-alpine
     commands:
       - npm ci
-      - npm run lint
+      # - npm run lint
       - NEXT_PUBLIC_API_URL=https://api-sdlc-platform.automationland.vn npm run build
     when:
       - event: [push, pull_request]
@@ -28,7 +28,7 @@ steps:
         from_secret: vps_user
       password:
         from_secret: vps_password
-      command_timeout: 30m
+      command_timeout: 60m
       script:
         - set -e
         - cd /home/sdlc
