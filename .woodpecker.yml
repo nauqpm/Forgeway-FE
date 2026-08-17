@@ -36,6 +36,7 @@ steps:
         - docker compose build --no-cache frontend-u
         - docker compose up -d frontend-u
         - docker image prune -f
+        - docker ps
     when:
       - event: [push, manual]
         branch: production
