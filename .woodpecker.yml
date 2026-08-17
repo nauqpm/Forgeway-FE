@@ -31,6 +31,8 @@ steps:
       script:
         - set -e
         - cd /home/sdlc
+        - eval $(ssh-agent -s)
+        - ssh-add ~/.ssh/id_rsa || true
         - docker compose build --no-cache frontend-u
         - docker compose up -d frontend-u
         - docker image prune -f
