@@ -14,9 +14,10 @@ steps:
     image: node:20-alpine
     commands:
       - npm ci
+      - npm run lint
       - NEXT_PUBLIC_API_URL=https://api-sdlc-platform.automationland.vn npm run build
     when:
-      - event: [pull_request]
+      - event: [push, pull_request]
 
   deploy-to-vps:
     image: appleboy/drone-ssh
