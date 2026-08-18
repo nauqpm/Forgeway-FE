@@ -15,6 +15,8 @@ steps:
     commands:
       - npm ci
       - npm run lint
+      - npx tsc --noEmit
+      - npm run test
       - NEXT_PUBLIC_API_URL=https://api-sdlc-platform.automationland.vn npm run build
     when:
       - event: [push, pull_request]
