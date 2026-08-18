@@ -10,6 +10,7 @@ import DocumentToolbar from "@/modules/docs/components/DocumentToolbar";
 import DocumentGrid from "@/modules/docs/components/DocumentGrid";
 import DocumentModals from "@/modules/docs/components/DocumentModals";
 import { buildDocumentHref, DOCUMENTS_LIBRARY_HREF } from "@/modules/docs/utils/documentRoutes";
+import { addRecentSearchItem } from "@/modules/workspace/shared/utils/recentSearchItems";
 
 type DocumentsLibraryContentProps = {
   documentId?: string;
@@ -75,6 +76,27 @@ export default function DocumentsLibraryContent({ documentId, documentMode }: Do
     () => documents.find((doc) => doc._id === documentId) ?? null,
     [documentId, documents],
   );
+
+  useEffect(() => {
+    if (!user?.id || !routeDocument) return;
+
+    const fallbackTimestamp = new Date().toISOString();
+    addRecentSearchItem(user.id, {
+      id: routeDocument._id,
+      type: "document",
+      title: routeDocument.name || routeDocument.originalName || "Untitled document",
+      description: `Document Library File (${routeDocument.originalName})`,
+      key: routeDocument.filename,
+      url: buildDocumentHref(routeDocument._id),
+      workspaceId: routeDocument.workspaceIds?.[0],
+      metadata: {
+        mimeType: routeDocument.mimeType,
+        extension: routeDocument.extension,
+      },
+      createdAt: routeDocument.createdAt ?? fallbackTimestamp,
+      updatedAt: routeDocument.updatedAt ?? routeDocument.createdAt ?? fallbackTimestamp,
+    });
+  }, [routeDocument, user?.id]);
 
   useEffect(() => {
     if (!documentId || isLoading) return;

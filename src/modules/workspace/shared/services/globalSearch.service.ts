@@ -1,7 +1,7 @@
 import api from "@/lib/axiosIns";
 import { apiRoutes } from "@/config/apiRoutes";
 
-export type GlobalSearchType = "task" | "page" | "comment" | "workspace" | "board" | "sprint" | "user";
+export type GlobalSearchType = "task" | "page" | "document" | "comment" | "workspace" | "board" | "sprint" | "user";
 
 export type GlobalSearchItem = {
   id: string;

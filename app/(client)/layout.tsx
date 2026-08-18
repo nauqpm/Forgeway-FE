@@ -17,6 +17,8 @@ import { useWorkspaceRealtime } from "@/lib/realtime/hooks/use-workspace-realtim
 import { presenceClient } from "@/lib/realtime/presence.client";
 import { useInvisibleMode } from "@/lib/realtime/hooks/useInvisibleMode";
 import { useCurrentWorkspace } from "@/modules/workspace/shared/hooks/useWorkspaces";
+import { useWorkspaceMembers } from "@/modules/workspace/shared/hooks/useWorkspaceMembers";
+import { buildSearchAssignees } from "@/modules/workspace/shared/utils/searchAssignees";
 import UserAvatar from "@/shared/components/UserAvatar";
 import {
   ChevronDown,
@@ -50,17 +52,6 @@ import { ADMIN_URL, IS_SUPER_ADMIN } from "@/lib/admin-url";
 import { useAccountSwitcherStore } from "@/stores/account-switcher.store";
 import AccountSwitcher from "@/shared/components/layout/account-switcher/AccountSwitcher";
 
-type SearchAssigneeUser = {
-  _id?: string;
-  id?: string;
-  fullName?: string;
-  name?: string;
-  email?: string;
-  avatar?: string;
-  avatarUrl?: string;
-  image?: string;
-};
-
 // Constants for filter synchronization
 const DEFAULT_FILTERS: Filters = {
   search: "",
@@ -84,6 +75,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, user, logout } = useAuth();
   const queryClient = useQueryClient();
   const { currentWorkspace, workspaces, isLoading: isWorkspacesLoading } = useCurrentWorkspace();
+  const { data: searchWorkspaceMembers = [] } = useWorkspaceMembers(currentWorkspace?._id);
   const { theme, setTheme } = useTheme();
 
   // UI State
@@ -146,28 +138,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     () => searchProjects.map((workspace) => workspace.key).filter(Boolean) as string[],
     [searchProjects],
   );
-  const searchAssignees = (currentWorkspace?.members ?? [])
-    .filter((member) => member && member.userId)
-    .map((member) => {
-      const memberUser = member.userId;
-      const memberUserProfile = typeof memberUser === "string" ? null : (memberUser as SearchAssigneeUser);
-      const memberId =
-        typeof memberUser === "string" ? memberUser : memberUserProfile?._id || memberUserProfile?.id || "member";
-      const memberName =
-        typeof memberUser === "string"
-          ? memberUser
-          : memberUserProfile?.fullName || memberUserProfile?.name || memberUserProfile?.email || memberId;
-      const memberAvatar =
-        typeof memberUser === "string"
-          ? undefined
-          : memberUserProfile?.avatar || memberUserProfile?.avatarUrl || memberUserProfile?.image;
-
-      return {
-        id: memberId,
-        name: memberId === user?.id ? user?.fullName || user?.email || memberName : memberName,
-        avatar: memberAvatar,
-      };
-    });
+  const searchAssignees = useMemo(
+    () =>
+      buildSearchAssignees(searchWorkspaceMembers, {
+        id: user?.id,
+        fullName: user?.fullName,
+        email: user?.email,
+      }),
+    [searchWorkspaceMembers, user?.email, user?.fullName, user?.id],
+  );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
