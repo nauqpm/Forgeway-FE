@@ -333,6 +333,7 @@ export default function TaskDetailList({
               value={issue.status}
               columnId={issue.columnId}
               options={boardColumns.map((col) => ({ id: col.id, name: col.name }))}
+              maxVisibleOptions={5}
               disabled={!canUpdateTask || issue.isArchived}
               onChange={(status, option) =>
                 updateIssueFields({ columnId: option.id, status })

@@ -426,6 +426,7 @@ export default function TaskDetailModal({
                 value={issue.status}
                 columnId={issue.columnId}
                 options={boardColumns.map((col) => ({ id: col.id, name: col.name }))}
+                maxVisibleOptions={5}
                 disabled={!canEditTask || issue.isArchived}
                 onChange={(status, option) => onUpdateIssue?.({ ...issue, columnId: option.id, status })}
               />
