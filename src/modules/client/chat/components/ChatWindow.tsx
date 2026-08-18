@@ -160,7 +160,7 @@ export default function ChatWindow() {
 
   const [joining, setJoining] = useState(false);
 
-  const isWorkspaceAdmin = useMemo(() => {
+  const isWorkspacePrivileged = useMemo(() => {
     if (userRole === 'super_admin') return true;
     if (!activeChannel?.workspaceId) return false;
     const ws = workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(activeChannel.workspaceId));
@@ -173,6 +173,13 @@ export default function ChatWindow() {
     const role = isOwner ? 'workspace_admin' : ((member as { role?: string })?.role || 'member');
     return role === 'workspace_admin';
   }, [activeChannel?.workspaceId, workspaces, currentUserId, userRole]);
+
+  const canDeleteForEveryone = useMemo(() => {
+    if (!activeChannel) return false;
+    if (activeChannel.type === 'dm') return false;
+    if (activeChannel.type === 'announcement') return userRole === 'super_admin';
+    return isWorkspacePrivileged;
+  }, [activeChannel, userRole, isWorkspacePrivileged]);
 
   const isChannelAdmin = useMemo(() => {
     if (!activeChannel || !activeChannel.channelMembers) return false;
@@ -713,7 +720,7 @@ export default function ChatWindow() {
 
             {(() => {
               const canEditName = activeChannel.type === 'custom' || (activeChannel.type === 'dm' && (activeChannel.members?.length ?? 0) > 2);
-              const canDeleteChannel = activeChannel.type === 'custom' && (userRole === 'super_admin' || isWorkspaceAdmin || isChannelAdmin || activeChannel.createdBy === currentUserId);
+              const canDeleteChannel = activeChannel.type === 'custom' && (userRole === 'super_admin' || isWorkspacePrivileged || isChannelAdmin || activeChannel.createdBy === currentUserId);
               if (!canEditName && !canDeleteChannel) return null;
 
               return (
@@ -826,7 +833,7 @@ export default function ChatWindow() {
               <p className="text-sm text-[#787774] dark:text-[#9B9A97] max-w-sm mb-6 leading-relaxed">
                 {activeChannel.description || `This is a ${activeChannel.isPrivate ? 'private' : 'public'} custom channel. Join to view its message history and post messages.`}
               </p>
-              {(!activeChannel.isPrivate || isWorkspaceAdmin || activeChannel.channelMembers?.some(m => String(m.userId) === String(currentUserId))) ? (
+              {(!activeChannel.isPrivate || isWorkspacePrivileged || activeChannel.channelMembers?.some(m => String(m.userId) === String(currentUserId))) ? (
                 <button
                   onClick={handleJoinChannel}
                   disabled={joining}
@@ -915,6 +922,7 @@ export default function ChatWindow() {
                       message={msg}
                       isSameUserAsPrevious={isSameUserAsPrevious}
                       isMine={isMine}
+                      isWorkspaceAdmin={canDeleteForEveryone}
                     />
                   </React.Fragment>
                 );

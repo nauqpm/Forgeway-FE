@@ -13,6 +13,7 @@ import {
   upsertChannelInCache,
   upsertMessageInCache,
   removeMessageFromCache,
+  resolveLastMessageForClient,
 } from '@/modules/client/chat/utils/chatQueryCache';
 import { queryKeys } from '@/shared/constants/queryKeys';
 import toast from 'react-hot-toast';
@@ -55,7 +56,6 @@ export default function ChatRealtimeHandler() {
     const handleReconnect = () => {
       const ids = Array.from(joinedWorkspacesRef.current);
       if (ids.length > 0) {
-        console.log('[ChatRT] Reconnected. Re-joining workspace rooms:', ids);
         ids.forEach(wsId => {
           socket.emit('chat.joinWorkspace', { workspaceId: wsId });
         });
@@ -96,10 +96,6 @@ export default function ChatRealtimeHandler() {
           socket.emit('chat.joinWorkspace', { workspaceId: wsId });
         }
       });
-
-      if (toJoin.length > 0 || toLeave.length > 0) {
-        console.log('[ChatRT] Syncing workspace rooms. Join:', toJoin, 'Leave:', toLeave);
-      }
     }
     
     joinedWorkspacesRef.current = currentIds;
@@ -135,14 +131,11 @@ export default function ChatRealtimeHandler() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNewMessage = useCallback((envelope: any) => {
-    console.log("ChatRealtimeHandler: Received chat.message.sent event", envelope);
     const message = (envelope.data || envelope) as Message;
     if (!message?.channelId) {
-      console.warn("ChatRealtimeHandler: Message does not have channelId", message);
       return;
     }
 
-    console.log("ChatRealtimeHandler: Upserting message to cache", message.channelId, message);
     upsertMessageInCache(queryClient, message.channelId, message);
     ensureChannelInCache(message.channelId);
 
@@ -151,7 +144,6 @@ export default function ChatRealtimeHandler() {
     }
 
     const activeChannelId = useChatStore.getState().activeChannelId;
-    console.log("ChatRealtimeHandler: activeChannelId is", activeChannelId);
     const isCurrentChannel = activeChannelId && message.channelId && String(activeChannelId) === String(message.channelId);
     const senderId = getSenderId(message);
     const currentUser = useAuthStore.getState().user;
@@ -226,8 +218,13 @@ export default function ChatRealtimeHandler() {
     removeMessageFromCache(queryClient, data.channelId, data.messageId, data.threadParentId);
 
     if (data.lastMessage !== undefined) {
+      const resolvedLastMessage = resolveLastMessageForClient(
+        queryClient,
+        data.channelId,
+        data.lastMessage
+      );
       updateChannelInCache(queryClient, data.channelId, () => ({
-        lastMessage: data.lastMessage || undefined,
+        lastMessage: resolvedLastMessage ?? undefined,
       }));
     }
 
@@ -243,6 +240,17 @@ export default function ChatRealtimeHandler() {
     if (!data?.messageId || !data?.channelId) return;
 
     removeMessageFromCache(queryClient, data.channelId, data.messageId, data.threadParentId);
+
+    if (data.lastMessage !== undefined) {
+      const resolvedLastMessage = resolveLastMessageForClient(
+        queryClient,
+        data.channelId,
+        data.lastMessage
+      );
+      updateChannelInCache(queryClient, data.channelId, () => ({
+        lastMessage: resolvedLastMessage ?? undefined,
+      }));
+    }
   }, [queryClient]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -307,7 +315,6 @@ export default function ChatRealtimeHandler() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleThreadReplyCreated = useCallback((envelope: any) => {
-    console.log("ChatRealtimeHandler: Received chat.thread.reply.created", envelope);
     const reply = (envelope.data || envelope) as Message;
     const channelId = typeof reply.channelId === 'object' ? String(reply.channelId) : String(reply.channelId || '');
     const parentId = typeof reply.threadParentId === 'object' ? String(reply.threadParentId) : String(reply.threadParentId || '');
@@ -363,7 +370,6 @@ export default function ChatRealtimeHandler() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleChannelCreated = useCallback((envelope: any) => {
-    console.log('[ChatRT] chat.channel.created received', envelope);
     const raw = (envelope.data || envelope) as Channel;
     const channelId = String(raw?._id || raw?.id || '');
     if (!channelId) return;
