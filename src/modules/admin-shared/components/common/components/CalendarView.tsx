@@ -21,6 +21,7 @@ import { useAssignees } from '@/modules/workspace/shared/hooks/useAssignees';
 import { toCalendarDateKey } from '@/modules/workspace/shared/utils/calendarDateKey';
 
 import { Workspace } from '@/modules/workspace/shared/types/workspace.type';
+import { BoardColumn } from '@/modules/workspace/shared/types/board.type';
 
 // Minimal event shape used by the popover — works for both EventApi and OverflowEntry
 type MorePopoverState = {
@@ -74,6 +75,7 @@ interface CalendarViewProps {
   onSelectIssue: (issue: Issue | null) => void;
   onQuickCreateTask?: (title: string, date: string) => Promise<void> | void;
   workspace?: Workspace;
+  boardColumns?: BoardColumn[];
 }
 
 export default function CalendarView({
@@ -83,6 +85,7 @@ export default function CalendarView({
   onSelectIssue,
   onQuickCreateTask,
   workspace,
+  boardColumns = [],
 }: CalendarViewProps) {
   const calendarRef = useRef<FullCalendar>(null);
   const calendarShellRef = useRef<HTMLDivElement>(null);
@@ -101,6 +104,19 @@ export default function CalendarView({
     statuses: [],
   });
 
+  const availableStatuses = useMemo(
+    () => {
+      const workspaceStatuses = boardColumns
+        .map((column) => column.name)
+        .filter(Boolean);
+      const issueStatuses = issues.map((issue) => issue.status).filter(Boolean);
+      return Array.from(
+        new Set(workspaceStatuses.length > 0 ? workspaceStatuses : issueStatuses),
+      );
+    },
+    [boardColumns, issues],
+  );
+
   // Apply calendar-local filters
   const filteredIssues = useMemo(
     () =>
@@ -114,11 +130,20 @@ export default function CalendarView({
           return false;
         if (filters.types.length && !filters.types.includes(issue.type))
           return false;
-        if (filters.statuses.length && !filters.statuses.includes(issue.status))
-          return false;
+        if (filters.statuses.length) {
+          const selectedStatus = filters.statuses[0];
+          const selectedColumn = boardColumns.find(
+            (column) => column.name === selectedStatus,
+          );
+          const matchesStatus =
+            issue.status === selectedStatus ||
+            selectedColumn?.id === issue.columnId ||
+            selectedColumn?.mappedStatuses?.includes(issue.status);
+          if (!matchesStatus) return false;
+        }
         return true;
       }),
-    [issues, filters]
+    [boardColumns, issues, filters]
   );
 
   const { events, unscheduledTasks } = useCalendarData(filteredIssues, sprints);
@@ -334,6 +359,7 @@ export default function CalendarView({
           isSidebarOpen={isSidebarOpen}
           onToggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
           assignees={assignees}
+          availableStatuses={availableStatuses}
         />
 
         <div ref={calendarShellRef} className="flex-1 overflow-auto al-calendar-shell">

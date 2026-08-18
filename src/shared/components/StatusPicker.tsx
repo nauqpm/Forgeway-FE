@@ -152,7 +152,7 @@ export default function StatusPicker({
                 ) : (
                   <span className="h-3.5 w-3.5 shrink-0" />
                 )}
-                <span className="truncate">{option.name}</span>
+                <span title={option.name} className="min-w-0 truncate">{option.name}</span>
               </button>
             );
           })}
@@ -177,7 +177,7 @@ export default function StatusPicker({
           isDisabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
         }`}
       >
-        <span className="max-w-36 truncate">{displayName}</span>
+        <span title={displayName} className="max-w-36 truncate">{displayName}</span>
         {!isDisabled && (
           <ChevronDown className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} />
         )}
@@ -208,7 +208,7 @@ export default function StatusPicker({
                 ) : (
                   <span className="h-3.5 w-3.5 shrink-0" />
                 )}
-                <span className="truncate">{option.name}</span>
+                <span title={option.name} className="min-w-0 truncate">{option.name}</span>
               </button>
             );
           })}

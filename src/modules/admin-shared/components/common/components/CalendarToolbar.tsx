@@ -14,6 +14,7 @@ interface CalendarToolbarProps {
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
   assignees: { id: string; color: string; name?: string }[];
+  availableStatuses: string[];
 }
 
 const SELECT_CLASS =
@@ -31,6 +32,7 @@ export default function CalendarToolbar({
   isSidebarOpen,
   onToggleSidebar,
   assignees,
+  availableStatuses,
 }: CalendarToolbarProps) {
   const api = () => calendarRef.current?.getApi();
 
@@ -82,7 +84,7 @@ export default function CalendarToolbar({
           className={SELECT_CLASS}
         >
           <option value="">All Statuses</option>
-          {['To Do', 'In Progress', 'Done'].map((s) => (
+          {availableStatuses.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>

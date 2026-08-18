@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Trash2, ChevronUp, ArrowRightCircle } from 'lucide-react';
 import AssigneePicker, { AssigneePickerUser } from '@/shared/components/AssigneePicker';
-import StatusPicker from '@/shared/components/StatusPicker';
+import StatusPicker, { StatusOption } from '@/shared/components/StatusPicker';
 import PriorityPicker from '@/shared/components/PriorityPicker';
 import TypePicker from '@/shared/components/TypePicker';
 
@@ -22,9 +22,8 @@ interface BulkActionBarProps {
   canEditTask?: boolean;
   canDeleteTask?: boolean;
   canMoveTask?: boolean;
+  statusOptions: StatusOption[];
 }
-
-const STATUS_OPTIONS = ['To Do', 'In Progress', 'Done'];
 
 const PICKER_CLS =
   '[&>button]:!h-8 [&>button]:!py-0 [&>button]:!flex [&>button]:!items-center [&>button]:!text-sm [&>button]:!font-medium [&>button]:!bg-transparent [&>button]:!border-white/[0.08] [&>button]:!text-[#9B9A97] [&>button]:hover:!bg-white/8 [&>button]:hover:!text-[#E8E8E7] [&>button]:hover:!border-white/[0.18] [&>button]:!rounded-[6px]';
@@ -50,6 +49,7 @@ export default function BulkActionBar({
   canEditTask = true,
   canDeleteTask = true,
   canMoveTask = true,
+  statusOptions,
 }: BulkActionBarProps) {
   const [showSprintMenu, setShowSprintMenu] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
@@ -106,8 +106,10 @@ export default function BulkActionBar({
             value={null}
             placeholder="Status"
             placement="top"
-            options={STATUS_OPTIONS}
-            onChange={(status) => apply({ status })}
+            options={statusOptions}
+            onChange={(status, option) =>
+              apply({ status, columnId: option.id })
+            }
             size="sm"
             variant="default"
             className={PICKER_CLS}
