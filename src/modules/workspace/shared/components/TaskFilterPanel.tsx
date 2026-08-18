@@ -136,7 +136,7 @@ export default function TaskFilterPanel({
   const visibleWorkspaces = showAllWorkspaces ? availableWorkspaces : availableWorkspaces.slice(0, 8);
   const hiddenWorkspaceCount = Math.max(availableWorkspaces.length - 8, 0);
 
-  const toggleDocumentType = (type: "page" | "comment") => {
+  const toggleDocumentType = (type: "page" | "document" | "comment") => {
     const nextTypes = documentTypes.includes(type)
       ? documentTypes.filter((currentType) => currentType !== type)
       : [...documentTypes, type];
@@ -158,8 +158,14 @@ export default function TaskFilterPanel({
           <CheckboxRow
             checked={documentTypes.includes("page")}
             label="Pages"
-            detail="Workspace documents"
+            detail="Workspace pages"
             onChange={() => toggleDocumentType("page")}
+          />
+          <CheckboxRow
+            checked={documentTypes.includes("document")}
+            label="Files"
+            detail="Document library files"
+            onChange={() => toggleDocumentType("document")}
           />
           <CheckboxRow
             checked={documentTypes.includes("comment")}
@@ -268,13 +274,17 @@ export default function TaskFilterPanel({
       </Section>
 
       <Section title="Filter by assignee" icon={Users}>
-        {(assignees.length > 0 ? assignees : [{ id: "me", name: currentUserName || "Assigned to me" }]).slice(0, 5).map((user) => (
+        {(assignees.length > 0
+          ? assignees
+          : currentUserId
+            ? [{ id: currentUserId, name: currentUserName || "Assigned to me" }]
+            : []).slice(0, 5).map((user) => (
           <CheckboxRow
             key={user.id}
             checked={filters.assignees.includes(user.id)}
             label={user.name}
             detail="Assignee"
-            avatar={(user.avatar || user.name || user.id).slice(0, 2).toUpperCase()}
+            avatar={user.name.slice(0, 2).toUpperCase()}
             onChange={() => toggleArray("assignees", user.id)}
           />
         ))}

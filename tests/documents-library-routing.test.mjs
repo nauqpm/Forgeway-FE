@@ -17,6 +17,7 @@ test("documents library view and edit use document id routes", () => {
   assert.match(libraryPage, /router\.push\(buildDocumentHref\(doc\._id\)\)/);
   assert.match(libraryPage, /router\.push\(buildDocumentHref\(doc\._id, "edit"\)\)/);
   assert.match(libraryPage, /router\.push\(DOCUMENTS_LIBRARY_HREF\)/);
+  assert.match(libraryPage, /routeDocument\.workspaceIds\?\.\[0\]/);
   assert.match(viewPage, /documentMode="view"/);
   assert.match(editPage, /documentMode="edit"/);
   assert.match(modals, /onEditViewingDoc/);

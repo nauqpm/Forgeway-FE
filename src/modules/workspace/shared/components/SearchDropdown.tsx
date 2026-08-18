@@ -13,6 +13,8 @@ import TaskFilterPanel from "./TaskFilterPanel";
 import { useGlobalSearch } from "../hooks/useGlobalSearch";
 import type { GlobalSearchItem, GlobalSearchType } from "../services/globalSearch.service";
 import { pagesService } from "@/modules/docs/services/pages.service";
+import { DEFAULT_DOCUMENT_SEARCH_TYPES } from "../constants/globalSearchTypes";
+import { useRecentSearchItems } from "../hooks/useRecentSearchItems";
 
 type SearchDropdownProps = {
   filters: Filters;
@@ -27,7 +29,6 @@ type SearchDropdownProps = {
 };
 
 const apps = ["Work", "Docs"];
-const documentSearchTypes: GlobalSearchType[] = ["page", "comment"];
 const taskSearchTypes: GlobalSearchType[] = ["task", "workspace", "board", "sprint", "user"];
 
 const taskStatusValues: Record<string, string> = {
@@ -186,13 +187,14 @@ export default function SearchDropdown({
 }: SearchDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
-  const [documentTypes, setDocumentTypes] = useState<GlobalSearchType[]>(documentSearchTypes);
+  const [documentTypes, setDocumentTypes] = useState<GlobalSearchType[]>([...DEFAULT_DOCUMENT_SEARCH_TYPES]);
   const [documentLastUpdated, setDocumentLastUpdated] = useState<string | null>(null);
   const [documentAuthorIds, setDocumentAuthorIds] = useState<string[]>([]);
   const [activeApp, setActiveApp] = useState("Work");
   const [activeResultIndex, setActiveResultIndex] = useState(-1);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const router = useRouter();
+  const { recentSearchItems, addRecentSearchItem } = useRecentSearchItems(currentUserId);
   const rootRef = useRef<HTMLDivElement>(null);
   const inputWrapRef = useRef<HTMLDivElement>(null);
   const activeWorkspaceKey = filters.workspaceKey || workspaceKey;
@@ -335,9 +337,12 @@ export default function SearchDropdown({
   const globalResultCount = globalSearch.data?.total ?? 0;
   const hasSearchInput = filters.search.trim().length > 0;
   const showEmptyStateSuggestions = !hasSearchInput;
+  const recentDocumentItems = recentSearchItems
+    .filter((item) => item.type === "page" || item.type === "document")
+    .slice(0, 8);
 
   const resultIcon = (item: GlobalSearchItem) => {
-    if (item.type === "page") return FileText;
+    if (item.type === "page" || item.type === "document") return FileText;
     if (item.type === "comment") return Sparkles;
     if (item.type === "user") return UserRound;
     if (item.type === "workspace" || item.type === "board") return Kanban;
@@ -346,24 +351,41 @@ export default function SearchDropdown({
   };
 
   const openGlobalResult = (item: GlobalSearchItem) => {
+    addRecentSearchItem(item);
     setIsOpen(false);
     router.push(item.url);
   };
 
-  const openDocResult = (doc: { slug: string; workspaceKey?: string }) => {
+  const openDocResult = (doc: (typeof visibleDocs)[number]) => {
     const targetWorkspaceKey = doc.workspaceKey || activeWorkspaceKey;
     if (!targetWorkspaceKey) return;
+    const url = `/workspaces/${encodeURIComponent(targetWorkspaceKey)}/pages/${encodeURIComponent(doc.slug)}`;
+
+    addRecentSearchItem({
+      id: doc.id,
+      type: "page",
+      title: doc.title,
+      description: doc.content,
+      key: doc.slug,
+      url,
+      workspaceId: doc.workspaceId,
+      workspaceName: projects.find((project) => project.key === targetWorkspaceKey)?.name,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    });
 
     setIsOpen(false);
-    router.push(
-      `/workspaces/${encodeURIComponent(targetWorkspaceKey)}/pages/${encodeURIComponent(doc.slug)}`
-    );
+    router.push(url);
   };
 
   const keyboardResults = isGlobalSearchActive
     ? visibleGlobalItems
     : activeApp === "Docs"
-      ? visibleDocs
+      ? showEmptyStateSuggestions
+        ? recentDocumentItems
+        : !globalSearchEnabled
+          ? visibleDocs
+          : []
       : visibleTasks;
 
   const selectKeyboardResult = () => {
@@ -374,7 +396,11 @@ export default function SearchDropdown({
       return;
     }
     if (activeApp === "Docs") {
-      openDocResult(result as (typeof visibleDocs)[number]);
+      if (showEmptyStateSuggestions) {
+        openGlobalResult(result as GlobalSearchItem);
+      } else {
+        openDocResult(result as (typeof visibleDocs)[number]);
+      }
       return;
     }
     const task = result as (typeof visibleTasks)[number];
@@ -594,7 +620,26 @@ export default function SearchDropdown({
                         />
                       );
                     })}
-                  {activeApp === "Docs" && (!globalSearchEnabled || debouncedSearch.trim().length < 2) &&
+                  {activeApp === "Docs" && showEmptyStateSuggestions &&
+                    recentDocumentItems.map((item, index) => (
+                      <RecentItem
+                        key={`${item.type}-${item.id}`}
+                        icon={FileText}
+                        title={item.title}
+                        meta={[item.type === "document" ? "Document" : "Page", item.workspaceName]
+                          .filter(Boolean)
+                          .join(" · ")}
+                        tone="gray"
+                        active={activeResultIndex === index}
+                        onClick={() => openGlobalResult(item)}
+                      />
+                    ))}
+                  {activeApp === "Docs" && showEmptyStateSuggestions && recentDocumentItems.length === 0 && (
+                    <p className="px-2 py-2 text-[0.8125rem] text-[#787774] dark:text-[#9B9A97]">
+                      No recently viewed docs yet.
+                    </p>
+                  )}
+                  {activeApp === "Docs" && !globalSearchEnabled && hasSearchInput &&
                     visibleDocs.map((doc, index) => (
                       <RecentItem
                         key={doc.id}
