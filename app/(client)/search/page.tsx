@@ -6,9 +6,8 @@ import { FormEvent, useMemo, useState } from "react";
 import { CheckSquare, ChevronDown, FileText, Kanban, Search, Sparkles, UserRound } from "lucide-react";
 import { useInfiniteGlobalSearch } from "@/modules/workspace/shared/hooks/useInfiniteGlobalSearch";
 import type { GlobalSearchItem, GlobalSearchType } from "@/modules/workspace/shared/services/globalSearch.service";
-import { ALL_GLOBAL_SEARCH_TYPES } from "@/modules/workspace/shared/constants/globalSearchTypes";
 
-const ALL_TYPES: GlobalSearchType[] = [...ALL_GLOBAL_SEARCH_TYPES];
+const ALL_TYPES: GlobalSearchType[] = ["task", "page", "comment", "workspace", "board", "sprint", "user"];
 
 const cleanDescription = (value?: string) =>
   (value ?? "")
@@ -18,7 +17,7 @@ const cleanDescription = (value?: string) =>
 
 const iconFor = (item: GlobalSearchItem) => {
   if (item.type === "task") return CheckSquare;
-  if (item.type === "page" || item.type === "document") return FileText;
+  if (item.type === "page") return FileText;
   if (item.type === "user") return UserRound;
   if (item.type === "workspace" || item.type === "board") return Kanban;
   return Sparkles;
