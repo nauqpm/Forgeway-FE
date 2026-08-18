@@ -15,14 +15,21 @@ interface Props {
     fieldErrors?: Record<string, string>;
     message?: string;
   }>;
+  isAuthVariant?: boolean;
 }
 
-const labelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]";
-const inputBaseCls = "w-full px-3 py-2 pr-10 border rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:outline-none transition-colors";
-const inputNormalCls = `${inputBaseCls} border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]`;
-const inputErrorCls = `${inputBaseCls} border-[#9F2F2D] focus:border-[#9F2F2D]`;
+const defaultLabelCls = "block text-[0.8125rem] font-medium text-[#787774] dark:text-[#9B9A97]";
+const authLabelCls = "block text-[0.8125rem] font-semibold text-gray-800 mb-1.5";
 
-export function ChangePasswordForm({ saving, onChangePassword }: Props) {
+const defaultInputBaseCls = "w-full px-3 py-2 pr-10 border rounded-[6px] bg-white dark:bg-[#252525] text-[#111111] dark:text-[#E8E8E7] placeholder:text-[#ABABAB] dark:placeholder:text-[#6B6B6B] focus:outline-none transition-colors";
+const defaultInputNormalCls = `${defaultInputBaseCls} border-[#EAEAEA] dark:border-white/10 focus:border-[#2563EB] dark:focus:border-[#3B82F6]`;
+const defaultInputErrorCls = `${defaultInputBaseCls} border-[#9F2F2D] focus:border-[#9F2F2D]`;
+
+const authInputBaseCls = "w-full px-4 py-2.5 pr-11 bg-white/45 border rounded-[6px] text-[0.8125rem] text-gray-900 placeholder:text-gray-500 focus:bg-white/95 focus:ring-2 outline-none transition-all shadow-inner disabled:opacity-50";
+const authInputNormalCls = `${authInputBaseCls} border-gray-200/35 focus:border-[#2563EB] focus:ring-[#2563EB]`;
+const authInputErrorCls = `${authInputBaseCls} border-red-500 focus:border-red-500 focus:ring-red-200`;
+
+export function ChangePasswordForm({ saving, onChangePassword, isAuthVariant = false }: Props) {
   const [form, setForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -34,6 +41,10 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [success, setSuccess] = useState(false);
+
+  const labelCls = isAuthVariant ? authLabelCls : defaultLabelCls;
+  const inputNormalCls = isAuthVariant ? authInputNormalCls : defaultInputNormalCls;
+  const inputErrorCls = isAuthVariant ? authInputErrorCls : defaultInputErrorCls;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValidationError(null);
@@ -103,12 +114,14 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
       <div>
         <div className="flex items-center justify-between mb-1.5">
           <label className={labelCls}>Current password</label>
-          <Link
-            href="/forgot-password"
-            className="text-[0.6875rem] text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#3B82F6] transition-colors"
-          >
-            Forgot password?
-          </Link>
+          {!isAuthVariant && (
+            <Link
+              href="/forgot-password"
+              className="text-[0.6875rem] text-[#2563EB] hover:text-[#1D4ED8] dark:text-[#3B82F6] transition-colors"
+            >
+              Forgot password?
+            </Link>
+          )}
         </div>
         <div className="relative">
           <input
@@ -127,13 +140,13 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
           <button
             type="button"
             onClick={() => setShowCurrent((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
+            className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isAuthVariant ? 'p-1 text-gray-400 hover:text-gray-700' : 'text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]'}`}
           >
             {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         {fieldErrors.currentPassword && (
-          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
+          <p className={`mt-1.5 text-[0.8125rem] ${isAuthVariant ? 'font-medium text-red-700' : 'text-[#9F2F2D] dark:text-[#F87171]'}`}>
             {fieldErrors.currentPassword}
           </p>
         )}
@@ -158,13 +171,13 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
           <button
             type="button"
             onClick={() => setShowNew((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
+            className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isAuthVariant ? 'p-1 text-gray-400 hover:text-gray-700' : 'text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]'}`}
           >
             {showNew ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         {fieldErrors.newPassword && (
-          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
+          <p className={`mt-1.5 text-[0.8125rem] ${isAuthVariant ? 'font-medium text-red-700' : 'text-[#9F2F2D] dark:text-[#F87171]'}`}>
             {fieldErrors.newPassword}
           </p>
         )}
@@ -189,23 +202,27 @@ export function ChangePasswordForm({ saving, onChangePassword }: Props) {
           <button
             type="button"
             onClick={() => setShowConfirm((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97] transition-colors"
+            className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isAuthVariant ? 'p-1 text-gray-400 hover:text-gray-700' : 'text-[#ABABAB] hover:text-[#787774] dark:hover:text-[#9B9A97]'}`}
           >
             {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         {fieldErrors.confirmPassword && (
-          <p className="mt-1.5 text-[0.8125rem] text-[#9F2F2D] dark:text-[#F87171]">
+          <p className={`mt-1.5 text-[0.8125rem] ${isAuthVariant ? 'font-medium text-red-700' : 'text-[#9F2F2D] dark:text-[#F87171]'}`}>
             {fieldErrors.confirmPassword}
           </p>
         )}
       </div>
 
-      <div className="flex justify-end">
+      <div className={`${isAuthVariant ? 'mt-6' : 'flex justify-end'}`}>
         <button
           type="submit"
           disabled={saving}
-          className="px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[0.8125rem] font-medium transition-colors flex items-center gap-2"
+          className={
+            isAuthVariant
+              ? "w-full py-3 bg-[#2563EB] text-white rounded-[6px] font-bold hover:bg-[#1D4ED8] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              : "px-6 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] dark:bg-[#3B82F6] dark:hover:bg-[#2563EB] disabled:opacity-50 text-white rounded-[6px] text-[0.8125rem] font-medium transition-colors flex items-center gap-2"
+          }
         >
           {saving && <Loader2 className="w-4 h-4 animate-spin" />}
           {saving ? "Saving..." : "Change password"}

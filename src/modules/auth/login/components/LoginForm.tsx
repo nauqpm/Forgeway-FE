@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import logoIcon from '../../../../../app/icon.png';
+import { exchangeCode } from '../../shared/services/ssoService';
 
 const LEGACY_LOGIN_RETRY_STORAGE_KEY = 'sdlc-platform-login-retry';
 const LOGIN_RETRY_STORAGE_KEY = 'sdlc-platform-login-retry-v2';
@@ -79,7 +80,7 @@ function LoginFormInner() {
   const [retryAt, setRetryAt] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, user } = useAuth();
   const searchParams = useSearchParams();
   const renewIntent = searchParams.get('intent') === 'switch-renew';
   const renewProvider =
@@ -88,6 +89,21 @@ function LoginFormInner() {
   const normalizedEmail = normalizeEmail(email);
   const retrySeconds = retryEmail === normalizedEmail ? getRetrySeconds(retryAt, now) : 0;
   const isCoolingDown = retrySeconds > 0;
+
+  useEffect(() => {
+    if(!user) return;
+    const url = new URL(window.location.href);
+    const redirectUrl = url.searchParams.get('redirect');
+    if (redirectUrl) {
+      exchangeCode({
+        redirectUrl
+      }).then(res => {
+        window.location.href = res.redirectUrl;
+      });
+    } else  {
+      window.location.href = '/dashboard';
+    }
+  }, [user]);
 
   useEffect(() => {
     const storedRetry = readStoredLoginRetry();

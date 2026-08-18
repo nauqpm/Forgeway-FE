@@ -22,6 +22,7 @@ import { AUTH_ROUTES } from "../constants/auth-routes";
 import { AuthErrorCode } from "../types/auth.types";
 import { validateEmail } from "../utils/emailValidation";
 import type { AuthUser, LoginRequest, RegisterRequest, AuthApiError, Permission } from "../types/auth.types";
+import { exchangeCode } from "../services/ssoService";
 
 export const AUTH_ME_QUERY_KEY = ["auth", "me"] as const;
 export const AUTH_PERMISSIONS_QUERY_KEY = ["auth", "permissions"] as const;
@@ -181,12 +182,24 @@ export const useAuth = () => {
       setInitialized(true);
       await fetchPermissions();
 
+      if (currentUser.mustChangePassword) {
+        router.push(AUTH_ROUTES.CHANGE_PASSWORD);
+        return;
+      }
+
       if (currentUser.role === "super_admin") {
         window.location.href = ADMIN_URL;
         return;
       }
 
-      router.push(AUTH_ROUTES.HOME);
+      // Note: để ở đây, sẽ bị gọi nhiều lần, không ổn
+      const url = new URL(window.location.href);
+      const redirectUrl = url.searchParams.get('redirect');
+      await exchangeCode({
+        redirectUrl: redirectUrl || ''
+      });
+
+      router.push(AUTH_ROUTES.DASHBOARD);
     },
     onError: handleLoginError,
   });
@@ -273,6 +286,7 @@ export const useAuth = () => {
       const nextUser = await queryClient.fetchQuery({
         queryKey: AUTH_ME_QUERY_KEY,
         queryFn: getCurrentUserAPI,
+        staleTime: 0, // Force network request to get fresh mustChangePassword status
         retry: false,
       });
       queryClient.setQueryData(AUTH_ME_QUERY_KEY, nextUser);
@@ -322,7 +336,7 @@ export const useAuth = () => {
       setUser(response.user);
       await fetchPermissions();
     }
-    router.replace('/');
+    router.replace(AUTH_ROUTES.DASHBOARD);
   }, [queryClient, setUser, fetchPermissions, router]);
 
   return {

@@ -16,6 +16,7 @@ export interface User {
   locale?: string;
   mfaEnabled?: boolean;
   ssoProvider?: SsoProvider | null;
+  mustChangePassword?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -44,6 +45,16 @@ export interface LoginResponse {
   mfaToken?: string;
   /** MFA method required by the backend */
   mfaMethod?: MfaMethod;
+}
+
+// -- SSO
+export interface GetExchangeCodeRequest {
+  redirectUrl: string;
+}
+
+export interface GetExchangeCodeResponse {
+  success: boolean;
+  redirectUrl: string;
 }
 
 export interface RegisterRequest {
