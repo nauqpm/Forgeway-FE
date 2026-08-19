@@ -185,6 +185,8 @@ export const useColumnHandlers = ({
   });
 
   const handleAddColumn = () => {
+    if (createColumnMutation.isPending) return;
+
     const normalizedName = normalizeColumnDisplayName(newColumnName);
     if (!normalizedName) {
       toast.error(COLUMN_NAME_MESSAGES.INVALID);
