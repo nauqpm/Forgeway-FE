@@ -517,7 +517,7 @@ export default function LandingPage() {
 }
 
 // Code cũ của trang Home được giữ lại theo yêu cầu
-export function LandingPageOld() {
+function LandingPageOld() {
   const [activeTeamIndex, setActiveTeamIndex] = useState(0);
   const activeTeam = teamSolutions[activeTeamIndex];
 
@@ -1578,3 +1578,5 @@ export function LandingPageOld() {
     </main>
   );
 }
+
+void LandingPageOld;

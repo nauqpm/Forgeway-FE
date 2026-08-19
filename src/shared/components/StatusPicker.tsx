@@ -24,8 +24,14 @@ export type StatusPickerProps = {
   placement?: "bottom" | "top";
   /** Label shown when no value is selected (overrides "No status" default). */
   placeholder?: string;
+  /** Maximum number of options visible before the menu becomes scrollable. */
+  maxVisibleOptions?: number;
   className?: string;
 };
+
+const STATUS_OPTION_HEIGHT = 36;
+const STATUS_MENU_VERTICAL_PADDING = 8;
+const DEFAULT_MAX_VISIBLE_OPTIONS = 7;
 
 const buttonStyles = {
   default:
@@ -52,12 +58,14 @@ export default function StatusPicker({
   menuAlign = "left",
   placement = "bottom",
   placeholder,
+  maxVisibleOptions,
   className = "",
 }: StatusPickerProps) {
   const [open, setOpen] = useState(false);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const isDisabled = disabled || !onChange;
 
   // Normalize options
@@ -74,6 +82,12 @@ export default function StatusPicker({
   ];
 
   const finalOptions = normalizedOptions.length > 0 ? normalizedOptions : fallbackOptions;
+  const visibleOptionLimit = Math.max(
+    1,
+    maxVisibleOptions ?? DEFAULT_MAX_VISIBLE_OPTIONS,
+  );
+  const menuViewportHeight =
+    Math.min(finalOptions.length, visibleOptionLimit) * STATUS_OPTION_HEIGHT;
 
   // Resolve current selection
   const currentOption = finalOptions.find(
@@ -90,13 +104,21 @@ export default function StatusPicker({
     if (!open) return;
 
     const handlePointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        !rootRef.current?.contains(target) &&
+        !dropdownRef.current?.contains(target)
+      ) {
         setOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handlePointerDown);
-    const closeOnScroll = () => setOpen(false);
+    const closeOnScroll = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Node && dropdownRef.current?.contains(target)) return;
+      setOpen(false);
+    };
     window.addEventListener("scroll", closeOnScroll, true);
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
@@ -108,7 +130,7 @@ export default function StatusPicker({
     if (isDisabled) return;
     if (!open && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      const dropdownH = Math.min(finalOptions.length * 40 + 8, 260);
+      const dropdownH = menuViewportHeight + STATUS_MENU_VERTICAL_PADDING;
       const spaceBelow = window.innerHeight - rect.bottom;
       const useTop = placement === "top" || (spaceBelow < dropdownH && rect.top > dropdownH);
       const leftPos = menuAlign === "right" ? rect.right - 160 : rect.left;
@@ -134,28 +156,34 @@ export default function StatusPicker({
           className="fixed z-[999999] min-w-40 max-w-[280px] overflow-hidden rounded-[8px] border border-[#EAEAEA] bg-white py-1 shadow-lg dark:border-white/[0.06] dark:bg-[#202020]"
           style={{ ...dropdownStyle, boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         >
-          {finalOptions.map((option) => {
-            const selected = option.id === currentOption?.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => handleChange(option)}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] transition-colors ${
-                  selected
-                    ? "border-l-2 border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB] dark:border-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]"
-                    : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-[#2E2E2E]"
-                }`}
-              >
-                {selected ? (
-                  <Check className="h-3.5 w-3.5 shrink-0" />
-                ) : (
-                  <span className="h-3.5 w-3.5 shrink-0" />
-                )}
-                <span className="truncate">{option.name}</span>
-              </button>
-            );
-          })}
+          <div
+            ref={dropdownRef}
+            className="overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-[#C8C7C4] scrollbar-track-transparent dark:scrollbar-thumb-white/15"
+            style={{ maxHeight: menuViewportHeight }}
+          >
+            {finalOptions.map((option) => {
+              const selected = option.id === currentOption?.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => handleChange(option)}
+                  className={`flex h-9 w-full items-center gap-2 px-3 text-left text-[0.8125rem] transition-colors ${
+                    selected
+                      ? "border-l-2 border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB] dark:border-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]"
+                      : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-[#2E2E2E]"
+                  }`}
+                >
+                  {selected ? (
+                    <Check className="h-3.5 w-3.5 shrink-0" />
+                  ) : (
+                    <span className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span title={option.name} className="min-w-0 truncate">{option.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>,
         document.body
       )
@@ -177,7 +205,7 @@ export default function StatusPicker({
           isDisabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
         }`}
       >
-        <span className="max-w-36 truncate">{displayName}</span>
+        <span title={displayName} className="max-w-36 truncate">{displayName}</span>
         {!isDisabled && (
           <ChevronDown className={size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4"} />
         )}
@@ -190,28 +218,34 @@ export default function StatusPicker({
           }`}
           style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)" }}
         >
-          {finalOptions.map((option) => {
-            const selected = option.id === currentOption?.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => handleChange(option)}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[0.8125rem] transition-colors ${
-                  selected
-                    ? "border-l-2 border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB] dark:border-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]"
-                    : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-[#2E2E2E]"
-                }`}
-              >
-                {selected ? (
-                  <Check className="h-3.5 w-3.5 shrink-0" />
-                ) : (
-                  <span className="h-3.5 w-3.5 shrink-0" />
-                )}
-                <span className="truncate">{option.name}</span>
-              </button>
-            );
-          })}
+          <div
+            ref={dropdownRef}
+            className="overflow-y-auto overscroll-contain scrollbar-thin scrollbar-thumb-[#C8C7C4] scrollbar-track-transparent dark:scrollbar-thumb-white/15"
+            style={{ maxHeight: menuViewportHeight }}
+          >
+            {finalOptions.map((option) => {
+              const selected = option.id === currentOption?.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => handleChange(option)}
+                  className={`flex h-9 w-full items-center gap-2 px-3 text-left text-[0.8125rem] transition-colors ${
+                    selected
+                      ? "border-l-2 border-[#2563EB] bg-[#EFF6FF] font-medium text-[#2563EB] dark:border-[#3B82F6] dark:bg-[rgba(37,99,235,0.12)] dark:text-[#3B82F6]"
+                      : "text-[#787774] hover:bg-[#F7F6F3] dark:text-[#9B9A97] dark:hover:bg-[#2E2E2E]"
+                  }`}
+                >
+                  {selected ? (
+                    <Check className="h-3.5 w-3.5 shrink-0" />
+                  ) : (
+                    <span className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span title={option.name} className="min-w-0 truncate">{option.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 

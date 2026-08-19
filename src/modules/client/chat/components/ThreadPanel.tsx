@@ -44,8 +44,7 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
   const { data: workspaces = [] } = useWorkspaces();
   const userRole = useAuthStore(state => state.user?.role);
 
-  const isWorkspaceAdmin = React.useMemo(() => {
-    if (channel?.type === 'dm') return false;
+  const isWorkspacePrivileged = React.useMemo(() => {
     if (userRole === 'super_admin') return true;
     if (!channel?.workspaceId) return false;
     const ws = workspaces.find(w => String(w._id || (w as { id?: string }).id) === String(channel.workspaceId));
@@ -57,7 +56,14 @@ export default function ThreadPanel({ channelId, messageId, onClose }: ThreadPan
     });
     const role = isOwner ? 'workspace_admin' : ((member as { role?: string })?.role || 'member');
     return role === 'workspace_admin';
-  }, [channel?.type, channel?.workspaceId, workspaces, currentUserId, userRole]);
+  }, [channel?.workspaceId, workspaces, currentUserId, userRole]);
+
+  const isWorkspaceAdmin = React.useMemo(() => {
+    if (!channel) return false;
+    if (channel.type === 'dm') return false;
+    if (channel.type === 'announcement') return userRole === 'super_admin';
+    return isWorkspacePrivileged;
+  }, [channel, userRole, isWorkspacePrivileged]);
 
   const { data: replies = [], isLoading } = useThreadReplies(channelId, messageId);
 

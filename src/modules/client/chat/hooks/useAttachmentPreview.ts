@@ -200,7 +200,7 @@ export function useAttachmentPreview(
 
       const isPreviewable = mime === 'application/pdf' || mime.startsWith('image/') || mime.startsWith('text/');
 
-      if (isPreviewable) {
+      if (!forceDownload && isPreviewable) {
         if (mime.startsWith('image/')) {
           openMediaInNewTab(blobUrl, filename);
         } else {
@@ -218,7 +218,7 @@ export function useAttachmentPreview(
       }
     } catch (err) {
       console.error('Failed to download or preview file:', err);
-      window.open(file.url, '_blank');
+      toast.error(forceDownload ? 'Failed to download file' : 'Failed to open file');
     } finally {
       setIsDownloading(null);
     }

@@ -118,6 +118,7 @@ export default function CreateTaskModal({
               columnId={newIssueForm.columnId}
               options={statusOptions}
               variant="input"
+              maxVisibleOptions={3}
               onChange={(status, option) => setNewIssueForm({ ...newIssueForm, status, columnId: option.id })}
             />
           </div>

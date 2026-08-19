@@ -541,7 +541,7 @@ export default function MessageItem({
       <MediaLightbox
         file={lightboxFile}
         isDownloading={Boolean(isDownloading)}
-        onDownload={handleDownloadFile}
+        onDownload={(file) => handleDownloadFile(file, true)}
         onClose={() => setLightboxFile(null)}
       />
 

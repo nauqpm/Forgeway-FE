@@ -473,6 +473,7 @@ export default function TaskDetailDrawer({
                       value={issue.status}
                       columnId={issue.columnId}
                       options={boardColumns.map((col) => ({ id: col.id, name: col.name }))}
+                      maxVisibleOptions={5}
                       disabled={!canEditTask || issue.isArchived}
                       onChange={(status, option) =>
                         updateIssueFields({ columnId: option.id, status })

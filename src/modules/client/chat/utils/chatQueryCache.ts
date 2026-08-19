@@ -40,13 +40,10 @@ export const upsertMessageInCache = (
   channelId: string,
   message: Message
 ) => {
-  console.log("chatQueryCache: upsertMessageInCache called", { channelId, message });
   queryClient.setQueryData<InfiniteData<MessagesPage>>(
     queryKeys.chat.messages(channelId),
     (current) => {
-      console.log("chatQueryCache: current messages cache data is", current);
       if (!current) {
-        console.log("chatQueryCache: current cache is empty, doing nothing to avoid cache pollution");
         return undefined;
       }
 
@@ -200,8 +197,38 @@ export const removeMessageFromCache = (
       queryKey: queryKeys.chat.threadReplies(channelId, messageId),
     });
   }
-
   queryClient.invalidateQueries({ queryKey: queryKeys.chat.channels() });
   queryClient.invalidateQueries({ queryKey: queryKeys.chat.activeThreads(channelId) });
   queryClient.invalidateQueries({ queryKey: ['chat', 'messages', 'search', channelId] });
+};
+
+export const resolveLastMessageForClient = (
+  queryClient: QueryClient,
+  channelId: string,
+  serverLastMessage: Message | null | undefined
+): Message | null | undefined => {
+  const cached = queryClient.getQueryData<InfiniteData<MessagesPage>>(
+    queryKeys.chat.messages(channelId)
+  );
+
+  if (!cached) return serverLastMessage;
+
+  const allMessages = cached.pages.flatMap((page) => page.messages);
+
+  if (!serverLastMessage) {
+    const sorted = [...allMessages].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    return sorted[0] ?? null;
+  }
+
+  const serverId = serverLastMessage._id || serverLastMessage.id;
+  const existsLocally = serverId && allMessages.some((m) => getMessageId(m) === serverId);
+
+  if (existsLocally) return serverLastMessage;
+
+  const sorted = [...allMessages].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  return sorted[0] ?? null;
 };

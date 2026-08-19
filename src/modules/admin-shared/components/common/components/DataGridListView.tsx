@@ -213,6 +213,29 @@ export default function DataGridListView({
 
   const normalizedMembers = useMemo(() => toAssigneePickerUsers(members), [members]);
 
+  const bulkStatusOptions = useMemo(() => {
+    if (boardColumns && boardColumns.length > 0) {
+      return boardColumns.map((column) => ({
+        id: column.id,
+        name: column.name,
+      }));
+    }
+
+    return Array.from(
+      new Map(
+        issues
+          .filter((issue) => issue.status)
+          .map((issue) => [
+            issue.columnId || issue.status,
+            {
+              id: issue.columnId || issue.status,
+              name: issue.status,
+            },
+          ]),
+      ).values(),
+    );
+  }, [boardColumns, issues]);
+
   const handleBulkDelete = async () => {
     if (!onBulkDelete) return;
     if (confirm(`Are you sure you want to delete ${selectedCount} items?`)) {
@@ -778,6 +801,7 @@ export default function DataGridListView({
           members={normalizedMembers}
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}
+          statusOptions={bulkStatusOptions}
         />
       )}
     </div>

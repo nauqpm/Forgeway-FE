@@ -157,6 +157,26 @@ export default function WorkspacePage(props: WorkspacePageProps) {
     );
   }
 
+  const workspaceStatusOptions = columns.length > 0
+    ? columns.map((column) => ({ id: column.id, name: column.name }))
+    : Array.from(
+        new Map(
+          issues
+            .filter((issue) => issue.status)
+            .map((issue) => [
+              issue.columnId || issue.status,
+              { id: issue.columnId || issue.status, name: issue.status },
+            ]),
+        ).values(),
+      );
+  const bulkStatusOptions = workspaceStatusOptions.length > 0
+    ? workspaceStatusOptions
+    : [
+        { id: "todo", name: "To Do" },
+        { id: "inprogress", name: "In Progress" },
+        { id: "done", name: "Done" },
+      ];
+
   return (
     <WorkspaceTabShell mode="canvas">
       <div className="flex h-full w-full min-h-0 min-w-0 flex-1 flex-col">
@@ -280,6 +300,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           }}
           calendarProps={{
             workspace,
+            boardColumns: columns,
             issues,
             sprints,
             handleUpdateIssueDate,
@@ -352,6 +373,7 @@ export default function WorkspacePage(props: WorkspacePageProps) {
           canEditTask={canEditTask}
           canDeleteTask={canDeleteTask}
           canMoveTask={canMoveTask}
+          statusOptions={bulkStatusOptions}
         />
 
         <ImportCsvModal 

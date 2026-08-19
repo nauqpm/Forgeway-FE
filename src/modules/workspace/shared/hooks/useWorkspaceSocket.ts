@@ -112,11 +112,16 @@ export function useWorkspaceSocket(workspaceId?: string) {
         switch (delta.action) {
           case "board:columns-replaced":
             return { ...current, columns: sortColumns(delta.payload.columns ?? current.columns) };
-          case "column:created":
+          case "column:created": {
+            const newColumn = delta.payload.column;
+            const existingColumns = current.columns.filter(
+              (c) => c.id !== newColumn.id && !(c.id.startsWith("temp-") && c.name === newColumn.name)
+            );
             return {
               ...current,
-              columns: sortColumns([...current.columns, delta.payload.column]),
+              columns: sortColumns([...existingColumns, newColumn]),
             };
+          }
           case "column:updated":
             return {
               ...current,

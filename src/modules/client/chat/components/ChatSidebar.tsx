@@ -15,6 +15,26 @@ import CreateChannelModal from './CreateChannelModal';
 
 const cn = (...classes: (string | boolean | undefined | null)[]) => classes.filter(Boolean).join(' ');
 
+const toPlainTextPreview = (content: string) => {
+  const text = content
+    // Preserve the readable part of mentions and links.
+    .replace(/(?:\[@|@\[)([^\]]+)\]\([^)]+\)/g, '@$1')
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove paired Markdown markers while retaining their content.
+    .replace(/(\*\*|__|~~|\*|_|`)(.*?)\1/g, '$2')
+    // Tiptap can occasionally produce an unmatched marker between differently
+    // formatted runs. It is still syntax, so it must not leak into previews.
+    .replace(/(^|[\s([{])(?:\*{1,3}|_{1,3}|~{2}|`)(?=\S)/g, '$1')
+    .replace(/(\S)(?:\*{1,3}|_{1,3}|~{2}|`)(?=$|[\s)\]},.!?:;])/g, '$1')
+    .replace(/^\s{0,3}(?:#{1,6}\s+|>\s*|[-+*]\s+)/gm, '')
+    .replace(/@@@SOFTBREAK@@@/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return text;
+};
+
 export default function ChatSidebar() {
   const activeChannelId = useChatStore(state => state.activeChannelId);
   const setActiveChannel = useChatStore(state => state.setActiveChannel);
@@ -190,13 +210,8 @@ export default function ChatSidebar() {
     if (lastMsg.type === 'sticker') {
       formattedContent = "[Sticker]";
     } else if (lastMsg.content && lastMsg.content.trim()) {
-      let cleanContent = lastMsg.content.replace(/(?:\[@|@\[)([^\]]+)\]\(([^)]+)\)/g, '@$1');
-      // Strip simple markdown formatting: **bold**, *italic*, __underline__, ~~strikethrough~~, `code`
-      cleanContent = cleanContent.replace(/(\*\*|__|\*|_|~~|`)(.*?)\1/g, '$2');
-      // Strip blockquote >
-      cleanContent = cleanContent.replace(/^>\s+/gm, '');
-      // Strip softbreak tokens, newlines, and collapse extra whitespaces
-      cleanContent = cleanContent.replace(/@@@SOFTBREAK@@@/g, ' ').replace(/\s+/g, ' ').trim();
+
+      const cleanContent = toPlainTextPreview(lastMsg.content);
       
       if (lastMsg.attachments && lastMsg.attachments.length > 0) {
         const firstAttachment = lastMsg.attachments[0];

@@ -215,18 +215,18 @@ export default function BoardFilters({
             ))}
           </div>
 
-          <div className="w-2/3 p-3 overflow-y-auto bg-white dark:bg-[#202020] flex flex-col gap-2.5">
+          <div className="w-2/3 min-w-0 overflow-x-hidden overflow-y-auto bg-white p-3 dark:bg-[#202020] flex flex-col gap-2.5">
             {activeTab === "Status" && (
               <>
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#ABABAB] dark:text-[#6B6B6B]" />
                   <input type="text" placeholder="Search statuses..." value={statusSearch} onChange={(e) => setStatusSearch(e.target.value)} className={searchInputCls} />
                 </div>
-                <div className="flex flex-col gap-0.5">
+                <div className="flex min-w-0 flex-col gap-0.5">
                   {filteredStatuses.map((status) => (
-                    <label key={status} className="flex items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
-                      <input type="checkbox" checked={filters.statuses.includes(status)} onChange={() => toggleArrayFilter("statuses", status)} className="rounded accent-[#2563EB] w-3.5 h-3.5" />
-                      <span className="text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{status}</span>
+                    <label key={status} className="flex min-w-0 items-center gap-2.5 p-2 hover:bg-[#F7F6F3] dark:hover:bg-[#2E2E2E] rounded-[6px] cursor-pointer transition-colors">
+                      <input type="checkbox" checked={filters.statuses.includes(status)} onChange={() => toggleArrayFilter("statuses", status)} className="h-3.5 w-3.5 shrink-0 rounded accent-[#2563EB]" />
+                      <span title={status} className="block min-w-0 flex-1 truncate text-[0.8125rem] text-[#111111] dark:text-[#E8E8E7]">{status}</span>
                     </label>
                   ))}
                   {filteredStatuses.length === 0 && <p className="text-[0.8125rem] text-[#ABABAB] text-center py-4">No statuses found</p>}
